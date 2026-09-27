@@ -663,6 +663,10 @@ do i=.int(1) to filenames[0]
     if compile then say '[ 'res' ] rxc      - Compiled       ' esc||ANSI_BLUE||sourceFile||esc||ANSI_RESET
     end
   if RC\=0 then return RC
+  if compile & \fileExists(binfile'.rxas') then do
+    call emitStderr 'crexx: compiler returned success without RXAS output: ' || binfile'.rxas'
+    return 2
+  end
 
   if compile then do
 /* print the file when verbose ibm style output is requested */
@@ -682,6 +686,7 @@ do i=.int(1) to filenames[0]
     address crexx "run :asmArgs[]" output out error err
     if RC<>0 then do
       say '[rxas     - Assembly Failed    ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
+      call emitStderr 'crexx: RXAS input kind after assembly failure: ' || rxfs..pathkind(binfile'.rxas')
       do diagnosticIndex = 1 to out[0]
         call emitStderr out[diagnosticIndex]
       end

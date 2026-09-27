@@ -1,0 +1,48 @@
+name: Driver Linux contention diagnosis
+
+on:
+  push:
+    branches: ['temp/driver-linux-diagnosis']
+
+permissions:
+  contents: read
+
+jobs:
+  driver:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Build ordinary Release driver and toolchain
+        run: |
+          cmake -S . -B "$RUNNER_TEMP/driver-build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
+            -DENABLE_LLAMA=OFF
+          cmake --build "$RUNNER_TEMP/driver-build" \
+            --target stage-product stage-optional --parallel 4
+      - name: Repeat focused held-lock and cleanup control
+        run: |
+          mkdir -p "$RUNNER_TEMP/driver-logs"
+          for iteration in $(seq 1 8); do
+            if ! python bin/tests/crexx_driver_output_lock.py \
+              --crexx "$RUNNER_TEMP/driver-build/bin/crexx" \
+              --rxvme "$RUNNER_TEMP/driver-build/bin/rxvme" \
+              --work "$RUNNER_TEMP/driver-build/driver-test-$iteration" \
+              > "$RUNNER_TEMP/driver-logs/$iteration.log" 2>&1; then
+              cat "$RUNNER_TEMP/driver-logs/$iteration.log"
+              exit 1
+            fi
+          done
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: driver-linux-diagnosis
+          path: ${{ runner.temp }}/driver-logs
+          if-no-files-found: ignore
+          retention-days: 7

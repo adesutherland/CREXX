@@ -56,6 +56,8 @@ def check_scenario(crexx, root, keep, source="same.crexx"):
         wait_for(root / "first.marker", first)
         image = root / "same.rxbin"
         original = image.read_bytes()
+        image_mtime = image.stat().st_mtime_ns
+        asm_mtime = (root / "same.rxas").stat().st_mtime_ns
         refused = subprocess.run(
             command(crexx, [*flags, "--lock-timeout", "0"],
                     "refused.marker", "-", "refused", source),
@@ -80,11 +82,14 @@ def check_scenario(crexx, root, keep, source="same.crexx"):
             time.sleep(0.5)
             assert second.poll() is None, "second driver did not wait"
             assert not (root / "second.marker").exists(), "second program ran during first"
+            assert image.stat().st_mtime_ns == image_mtime, "second build changed live image"
+            assert (root / "same.rxas").stat().st_mtime_ns == asm_mtime, "second build changed live assembly"
             (root / "release.flag").touch()
             first_out, first_err = first.communicate(timeout=30)
             second_out, second_err = second.communicate(timeout=30)
             assert first.returncode == 0, (first_out, first_err)
-            assert second.returncode == 0, (second_out, second_err)
+            assert second.returncode == 0, (second_out, second_err,
+                                            sorted(path.name for path in root.iterdir()))
             assert "LOCK PASS first" in first_out, first_out
             assert "LOCK PASS second" in second_out, second_out
         finally:
