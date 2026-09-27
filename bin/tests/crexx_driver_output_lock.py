@@ -2,8 +2,10 @@
 
 import argparse
 import concurrent.futures
+import os
 import pathlib
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -45,6 +47,31 @@ def command(crexx, flags, marker, gate, label, source="same.crexx"):
     return [str(crexx), *flags, source, "--args", marker, gate, label]
 
 
+def linux_lock_snapshot(root, process):
+    if sys.platform != 'linux':
+        return {}
+    import fcntl
+    lock = root / 'same.crexx-driver.lock'
+    result = {'path_inode': lock.stat().st_ino, 'process': process.poll()}
+    result['owner_fds'] = []
+    for fd in pathlib.Path(f'/proc/{process.pid}/fd').iterdir():
+        try:
+            target = os.readlink(fd)
+        except OSError:
+            continue
+        if 'crexx-driver.lock' in target:
+            result['owner_fds'].append((fd.name, target))
+    with lock.open('r+') as probe:
+        try:
+            fcntl.flock(probe, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            result['probe'] = 'busy'
+        else:
+            result['probe'] = 'free'
+            fcntl.flock(probe, fcntl.LOCK_UN)
+    return result
+
+
 def check_scenario(crexx, root, keep, source="same.crexx"):
     root.mkdir()
     (root / source).write_text(SOURCE, encoding="utf-8")
@@ -61,6 +88,7 @@ def check_scenario(crexx, root, keep, source="same.crexx"):
         original = image.read_bytes()
         image_mtime = image.stat().st_mtime_ns
         asm_mtime = (root / "same.rxas").stat().st_mtime_ns
+        lock_before = linux_lock_snapshot(root, first)
         refused = subprocess.run(
             command(crexx, [*flags, "--lock-timeout", "0"],
                     "refused.marker", "-", "refused", source),
@@ -89,7 +117,9 @@ def check_scenario(crexx, root, keep, source="same.crexx"):
             assert second.poll() is None, "second driver did not wait"
             assert not (root / "second.marker").exists(), "second program ran during first"
             assert image.stat().st_mtime_ns == image_mtime, "second build changed live image"
-            assert (root / "same.rxas").stat().st_mtime_ns == asm_mtime, "second build changed live assembly"
+            assert (root / "same.rxas").stat().st_mtime_ns == asm_mtime, (
+                "second build changed live assembly", lock_before,
+                linux_lock_snapshot(root, first))
             (root / "release.flag").touch()
             first_out, first_err = first.communicate(timeout=30)
             second_out, second_err = second.communicate(timeout=30)
