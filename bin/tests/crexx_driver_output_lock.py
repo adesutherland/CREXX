@@ -54,6 +54,9 @@ def check_scenario(crexx, root, keep, source="same.crexx"):
         cwd=root, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     try:
         wait_for(root / "first.marker", first)
+        if first.poll() is not None:
+            raise AssertionError(("first driver finished before gate release",
+                                  first.returncode, first.communicate()))
         image = root / "same.rxbin"
         original = image.read_bytes()
         image_mtime = image.stat().st_mtime_ns
@@ -80,6 +83,9 @@ def check_scenario(crexx, root, keep, source="same.crexx"):
             cwd=root, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
             time.sleep(0.5)
+            if first.poll() is not None:
+                raise AssertionError(("first driver finished before gate release",
+                                      first.returncode, first.communicate()))
             assert second.poll() is None, "second driver did not wait"
             assert not (root / "second.marker").exists(), "second program ran during first"
             assert image.stat().st_mtime_ns == image_mtime, "second build changed live image"
