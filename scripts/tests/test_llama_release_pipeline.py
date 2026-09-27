@@ -202,9 +202,12 @@ class MatrixTests(unittest.TestCase):
                      for r in matrix.cores_for(rows)['include']]
             names += ['llama.rexx-' + version + '-' + r['core_platform'] + '-' + r['backend'] + '.zip'
                       for r in rows['include']]
+            source_sha = '0123456789abcdef0123456789abcdef01234567'
             if not full:
                 names += ['CREXX-dev-snapshot-linux-x64.deb', 'CREXX-dev-snapshot-windows-x64-unsigned-setup.exe',
                           'llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe']
+                names += ['CREXX-sdk-' + source_sha + '-' + platform + '.zip'
+                          for platform in ('windows-x64', 'macos-arm64', 'macos-x86_64')]
             with tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
                 source = root / ('downloaded-release-assets' if full else 'downloaded-dev-snapshot-assets')
@@ -212,7 +215,7 @@ class MatrixTests(unittest.TestCase):
                 for name in names:
                     (source / name).touch()
                 command = ['bash', '-c', script.replace('${{ runner.temp }}', temp)]
-                env = dict(os.environ, GITHUB_REF_NAME=version)
+                env = dict(os.environ, GITHUB_REF_NAME=version, GITHUB_SHA=source_sha)
                 result = subprocess.run(command, env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 # Empty prior collector output so a missing input cannot pass
