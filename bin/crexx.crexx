@@ -500,9 +500,8 @@ do lockIndex = 1 to lockPaths[0]
   lockPath = lockPaths[lockIndex]
   lockStarted = rxplatform..uptime()
   waitingReported = 0
-  do
-    outputGuard = .rxfs..fileguard(lockPath, 'exclusive')
-    if outputGuard.held() then leave
+  outputGuard = .rxfs..fileguard(lockPath, 'exclusive')
+  do while \outputGuard.held()
     if \outputGuard.busy() then do
       call emitStderr 'crexx: cannot acquire output lock: ' || lockPath
       return 2
@@ -516,6 +515,7 @@ do lockIndex = 1 to lockPaths[0]
       waitingReported = 1
     end
     ignored = rxplatform..sleep(50)
+    outputGuard = .rxfs..fileguard(lockPath, 'exclusive')
   end
   outputGuards[lockIndex] = outputGuard
 end
