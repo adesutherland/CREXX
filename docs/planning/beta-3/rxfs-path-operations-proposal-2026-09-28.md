@@ -1,12 +1,15 @@
 # RXFS pathname operations: bounded repair proposal
 
-28 September 2026. **Copy repair approved after Adrian's clarification;
-hardlink/move and legacy semantic changes remain proposals.** Adrian asked
-whether the change belonged to the `crexx` wrapper; after clarification that
-it is the native `rxfs` provider's copy operation, he replied “Approved”.
-This authorizes RXFS-STEP-02 and its relevant characterization, focused QA,
-independent review and ordinary publication. It does not approve D-01's
-hardlink/move contract qualification or changing legacy broken-link behavior.
+28 September 2026. **D-01 hardlink/move policy approved; implementation is
+paused at Adrian's subsequent request for clarification.** His correction
+was: “I meant the hardlink/move decision that you explained is approved”.
+The approved direction retains those operations for caller-controlled source
+directories, rejects stable final links, preserves destination non-overwrite,
+and explicitly excludes protection against concurrent source-entry replacement.
+The initial copy-only interpretation was too narrow. Legacy broken-link/status
+behavior remains unchanged. Sol was interrupted after “Wait - I am confused”;
+do not resume filesystem implementation until that hold is resolved. Preserve
+the local partial copy draft without claiming it is reviewed or qualified.
 This is subordinate to the authoritative
 [beta 3 core-baseline plan](core-baseline-2026-09-28.md), not a new baseline
 scope record. Source reviewed: published `develop`
@@ -133,7 +136,13 @@ cases before treating a simplified error map as compatible.
   and [Win32 information classes](https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ne-minwinbase-file_info_by_handle_class)
   are the candidate API contract.
 
-## Decisions required before hardlink/move or legacy semantic edits
+## Decisions and historical alternatives
+
+**Current disposition:** D-01's caller-controlled-directory option is approved.
+D-02 retains existing behavior; no legacy semantic edit is selected. The
+decision descriptions below preserve the alternatives considered and are not
+new requests to reconfirm D-01. The later user-requested implementation hold
+remains in force independently of that approval.
 
 **D-01 — Concurrent untrusted mutation of the final source entry.** The
 published words “reject a final symlink/reparse point” can be enforced for
@@ -159,9 +168,11 @@ behavior from an actual Windows run before imposing the POSIX result there.
 
 ## Acceptance criteria and steps (all verification remains OPEN)
 
-The copy-only slice of RXFS-AC-01, RXFS-AC-02 and RXFS-AC-05, and
-RXFS-STEP-02 with its supporting review/QA steps, is now approved.
-RXFS-AC-03/04 and their semantic decision gates remain unapproved. The
+The selected D-01 contract now governs RXFS-AC-03 and RXFS-STEP-03.
+Do not impose the rejected unconditional atomic source-type guarantee.
+Copy repair and supporting review/QA are part of the working proposal, but
+all filesystem implementation is currently held as recorded above.
+RXFS-AC-04 does not authorize changing legacy behavior. The
 existing 53-case macOS provider receipt supplies retained characterization;
 it does not substitute for new failure regressions or other platform proof.
 Copy keeps its ordinary byte-copy and `0/-8` contract, destination exclusion,

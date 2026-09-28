@@ -518,7 +518,7 @@ Linux ASan/LSan is still running. This macOS result does not qualify the
 subsequent #220 edit, Linux leaks, or native mainframe integration; AC-08
 and all other outstanding criteria remain open. No repeat was dispatched.
 
-**Copy-only implementation approval:** after the copy proposal was clarified
+**Historical approval interpretation, corrected below:** after the copy proposal was clarified
 as a repair to the native `rxfs` provider rather than the `crexx` wrapper,
 Adrian replied “Approved”. Apply the
 [RXFS plan's](rxfs-path-operations-proposal-2026-09-28.md) copy-only
@@ -530,7 +530,34 @@ promised. Add meaningful permanent substitution/special-file and error
 regressions, run focused Debug and maintained sanitizer checks, exercise the
 four-tool library path, then independently review before ordinary publication.
 The wider hardlink/move decision and legacy semantic changes remain open;
-this approval does not silently adopt the earlier bundled contract proposal.
+this was the coordinator's overly narrow interpretation, not the final
+record of Adrian's decision.
+
+**18:11 UTC correction and user-requested implementation hold:** Adrian
+clarified, “I meant the hardlink/move decision that you explained is approved”.
+D-01 is approved: retain hardlink/move for caller-controlled source
+directories, reject stable final symlinks/reparse points, preserve destination
+non-overwrite and supported file/directory behavior, and explicitly document
+that concurrent replacement of the source entry is not protected. This is a
+bounded pathname-operation contract, not an atomic source-identity guarantee.
+Legacy delete/rename broken-link and status behavior is to remain unchanged;
+no legacy semantic change was selected.
+
+Adrian then said “Wait - I am confused” and requested an explanation. The
+coordinator interrupted Sol; implementation is **PAUSED pending clarification**.
+Do not restart it from a heartbeat or infer that repeating the saved
+automation prompt revokes this hold. Existing hosted jobs and concise status
+reporting continue. The partial copy draft in `lib/plugins/fs/rxfs_ops.h`
+and untracked `rxfs_copy_native.h` is preserved locally, uncommitted and
+unqualified; no copy/hardlink/move change has been published. The worker also
+flagged that replacing Windows `CopyFileW` with a byte loop could drop
+attributes/security/encryption behavior. No Windows replacement was selected;
+review the exact compatibility choices before resuming that part.
+
+PR #710 still contains only the reviewed format fix plus receipts. All five
+core platform jobs and optimizer parity have passed, while two plugin jobs
+and CodeQL remain active at this snapshot. The macOS sanitizer result is
+retained as above; Linux ASan/LSan is still running on `9f2f44cfd`.
 
 The macOS current-provider characterization is retained at `65a49141e`:
 [53 isolated invocations](../../qa/beta3-core-baseline/rxfs-stable-path-macos-2026-09-28.md)
