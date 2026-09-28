@@ -59,6 +59,14 @@ no current CMS31/TSO31/TSO64 package evidence.
 | `linker/rxlinkmain.c`, `disassembler/rxdamain.c`, `interpreter/rxseqmain.c` | Text files now use `platform_fopen`/`openfile` where applicable; C stdio and `argv` remain | No current native package evidence. Before enabling any of these native tools, apply the standalone startup contract and qualify their explicit file-page selection. |
 | `interpreter/crexxsaa.c`, `interpreter/rxvmlib.c`, `bin/crexx.crexx`, `preprocessor/rxpp_sh.c` | Host embedding, driver and editor surfaces; direct C/environment or VM file services | No current native package evidence. Embedding must not rebind a host's C standard streams; native availability and each text crossing need explicit packaging and tests before parity claims. |
 
+The current lab VM profile uses static providers and has no published raw
+environment backend yet. `CREXX_PROVIDER_PATH` is optional in that profile;
+making its lookup a mandatory startup step would reject otherwise usable
+native VMs on `ENOTSUP`. The raw `GETENV` instruction is already checked and
+fails explicitly when called. Configuration lookups need a per-option native
+capability decision and backend proof before routing them; `ENOTSUP` must
+remain distinguishable from an absent variable.
+
 The raw host fixture compiles the CMS and TSO `platform.c` routes and exercises
 record/byte text, short writes, capacity rejection before record commit,
 read/write/flush/close errors, binary bytes, names, directory EOF/errors,
