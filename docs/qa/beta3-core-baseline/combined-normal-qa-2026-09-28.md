@@ -54,3 +54,35 @@ repairs of the two causes, run the affected focused tests and repeat broader
 correctness only if changed inputs or a distinct failure justify it. AC-07 is
 not satisfied by this receipt. Native raw backend and AC-04/11, product
 integration AC-09, and final hosted sanitizer AC-08 remain open separately.
+
+## Focused resolution of the three failed entries
+
+The coordinator accepted the two diagnoses and authorized narrow repairs.
+Commit `64ba2ef0d4e2317c6e85673469d0747dcf6b5057` supplies the build
+`bin` library path to all three RXC invocations in the source-map fixture and
+registers its actual `library` preparation target alongside `rxc`. The
+generated Debug and Apple ASan CTest files both record
+`CREXX_PREP_TARGETS "rxc;library"`; `--no-exe-import` and the source-map/error
+assertions remain. Commit `d454750bd344b44f2dcb48886f7260c1a899478b`
+adds German and Dutch translations for `RXBIN_IMPORT_READ_ERROR` and
+`IMPORT_DIRECTORY_READ_ERROR`, retaining `{file}` and `{directory}`.
+No product source or prior passing test was changed. The resulting code/test/
+catalogue tree is `088c61f77fda5eef407cf0fd1a54f0d13b55ef8d` at
+`d454750bd`.
+
+Commands and results on that input (the three-test selector was
+`-R '^(source_import_srcmap_factory|rxc_diagnostic_catalogs|rxpp_diagnostic_catalogs)$'`):
+
+| Command | Result and retained log |
+| --- | --- |
+| `cmake --build cmake-build-debug --target qa-prep-comprehensive --parallel 10` | PASS after CMake regeneration, `/tmp/beta3-focused-prep.d7FtPV`, SHA-256 `485ab8057a10cd836704d594697e21ed8ad9f2ea9feed26bcfc6aa0c2b0579b0`. The regeneration rebuilt the aggregate's generated fixtures; it was not a second correctness run. |
+| `ctest --test-dir cmake-build-debug -R <three-test selector above> --parallel 1 --output-on-failure` | PASS 3/3, `/tmp/beta3-three-repair-ctest.mVprmP`, SHA-256 `49e4ecd0d2a6a0215ec877eb0bba06615a187cf39a6ba548ab81001ed59115f5`. |
+| `tools/asan-run.sh --phase build --build-target rxc --build-target library --build-jobs 8 --build-leaks off --leaks off --no-live-tail` | PASS, `cmake-build-debugasan/asan-logs/20260928-142900-build/build.log`, SHA-256 `dedeb7b0265e48a6b8c84e2f6d3a54deac4056d4e6704eb4bc056e98d5906923`. |
+| `tools/asan-run.sh --phase ctest --regex '^source_import_srcmap_factory$' --test-jobs 1 --leaks off --no-live-tail` | PASS 1/1, `cmake-build-debugasan/asan-logs/20260928-143155-ctest/ctest.log`, SHA-256 `223fca98f88919eaed940915385d3099777a21e520b5eb5a3a52f4`. No sanitizer diagnostic. Apple LSan is unsupported. |
+
+The retained 2,283 passing combined results plus these three focused passes
+resolve the local correctness failures without repeating unchanged tests.
+This is a composite local proof, not a literal new 2,286/2,286 broad run or a
+final native/platform/sanitizer/publication claim. Coordinator review of the
+repairs and evidence remains open. Native raw backend and AC-04/11, final
+Linux ASan/LSan plus macOS ASan AC-08, and AC-09 publication remain open.

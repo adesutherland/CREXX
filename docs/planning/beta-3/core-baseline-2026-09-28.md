@@ -328,6 +328,9 @@ documentation-only audit/handoff commits. The later current-status receipts
 below supersede the outgoing worker's draft inventory. No product
 implementation push or sanitizer workflow dispatch occurred.
 
+The current local repair HEAD is `d454750bd` after the two STEP-05 QA fixes
+described below; product implementation inputs remain those at `ce4a9273f`.
+
 STEP-01 complete, STEP-02/03 in progress, STEP-04 complete by authorized
 SOURCELINE deferral, STEP-05 partial, STEP-06–08 open. AC-05 satisfied by evidence;
 AC-06 not applicable. All other criteria remain open/partial as detailed below.
@@ -587,12 +590,36 @@ in its isolated fixture, and both RXC/RXPP diagnostic-catalog tests find the
 same two new keys absent from German and Dutch catalogues. Exact commands,
 tree/cache/log hashes, excerpts, passing serialized aggregate receipts and
 repair limits are in the [combined normal QA receipt](../../qa/beta3-core-baseline/combined-normal-qa-2026-09-28.md).
-The coordinator is reviewing both causes. No production source, test fixture
-or catalogue was changed after this result; AC-07 and STEP-05 remain OPEN
+At this point, the coordinator was reviewing both causes. No production source,
+test fixture or catalogue had yet changed; AC-07 and STEP-05 remained OPEN
 pending focused repair qualification. Preserve the other 2283 passing results
 unless a changed input or distinct failure justifies broader repetition.
 AC-04/11 raw native and text crossings, AC-08 final hosted product sanitizer,
 AC-09 product publication and AC-10 final handoff also remain OPEN.
+
+**STEP-05 focused repair actions, completed after coordinator cause review:**
+
+1. **STEP-05.1 — Fixture dependency.** `64ba2ef0d` passes the configured
+   build `bin` library path to all three source-map RXC calls and registers
+   `library` with `rxc` as the fixture's prep targets. It preserves mandatory
+   compiler-exit loading, `--no-exe-import` and every srcmap/error assertion.
+2. **STEP-05.2 — Catalogue completeness.** `d454750bd` adds the two missing
+   import-failure messages in German and Dutch with unchanged placeholder
+   names. No English message or product logic changed.
+3. **STEP-05.3 — Focused qualification.** The regenerated Debug
+   `qa-prep-comprehensive` passed; the exact three previously failed CTests
+   passed 3/3; a focused Apple ASan build of `rxc` and `library` and the
+   matching source-map CTest passed 1/1 without sanitizer diagnostics. Exact
+   commands, input tree `088c61f77fda5eef407cf0fd1a54f0d13b55ef8d`,
+   local paths and hashes are in the [combined normal QA receipt](../../qa/beta3-core-baseline/combined-normal-qa-2026-09-28.md).
+
+The 2,283 unchanged passing combined results are retained and the three
+failed entries are resolved by focused rerun. AC-07 has composite local
+correctness evidence for this cREXX candidate, pending coordinator acceptance;
+it is not a new single-run 2,286/2,286 result. STEP-05 remains partial until
+the final integrated inputs and their applicable QA are settled. AC-04/11
+native raw backend and text crossings, AC-08 final Linux/macOS sanitizer
+matrix, AC-09 product publication and AC-10 handoff remain OPEN.
 
 ### Coordinator workflow publication receipt
 
