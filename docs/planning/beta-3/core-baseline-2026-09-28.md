@@ -323,16 +323,15 @@ cite the qualified source revision, command/result and retained artifact/log.
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
-checkout and made local, unpushed commits `34cc3a725` and `7e5771d2a` after
-`4ce9de623`. Current HEAD is `7e5771d2a`; platform/codec/OOM drafts remain
-uncommitted. No implementation push or sanitizer workflow dispatch occurred.
+checkout; current local, unpushed HEAD is `2df36e28e`. The later current-status
+receipts below supersede the outgoing worker's draft inventory. No product
+implementation push or sanitizer workflow dispatch occurred.
 
 STEP-01 complete, STEP-02/03 in progress, STEP-04 complete by authorized
 SOURCELINE deferral, STEP-05 partial, STEP-06–08 open. AC-05 satisfied by evidence;
-AC-06 not applicable. All other criteria remain open/partial as listed in the
-handoff. Shared cREXX conversion and raw native services are authoritative;
-the tentative runtime map-setter draft is superseded. The replacement must
-reconcile the remaining stale **uncommitted** declarations before publication.
+AC-06 not applicable. All other criteria remain open/partial as detailed below.
+Shared cREXX conversion and raw native services are authoritative; the
+tentative runtime map-setter draft was removed before the platform commit.
 
 ## Execution receipts
 
@@ -359,6 +358,7 @@ reconcile the remaining stale **uncommitted** declarations before publication.
 | Active 0016 + older 0011 sentinel | Canonical portable writer and legacy ILP32 spelling reader | Committed `4ce9de623`; actual ILP32 ordinary CI open. |
 | Active 0017 namespace source root | Shared compiler first-root rule, same-root providers retained | Committed `7e5771d2a`; source-root and private-dependency normal regressions pass. |
 | Older 0010 TSO platform | Explicit product profile, logical mapping and raw native service route | Profile/name/directory/file adapters and console/process-input wrappers committed `177c077aa` and pass CMS/TSO host mocks; core CLI selector follow-up `61fdba645` passes. Product startup/stdio routing and actual backend/package gates open. |
+| Native VM environment crossing | Shared VM `GETENV` uses platform-decoded raw environment service on CMS/TSO, while desktop lookup stays unchanged | Committed `2df36e28e`; CMS/TSO host mocks and optimized/unoptimized VM getenv pass matching Debug and Apple ASan tests. Other process-input crossings and actual backend/package gates open. |
 | Older 0012 symbol allocation | Shared compiler terminal allocation checks | Committed `34cc3a725`; fault CTest passes Debug and Apple ASan. |
 | Older 0013 value factories | Shared VM worker and standalone allocation checks | Committed `34cc3a725`; fault CTest passes Debug and Apple ASan. |
 | TSO integer-only exhaustion formatting | Bounded heap-independent diagnostic path | Shared OOM/UTF-8 and native raw emergency output committed `177c077aa`; host mocks pass Debug and Apple ASan. Actual backend and bounded emergency-record capacity remain open. |
@@ -543,6 +543,37 @@ is authorized here.
   or guest run performed. One frozen-input combined normal correctness suite,
   independent review, normal publication and one approved hosted sanitizer
   matrix remain in sequence.
+
+### VM environment crossing (28 September, 12:49 local)
+
+- Local commit `2df36e28e` routes the VM's `GETENV` through the cREXX-owned
+  native environment decoder only on raw CMS/TSO builds. It preserves the
+  existing desktop lookup, distinguishes absent from unsupported/error, rejects
+  embedded-zero native names, and signals `NOTREADY` on service failure.
+  CMS/TSO host mocks exercise present, absent, embedded-zero and unavailable
+  services. This does not route every tool configuration lookup or startup
+  argument, and it does not qualify a lab raw backend.
+- Matching Debug build `cmake --build cmake-build-debug --target rxbvm
+  test_native_raw_cms test_native_raw_tso --parallel 8` passed at
+  `/tmp/beta3-getenv-final-build.log`; `ctest --test-dir cmake-build-debug -R
+  '^(ts_getenv_(noopt|opt)|native_raw_(cms|tso))$' --parallel 1
+  --output-on-failure` passed 4/4 at `/tmp/beta3-getenv-final-test.log`.
+  Apple ASan runner builds passed at
+  `cmake-build-debugasan/asan-logs/20260928-124517-build` (the generated
+  `ts_getenv` fixture) and `20260928-124747-build` (current VM/mock objects);
+  the same four CTests passed at `20260928-124751-ctest`. An earlier attempt
+  at `20260928-124328-ctest` found no generated `ts_getenv` module in that
+  build tree; this was a missing fixture, with no sanitizer diagnostic, and
+  the targeted fixture build/replay resolved it. Apple LSan is unsupported.
+- Console/stdout integration remains an explicit open dependency. Existing
+  standalone RXC/RXAS/RXVM entrypoints (and any later packaged RXLINK/RXDAS)
+  use standard C streams for diagnostics/SAY/TRACE. A platform-local startup
+  attachment of owned IBM1047 wrappers has been proposed to the coordinator;
+  it requires the lab's safe newlib bind/restore and exit-flush ownership
+  detail before modifying FILE slots. Embedding and ordinary C clients retain
+  their host-owned standard streams. The lab also needs to settle the CMS
+  iterator payload shape and emergency stderr capacity. AC-04/AC-11 and the
+  frozen combined correctness/native gates remain open.
 
 ### Coordinator workflow publication receipt
 

@@ -36,9 +36,9 @@ still unverified. There is no UTF16/32 tool-stream selector.
 | Linker/disassembler | RXBIN loads/writes use binary modes. Linker control now uses `platform_fopen`; disassembler output and linker map/report use textual `openfile`. Both tools accept the existing `-E` file-page selector. | Non-ASCII control/report/disassembly and failure checks open. |
 | VM file API | Native `rxvm_private_fopen` routes via `platform_fopen`; `.binary` remains byte exact in the raw adapter. The CLI accepts `-E` for application text files. | Application text APIs, mixed page/layout lifetime and actual runtime backend require combined proof. |
 | Compiler/VM/tool stdio and diagnostics | OOM panic has bounded cREXX UTF8-to-IBM1047 conversion and raw `stderr`. An owned `crexx_native_standard(0/1/2)` wrapper now decodes/encodes IBM1047 console records independently of the selected file page; host mocks cover input/output and release. | Ordinary product `stdin`, `stdout`, `stderr`, SAY, TRACE and diagnostic callers still use C stdio or existing runtime routes; attach the owned wrapper at the supported process/VM boundaries and qualify them. |
-| Arguments and environment | `crexx_native_arguments` and `crexx_native_environment` decode the raw IBM1047 process services to owned UTF-8, retry exact ERANGE lengths, distinguish absent/empty/unsupported values and reject embedded NUL. | Startup/tool/VM callers are not yet routed; old already-decoded compatibility inputs must not be decoded twice. |
+| Arguments and environment | `crexx_native_arguments` and `crexx_native_environment` decode the raw IBM1047 process services to owned UTF-8, retry exact ERANGE lengths, distinguish absent/empty/unsupported values and reject embedded NUL. VM `GETENV` now uses the native adapter and signals `NOTREADY` on backend failure; optimized/unoptimized desktop VM cases remain passing. | Standalone startup arguments and direct tool/configuration `getenv` callers are not yet routed; old already-decoded compatibility inputs must not be decoded twice. |
 | Native names and discovery | TSO `root.TYPE(NAME)` mapping, CMS `NAME TYPE MODE` mapping, IBM1047 name encoding and raw directory adapters are in cREXX platform code. CMS `fileexists` probes the same raw byte route. Compiler preserves root/provider policy and propagates iterator errors. | CMS 18-byte FID iterator shape is provisional pending lab backend. Native close/error and package evidence open. |
-| Driver, RXPP, crexxsaa, profiler and ancillary tools | Audit identified direct `fopen`, `getenv` and stdio sites; no blanket parity claim is made. | Identify supported native build sets and route every maintained text crossing or record explicit unavailability. |
+| Driver, RXPP, crexxsaa, profiler and ancillary tools | Current lab package evidence lists RXC/RXAS/RXVM; it does not establish native RXPP, RXLINK, RXDAS, `crexxsaa`, profiler or ancillary packages. Desktop RXPP's `precomp.readallx`/`writeall` use direct `fopen` and the helper is both a static RXPP provider and a dynamic compiler import. | No native parity claim for the unbuilt components. Before any native RXPP packaging, route its text opens through the selected cREXX platform without duplicating codec state in the dynamic module; verify read/write/close failures and its generated text. Audit driver and embedding stream ownership separately. |
 | Binary RXBIN, packages and explicit binary files | `rb`/`wb` raw mock passes embedded zero, high bytes and LF without conversion. | Native package and actual binary storage proof open. |
 
 The raw host fixture compiles the CMS and TSO `platform.c` routes and exercises
@@ -60,6 +60,12 @@ not the frozen combined suite or native package gates.
 The added nonseekable/failed-read checks passed the two raw host tests in Debug
 at `/tmp/beta3-sequential-test2.log` and Apple ASan at
 `cmake-build-debugasan/asan-logs/20260928-123014-ctest`.
+Native VM `GETENV` is now routed through the platform decoder at `2df36e28e`.
+CMS/TSO mock and optimized/unoptimized VM getenv tests pass 4/4 in Debug at
+`/tmp/beta3-getenv-final-build.log` and `/tmp/beta3-getenv-final-test.log`,
+and 4/4 under Apple ASan at
+`cmake-build-debugasan/asan-logs/20260928-124747-build` and
+`20260928-124751-ctest` (generated test fixture built at `20260928-124517-build`).
 The shared `-E` CLI selector is now accepted by `rxc`, `rxas`, `rxlink`, `rxdas`
 and `rxbvm`. A measured serialized regression accepts UTF8 and rejects an
 unsupported page in each tool: Debug `/tmp/beta3-selector-final-ctest.log`,
