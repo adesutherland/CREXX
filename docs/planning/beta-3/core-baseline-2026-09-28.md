@@ -576,6 +576,24 @@ is authorized here.
   iterator payload shape and emergency stderr capacity. AC-04/AC-11 and the
   frozen combined correctness/native gates remain open.
 
+### Frozen combined normal QA (28 September)
+
+At clean local product/test/build input `ce4a9273fc5752fd045170661140e322cdf192c2`,
+the normal Debug `all` build and `qa-prep-comprehensive` passed. The one
+combined essential/smoke/comprehensive CTest run finished **2283/2286 passed**
+in 820.57 seconds, without a timeout. The three failed test entries have two
+causes: `source_import_srcmap_factory` lacks the required library search path
+in its isolated fixture, and both RXC/RXPP diagnostic-catalog tests find the
+same two new keys absent from German and Dutch catalogues. Exact commands,
+tree/cache/log hashes, excerpts, passing serialized aggregate receipts and
+repair limits are in the [combined normal QA receipt](../../qa/beta3-core-baseline/combined-normal-qa-2026-09-28.md).
+The coordinator is reviewing both causes. No production source, test fixture
+or catalogue was changed after this result; AC-07 and STEP-05 remain OPEN
+pending focused repair qualification. Preserve the other 2283 passing results
+unless a changed input or distinct failure justifies broader repetition.
+AC-04/11 raw native and text crossings, AC-08 final hosted product sanitizer,
+AC-09 product publication and AC-10 final handoff also remain OPEN.
+
 ### Coordinator workflow publication receipt
 
 Master workflow-only commit `2d24ae989fdb530942c73d81301d6affd243a671` has
