@@ -322,6 +322,31 @@ artifact/log. Unverified outcomes remain open.
 
 ## Current handoff
 
+**28 September, 16:09 UTC integration checkpoint:** PR #709 merged normally
+into `develop` at `9f2f44cfd888d324858769809b0381e524850b4c` at 16:08 UTC.
+The merged tree equals reviewed PR head `54d31a27f`; its product/test/build
+inputs equal `a4a39dc3b`, whose complete ordinary Build `36440639967` and
+CodeQL `36440638876` both passed. The intervening changes are documentation
+only. Those valid results were reused; no branch-protection bypass or broad
+local repeat was used. The execution checkout fast-forwarded to the merge.
+Automatic develop Build `36448832221` and CodeQL `36448831088` are running.
+The one explicitly approved sanitizer dispatch is now running as
+`36448935081`, on exact merged head `9f2f44cfd`, with Linux ASan/LSan and
+macOS ARM64 ASan lanes. AC-08 remains open until terminal qualified results;
+AC-09 has
+its integration portion complete and awaits automatic publication results.
+Native AC-04/11 and final AC-10 remain open. This checkpoint supersedes the
+historical draft/publication snapshots below, without changing their evidence.
+
+The worker's read-only roadmap/backlog refresh found no new beta-3 blocker:
+published roadmap and Release 1 plan inputs were unchanged, ten issues remain
+open overall and seven in the beta-3 milestone; #602 retains its approved
+post-beta-3 disposition. No scope reclassification or issue mutation occurred.
+Both delegated reviews are complete; the coordinator owns the running hosted
+gates and will reassign repair work if a concrete failure appears. The lab can
+now pin the merged revision for raw-backend and standard-stream reconciliation;
+its old package successes do not qualify this new native path.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
