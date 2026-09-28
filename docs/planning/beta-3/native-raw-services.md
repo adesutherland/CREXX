@@ -101,3 +101,24 @@ converted entry points can remain independently selected. They must never be
 stacked under the cREXX decoder, and any transitional already-decoded arguments
 or names remain a named open gap. Host mocks prove the cREXX adapter only.
 Combined backend tests and CMS31/TSO31/TSO64 native package gates remain OPEN.
+
+Three backend details still need an exact joint implementation receipt:
+
+1. **Standalone standard streams:** existing RXC/RXAS/RXVM product code uses
+   C `stdin`/`stdout`/`stderr` for diagnostics, SAY and TRACE. cREXX can create
+   owned IBM1047 record `FILE *` wrappers with `crexx_native_standard(0/1/2)`,
+   but the lab must identify a safe process-local newlib bind/restore point,
+   flush/close ownership and startup order. A cREXX platform-local startup
+   call in standalone tool mains is proposed; embedding APIs and ordinary C
+   clients must retain their host-owned streams. No FILE-slot assignment is
+   part of the current accepted implementation.
+2. **CMS directory payload:** the adapter currently expects an actual 18-byte
+   IBM1047 FID (8-byte padded name, 8-byte padded type, 2-byte mode). Confirm
+   this against the raw iterator or supply its exact actual-entry shape;
+   reconcile the small header/adapter detail with focused tests. The runtime
+   must not invent a cREXX suffix or provider selection.
+3. **Emergency stderr capacity:** `stderr` is allocation-free and record-based,
+   but v1 gives no guaranteed maximum complete record length. State its
+   capacity (or an equivalent explicit chunk/continuation contract) so the
+   cREXX bounded panic formatter can avoid an uncommittable record after OOM.
+   Until then, host mock success is not native emergency-output proof.
