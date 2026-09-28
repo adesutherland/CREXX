@@ -428,6 +428,24 @@ changes. Filesystem source-identity and final-symlink guarantees require a
 separate review before changing behavior; do not infer atomic object identity
 from a pathname API or silently weaken the documented symlink rejection.
 
+**17:34 UTC filesystem review evidence:** the coordinator's
+[controlled source-substitution probe](../../qa/beta3-core-baseline/codeql-226-path-swap-probe-2026-09-28.md)
+uses the unchanged published `rxfs_transfer` function. On macOS, replacing
+the inspected final source with a symlink makes hardlink succeed against the
+referenced victim inode and move succeed with a symlink target; copy rejects
+the substitution through `O_NOFOLLOW`. Unchanged-source controls pass. This
+confirms a gap in the documented final-symlink rejection for those two
+operations, without asserting an additional general atomic-identity promise
+or cross-platform qualification. #226 remains open for a repair/design
+proposal before filesystem implementation. No contract is weakened.
+
+Sol is implementing only the separately bounded #220 format repair below.
+Published develop remains `9f2f44cfd`; both approved hosted sanitizer lanes
+are still running on that revision. The mainframe lab checkout has no new
+raw-backend/bind/flush implementation at this snapshot; unrelated lab planning
+edits were left untouched. Native AC-04/11, sanitizer AC-08, alert-review
+AC-09 and final AC-10 remain open.
+
 **STEP-03-Q1 (serves AC-03/07/09):** repair #220's one format specifier in a
 separate local commit; inspect its type against the variadic format, exercise
 the relevant existing graph/binutils failure regression in normal Debug and
