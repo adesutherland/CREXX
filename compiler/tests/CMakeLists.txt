@@ -3508,10 +3508,11 @@ set_tests_properties(source_import_optional_factory_arg PROPERTIES LABELS "compi
 
 add_test(NAME source_import_srcmap_factory
         COMMAND ${CMAKE_COMMAND} -DRXC=$<TARGET_FILE:rxc>
+                -DLIBRARY_DIR=${CMAKE_BINARY_DIR}/bin
                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/source_import_srcmap_factory_ws
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_source_import_srcmap.cmake)
 set_tests_properties(source_import_srcmap_factory PROPERTIES LABELS "compiler;imports;srcmap;regression")
-crexx_register_test_prep_targets(TESTS source_import_srcmap_factory TARGETS rxc)
+crexx_register_test_prep_targets(TESTS source_import_srcmap_factory TARGETS rxc library)
 
 set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_import_contract_stub_covariant_cycle.cmake")
 set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_import_contract_stub_covariant_cycle_ws\")\n")

@@ -21,7 +21,7 @@ main: procedure = .int
   if box.value() <> 7 then return 1
   return 0
 ]=])
-execute_process(COMMAND "${RXC}" --no-exe-import --diagnostics raw
+execute_process(COMMAND "${RXC}" -i "${LIBRARY_DIR}" --no-exe-import --diagnostics raw
         -o "${WORK}/consumer" "${WORK}/consumer.crexx"
         WORKING_DIRECTORY "${WORK}" RESULT_VARIABLE rc
         OUTPUT_VARIABLE out ERROR_VARIABLE err)
@@ -37,7 +37,7 @@ badbox: class
     arg value = 7
     return
 ]=])
-execute_process(COMMAND "${RXC}" --no-exe-import --diagnostics raw
+execute_process(COMMAND "${RXC}" -i "${LIBRARY_DIR}" --no-exe-import --diagnostics raw
         -o "${WORK}/badargs" "${WORK}/badargs.crexx"
         WORKING_DIRECTORY "${WORK}" RESULT_VARIABLE rc
         OUTPUT_VARIABLE out ERROR_VARIABLE err)
@@ -49,7 +49,7 @@ file(WRITE "${WORK}/provider.crexx" [=[options levelg srcmap
 namespace mapped_provider expose optionalbox
 @1+2{bad
 ]=])
-execute_process(COMMAND "${RXC}" --no-exe-import --diagnostics raw
+execute_process(COMMAND "${RXC}" -i "${LIBRARY_DIR}" --no-exe-import --diagnostics raw
         -o "${WORK}/consumer_bad" "${WORK}/consumer.crexx"
         WORKING_DIRECTORY "${WORK}" RESULT_VARIABLE rc
         OUTPUT_VARIABLE out ERROR_VARIABLE err)
