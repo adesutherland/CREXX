@@ -170,6 +170,7 @@ SRCMAP_UNBALANCED = Source map span is not balanced: {reason}.
 SYMBOL_HAS_BOUNDARY_WHITESPACE = Symbol has invalid boundary whitespace.
 SYNC_TEST = Source synchronisation test diagnostic.
 SYNTAX_ERROR = Syntax error.
+RXBIN_IMPORT_READ_ERROR = Cannot read binary import "{file}".
 SYNTAX_ERROR_IN_IMPORT_DECL = Imported declaration "{name}" in {import_file} has invalid syntax.
 INITIALISER_NOT_CALLABLE = Initialisers are VM lifecycle entry points and cannot be called directly.
 INITIALISER_NOT_EXPOSABLE = Initialisers are private module lifecycle entry points and cannot be exposed by a namespace.
@@ -479,3 +480,5 @@ RXC-LC-53.2 = Variable reference expected after STEM keyword; found "{token}"
 RXC-LC-53.3 = Argument to STEM must have one period, as its last character; found "{name}"
 RXC-LC-54 = Invalid STEM value
 RXC-LC-54.1 = For this STEM APPEND, the value of "{name}" must be a count of lines; found: "{value}"
+
+IMPORT_DIRECTORY_READ_ERROR = Cannot read import directory {directory}.

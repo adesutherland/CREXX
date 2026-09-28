@@ -242,6 +242,7 @@ void cntx_buf(Context *context, char* buff_start, size_t bytes) {
         rxfl_fre(context->importable_file_list);
         context->importable_file_list = 0;
     }
+    context->import_discovery_error = 0;
 }
 
 /* Free Context */

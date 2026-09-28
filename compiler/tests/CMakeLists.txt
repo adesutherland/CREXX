@@ -20,6 +20,13 @@ add_test(NAME symbol_allocation_failure COMMAND test_symbol_allocation)
 set_tests_properties(symbol_allocation_failure PROPERTIES
         LABELS "unit;compiler;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_symbol_allocation)
 
+add_executable(test_import_directory_errors test_import_directory_errors.c)
+target_include_directories(test_import_directory_errors PRIVATE ${symbol_test_includes})
+target_link_libraries(test_import_directory_errors PRIVATE rxclib)
+add_test(NAME import_directory_errors COMMAND test_import_directory_errors)
+set_tests_properties(import_directory_errors PROPERTIES
+    LABELS "unit;compiler;imports" TIMEOUT 30 CREXX_PREP_TARGETS test_import_directory_errors)
+
 # The test driver itself must be compiled as strict C90
 add_executable(crexx_test_driver src/test_driver.c)
 
@@ -145,6 +152,32 @@ add_test(NAME rxc_help_import_resolution_report COMMAND $<TARGET_FILE:rxc> -h)
 set_tests_properties(rxc_help_import_resolution_report PROPERTIES
         PASS_REGULAR_EXPRESSION "--import-resolution-report"
         LABELS "compiler;imports;newbuild")
+
+add_test(NAME source_root_namespace_order
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXBVM=$<TARGET_FILE:rxbvm>
+        -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/fixtures/source_root_namespace_order
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/source_root_namespace_order_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/source_root_namespace_order.cmake)
+set_tests_properties(source_root_namespace_order PROPERTIES
+    LABELS "compiler;imports;regression"
+    RUN_SERIAL TRUE TIMEOUT 300
+    CREXX_PREP_TARGETS "rxc;rxas;rxbvm")
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(compiler_load_failure_command ${Python3_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/compiler_load_failures.py
+    --rxc $<TARGET_FILE:rxc> --rxas $<TARGET_FILE:rxas> --vm $<TARGET_FILE:rxbvm>
+    --library ${CMAKE_BINARY_DIR}/bin/library.rxbin
+    --exits ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+    --work ${CMAKE_CURRENT_BINARY_DIR}/compiler-load-failures)
+add_custom_target(check_compiler_load_failures COMMAND ${compiler_load_failure_command}
+    DEPENDS rxc rxas rxbvm compiler_exit_bin library VERBATIM)
+add_test(NAME compiler_load_failures COMMAND ${compiler_load_failure_command})
+set_tests_properties(compiler_load_failures PROPERTIES
+    LABELS "compiler;imports;regression" RUN_SERIAL TRUE TIMEOUT 300
+    CREXX_PREP_TARGETS "rxc;rxas;rxbvm;compiler_exit_bin;library")
 
 add_executable(test_project_dependencies test_project_dependencies.c)
 target_link_libraries(test_project_dependencies PRIVATE rxclib)
