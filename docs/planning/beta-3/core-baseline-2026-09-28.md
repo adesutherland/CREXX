@@ -1,6 +1,6 @@
 # Beta 3 core baseline: architecture and execution proposal
 
-Date: 28 September 2026. Status: **approved by Adrian; execution starting**.
+Date: 28 September 2026. Status: **approved by Adrian; integration and qualification in progress**.
 Approval: Adrian replied “Approved” after the metadata-only SOURCELINE revision.
 AD-01–08, the conditional deferral and the explicit sanitizer closeout are accepted.
 
@@ -254,8 +254,10 @@ Attach any task PRs. No new user-owned chat or lab guest operation is implied.
 
 ## Numbered acceptance criteria
 
-All criteria are **OPEN** pending execution; architectural approval is recorded above. Every closure must
-cite the qualified source revision, command/result and retained artifact/log.
+Architectural approval is recorded above; criterion status and evidence are
+maintained in the current handoff and dated execution receipts below. Every
+closure must cite the qualified source revision, command/result and retained
+artifact/log. Unverified outcomes remain open.
 
 | ID | Observable pass condition | Required evidence |
 | --- | --- | --- |
@@ -332,8 +334,10 @@ The current local repair HEAD is `d454750bd` after the two STEP-05 QA fixes
 described below; product implementation inputs remain those at `ce4a9273f`.
 
 STEP-01 complete, STEP-02/03 in progress, STEP-04 complete by authorized
-SOURCELINE deferral, STEP-05 partial, STEP-06–08 open. AC-05 satisfied by evidence;
-AC-06 not applicable. All other criteria remain open/partial as detailed below.
+SOURCELINE deferral, STEP-05 local QA accepted, STEP-06 review/publication in
+progress, STEP-07–08 open. AC-05 satisfied by evidence; AC-06 not applicable;
+AC-07 satisfied for the current local candidate by coordinator-reviewed combined
+and focused repair evidence. All other criteria remain open/partial as detailed below.
 Shared cREXX conversion and raw native services are authoritative; the
 tentative runtime map-setter draft was removed before the platform commit.
 

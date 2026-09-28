@@ -44,3 +44,31 @@ the native backend exposes raw bytes and record boundaries. Superseded local
 runtime drafts are unpublished and provide no acceptance evidence. The cREXX
 adapter can be tested against host raw-service mocks, but those tests cannot
 close the combined native runtime/package gates.
+
+## Local correctness acceptance and draft integration (28 September)
+
+- Independently inspected `64ba2ef0d` and `d454750bd`: all three source-map
+  compiler invocations receive the build library path, the preparation target
+  includes `library`, original source-map/error assertions remain, and German
+  and Dutch messages retain the exact required placeholders.
+- Compared `ce4a9273f..6a032a0b7`: only those test/catalogue repairs and evidence
+  documents changed. Accepted the retained 2,283 combined passes plus three
+  focused Debug passes and the focused Apple ASan source-map pass. Recomputed
+  the focused log hashes and corrected a transcription error in the ASan hash.
+  AC-07 is satisfied for this local candidate; no broad rerun is warranted.
+- Reviewed common import/allocation changes: namespace exclusion keeps several
+  providers within a selected root; discovery preserves iterator errors and
+  resets on a new parse; required compiler-exit loads fail terminally; symbol
+  and value allocation checks use the bounded panic path. The distinguishing
+  normal/fault tests and passing combined suite support these common repairs.
+- The native codec/stream code separates codec, text/binary and physical record
+  layout, with explicit ownership/error mocks. Its integration remains partial:
+  startup/console callers, optional configuration environment policy and the
+  backend details in `native-raw-services.md` are open. Desktop `-E` currently
+  accepts UTF8 only; the seven shared mappings are applied by native raw
+  profiles. This is a capability boundary, not universal legacy-page support.
+- A draft integration PR may expose the reviewed candidate to ordinary hosted
+  checks and the lab without claiming the full baseline accepted. AC-03 actual
+  ILP32 execution, AC-04/11 native text completion, AC-08 final sanitizer matrix,
+  AC-09 develop integration and AC-10 final handoff remain open. No release/tag
+  action or protected-branch bypass is part of this step.

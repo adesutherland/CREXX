@@ -78,11 +78,14 @@ Commands and results on that input (the three-test selector was
 | `cmake --build cmake-build-debug --target qa-prep-comprehensive --parallel 10` | PASS after CMake regeneration, `/tmp/beta3-focused-prep.d7FtPV`, SHA-256 `485ab8057a10cd836704d594697e21ed8ad9f2ea9feed26bcfc6aa0c2b0579b0`. The regeneration rebuilt the aggregate's generated fixtures; it was not a second correctness run. |
 | `ctest --test-dir cmake-build-debug -R <three-test selector above> --parallel 1 --output-on-failure` | PASS 3/3, `/tmp/beta3-three-repair-ctest.mVprmP`, SHA-256 `49e4ecd0d2a6a0215ec877eb0bba06615a187cf39a6ba548ab81001ed59115f5`. |
 | `tools/asan-run.sh --phase build --build-target rxc --build-target library --build-jobs 8 --build-leaks off --leaks off --no-live-tail` | PASS, `cmake-build-debugasan/asan-logs/20260928-142900-build/build.log`, SHA-256 `dedeb7b0265e48a6b8c84e2f6d3a54deac4056d4e6704eb4bc056e98d5906923`. |
-| `tools/asan-run.sh --phase ctest --regex '^source_import_srcmap_factory$' --test-jobs 1 --leaks off --no-live-tail` | PASS 1/1, `cmake-build-debugasan/asan-logs/20260928-143155-ctest/ctest.log`, SHA-256 `223fca98f88919eaed940915385d3099777a21e520b5eb5a3a52f4`. No sanitizer diagnostic. Apple LSan is unsupported. |
+| `tools/asan-run.sh --phase ctest --regex '^source_import_srcmap_factory$' --test-jobs 1 --leaks off --no-live-tail` | PASS 1/1, `cmake-build-debugasan/asan-logs/20260928-143155-ctest/ctest.log`, SHA-256 `223fca98f88919eaed940915385d3099777a21e520b5eb5a8c1224485a3a52f4`. No sanitizer diagnostic. Apple LSan is unsupported. |
 
 The retained 2,283 passing combined results plus these three focused passes
 resolve the local correctness failures without repeating unchanged tests.
 This is a composite local proof, not a literal new 2,286/2,286 broad run or a
 final native/platform/sanitizer/publication claim. Coordinator review of the
-repairs and evidence remains open. Native raw backend and AC-04/11, final
+repairs and evidence was completed on 28 September: the coordinator inspected
+both repair diffs, verified that only their test/catalogue inputs and documentation
+changed after the combined run, and independently checked the focused log hashes.
+AC-07 is satisfied for this local candidate. Native raw backend and AC-04/11, final
 Linux ASan/LSan plus macOS ASan AC-08, and AC-09 publication remain open.
