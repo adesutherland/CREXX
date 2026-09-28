@@ -37,18 +37,40 @@ logs are retained locally beyond GitHub's 14-day retention.
 | `macos/20260928-160958-full/ctest.log` | `fba984eecb18fb27a97012fd2fced59922ba5fdf0af113a319fc24cfde9d1aa7` |
 | `macos/20260928-160958-full/run.env` | `6474f6b5685e5c9fb6799a4460748c884c2eb02741b363f16e9b0292b07bef6c` |
 
-## Linux x64 ASan/LSan: RUNNING
+## Linux x64 ASan/LSan: PASS
 
-Job `109018428967` is still in its full instrumented build/CTest step at
-this checkpoint. The workflow enables leak detection for both build and
-tests. Retain and inspect its terminal result and artifact before recording
-a Linux or combined pass; macOS completion does not close this lane.
+Job `109018428967` completed successfully at **18:21:08 UTC**. Checkout and
+configured build identity both identify `9f2f44cfd`. Build and comprehensive
+QA preparation passed; CTest passed **2,376/2,376** in 4,928.55 seconds.
+The retained `run.env` records `build_leaks=on`, `test_leaks=on` and
+`stop_on_failure=1`, with four build jobs, eight test jobs and only the
+performance-measurement label excluded. Coordinator inspection found no
+AddressSanitizer/LeakSanitizer diagnostic or failed/not-run test in the
+build, preparation or CTest logs.
+
+The Linux job log and artifact are retained alongside the macOS evidence in
+the durable directory above. Artifact `10988706770`, `sanitizer-logs-linux`,
+was 257,172 bytes and unexpired when downloaded. Relevant new codec and raw
+CMS/TSO host fixtures all pass; they remain host mocks, not native proof.
+
+| Retained file, relative to the durable directory | SHA-256 |
+| --- | --- |
+| `sanitizer-logs-linux-10988706770.zip` | `0ab466dfef0f1bd96c9ab1a2b9b18d872b10633c0577feafd7736a47f5a37789` |
+| `linux-job-109018428967.log` | `af752f632d2673b728f780936c2dbcafdcb0584a114c3ba1a64c5437995841d2` |
+| `linux/20260928-161017-full/build.log` | `0fafb32074e50608da2b82ac4c6110b21c9494d547f0edb409213f6015be5e82` |
+| `linux/20260928-161017-full/qa-prep.log` | `cee98027c72216ea8754dc53f34db2b622734bc9a799a7f305e0b4544108f91b` |
+| `linux/20260928-161017-full/ctest.log` | `62c0942c60c1c5f797d8c3b4747ee22d5c6510ba9da83410e2154878b0198134` |
+| `linux/20260928-161017-full/run.env` | `136b5fc2b5c5ca4d0b6a8ddc15b5854acb529f8069a92627fd4902acaa16cc30` |
 
 ## Acceptance boundary
 
-This qualifies the named macOS revision only. Later RXBIN format repair
+The complete matrix is SUCCESS and qualifies the named revision on both
+maintained platforms. The cache-marker job is correctly skipped for a manual
+dispatch; it is written only by scheduled runs. Later RXBIN format repair
 `b63ee4b6a` in PR #710 is outside this matrix's source and has its own
 focused Debug/Apple ASan receipt. Native CMS/TSO raw backends, standard-stream
 integration and packages are also outside this hosted platform proof.
-AC-08 remains open for Linux completion and the final combined baseline;
-no further broad run has been dispatched or implied by this receipt.
+AC-08's matrix requirement is fulfilled for integrated baseline `9f2f44cfd`.
+Do not relabel that exact-source result as qualification of later code or
+as complete native/final-baseline acceptance. No further broad run has been
+dispatched or implied by this receipt.

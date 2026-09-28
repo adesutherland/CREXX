@@ -322,6 +322,25 @@ artifact/log. Unverified outcomes remain open.
 
 ## Current handoff
 
+**18:21 UTC integrated-baseline sanitizer acceptance:** the one approved
+matrix `36448935081` is SUCCESS on exact published `9f2f44cfd`. Linux
+ASan/LSan and macOS ASan each pass **2,376/2,376** after successful build and
+preparation. Both complete artifacts and job logs are retained in durable
+local storage; the coordinator verified checkout identities, Linux build/test
+leak detection and absence of sanitizer diagnostics. See the
+[hosted receipt](../../qa/beta3-core-baseline/hosted-sanitizer-2026-09-28.md).
+This satisfies the matrix portion of AC-08 for that integrated revision;
+do not attribute it to the later #220 code edit or to native packages. No
+extra broad run is launched. The original native AC-04/11 and final AC-10
+remain open with their existing raw-backend/stdio/process-input dependencies.
+
+PR #710 Build `36459678214` has fully passed on `925f62614`, including all
+core and plugin jobs. CodeQL `36459677779` remains running; the PR is still
+open and develop remains `9f2f44cfd`. The #220 change has its accepted local
+focused Debug/Apple ASan evidence. Finish its ordinary checks and integration
+without reviving the cancelled filesystem work below. No implementation
+worker is running; the coordinator owns the current publication and handoff.
+
 **18:15 UTC scope correction — RXFS expansion cancelled:** Adrian explicitly
 instructed, “Yes stop thsese pointless changes please.” This supersedes the
 filesystem approval/hold history below. Stop the proposed copy/hardlink/move

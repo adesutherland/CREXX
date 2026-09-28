@@ -1,8 +1,8 @@
 # Beta 3 external-text boundary audit (in progress)
 
 28 September 2026. This is the AC-04/AC-11 capability register for the
-feature-gated cREXX candidate in draft PR #709 at published head
-`a4a39dc3b9c63fff9c726842f1c8ea43ded9326e`, not a native-package
+feature-gated cREXX implementation merged through PR #709 at published
+`9f2f44cfd888d324858769809b0381e524850b4c`, not a native-package
 qualification. The exact native raw backend and CMS31/TSO31/TSO64 package
 checks remain separate open dependencies. A later local documentation-only
 flush proposal does not alter the qualified product/test inputs.
@@ -32,7 +32,7 @@ still unverified. There is no UTF16/32 tool-stream selector.
 
 | Component/boundary | cREXX route and status | Remaining proof or gap |
 | --- | --- | --- |
-| Shared codec | `platform/text_codec.c` owns strict UTF8 and seven selected pages; generated tables derive from retained `rxunicode` data. | Linux and actual native combined checks open. |
+| Shared codec | `platform/text_codec.c` owns strict UTF8 and seven selected pages; generated tables derive from retained `rxunicode` data. | Linux ASan/LSan codec and raw CMS/TSO host fixtures pass in run `36448935081` on `9f2f44cfd`; actual native combined checks remain open. |
 | Compiler source, imports, RXPP-fed source | `rxc` textual opens use `openfile`; the raw platform adapter decodes and inserts logical LF for native records. Binary RXBIN imports stay `rb`. Host mocks now exercise `file2buf` on a nonseekable raw record stream and injected read error. | Native source/import package proof remains open. RXPP's own stream crossings need a separate supported-surface audit. |
 | Assembler input/output | `rxas` uses `openfile` text input and binary RXBIN output. `-E` selects the file page. | Raw native end-to-end assembly with non-ASCII source/output open. |
 | Linker/disassembler | RXBIN loads/writes use binary modes. Linker control now uses `platform_fopen`; disassembler output and linker map/report use textual `openfile`. Both tools accept the existing `-E` file-page selector. | Non-ASCII control/report/disassembly and failure checks open. |
@@ -100,5 +100,7 @@ unsupported page in each tool: Debug `/tmp/beta3-selector-final-ctest.log`,
 Apple ASan `cmake-build-debugasan/asan-logs/20260928-123436-ctest`. This proves
 parsing and selection on desktop, not non-ASCII native tool I/O.
 These mocks do not establish an implemented or qualified lab backend. Apple
-LeakSanitizer is unavailable; the approved final Linux ASan/LSan plus macOS
-ASan matrix remains open.
+LeakSanitizer is unavailable. The approved hosted matrix now passes
+2,376/2,376 on both Linux ASan/LSan and macOS ASan at `9f2f44cfd`;
+the [retained receipt](hosted-sanitizer-2026-09-28.md) records exact logs,
+settings and hashes. Those host results do not close the native gaps above.
