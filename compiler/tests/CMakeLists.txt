@@ -6210,6 +6210,9 @@ if(ENABLE_PARSER_MODE)
     crexx_register_test_prep_targets(
             TESTS source_semantics
             TARGETS test_source_semantics library compiler_exit_bin)
+    crexx_register_test_prep_targets(
+            TESTS highlight_cache
+            TARGETS test_highlight_cache library compiler_exit_bin)
 endif()
 
 function(crexx_force_raw_diagnostics_for_directory_tests)
