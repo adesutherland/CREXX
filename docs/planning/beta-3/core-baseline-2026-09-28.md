@@ -347,6 +347,16 @@ gates and will reassign repair work if a concrete failure appears. The lab can
 now pin the merged revision for raw-backend and standard-stream reconciliation;
 its old package successes do not qualify this new native path.
 
+**16:27 UTC publication update:** the final PR-head Build `36443902138` and
+CodeQL `36443901636` have both completed successfully on `54d31a27f`, whose
+tree is identical to merged `9f2f44cfd`. The merge's automatic Build and CodeQL
+remain running: Linux, MSVC, MinGW and macOS ARM64 core jobs have passed;
+Intel macOS packaging and optimizer parity are still active. Both approved
+sanitizer lanes are running their full instrumented build/CTest step, with
+no terminal failure at this snapshot. These are progress observations, not
+AC-08 or full AC-09 closure. No raw backend or stream-binding update was
+found in the read-only lab checkout at `dc2fad44`.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
