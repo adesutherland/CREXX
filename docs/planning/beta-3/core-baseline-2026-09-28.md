@@ -397,6 +397,25 @@ and unchanged valid QA evidence; a repair must identify affected proof before
 requesting any additional run. Native AC-04/11, final sanitizer AC-08 and
 final AC-10 remain open.
 
+**17:17 UTC CodeQL triage checkpoint:** the worker's
+[trace and probe receipt](../../qa/beta3-core-baseline/codeql-227-triage-2026-09-28.md)
+at `8cd689359` confirms a real environment-path-to-stderr flow on allocation
+failure. The same configured search path is already printed by the ordinary
+missing-provider diagnostic. Coordinator source inspection confirms the
+`fileexists` OOM detail, the fd-2 sink and that ordinary diagnostic; the
+documented provider roots are trusted process configuration. No product-owned
+remote or otherwise unauthorized recipient has been demonstrated. The current
+recommendation is a qualified local-diagnostic disposition; hiding only the
+OOM detail would not establish path confidentiality. Alert #227 remains OPEN
+pending final disposition, with no suppression or production change.
+
+The nine older open CodeQL alerts are now included in the original release
+readiness review. The same Sol worker is performing bounded read-only triage
+of their current code paths and shared causes; repair/defer/dismiss proposals
+remain unapproved. This adds the previously omitted static-analysis inventory,
+not a silent issue closure or a change to the product-definition sequence.
+Both sanitizer lanes are still active on unchanged published `9f2f44cfd`.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
