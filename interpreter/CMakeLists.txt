@@ -540,7 +540,7 @@ if(BUILD_TESTING)
             LABELS "interpreter;spawn;sanitizer;concurrency;smoke"
             CREXX_PREP_TARGETS test_rxspawn_inheritance TIMEOUT 180)
     add_executable(test_rxvmfile tests/test_rxvmfile.c)
-    target_include_directories(test_rxvmfile PRIVATE .)
+    target_include_directories(test_rxvmfile PRIVATE . ../platform)
     add_test(NAME rxvmfile_private_open COMMAND test_rxvmfile)
     set_tests_properties(rxvmfile_private_open PROPERTIES
             LABELS "interpreter;spawn;sanitizer;concurrency;smoke"

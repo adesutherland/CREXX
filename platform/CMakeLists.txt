@@ -4,7 +4,8 @@ project(PLATFORM C)
 
 set(CMAKE_C_STANDARD 90)
 
-add_library(platform platform.h platform.c rxinteger.h rxinteger.c)
+set(platform_sources platform.c platform_tso.c platform_native.c text_codec.c oom.c)
+add_library(platform platform.h ${platform_sources} rxinteger.h rxinteger.c)
 target_include_directories(platform PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if(WIN32)
     target_link_libraries(platform PUBLIC psapi)
@@ -12,7 +13,7 @@ endif()
 
 if(UNIX AND BUILD_TESTING)
     # Deliberately retain Linux aliases to test profile precedence on both hosts.
-    add_executable(platform_cms_harness platform_cms_harness.c platform.c)
+    add_executable(platform_cms_harness platform_cms_harness.c ${platform_sources})
     target_compile_definitions(platform_cms_harness PRIVATE
             __MAINFRAME_LAB_VM370_4381__=1 __linux__=1 __linux=1)
     add_test(NAME platform_cms_selection COMMAND platform_cms_harness)
@@ -20,7 +21,7 @@ if(UNIX AND BUILD_TESTING)
     set_tests_properties(platform_cms_selection PROPERTIES
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cms24"
             LABELS "platform;cms" TIMEOUT 30)
-    add_executable(platform_cms31_harness platform_cms_harness.c platform.c)
+    add_executable(platform_cms31_harness platform_cms_harness.c ${platform_sources})
     target_compile_definitions(platform_cms31_harness PRIVATE
             __MAINFRAME_LAB_CMS20_ESA31__=1 __linux__=1 __linux=1)
     add_test(NAME platform_cms31_selection COMMAND platform_cms31_harness)
@@ -35,6 +36,24 @@ if(UNIX AND BUILD_TESTING)
 endif()
 
 if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
+    foreach(profile IN ITEMS cms tso)
+        string(TOUPPER "${profile}" profile_upper)
+        add_executable(test_native_raw_${profile} tests/test_native_raw_adapter.c
+                platform.c platform_native.c text_codec.c oom.c rxinteger.c)
+        if(profile STREQUAL "tso")
+            target_sources(test_native_raw_${profile} PRIVATE platform_tso.c)
+        endif()
+        target_include_directories(test_native_raw_${profile} PRIVATE .)
+        target_compile_definitions(test_native_raw_${profile} PRIVATE CREXX_NATIVE_RAW_IO=1
+                CREXX_NATIVE_HOST_MOCK=1 CREXX_${profile_upper}_ELF=1)
+        add_test(NAME native_raw_${profile} COMMAND test_native_raw_${profile})
+        set_tests_properties(native_raw_${profile} PROPERTIES
+                LABELS "platform;text;raw" TIMEOUT 30
+                CREXX_PREP_TARGETS test_native_raw_${profile})
+    endforeach()
+endif()
+
+if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
     # Link the real front ends to an injected text-stream provider. These are
     # host interface tests, not an implementation of the CMS runtime/code page.
     foreach(tool IN ITEMS rxc rxas)
@@ -46,7 +65,7 @@ if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
             set(frontend rxaslib)
         endif()
         add_executable(${tool}_cms_text_harness EXCLUDE_FROM_ALL
-                ${entry} platform.c rxinteger.c tests/cms_text_mock.c)
+                ${entry} ${platform_sources} rxinteger.c tests/cms_text_mock.c)
         target_include_directories(${tool}_cms_text_harness PRIVATE .
                 "${CMAKE_SOURCE_DIR}/compiler" "${CMAKE_SOURCE_DIR}/assembler"
                 "${CMAKE_BINARY_DIR}/assembler"
@@ -59,7 +78,7 @@ if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
             target_link_libraries(${tool}_cms_text_harness PRIVATE avl_tree)
         endif()
     endforeach()
-    add_executable(platform_cms_directory_harness tests/cms_directory.c platform.c)
+    add_executable(platform_cms_directory_harness tests/cms_directory.c ${platform_sources})
     target_include_directories(platform_cms_directory_harness PRIVATE .)
     target_compile_definitions(platform_cms_directory_harness PRIVATE
             __MAINFRAME_LAB_CMS20_ESA31__=1 CREXX_CMS_DIRENT=1 __linux__=1)
@@ -115,4 +134,17 @@ if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
             LABELS "platform;terminal;tty;disconnect"
             PASS_REGULAR_EXPRESSION "PASS: terminal disconnect semantics"
             TIMEOUT 10)
+endif()
+
+if(UNIX AND BUILD_TESTING)
+    add_executable(test_oom_diagnostic tests/test_oom.c text_codec.c)
+    target_include_directories(test_oom_diagnostic PRIVATE .)
+    add_test(NAME oom_diagnostic COMMAND test_oom_diagnostic)
+    set_tests_properties(oom_diagnostic PROPERTIES LABELS "platform;allocation" TIMEOUT 30
+        CREXX_PREP_TARGETS test_oom_diagnostic)
+    add_executable(test_text_codec tests/test_text_codec.c text_codec.c)
+    target_include_directories(test_text_codec PRIVATE .)
+    add_test(NAME text_codec COMMAND test_text_codec)
+    set_tests_properties(text_codec PROPERTIES LABELS "platform;text" TIMEOUT 30
+        CREXX_PREP_TARGETS test_text_codec)
 endif()

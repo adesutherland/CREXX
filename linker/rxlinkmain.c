@@ -913,7 +913,7 @@ static int parse_control_file(link_config *config, const char *path) {
     char line[4096];
     size_t line_number = 0;
 
-    fp = fopen(path, "r");
+    fp = platform_fopen(path, "r");
     if (!fp) {
         fprintf(stderr, "ERROR: opening control file %s\n", path);
         return 0;

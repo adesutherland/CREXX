@@ -29,6 +29,7 @@
 #ifndef CREXX_PLATFORM_H
 #define CREXX_PLATFORM_H
 #define MAXFILEPATH 4096
+#include "platform_config.h"
 
 #include <stdio.h>
 #include <stddef.h>
@@ -121,11 +122,26 @@ int fileexists(char *name, char *type, char *dir);
  * mode - is the fopen() file mode
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode);
+/* A complete logical path through the same text/native naming boundary. */
+FILE *platform_fopen(const char *path, const char *mode);
+/* Native text storage is independent of its codec. DEFAULT preserves the
+ * platform's established exchange-file policy; explicit layouts are captured
+ * by the newly opened stream. Binary modes always preserve raw bytes. */
+#define CREXX_TEXT_STORAGE_DEFAULT (-1)
+#define CREXX_TEXT_STORAGE_BYTES 0
+#define CREXX_TEXT_STORAGE_RECORDS 1
+FILE *platform_fopen_storage(const char *path, const char *mode, int storage);
+#if defined(CREXX_PLATFORM_TSO)
+FILE *crexx_tso_openfile(const char *, const char *, const char *, const char *);
+FILE *crexx_tso_openfile_storage(const char *, const char *, const char *, const char *, int);
+char *crexx_tso_dirfirst(const char *, const char *, const char *, void **);
+char *crexx_tso_dirnext(void **);
+void crexx_tso_dirclose(void **);
+#endif
 
-/* Select the external encoding for source/assembly text opened by openfile.
- * Binary modes are unaffected. Default desktop text is UTF-8. A selected CMS
- * runtime may provide native record-text codecs through CREXX_CMS_TEXT_IO.
- * Call before opening files; 0 succeeds, -1 means unsupported/invalid. */
+/* Select the external encoding for subsequently opened text streams. Existing
+ * streams retain their selected codec and storage layout; binary modes bypass
+ * conversion. Native IBM1047 defaults to records, exchange pages to bytes. */
 int platform_text_encoding(const char *encoding);
 
 /*
@@ -144,6 +160,9 @@ char *dirnxtfl(void **dir_ptr);
 /*
  * Close the opaque directory context
  */
+/* Iteration returns NULL with errno=0 at clean EOF, or nonzero on error.
+ * ENOENT/ENOTDIR mean an absent root. close always releases and nulls the
+ * context, preserving a previous error or setting errno for a close failure. */
 void dirclose(void **dir_ptr);
 
 /* Returns the executable directory path in a malloced buffer */

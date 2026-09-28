@@ -64,7 +64,8 @@ add_library(rxclib STATIC
         rxcp_inline_bind.c rxcp_inline_clone.c rxcp_inline_rewrite.c rxcp_inline_analysis.c rxcp_inline_payload.c
         rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_super.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit_flow.c rxcp_emit_proc.c rxcp_emit_meta.c rxcp_emit.h rxcp_opt.c rxcp_constant.h rxcp_partial_call.c rxcp_partial_call.h rxcp_flow.c rxcp_flow.h rxcp_dispatch.c rxcp_dispatch.h
         ../binutils/include/rxsignature.h
-        ../platform/platform.h ../platform/platform.c ../platform/rxinteger.h ../platform/rxinteger.c
+        ../platform/platform.h ../platform/platform.c ../platform/platform_tso.c
+        ../platform/text_codec.c ../platform/platform_native.c ../platform/oom.c ../platform/rxinteger.h ../platform/rxinteger.c
         ../utf8/utf.h rxcpfunc.c rxcp_import_report.c rxcp_import_report.h rxcp_project_dependencies.c
         rxcp_import_publish.c rxcp_import_publish.h rxcp_exit.c
         rxcp_instr.c

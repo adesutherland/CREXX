@@ -25,7 +25,7 @@ set(vm_sources
     interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal.c
     interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c
     interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decContext.c
-    platform/platform.c platform/rxinteger.c avl_tree/avl_tree.c rxpa/rxpa.c
+    platform/platform.c platform/platform_tso.c platform/platform_native.c platform/text_codec.c platform/oom.c platform/rxinteger.c avl_tree/avl_tree.c rxpa/rxpa.c
     binutils/rxbin.c binutils/rxbin007.c binutils/rxsignature.c
     binutils/rxsha256.c binutils/rxgraph.c)
 list(TRANSFORM vm_sources PREPEND "${CREXX_SOURCE}/")

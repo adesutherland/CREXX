@@ -87,6 +87,15 @@ platform configuration, accepting old lab defines only as documented transitiona
 build aliases if needed. Avoid a new general plugin framework or a wholesale
 platform-directory reorganization for this batch.
 
+**28 September native-integration clarification:** Adrian explicitly accepts
+minor later changes to `platform_fopen()` by the mainframe agent once native
+details are settled. Its platform implementation and supporting header/backend
+mechanics may be reconciled within AD-02/03; current draft signatures are not
+an immutable ABI. Keep native flags inside the platform boundary and bring
+the adjustments upstream with focused QA. Preserve cREXX conversion ownership,
+byte-exact binary I/O and explicit record/line handling. This permission does
+not close unverified AC-04/AC-11 or the lab's native/package gates.
+
 ### AD-03 — newlib and native runtime remain application-independent
 
 Generic newlib/C runtime responsibilities include C allocation/stdio behavior,
@@ -96,9 +105,12 @@ low-address buffers/control blocks, entry modes, stack setup, register preservat
 and cleanup. Mainframe Lab owns their source/build/package qualification.
 
 No cREXX namespace policy, source-extension precedence, RXBIN knowledge or BIF
-semantics belongs in generic newlib. General native I/O/transcoding helpers may
-remain reusable runtime facilities. cREXX's platform layer selects the encoding
-and applies its logical naming policy. Each stream is converted exactly once;
+semantics belongs in generic newlib. The subsequent [text-boundary clarification](text-boundary-2026-09-28.md)
+supersedes the tentative runtime-transcoder allocation: common cREXX codec
+code owns conversion and the cREXX platform layer selects and applies it.
+The cREXX route requires raw native byte/record services with no implicit
+transcoding. Native record boundaries and logical text lines remain distinct.
+Each stream is converted exactly once;
 binary input/output is never transcoded. Preserve the existing non-seekable
 source-stream and deferred close-error contracts. A remaining runtime dependency
 must be a documented service with ownership and tests, not an invisible source
@@ -220,8 +232,14 @@ or a concrete failing gate. Actual first-party findings follow SAN worklist rule
 
 ### AD-08 — One integration worker, independent coordinator review
 
-Adrian approved this plan. Start one Astra Extra High implementation
-subagent in an isolated current-develop worktree. The worker integrates the
+Adrian approved this plan and initially selected one Astra Extra High implementation
+subagent in an isolated current-develop worktree. On 28 September he authorized
+switching that worker to GPT-6 Sol Extra High at an appropriate checkpoint.
+The outgoing worker saved the linked handoff after its current focused ASan
+operation completed, stopped editing and preserved the same checkout and all
+test evidence. The replacement continues with Sol Extra High; the coordinator
+retains independent architectural review. Only one implementation worker edits
+the checkout at a time. The worker integrates the
 approved cREXX changes, writes permanent regressions, performs QA, maintains
 this plan's evidence/status and delivers reviewable commits. It may adapt patch
 mechanics within these decisions; changing the boundary, metadata-query/stripping
@@ -250,6 +268,7 @@ cite the qualified source revision, command/result and retained artifact/log.
 | AC-07 | The batch passes a core product build, focused normal regressions and the relevant normal correctness suite; focused sanitizer checks pass where the changed ownership/error paths warrant them. | Exact-input local receipts; use `tools/asan-run.sh` for sanitizer commands. Run broader correctness once for the combined implementation and reuse valid results. |
 | AC-08 | Scheduled/default-branch QA is repaired, and the final combined baseline has completed Linux ASan/LSan and macOS ASan assurance without unresolved first-party SAN findings. | Narrow workflow diff; terminal hosted jobs/logs, actual checkout SHA and workflow SHA, no false success marker from cancellation. Distinguish Apple LSan capability limit. |
 | AC-09 | Reviewed commits are integrated into develop and the workflow repair into the default branch; relevant automatic publication checks pass. | Commit/PR links, Build/CodeQL results and any affected ordinary packaging/optimizer checks. No beta release claim. |
+| AC-11 | Every maintained CMS31/TSO31/TSO64 text boundary is coherent UTF-8 internally with explicit external encoding, exactly-once conversion, strict failures and unchanged binary bytes. Includes source/imports, assembler/linker/disassembler, VM stdio/arguments/diagnostics, file/stream APIs, tools/driver/RXPP where available, native names and environment. Source/file selectors include UTF8, ASCII, Latin1, Windows-1252, IBM437, IBM850 and IBM1047 using existing authoritative maps. Classic BYTE/UTF8 and replacement-codec policies remain unchanged. | Complete component/profile/selector capability matrix, native runtime and core host fixtures for non-ASCII, chunk/record/close/error boundaries and binary high bytes. No blanket parity claim from source smoke; actual unavailable components explicit. Native package B3 proof remains separate. |
 | AC-10 | Guides, #602 evidence and handoff match the implemented contract; lab can consume one exact baseline and sees remaining native/package work. | Updated human/agent docs, matching tool/library manifest, patch reconciliation, #602 closed only for the accepted implemented contract after AC-05/06 and QA pass, or visibly open with its authorized post-beta-3 disposition, final report naming remaining B3 gates and product-definition phase. |
 
 ## Numbered implementation steps
@@ -301,19 +320,19 @@ cite the qualified source revision, command/result and retained artifact/log.
 
 ## Current handoff
 
-- Architecture decisions: AD-01–08 approved on 28 September 2026.
-- AC-01–10: open. STEP-01 complete: isolated checkout on `temp/beta3-core-baseline` at the inspected develop revision; primary checkout preserved.
-- STEP-02 in progress; STEP-03–08 open.
-- Execution checkout: `/Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX`.
-  This execution copy is the live status/evidence record; the primary checkout
-  copy is retained for review and will be synchronized after acceptance.
-- Selected scope: cREXX integration, architectural reconciliation, a conditional
-  metadata-only SOURCELINE attempt, sanitizer workflow repair and baseline QA;
-  subsequent definition/archive work. Adrian explicitly allows blank comments
-  and deferral of SOURCELINE if reconstruction is infeasible or not sensible.
-- Next action: establish the isolated execution checkout, start the approved
-  implementation agent, and begin patch reconciliation and SOURCELINE feasibility.
-  No production source, workflow, issue or release has yet changed.
+**28 September replacement worker checkpoint:** the complete
+[takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
+earlier source/test boundary. The Sol Extra High worker continued in the same
+checkout and made local, unpushed commits `34cc3a725` and `7e5771d2a` after
+`4ce9de623`. Current HEAD is `7e5771d2a`; platform/codec/OOM drafts remain
+uncommitted. No implementation push or sanitizer workflow dispatch occurred.
+
+STEP-01 complete, STEP-02/03 in progress, STEP-04 complete by authorized
+SOURCELINE deferral, STEP-05 partial, STEP-06–08 open. AC-05 satisfied by evidence;
+AC-06 not applicable. All other criteria remain open/partial as listed in the
+handoff. Shared cREXX conversion and raw native services are authoritative;
+the tentative runtime map-setter draft is superseded. The replacement must
+reconcile the remaining stale **uncommitted** declarations before publication.
 
 ## Execution receipts
 
@@ -334,14 +353,186 @@ cite the qualified source revision, command/result and retained artifact/log.
 | Lab candidate | Disposition / owning layer | Implementation evidence |
 | --- | --- | --- |
 | Earlier CMS topics 0001–0012 | Upstream foundation retained, no blind replay | Current platform text/directory and constrained build code inspected; pending final manifest |
-| Active 0013 compression workspace | Shared binutils; adapt checked heap table and add failure tests | Open |
-| Active 0014 native directory hook | Reconcile into cREXX platform adapter backed by native member services | Open |
-| Active 0015 RXBIN import diagnostics | Shared compiler; preserve binary cause and nonzero required failure | Open |
-| Active 0016 + older 0011 sentinel | Older writer/reader/legacy spelling is complete superset of newer decoder | Open |
-| Active 0017 namespace source root | Shared compiler first-root rule, multiple same-root providers retained | Open |
-| Older 0010 TSO platform | Explicit product profiles and logical mapping in cREXX; generic records/stdio/encoding below | Open |
-| Older 0012 symbol allocation | Shared compiler terminal allocation checks | Open |
-| Older 0013 value factories | Shared VM worker and standalone allocation checks | Open |
-| TSO integer-only exhaustion formatting | Supersede with bounded heap-independent diagnostic path; integer formatting alone insufficient | Open |
-| Compiler-exit false success | Reproduce current `library` bridge load failure and distinguish required/optional modules | Open |
-| SOURCELINE #602 | Early metadata/caller feasibility assessment under AD-05/06 | Open |
+| Active 0013 compression workspace | Shared binutils, checked heap table and failure tests | Committed `4ce9de623`; LP64 local proof retained; actual ILP32 ordinary CI open. |
+| Active 0014 native directory hook | cREXX platform adapter backed by raw native member service | Compiler error propagation committed `7e5771d2a`; CMS/TSO raw host mocks and constrained host build pass locally. Adapter remains uncommitted; actual raw backend/package proof open. |
+| Active 0015 RXBIN import diagnostics | Shared compiler, retain binary cause and nonzero failure | Committed `7e5771d2a`; real malformed-import regression passes Debug and Apple ASan. |
+| Active 0016 + older 0011 sentinel | Canonical portable writer and legacy ILP32 spelling reader | Committed `4ce9de623`; actual ILP32 ordinary CI open. |
+| Active 0017 namespace source root | Shared compiler first-root rule, same-root providers retained | Committed `7e5771d2a`; source-root and private-dependency normal regressions pass. |
+| Older 0010 TSO platform | Explicit product profile, logical mapping and raw native service route | Profile/name/directory/file adapters and console/process-input wrappers pass CMS/TSO host mocks; uncommitted. Product startup/stdio routing and actual backend/package gates open. |
+| Older 0012 symbol allocation | Shared compiler terminal allocation checks | Committed `34cc3a725`; fault CTest passes Debug and Apple ASan. |
+| Older 0013 value factories | Shared VM worker and standalone allocation checks | Committed `34cc3a725`; fault CTest passes Debug and Apple ASan. |
+| TSO integer-only exhaustion formatting | Bounded heap-independent diagnostic path | Shared OOM/UTF-8 and native raw emergency output host mocks pass Debug and Apple ASan; uncommitted. Actual backend and bounded emergency-record capacity remain open. |
+| Compiler-exit false success | Required `library` load fails, optional exit warning/fallback remains | Committed `7e5771d2a`; real PARSE/ADDRESS regression and CTest pass Debug and Apple ASan. |
+| SOURCELINE #602 | Feasibility disposition; user-authorized deferral | Complete for this batch; #602 OPEN and AC-06 not applicable. |
+
+### SOURCELINE scope clarification and disposition
+
+Adrian further clarified during execution: metadata-only SOURCELINE is not a
+beta 3 requirement; update #602 accordingly. A future Level C design may use an
+explicit source-file-available solution. No general Level B/G commitment is
+selected, and no source-file fallback is to be implemented in this batch.
+This explicit scope amendment supersedes conditional implementation in AD-05/06.
+
+**AC-05 satisfied as a feasibility disposition; AC-06 not applicable. STEP-04
+complete by authorized deferral; #602 remains OPEN.** Real baseline compilation
+of separate `alpha/unit.crexx` and `beta/unit.crexx`, with namespaces alpha and
+beta, followed by binary imports and normal inlining into main, emits conflicting
+`unit.crexx:6` anchors (`return value + 11` versus `return value + 29`) in the
+same physical module. META_SOURCE_STEP has no original module identity. A lookup
+cannot distinguish these sources by the approved module/file/line key; choosing
+one text arbitrarily is forbidden. Fixing source identity transport is a future
+compiler/inliner provenance design, not a comment-retention tweak. Existing
+source-step stripping does not repair this collision.
+
+The compact [probe log](../../qa/beta3-core-baseline/sourceline-probe.log)
+and the [actual caller RXAS](../../qa/beta3-core-baseline/sourceline-main.rxas)
+retain commands and conflicting source anchors from product revision
+`143921e11e4d573909fcc4def28da5dceadba9d9`. Providers are retained beside them.
+Coordinator independently inspected this evidence. No further SOURCELINE QA or
+implementation is required by the clarified beta 3 scope; the coordinator owns
+the #602 issue update.
+
+### Expanded text boundary outcome
+
+Adrian explicitly confirmed all maintained components must have coherent
+EBCDIC/UTF8 conversion both ways, then included classic ASCII and existing
+Windows/legacy pages. AC-11 records the clarified outcome and remains OPEN.
+STEP-02/03/05 now include a complete text-boundary audit and host verification.
+Bootstrap/native paths reuse the retained `rxunicode` mapping files, not a
+running Rexx codec or divergent hand-coded tables. No UTF16/32 tool-stream
+selector or new codepage policy is selected. Source/API bytecode stays binary.
+
+Adrian then explicitly clarified that EBCDIC/code-page conversion belongs in
+cREXX so the lab can supply the correct newlib services. The authoritative
+[text boundary](text-boundary-2026-09-28.md) supersedes the tentative runtime
+map-setter design: shared common cREXX codecs; cREXX platform selection,
+conversion and logical line adaptation; raw byte/record/native services below.
+Passing cREXX codec maps to newlib is NOT the selected architecture.
+
+The coordinator's isolated lab checkout
+`/Users/adrian/CLionProjects/mainframe-lab-beta3-text-runtime`, branch
+`temp/beta3-text-runtime`, base `1742740df60c0858421f196993e55da3edcb681b`,
+contains only a superseded unpublished runtime draft. It is not a delivered
+baseline dependency. Adrian is handing the raw-runtime contract to the
+mainframe agent. Tentative uncommitted worker map-setter declarations/routing
+are being reconciled and must not be published. AC-04/AC-11 remain OPEN until
+raw service signatures, cREXX adapters and combined host evidence are complete;
+actual native packages still require the separate B3 gates. No guest operation
+is authorized here.
+
+### Outgoing worker checkpoint (28 September, 11:26 local)
+
+- Commits: `27614024d` approved plan/review; `4ce9de623` RXBIN compression and
+  portable sentinel repair plus focused Linux ILP32 normal-CI command.
+- Normal Debug baseline `all` build passed (log `/tmp/beta3-baseline-build.0pyDsF`).
+- Five focused normal cases passed: compression workspace, compact format,
+  symbol allocation, value factory allocation and both source-root orders;
+  `/tmp/beta3-core-focused.SG3Jq7`. The new source-root fixture fails against
+  unchanged baseline RXC (`38` where first-root expectation is `35`).
+- Real mandatory-exit regression passes after repair: absent/corrupt library
+  and missing certified exits fail, working PARSE executes `before/hello/after`,
+  optional exit load keeps its existing warning/fallback, malformed RXBIN
+  import fails with retained cause. Baseline PARSE/ADDRESS silently disappeared
+  with status zero; compact receipt retained under `docs/qa/beta3-core-baseline`.
+- At this earlier checkpoint, compiler root/load/allocation and native platform
+  edits remained uncommitted. Shadowed source providers
+  now have a separate flag so dependency manifests do not hash unused bodies.
+- The outgoing worker's final focused Apple ASan build completed PASS in
+  `cmake-build-debugasan/asan-logs/20260928-113702-build`. Apple LeakSanitizer
+  is unsupported; no broad local or hosted sanitizer matrix was launched.
+
+### Replacement worker checkpoint (28 September, 10:55 UTC)
+
+- Local, unpushed HEAD `7e5771d2a` follows `34cc3a725` allocation repair and
+  `4ce9de623` binutils repair. The compiler commit adds first-root namespace
+  selection, required-exit/RXBIN failure status, directory enumeration/close
+  failure propagation and explicit rediscovery reset. No primary or lab source
+  checkout was modified.
+- Debug command `cmake --build cmake-build-debug --target
+  test_import_directory_errors check_compiler_load_failures --parallel 8`
+  passed (`/tmp/beta3-takeover-build.log`). The matching seven focused CTests,
+  including the private-dependency convergence test, passed 7/7
+  (`/tmp/beta3-takeover-focused.log`).
+- Apple ASan focused build passed under `tools/asan-run.sh` at
+  `cmake-build-debugasan/asan-logs/20260928-114734-build`; focused
+  `symbol_allocation_failure`, `value_factory_allocation_failure`,
+  `import_directory_errors`, `source_root_namespace_order` and
+  `compiler_load_failures` passed 5/5 at
+  `cmake-build-debugasan/asan-logs/20260928-115011-ctest`. No sanitizer
+  diagnostic was observed. Apple LSan remains a capability limit.
+- The **uncommitted** shared codec and bounded OOM drafts at this checkpoint build and pass
+  `text_codec`/`oom_diagnostic` 2/2 in Debug (`/tmp/beta3-codec-oom-build.log`,
+  `/tmp/beta3-codec-oom-test.log`) and Apple ASan
+  (`cmake-build-debugasan/asan-logs/20260928-115149-build`,
+  `20260928-115157-ctest`). The codec regression covers all seven selectors,
+  full byte round trips, CP1252 C1 policy, malformed UTF-8, mapping failures
+  and chunk boundaries. These results **do not** qualify the unimplemented
+  native raw stream/console/name adapters or the final combined tree.
+- `ports/single-threaded/CMakeLists.txt` now lists extracted `platform/oom.c`;
+  a constrained standalone build was still due at this checkpoint. The lab raw
+  backend and actual CMS31/TSO31/TSO64 package gates are external dependencies.
+- AC-01/02/03/07 remain partial, AC-04/11 and product AC-09/10 remain open,
+  AC-08 awaits final combined Linux/macOS sanitizer assurance. STEP-02/03/05
+  continue; STEP-06–08 remain open. Freeze combined inputs and run the normal
+  correctness suite once after the platform work, then coordinator review,
+  ordinary publication and the one approved hosted sanitizer matrix.
+
+### Current implementation status (28 September, 11:28 UTC)
+
+- Local HEAD remains `7e5771d2a`, with the platform/codec/OOM candidate still
+  intentionally uncommitted. Superseded native map setters and converted TSO
+  file/directory calls have been removed from its raw route. `platform_fopen`
+  still owns native open mechanics; codec and physical byte/record storage are
+  independent. IBM1047 defaults to native records, the six exchange selectors
+  to explicit-LF byte streams, and binary modes remain raw bytes. Adrian
+  permits small later platform/backend signature adjustments as native details
+  settle; combined native qualification remains open.
+- CMS/TSO host mocks now cover `platform.c` file routing, raw name/directory
+  adaptation, read/write/flush/close errors, short writes, record capacity,
+  binary high bytes, emergency stderr, owned IBM1047 standard-stream wrappers,
+  and length-aware argument/environment conversion. Debug build/test passed at
+  `/tmp/beta3-raw-errors-build.log` and `/tmp/beta3-raw-errors-test.log` (2/2).
+  Matching Apple ASan build/test passed through `tools/asan-run.sh` at
+  `cmake-build-debugasan/asan-logs/20260928-121803-build` and
+  `20260928-121808-ctest` (2/2), without a sanitizer diagnostic. Apple LSan is
+  unsupported. These adapters are not yet attached to all product startup,
+  stdio/SAY/TRACE, environment and ancillary-tool crossings.
+- The constrained host build now passes: configure
+  `/tmp/beta3-single-config.log`, `rxbvm_single`, `test_single_state` and
+  `test_single_embed` build `/tmp/beta3-single-build.log`, and focused
+  `single_vm_state` `/tmp/beta3-single-test.log`. This is not a CMS/TSO native
+  compiler/package proof. The detailed crossing inventory is
+  [text-capability-matrix.md](../../qa/beta3-core-baseline/text-capability-matrix.md).
+- The complete Debug build now passes on the current candidate tree at
+  `/tmp/beta3-platform-all-build2.log` (1,564 actions after the focused
+  test-target include-path repair). `platform_cms_text` initially could not
+  start because its `EXCLUDE_FROM_ALL` harness was not built; after building
+  `rxc_cms_text_harness` and `rxas_cms_text_harness`, the unchanged test passed
+  at `/tmp/beta3-cms-text-replay.log`. Nine relevant file/linker/disassembler/
+  VM/platform CTests pass at `/tmp/beta3-platform-crossing-test.log`. The
+  generated codec table matches its authoritative inputs with
+  `python3 platform/generate_text_codecs.py --check`
+  (`/tmp/beta3-codec-generation-check.log`). These focused receipts do not
+  replace the one final combined normal correctness suite.
+- A subsequent narrow CMS `fileexists` correction routes existence probes
+  through the raw binary open, avoiding the old converted libc path. Targeted
+  product/adapter build `/tmp/beta3-fileexists-build.log`, seven related
+  CTests `/tmp/beta3-fileexists-test.log`, and matching Apple ASan raw tests
+  `cmake-build-debugasan/asan-logs/20260928-122744-build` and
+  `20260928-122754-ctest` pass. The earlier full-build receipt predates only
+  this narrow edit; final combined correctness remains due on frozen inputs.
+- AC-01/02/03/07 remain partial; AC-04/11, product AC-09/10 and final combined
+  AC-08 remain open. STEP-02/03/05 continue; STEP-06–08 remain open. Needed
+  lab input is the actual raw backend, CMS iterator payload shape/capacity and
+  standard/argument/environment service behavior. No lab checkout was edited
+  or guest run performed. One frozen-input combined normal correctness suite,
+  independent review, normal publication and one approved hosted sanitizer
+  matrix remain in sequence.
+
+### Coordinator workflow publication receipt
+
+Master workflow-only commit `2d24ae989fdb530942c73d81301d6affd243a671` has
+completed automatic Build `36407284141` SUCCESS and CodeQL `36407284095` SUCCESS,
+as independently reported by the coordinator. This verifies that narrow
+publication only. AC-08 still requires the final combined product sanitizer
+matrix; AC-09 product integration remains OPEN.
