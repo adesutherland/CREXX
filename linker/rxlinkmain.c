@@ -2597,6 +2597,7 @@ static void print_help(void) {
     printf("  -m map_file     Write a simple link map\n");
     printf("  -p providers    Write native-provider requirements for packaging\n");
     printf("  -l location     Working location for input/output resolution\n");
+    printf("  -E encoding     Control/map/report text file encoding (RXBIN stays binary)\n");
     printf("  -s              Strip source/TRACE debug metadata from linked output\n");
     printf("  -i              Preserve inline-body metadata in linked output\n");
     printf("  -d              Debug mode\n");
@@ -2651,6 +2652,12 @@ int main(int argc, char *argv[]) {
             case 'L':
                 if (++argi >= argc) goto fail;
                 config.location = argv[argi];
+                break;
+            case 'E':
+                if (++argi >= argc || platform_text_encoding(argv[argi]) != 0) {
+                    fprintf(stderr, "ERROR: missing or unsupported text encoding after -E\n");
+                    goto fail;
+                }
                 break;
             case 'D':
                 config.debug_mode = 1;

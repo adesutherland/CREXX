@@ -48,6 +48,7 @@ static void help() {
             "  -p              all constant Pool\n"
             "  -g              semantic graph summary\n"
             "  -l location     working Location (directory)\n"
+            "  -E encoding     RXAS text output encoding (RXBIN input stays binary)\n"
             "  -o output_file  Output file (default is stdout)\n";
 
     printf("%s",helpMessage);
@@ -109,6 +110,12 @@ int main(int argc, char *argv[]) {
                     error_and_exit(2, "Missing location after -l");
                 }
                 location = argv[i];
+                break;
+
+            case 'e': /* RXAS text output encoding */
+                i++;
+                if (i >= argc || platform_text_encoding(argv[i]) != 0)
+                    error_and_exit(2, "Missing or unsupported text encoding after -E");
                 break;
 
             case 'v': /* Version */

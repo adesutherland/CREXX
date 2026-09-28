@@ -36,6 +36,23 @@ if(UNIX AND BUILD_TESTING)
 endif()
 
 if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    set(text_selector_command "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_text_selectors.py"
+            --rxc $<TARGET_FILE:rxc> --rxas $<TARGET_FILE:rxas>
+            --rxlink $<TARGET_FILE:rxlink> --rxdas $<TARGET_FILE:rxdas>
+            --rxbvm $<TARGET_FILE:rxbvm>)
+    add_custom_target(check_text_selectors COMMAND ${text_selector_command}
+            DEPENDS rxc rxas rxlink rxdas rxbvm VERBATIM)
+    # Isolated command on this host: 0.13 s Debug, 0.49 s Apple ASan runner.
+    # Serialize its nested front ends; 300 s is a hang guard on slower CI.
+    add_test(NAME text_selector_cli COMMAND ${text_selector_command})
+    set_tests_properties(text_selector_cli PROPERTIES
+            LABELS "platform;text;tools" RUN_SERIAL TRUE TIMEOUT 300
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxdas;rxbvm")
+endif()
+
+if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
     foreach(profile IN ITEMS cms tso)
         string(TOUPPER "${profile}" profile_upper)
         add_executable(test_native_raw_${profile} tests/test_native_raw_adapter.c

@@ -169,7 +169,7 @@ static void help() {
             "  --diagnostic-locale locale  Diagnostic locale such as en_GB or en_US\n"
             "  --no-localisation  Use raw diagnostic code/parameter rendering\n"
             "  -o output_stem  RXAS output stem or .rxas file\n"
-            "  -E encoding     Source/assembly text encoding (UTF8; CMS runtime may add IBM1047)\n"
+            "  -E encoding     Source/assembly text encoding (UTF8; native profiles add six pages)\n"
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
 #ifdef ENABLE_PARSER_MODE

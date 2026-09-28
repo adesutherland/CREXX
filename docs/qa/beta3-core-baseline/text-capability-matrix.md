@@ -33,8 +33,8 @@ still unverified. There is no UTF16/32 tool-stream selector.
 | Shared codec | `platform/text_codec.c` owns strict UTF8 and seven selected pages; generated tables derive from retained `rxunicode` data. | Linux and actual native combined checks open. |
 | Compiler source, imports, RXPP-fed source | `rxc` textual opens use `openfile`; the raw platform adapter decodes and inserts logical LF for native records. Binary RXBIN imports stay `rb`. Host mocks now exercise `file2buf` on a nonseekable raw record stream and injected read error. | Native source/import package proof remains open. RXPP's own stream crossings need a separate supported-surface audit. |
 | Assembler input/output | `rxas` uses `openfile` text input and binary RXBIN output. `-E` selects the file page. | Raw native end-to-end assembly with non-ASCII source/output open. |
-| Linker/disassembler | RXBIN loads/writes use binary modes. Linker control now uses `platform_fopen`; disassembler output and linker map/report use textual `openfile`. | Non-ASCII control/report/disassembly and failure checks open. |
-| VM file API | Native `rxvm_private_fopen` routes via `platform_fopen`; `.binary` remains byte exact in the raw adapter. | Application text APIs, mixed page/layout lifetime and actual runtime backend require combined proof. |
+| Linker/disassembler | RXBIN loads/writes use binary modes. Linker control now uses `platform_fopen`; disassembler output and linker map/report use textual `openfile`. Both tools accept the existing `-E` file-page selector. | Non-ASCII control/report/disassembly and failure checks open. |
+| VM file API | Native `rxvm_private_fopen` routes via `platform_fopen`; `.binary` remains byte exact in the raw adapter. The CLI accepts `-E` for application text files. | Application text APIs, mixed page/layout lifetime and actual runtime backend require combined proof. |
 | Compiler/VM/tool stdio and diagnostics | OOM panic has bounded cREXX UTF8-to-IBM1047 conversion and raw `stderr`. An owned `crexx_native_standard(0/1/2)` wrapper now decodes/encodes IBM1047 console records independently of the selected file page; host mocks cover input/output and release. | Ordinary product `stdin`, `stdout`, `stderr`, SAY, TRACE and diagnostic callers still use C stdio or existing runtime routes; attach the owned wrapper at the supported process/VM boundaries and qualify them. |
 | Arguments and environment | `crexx_native_arguments` and `crexx_native_environment` decode the raw IBM1047 process services to owned UTF-8, retry exact ERANGE lengths, distinguish absent/empty/unsupported values and reject embedded NUL. | Startup/tool/VM callers are not yet routed; old already-decoded compatibility inputs must not be decoded twice. |
 | Native names and discovery | TSO `root.TYPE(NAME)` mapping, CMS `NAME TYPE MODE` mapping, IBM1047 name encoding and raw directory adapters are in cREXX platform code. CMS `fileexists` probes the same raw byte route. Compiler preserves root/provider policy and propagates iterator errors. | CMS 18-byte FID iterator shape is provisional pending lab backend. Native close/error and package evidence open. |
@@ -60,6 +60,11 @@ not the frozen combined suite or native package gates.
 The added nonseekable/failed-read checks passed the two raw host tests in Debug
 at `/tmp/beta3-sequential-test2.log` and Apple ASan at
 `cmake-build-debugasan/asan-logs/20260928-123014-ctest`.
+The shared `-E` CLI selector is now accepted by `rxc`, `rxas`, `rxlink`, `rxdas`
+and `rxbvm`. A measured serialized regression accepts UTF8 and rejects an
+unsupported page in each tool: Debug `/tmp/beta3-selector-final-ctest.log`,
+Apple ASan `cmake-build-debugasan/asan-logs/20260928-123436-ctest`. This proves
+parsing and selection on desktop, not non-ASCII native tool I/O.
 These mocks do not establish an implemented or qualified lab backend. Apple
 LeakSanitizer is unavailable; the approved final Linux ASan/LSan plus macOS
 ASan matrix remains open.

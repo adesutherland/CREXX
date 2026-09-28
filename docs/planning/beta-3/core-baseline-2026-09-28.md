@@ -477,7 +477,7 @@ is authorized here.
   correctness suite once after the platform work, then coordinator review,
   ordinary publication and the one approved hosted sanitizer matrix.
 
-### Current implementation status (28 September, 11:30 UTC)
+### Current implementation status (28 September, 11:36 UTC)
 
 - Local HEAD remains `7e5771d2a`, with the platform/codec/OOM candidate still
   intentionally uncommitted. Superseded native map setters and converted TSO
@@ -526,6 +526,14 @@ is authorized here.
   record input, scanner sentinels and injected read failure. Its two Debug
   tests pass at `/tmp/beta3-sequential-test2.log` and matching Apple ASan
   tests at `cmake-build-debugasan/asan-logs/20260928-123014-ctest`.
+- The existing `-E` external-text selector now reaches linker control/maps,
+  disassembler RXAS output and VM application text files as well as compiler
+  and assembler text. A new CLI regression was timed in isolation (Debug
+  0.13 s; Apple ASan runner 0.49 s), registered `RUN_SERIAL` with a 300 s hang
+  guard, and passes in Debug `/tmp/beta3-selector-final-ctest.log` and Apple
+  ASan `cmake-build-debugasan/asan-logs/20260928-123436-ctest`. It verifies
+  supported UTF8/unsupported-selector behavior on desktop, not native page
+  conversion or all component text crossings.
 - AC-01/02/03/07 remain partial; AC-04/11, product AC-09/10 and final combined
   AC-08 remain open. STEP-02/03/05 continue; STEP-06–08 remain open. Needed
   lab input is the actual raw backend, CMS iterator payload shape/capacity and

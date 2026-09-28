@@ -18,8 +18,10 @@ Source buffering accepts sequential streams and retains two scanner sentinels.
 The optional [CMS text adapter](../../ports/single-threaded/CMS-TEXT.md) converts
 external text before source/header/import lexical analysis and after RXC
 assembly emission. It does not change UTF-8 buffers or RXBIN 007. RXC/RXAS
-`-E` selects external encoding before opening files; read/write/close failures
-must prevent success.
+`-E` selects external encoding before opening files. The beta 3 native raw
+route uses the shared seven-page codec in the platform layer; `rxlink`, `rxdas`
+and the VM accept the same `-E` selector for supported text files. RXBIN and
+explicit binary paths stay raw. Read/write/close failures must prevent success.
 
 ## The Compilation Pipeline
 
