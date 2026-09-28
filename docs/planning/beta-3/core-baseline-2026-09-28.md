@@ -357,6 +357,14 @@ no terminal failure at this snapshot. These are progress observations, not
 AC-08 or full AC-09 closure. No raw backend or stream-binding update was
 found in the read-only lab checkout at `dc2fad44`.
 
+**16:57 UTC publication update:** complete develop Build `36448832221`
+has passed on exact merged revision `9f2f44cfd`, including the core and plugin
+jobs. Develop CodeQL `36448831088` and both sanitizer lanes of `36448935081`
+remain in progress, so AC-08 and the remaining AC-09 checks stay open. The
+execution checkout contains only local status-documentation commits after the
+published merge; no product/test/build inputs have changed. The native raw
+backend and binding/flush dependencies remain unchanged in the lab checkout.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
