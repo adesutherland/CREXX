@@ -323,8 +323,9 @@ cite the qualified source revision, command/result and retained artifact/log.
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
-checkout; current local, unpushed HEAD is `2df36e28e`. The later current-status
-receipts below supersede the outgoing worker's draft inventory. No product
+checkout; latest implementation commit is `2df36e28e`, followed by local
+documentation-only audit/handoff commits. The later current-status receipts
+below supersede the outgoing worker's draft inventory. No product
 implementation push or sanitizer workflow dispatch occurred.
 
 STEP-01 complete, STEP-02/03 in progress, STEP-04 complete by authorized
