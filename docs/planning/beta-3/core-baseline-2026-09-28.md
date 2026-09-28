@@ -322,6 +322,162 @@ artifact/log. Unverified outcomes remain open.
 
 ## Current handoff
 
+**28 September, 16:09 UTC integration checkpoint:** PR #709 merged normally
+into `develop` at `9f2f44cfd888d324858769809b0381e524850b4c` at 16:08 UTC.
+The merged tree equals reviewed PR head `54d31a27f`; its product/test/build
+inputs equal `a4a39dc3b`, whose complete ordinary Build `36440639967` and
+CodeQL `36440638876` both passed. The intervening changes are documentation
+only. Those valid results were reused; no branch-protection bypass or broad
+local repeat was used. The execution checkout fast-forwarded to the merge.
+Automatic develop Build `36448832221` and CodeQL `36448831088` are running.
+The one explicitly approved sanitizer dispatch is now running as
+`36448935081`, on exact merged head `9f2f44cfd`, with Linux ASan/LSan and
+macOS ARM64 ASan lanes. AC-08 remains open until terminal qualified results;
+AC-09 has
+its integration portion complete and awaits automatic publication results.
+Native AC-04/11 and final AC-10 remain open. This checkpoint supersedes the
+historical draft/publication snapshots below, without changing their evidence.
+
+The worker's read-only roadmap/backlog refresh found no new beta-3 blocker:
+published roadmap and Release 1 plan inputs were unchanged, ten issues remain
+open overall and seven in the beta-3 milestone; #602 retains its approved
+post-beta-3 disposition. No scope reclassification or issue mutation occurred.
+Both delegated reviews are complete; the coordinator owns the running hosted
+gates and will reassign repair work if a concrete failure appears. The lab can
+now pin the merged revision for raw-backend and standard-stream reconciliation;
+its old package successes do not qualify this new native path.
+
+**16:27 UTC publication update:** the final PR-head Build `36443902138` and
+CodeQL `36443901636` have both completed successfully on `54d31a27f`, whose
+tree is identical to merged `9f2f44cfd`. The merge's automatic Build and CodeQL
+remain running: Linux, MSVC, MinGW and macOS ARM64 core jobs have passed;
+Intel macOS packaging and optimizer parity are still active. Both approved
+sanitizer lanes are running their full instrumented build/CTest step, with
+no terminal failure at this snapshot. These are progress observations, not
+AC-08 or full AC-09 closure. No raw backend or stream-binding update was
+found in the read-only lab checkout at `dc2fad44`.
+
+**16:57 UTC publication update:** complete develop Build `36448832221`
+has passed on exact merged revision `9f2f44cfd`, including the core and plugin
+jobs. Develop CodeQL `36448831088` and both sanitizer lanes of `36448935081`
+remain in progress, so AC-08 and the remaining AC-09 checks stay open. The
+execution checkout contains only local status-documentation commits after the
+published merge; no product/test/build inputs have changed. The native raw
+backend and binding/flush dependencies remain unchanged in the lab checkout.
+
+**17:07 UTC publication acceptance:** develop CodeQL `36448831088` has
+completed successfully on `9f2f44cfd`, alongside the already passing complete
+Build `36448832221`. AC-09 is now satisfied: reviewed shared-core/feature-gated
+adapter commits are integrated, their ordinary publication checks passed, and
+the separately published default-branch workflow repair passed its Build and
+CodeQL checks. This is development publication, not a beta release. Both full
+sanitizer lanes remain active, so AC-08 is still open. Native AC-04/11 and final
+AC-10 remain open, with no native result inferred from these hosted gates.
+
+**CodeQL alert correction after Adrian's query:** the successful CodeQL
+workflow status above establishes analysis execution, not an alert-free result.
+The coordinator had checked job conclusions but omitted the code-scanning
+alert inventory. Newly introduced alert
+[#227](https://github.com/adesutherland/CREXX/security/code-scanning/227),
+created at 15:21 UTC during the PR analysis, remains open on `9f2f44cfd`.
+Rule `cpp/system-data-exposure` has warning/medium severity and traces
+`getenv("CREXX_PROVIDER_PATH")` in `interpreter/rxvmmain.c:389` to the new
+allocation-free diagnostic's `write(2, bytes, length)` in `platform/oom.c:59`.
+This is a static-analysis finding, not a sanitizer diagnostic or a confirmed
+exploitable vulnerability. The nine other open CodeQL alerts predate this
+batch; they are not dismissed by successful workflow execution either.
+
+The earlier unqualified CodeQL acceptance is corrected: integration and
+automatic workflow execution passed, but AC-09 alert review remains OPEN
+pending an evidence-backed disposition of #227. The Sol Extra High worker
+is tracing the complete flow and preparing a minimal proof and proposed
+disposition/repair. No alert dismissal, suppression or speculative source
+change is authorized by this correction. Keep the running sanitizer matrix
+and unchanged valid QA evidence; a repair must identify affected proof before
+requesting any additional run. Native AC-04/11, final sanitizer AC-08 and
+final AC-10 remain open.
+
+**17:17 UTC CodeQL triage checkpoint:** the worker's
+[trace and probe receipt](../../qa/beta3-core-baseline/codeql-227-triage-2026-09-28.md)
+at `8cd689359` confirms a real environment-path-to-stderr flow on allocation
+failure. The same configured search path is already printed by the ordinary
+missing-provider diagnostic. Coordinator source inspection confirms the
+`fileexists` OOM detail, the fd-2 sink and that ordinary diagnostic; the
+documented provider roots are trusted process configuration. No product-owned
+remote or otherwise unauthorized recipient has been demonstrated. The current
+recommendation is a qualified local-diagnostic disposition; hiding only the
+OOM detail would not establish path confidentiality. Alert #227 remains OPEN
+pending final disposition, with no suppression or production change.
+
+The nine older open CodeQL alerts are now included in the original release
+readiness review. The same Sol worker is performing bounded read-only triage
+of their current code paths and shared causes; repair/defer/dismiss proposals
+remain unapproved. This adds the previously omitted static-analysis inventory,
+not a silent issue closure or a change to the product-definition sequence.
+Both sanitizer lanes are still active on unchanged published `9f2f44cfd`.
+
+**17:27 UTC older-alert review and bounded repair:** the
+[nine-alert receipt](../../qa/beta3-core-baseline/codeql-older-alerts-triage-2026-09-28.md)
+at `6c437c535` identifies four redundant compiler checks (#216–218/#225),
+one confirmed RXBIN error-format defect (#220), and four filesystem check/use
+findings (#222–224/#226). Coordinator inspection confirms that #220 passes
+a `size_t` operand index to `%d`, unlike the adjacent correct `%zu` cases.
+Correcting that one specifier is a routine diagnostic-portability repair
+within the approved shared binutils outcome, without language or format design
+changes. Filesystem source-identity and final-symlink guarantees require a
+separate review before changing behavior; do not infer atomic object identity
+from a pathname API or silently weaken the documented symlink rejection.
+
+**17:34 UTC filesystem review evidence:** the coordinator's
+[controlled source-substitution probe](../../qa/beta3-core-baseline/codeql-226-path-swap-probe-2026-09-28.md)
+uses the unchanged published `rxfs_transfer` function. On macOS, replacing
+the inspected final source with a symlink makes hardlink succeed against the
+referenced victim inode and move succeed with a symlink target; copy rejects
+the substitution through `O_NOFOLLOW`. Unchanged-source controls pass. This
+confirms a gap in the documented final-symlink rejection for those two
+operations, without asserting an additional general atomic-identity promise
+or cross-platform qualification. #226 remains open for a repair/design
+proposal before filesystem implementation. No contract is weakened.
+
+Sol is implementing only the separately bounded #220 format repair below.
+Published develop remains `9f2f44cfd`; both approved hosted sanitizer lanes
+are still running on that revision. The mainframe lab checkout has no new
+raw-backend/bind/flush implementation at this snapshot; unrelated lab planning
+edits were left untouched. Native AC-04/11, sanitizer AC-08, alert-review
+AC-09 and final AC-10 remain open.
+
+**STEP-03-Q1 (serves AC-03/07/09):** repair #220's one format specifier in a
+separate local commit; inspect its type against the variadic format, exercise
+the relevant existing graph/binutils failure regression in normal Debug and
+the maintained sanitizer build where applicable, and retain the exact results.
+Acceptance **AC-03-Q1** is a type-correct diagnostic with the original failure
+result/cause preserved and focused checks passing. Reuse the current broad
+matrix on its named revision; do not cancel or relabel it as testing changed
+source. The worker must report any additional qualification needed before
+publication. No compiler null-check cleanup, filesystem mutation, alert
+dismissal or new broad run is part of this bounded step.
+
+**17:40 UTC #220 repair acceptance:** local commit `b63ee4b6a` changes only
+the incorrect graph-operand format specifier plus its
+[QA receipt](../../qa/beta3-core-baseline/codeql-220-format-repair-2026-09-28.md).
+The coordinator independently inspected the variadic types and unchanged
+failure/cause handling, verified retained Debug 4/4 and Apple ASan 4/4
+results and hashes, and completed a successful normal core product build.
+AC-03-Q1 and STEP-03-Q1 are accepted locally; ordinary publication and its
+automatic Build/CodeQL verification are next. These checks do not dynamically
+exercise the rare changed diagnostic branch; its correction is established
+by the actual `size_t` argument and `%zu` contract.
+
+The current hosted sanitizer matrix remains evidence for `9f2f44cfd` only.
+Do not cancel or relabel it to cover this later product edit. AC-08's final
+combined baseline requirement stays open; no second broad run is dispatched
+while the full native baseline inputs are still unsettled. The normal
+development-publication policy permits this reviewed diagnostic fix to be
+published without waiting for another full matrix. Sol is preparing a bounded
+read-only filesystem repair/design proposal; no filesystem implementation or
+contract change is approved by that assignment. All other open criteria and
+the subsequent product-definition phase are preserved.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same

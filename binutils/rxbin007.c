@@ -1056,7 +1056,7 @@ static int rxbin007_encode_instructions(const module_file *module,
                                               text,
                                               &graph_id,
                                               &graph_error)) {
-                    rxbin007_set_error("RXBIN 007 cannot resolve graph operand %d:%d: %s",
+                    rxbin007_set_error("RXBIN 007 cannot resolve graph operand %d:%zu: %s",
                                        opcode,
                                        operand_index,
                                        graph_error ? graph_error : "unknown graph error");
