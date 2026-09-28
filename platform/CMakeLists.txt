@@ -56,7 +56,8 @@ if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
     foreach(profile IN ITEMS cms tso)
         string(TOUPPER "${profile}" profile_upper)
         add_executable(test_native_raw_${profile} tests/test_native_raw_adapter.c
-                platform.c platform_native.c text_codec.c oom.c rxinteger.c)
+                platform.c platform_native.c text_codec.c oom.c rxinteger.c
+                ../interpreter/rxenv.c)
         if(profile STREQUAL "tso")
             target_sources(test_native_raw_${profile} PRIVATE platform_tso.c)
         endif()

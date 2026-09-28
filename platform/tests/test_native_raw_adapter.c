@@ -17,6 +17,7 @@
 #else
 #define RAW(name) lab_tso_raw_##name
 #endif
+int getEnvVal(char **value, char *name, size_t name_length);
 
 static unsigned opened_flags;
 static int standard_descriptor;
@@ -316,9 +317,24 @@ int main(void) {
            !strcmp(environment_value, ""));
     free(environment_value);
     assert(crexx_native_environment("ABSENT", &environment_value) == 0 && !environment_value);
+    {
+        char present[] = "PRESENT", absent[] = "ABSENT", embedded[] = {'A', 0, 'B'};
+        assert(getEnvVal(&environment_value, present, strlen(present)) == 1 &&
+               !strcmp(environment_value, "A"));
+        free(environment_value);
+        assert(getEnvVal(&environment_value, absent, strlen(absent)) == 0 &&
+               !strcmp(environment_value, ""));
+        assert(getEnvVal(&environment_value, embedded, sizeof(embedded)) == -1 &&
+               errno == EINVAL);
+    }
     environment_unavailable = 1;
     assert(crexx_native_environment("PRESENT", &environment_value) == -1 &&
            errno == ENOTSUP && !environment_value);
+    {
+        char present[] = "PRESENT";
+        assert(getEnvVal(&environment_value, present, strlen(present)) == -1 &&
+               errno == ENOTSUP);
+    }
     argument_bad_byte = 1;
     assert(crexx_native_arguments(&argument_count, &arguments) == -1 &&
            errno == EINVAL && !arguments && argument_count == 0);
