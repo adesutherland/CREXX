@@ -488,6 +488,26 @@ integration or alert closure. The separate approved sanitizer matrix
 `36448935081` remains active on `9f2f44cfd`, and native dependencies remain
 unchanged in the read-only lab checkout at `dc2fad44`.
 
+**17:59 UTC review/status checkpoint:** the local
+[RXFS proposal](rxfs-path-operations-proposal-2026-09-28.md), `df72bd984`,
+is complete as a proposal, not approved implementation. Coordinator review
+of the retained macOS substitution proof and primary Linux/Windows primitive
+documentation supports separating an opened-object copy repair from the
+hardlink/move contract decision. Adrian has been asked whether to approve
+copy hardening, caller-controlled-directory hardlink/move with an explicit
+concurrent-source-replacement limit, and unchanged legacy broken-link
+behavior. No answer is recorded yet; no contract change or alert disposition
+is inferred. Sol is gathering a bounded macOS behavior receipt for the current
+provider while this decision is pending, without changing production code.
+
+PR #710 remains open at `925f62614`. Linux, MSVC, MinGW, macOS ARM64 and
+optimizer-parity jobs have passed; Intel macOS and CodeQL are still running,
+and the complete Build has not yet finished. Both sanitizer lanes remain
+active on `9f2f44cfd`; there is no terminal sanitizer verdict. The local
+follow-up after the PR head changes documentation only. Published develop,
+native raw-backend/stdio dependencies, all outstanding acceptance criteria
+and the later product-definition phase remain unchanged.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
