@@ -5963,7 +5963,9 @@ if (ENABLE_PARSER_MODE)
             RUN_SERIAL TRUE)
 
     add_test(NAME source_semantics COMMAND test_source_semantics)
-    set_tests_properties(source_semantics PROPERTIES LABELS "compiler;syntax_highlighting;stage5")
+    set_tests_properties(source_semantics PROPERTIES
+            LABELS "compiler;syntax_highlighting;stage5"
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
     add_test(NAME highlight_editor_diagnostics COMMAND test_highlight_editor_diagnostics)
     set_tests_properties(highlight_editor_diagnostics PROPERTIES LABELS "compiler;syntax_highlighting;stage5")
@@ -6207,7 +6209,7 @@ if(ENABLE_PARSER_MODE)
             TARGETS parser_tester)
     crexx_register_test_prep_targets(
             TESTS source_semantics
-            TARGETS test_source_semantics)
+            TARGETS test_source_semantics library compiler_exit_bin)
 endif()
 
 function(crexx_force_raw_diagnostics_for_directory_tests)
