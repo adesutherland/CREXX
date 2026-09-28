@@ -1,9 +1,11 @@
 # Beta 3 external-text boundary audit (in progress)
 
-28 September 2026. This is the AC-04/AC-11 capability register for the local
-`temp/beta3-core-baseline` candidate, not a native-package qualification. The
-current code and host mocks are local and unpushed. The exact native raw backend
-and CMS31/TSO31/TSO64 package checks remain separate open dependencies.
+28 September 2026. This is the AC-04/AC-11 capability register for the
+feature-gated cREXX candidate in draft PR #709 at published head
+`a4a39dc3b9c63fff9c726842f1c8ea43ded9326e`, not a native-package
+qualification. The exact native raw backend and CMS31/TSO31/TSO64 package
+checks remain separate open dependencies. A later local documentation-only
+flush proposal does not alter the qualified product/test inputs.
 
 ## Encoding and physical storage
 
@@ -35,7 +37,7 @@ still unverified. There is no UTF16/32 tool-stream selector.
 | Assembler input/output | `rxas` uses `openfile` text input and binary RXBIN output. `-E` selects the file page. | Raw native end-to-end assembly with non-ASCII source/output open. |
 | Linker/disassembler | RXBIN loads/writes use binary modes. Linker control now uses `platform_fopen`; disassembler output and linker map/report use textual `openfile`. Both tools accept the existing `-E` file-page selector. | Non-ASCII control/report/disassembly and failure checks open. |
 | VM file API | Native `rxvm_private_fopen` routes via `platform_fopen`; `.binary` remains byte exact in the raw adapter. The CLI accepts `-E` for application text files. | Application text APIs, mixed page/layout lifetime and actual runtime backend require combined proof. |
-| Compiler/VM/tool stdio and diagnostics | OOM panic has bounded cREXX UTF8-to-IBM1047 conversion and raw `stderr`. An owned `crexx_native_standard(0/1/2)` wrapper now decodes/encodes IBM1047 console records independently of the selected file page; host mocks cover input/output and release. | Ordinary product `stdin`, `stdout`, `stderr`, SAY, TRACE and diagnostic callers still use C stdio or existing runtime routes; attach the owned wrapper at the supported process/VM boundaries and qualify them. |
+| Compiler/VM/tool stdio and diagnostics | OOM panic has bounded cREXX UTF8-to-IBM1047 conversion and raw `stderr`. An owned `crexx_native_standard(0/1/2)` wrapper now decodes/encodes IBM1047 console records independently of the selected file page; host mocks cover input/output and release. | Ordinary product `stdin`, `stdout`, `stderr`, SAY, TRACE and diagnostic callers still use C stdio or existing runtime routes. Startup bind/restore and explicit flush delivery remain open: the console probe demonstrates an invisible partial prompt and deferred raw error at `fflush`; the platform-only and generic per-stream proposals are in `native-raw-services.md`. |
 | Arguments and environment | `crexx_native_arguments` and `crexx_native_environment` decode the raw IBM1047 process services to owned UTF-8, retry exact ERANGE lengths, distinguish absent/empty/unsupported values and reject embedded NUL. VM `GETENV` now uses the native adapter and signals `NOTREADY` on backend failure; optimized/unoptimized desktop VM cases remain passing. | Standalone startup arguments and direct tool/configuration `getenv` callers are not yet routed; old already-decoded compatibility inputs must not be decoded twice. |
 | Native names and discovery | TSO `root.TYPE(NAME)` mapping, CMS `NAME TYPE MODE` mapping, IBM1047 name encoding and raw directory adapters are in cREXX platform code. CMS `fileexists` probes the same raw byte route. Compiler preserves root/provider policy and propagates iterator errors. | CMS 18-byte FID iterator shape is provisional pending lab backend. Native close/error and package evidence open. |
 | Driver, RXPP, crexxsaa, profiler and ancillary tools | Current lab package evidence lists RXC/RXAS/RXVM; it does not establish native RXPP, RXLINK, RXDAS, `crexxsaa`, profiler or ancillary packages. Desktop RXPP's `precomp.readallx`/`writeall` use direct `fopen` and the helper is both a static RXPP provider and a dynamic compiler import. | No native parity claim for the unbuilt components. Before any native RXPP packaging, route its text opens through the selected cREXX platform without duplicating codec state in the dynamic module; verify read/write/close failures and its generated text. Audit driver and embedding stream ownership separately. |

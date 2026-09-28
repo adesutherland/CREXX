@@ -337,8 +337,9 @@ now publishes `a4a39dc3b9c63fff9c726842f1c8ea43ded9326e`, including the
 portable source-root fixture rename (`369cbeb7b`), parser-mode fixture
 repairs (`1366df3c1`, `00d42cb3a`) and coordinator acceptance. The new
 ordinary Build `36440639967` and CodeQL `36440638876` were in progress at
-15:09 UTC on 28 September; both Windows jobs had passed checkout and reached
-their actual builds. `develop` remains at `143921e11`. Product implementation
+15:22 UTC on 28 September; all Linux/Windows/macOS core jobs and Linux
+optimizer parity had passed, while plugin jobs and CodeQL were still running.
+`develop` remains at `143921e11`. Product implementation
 inputs remain those at `ce4a9273f`; no later production code changed.
 
 STEP-01 complete, STEP-02/03 in progress, STEP-04 complete by authorized
@@ -371,7 +372,9 @@ tentative runtime map-setter draft was removed before the platform commit.
 
 | Lab candidate | Disposition / owning layer | Implementation evidence |
 | --- | --- | --- |
-| Earlier CMS topics 0001–0012 | Upstream foundation retained, no blind replay | Current platform text/directory and constrained build code inspected; pending final manifest |
+| CMS release-PoC topics 0001–0010 | Upstream foundation retained, no blind replay | Already in base `143921e11`: `e05066b01` through `20e3de226` cover CMS ELF/C99/sequential RXAS input, environment/process separation, compact VM/allocator/RXC embedding, CMS directory services and platform selection. Later core commits retain these paths. |
+| CMS release-PoC topic 0011 | Retained converted-text compatibility in the base; superseded for the proposed cREXX raw route once its backend is integrated | Base `e68681cd1`; feature-gated cREXX adapter `177c077aa`. Existing lab packages may still use the old route until cutover. Do not stack converted newlib text under cREXX decoding; native backend/package proof open. |
+| CMS release-PoC topic 0012 | Reject filename-equals-namespace fallback when enumeration is unavailable; assign real enumeration to native runtime | The patch explicitly misses providers whose filename differs from namespace. Shared first-root/multiple-provider resolver `7e5771d2a` and platform raw directory adapter `177c077aa` retain the correct model; actual CMS iterator/backend remains an AC-04/11 dependency. |
 | Active 0013 compression workspace | Shared binutils, checked heap table and failure tests | Committed `4ce9de623`; LP64 local proof and actual Linux `gcc -m32` ILP32 check passed in PR Build job `108975377026` at published head `30d723054`. |
 | Active 0014 native directory hook | cREXX platform adapter backed by raw native member service | Compiler error propagation committed `7e5771d2a`; CMS/TSO adapter committed `177c077aa` with sequential-input follow-up `e287d5f2f`. Host mocks and constrained host build pass; actual raw backend/package proof open. |
 | Active 0015 RXBIN import diagnostics | Shared compiler, retain binary cause and nonzero failure | Committed `7e5771d2a`; real malformed-import regression passes Debug and Apple ASan. |
@@ -681,6 +684,74 @@ fresh automatic Build and CodeQL checks remain in progress. The
 compare a cREXX-owned `platform_fflush` route with a generic per-stream
 explicit-flush delivery mechanism. The ordinary C `fflush(FILE *)` gap is
 still open; the comparison selects no new runtime ABI or generic-newlib fork.
+
+### Shared-core acceptance and exact-revision handoff (28 September)
+
+Published PR #709 head `a4a39dc3b9c63fff9c726842f1c8ea43ded9326e`
+contains the last production implementation at `2df36e28e` and the later
+fixture-only repairs. The local follow-up after that head changes documentation
+only. Coordinator-reviewed composite local correctness at `30d723054`
+retains 2,283 passing combined Debug tests plus three focused repairs; the
+parser-mode hosted fixtures then passed focused Debug/Apple ASan at the exact
+inputs in the [fixture receipt](../../qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
+No broad local QA was repeated for fixture or documentation changes.
+
+The patch register above now disposes every supplied CMS release-PoC topic:
+0001–0010 were already in the base, 0011's converted-text compatibility is
+superseded for the new raw cREXX route, 0012's filename/namespace shortcut is rejected
+in favor of real enumeration, 0013/0015/0016/0017 are integrated in shared
+core, and 0014 plus older TSO native mechanics are assigned to the raw
+platform/runtime boundary. Older portable-sentinel, allocation and bounded
+diagnostic causes are integrated in their owning shared layers. No historical
+patch stack is being replayed. The present codec, source/import and RXBIN
+behavior is reviewable without an implemented lab raw backend.
+
+For coordinator acceptance, **AC-02 and AC-03 are ready at the shared-core
+boundary**. AC-02 is supported by the first-root/same-root-provider,
+private-dependency, directory-error, malformed-import and real mandatory/
+optional compiler-exit regressions in Debug, with matching focused Apple ASan
+for the relevant ownership/error paths, plus the
+combined normal proof. AC-03 is supported by the deterministic compressor
+byte/digest and fault cases, canonical/legacy imported sentinel and real
+overflow controls, compiler/VM allocation and bounded OOM checks, LP64 local
+proof, and an actual Linux `gcc -m32` reader/writer pass. AC-01's patch
+disposition is ready for coordinator acceptance; actual native interface/
+package behavior remains explicitly assigned to AC-04/11. AC-05 is satisfied
+by the approved #602 feasibility disposition, AC-06 is not applicable, and
+AC-07's local composite correctness proof has already been accepted. AC-10
+has current guides, matrix and a consumable candidate identity, but remains
+OPEN until the final reviewed baseline/native dependency handoff.
+
+The repaired-head ordinary Build run `36440639967` is on exact
+`a4a39dc3b`. At the 15:22 UTC read-only status snapshot, Linux core job
+`108990065887` passed **176/176** smoke tests (including parser-mode
+`source_semantics`) and `gcc -m32` RXBIN, Linux optimizer parity
+`108990065642` passed, MSVC `108990065685` passed **162/162** (parser test
+absent in that configuration), and MinGW `108990129985`, macOS ARM64
+`108990065730` and macOS Intel `108990065704` passed. The Build run itself
+remained in progress on four plugin jobs; CodeQL run `36440638876`, C++ job
+`108989891074`, remained in progress on the same head. Retained Linux log
+`/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-beta3-linux-retry.n2Iuq6YKeU`
+has SHA-256 `7b4bc33100119f61279f2e7adee99e7365bf8ff41b0104f869b05eb79960c908`;
+MSVC log
+`/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-beta3-msvc-retry.C6pziKqSlE`
+has SHA-256 `0a6c750017da215e1901b4692844d5015b22601829019eb4e529028b71aa1ae5`.
+
+The reviewed shared-core repairs and feature-gated native adapters are ready
+for **ordinary develop publication once this PR's automatic Build and CodeQL
+checks finish successfully**. This is phase readiness, not native acceptance
+or beta release qualification. `develop` remains `143921e11`. AC-04/11 remain
+OPEN for the lab's raw backend, actual CMS iterator shape, console bind/flush,
+emergency stderr capacity, native argument/configuration text crossings,
+applicable RXPP/ancillary availability and CMS31/TSO31/TSO64 package evidence.
+The cREXX side can reconcile `platform_fopen` details and independently route
+supported callers once the matching raw service semantics are concrete; it
+must not invent a runtime flush or stdio ABI. AC-08 remains OPEN for the
+final combined Linux ASan/LSan plus macOS ASan matrix without open first-party
+SAN findings; AC-09 remains OPEN until develop integration and its automatic
+publication checks; AC-10 and STEP-08 remain OPEN for the final baseline and
+lab handoff. No native guest, broad sanitizer or new product QA is inferred
+from the ordinary PR results.
 
 ### Coordinator workflow publication receipt
 

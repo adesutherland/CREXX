@@ -11,8 +11,14 @@ The same test rejects a non-sentinel address exceeding SIZE_MAX in ILP32 builds.
 `tools/check-rxbin-width.sh "$PWD/cmake-build-debug/bin/rxas"
 "$PWD/cmake-build-debug/beta3-standalone"` passes locally on LP64. The script
 compiles only the portable binary library plus the format test, consuming a
-native-RXAS-generated fixture. Normal Linux Build CI runs it with gcc-multilib
-and `CFLAGS=-m32`. Actual ILP32 execution remains pending that hosted receipt.
+native-RXAS-generated fixture. Actual Linux ILP32 execution with gcc-multilib
+and `CFLAGS=-m32` passed in Build run `36440639967`, Core linux-x64 job
+`108990065887`, on published head `a4a39dc3b9c63fff9c726842f1c8ea43ded9326e`:
+`PASS RXBIN cross-width reader/writer (gcc -m32)`. The retained runner log is
+`/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-beta3-linux-retry.n2Iuq6YKeU`,
+SHA-256 `7b4bc33100119f61279f2e7adee99e7365bf8ff41b0104f869b05eb79960c908`.
+This proves the portable RXBIN reader/writer on an actual 32-bit Linux process,
+not a native CMS/TSO package.
 
 The production compressor is compiled directly into the fault-injection unit
 without a replacement algorithm. Deterministic mixed/random input of 20,000
