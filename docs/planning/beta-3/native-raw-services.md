@@ -132,3 +132,74 @@ Three backend details still need an exact joint implementation receipt:
    capacity (or an equivalent explicit chunk/continuation contract) so the
    cREXX bounded panic formatter can avoid an uncommittable record after OOM.
    Until then, host mock success is not native emergency-output proof.
+
+### Standard-stream flush reconciliation (proposal only)
+
+The approved behavior is prompt visibility before native console input,
+observable `fflush` errors, unchanged file-record boundaries and host-owned
+embedding streams. No new runtime ABI or generic-newlib fork is selected here.
+The [host probe](../../qa/beta3-core-baseline/console-flush-probe-2026-09-28.md)
+establishes the gap in the current cookie adapter. The read-only lab source
+at `dc2fad44259d4a81e4e147af5f1f078d0cd9eb6f`
+(`build/compilers/libc-poc/newlib/source/newlib/libc/stdio/fflush.c`) invokes
+a cookie's write callback only when its own
+`FILE` buffer contains bytes; `funopen` supplies no explicit-flush callback.
+Thus `setvbuf`, a pre-read drain or raw `flush` inside the existing close
+callback cannot alone make an ordinary `fflush(file)` observe an adapter-held
+partial console record or a deferred raw error.
+
+One cREXX-owned route is `platform_fflush(FILE *)`. It would call libc
+`fflush` first, then locate an owned raw wrapper, commit a pending **console**
+partial record on explicit flush and call raw `flush`. File-record streams
+would call raw `flush` without ending their pending logical record; byte and
+binary streams would retain their current byte semantics. `platform_fflush(NULL)`
+would first flush libc streams, then visit every live owned wrapper, including
+ones with an empty libc buffer, and return an error if either stage failed.
+`wrap_raw_stream` would register only successfully created `FILE *` wrappers;
+the close callback would unregister before freeing the cookie. The registry's
+iteration, close/error ordering and concurrency must be defined before use.
+Unowned streams pass through to libc unchanged. A standard-input pre-read
+drain could call this same route for bound output wrappers; it supplements,
+but does not replace, explicit flush error handling. The console-only record
+commit is tied to the requested flush, never to an arbitrary cookie-write
+chunk, and close must not commit that prompt twice.
+
+That route can cover audited first-party callers only if they use it. Current
+direct libc `fflush` calls include `compiler/rxcp_exit.c` and `rxcpmain.c`,
+`interpreter/exitfunc.c`, `rxcrexxcmd.c`, `rxspawn.c`, `rxvml.c` and
+`rxvmprogram.c`, plus `lib/plugins/console/console.c`; the keyaccess plugin
+also flushes file handles. Only actually packaged native components would
+be routed in this phase. Libraries and plugins may call libc directly, and
+newlib's own automatic line/buffer/exit flushing does not call a
+`platform_fflush` function. Replacing product call sites or applying a macro
+to cREXX sources does not intercept an unmodified C client calling the
+standard `fflush` on an exposed `crexx_native_standard` or `platform_fopen`
+wrapper. `fclose` remains covered by the current close callback, but it cannot
+repair the earlier explicit-flush return value. Therefore a platform-only
+route is useful for owned call sites and host qualification, but does not by
+itself satisfy the full ordinary-`fflush(FILE *)` contract for exposed wrappers.
+
+The alternative is an application-independent, **generic per-stream**
+explicit-flush callback supplied by the native stdio/link boundary. It would
+run after libc drains the selected `FILE` buffer, including an empty buffer
+and each owned stream visited by `fflush(NULL)`, propagate callback failure
+with errno, and unregister safely on close. It must distinguish explicit
+`fflush` from incidental buffer-full/line-buffer writes so physical record
+boundaries do not depend on buffering. The runtime callback knows neither
+cREXX text nor IBM1047; cREXX's platform callback alone decides console
+record completion and calls the existing raw `flush`. A generic link shim or
+other lab-owned stdio mechanism may meet this contract without forking newlib;
+its feasibility, static/dynamic call coverage and bind/restore lifecycle are
+for native reconciliation. The current raw `write`/`flush` signatures need no
+change for this proposal: a completed console record must become visible by a
+successful raw `flush`, which must report deferred failure and must never
+implicitly end a file record.
+
+The smallest complete direction is to retain cREXX's per-stream flush logic
+in the platform layer while the lab confirms a generic explicit-flush delivery
+mechanism and process-local standard-stream bind/restore. A platform-only
+`platform_fflush` may qualify first-party call paths in the meantime, but the
+direct standard-C call gap and AC-04/AC-11 remain open. No FILE-slot write,
+hook registration, runtime change or product startup edit is authorized by
+this proposal; both alternatives require focused host and combined native
+tests before acceptance.

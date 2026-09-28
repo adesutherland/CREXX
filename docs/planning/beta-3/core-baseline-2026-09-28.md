@@ -333,20 +333,21 @@ or develop integration occurred.
 
 The reviewed cREXX candidate and local AC-07 acceptance were recorded at
 `30d723054`. Draft [PR #709](https://github.com/adesutherland/CREXX/pull/709)
-publishes that exact commit; `develop` remains at `143921e11`. The current
-local HEAD includes subsequent console-risk documentation, the portable
-source-root fixture rename (`369cbeb7b`) and parser-mode fixture repairs
-(`1366df3c1`, `00d42cb3a`), qualified in focused Debug and Apple ASan pending
-coordinator review/push. Product implementation inputs remain
-those at `ce4a9273f`; no later production code changed.
+now publishes `a4a39dc3b9c63fff9c726842f1c8ea43ded9326e`, including the
+portable source-root fixture rename (`369cbeb7b`), parser-mode fixture
+repairs (`1366df3c1`, `00d42cb3a`) and coordinator acceptance. The new
+ordinary Build `36440639967` and CodeQL `36440638876` were in progress at
+15:09 UTC on 28 September; both Windows jobs had passed checkout and reached
+their actual builds. `develop` remains at `143921e11`. Product implementation
+inputs remain those at `ce4a9273f`; no later production code changed.
 
 STEP-01 complete, STEP-02/03 in progress, STEP-04 complete by authorized
 SOURCELINE deferral, STEP-05 local QA accepted, STEP-06 review/draft publication
 in progress, STEP-07–08 open. AC-05 satisfied by evidence; AC-06 not applicable;
 AC-07 satisfied for the local candidate by coordinator-reviewed combined and
 focused repair evidence at `30d723054`. All other criteria remain open/partial
-as detailed below. Hosted Build on that published head found two fixture causes
-and did not pass; its focused repair evidence is in the
+as detailed below. The earlier hosted Build on `30d723054` found two fixture
+causes and did not pass; its focused repair evidence is in the
 [hosted fixture receipt](../../qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
 Shared cREXX conversion and raw native services are authoritative; the
 tentative runtime map-setter draft was removed before the platform commit.
@@ -673,8 +674,13 @@ demonstrates that `fflush` can report success while a partial prompt remains
 invisible and a deferred raw error reaches only close. This is an additional
 AC-04/11 native standard-stream contract requirement, not a sanitizer finding.
 Startup binding, CMS iterator shape, emergency stderr capacity and the actual
-raw backend/package proof remain open. The coordinator will review and push
-the compatible local fixture/docs commits; this worker will not push or merge.
+raw backend/package proof remain open. The coordinator reviewed and published
+the compatible local fixture/docs commits in PR #709 at `a4a39dc3b`; the
+fresh automatic Build and CodeQL checks remain in progress. The
+[native flush alternatives](native-raw-services.md#standard-stream-flush-reconciliation-proposal-only)
+compare a cREXX-owned `platform_fflush` route with a generic per-stream
+explicit-flush delivery mechanism. The ordinary C `fflush(FILE *)` gap is
+still open; the comparison selects no new runtime ABI or generic-newlib fork.
 
 ### Coordinator workflow publication receipt
 
