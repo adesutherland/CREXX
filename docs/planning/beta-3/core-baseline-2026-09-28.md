@@ -1,6 +1,6 @@
 # Beta 3 core baseline: architecture and execution proposal
 
-Date: 28 September 2026. Status: **approved by Adrian; integration and qualification in progress**.
+Date: 28 September 2026. Status: **work stopped at Adrian's request after PR #710 publication**.
 Approval: Adrian replied “Approved” after the metadata-only SOURCELINE revision.
 AD-01–08, the conditional deferral and the explicit sanitizer closeout are accepted.
 
@@ -321,6 +321,24 @@ artifact/log. Unverified outcomes remain open.
    this integration batch or equate it with completing the beta release.
 
 ## Current handoff
+
+**18:24 UTC final instruction and stop:** Adrian instructed, “I want you to
+merge in the pr and publish and stop.” PR #710 was merged normally at
+18:24:30 UTC and remote `develop` was verified at
+`2a6bb845ad889200d4af53ed40fdae124a317480`. Its only production change is
+the reviewed one-line RXBIN diagnostic correction; the remaining PR files
+are documentation. No `rxfs` change is included or left in the active
+checkout. The earlier mainframe-related baseline was already merged in
+PR #709; no further mainframe or filesystem work is assigned.
+
+The #710 full Build passed before merge; CodeQL was still running when the
+normal merge was requested. Ordinary post-merge checks may continue on
+GitHub, without further work assigned here. Both agents are stopped and the
+ten-minute status automation is PAUSED. This is a user-requested stop, not a
+claim that all historical baseline/native/product-definition acceptance
+criteria have been completed. Earlier instructions below to continue work
+are superseded. Local follow-up notes remain historical, unpublished
+documentation; do not publish or resume them automatically.
 
 **18:21 UTC integrated-baseline sanitizer acceptance:** the one approved
 matrix `36448935081` is SUCCESS on exact published `9f2f44cfd`. Linux
