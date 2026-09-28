@@ -478,6 +478,16 @@ read-only filesystem repair/design proposal; no filesystem implementation or
 contract change is approved by that assignment. All other open criteria and
 the subsequent product-definition phase are preserved.
 
+**#220 publication checkpoint:** the reviewed fix and current review receipts
+are published in [PR #710](https://github.com/adesutherland/CREXX/pull/710),
+head `925f6261460102a5581298f64f236123fcda8c6e`, against `develop`.
+Automatic Build `36459678214` is running and CodeQL `36459677779` is queued.
+The PR is open; published develop still points to `9f2f44cfd`. Check those
+normal publication results and the actual #220 alert instance before claiming
+integration or alert closure. The separate approved sanitizer matrix
+`36448935081` remains active on `9f2f44cfd`, and native dependencies remain
+unchanged in the read-only lab checkout at `dc2fad44`.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
