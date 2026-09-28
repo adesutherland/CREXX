@@ -1,5 +1,15 @@
 # RXFS pathname operations: bounded repair proposal
 
+**CANCELLED by Adrian on 28 September 2026:** “Yes stop thsese pointless
+changes please.” This document is retained as historical review evidence,
+not an active implementation plan or beta 3 requirement. The cancellation
+supersedes the approval/hold history below, withdraws RXFS-STEP-01–05 as
+active work, and removes RXFS-AC-01–05 from proposed delivery gates. Existing
+filesystem semantics and documentation remain unchanged. The unfinished
+copy draft was archived outside the checkout and removed; nothing from it
+was published. No further filesystem redesign or investigation is assigned.
+The underlying CodeQL observations are not thereby claimed fixed or dismissed.
+
 28 September 2026. **D-01 hardlink/move policy approved; implementation is
 paused at Adrian's subsequent request for clarification.** His correction
 was: “I meant the hardlink/move decision that you explained is approved”.

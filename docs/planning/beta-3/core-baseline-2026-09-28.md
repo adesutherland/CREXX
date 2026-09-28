@@ -322,6 +322,29 @@ artifact/log. Unverified outcomes remain open.
 
 ## Current handoff
 
+**18:15 UTC scope correction — RXFS expansion cancelled:** Adrian explicitly
+instructed, “Yes stop thsese pointless changes please.” This supersedes the
+filesystem approval/hold history below. Stop the proposed copy/hardlink/move
+redesign, associated legacy semantic investigation and additional filesystem
+qualification work. The subordinate RXFS-AC/STEP criteria were introduced by
+the coordinator's expansion of the CodeQL review; they are cancelled, not
+new beta 3 baseline gates. Keep the existing filesystem code and public
+contract unchanged. No alert is called repaired or dismissed by cancellation.
+
+Sol is stopped. The only unfinished production changes were the worker's
+`rxfs_ops.h` edit and new `rxfs_copy_native.h`. They were preserved at
+`/Users/adrian/.codex/qa/crexx-beta3/cancelled-rxfs-20260928T181525Z/`
+with a hash manifest, then removed from the active checkout. Inspection
+confirms `lib/plugins/fs` is unchanged from published `9f2f44cfd`; no
+filesystem implementation was committed or published. Historical review
+receipts are retained for provenance, not as ongoing assignments.
+
+Continue the original approved core/mainframe boundary, encoding and native
+integration work, the already-reviewed RXBIN #220 fix in PR #710, existing
+hosted QA and the later product-definition review. Preserve all original
+AC-01–11 scope and explicit sanitizer/native gates. No new broad test or
+filesystem task is authorized by the status heartbeat.
+
 **28 September, 16:09 UTC integration checkpoint:** PR #709 merged normally
 into `develop` at `9f2f44cfd888d324858769809b0381e524850b4c` at 16:08 UTC.
 The merged tree equals reviewed PR head `54d31a27f`; its product/test/build
