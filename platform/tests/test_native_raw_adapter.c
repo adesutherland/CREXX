@@ -225,6 +225,7 @@ int main(void) {
                    (LAB_RAW_WRITE | LAB_RAW_RECORDS));
     assert(fwrite(cp1252_text, 1, sizeof(cp1252_text), file) == sizeof(cp1252_text));
     assert(fclose(file) == 0 && !active);
+
     assert(records == 2 && record_sizes[0] == 3 && record_sizes[1] == 1);
     assert(output_length == 4 && output[0] == 'A' && output[1] == 'B' &&
            output[2] == 0x80 && output[3] == 'Z');
@@ -238,6 +239,18 @@ int main(void) {
 #else
     assert(!strcmp((char *)decoded, "ROOT.TXT(MIXED)"));
 #endif
+
+    reset_mock(); choose("IBM1047");
+    input[0] = 0xc1; input_length = 1; input_record = 1;
+    file = crexx_native_fopen("seq.txt", "r"); assert(file);
+    {
+        size_t length = 99;
+        char *source = file2buf(file, &length);
+        assert(source && length == 3 && !memcmp(source, "A\n\n", 3) &&
+               source[3] == 0 && source[4] == 0);
+        free(source);
+    }
+    assert(fclose(file) == 0 && !active);
 
     reset_mock(); choose("Windows-1252");
     input[0] = 0x80; input_length = 1; input_record = 1;
@@ -327,7 +340,10 @@ int main(void) {
 
     reset_mock(); read_error = 1;
     file = crexx_native_fopen("readerr.txt", "r"); assert(file);
-    assert(fread(readback, 1, sizeof(readback), file) == 0 && ferror(file));
+    {
+        size_t length = 99;
+        assert(!file2buf(file, &length) && length == 0 && ferror(file));
+    }
     assert(fclose(file) != 0 && !active);
 
     reset_mock(); write_error = 1;

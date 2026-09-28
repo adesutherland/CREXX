@@ -31,7 +31,7 @@ still unverified. There is no UTF16/32 tool-stream selector.
 | Component/boundary | cREXX route and status | Remaining proof or gap |
 | --- | --- | --- |
 | Shared codec | `platform/text_codec.c` owns strict UTF8 and seven selected pages; generated tables derive from retained `rxunicode` data. | Linux and actual native combined checks open. |
-| Compiler source, imports, RXPP-fed source | `rxc` textual opens use `openfile`; the raw platform adapter decodes and inserts logical LF for native records. Binary RXBIN imports stay `rb`. | Native source/import package and nonseekable/error checks open. RXPP's own stream crossings need a separate supported-surface audit. |
+| Compiler source, imports, RXPP-fed source | `rxc` textual opens use `openfile`; the raw platform adapter decodes and inserts logical LF for native records. Binary RXBIN imports stay `rb`. Host mocks now exercise `file2buf` on a nonseekable raw record stream and injected read error. | Native source/import package proof remains open. RXPP's own stream crossings need a separate supported-surface audit. |
 | Assembler input/output | `rxas` uses `openfile` text input and binary RXBIN output. `-E` selects the file page. | Raw native end-to-end assembly with non-ASCII source/output open. |
 | Linker/disassembler | RXBIN loads/writes use binary modes. Linker control now uses `platform_fopen`; disassembler output and linker map/report use textual `openfile`. | Non-ASCII control/report/disassembly and failure checks open. |
 | VM file API | Native `rxvm_private_fopen` routes via `platform_fopen`; `.binary` remains byte exact in the raw adapter. | Application text APIs, mixed page/layout lifetime and actual runtime backend require combined proof. |
@@ -57,6 +57,9 @@ The full local Debug build passed at `/tmp/beta3-platform-all-build2.log` and
 nine focused product-crossing tests passed at
 `/tmp/beta3-platform-crossing-test.log`; these remain host correctness checks,
 not the frozen combined suite or native package gates.
+The added nonseekable/failed-read checks passed the two raw host tests in Debug
+at `/tmp/beta3-sequential-test2.log` and Apple ASan at
+`cmake-build-debugasan/asan-logs/20260928-123014-ctest`.
 These mocks do not establish an implemented or qualified lab backend. Apple
 LeakSanitizer is unavailable; the approved final Linux ASan/LSan plus macOS
 ASan matrix remains open.

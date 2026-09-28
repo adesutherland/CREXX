@@ -477,7 +477,7 @@ is authorized here.
   correctness suite once after the platform work, then coordinator review,
   ordinary publication and the one approved hosted sanitizer matrix.
 
-### Current implementation status (28 September, 11:28 UTC)
+### Current implementation status (28 September, 11:30 UTC)
 
 - Local HEAD remains `7e5771d2a`, with the platform/codec/OOM candidate still
   intentionally uncommitted. Superseded native map setters and converted TSO
@@ -521,6 +521,11 @@ is authorized here.
   `cmake-build-debugasan/asan-logs/20260928-122744-build` and
   `20260928-122754-ctest` pass. The earlier full-build receipt predates only
   this narrow edit; final combined correctness remains due on frozen inputs.
+- After local platform commit `177c077aae39c610ba6d557c229f85a611e7906f`,
+  the raw host fixture gained explicit `file2buf` coverage for nonseekable
+  record input, scanner sentinels and injected read failure. Its two Debug
+  tests pass at `/tmp/beta3-sequential-test2.log` and matching Apple ASan
+  tests at `cmake-build-debugasan/asan-logs/20260928-123014-ctest`.
 - AC-01/02/03/07 remain partial; AC-04/11, product AC-09/10 and final combined
   AC-08 remain open. STEP-02/03/05 continue; STEP-06–08 remain open. Needed
   lab input is the actual raw backend, CMS iterator payload shape/capacity and
