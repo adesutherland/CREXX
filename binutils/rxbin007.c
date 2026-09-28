@@ -134,7 +134,7 @@ static int rxbin007_lzss_compress(const unsigned char *input,
                                   size_t input_size,
                                   rxbin_byte_buffer *output) {
     size_t *previous_positions;
-    size_t last_positions[RXBIN007_LZSS_HASH_SIZE];
+    size_t *last_positions;
     size_t position;
     size_t control_index;
     unsigned char control;
@@ -143,8 +143,14 @@ static int rxbin007_lzss_compress(const unsigned char *input,
     unsigned int i;
 
     if (!input_size) return 1;
+    /* Keep the hash table off constrained native application stacks. */
+    last_positions = (size_t *)malloc(sizeof(size_t) * RXBIN007_LZSS_HASH_SIZE);
     previous_positions = (size_t *)malloc(sizeof(size_t) * RXBIN007_LZSS_PREV_SIZE);
-    if (!previous_positions) return 0;
+    if (!last_positions || !previous_positions) {
+        free(last_positions);
+        free(previous_positions);
+        return 0;
+    }
     for (i = 0u; i < RXBIN007_LZSS_HASH_SIZE; i++) last_positions[i] = SIZE_MAX;
     for (i = 0u; i < RXBIN007_LZSS_PREV_SIZE; i++) previous_positions[i] = SIZE_MAX;
     position = 0u;
@@ -227,10 +233,12 @@ static int rxbin007_lzss_compress(const unsigned char *input,
         }
     }
     if (group_open) output->data[control_index] = control;
+    free(last_positions);
     free(previous_positions);
     return 1;
 
 error:
+    free(last_positions);
     free(previous_positions);
     return 0;
 }
@@ -674,7 +682,8 @@ static int rxbin007_encode_entry_payload(const rxbin007_pool *pool,
                 !rxbin007_pool_find_id(pool, entry->exposed, &exposed)) return 0;
             return rxbin007_u32(payload, next) &&
                    rxbin007_i32(payload, entry->locals) &&
-                   rxbin007_u64(payload, (uint64_t)entry->start) &&
+                   rxbin007_u64(payload, entry->start == SIZE_MAX
+                       ? UINT64_MAX : (uint64_t)entry->start) &&
                    rxbin007_u32(payload, exposed) &&
                    rxbin007_payload_named(payload,
                                           entry->name,
@@ -1829,7 +1838,8 @@ static int rxbin007_fill_record(rxbin007_pool_read *pool, uint32_t id) {
             size_t exposed_offset;
             if (!rxbin007_reader_u32(&reader, &next) ||
                 !rxbin007_reader_u32(&reader, &locals) ||
-                !rxbin007_reader_u64(&reader, &start) || start > SIZE_MAX ||
+                !rxbin007_reader_u64(&reader, &start) ||
+                (start != UINT64_MAX && start > SIZE_MAX) ||
                 !rxbin007_reader_u32(&reader, &exposed) ||
                 !rxbin007_reader_u32(&reader, &name_length) ||
                 name_length != (uint32_t)(reader.end - reader.cursor) ||
@@ -1838,7 +1848,12 @@ static int rxbin007_fill_record(rxbin007_pool_read *pool, uint32_t id) {
                 !rxbin007_id_offset_kind(pool, exposed, RXBIN007_REF_EXPOSE, 1,
                                          &exposed_offset)) return 0;
             entry->locals = (int32_t)locals;
-            entry->start = (size_t)start;
+            /* Imported procedures have no code address. Earlier ILP32
+             * writers emitted their native SIZE_MAX; accept that spelling
+             * only for imports, and always write the portable u64 sentinel. */
+            entry->start = start == UINT64_MAX ||
+                ((int32_t)locals == -1 && start == UINT32_MAX)
+                ? SIZE_MAX : (size_t)start;
             entry->exposed = exposed_offset;
             memcpy(entry->name, reader.cursor, name_length);
             entry->name[name_length] = 0;
@@ -2132,7 +2147,11 @@ static int rxbin007_materialize_pool(rxbin007_pool_read *pool) {
     pool->shared->stored_size = total_size;
     pool->shared->refcount = 0u;
     for (id = 0u; id < pool->record_count; id++) {
-        if (!rxbin007_fill_record(pool, id)) return 0;
+        if (!rxbin007_fill_record(pool, id)) {
+            rxbin007_set_error("RXBIN 007 cannot materialize record %u (kind %u)",
+                               (unsigned)id, (unsigned)pool->records[id].type);
+            return 0;
+        }
     }
     return 1;
 }
@@ -2585,7 +2604,10 @@ static int rxbin007_parse_image(const unsigned char *image,
             module_count,
             (uint32_t)total_records,
             &pools,
-            &pool_count)) goto error;
+            &pool_count)) {
+        rxbin007_set_error("RXBIN 007 constant or metadata record section is invalid");
+        goto error;
+    }
     if (rxbin007_pool_reads_have_type(pools, pool_count, META_PROVIDER) &&
         !(feature_flags & RXBIN007_FEATURE_NATIVE_PROVIDERS)) {
         rxbin007_set_error(
@@ -2617,7 +2639,11 @@ static int rxbin007_parse_image(const unsigned char *image,
                                 pool_count,
                                 graph,
                                 feature_flags,
-                                &state)) goto error;
+                                &state)) {
+        if (!rxbin007_error[0])
+            rxbin007_set_error("RXBIN 007 module directory or instructions are invalid");
+        goto error;
+    }
     rxbin007_free_pool_reads(pools, pool_count, 0);
     rx_graph_release(&graph);
     rxbin007_free_section_views(sections);
