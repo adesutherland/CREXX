@@ -337,8 +337,12 @@ GitHub, without further work assigned here. Both agents are stopped and the
 ten-minute status automation is PAUSED. This is a user-requested stop, not a
 claim that all historical baseline/native/product-definition acceptance
 criteria have been completed. Earlier instructions below to continue work
-are superseded. Local follow-up notes remain historical, unpublished
-documentation; do not publish or resume them automatically.
+are superseded. Adrian then explicitly requested that all completed changes
+be present on develop and published. Both code PRs were already merged; the
+remaining QA receipts, scope-cancellation and stop notes are included in the
+final documentation publication as well. This adds no product code and does
+not resume any cancelled or incomplete implementation work. The stopped
+worker and paused status automation remain stopped after publication.
 
 **18:21 UTC integrated-baseline sanitizer acceptance:** the one approved
 matrix `36448935081` is SUCCESS on exact published `9f2f44cfd`. Linux
