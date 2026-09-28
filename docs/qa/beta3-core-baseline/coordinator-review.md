@@ -72,3 +72,37 @@ close the combined native runtime/package gates.
   ILP32 execution, AC-04/11 native text completion, AC-08 final sanitizer matrix,
   AC-09 develop integration and AC-10 final handoff remain open. No release/tag
   action or protected-branch bypass is part of this step.
+
+## Hosted review and native flush finding (28 September, 14:36 UTC)
+
+Draft [PR #709](https://github.com/adesutherland/CREXX/pull/709) publishes
+`30d72305459ca230befffcdc5208cfce83982a86`; develop remains `143921e11`.
+The PR Build run `36436367998` and CodeQL `36436367190` started normally.
+Both Windows jobs failed during Git checkout because the newly added
+`second/aux.crexx` fixture uses the reserved Windows AUX basename. No Windows
+compiler or product test ran. The worker is making a narrow filename repair
+that preserves its namespace/content and the regression's intended semantics.
+
+The [console probe](console-flush-probe-2026-09-28.md) confirms a separate
+native adapter integration gap: `fflush` returns success with an invisible
+partial prompt, and deferred raw flush failures are only seen at close. This
+is a deterministic host-mock functional result, not a sanitizer finding or
+native guest proof. The standard-stream integration contract now explicitly
+requires prompt visibility and flush-error propagation while preserving
+logical file records. Its native implementation and qualification remain open.
+
+## Hosted fixture follow-up (28 September, after the first hosted Build)
+
+The ordinary Build run on published head `30d723054` ended with only two
+fixture causes: Windows checkout rejected the reserved `AUX` filename, and
+Linux/macOS smoke each passed 175/176 with parser-only `source_semantics`
+unable to find its required library. The [worker receipt](hosted-fixture-repair-2026-09-28.md)
+records the exact runner and local logs, the accepted 100% fixture rename
+`369cbeb7b`, the fresh parser-mode reproduction and the focused Debug/Apple
+ASan repair tests. A bounded adjacent audit found the same setup omission in
+the parser cache sandbox, repaired in test-only commit `00d42cb3a` and passing
+its original assertions in focused Debug/Apple ASan. The local broad AC-07
+proof did not include parser mode and remains valid for its recorded inputs.
+Linux ILP32 RXBIN and optimizer
+parity passed on the published head. A new hosted Build on the repaired head
+is still required; the native/console and final sanitizer gates remain open.

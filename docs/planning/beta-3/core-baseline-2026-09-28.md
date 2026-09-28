@@ -327,17 +327,27 @@ artifact/log. Unverified outcomes remain open.
 earlier source/test boundary. The Sol Extra High worker continued in the same
 checkout; latest implementation commit is `2df36e28e`, followed by local
 documentation-only audit/handoff commits. The later current-status receipts
-below supersede the outgoing worker's draft inventory. No product
-implementation push or sanitizer workflow dispatch occurred.
+below supersede the outgoing worker's draft inventory. Draft PR #709 later
+published the reviewed cREXX candidate; no final sanitizer workflow dispatch
+or develop integration occurred.
 
-The current local repair HEAD is `d454750bd` after the two STEP-05 QA fixes
-described below; product implementation inputs remain those at `ce4a9273f`.
+The reviewed cREXX candidate and local AC-07 acceptance were recorded at
+`30d723054`. Draft [PR #709](https://github.com/adesutherland/CREXX/pull/709)
+publishes that exact commit; `develop` remains at `143921e11`. The current
+local HEAD includes subsequent console-risk documentation, the portable
+source-root fixture rename (`369cbeb7b`) and parser-mode fixture repairs
+(`1366df3c1`, `00d42cb3a`), qualified in focused Debug and Apple ASan pending
+coordinator review/push. Product implementation inputs remain
+those at `ce4a9273f`; no later production code changed.
 
 STEP-01 complete, STEP-02/03 in progress, STEP-04 complete by authorized
-SOURCELINE deferral, STEP-05 local QA accepted, STEP-06 review/publication in
-progress, STEP-07–08 open. AC-05 satisfied by evidence; AC-06 not applicable;
-AC-07 satisfied for the current local candidate by coordinator-reviewed combined
-and focused repair evidence. All other criteria remain open/partial as detailed below.
+SOURCELINE deferral, STEP-05 local QA accepted, STEP-06 review/draft publication
+in progress, STEP-07–08 open. AC-05 satisfied by evidence; AC-06 not applicable;
+AC-07 satisfied for the local candidate by coordinator-reviewed combined and
+focused repair evidence at `30d723054`. All other criteria remain open/partial
+as detailed below. Hosted Build on that published head found two fixture causes
+and did not pass; its focused repair evidence is in the
+[hosted fixture receipt](../../qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
 Shared cREXX conversion and raw native services are authoritative; the
 tentative runtime map-setter draft was removed before the platform commit.
 
@@ -353,17 +363,18 @@ tentative runtime map-setter draft was removed before the platform commit.
   `.github/workflows/sanitizers.yml` changed; it matches develop's blob
   `f3806cda1`. Coordinator reports `actionlint` and `git diff --check` passed.
   AC-08 is partial: scheduling source repaired; final candidate matrix OPEN.
-  No worker workflow edit or dispatch. STEP-05 final local QA remains open.
+  No worker workflow edit or dispatch. The later AC-07 local QA acceptance is
+  recorded below; this dated setup observation predates it.
 
 ### Patch reconciliation register
 
 | Lab candidate | Disposition / owning layer | Implementation evidence |
 | --- | --- | --- |
 | Earlier CMS topics 0001–0012 | Upstream foundation retained, no blind replay | Current platform text/directory and constrained build code inspected; pending final manifest |
-| Active 0013 compression workspace | Shared binutils, checked heap table and failure tests | Committed `4ce9de623`; LP64 local proof retained; actual ILP32 ordinary CI open. |
+| Active 0013 compression workspace | Shared binutils, checked heap table and failure tests | Committed `4ce9de623`; LP64 local proof and actual Linux `gcc -m32` ILP32 check passed in PR Build job `108975377026` at published head `30d723054`. |
 | Active 0014 native directory hook | cREXX platform adapter backed by raw native member service | Compiler error propagation committed `7e5771d2a`; CMS/TSO adapter committed `177c077aa` with sequential-input follow-up `e287d5f2f`. Host mocks and constrained host build pass; actual raw backend/package proof open. |
 | Active 0015 RXBIN import diagnostics | Shared compiler, retain binary cause and nonzero failure | Committed `7e5771d2a`; real malformed-import regression passes Debug and Apple ASan. |
-| Active 0016 + older 0011 sentinel | Canonical portable writer and legacy ILP32 spelling reader | Committed `4ce9de623`; actual ILP32 ordinary CI open. |
+| Active 0016 + older 0011 sentinel | Canonical portable writer and legacy ILP32 spelling reader | Committed `4ce9de623`; actual Linux `gcc -m32` ILP32 reader/writer passed in PR Build job `108975377026` at `30d723054`. |
 | Active 0017 namespace source root | Shared compiler first-root rule, same-root providers retained | Committed `7e5771d2a`; source-root and private-dependency normal regressions pass. |
 | Older 0010 TSO platform | Explicit product profile, logical mapping and raw native service route | Profile/name/directory/file adapters and console/process-input wrappers committed `177c077aa` and pass CMS/TSO host mocks; core CLI selector follow-up `61fdba645` passes. Product startup/stdio routing and actual backend/package gates open. |
 | Native VM environment crossing | Shared VM `GETENV` uses platform-decoded raw environment service on CMS/TSO, while desktop lookup stays unchanged | Committed `2df36e28e`; CMS/TSO host mocks and optimized/unoptimized VM getenv pass matching Debug and Apple ASan tests. Other process-input crossings and actual backend/package gates open. |
@@ -618,12 +629,51 @@ AC-09 product publication and AC-10 final handoff also remain OPEN.
    local paths and hashes are in the [combined normal QA receipt](../../qa/beta3-core-baseline/combined-normal-qa-2026-09-28.md).
 
 The 2,283 unchanged passing combined results are retained and the three
-failed entries are resolved by focused rerun. AC-07 has composite local
-correctness evidence for this cREXX candidate, pending coordinator acceptance;
-it is not a new single-run 2,286/2,286 result. STEP-05 remains partial until
-the final integrated inputs and their applicable QA are settled. AC-04/11
+failed entries are resolved by focused rerun. The coordinator accepted this
+composite local correctness evidence in `30d723054`; AC-07 is satisfied for
+the current local cREXX candidate. It is not a new single-run 2,286/2,286
+result. STEP-05 local QA is accepted; final integrated inputs and their
+applicable native/sanitizer QA are still unsettled. AC-04/11
 native raw backend and text crossings, AC-08 final Linux/macOS sanitizer
 matrix, AC-09 product publication and AC-10 handoff remain OPEN.
+
+### Draft PR hosted fixture follow-up
+
+Draft PR #709 published `30d723054`; `develop` did not move. Its ordinary
+Build run `36436367998` found two independent fixture causes. MSVC/MinGW
+could not check out the Windows-reserved `second/aux.crexx` basename. Local
+commit `369cbeb7b` renames only that fixture to `second_extra.crexx`; its
+first-root/multiple-provider regression passes focused Debug and Apple ASan.
+Linux x64, macOS ARM64 and macOS Intel each completed 175/176 smoke tests;
+their only failure was parser-only `source_semantics` loading its required
+`library` from the wrong working directory. The original local Debug/ASan
+combined builds had `ENABLE_PARSER_MODE=OFF`, so their accepted AC-07 proof
+did not cover this test. A fresh parser-enabled Debug build reproduced the
+failure, then passed the original test after setting its CTest working
+directory to build `bin` and declaring `test_source_semantics`, `library` and
+`compiler_exit_bin` prep targets in `1366df3c1`. The matching focused Apple
+ASan parser-mode test passes 1/1. Exact commands, local and hosted log hashes,
+the read-only DSL-Syntax-Highlighter input identity and the open hosted retry
+are in the [fixture repair receipt](../../qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
+An adjacent parser-mode sandbox audit found the same missing-module setup in
+the comprehensive `highlight_cache` test; commit `00d42cb3a` makes its first
+sandbox stage the required library and compiler exits, with explicit fixture
+prep. Its original
+cache assertions pass focused Debug and Apple ASan 1/1 each. The other direct
+parser-mode editor test passed unchanged, and no further isolated parser
+sandbox was found. These test-only inputs await coordinator review/push; no
+production behavior was changed.
+The Linux hosted `gcc -m32` RXBIN cross-width check and optimizer parity job
+passed on published head; retain those valid results. No broad QA rerun was
+made for these test-only/fixture-only changes.
+
+The separate [console flush probe](../../qa/beta3-core-baseline/console-flush-probe-2026-09-28.md)
+demonstrates that `fflush` can report success while a partial prompt remains
+invisible and a deferred raw error reaches only close. This is an additional
+AC-04/11 native standard-stream contract requirement, not a sanitizer finding.
+Startup binding, CMS iterator shape, emergency stderr capacity and the actual
+raw backend/package proof remain open. The coordinator will review and push
+the compatible local fixture/docs commits; this worker will not push or merge.
 
 ### Coordinator workflow publication receipt
 

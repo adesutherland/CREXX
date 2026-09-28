@@ -112,6 +112,16 @@ Three backend details still need an exact joint implementation receipt:
    call in standalone tool mains is proposed; embedding APIs and ordinary C
    clients must retain their host-owned streams. No FILE-slot assignment is
    part of the current accepted implementation.
+   The [host console probe](../../qa/beta3-core-baseline/console-flush-probe-2026-09-28.md)
+   additionally confirms that the current cookie adapter cannot make a partial
+   prompt visible through `fflush`, and only reports deferred raw flush errors
+   at close. The binding/flush design must make a prompt visible before input
+   and propagate flush failures. Preserve logical file records independently
+   of stdio buffer chunk sizes; committing a record on every cookie write is
+   not a valid fix. A pre-read console drain alone does not establish the full
+   `fflush` error contract. Resolve this within the cREXX platform/native stdio
+   boundary and qualify the result before attaching the wrappers to product
+   standard streams. Existing host-mock passes do not close this requirement.
 2. **CMS directory payload:** the adapter currently expects an actual 18-byte
    IBM1047 FID (8-byte padded name, 8-byte padded type, 2-byte mode). Confirm
    this against the raw iterator or supply its exact actual-entry shape;
