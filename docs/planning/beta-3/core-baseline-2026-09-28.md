@@ -518,6 +518,29 @@ Linux ASan/LSan is still running. This macOS result does not qualify the
 subsequent #220 edit, Linux leaks, or native mainframe integration; AC-08
 and all other outstanding criteria remain open. No repeat was dispatched.
 
+**Copy-only implementation approval:** after the copy proposal was clarified
+as a repair to the native `rxfs` provider rather than the `crexx` wrapper,
+Adrian replied “Approved”. Apply the
+[RXFS plan's](rxfs-path-operations-proposal-2026-09-28.md) copy-only
+RXFS-STEP-02, RXFS-AC-02 and supporting characterization/review/QA criteria.
+Open the source once, validate the opened ordinary file and copy from that
+same object, retaining destination non-overwrite, final-link rejection,
+`0/-8`, cleanup and normal platform behavior. No source-content snapshot is
+promised. Add meaningful permanent substitution/special-file and error
+regressions, run focused Debug and maintained sanitizer checks, exercise the
+four-tool library path, then independently review before ordinary publication.
+The wider hardlink/move decision and legacy semantic changes remain open;
+this approval does not silently adopt the earlier bundled contract proposal.
+
+The macOS current-provider characterization is retained at `65a49141e`:
+[53 isolated invocations](../../qa/beta3-core-baseline/rxfs-stable-path-macos-2026-09-28.md)
+confirm the current stable-path statuses and source/target outcomes. It is
+not concurrent-swap, Linux, Windows or mainframe qualification. Reuse those
+valid observations; new copy regressions must distinguish the actual repair.
+The existing hosted matrix remains tied to `9f2f44cfd`, and PR #710's
+format-only product input remains separate until any combined publication
+decision is made. No extra broad matrix is dispatched for this approval.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same

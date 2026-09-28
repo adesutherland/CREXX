@@ -1,7 +1,13 @@
 # RXFS pathname operations: bounded repair proposal
 
-28 September 2026. **Proposal only; no filesystem implementation or contract
-change is approved here.** This is subordinate to the authoritative
+28 September 2026. **Copy repair approved after Adrian's clarification;
+hardlink/move and legacy semantic changes remain proposals.** Adrian asked
+whether the change belonged to the `crexx` wrapper; after clarification that
+it is the native `rxfs` provider's copy operation, he replied “Approved”.
+This authorizes RXFS-STEP-02 and its relevant characterization, focused QA,
+independent review and ordinary publication. It does not approve D-01's
+hardlink/move contract qualification or changing legacy broken-link behavior.
+This is subordinate to the authoritative
 [beta 3 core-baseline plan](core-baseline-2026-09-28.md), not a new baseline
 scope record. Source reviewed: published `develop`
 `9f2f44cfd888d324858769809b0381e524850b4c`, plus local documentation
@@ -151,7 +157,18 @@ independently with operation-first error classification; its historical
 wrong-type and broken-link status still needs tests. Decide Windows CRT
 behavior from an actual Windows run before imposing the POSIX result there.
 
-## Proposed acceptance criteria and steps (all OPEN)
+## Acceptance criteria and steps (all verification remains OPEN)
+
+The copy-only slice of RXFS-AC-01, RXFS-AC-02 and RXFS-AC-05, and
+RXFS-STEP-02 with its supporting review/QA steps, is now approved.
+RXFS-AC-03/04 and their semantic decision gates remain unapproved. The
+existing 53-case macOS provider receipt supplies retained characterization;
+it does not substitute for new failure regressions or other platform proof.
+Copy keeps its ordinary byte-copy and `0/-8` contract, destination exclusion,
+regular-source restriction and final-link rejection. It promises no immutable
+snapshot of concurrently edited contents. Preserve supported metadata/error
+behavior when changing a platform implementation, and report any unavoidable
+public behavior change before selecting it.
 
 | ID | Observable pass condition | Evidence |
 | --- | --- | --- |
