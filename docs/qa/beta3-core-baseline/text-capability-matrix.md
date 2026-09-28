@@ -2,7 +2,7 @@
 
 28 September 2026. This is the AC-04/AC-11 capability register for the local
 `temp/beta3-core-baseline` candidate, not a native-package qualification. The
-current code and host mocks are still uncommitted. The exact native raw backend
+current code and host mocks are local and unpushed. The exact native raw backend
 and CMS31/TSO31/TSO64 package checks remain separate open dependencies.
 
 ## Encoding and physical storage

@@ -1,0 +1,19 @@
+{
+  "head": "4ce9de62368029be5745ff5d343f0c42e0b485e5",
+  "note": "Checkpoint binary receipts; later unbuilt OOM/shared codec edits are NOT covered by these binaries. No final-tree qualification claim.",
+  "files": {
+    "cmake-build-debug/bin/rxc": "3091fce8c7bdfa265dbe4ca3924eef0426b711b4e7612814beb9432cb757bd0a",
+    "cmake-build-debug/bin/rxas": "24cfac044ad5f606b47b47eeae3e12d0774c5378903c9f8dcd80eec634309683",
+    "cmake-build-debug/bin/rxbvm": "22550dabe76aac2950740d6ee6c5b8b0902c38e184a506b7ccd481e2ec3bf16b",
+    "cmake-build-debug/bin/library.rxbin": "9809e3de86f04c3ce4e70f604258aff1e0fc3cc9a362491aee5462bbbaf2d11f",
+    "cmake-build-debug/bin/rxcexits.rxbin": "f270fc763ea843748c3c0552d2558f7ead9a2639751b0330f2cdd06d23e5cc9e",
+    "cmake-build-debug/compiler/tests/test_symbol_allocation": "9e30e8b17fb10a1d20baaade80d2684dd1d0d88404e694fe9e4de4c79cef7335",
+    "cmake-build-debug/compiler/tests/test_import_directory_errors": "36cb34c2ee891ad802fea3bf0aabdec1d72f6478071aabca9455794f35621f2c",
+    "cmake-build-debugasan/bin/rxc": "c5d0be1e1cef7c74b3583f6e1f7de5cb589968f83cae3253ba5686cce99ecefe",
+    "cmake-build-debugasan/bin/rxas": "7549987db8640c6912f5eb0c610c45593af87fd3f4b8e93d1a0ddeac21188146",
+    "cmake-build-debugasan/bin/rxbvm": "2d0acb0cb987b14fd99eb52a3ffb6d896efe66c957211f5afa18c693c48f78e6",
+    "cmake-build-debugasan/bin/library.rxbin": "9809e3de86f04c3ce4e70f604258aff1e0fc3cc9a362491aee5462bbbaf2d11f",
+    "cmake-build-debugasan/bin/rxcexits.rxbin": "f270fc763ea843748c3c0552d2558f7ead9a2639751b0330f2cdd06d23e5cc9e",
+    "cmake-build-debugasan/compiler/tests/test_symbol_allocation": "32cd985d0dc4274e114d67cbbf3b073055f1e9c49497eb35b5a8e38e541dc339"
+  }
+}

@@ -354,14 +354,14 @@ reconcile the remaining stale **uncommitted** declarations before publication.
 | --- | --- | --- |
 | Earlier CMS topics 0001–0012 | Upstream foundation retained, no blind replay | Current platform text/directory and constrained build code inspected; pending final manifest |
 | Active 0013 compression workspace | Shared binutils, checked heap table and failure tests | Committed `4ce9de623`; LP64 local proof retained; actual ILP32 ordinary CI open. |
-| Active 0014 native directory hook | cREXX platform adapter backed by raw native member service | Compiler error propagation committed `7e5771d2a`; CMS/TSO raw host mocks and constrained host build pass locally. Adapter remains uncommitted; actual raw backend/package proof open. |
+| Active 0014 native directory hook | cREXX platform adapter backed by raw native member service | Compiler error propagation committed `7e5771d2a`; CMS/TSO adapter committed `177c077aa` with sequential-input follow-up `e287d5f2f`. Host mocks and constrained host build pass; actual raw backend/package proof open. |
 | Active 0015 RXBIN import diagnostics | Shared compiler, retain binary cause and nonzero failure | Committed `7e5771d2a`; real malformed-import regression passes Debug and Apple ASan. |
 | Active 0016 + older 0011 sentinel | Canonical portable writer and legacy ILP32 spelling reader | Committed `4ce9de623`; actual ILP32 ordinary CI open. |
 | Active 0017 namespace source root | Shared compiler first-root rule, same-root providers retained | Committed `7e5771d2a`; source-root and private-dependency normal regressions pass. |
-| Older 0010 TSO platform | Explicit product profile, logical mapping and raw native service route | Profile/name/directory/file adapters and console/process-input wrappers pass CMS/TSO host mocks; uncommitted. Product startup/stdio routing and actual backend/package gates open. |
+| Older 0010 TSO platform | Explicit product profile, logical mapping and raw native service route | Profile/name/directory/file adapters and console/process-input wrappers committed `177c077aa` and pass CMS/TSO host mocks; core CLI selector follow-up `61fdba645` passes. Product startup/stdio routing and actual backend/package gates open. |
 | Older 0012 symbol allocation | Shared compiler terminal allocation checks | Committed `34cc3a725`; fault CTest passes Debug and Apple ASan. |
 | Older 0013 value factories | Shared VM worker and standalone allocation checks | Committed `34cc3a725`; fault CTest passes Debug and Apple ASan. |
-| TSO integer-only exhaustion formatting | Bounded heap-independent diagnostic path | Shared OOM/UTF-8 and native raw emergency output host mocks pass Debug and Apple ASan; uncommitted. Actual backend and bounded emergency-record capacity remain open. |
+| TSO integer-only exhaustion formatting | Bounded heap-independent diagnostic path | Shared OOM/UTF-8 and native raw emergency output committed `177c077aa`; host mocks pass Debug and Apple ASan. Actual backend and bounded emergency-record capacity remain open. |
 | Compiler-exit false success | Required `library` load fails, optional exit warning/fallback remains | Committed `7e5771d2a`; real PARSE/ADDRESS regression and CTest pass Debug and Apple ASan. |
 | SOURCELINE #602 | Feasibility disposition; user-authorized deferral | Complete for this batch; #602 OPEN and AC-06 not applicable. |
 
@@ -479,8 +479,9 @@ is authorized here.
 
 ### Current implementation status (28 September, 11:36 UTC)
 
-- Local HEAD remains `7e5771d2a`, with the platform/codec/OOM candidate still
-  intentionally uncommitted. Superseded native map setters and converted TSO
+- Latest local implementation commit is `61fdba64573f923327a40bb50901e268b0f45825`,
+  following reviewable platform commit `177c077aa` and sequential-input
+  regression commit `e287d5f2f`. Superseded native map setters and converted TSO
   file/directory calls have been removed from its raw route. `platform_fopen`
   still owns native open mechanics; codec and physical byte/record storage are
   independent. IBM1047 defaults to native records, the six exchange selectors
@@ -503,7 +504,8 @@ is authorized here.
   `single_vm_state` `/tmp/beta3-single-test.log`. This is not a CMS/TSO native
   compiler/package proof. The detailed crossing inventory is
   [text-capability-matrix.md](../../qa/beta3-core-baseline/text-capability-matrix.md).
-- The complete Debug build now passes on the current candidate tree at
+- The complete Debug build passed on the platform candidate before the later
+  narrow existence-probe and selector edits at
   `/tmp/beta3-platform-all-build2.log` (1,564 actions after the focused
   test-target include-path repair). `platform_cms_text` initially could not
   start because its `EXCLUDE_FROM_ALL` harness was not built; after building
