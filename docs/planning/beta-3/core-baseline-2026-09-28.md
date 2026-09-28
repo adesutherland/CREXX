@@ -508,6 +508,16 @@ follow-up after the PR head changes documentation only. Published develop,
 native raw-backend/stdio dependencies, all outstanding acceptance criteria
 and the later product-definition phase remain unchanged.
 
+**18:00 UTC macOS sanitizer result:** job `109018428816` in the approved
+matrix passed on exact `9f2f44cfd`, with successful build/preparation and
+**2,376/2,376 CTests**. The coordinator retained the uploaded artifact and
+job log in durable local storage, verified checkout identity and settings,
+and inspected for sanitizer diagnostics. Full paths, hashes and platform
+limits are in the [hosted sanitizer receipt](../../qa/beta3-core-baseline/hosted-sanitizer-2026-09-28.md).
+Linux ASan/LSan is still running. This macOS result does not qualify the
+subsequent #220 edit, Linux leaks, or native mainframe integration; AC-08
+and all other outstanding criteria remain open. No repeat was dispatched.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
