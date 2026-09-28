@@ -760,8 +760,8 @@ int rxspawn_redirect_write_close(REDIRECT *redirect,
  * Sets value (null terminated) (and a handle) from env variable name length name_length (not null terminated)
  * Value can be set to point to a zero length string (if the variable is not set)
  *
- * Returns 1 if value should bee free()d
- * Otherwise returns 0
+ * Returns 1 if value should be free()d, 0 for borrowed/absent values, or
+ * -1/errno on a native environment failure.
  */
 int getEnvVal(char **value, char *name, size_t name_length);
 

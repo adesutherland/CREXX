@@ -1,0 +1,8 @@
+options levelb
+import order
+
+main: procedure = .int
+  value = firstvalue() + extravalue()
+  if value <> 35 & value <> 38 then return 12
+  say "ORDER PASS" value
+  return 0

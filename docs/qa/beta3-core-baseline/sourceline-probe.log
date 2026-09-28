@@ -1,0 +1,25 @@
+$ /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/bin/rxc -x -o /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/alpha /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/alpha/unit.crexx
+status=0
+
+$ /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/bin/rxas -o /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/alpha /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/alpha.rxas
+status=0
+
+$ /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/bin/rxc -x -o /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/beta /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/beta/unit.crexx
+status=0
+
+$ /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/bin/rxas -o /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/beta /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/beta.rxas
+status=0
+
+$ /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/bin/rxc -x -i /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe -o /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/main /Users/adrian/.codex/worktrees/beta3-core-baseline/CREXX/cmake-build-debug/beta3-source-probe/main.crexx
+status=0
+
+   .srcstep 1 1 17 "main.crexx" 5 5 21 "arg values = .string[]"
+   .srcstep 5 5 17 "main.crexx" 6 1 25 "say alpha..calc(values[0])"
+   .srcstep 4 4 17 "main.crexx" 6 5 16 "say alpha..calc(values[0])"
+   .srcstep 2 2 33 "main.crexx" 6 16 16 "say alpha..calc(values[0])"
+   .srcstep 3 3 25 "unit.crexx" 6 3 20 "  return value + 11"
+   .srcstep 9 9 17 "main.crexx" 7 1 24 "say beta..calc(values[0])"
+   .srcstep 8 8 17 "main.crexx" 7 5 15 "say beta..calc(values[0])"
+   .srcstep 6 6 33 "main.crexx" 7 15 15 "say beta..calc(values[0])"
+   .srcstep 7 7 25 "unit.crexx" 6 3 20 "  return value + 29"
+   .srcstep 10 10 1 "main.crexx" 7 24 24 "say beta..calc(values[0])"

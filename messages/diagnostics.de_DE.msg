@@ -170,6 +170,7 @@ SRCMAP_UNBALANCED = Source-Map-Spanne ist nicht ausgeglichen: {reason}.
 SYMBOL_HAS_BOUNDARY_WHITESPACE = Symbol hat ungültigen Leerraum am Rand.
 SYNC_TEST = Source-Synchronisationstestdiagnose.
 SYNTAX_ERROR = Syntaxfehler.
+RXBIN_IMPORT_READ_ERROR = Binärimport "{file}" kann nicht gelesen werden.
 SYNTAX_ERROR_IN_IMPORT_DECL = Die importierte Deklaration "{name}" in {import_file} hat eine ungültige Syntax.
 INITIALISER_NOT_CALLABLE = Initialisierer sind VM-Lebenszyklus-Einstiegspunkte und können nicht direkt aufgerufen werden.
 INITIALISER_NOT_EXPOSABLE = Initialisierer sind private Modul-Lebenszyklus-Einstiegspunkte und können nicht durch einen Namensraum exportiert werden.
@@ -479,3 +480,5 @@ RXC-LC-53.2 = Variablenreferenz nach STEM-Schlüsselwort erwartet; gefunden "{to
 RXC-LC-53.3 = Argument für STEM muss genau einen Punkt als letztes Zeichen haben; gefunden "{name}"
 RXC-LC-54 = Ungültiger STEM-Wert
 RXC-LC-54.1 = Für dieses STEM APPEND muss der Wert von "{name}" eine Zeilenzahl sein; gefunden: "{value}"
+
+IMPORT_DIRECTORY_READ_ERROR = Importverzeichnis {directory} kann nicht gelesen werden.

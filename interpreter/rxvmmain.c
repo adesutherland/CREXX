@@ -76,6 +76,7 @@ static void help() {
             "                  Write the instruction-sequence execution profile\n"
 #endif
             "  -l location     Working Location (directory)\n"
+            "  -E encoding     VM text-file encoding (RXBIN and .binary stay raw)\n"
             "  -v              Prints Version\n"
             "\n*   VM Extension Plugin are specified by the full file name without the extension\n"
             "    Multiple plugins can be loaded by specifying multiple -p options\n"
@@ -309,6 +310,12 @@ int main(int argc, char *argv[]) {
                     error_and_exit("Missing location after -l");
                 }
                 context.location = argv[i];
+                break;
+
+            case 'E': /* VM application text files */
+                i++;
+                if (i >= argc || platform_text_encoding(argv[i]) != 0)
+                    error_and_exit("Missing or unsupported text encoding after -E");
                 break;
 
             case 'P': /* Load Plugin */

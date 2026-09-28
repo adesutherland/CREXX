@@ -27,6 +27,7 @@
  */
 
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -3039,7 +3040,12 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
 
             default: /* error */
                 if (file_module_section) free_module(file_module_section);
-                if (context->debug_mode >= 2) printf("Importing Procedures - Error reading file\n");
+                {
+                    const char *detail = rxbin_last_error();
+                    fprintf(stderr, "RXBIN_IMPORT_READ_ERROR: %s (code %d): %s\n",
+                            file_name, loaded_rc, detail ? detail : "no RXBIN detail");
+                    mknd_err1(context->ast, "RXBIN_IMPORT_READ_ERROR", "file", file_name);
+                }
                 fclose(fp);
                 return;
         }
@@ -3304,6 +3310,34 @@ const char *rxcp_importable_source_namespace(Context *context, importable_file *
     return file->namespace_name;
 }
 
+/* Source roots are ordered by the caller. A namespace can span several files
+ * within one root, but a later root must not replace an already loaded
+ * provider merely because its file has a different name. Check lazily so
+ * constrained ports do not read every source header during discovery. */
+static int source_namespace_claimed_by_earlier_root(Context *context,
+                                                    importable_file **list,
+                                                    size_t current) {
+    importable_file *candidate = list[current];
+    const char *namespace_name;
+    size_t i;
+
+    if (!candidate || candidate->type != REXX_FILE) return 0;
+    namespace_name = rxcp_importable_source_namespace(context, candidate);
+    if (!namespace_name || !namespace_name[0]) return 0;
+    for (i = 0; i < current; i++) {
+        importable_file *earlier = list[i];
+        const char *earlier_namespace;
+
+        if (!earlier || earlier->type != REXX_FILE || !earlier->imported) continue;
+        if (earlier->root_kind == candidate->root_kind &&
+            earlier->root_index == candidate->root_index) continue;
+        earlier_namespace = rxcp_importable_source_namespace(context, earlier);
+        if (earlier_namespace && strcmp(earlier_namespace, namespace_name) == 0)
+            return 1;
+    }
+    return 0;
+}
+
 /* Parse and rxcp_val a rexx program in a string and return the context */
 /* Parse and rxcp_val a rexx program in a string and return the context */
 Context *rxcp_parse_buffer(char* rexx_source, int debug_mode) {
@@ -3441,9 +3475,16 @@ static int load_another_file(Context *context) {
 
     for (f = 0; master_context->importable_file_list[f]; f++) {
         /* Already imported? */
-        if (!master_context->importable_file_list[f]->imported) {
+        if (!master_context->importable_file_list[f]->imported &&
+            !master_context->importable_file_list[f]->shadowed) {
             if (master_context->importable_file_list[f]->type == REXX_FILE &&
                 !source_import_file_is_visible(context, master_context->importable_file_list[f])) {
+                continue;
+            }
+            if (source_namespace_claimed_by_earlier_root(master_context,
+                                                         master_context->importable_file_list,
+                                                         f)) {
+                master_context->importable_file_list[f]->shadowed = 1;
                 continue;
             }
             master_context->importable_file_list[f]->imported = 1;
@@ -4384,6 +4425,7 @@ static importable_file* importable_file_f(char* name, file_type type, char *loca
     }
     else file->location = 0;
     file->imported = 0;
+    file->shadowed = 0;
     file->source_root = 0;
     file->source_default_level = UNKNOWN;
     file->mtime = read_importable_mtime(location, name);
@@ -4419,7 +4461,20 @@ static void free_directory_names(char **names, size_t count) {
     free(names);
 }
 
-static char **scan_directory_names(const char *directory, char *prefix, char *type, size_t *count) {
+/* Missing optional roots are empty; an incomplete native/desktop enumeration
+ * is a compilation error, including a deferred iterator close failure. */
+static void import_directory_error(Context *context, const char *directory, int error) {
+    if (!error) return;
+    if (!context->import_discovery_error) {
+        context->import_discovery_error = error;
+        fprintf(stderr, "IMPORT_DIRECTORY_READ_ERROR: %s: %s (%d)\n",
+                directory ? directory : ".", strerror(error), error);
+        if (context->ast) mknd_err1(context->ast, "IMPORT_DIRECTORY_READ_ERROR",
+                                  "directory", directory ? directory : ".");
+    }
+}
+
+static char **scan_directory_names(Context *context, const char *directory, char *prefix, char *type, size_t *count) {
     void *dir_ptr;
     char *name;
     char **names;
@@ -4430,7 +4485,9 @@ static char **scan_directory_names(const char *directory, char *prefix, char *ty
     *count = 0;
     names = 0;
     dir_ptr = 0;
+    errno = 0;
     name = dirfstfl(directory, prefix, type, &dir_ptr);
+    if (!name && !dir_ptr && (errno == ENOENT || errno == ENOTDIR)) errno = 0;
     while (name) {
         copy_size = strlen(name) + 1;
         copy = strdup(name);
@@ -4453,6 +4510,12 @@ static char **scan_directory_names(const char *directory, char *prefix, char *ty
         name = dirnxtfl(&dir_ptr);
     }
     dirclose(&dir_ptr);
+    import_directory_error(context, directory, errno);
+    if (context->import_discovery_error) {
+        free_directory_names(names, *count);
+        *count = 0;
+        return NULL;
+    }
 
     if (*count > 1) qsort(names, *count, sizeof(char *), directory_name_compare);
     return names;
@@ -4527,7 +4590,7 @@ static void discard_missing_directory_names(const char *directory, char **names,
 /* readdir() does not define a coherent result while another process mutates
  * the directory. Prefer two matching scans. Under continuous activity, merge
  * a bounded number of observations and discard entries that no longer exist. */
-static char **snapshot_directory_names(const char *directory, char *prefix, char *type,
+static char **snapshot_directory_names(Context *context, const char *directory, char *prefix, char *type,
                                        size_t *count, int debug_mode) {
     char **previous;
     char **current;
@@ -4537,11 +4600,18 @@ static char **snapshot_directory_names(const char *directory, char *prefix, char
     size_t observed_count;
     int attempt;
 
-    previous = scan_directory_names(directory, prefix, type, &previous_count);
+    previous = scan_directory_names(context, directory, prefix, type, &previous_count);
+    if (context->import_discovery_error) { *count = 0; return NULL; }
     observed = 0;
     observed_count = 0;
     for (attempt = 1; attempt < RXCP_DIRECTORY_SNAPSHOT_MAX_SCANS; attempt++) {
-        current = scan_directory_names(directory, prefix, type, &current_count);
+        current = scan_directory_names(context, directory, prefix, type, &current_count);
+        if (context->import_discovery_error) {
+            free_directory_names(previous, previous_count);
+            free_directory_names(observed, observed_count);
+            *count = 0;
+            return NULL;
+        }
         if (directory_names_equal(previous, previous_count, current, current_count)) {
             free_directory_names(observed, observed_count);
             free_directory_names(previous, previous_count);
@@ -4575,7 +4645,7 @@ static char **snapshot_directory_names(const char *directory, char *prefix, char
 }
 
 /* Get a list of files of a type in a directory (can be null), skipping skip_name (can be null) */
-static void list_files_in_dir(char *directory, file_type type, char* skip_name, char *skip_module,
+static void list_files_in_dir(Context *context, char *directory, file_type type, char* skip_name, char *skip_module,
                               importable_file ***list, size_t *number, int debug_mode, char source_root,
                               RxcpImportRootKind root_kind, size_t root_index) {
 
@@ -4605,7 +4675,7 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
             return;
     }
 
-    names = snapshot_directory_names(directory, file_prefix, type_name, &name_count, debug_mode);
+    names = snapshot_directory_names(context, directory, file_prefix, type_name, &name_count, debug_mode);
     for (i = 0; i < name_count; i++) {
         name = names[i];
         if ((!skip_name || strcmp(name, skip_name) != 0) &&
@@ -4623,7 +4693,7 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
     free_directory_names(names, name_count);
 }
 
-static void list_source_files_in_dir(char *directory, const char *extension, RexxLevel default_level,
+static void list_source_files_in_dir(Context *context, char *directory, const char *extension, RexxLevel default_level,
                                      char* skip_name, char *skip_module,
                                      importable_file ***list, size_t *number, int debug_mode, char source_root,
                                      RxcpImportRootKind root_kind, size_t root_index) {
@@ -4634,7 +4704,10 @@ static void list_source_files_in_dir(char *directory, const char *extension, Rex
 
     if (!extension || !extension[0]) return;
 
+    dir_ptr = NULL;
+    errno = 0;
     name = dirfstfl(directory, 0, (char*) extension, &dir_ptr);
+    if (!name && !dir_ptr && (errno == ENOENT || errno == ENOTDIR)) errno = 0;
     while (name) {
         if ((!skip_name || strcmp(name, skip_name) != 0) &&
             (!skip_module || !module_name_equals(name, skip_module))) {
@@ -4651,6 +4724,7 @@ static void list_source_files_in_dir(char *directory, const char *extension, Rex
         name = dirnxtfl(&dir_ptr);
     }
     dirclose(&dir_ptr);
+    import_directory_error(context, directory, errno);
 }
 
 static importable_file *find_stage_module(importable_file **list, int stage, const char *name) {
@@ -4696,7 +4770,7 @@ static void collect_root_files(Context *context, char *directory, file_type type
     root_list[0] = 0;
     root_count = 0;
 
-    list_files_in_dir(directory, type, skip_name, skip_module, &root_list, &root_count,
+    list_files_in_dir(context, directory, type, skip_name, skip_module, &root_list, &root_count,
                       debug_mode, source_root, root_kind, root_index);
     for (i = 0; i < root_count; i++) {
         add_unique_stage_file(context, list, number, root_list[i]);
@@ -4719,7 +4793,7 @@ static void collect_source_root_files(Context *context, char *directory, const R
     root_list[0] = 0;
     root_count = 0;
 
-    list_source_files_in_dir(directory, extension->extension, extension->default_level,
+    list_source_files_in_dir(context, directory, extension->extension, extension->default_level,
                              skip_name, skip_module, &root_list, &root_count, debug_mode, source_root,
                              root_kind, root_index);
     for (i = 0; i < root_count; i++) {
@@ -4741,7 +4815,7 @@ static void collect_binary_root_files(Context *context, char *directory, char *s
     root_list[0] = 0;
     root_count = 0;
 
-    list_files_in_dir(directory, RXBIN_FILE, 0, skip_module, &root_list, &root_count,
+    list_files_in_dir(context, directory, RXBIN_FILE, 0, skip_module, &root_list, &root_count,
                       debug_mode, 0, root_kind, root_index);
     if (auto_import_rxas) {
         importable_file **rxas_list;
@@ -4755,7 +4829,7 @@ static void collect_binary_root_files(Context *context, char *directory, char *s
         }
         rxas_list[0] = 0;
         rxas_count = 0;
-        list_files_in_dir(directory, RXAS_FILE, 0, skip_module, &rxas_list, &rxas_count,
+        list_files_in_dir(context, directory, RXAS_FILE, 0, skip_module, &rxas_list, &rxas_count,
                           debug_mode, 0, root_kind, root_index);
 
         for (i = 0; i < rxas_count; i++) {
@@ -4802,8 +4876,10 @@ importable_file **rxfl_lst(Context *context) {
     size_t source_extension_count;
     size_t e;
 
+    if (!context) { errno = EINVAL; return NULL; }
+    if (context->import_discovery_error) { errno = context->import_discovery_error; return NULL; }
     list = malloc(sizeof(importable_file *));
-    if (!list) return 0;
+    if (!list) RX_PANIC_OOM("malloc importable list", sizeof(importable_file *), 0);
     list[0] = 0;
     skip_module = context ? context->file_name : 0;
     source_extension_count = rxcp_source_extension_list(context ? context->initial_source_extension : 0,
@@ -4863,6 +4939,11 @@ importable_file **rxfl_lst(Context *context) {
         }
     }
 
+    if (context->import_discovery_error) {
+        rxfl_fre(list);
+        errno = context->import_discovery_error;
+        return NULL;
+    }
     if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files finished. Found %zu files.\n", number);
     return list;
 }

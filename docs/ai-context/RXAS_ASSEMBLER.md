@@ -3,8 +3,10 @@
 The `rxas` assembler is responsible for translating human-readable Intermediate Representation (IR) assembly (`.rxas`) into packed executable bytecode (`.rxbin`) consumed by the `rxvm` interpreter.
 
 RXAS `-E encoding` selects assembly input encoding before opening files.
-Desktop input remains UTF-8; an explicitly selected CMS platform may provide
-the optional [text adapter](../../ports/single-threaded/CMS-TEXT.md). Conversion
+Desktop input remains UTF-8; explicit CMS/TSO raw profiles use the shared
+[seven-page platform codec](../planning/beta-3/text-boundary-2026-09-28.md).
+The older optional [CMS text adapter](../../ports/single-threaded/CMS-TEXT.md)
+is a transitional converted route. Conversion
 precedes lexical analysis; sequential input is supported and input read/close
 failures are errors. RXBIN output always uses binary I/O and never passes
 through that adapter.

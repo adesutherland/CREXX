@@ -5753,7 +5753,11 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #define RXVM_NONWINDOWS_ONLY(...) __VA_ARGS__
 #endif
 
-#if defined(__linux__)
+#if defined(CREXX_PLATFORM_TSO)
+#define RXVM_PLATFORM_NAME "tso"
+#elif defined(CREXX_PLATFORM_CMS)
+#define RXVM_PLATFORM_NAME "cms"
+#elif defined(__linux__)
 #define RXVM_PLATFORM_NAME "linux"
 #elif defined(_WIN32)
 #define RXVM_PLATFORM_NAME "windows"

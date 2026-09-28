@@ -65,6 +65,7 @@ struct Context {
     char executable_import_included;
     size_t executable_import_root_index;
     importable_file **importable_file_list;
+    int import_discovery_error; /* errno of incomplete enumeration, never a usable list */
     FILE *file_pointer;
     FILE *traceFile;
     char *buff_start;
@@ -217,6 +218,7 @@ struct importable_file {
     file_type type;
     char *location;
     char imported;
+    char shadowed;
     char source_root;
     RexxLevel source_default_level;
     time_t mtime;

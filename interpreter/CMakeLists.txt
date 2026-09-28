@@ -540,7 +540,7 @@ if(BUILD_TESTING)
             LABELS "interpreter;spawn;sanitizer;concurrency;smoke"
             CREXX_PREP_TARGETS test_rxspawn_inheritance TIMEOUT 180)
     add_executable(test_rxvmfile tests/test_rxvmfile.c)
-    target_include_directories(test_rxvmfile PRIVATE .)
+    target_include_directories(test_rxvmfile PRIVATE . ../platform)
     add_test(NAME rxvmfile_private_open COMMAND test_rxvmfile)
     set_tests_properties(rxvmfile_private_open PROPERTIES
             LABELS "interpreter;spawn;sanitizer;concurrency;smoke"
@@ -656,6 +656,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+
+add_executable(test_value_factory_allocation tests/test_value_factory_allocation.c)
+target_include_directories(test_value_factory_allocation PRIVATE . ../utf8 ../platform ../binutils/include)
+target_link_libraries(test_value_factory_allocation PRIVATE rxvmref platform ${CREXX_MATH_LIBRARY})
+add_test(NAME value_factory_allocation_failure COMMAND test_value_factory_allocation)
+set_tests_properties(value_factory_allocation_failure PROPERTIES
+        LABELS "unit;interpreter;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_value_factory_allocation)
 
 # Value test executable
 add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)

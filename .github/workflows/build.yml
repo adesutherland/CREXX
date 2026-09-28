@@ -176,6 +176,15 @@ jobs:
             --target stage-product stage-optional sqlite sqlite_static vector vector_static \
             --parallel ${{ matrix.build_jobs }}
 
+      - name: Check portable RXBIN with a 32-bit reader and writer
+        if: matrix.platform == 'linux' && !matrix.cuda
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gcc-multilib
+          CC=gcc CFLAGS=-m32 tools/check-rxbin-width.sh \
+            "${{ runner.temp }}/build/bin/rxas" "${{ runner.temp }}/rxbin-ilp32"
+
       - name: Run fast candidate QA
         if: matrix.platform != 'windows'
         shell: bash

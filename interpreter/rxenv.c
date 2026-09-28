@@ -4,6 +4,10 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#ifdef CREXX_NATIVE_RAW_IO
+#include "platform_native.h"
+#endif
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -12,21 +16,37 @@
  * Sets value (null terminated) (and a handle) from env variable name length name_length (not null terminated)
  * Value can be set to point to a zero length string (if the variable is not set)
  *
- * Returns 1 if value should bee free()d
- * Otherwise returns 0
+ * Returns 1 if value should be free()d, 0 for borrowed/absent values, or
+ * -1/errno when the native environment service fails.
  */
 int getEnvVal(char **value, char *name, size_t name_length) {
 
     char* nulled_name;
+    if (!value || (!name && name_length)) { errno = EINVAL; return -1; }
+    *value = NULL;
     if (!name_length) {
         *value = "";
         return 0;
     }
+#ifdef CREXX_NATIVE_RAW_IO
+    if (memchr(name, 0, name_length)) { errno = EINVAL; return -1; }
+#endif
+    if (name_length == (size_t)-1) { errno = EOVERFLOW; return -1; }
     nulled_name = malloc(name_length + 1);
+    if (!nulled_name) { errno = ENOMEM; return -1; }
     memcpy(nulled_name, name, name_length);
     nulled_name[name_length] = 0;
 
-#ifdef _WIN32
+#ifdef CREXX_NATIVE_RAW_IO
+    {
+        int result = crexx_native_environment(nulled_name, value);
+        int error = errno;
+        free(nulled_name);
+        if (result < 0) { errno = error; return -1; }
+        if (!result) { *value = ""; return 0; }
+        return 1;
+    }
+#elif defined(_WIN32)
 
     wchar_t *wname;
     int wname_length = MultiByteToWideChar(CP_UTF8, 0, nulled_name, -1, NULL, 0);
@@ -63,4 +83,3 @@ int getEnvVal(char **value, char *name, size_t name_length) {
 
 #endif
 }
-

@@ -6,13 +6,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "platform.h"
 #ifdef __APPLE__
 #include <fcntl.h>
 #include <unistd.h>
 #endif
 
 static FILE *rxvm_private_fopen(const char *path, const char *mode) {
-#ifdef __APPLE__
+#if defined(CREXX_MAINFRAME_ELF)
+    /* Native profiles have no child-process inheritance and libc may reject
+     * Linux's e modifier. Use the logical-name/text boundary exactly once. */
+    return platform_fopen(path, mode);
+#elif defined(__APPLE__)
     /* Darwin fopen does not implement the 'e' modifier. Preserve its C mode
      * parsing and initial append position, but open atomically close-on-exec. */
     int flags, fd, saved_errno;

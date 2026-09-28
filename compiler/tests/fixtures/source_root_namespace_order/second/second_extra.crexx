@@ -1,0 +1,5 @@
+options levelb
+namespace order expose extravalue
+
+extravalue: procedure = .int
+  return 9

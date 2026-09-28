@@ -236,6 +236,10 @@ RXVM_HANDLER(GETENV_REG_REG, VM_ADVANCE(2);
         {
             char *value;
             int should_free = getEnvVal(&value, op2R->string_value, op2R->string_length);
+            if (should_free < 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_NOTREADY, "Unable to read environment value");
+                DISPATCH;
+            }
             set_null_string(op1R, value);
             if (should_free) free(value);
         }
@@ -251,6 +255,10 @@ RXVM_HANDLER(GETENV_REG_STRING, VM_ADVANCE(2);
         {
             char *value;
             int should_free = getEnvVal(&value, (CONSTSTRING_OP(2))->string, (CONSTSTRING_OP(2))->string_len);
+            if (should_free < 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_NOTREADY, "Unable to read environment value");
+                DISPATCH;
+            }
             set_null_string(op1R, value);
             if (should_free) free(value);
         }

@@ -1,0 +1,2 @@
+compressed=12207 digest=3fc9210d4fbd2dba workspace_allocations=2
+PASS compression workspace allocation/output failures and round trip
