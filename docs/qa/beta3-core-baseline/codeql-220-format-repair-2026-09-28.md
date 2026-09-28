@@ -47,6 +47,16 @@ diagnostic branch. `git diff --check` passed. No broad test was repeated.
 
 ## Publication boundary
 
+The coordinator independently inspected commit
+`b63ee4b6aaf4c7bd577399adbd32ba83332ec730`, verified all four retained log
+hashes and passing results, and confirmed that this is the only non-document
+change after published `9f2f44cfd`. A normal core product build,
+`cmake --build cmake-build-debug --target rxc rxas rxlink rxvm --parallel 8`,
+also passed at `/tmp/crexx-codeql220-core-build.0JY6OJ`, SHA-256
+`d68a5dbe77179f58e691948112a4cab7d79792acfd99099db6a7df9810dee54b`,
+with no compiler warnings or errors. AC-03-Q1 is accepted for ordinary
+publication. No unchanged focused test was repeated.
+
 The already-running hosted sanitizer matrix targets published
 `9f2f44cfd888d324858769809b0381e524850b4c`; it does not test this
 subsequent product edit. Its result remains valid only for that named input.

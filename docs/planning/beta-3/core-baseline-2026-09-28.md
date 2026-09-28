@@ -457,6 +457,27 @@ source. The worker must report any additional qualification needed before
 publication. No compiler null-check cleanup, filesystem mutation, alert
 dismissal or new broad run is part of this bounded step.
 
+**17:40 UTC #220 repair acceptance:** local commit `b63ee4b6a` changes only
+the incorrect graph-operand format specifier plus its
+[QA receipt](../../qa/beta3-core-baseline/codeql-220-format-repair-2026-09-28.md).
+The coordinator independently inspected the variadic types and unchanged
+failure/cause handling, verified retained Debug 4/4 and Apple ASan 4/4
+results and hashes, and completed a successful normal core product build.
+AC-03-Q1 and STEP-03-Q1 are accepted locally; ordinary publication and its
+automatic Build/CodeQL verification are next. These checks do not dynamically
+exercise the rare changed diagnostic branch; its correction is established
+by the actual `size_t` argument and `%zu` contract.
+
+The current hosted sanitizer matrix remains evidence for `9f2f44cfd` only.
+Do not cancel or relabel it to cover this later product edit. AC-08's final
+combined baseline requirement stays open; no second broad run is dispatched
+while the full native baseline inputs are still unsettled. The normal
+development-publication policy permits this reviewed diagnostic fix to be
+published without waiting for another full matrix. Sol is preparing a bounded
+read-only filesystem repair/design proposal; no filesystem implementation or
+contract change is approved by that assignment. All other open criteria and
+the subsequent product-definition phase are preserved.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
