@@ -374,6 +374,29 @@ CodeQL checks. This is development publication, not a beta release. Both full
 sanitizer lanes remain active, so AC-08 is still open. Native AC-04/11 and final
 AC-10 remain open, with no native result inferred from these hosted gates.
 
+**CodeQL alert correction after Adrian's query:** the successful CodeQL
+workflow status above establishes analysis execution, not an alert-free result.
+The coordinator had checked job conclusions but omitted the code-scanning
+alert inventory. Newly introduced alert
+[#227](https://github.com/adesutherland/CREXX/security/code-scanning/227),
+created at 15:21 UTC during the PR analysis, remains open on `9f2f44cfd`.
+Rule `cpp/system-data-exposure` has warning/medium severity and traces
+`getenv("CREXX_PROVIDER_PATH")` in `interpreter/rxvmmain.c:389` to the new
+allocation-free diagnostic's `write(2, bytes, length)` in `platform/oom.c:59`.
+This is a static-analysis finding, not a sanitizer diagnostic or a confirmed
+exploitable vulnerability. The nine other open CodeQL alerts predate this
+batch; they are not dismissed by successful workflow execution either.
+
+The earlier unqualified CodeQL acceptance is corrected: integration and
+automatic workflow execution passed, but AC-09 alert review remains OPEN
+pending an evidence-backed disposition of #227. The Sol Extra High worker
+is tracing the complete flow and preparing a minimal proof and proposed
+disposition/repair. No alert dismissal, suppression or speculative source
+change is authorized by this correction. Keep the running sanitizer matrix
+and unchanged valid QA evidence; a repair must identify affected proof before
+requesting any additional run. Native AC-04/11, final sanitizer AC-08 and
+final AC-10 remain open.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
