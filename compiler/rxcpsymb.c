@@ -782,6 +782,10 @@ size_t scp_noch(Scope *scope) {
 Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     char *c;
     Symbol *symbol = (Symbol*)malloc(sizeof(Symbol));
+    if (!symbol) RX_PANIC_OOM("allocate symbol", sizeof(Symbol), "sym_fn");
+
+    if (name_length == SIZE_MAX)
+        RX_PANIC_OOM("allocate symbol name", RX_OOM_UNKNOWN_SIZE, "sym_fn");
 
     /* Normalise stem variables by stripping the trailing dot */
     if (name_length > 0 && name[name_length - 1] == '.') {
@@ -804,6 +808,8 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->needs_default_initiation = 0;
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
+    if (!symbol->name)
+        RX_PANIC_OOM("allocate symbol name", name_length + 1, "sym_fn");
     memcpy(symbol->name, name, name_length);
     symbol->name[name_length] = 0;
     symbol->register_type = 'r';

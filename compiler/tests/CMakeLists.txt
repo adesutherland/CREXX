@@ -12,6 +12,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_C_STANDARD 90)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+add_executable(test_symbol_allocation test_symbol_allocation.c)
+get_target_property(symbol_test_includes rxclib INCLUDE_DIRECTORIES)
+target_include_directories(test_symbol_allocation PRIVATE ${symbol_test_includes})
+target_link_libraries(test_symbol_allocation PRIVATE rxclib)
+add_test(NAME symbol_allocation_failure COMMAND test_symbol_allocation)
+set_tests_properties(symbol_allocation_failure PROPERTIES
+        LABELS "unit;compiler;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_symbol_allocation)
+
 # The test driver itself must be compiled as strict C90
 add_executable(crexx_test_driver src/test_driver.c)
 
