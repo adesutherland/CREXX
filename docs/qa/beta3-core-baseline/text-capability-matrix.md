@@ -41,6 +41,24 @@ still unverified. There is no UTF16/32 tool-stream selector.
 | Driver, RXPP, crexxsaa, profiler and ancillary tools | Current lab package evidence lists RXC/RXAS/RXVM; it does not establish native RXPP, RXLINK, RXDAS, `crexxsaa`, profiler or ancillary packages. Desktop RXPP's `precomp.readallx`/`writeall` use direct `fopen` and the helper is both a static RXPP provider and a dynamic compiler import. | No native parity claim for the unbuilt components. Before any native RXPP packaging, route its text opens through the selected cREXX platform without duplicating codec state in the dynamic module; verify read/write/close failures and its generated text. Audit driver and embedding stream ownership separately. |
 | Binary RXBIN, packages and explicit binary files | `rb`/`wb` raw mock passes embedded zero, high bytes and LF without conversion. | Native package and actual binary storage proof open. |
 
+### Caller-level native audit
+
+The present lab package pipeline names RXC, RXAS and RXVM. This table records
+their remaining crossings even when a host mock has already proved the adapter.
+Other desktop components remain in the supported-surface audit above, but have
+no current CMS31/TSO31/TSO64 package evidence.
+
+| Caller | Current boundary | Native disposition still needed |
+| --- | --- | --- |
+| `compiler/rxc_main.c` → `rxcmain`, `compiler/rxcp_ast_print.c`, `compiler/rxcp_exit.c` | `argv`, C `stdout`/`stderr`, compiler-exit SAY and diagnostics | Decode raw process arguments once at standalone startup; attach IBM1047 console wrappers before first output. Keep direct embedding of `rxcmain` host-owned. |
+| `assembler/rxasmain.c` | `argv`, C `stdout`/`stderr`; source text through `openfile` | Same process input and console startup contract; `-E` already selects source text page. |
+| `interpreter/rxvmmain.c`, `interpreter/exitfunc.c`, `interpreter/rxvmintp.c` | `argv`, C `stdin`/`stdout`/`stderr`, SAY/TRACE and diagnostics | Same standalone startup contract; `rxvml` embedding must retain host streams. VM application files already pass through the native adapter. |
+| `interpreter/rxenv.c` VM `GETENV` | cREXX native environment decode on CMS/TSO; desktop native `getenv` otherwise | Host mock plus normal/ASan VM regressions pass; native service/package proof open. |
+| Compiler configuration (`rxcp_project_dependencies.c`, `rxcp_exit.c`, `rxcpmain.c`, `rxcp_diag.c`) and VM configuration (`rxvmmain.c`) | Direct `getenv` calls for path, exit and diagnostic options | Route supported native options through the raw environment decoder with owned UTF-8 lifetime, or declare each option unavailable on the native profile. Do not treat ENOTSUP as absence. |
+| `preprocessor/precomp.c` in RXPP | Direct `fopen`/`fgets`/`fputs`/`fclose`; dynamic compiler import and static RXPP provider | Native RXPP is not yet packaged. A future native build must use the same platform-selected codec in both provider shapes and propagate read/write/close errors. |
+| `linker/rxlinkmain.c`, `disassembler/rxdamain.c`, `interpreter/rxseqmain.c` | Text files now use `platform_fopen`/`openfile` where applicable; C stdio and `argv` remain | No current native package evidence. Before enabling any of these native tools, apply the standalone startup contract and qualify their explicit file-page selection. |
+| `interpreter/crexxsaa.c`, `interpreter/rxvmlib.c`, `bin/crexx.crexx`, `preprocessor/rxpp_sh.c` | Host embedding, driver and editor surfaces; direct C/environment or VM file services | No current native package evidence. Embedding must not rebind a host's C standard streams; native availability and each text crossing need explicit packaging and tests before parity claims. |
+
 The raw host fixture compiles the CMS and TSO `platform.c` routes and exercises
 record/byte text, short writes, capacity rejection before record commit,
 read/write/flush/close errors, binary bytes, names, directory EOF/errors,
