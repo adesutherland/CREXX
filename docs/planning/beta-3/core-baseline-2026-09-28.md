@@ -416,6 +416,29 @@ remain unapproved. This adds the previously omitted static-analysis inventory,
 not a silent issue closure or a change to the product-definition sequence.
 Both sanitizer lanes are still active on unchanged published `9f2f44cfd`.
 
+**17:27 UTC older-alert review and bounded repair:** the
+[nine-alert receipt](../../qa/beta3-core-baseline/codeql-older-alerts-triage-2026-09-28.md)
+at `6c437c535` identifies four redundant compiler checks (#216–218/#225),
+one confirmed RXBIN error-format defect (#220), and four filesystem check/use
+findings (#222–224/#226). Coordinator inspection confirms that #220 passes
+a `size_t` operand index to `%d`, unlike the adjacent correct `%zu` cases.
+Correcting that one specifier is a routine diagnostic-portability repair
+within the approved shared binutils outcome, without language or format design
+changes. Filesystem source-identity and final-symlink guarantees require a
+separate review before changing behavior; do not infer atomic object identity
+from a pathname API or silently weaken the documented symlink rejection.
+
+**STEP-03-Q1 (serves AC-03/07/09):** repair #220's one format specifier in a
+separate local commit; inspect its type against the variadic format, exercise
+the relevant existing graph/binutils failure regression in normal Debug and
+the maintained sanitizer build where applicable, and retain the exact results.
+Acceptance **AC-03-Q1** is a type-correct diagnostic with the original failure
+result/cause preserved and focused checks passing. Reuse the current broad
+matrix on its named revision; do not cancel or relabel it as testing changed
+source. The worker must report any additional qualification needed before
+publication. No compiler null-check cleanup, filesystem mutation, alert
+dismissal or new broad run is part of this bounded step.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
