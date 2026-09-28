@@ -119,3 +119,15 @@ recorded SHA-256, and accepted this repair batch for publication to PR #709.
 `git diff --check 30d723054..e98c4542d` passes. Retain the previous combined
 normal, hosted ILP32 and optimizer-parity evidence; no broad repeat is needed.
 The repaired-head automatic Build and CodeQL checks remain publication gates.
+
+## Shared-core acceptance (28 September, 15:29 UTC)
+
+Accepted AC-01's complete patch disposition and AC-02/AC-03 on product/test
+inputs `a4a39dc3b`, following the earlier code/regression reviews and the real
+hosted ILP32 proof. Inspected `35495c941` and its updated receipts: source
+changes after `a4a39dc3b` are documentation only. All five core platform jobs
+and Linux optimizer parity passed; plugin jobs and current CodeQL are still
+running. The earlier CodeQL on production-identical `30d723054` has succeeded,
+but is not relabelled as the current run. Publish the final documents and mark
+the reviewed phase ready for integration, retaining automatic checks and every
+open native/final-sanitizer criterion. No broad local rerun is warranted.

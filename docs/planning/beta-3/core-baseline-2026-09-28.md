@@ -346,7 +346,11 @@ STEP-01 complete, STEP-02/03 in progress, STEP-04 complete by authorized
 SOURCELINE deferral, STEP-05 local QA accepted, STEP-06 review/draft publication
 in progress, STEP-07–08 open. AC-05 satisfied by evidence; AC-06 not applicable;
 AC-07 satisfied for the local candidate by coordinator-reviewed combined and
-focused repair evidence at `30d723054`. All other criteria remain open/partial
+focused repair evidence at `30d723054`. The coordinator subsequently accepted
+AC-01 patch disposition, AC-02 and AC-03 on the unchanged published product
+inputs at `a4a39dc3b`, after reviewing the completed register and actual
+hosted ILP32 evidence; see the shared-core acceptance receipt below. All
+remaining criteria stay open/partial
 as detailed below. The earlier hosted Build on `30d723054` found two fixture
 causes and did not pass; its focused repair evidence is in the
 [hosted fixture receipt](../../qa/beta3-core-baseline/hosted-fixture-repair-2026-09-28.md).
@@ -752,6 +756,29 @@ SAN findings; AC-09 remains OPEN until develop integration and its automatic
 publication checks; AC-10 and STEP-08 remain OPEN for the final baseline and
 lab handoff. No native guest, broad sanitizer or new product QA is inferred
 from the ordinary PR results.
+
+### Coordinator shared-core acceptance (28 September, 15:29 UTC)
+
+The coordinator reviewed documentation-only follow-up `35495c941` against
+published product/test head `a4a39dc3b`, checked the upstream CMS foundation
+identities and the rejected filename/namespace shortcut, and accepted the
+complete patch disposition under AC-01. Native mechanisms are assigned explicit
+runtime dependencies; this disposition does not qualify those mechanisms.
+Previously reviewed compiler/error and compressor/sentinel/allocation changes,
+their retained normal/focused sanitizer regressions, and the independently
+inspected actual Linux ILP32 job support acceptance of AC-02 and AC-03.
+All five ordinary platform core jobs and optimizer parity have passed on
+`a4a39dc3b`. Plugin jobs and current CodeQL remain running at this snapshot.
+The local follow-up contains only documentation and passes `git diff --check`;
+no code or test/build input invalidates the retained results.
+
+Publish this final review/handoff documentation with the compatible reviewed
+phase and make PR #709 ready for review. Ordinary automatic checks on the
+published revision remain separate publication evidence. AC-04/11 native text
+and backend completion, AC-08 final sanitizer assurance, AC-09 develop
+integration/checks and AC-10 final baseline handoff remain OPEN. Neither native
+flush proposal selects a newlib fork or adds an approved runtime ABI. This is
+ordinary development integration readiness, not overall baseline acceptance.
 
 ### Coordinator workflow publication receipt
 
