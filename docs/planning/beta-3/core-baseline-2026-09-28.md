@@ -365,6 +365,15 @@ execution checkout contains only local status-documentation commits after the
 published merge; no product/test/build inputs have changed. The native raw
 backend and binding/flush dependencies remain unchanged in the lab checkout.
 
+**17:07 UTC publication acceptance:** develop CodeQL `36448831088` has
+completed successfully on `9f2f44cfd`, alongside the already passing complete
+Build `36448832221`. AC-09 is now satisfied: reviewed shared-core/feature-gated
+adapter commits are integrated, their ordinary publication checks passed, and
+the separately published default-branch workflow repair passed its Build and
+CodeQL checks. This is development publication, not a beta release. Both full
+sanitizer lanes remain active, so AC-08 is still open. Native AC-04/11 and final
+AC-10 remain open, with no native result inferred from these hosted gates.
+
 **28 September replacement worker checkpoint:** the complete
 [takeover handoff](worker-handoff-2026-09-28.md) records every AC/step and the
 earlier source/test boundary. The Sol Extra High worker continued in the same
