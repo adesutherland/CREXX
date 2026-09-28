@@ -106,3 +106,16 @@ proof did not include parser mode and remains valid for its recorded inputs.
 Linux ILP32 RXBIN and optimizer
 parity passed on the published head. A new hosted Build on the repaired head
 is still required; the native/console and final sanitizer gates remain open.
+
+## Fixture repair acceptance (28 September, 15:03 UTC)
+
+Independently reviewed the clean candidate `e98c4542d`: the Windows fixture
+is a content-preserving rename; `source_semantics` now declares its required
+modules and build-bin working directory; `highlight_cache` stages those
+modules in its isolated sandbox and removes them on both cleanup paths.
+Original test assertions and production code are unchanged. Inspected the
+focused Debug/Apple ASan receipts, including the final cache ASan log and its
+recorded SHA-256, and accepted this repair batch for publication to PR #709.
+`git diff --check 30d723054..e98c4542d` passes. Retain the previous combined
+normal, hosted ILP32 and optimizer-parity evidence; no broad repeat is needed.
+The repaired-head automatic Build and CodeQL checks remain publication gates.

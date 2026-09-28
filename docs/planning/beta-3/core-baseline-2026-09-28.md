@@ -661,7 +661,8 @@ sandbox stage the required library and compiler exits, with explicit fixture
 prep. Its original
 cache assertions pass focused Debug and Apple ASan 1/1 each. The other direct
 parser-mode editor test passed unchanged, and no further isolated parser
-sandbox was found. These test-only inputs await coordinator review/push; no
+sandbox was found. The coordinator accepted these test-only inputs at
+`e98c4542d` for the next PR publication; no
 production behavior was changed.
 The Linux hosted `gcc -m32` RXBIN cross-width check and optimizer parity job
 passed on published head; retain those valid results. No broad QA rerun was
