@@ -143,6 +143,8 @@ void crexx_tso_dirclose(void **);
  * streams retain their selected codec and storage layout; binary modes bypass
  * conversion. Native IBM1047 defaults to records, exchange pages to bytes. */
 int platform_text_encoding(const char *encoding);
+/* Text emitted by cREXX to a native mainframe standard stream. */
+int platform_console_text_write(FILE *stream, const char *text, size_t length);
 
 /*
  * Get the first file from a directory (or null if there isn't one)

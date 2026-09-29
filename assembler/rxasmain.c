@@ -29,6 +29,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "platform.h"
+#if defined(CREXX_MAINFRAME_ELF)
+#include <mainframe_text.h>
+#endif
 #include "rxas.h"
 #include "rxasassm.h"
 #include "../binutils/include/rxdefs.h"
@@ -130,6 +133,9 @@ int rxas_parser_mode_main(int stdio_mode, int port, const char *file_name, int d
 #endif
 
 int main(int argc, char *argv[]) {
+#if defined(CREXX_MAINFRAME_ELF)
+    mainframe_set_text_conversion(0);
+#endif
     Assembler_Context scanner;
     char *combined_location = 0;
     char *exe_path = 0;
