@@ -1,7 +1,7 @@
 %% crexxalmanac.sty -- cRexx Almanac inspired compact API reference layout
 %% 2026/08/07 v1.0.4
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{crexxalmanac}[2026/09/29 v1.0.8 continuous narrow marker strip]
+\ProvidesPackage{crexxalmanac}[2026/09/29 v1.0.9 leaders extend to return type]
 
 \RequirePackage{xcolor}
 \RequirePackage{amssymb}
@@ -113,13 +113,16 @@
 }
 \newcommand{\API@MarkerBox}[1]{\hbox to \APIMarkerWidth{\hfil\scriptsize #1\hfil}}
 \newcommand{\API@SinceBox}[1]{\hbox to \APISinceWidth{\hfil\scriptsize #1}}
-\newcommand{\API@ModifierBox}[1]{%
-  \hbox to \API@ModifierWidth{\color{apiMid}#1\APILeaderFill}%
-}
-% A long return type is anchored at its right edge and may extend to the left;
-% it can therefore never overwrite the fixed method-name column.
-\newcommand{\API@TypeBox}[1]{%
-  \hbox to \APITypeWidth{\hfil\hbox to 0pt{\hss\bfseries #1}}%
+% Set modifiers, dot leaders and the return type in one horizontal box.
+% The leaders therefore end immediately before the actual type, rather than
+% at the left edge of its formerly reserved column. The type's right edge
+% remains fixed, so method names and arguments do not move.
+\newcommand{\API@ModifierAndTypeBox}[2]{%
+  \hbox to \dimexpr\API@ModifierWidth+\APITypeWidth\relax{%
+    {\color{apiMid}#1}%
+    \APILeaderFill
+    \IfBlankF{#2}{\bfseries #2}%
+  }%
 }
 \newcommand{\API@GapBox}{\hbox to \APITypeDeclarationGap{\hfil}}
 \newcommand{\API@NameBox}[1]{%
@@ -133,8 +136,7 @@
   \sbox{\API@RowBox}{\hbox to \linewidth{\vrule width 0pt height 9pt depth 3pt%
     \API@MarkerBox{#1}%
     \API@SinceBox{#2}%
-    \API@ModifierBox{#3}%
-    \API@TypeBox{#4}%
+    \API@ModifierAndTypeBox{#3}{#4}%
     \API@GapBox
     \API@NameBox{#5}%
     \API@ArgumentsBox{#6\IfBlankF{#7}{\ {\color{apiMid}#7}}}%
@@ -147,8 +149,7 @@
   \sbox{\API@RowBox}{\hbox to \linewidth{\vrule width 0pt height 9pt depth 3pt%
     \API@MarkerBox{#1}%
     \API@SinceBox{#2}%
-    \API@ModifierBox{#3}%
-    \API@TypeBox{#4}%
+    \API@ModifierAndTypeBox{#3}{#4}%
     \API@GapBox
     \API@NameBox{#5}%
     \API@ArgumentsBox{\IfBlankF{#6}{{\color{apiMid}= #6}}}%
