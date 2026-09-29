@@ -1,7 +1,7 @@
 %% crexxalmanac.sty -- cRexx Almanac inspired compact API reference layout
 %% 2026/08/07 v1.0.4
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{crexxalmanac}[2026/08/07 v1.0.6 Almanac-style API reference]
+\ProvidesPackage{crexxalmanac}[2026/09/29 v1.0.8 continuous narrow marker strip]
 
 \RequirePackage{xcolor}
 \RequirePackage{amssymb}
@@ -14,12 +14,14 @@
 \definecolor{apiMid}{HTML}{777B76}
 \definecolor{apiLight}{HTML}{ECEDE9}
 \definecolor{apiRule}{HTML}{8C908B}
+\definecolor{apiMarkerBar}{HTML}{C4C5C1} % vertical member-marker strip
 \definecolor{apiText}{HTML}{343733}
 
 \newlength\APIHeadingHeight
 \newlength\APIHeadingSplit
 \newlength\APIHeadingInset
 \newlength\APIMarkerWidth
+\newlength\APIMarkerBarWidth
 \newlength\APISinceWidth
 \newlength\APITypeWidth
 \newlength\APINameWidth
@@ -32,6 +34,7 @@
 \setlength\APIHeadingSplit{0.73\linewidth}
 \setlength\APIHeadingInset{2.2mm}
 \setlength\APIMarkerWidth{1.45em}
+\setlength\APIMarkerBarWidth{0.70em}
 \setlength\APISinceWidth{2.05em}
 \setlength\APITypeWidth{8.2em}
 \setlength\APINameWidth{8.8em}
@@ -43,6 +46,8 @@
 \NewDocumentCommand{\APISetHeadingSplit}{m}{\setlength\APIHeadingSplit{#1}}
 \NewDocumentCommand{\APISetHeadingHeight}{m}{\setlength\APIHeadingHeight{#1}}
 \NewDocumentCommand{\APISetMarkerWidth}{m}{\setlength\APIMarkerWidth{#1}}
+\NewDocumentCommand{\APISetMarkerBarWidth}{m}{\setlength\APIMarkerBarWidth{#1}}
+% Override with \colorlet{apiMarkerBar}{<your colour>} if desired.
 \NewDocumentCommand{\APISetSinceWidth}{m}{\setlength\APISinceWidth{#1}}
 \NewDocumentCommand{\APISetTypeWidth}{m}{\setlength\APITypeWidth{#1}}
 \NewDocumentCommand{\APISetNameWidth}{m}{\setlength\APINameWidth{#1}}
@@ -95,7 +100,18 @@
 \newcommand{\API@ArgumentWidth}{%
   \dimexpr\APIDeclarationWidth-\APINameWidth\relax
 }
-\newcommand{\API@MarkerBox}[1]{\hbox to \APIMarkerWidth{\hfil\scriptsize #1}}
+% Paint the strip to the full height/depth of each member row.  In
+% particular, multiline parameter lists extend the strip downwards.
+\newsavebox{\API@RowBox}
+\newcommand{\API@PaintRow}{%
+  \leavevmode
+  \rlap{\hspace*{\dimexpr(\APIMarkerWidth-\APIMarkerBarWidth)/2\relax}%
+    \color{apiMarkerBar}%
+    \rule[-\dp\API@RowBox]{\APIMarkerBarWidth}{%
+      \dimexpr\ht\API@RowBox+\dp\API@RowBox\relax}}%
+  \usebox{\API@RowBox}%
+}
+\newcommand{\API@MarkerBox}[1]{\hbox to \APIMarkerWidth{\hfil\scriptsize #1\hfil}}
 \newcommand{\API@SinceBox}[1]{\hbox to \APISinceWidth{\hfil\scriptsize #1}}
 \newcommand{\API@ModifierBox}[1]{%
   \hbox to \API@ModifierWidth{\color{apiMid}#1\APILeaderFill}%
@@ -113,8 +129,8 @@
   \hbox to \API@ArgumentWidth{#1\hfil}%
 }
 \newcommand{\API@MethodRow}[8]{%
-  \par\noindent
-  \hbox to \linewidth{%
+  \par\nointerlineskip\noindent
+  \sbox{\API@RowBox}{\hbox to \linewidth{\vrule width 0pt height 9pt depth 3pt%
     \API@MarkerBox{#1}%
     \API@SinceBox{#2}%
     \API@ModifierBox{#3}%
@@ -122,12 +138,13 @@
     \API@GapBox
     \API@NameBox{#5}%
     \API@ArgumentsBox{#6\IfBlankF{#7}{\ {\color{apiMid}#7}}}%
-  }%
-  \par\vspace{-\APIRowSkip}%
+  }}%
+  \API@PaintRow
+  \par%
 }
 \newcommand{\API@ValueRow}[6]{%
-  \par\noindent
-  \hbox to \linewidth{%
+  \par\nointerlineskip\noindent
+  \sbox{\API@RowBox}{\hbox to \linewidth{\vrule width 0pt height 9pt depth 3pt%
     \API@MarkerBox{#1}%
     \API@SinceBox{#2}%
     \API@ModifierBox{#3}%
@@ -135,8 +152,9 @@
     \API@GapBox
     \API@NameBox{#5}%
     \API@ArgumentsBox{\IfBlankF{#6}{{\color{apiMid}= #6}}}%
-  }%
-  \par\vspace{-\APIRowSkip}%
+  }}%
+  \API@PaintRow
+  \par%
 }
 
 \NewDocumentEnvironment{APIMembers}{}
