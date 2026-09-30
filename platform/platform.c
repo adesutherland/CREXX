@@ -129,7 +129,9 @@ static int codec_write(void *cookie, const char *input, int count) {
         if (scalar == '\n') { bytes[0] = '\n'; n = 1; }
         else n = crexx_text_encode(s->map, scalar, bytes);
         if (n < 0) return codec_failure(s, errno);
-        if (fwrite(bytes, 1, (size_t)n, s->raw) != (size_t)n)
+        /* glibc fopencookie may report the requested count while leaving the
+         * stream error flag set after its write callback fails. */
+        if (fwrite(bytes, 1, (size_t)n, s->raw) != (size_t)n || ferror(s->raw))
             return codec_failure(s, errno);
     }
     return count;
@@ -138,6 +140,8 @@ static int codec_close(void *cookie) {
     crexx_file_codec *s = cookie;
     int error = s->failed;
     if (s->writing && !error && crexx_utf8_finish(&s->utf8)) error = errno;
+    if (s->writing && !error && fflush(s->raw) != 0) error = errno ? errno : EIO;
+    if (ferror(s->raw) && !error) error = errno ? errno : EIO;
     if (fclose(s->raw) && !error) error = errno;
     free(s);
     if (error) { errno = error; return -1; }
