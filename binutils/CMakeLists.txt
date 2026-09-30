@@ -23,6 +23,13 @@ target_include_directories(rxbin
 set_target_properties(rxbin PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(BUILD_TESTING)
+    add_executable(test_record_allocation tests/test_record_allocation.c)
+    target_link_libraries(test_record_allocation PRIVATE rxbin)
+    add_test(NAME record_allocation_failure COMMAND test_record_allocation)
+    set_tests_properties(record_allocation_failure PROPERTIES
+            LABELS "unit;binutils;allocation" TIMEOUT 30
+            CREXX_PREP_TARGETS test_record_allocation)
+
     add_executable(test_compression_workspace tests/test_compression_workspace.c)
     target_link_libraries(test_compression_workspace PRIVATE rxbin)
     add_test(NAME compression_workspace COMMAND test_compression_workspace)

@@ -20,6 +20,13 @@ add_test(NAME symbol_allocation_failure COMMAND test_symbol_allocation)
 set_tests_properties(symbol_allocation_failure PROPERTIES
         LABELS "unit;compiler;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_symbol_allocation)
 
+add_executable(test_ast_allocation test_ast_allocation.c)
+target_include_directories(test_ast_allocation PRIVATE ${symbol_test_includes})
+target_link_libraries(test_ast_allocation PRIVATE rxclib)
+add_test(NAME ast_allocation_failure COMMAND test_ast_allocation)
+set_tests_properties(ast_allocation_failure PROPERTIES
+        LABELS "unit;compiler;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_ast_allocation)
+
 add_executable(test_import_directory_errors test_import_directory_errors.c)
 target_include_directories(test_import_directory_errors PRIVATE ${symbol_test_includes})
 target_link_libraries(test_import_directory_errors PRIVATE rxclib)
