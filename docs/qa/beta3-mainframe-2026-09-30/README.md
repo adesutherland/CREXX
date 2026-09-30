@@ -38,15 +38,18 @@ heaps/stacks remain Lab runtime inputs and are not copied into cREXX.
    The permanent `mainframe_console_signals` test executes the real switch VM
    for both terminal and caught failures, native accent bytes, custom callbacks
    and actual read-only output-descriptor failures.
-2. **HIGH/PDOS guest chain, unresolved cause:** the Lab wider-profile report
+2. **HIGH/PDOS guest chain, later native closure:** the initial Lab wider-profile report
    records native RXC RC0 followed by RXAS rejection of fresh assembly. It also
-   records a PDOS console-field overflow during diagnostics. Member readback
-   and attribution remain Lab work; no core or kernel cause is inferred here.
-   The latest readback identifies two lost output blocks at track transitions;
-   the user-requested repeat reproduces the failure. Diagnostics and exact binary
-   readback pass, and the task leases have been released. The source baseline
-   stayed fixed in that workstream. HIGH remains supplementary to the selected
-   CMS31/TSO31/TSO64 ANY PoC/alpha scope.
+   records a PDOS console-field overflow during diagnostics. Initial member readback identified two lost output blocks at track
+   transitions; the user-requested repeat reproduced it. During final upstream
+   CI, the Lab traced WRBLOCK accepting unit check as a successful full write
+   and completed its separate PDOS kernel repair. Its updated repair report and
+   WIDE-06 record native RXC/RXAS/fresh RXVM RC0/0/0, a complete 3,108-record
+   assembly matching the host byte-for-byte, interactive and ordered byte proof,
+   with independent coordinator review. That closes the frozen-package PDOS
+   blocker; it does not qualify this new upstream signal follow-up or modern
+   z/OS HIGH. Some summary text still retained the earlier partial status at
+   readback and must be reconciled in the Lab. The cREXX baseline stayed fixed.
 3. Converted text streams are sequential and single-direction. Text `+` modes
    fail before opening/truncating; binary modes retain libc behavior. The
    frozen native SDK lacks append despite host codec append proof. Arbitrary
@@ -83,7 +86,19 @@ focused 24/24 / Apple ASan 7/7 receipts are historical and are superseded by
 these final product-input results.
 
 Apple provides no LSan; Linux ASan/LSan and broad platform assurance remain
-separate formal gates. Automatic development Build CREXX (Release/package smoke,
-optimizer parity) and CodeQL receipts are pending at commit time; inspect them
-by the final pushed SHA. The [formal candidate handoff](../../planning/beta-3/formal-candidate-2026-09-30.md)
+separate formal gates. Automatic development
+[Build CREXX 36749864309](https://github.com/adesutherland/CREXX/actions/runs/36749864309)
+and [CodeQL 36749863689](https://github.com/adesutherland/CREXX/actions/runs/36749863689)
+pass on `e15392da705c5e9e0e1e57b70586b53fc8cb64ed`. All four core Release/package
+lanes, MinGW, optimizer parity and four configured base plugin lanes pass. The
+published dev-snapshot tag points at that exact commit; 30 assets are present.
+All four actual core-package smoke summaries and the Mac/Windows SDK receipts
+identify it. CodeQL analysis 1868703980 reports nine existing open alerts
+(216–218, 222–227); no new alert, analysis error or warning. Existing alert
+triage remains separate from a successful analysis workflow. Nonblocking CI
+warnings identify the existing MSYS2 MINGW64 environment and Node 20 action
+runtime deprecations. [publication.json](publication.json) retains terminal
+runs, package digests and the late native boundary update. The final child is
+documentation/evidence only; unchanged valid product-input proof is reused
+without another local suite or duplicate CI matrix. The [formal candidate handoff](../../planning/beta-3/formal-candidate-2026-09-30.md)
 records the remaining release work. Beta 3 is prepared, not tagged/released.

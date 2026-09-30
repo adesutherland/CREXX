@@ -21,7 +21,7 @@
     "result": "2293/2293 pass",
     "seconds": 766.24
   },
-  "publication": "pending automatic Build CREXX and CodeQL on the final documentation-inclusive develop revision; inspect by exact SHA",
+  "publication": "Build CREXX and CodeQL pass on e15392da705c5e9e0e1e57b70586b53fc8cb64ed. See publication.json for terminal jobs, package identities, CodeQL findings and the documentation-only follow-up.",
   "qualified_product_commit": "6a09f7786b79c025981bda5d7a891982f8304dc0",
   "raw_log_sha256": {
     "asan-build.log": "a21d7a9cdc45f19a2ef7d13d58a13e612f035e908c3bcbdd21217ace92934ab7",

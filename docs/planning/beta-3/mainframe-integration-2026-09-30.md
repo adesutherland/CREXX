@@ -32,10 +32,10 @@ separate evidence; SDK WAIT, heap and stack changes are Lab runtime inputs.
    and maintained sanitizer builds before accepting its scheduling properties.
    Use focused sanitizer checks for changed allocation/error paths. Reuse valid
    unchanged evidence; broad overnight assurance is not an ordinary push gate.
-3. **INT-AC-03 — PENDING PUBLICATION:** Reviewed commits reach origin/develop and applicable
+3. **INT-AC-03 — PASS:** Reviewed commits reach origin/develop and applicable
    automatic Build/optimizer-parity/CodeQL results are terminal and inspected.
    Preserve the primary checkout's unrelated edits and identify publication SHA.
-4. **INT-AC-04 — PREPARED; PACKAGE RECEIPTS PENDING:** Beta 3 candidate preparation records the exact revision,
+4. **INT-AC-04 — PASS (PREPARATION):** Beta 3 candidate preparation records the exact revision,
    updated notes, actual build/package evidence and remaining formal gates.
    Verify tags, README, VERSION and notes together. No wider guest, sanitizer,
    signing or install claim beyond retained evidence; no tag/release publication
@@ -65,10 +65,10 @@ separate evidence; SDK WAIT, heap and stack changes are Lab runtime inputs.
 4. **INT-STEP-03 — DONE (AC-02):** Freeze product/test inputs, build core, run
    focused normal and sanitizer proof and the normal correctness suite once.
    Register actual first-party sanitizer findings in the canonical SAN worklist.
-5. **INT-STEP-04 — COMMITS READY; PUSH/CI PENDING (AC-03):** Review final diff and commit separate causes,
+5. **INT-STEP-04 — DONE (AC-03):** Review final diff and commit separate causes,
    promote to develop without rewriting unrelated history and push. Inspect
    automatic workflows on the exact published revision.
-6. **INT-STEP-05 — PREPARED; PACKAGE RECEIPTS PENDING (AC-04):** Prepare curated beta 3 notes and candidate
+6. **INT-STEP-05 — DONE (PREPARATION) (AC-04):** Prepare curated beta 3 notes and candidate
    handoff, retaining open formal release gates and profile limits.
 
 ## Initial inputs
@@ -91,7 +91,7 @@ The supplied-delta Debug build and focused 24/24 and Apple ASan 7/7 pass.
 Normal correctness was already running when the behavior approval arrived;
 retain its result as pre-signal-repair evidence, not final-input qualification.
 
-## Final local qualification and publication handoff
+## Final local qualification and pre-publication handoff
 
 Reviewed source changes are in three causal commits:
 
@@ -115,3 +115,24 @@ and [the formal candidate handoff](formal-candidate-2026-09-30.md). Attach the
 automatic Release/package receipts when available. Remaining exact-tag platform,
 sanitizer, signing/assets and manual native gates remain visibly open there.
 Do not cut a tag or call the formal release complete from this preparation.
+
+## Terminal closeout
+
+INT-AC-03/04 and INT-STEP-04/05 now pass for the requested publication and
+preparation. The reviewed delivery `e15392da705c5e9e0e1e57b70586b53fc8cb64ed`
+is on origin/develop. Build CREXX 36749864309, optimizer parity and CodeQL
+36749863689 pass on that exact SHA; CodeQL has no new alert (nine existing
+alerts retained). The dev snapshot publishes 30 assets and points at it.
+[Publication/package receipts](../../qa/beta3-mainframe-2026-09-30/publication.json)
+include real core-package smoke and archive identities for all four platforms.
+
+During final CI the Lab completed its independent PDOS kernel repair and
+recorded frozen HIGH guest closure, without changing any of the 44 imported
+cREXX source files. The notes/handoff now reflect that result while retaining
+exact upstream-package, manual/native and modern z/OS HIGH limits.
+
+This closeout commit changes documentation/evidence only. All qualified
+product/test/build hashes are unchanged, so valid local/hosted proof is reused
+and a duplicate development CI matrix is skipped. Formal tag workflows and
+release/platform requirements remain as configured. The integration/preparation
+request is complete; formal beta 3 release completion remains open.

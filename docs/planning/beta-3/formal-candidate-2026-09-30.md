@@ -29,7 +29,7 @@ receipts retain their exact inputs and are reused only where those inputs match.
 
 | Existing requirement | Preparation status and next evidence |
 | --- | --- |
-| Automatic development Build CREXX and CodeQL | Pending at commit time. Inspect both workflows on the final pushed SHA, including core Release/package smoke and optimizer parity. A green analysis run alone is not an assertion that every historical CodeQL alert is resolved. |
+| Automatic development Build CREXX and CodeQL | PASS on `e15392da7`: Build CREXX 36749864309 and CodeQL 36749863689, all four core Release/package lanes, MinGW, optimizer parity and configured base plugins. Nine existing CodeQL alerts remain, with no new alerts. The documentation-only closeout child preserves qualified product inputs and reuses this evidence. |
 | Exact candidate deep/comprehensive and maintained sanitizer assurance | Open for this changed candidate. Reconcile valid overnight results with exact product/test/build inputs. The maintained full matrix covers Linux ASan/LSan and macOS ASan; focused Apple proof cannot close it. No open first-party SAN item may be waived or called closed by this handoff. |
 | Full tag build matrix and release assets | Open. The existing tag workflow requires four core ZIPs, all six optional llama variants (including CUDA), MinGW and comprehensive correctness before publishing. Development base-lane smoke does not qualify omitted CUDA lanes or every device/model. |
 | Package installation, curated examples and signing | Open. Read actual package manifests, install/run the candidate packages and curated examples, and retain digests/results. Check configured macOS signing/notarization and actual optional PKGs; do not infer them from a build. Windows MSI/WiX/winget remains outside the current release scope. |
@@ -46,17 +46,21 @@ opening. The frozen SDK has no native append capability. BYTE and binary paths
 remain raw. The Linux host funopen shim is test-only; Linux compilation is
 not claimed by Apple receipts.
 
-The selected beta packages are CMS31, TSO31 and TSO64 RMODE ANY. Supplementary
-HIGH/PDOS fresh RXC-to-RXAS execution still loses output blocks at native track
-transitions. Cause remains under Lab investigation; the source baseline is
-frozen there. Neither the cREXX core nor the PDOS kernel is assigned blame by
-this review, and no HIGH pass is claimed. The Lab's published criterion record
+The selected beta packages are CMS31, TSO31 and TSO64 RMODE ANY. The Lab's late PDOS WRBLOCK repair has closed the lost-block
+failure for its frozen HIGH package: fresh RXC/RXAS/RXVM RC0/0/0 and full
+assembly/binary readbacks pass, with independent coordinator review. Its
+source baseline is unchanged. That older package does not qualify the upstream
+console-signal follow-up or modern z/OS HIGH. The Lab's published criterion record
 `docs/BETA3-MAINFRAME-PLAN.md` and manual procedure
 `docs/operator/BETA3-MANUAL-QUALIFICATION.md` retain native ownership and limits.
 
 ## Publication receipt
 
-Record the exact delivery SHA, Build CREXX and CodeQL run URLs, terminal
-conclusions, package manifests/digests and remaining open formal requirements
-when automatic publication finishes. This handoff deliberately does not
-predict success or manufacture package/signing evidence before those jobs run.
+The qualified delivery/package SHA is
+`e15392da705c5e9e0e1e57b70586b53fc8cb64ed`; its Build CREXX and CodeQL runs
+are terminal and successful. The mutable development snapshot currently points
+at it. [The publication receipt](../../qa/beta3-mainframe-2026-09-30/publication.json)
+records all four core-package digests, actual smoke summaries, terminal jobs,
+existing alert numbers and the late Lab update. The final documentation-only
+child records these results and preserves every qualified product input. Formal
+tag/assets, full matrix, exact native package and manual gates above stay open.
