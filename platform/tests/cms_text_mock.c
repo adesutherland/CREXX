@@ -1,6 +1,6 @@
 /* cREXX License (MIT), Copyright (c) 2026 the cREXX contributors.
- * Host-only injectable stream provider: XOR is deliberately not a CMS codec.
- * Every byte crosses the hook, proving conversion precedes lexical analysis.
+ * Host-only injectable raw stream provider: cREXX owns the IBM1047 codec.
+ * Every native byte crosses the hook before cREXX converts it.
  */
 #define _GNU_SOURCE 1
 #include <stdio.h>
@@ -8,33 +8,34 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <assert.h>
+#include "mainframe_text.h"
 
 typedef struct {
     FILE *file;
-    int writing, encoded, fail;
+    int writing, fail;
     size_t transferred;
 } text_stream;
-static int encoded;
+static int conversion_disabled;
 static unsigned matched_opens;
+void mainframe_set_text_conversion(int enabled) {
+    assert(!enabled);
+    conversion_disabled = 1;
+}
 
 int crexx_cms_text_encoding(const char *name) {
-    if (name && !strcmp(name, "TEST-XOR")) { encoded = 1; return 0; }
-    if (name && (!strcmp(name,"UTF8") || !strcmp(name,"utf8") ||
-                 !strcmp(name,"UTF-8") || !strcmp(name,"utf-8"))) {
-        encoded = 0; return 0;
-    }
+    if (name && !strcmp(name, "IBM1047")) return 0;
     errno = EINVAL;
     return -1;
 }
 
 static ssize_t read_text(void *cookie, char *out, size_t size) {
     text_stream *s = cookie;
-    size_t n, i;
+    size_t n;
     if (s->fail == 1 && s->transferred) { errno = EILSEQ; return -1; }
     if (size > 17) size = 17; /* Partial reads and buffer growth are intentional. */
     n = fread(out, 1, size, s->file);
     if (ferror(s->file)) return -1;
-    if (s->encoded) for (i = 0; i < n; ++i) out[i] ^= 0x80;
     s->transferred += n;
     return (ssize_t)n;
 }
@@ -46,7 +47,7 @@ static ssize_t write_text(void *cookie, const char *in, size_t size) {
         return -1;
     }
     for (i = 0; i < size; ++i)
-        if (fputc((unsigned char)in[i] ^ (s->encoded ? 0x80 : 0), s->file) == EOF)
+        if (fputc((unsigned char)in[i], s->file) == EOF)
             return -1;
     s->transferred += size;
     return (ssize_t)size;
@@ -72,12 +73,13 @@ FILE *crexx_cms_text_open(const char *path, const char *mode) {
     const char *log = getenv("CREXX_TEST_TEXT_LOG");
     const char *skip = getenv("CREXX_TEST_TEXT_SKIP");
     int writing = mode[0] == 'w';
+    assert(conversion_disabled);
     if (strchr(mode,'b') || (mode[0] != 'r' && !writing)) { errno=EINVAL; return NULL; }
     file = fopen(path, writing ? "wb" : "rb");
     if (!file) return NULL;
     s = calloc(1,sizeof(*s));
     if (!s) { fclose(file); return NULL; }
-    s->file=file; s->writing=writing; s->encoded=encoded;
+    s->file=file; s->writing=writing;
     if (failure && (!match || strstr(path,match)) &&
         matched_opens++ >= (unsigned)(skip ? atoi(skip) : 0)) {
         if (!strcmp(failure,"read")) s->fail=1;

@@ -47,6 +47,31 @@ static void oom_number(oom_message *message, unsigned long long value) {
         message->bytes[message->used++] = digits[--count];
 }
 static void oom_write(const char *bytes, size_t length) {
+#if defined(CREXX_MAINFRAME_ELF) && !defined(CREXX_NATIVE_RAW_IO)
+    unsigned char native[2048];
+    const uint32_t *map;
+    crexx_utf8_state state = {0, 0, 0};
+    size_t i, used = 0;
+    if (platform_text_codec_lookup("IBM1047", &map)) return;
+    for (i = 0; i < length; ++i) {
+        uint32_t scalar;
+        unsigned char encoded[4];
+        int ready = crexx_utf8_feed(&state, (unsigned char)bytes[i], &scalar);
+        int count;
+        if (ready <= 0) continue;
+        if (scalar == '\n') { encoded[0] = '\n'; count = 1; }
+        else {
+            count = crexx_text_encode(map, scalar, encoded);
+            /* Emergency diagnostics preserve the existing replacement rule. */
+            if (count < 0) count = crexx_text_encode(map, '?', encoded);
+        }
+        if (count < 0 || used + (size_t)count > sizeof(native)) return;
+        memcpy(native + used, encoded, (size_t)count);
+        used += (size_t)count;
+    }
+    bytes = (const char *)native;
+    length = used;
+#endif
     while (length) {
         ptrdiff_t written;
 #if defined(CREXX_NATIVE_RAW_IO)

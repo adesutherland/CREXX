@@ -1102,13 +1102,13 @@ int rxas_flow_procedure_dump(const RxasFlowProcedure *procedure,
                 (unsigned long long)block->id,
                 flow_graph_block_kind_name(block->kind));
         flow_graph_dump_id(stream, block->first_record);
-        fputc(':', stream);
+        platform_text_putc(':', stream);
         flow_graph_dump_id(stream, block->last_record);
         fputs(" instructions=", stream);
         flow_graph_dump_id(stream, block->first_instruction);
-        fputc(':', stream);
+        platform_text_putc(':', stream);
         flow_graph_dump_id(stream, block->last_instruction);
-        fputc('\n', stream);
+        platform_text_putc('\n', stream);
     }
     for (index = 0; index < procedure->metrics.records; index++) {
         const RxasFlowRecord *record;

@@ -3630,11 +3630,11 @@ int rxas_flow_ssa_dump(const RxasFlowSsaAnalysis *analysis,
                 "instruction=",
                 (unsigned long long)(index + 1), (int)version->kind,
                 (unsigned long long)version->register_id);
-        if (version->defining_instruction == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (version->defining_instruction == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu",
                      (unsigned long long)version->defining_instruction);
         fprintf(stream, " block=");
-        if (version->defining_block == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (version->defining_block == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)version->defining_block);
         fprintf(stream,
                 " owner=%llu count=%llu reference=%llu slot=%llu\n",

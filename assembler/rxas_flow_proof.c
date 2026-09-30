@@ -8029,7 +8029,7 @@ static void flow_proof_dump_value(
             (unsigned long long)node.source_value_id,
             (int)node.derivation, node.signal_dependencies);
     for (effect = 0; effect < RXAS_FLOW_EFFECT_CLASS_COUNT; effect++) {
-        if (effect) fputc(',', stream);
+        if (effect) platform_text_putc(',', stream);
         fprintf(stream, "%llu",
                 (unsigned long long)node.definition_effects[effect]);
     }
@@ -8039,10 +8039,10 @@ static void flow_proof_dump_value(
         input_id = rxas_flow_value_input(
                 service->ssa, service->metrics.epoch,
                 node.id, input);
-        if (input) fputc(',', stream);
+        if (input) platform_text_putc(',', stream);
         fprintf(stream, "%llu", (unsigned long long)input_id);
     }
-    fputc('\n', stream);
+    platform_text_putc('\n', stream);
     for (input = 0; input < node.input_count; input++) {
         RxasFlowValueNode input_node;
         size_t nested;
@@ -8066,19 +8066,19 @@ static void flow_proof_dump_value(
                 (int)input_node.derivation,
                 input_node.signal_dependencies);
         for (effect = 0; effect < RXAS_FLOW_EFFECT_CLASS_COUNT; effect++) {
-            if (effect) fputc(',', stream);
+            if (effect) platform_text_putc(',', stream);
             fprintf(stream, "%llu", (unsigned long long)
                     input_node.definition_effects[effect]);
         }
         fputs(" inputs=", stream);
         for (nested = 0; nested < input_node.input_count; nested++) {
-            if (nested) fputc(',', stream);
+            if (nested) platform_text_putc(',', stream);
             fprintf(stream, "%llu", (unsigned long long)
                     rxas_flow_value_input(
                             service->ssa, service->metrics.epoch,
                             input_node.id, nested));
         }
-        fputc('\n', stream);
+        platform_text_putc('\n', stream);
     }
 }
 

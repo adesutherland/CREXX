@@ -32,9 +32,256 @@
 #include <limits.h>
 #include <errno.h>
 
+#define CREXX_PLATFORM_STDIO_IMPLEMENTATION 1
 #include "platform.h"
 #include "platform_native.h"
 #include "text_codec.h"
+
+#if defined(CREXX_MAINFRAME_ELF) && !defined(CREXX_NATIVE_RAW_IO) && \
+    (defined(CREXX_CMS_TEXT_IO) || defined(CREXX_PLATFORM_TSO))
+/* The SDK supplies raw record bytes when mainframe text conversion is off.
+ * Keep character decoding in cREXX's existing codec at its file boundary. */
+typedef struct {
+    FILE *raw;
+    const uint32_t *map;
+    crexx_utf8_state utf8;
+    unsigned char pending[4];
+    unsigned pending_at, pending_count;
+    int writing, failed;
+} crexx_file_codec;
+static const uint32_t *selected_file_map;
+static int selected_file_map_set;
+
+static const uint32_t *file_codec(void) {
+    const uint32_t *map;
+    if (selected_file_map_set) return selected_file_map;
+    if (platform_text_codec_lookup("IBM1047", &map)) return NULL;
+    return map;
+}
+static int native_file_codec(void) {
+    const uint32_t *native;
+    return !platform_text_codec_lookup("IBM1047", &native) && file_codec() == native;
+}
+static int codec_failure(crexx_file_codec *s, int error) {
+    if (!s->failed) s->failed = error ? error : EIO;
+    errno = s->failed;
+    return -1;
+}
+static int codec_read(void *cookie, char *out, int count) {
+    crexx_file_codec *s = cookie;
+    int done = 0;
+    if (s->failed) return codec_failure(s, s->failed);
+    while (done < count) {
+        int byte, n;
+        uint32_t scalar;
+        if (s->pending_at < s->pending_count) {
+            out[done++] = (char)s->pending[s->pending_at++];
+            continue;
+        }
+        s->pending_at = s->pending_count = 0;
+        byte = fgetc(s->raw);
+        if (byte == EOF) {
+            if (ferror(s->raw) || (!s->map && crexx_utf8_finish(&s->utf8))) {
+                codec_failure(s, ferror(s->raw) ? errno : EILSEQ);
+                return done ? done : -1;
+            }
+            break;
+        }
+        /* The SDK preserves ASCII LF as the record/byte-stream delimiter. */
+        if (byte == '\n') {
+            if (!s->map && crexx_utf8_finish(&s->utf8)) {
+                codec_failure(s, errno);
+                return done ? done : -1;
+            }
+            out[done++] = '\n';
+            continue;
+        }
+        if (!s->map) {
+            n = crexx_utf8_feed(&s->utf8, (unsigned char)byte, &scalar);
+            if (n < 0) {
+                codec_failure(s, errno);
+                return done ? done : -1;
+            }
+            out[done++] = (char)byte;
+        } else {
+            scalar = s->map[(unsigned char)byte];
+            n = crexx_utf8_emit(scalar, s->pending);
+            if (n < 0) {
+                codec_failure(s, errno);
+                return done ? done : -1;
+            }
+            s->pending_count = (unsigned)n;
+        }
+    }
+    return done;
+}
+static int codec_write(void *cookie, const char *input, int count) {
+    crexx_file_codec *s = cookie;
+    int i;
+    if (s->failed) return codec_failure(s, s->failed);
+    for (i = 0; i < count; ++i) {
+        uint32_t scalar;
+        unsigned char bytes[4];
+        int ready = crexx_utf8_feed(&s->utf8, (unsigned char)input[i], &scalar);
+        int n;
+        if (ready < 0) return codec_failure(s, errno);
+        if (!ready) continue;
+        if (scalar == '\n') { bytes[0] = '\n'; n = 1; }
+        else n = crexx_text_encode(s->map, scalar, bytes);
+        if (n < 0) return codec_failure(s, errno);
+        if (fwrite(bytes, 1, (size_t)n, s->raw) != (size_t)n)
+            return codec_failure(s, errno);
+    }
+    return count;
+}
+static int codec_close(void *cookie) {
+    crexx_file_codec *s = cookie;
+    int error = s->failed;
+    if (s->writing && !error && crexx_utf8_finish(&s->utf8)) error = errno;
+    if (fclose(s->raw) && !error) error = errno;
+    free(s);
+    if (error) { errno = error; return -1; }
+    return 0;
+}
+static FILE *codec_wrap(FILE *raw, const char *mode) {
+    crexx_file_codec *s;
+    FILE *file;
+    if (!raw) return NULL;
+    s = calloc(1, sizeof(*s));
+    if (!s) { int error = errno; fclose(raw); errno = error; return NULL; }
+    s->raw = raw;
+    s->map = file_codec();
+    s->writing = *mode != 'r';
+    file = funopen(s, s->writing ? NULL : codec_read,
+                   s->writing ? codec_write : NULL, NULL, codec_close);
+    if (!file) { int error = errno; fclose(raw); free(s); errno = error; }
+    return file;
+}
+static const char *codec_storage_mode(const char *mode) {
+    if (native_file_codec() || strchr(mode, 'b')) return mode;
+    return *mode == 'r' ? "rb" : *mode == 'w' ? "wb" : *mode == 'a' ? "ab" : mode;
+}
+static int codec_mode_supported(const char *mode) {
+    if (strchr(mode, '+')) { errno = ENOTSUP; return 0; }
+    return 1;
+}
+#endif
+
+int platform_console_text_write(FILE *stream, const char *text, size_t length) {
+    if (!length) return 0;
+#if defined(CREXX_MAINFRAME_ELF)
+    const uint32_t *native_map;
+    crexx_utf8_state state = {0, 0, 0};
+    unsigned char chunk[128];
+    size_t i, used = 0;
+    if (!stream || !text || platform_text_codec_lookup("IBM1047", &native_map)) return -1;
+    for (i = 0; i < length; ++i) {
+        uint32_t scalar;
+        unsigned char encoded[4];
+        int ready = crexx_utf8_feed(&state, (unsigned char)text[i], &scalar);
+        int count;
+        if (ready < 0) return -1;
+        if (!ready) continue;
+        /* The runtime keeps ASCII LF as its record delimiter in raw mode. */
+        if (scalar == '\n') { encoded[0] = '\n'; count = 1; }
+        else {
+            count = crexx_text_encode(native_map, scalar, encoded);
+            if (count < 0) return -1;
+        }
+        if (used + (size_t)count > sizeof(chunk)) {
+            if (fwrite(chunk, 1, used, stream) != used) return -1;
+            used = 0;
+        }
+        memcpy(chunk + used, encoded, (size_t)count);
+        used += (size_t)count;
+    }
+    if (crexx_utf8_finish(&state)) return -1;
+    return !used || fwrite(chunk, 1, used, stream) == used ? 0 : -1;
+#else
+    return fwrite(text, 1, length, stream) == length ? 0 : -1;
+#endif
+}
+
+int platform_text_getc(FILE *stream) {
+#if defined(CREXX_MAINFRAME_ELF)
+    /* Text handlers share stdin's partially emitted scalar. Byte/binary
+     * handlers deliberately continue to use raw libc reads. */
+    static unsigned char pending[4];
+    static unsigned at, count;
+    const uint32_t *native_map;
+    int byte, length;
+    if (stream != stdin) return fgetc(stream);
+    if (at < count) return pending[at++];
+    at = count = 0;
+    byte = fgetc(stream);
+    if (byte == EOF || byte == '\n') return byte;
+    if (platform_text_codec_lookup("IBM1047", &native_map)) return EOF;
+    length = crexx_utf8_emit(native_map[(unsigned char)byte], pending);
+    if (length < 0) return EOF;
+    count = (unsigned)length;
+    return pending[at++];
+#else
+    return fgetc(stream);
+#endif
+}
+
+#if defined(CREXX_MAINFRAME_ELF)
+int platform_vfprintf(FILE *stream, const char *format, va_list args) {
+    char local[256], *text = local;
+    va_list copy;
+    int length, result;
+    if (stream != stdout && stream != stderr) return vfprintf(stream, format, args);
+    va_copy(copy, args);
+    length = vsnprintf(local, sizeof(local), format, copy);
+    va_end(copy);
+    if (length < 0) return -1;
+    if ((size_t)length >= sizeof(local)) {
+        text = malloc((size_t)length + 1u);
+        if (!text) return -1;
+        va_copy(copy, args);
+        result = vsnprintf(text, (size_t)length + 1u, format, copy);
+        va_end(copy);
+        if (result != length) { free(text); return -1; }
+    }
+    result = platform_console_text_write(stream, text, (size_t)length);
+    if (text != local) free(text);
+    return result ? -1 : length;
+}
+int platform_fprintf(FILE *stream, const char *format, ...) {
+    va_list args;
+    int result;
+    va_start(args, format);
+    result = platform_vfprintf(stream, format, args);
+    va_end(args);
+    return result;
+}
+int platform_printf(const char *format, ...) {
+    va_list args;
+    int result;
+    va_start(args, format);
+    result = platform_vfprintf(stdout, format, args);
+    va_end(args);
+    return result;
+}
+int platform_fputs(const char *text, FILE *stream) {
+    if (stream != stdout && stream != stderr) return fputs(text, stream);
+    return platform_console_text_write(stream, text, strlen(text)) ? EOF : 0;
+}
+int platform_puts(const char *text) {
+    if (platform_fputs(text, stdout) == EOF) return EOF;
+    return platform_console_text_write(stdout, "\n", 1u) ? EOF : 0;
+}
+#endif
+
+int platform_text_putc(int byte, FILE *stream) {
+#if defined(CREXX_MAINFRAME_ELF)
+    if (stream == stdout || stream == stderr) {
+        char text = (char)(unsigned char)byte;
+        return platform_console_text_write(stream, &text, 1u) ? EOF : (unsigned char)byte;
+    }
+#endif
+    return fputc(byte, stream);
+}
 
 #if defined(CREXX_CMS_TEXT_IO)
 #if !defined(CREXX_MAINFRAME_ELF)
@@ -50,8 +297,13 @@ int platform_text_encoding(const char *encoding) {
     if (platform_text_codec_lookup(encoding, &map)) return -1;
     crexx_native_select_file_codec(map);
     return 0;
-#elif defined(CREXX_CMS_TEXT_IO)
-    return crexx_cms_text_encoding(encoding);
+#elif defined(CREXX_MAINFRAME_ELF) && \
+      (defined(CREXX_CMS_TEXT_IO) || defined(CREXX_PLATFORM_TSO))
+    const uint32_t *map;
+    if (platform_text_codec_lookup(encoding, &map)) return -1;
+    selected_file_map = map;
+    selected_file_map_set = 1;
+    return 0;
 #else
     if (encoding && (!strcmp(encoding,"UTF8") || !strcmp(encoding,"utf8") ||
                      !strcmp(encoding,"UTF-8") || !strcmp(encoding,"utf-8"))) return 0;
@@ -65,7 +317,15 @@ static FILE *platform_open_stream_storage(const char *path, const char *mode, in
     return crexx_native_fopen_storage(path, mode, storage);
 #elif defined(CREXX_CMS_TEXT_IO)
     (void)storage;
-    if (!strchr(mode,'b')) return crexx_cms_text_open(path,mode);
+    if (!strchr(mode,'b')) {
+        FILE *raw;
+        if (!codec_mode_supported(mode)) return NULL;
+        if (native_file_codec()) {
+            if (crexx_cms_text_encoding("IBM1047")) return NULL;
+            raw = crexx_cms_text_open(path, mode);
+        } else raw = fopen(path, codec_storage_mode(mode));
+        return codec_wrap(raw, mode);
+    }
 #else
     (void)storage;
 #endif
@@ -472,6 +732,12 @@ int fileexists(char *name, char *type, char *dir) {
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode) {
 #if defined(CREXX_PLATFORM_TSO)
+#if defined(CREXX_PLATFORM_TSO) && !defined(CREXX_NATIVE_RAW_IO)
+    if (!strchr(mode, 'b'))
+        return codec_mode_supported(mode) ?
+            codec_wrap(crexx_tso_openfile(name, type, dir,
+                                         codec_storage_mode(mode)), mode) : NULL;
+#endif
     return crexx_tso_openfile(name, type, dir, mode);
 #else
     size_t len;
@@ -527,6 +793,12 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
 
 FILE *platform_fopen_storage(const char *path, const char *mode, int storage) {
 #if defined(CREXX_PLATFORM_TSO)
+#if defined(CREXX_PLATFORM_TSO) && !defined(CREXX_NATIVE_RAW_IO)
+    if (!strchr(mode, 'b'))
+        return codec_mode_supported(mode) ?
+            codec_wrap(crexx_tso_openfile_storage(path, "", NULL,
+                                                 codec_storage_mode(mode), storage), mode) : NULL;
+#endif
     return crexx_tso_openfile_storage(path, "", NULL, mode, storage);
 #else
     return platform_open_stream_storage(path, mode, storage);

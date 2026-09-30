@@ -33,6 +33,7 @@
 
 #include <stdio.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include "crexx_license.h"
 #include "rxinteger.h"
 
@@ -143,6 +144,29 @@ void crexx_tso_dirclose(void **);
  * streams retain their selected codec and storage layout; binary modes bypass
  * conversion. Native IBM1047 defaults to records, exchange pages to bytes. */
 int platform_text_encoding(const char *encoding);
+/* Text emitted by cREXX to a native mainframe standard stream. */
+int platform_console_text_write(FILE *stream, const char *text, size_t length);
+/* UTF-8 bytes at the VM text boundary; stdin is native IBM1047. Ordinary
+ * file streams have already selected their codec when opened. */
+int platform_text_getc(FILE *stream);
+/* A diagnostic character, never a binary/byte instruction. */
+int platform_text_putc(int byte, FILE *stream);
+#if defined(CREXX_MAINFRAME_ELF)
+int platform_vfprintf(FILE *stream, const char *format, va_list args);
+int platform_fprintf(FILE *stream, const char *format, ...);
+int platform_printf(const char *format, ...);
+int platform_fputs(const char *text, FILE *stream);
+int platform_puts(const char *text);
+/* stdio declarations above are complete before forwarding first-party text
+ * diagnostics. Non-console streams retain their existing libc behavior. */
+#if !defined(CREXX_PLATFORM_STDIO_IMPLEMENTATION)
+#define vfprintf platform_vfprintf
+#define fprintf platform_fprintf
+#define printf platform_printf
+#define fputs platform_fputs
+#define puts platform_puts
+#endif
+#endif
 
 /*
  * Get the first file from a directory (or null if there isn't one)

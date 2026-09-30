@@ -33,6 +33,7 @@
 #include "rxastree.h"
 #include "rxvmplugin.h"
 #include "rxsignature.h"
+#include "platform.h"
 
 #define RXVML_SECTION_MARK "\xc2\xa7"
 
@@ -1024,7 +1025,7 @@ static int rxvml_address_emit_to_endpoint(
 
     {
         if (is_error) {
-            fputs(text, stderr);
+            (void)platform_console_text_write(stderr, text, strlen(text));
             fflush(stderr);
         } else {
             rxvm_mprintf("%s", text);

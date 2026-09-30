@@ -688,11 +688,11 @@ static void debug_rule_accept(Assembler_Context *context, const op_map *map,
     first = 1;
     for (index = 0; index < context->optimiser_queue_items; index++) {
         if (!map->inst_mapped[index]) continue;
-        if (!first) fputc(',', stderr);
+        if (!first) platform_text_putc(',', stderr);
         fprintf(stderr, "%llu", (unsigned long long)index);
         first = 0;
     }
-    fputc('\n', stderr);
+    platform_text_putc('\n', stderr);
 }
 
 /* Assembler_Token to reg type */

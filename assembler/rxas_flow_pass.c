@@ -342,5 +342,5 @@ void rxas_optimisation_census_dump(const RxasOptimisationCensus *census,
         if (census->candidates[index])
             fprintf(stream, " %s=%llu", pass_descriptors[index].name,
                     (unsigned long long)census->candidates[index]);
-    fputc('\n', stream);
+    platform_text_putc('\n', stream);
 }

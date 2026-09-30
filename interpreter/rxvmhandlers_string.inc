@@ -3088,7 +3088,8 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
 
         else {
             /* Read until EOF or newline */
-            while ((ch = fgetc(stream)) != EOF) {
+            while ((ch = RXVM_UTF8_ONLY(platform_text_getc(stream))
+                         RXVM_BYTE_ONLY(fgetc(stream))) != EOF) {
 
                 /* End of line detection (LF) */
                 if (ch == '\n') {

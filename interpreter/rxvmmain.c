@@ -32,6 +32,9 @@
 #include <windows.h>
 #endif
 #include "platform.h"
+#if defined(CREXX_MAINFRAME_ELF)
+#include <mainframe_text.h>
+#endif
 #include "rxvmintp.h"
 #include "rxvmplugin_framework.h"
 #include "rxvmprocessworker.h"
@@ -147,6 +150,9 @@ static void license() {
 }
 
 int main(int argc, char *argv[]) {
+#if defined(CREXX_MAINFRAME_ELF)
+    mainframe_set_text_conversion(0);
+#endif
     char *file_name;
     char *combined_location = 0;
     char *exe_path = 0;

@@ -334,7 +334,7 @@ static int ctx_write(rxcrexxcmd_context *ctx, int is_error, const char *text, si
     if (writer) return writer(ctx->io->userdata, text, length);
 
     fallback = is_error ? stderr : stdout;
-    if (fwrite(text, 1, length, fallback) != length) return -1;
+    if (platform_console_text_write(fallback, text, length)) return -1;
     return fflush(fallback) == 0 ? 0 : -1;
 }
 

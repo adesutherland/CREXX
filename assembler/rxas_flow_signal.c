@@ -1467,25 +1467,25 @@ int rxas_flow_signal_dump(const RxasFlowSignalAnalysis *analysis,
                 "PERF3 flow-policy-version id=%llu kind=%s parent=",
                 (unsigned long long)version_id,
                 flow_policy_kind_name(version->kind));
-        if (version->parent == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (version->parent == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)version->parent);
         fputs(" instruction=", stream);
-        if (version->instruction_id == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (version->instruction_id == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu",
                      (unsigned long long)version->instruction_id);
         fputs(" block=", stream);
-        if (version->block_id == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (version->block_id == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)version->block_id);
         fprintf(stream, " effect=%d name=%s inputs=",
                 (int)version->effect, version->name ? version->name : "-");
         for (input_index = 0; input_index < version->input_count;
              input_index++) {
-            if (input_index) fputc(',', stream);
+            if (input_index) platform_text_putc(',', stream);
             fprintf(stream, "%llu",
                     (unsigned long long)analysis->policy_phi_inputs[
                             version->input_offset + input_index]);
         }
-        fputc('\n', stream);
+        platform_text_putc('\n', stream);
     }
     for (version_id = 0; version_id < analysis->effect_version_count;
          version_id++) {
@@ -1503,24 +1503,24 @@ int rxas_flow_signal_dump(const RxasFlowSignalAnalysis *analysis,
                 "parent=",
                 (unsigned long long)version_id, (int)version->kind,
                 (int)version->effect_class);
-        if (version->parent == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (version->parent == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)version->parent);
         fputs(" instruction=", stream);
-        if (version->instruction_id == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (version->instruction_id == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu",
                      (unsigned long long)version->instruction_id);
         fputs(" block=", stream);
-        if (version->block_id == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (version->block_id == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu",
                      (unsigned long long)version->block_id);
         fputs(" inputs=", stream);
         for (input = 0; input < input_count; input++) {
-            if (input) fputc(',', stream);
+            if (input) platform_text_putc(',', stream);
             fprintf(stream, "%llu", (unsigned long long)
                     rxas_flow_effect_input(
                             analysis, expected_epoch, version_id, input));
         }
-        fputc('\n', stream);
+        platform_text_putc('\n', stream);
     }
     for (edge_id = 0; edge_id < analysis->edge_count; edge_id++) {
         const RxasFlowEdge *edge;
@@ -1535,12 +1535,12 @@ int rxas_flow_signal_dump(const RxasFlowSignalAnalysis *analysis,
                 (unsigned long long)analysis->edge_policy[edge_id]);
         for (version_id = 0;
              version_id < RXAS_FLOW_EFFECT_CLASS_COUNT; version_id++) {
-            if (version_id) fputc(',', stream);
+            if (version_id) platform_text_putc(',', stream);
             fprintf(stream, "%llu",
                     (unsigned long long)analysis->edge_effect[
                             FLOW_EFFECT_INDEX(edge_id, version_id)]);
         }
-        fputc('\n', stream);
+        platform_text_putc('\n', stream);
     }
     return 1;
 }

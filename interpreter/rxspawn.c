@@ -1654,7 +1654,7 @@ static int join_redirect_thread(REDIRECT *redirect) {
 static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const char *text, size_t length) {
     if (!text) length = 0;
     if (!redirect) {
-        if (fwrite(text ? text : "", 1, length, fallback) != length) return -1;
+        if (platform_console_text_write(fallback, text ? text : "", length) != 0) return -1;
         return fflush(fallback) == 0 ? 0 : -1;
     }
 
@@ -1663,7 +1663,7 @@ static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const cha
         DWORD written;
         DWORD total = 0;
         if (redirect->hWrite == INVALID_HANDLE_VALUE) {
-            return fwrite(text ? text : "", 1, length, fallback) == length ? 0 : -1;
+            return platform_console_text_write(fallback, text ? text : "", length);
         }
         while (total < length) {
             if (!WriteFile(redirect->hWrite, text + total, (DWORD)(length - total), &written, NULL)) {
@@ -1681,7 +1681,7 @@ static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const cha
         size_t total = 0;
         ssize_t written;
         if (redirect->hWrite == -1) {
-            return fwrite(text ? text : "", 1, length, fallback) == length ? 0 : -1;
+            return platform_console_text_write(fallback, text ? text : "", length);
         }
         while (total < length) {
             written = write(redirect->hWrite, text + total, length - total);

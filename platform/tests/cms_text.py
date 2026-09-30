@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Host interface proof; TEST-XOR is a mock, not IBM1047/CMS qualification."""
+"""Host interface proof; raw IBM1047 libc simulation, not CMS guest qualification."""
 import argparse
 import os
 from pathlib import Path
 import subprocess
 
 p = argparse.ArgumentParser()
-for name in ("rxc", "rxas", "mock-rxc", "mock-rxas", "link", "vm", "work"):
+for name in ("rxc", "rxas", "mock-rxc", "mock-rxas", "link", "vm", "codec", "work"):
     p.add_argument("--" + name, required=True)
 a = p.parse_args()
 work = Path(a.work).resolve()
@@ -32,6 +32,13 @@ def run(args, *, failure=None, match=None, skip=0, expected=0, cwd=src):
     result = subprocess.run(list(map(str, args)), cwd=cwd, env=env,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             timeout=120)
+    if str(args[0]) in (a.mock_rxc, a.mock_rxas):
+        # Entry points select native stdio, while the reused host frontend
+        # libraries retain desktop diagnostics. Preserve both views of this
+        # intentionally mixed fixture; native console proof is a separate C
+        # test, not a claim derived from this library-link arrangement.
+        result.stdout += b"\n[native diagnostic view]\n" + transform(result.stdout, "decode")
+        result.stderr += b"\n[native diagnostic view]\n" + transform(result.stderr, "decode")
     with log.open("ab") as f:
         f.write((repr(args) + f" failure={failure} match={match} skip={skip} rc={result.returncode}\n").encode())
         f.write(result.stdout + result.stderr)
@@ -42,8 +49,9 @@ def run(args, *, failure=None, match=None, skip=0, expected=0, cwd=src):
     count += 1
     return result.stdout + result.stderr
 
-def transform(data):
-    return bytes(b ^ 0x80 for b in data)
+def transform(data, direction="encode"):
+    return subprocess.run([a.codec, direction], input=data, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE, check=True, timeout=30).stdout
 
 sources = {
     "main.crexx": "options levelb\nimport cms_text_provider\nsay greeting()\nreturn 0\n",
@@ -63,7 +71,7 @@ for mode in ([], ["-n"]):
         ("default", a.rxc, a.rxas, []),
         ("utf8", a.rxc, a.rxas, ["-E", "UTF8"]),
         ("adapter-utf8", a.mock_rxc, a.mock_rxas, ["-E", "UTF8"]),
-        ("converted", a.mock_rxc, a.mock_rxas, ["-E", "TEST-XOR"]),
+        ("converted", a.mock_rxc, a.mock_rxas, ["-E", "IBM1047"]),
     ):
         out = work / (("noopt-" if mode else "opt-") + label)
         out.mkdir(exist_ok=True)
@@ -82,12 +90,12 @@ for mode in ([], ["-n"]):
         run([a.link, "-o", "linked", "program.rxbin", "provider.rxbin"], cwd=out)
         output = run([a.vm, "linked.rxbin"], cwd=out)
         assert "café ^ []".encode() in output
-        products.append((transform(assembly) if label == "converted" else assembly,
+        products.append((transform(assembly, "decode") if label == "converted" else assembly,
                          binary, (out / "provider.rxbin").read_bytes(),
                          (out / "linked.rxbin").read_bytes(), output))
     assert all(product == products[0] for product in products), "encoding changed compilation products"
 
-write_sources()
+write_sources(True)
 stem = work / "failure"
 for compiler in (a.rxc, a.mock_rxc):
     for option in ([], ["unknown"]):
@@ -107,7 +115,7 @@ for failure in ("read", "close-read"):
     diagnostic = run([a.mock_rxc, "--no-exe-import", "-x", "-o", stem, src / "main.crexx"],
                      failure=failure, match="provider.crexx", skip=1, expected="error")
     assert b"Importing Procedures - Can't read input" in diagnostic, diagnostic
-    diagnostic = run([a.mock_rxas, "-o", stem, work / "opt-default/program.rxas"],
+    diagnostic = run([a.mock_rxas, "-o", stem, work / "opt-converted/program.rxas"],
                      failure=failure, match="program.rxas", expected="error")
     assert b"read input" in diagnostic, diagnostic
 for failure in ("write", "close-write", "convert-write"):

@@ -30,11 +30,17 @@
 // It exists to allow all the compiler code to be compiled into a library
 
 #include "platform.h"
+#if defined(CREXX_MAINFRAME_ELF)
+#include <mainframe_text.h>
+#endif
 
 // The main function of the compiler
 int rxcmain(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
+#if defined(CREXX_MAINFRAME_ELF)
+    mainframe_set_text_conversion(0);
+#endif
     platform_install_signal_handlers();
     return rxcmain(argc, argv);
 }
