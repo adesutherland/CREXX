@@ -42,12 +42,24 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
      include the object/interface instructions and the `sock*` TCP socket
      instructions.
 
-3. **In-Memory Buffering & Constant Pooling**:
+3. **Instruction records and constant representation**:
    - Handled in `assembler/rxasassm.c`.
-   - Instructions and operand slots are appended sequentially into a dynamic array of `bin_code` elements.
+   - Parsed instruction records enter the optimizer queues described below.
+     Emission appends surviving instructions and operand slots sequentially
+     into a dynamic array of `bin_code` elements; `-n` emits directly.
    - Complex and pooled literal types (Strings, Binary literals, Floats, Decimals, Procedure Headers, Metadata) are deduplicated via AVL Trees and injected into a variable-length **Constant Pool**.
 
-4. **Backpatching & Optimization (Second Pass)**:
+4. **Optimization and emission**:
+   - `assembler/rxas_opt.c` applies the bounded local peephole and collects
+     stable output into a procedure queue. At each procedure boundary,
+     `assembler/rxas_flow.c` runs whole-procedure control-flow and semantic
+     optimization before the surviving records are emitted.
+   - The procedure analyses reconstruct storage, component values, control
+     flow, signals and observable uses from assembly and the shared opcode
+     semantics. Compiler inline summaries are opaque metadata here, not proof
+     premises. `-n` bypasses the optimization routes.
+
+5. **Backpatching (after the final optimizer flush)**:
    - Forward references (branches to undefined labels, calls to undefined procedures) are logged as a linked list of references.
    - At the end of the parse, `backptch()` traverses all trees, resolves symbol addresses, updates the binary stream, and applies peephole jump optimizations.
 
@@ -143,14 +155,23 @@ remain in `META_FUNC`; inline-body templates are carried separately in
 .meta "fully.qualified.callable"=".inline" "I6;c,1,..."
 ```
 
-The `I6` payload is the compiler-owned inline transport described in
-`compiler/docs/inlining_design.md`. `rxas` stores it as `META_INLINE`, and
+The `I6`/`I7` payloads are the compiler-owned inline transport described in
+`compiler/docs/inlining_design.md`. `rxas` stores each as `META_INLINE`, and
 `rxdas` must emit it back to the same logical `.meta ... ".inline" "I6;..."`
-spelling so source, RXAS, and binary import paths do not drift. Linked final
+or `"I7;..."` spelling so source, RXAS, and binary import paths do not drift. Linked final
 images normally strip `META_INLINE`; library artifacts preserve it for
 downstream `rxc` optimisation. The leading `c` record is a versioned callable
 proof summary; `rxc` reconstructs its facts from the transported body and
 requires exact agreement before enabling imported inlining.
+This check is performed by importing RXC, not RXAS. It is consistency checking
+of annotated compiler IR and the declaration, not a proof that the transported
+body matches executable code. RXAS only requires a string payload and preserves
+it; handwritten assembly and other producers can omit this optional extension.
+The [boundary audit](../planning/release-1/optimization-boundary-audit-2026-09-18.md)
+retains a template/body disagreement probe and the published entry-alias
+optimizer repair. Adrian accepted the RXC-only inline transport and the public
+status-bit assertion contract on 2026-09-18; the explanatory probe does not
+reopen those decisions.
 
 Source/debug metadata now has two separate identities:
 
@@ -575,6 +596,9 @@ table.
 `binutils/rxopmeta.c` combines both sources through the stable
 `rxop_effects()` and `rxop_signal_contract()` C APIs; their count functions
 expose the mechanically checked inventory sizes.
+Here "sidecar" means a checked-in C table compiled into the tools. Neither
+table is an extra per-program file emitted by RXC or a transported producer
+assertion.
 
 The K04e handler audit records `STRLEN` as a string read with
 failure-atomic `UNICODE_ERROR` before its integer write, all three `ISUB`
@@ -615,7 +639,9 @@ existing handlers and do not change VM or RXBIN semantics.
 
 The current inventories each have 650 entries: 591 source opcodes (585
 classified and six explicitly conservative process/redirect operations), 56
-reserved slots and three internal handlers. Coverage is not inferred from an instruction name
+reserved slots and three internal handlers. The 2026-09-18 audit retains its
+historical 660-slot result for that earlier source revision. Inventory sizes
+come from `test_rxop_metadata`; coverage is not inferred from an instruction name
 or format. The audit used the VM handlers between `START_OF_INSTRUCTIONS` and
 `END_OF_INSTRUCTIONS`, the assembler/compiler behavior described here, and
 focused semantic tests. The tests mechanically validate table alignment,
@@ -634,8 +660,8 @@ K05 branch threading and M00 reachability request CFG only; exact K06 copy/
 status subsumption remains local; M01-M06 and K01-K04 retain their component
 proof ownership. M01-M04 request the component base, while M05, M06 and
 K01-K04 additionally request the sparse use index. The established `-d` flow
-dump has its own explicit diagnostic route. No current production consumer
-requests loop analysis.
+dump has its own explicit diagnostic route. H01 joined-key reuse and H02
+string-literal reuse request loop analysis when their census admits candidates.
 
 Incoming argument/global base identities are not a no-alias guarantee. Shared
 component queries invalidate facts on writes through another possible incoming
@@ -644,6 +670,10 @@ from an alias that is merely possible. The same component-write helper owns
 fresh queries and cached-query revalidation. Exact private-local identities and
 the existing dynamic/reference effect model remain separate. The
 `entry_alias_runtime` optimized/unoptimized regression covers this boundary.
+
+The [maintainability review](../planning/release-1/optimization-maintainability-and-fusion-ownership.md)
+describes the existing fact/proof/typed-plan/transaction interfaces and proposed
+incremental consolidation. It does not approve a replacement framework.
 
 D0.5 adds an exact linear write-once/single-use typed-copy route. One local-
 register census records explicit occurrences plus metadata, TRACE, implicit
@@ -732,8 +762,10 @@ work, retained-byte, reachability, predecessor, dominator-iteration, frontier,
 SCC, backedge and loop counters; dormant loop facts print as unavailable rather
 than being inferred. Post-dominance is deliberately deferred until a consumer
 needs a must-execute query. Ordinary assembly does not solve unused loop
-analysis: tests and future optimizer consumers request it explicitly. Stage 3
-therefore changes neither queued records nor RXBIN output.
+analysis. The current H01 joined-key and H02 string-literal reuse consumers
+request it when their candidate census admits those routes; tests may also
+request it explicitly. Structural analysis itself does not rewrite queued
+records or RXBIN output.
 
 Stage 4 adds `assembler/rxas_flow_signal.c`, a second demand-driven epoch
 cache layered on the structural result. Handler policy is modeled as a sparse

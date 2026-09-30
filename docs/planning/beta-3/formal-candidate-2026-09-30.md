@@ -5,7 +5,11 @@ Prepared 30 September 2026 under the
 This is a preparation record, not a new release policy or a completed release.
 The [Release 1 plan](../../release-1-plan.md) owns release scope and cadence.
 
-## Candidate identity
+## Prior preparation snapshot
+
+The identity and receipts in this section record the 30 September preparation
+before the develop-only release execution below. They are historical evidence,
+not the identity or hosted QA result of the final candidate.
 
 - Target: `v1.0.0-beta.3`, `VERSION` = `1.0.0-beta.3`.
 - Qualified product/test revision:
@@ -22,6 +26,49 @@ The [Release 1 plan](../../release-1-plan.md) owns release scope and cadence.
 - Local proof: Debug core/staged tools and prerequisites build;
   2,293/2,293 normal correctness; 8/8 focused Apple ASan; 13/13 packaging
   guard unit tests. See [permanent review receipts](../../qa/beta3-mainframe-2026-09-30/README.md).
+
+## Develop-only release execution — 30 September 2026
+
+**Vision:** retain the published mainframe repair and beta 3 preparation on
+`develop`, add the previously local approved Release 1 roadmap and performance
+decisions, and qualify one exact `develop` candidate before promoting it to
+`master` and tagging beta 3. No temporary QA or release branch is used. Native
+Lab package and manual evidence remain separately bounded below.
+
+The final candidate is the `develop` commit published in STEP-02. Record its
+exact SHA and matching hosted runs in the release receipt before promotion;
+the earlier `e15392da7` publication receipt does not qualify later changes.
+
+**Acceptance criteria**
+
+1. **B3-REL-AC-01 — complete:** `develop` contains the mainframe repair, beta 3
+   version and final release notes, approved roadmap/performance decisions and
+   branch-discipline guidance, with unrelated old checkout changes removed.
+   Verify commit ancestry, `VERSION`, the selected diff and a clean worktree.
+2. **B3-REL-AC-02 — open:** automatic Build CREXX and CodeQL, the CUDA lanes,
+   full Deep Build QA and maintained Linux ASan/LSan plus macOS ASan all pass
+   for the qualified `develop` product/test/build inputs. Retain run/job links,
+   exact SHA, failures and platform capability limits. A failure stops tagging.
+3. **B3-REL-AC-03 — open:** after AC-02, promote the qualified `develop` tree
+   to `master`, create and push annotated `v1.0.0-beta.3` on that master commit,
+   and verify the tag-driven release, expected assets and checksums. Preserve
+   the native Lab evidence boundary in the release report.
+
+**Execution steps**
+
+1. **B3-REL-STEP-01 — complete** (AC-01): cancel the temporary branch QA,
+   close its draft PR, delete that branch/worktree and fast-forward the existing
+   `develop` checkout to the current remote head.
+2. **B3-REL-STEP-02 — complete** (AC-01): reconcile and publish only the
+   selected release/roadmap/performance documentation and `AGENTS.md` on
+   `develop`; review the exact diff and preserve later beta 3 source/docs.
+3. **B3-REL-STEP-03 — open** (AC-02; depends on STEP-02): run the full hosted
+   release QA on that `develop` revision and inspect terminal outcomes.
+4. **B3-REL-STEP-04 — open** (AC-03; depends on STEP-03): promote, tag and
+   verify the automatic release. Stop after reporting the release result.
+
+The preceding temporary candidate branch and PR #713 are cancelled/closed;
+their incomplete runs do not qualify this `develop` candidate.
 
 ## Remaining formal release work
 

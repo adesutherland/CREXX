@@ -1,15 +1,28 @@
 # KEYACCESS-01: KeyAccess bulk-insert scaling
 
-Status: first Release verdict complete; awaiting review
+Status: closed; first Release verdict accepted and implementation retained by
+Adrian on 2026-09-18.
+
+## Acceptance and closure
+
+Adrian's decision: **"Accept, retain and close"**, 18 September 2026.
+Retain the incremental existing hash-index implementation introduced in
+`8ebdc5f26f4072e0493885d10ed34910e6815eb8` and the correctness/Windows Release
+evidence below. The 50,000-key comparison, 379.952295 s to 2.028873 s
+(approximately 187x faster), is accepted for its recorded workload and platform.
+No rework or further KeyAccess performance work is selected. The verdict review
+and this worklist are closed; normal exact-candidate release qualification
+remains separate. See the [durable decision](DECISIONS.md#keyaccess-decision-2026-09-18--accept-retain-and-close).
 
 ## Problem
 
-Loading unique keys into one transaction currently performs a full index scan
-for every `writekey()`. The supplied 50,000-key run takes about 380 seconds.
+Before the retained fix, loading unique keys into one transaction performed a
+full index scan for every `writekey()`. The supplied 50,000-key run took about
+380 seconds.
 
 ## Design selection
 
-### Status quo
+### Status quo before the fix
 
 `writekey()` calls the linear `find_key()` scan for every key and discards the
 lazy in-memory hash index after every successful write. The hash index is not

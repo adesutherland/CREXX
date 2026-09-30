@@ -1755,10 +1755,30 @@ profiles remain comparable. Placement/heat profiling must additionally count
 the private dispatch identity: attributing it only to `UNLINK` or `LINKATTR1`
 can incorrectly classify a frequently executed private handler as cold.
 
-The shared inventory and gap report between RXAS static fusion and these VM
-load-time fusions is a separate roadmap item, `PERF3-05-R4`. Making a private
-fusion a normal serialized instruction, or adding adaptive runtime quickening,
-requires its own RXAS/RXBIN compatibility and architecture decision.
+The shared inventory and gap report is complete in
+[`PERF3-FUSION-REGISTRY.md`](../../performance/PERF3-FUSION-REGISTRY.md), closing
+`PERF3-05-R4`. The pattern recognizers inspect only static bytecode facts that
+RXAS also has. Runtime payload guards explain the conditional fast path, not
+a fundamental need to select the pattern inside RXVM. RXAS could select an
+explicit instruction whose VM contract includes the guard and fallback, but
+that requires a public instruction/compatibility decision and preservation of
+intermediate entry points, source observations and signal continuations.
+The [2026-09-18 follow-up](../planning/release-1/optimization-maintainability-and-fusion-ownership.md)
+reviews removal, RXAS-owned instruction selection or bounded retention of the
+two mechanisms; no replacement architecture is selected. It also distinguishes
+these static fusions from adaptive instruction rewriting and the existing
+runtime method/factory caches. The earlier Q7 adaptive prototype was rejected
+for its measured clients and costs, not as proof that runtime learning can
+never help. The accepted result of that investigation was instead the direct,
+guarded owner-discovery improvement in canonical `MKREF_REG_REG`; it retains
+no learned site state and remains separate from R1/R2.
+
+A future adaptive handler could learn runtime receiver/representation behavior
+unavailable to RXAS and select a guarded implementation in the worker-owned
+execution image. It must improve on the existing direct handlers and caches,
+preserve canonical observation/signal behavior, and define refresh, re-entry
+and teardown. No general adaptive quickening framework is currently installed
+or selected by the follow-up review.
 
 ### Instruction Flow Example
 The assembler passes operands inline sequentially in the binary array. A

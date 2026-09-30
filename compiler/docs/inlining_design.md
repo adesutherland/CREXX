@@ -585,6 +585,23 @@ retains the normal call. A valid summary may open a narrowly proved case even
 when an older emitter hint is absent; the direct scalar-binding regression is
 the first such evidence-open gate.
 
+Validation boundary: these checks concern the transported, annotated AST and
+the callable declaration. Symbol read/write usage is serialized in node records
+and restored by `inline_meta_import_node`; summary reconstruction traverses
+those annotations. This is not an independently derived proof from the
+executable instruction body. RXAS stores `META_INLINE` without interpreting its
+AST or summary, and importing RXC does not establish AST/bytecode equivalence.
+The current mechanism consequently depends on the producer keeping the two
+representations coherent. Editing a library's executable assembly while keeping
+an old template can change non-inlined calls without changing inlined calls.
+The [2026-09-18 audit](../../docs/planning/release-1/optimization-boundary-audit-2026-09-18.md)
+retains that reproduction and separates proposed integrity policy from existing
+behavior.
+Adrian accepted this RXC-owned boundary on 2026-09-18: keep imported inlining
+and its documented producer-coherence obligation. Do not treat the deliberate
+inconsistency probe as an open request to remove the transport or replace the
+compiler's structured AST-rewrite machinery.
+
 The important point of the `>` / `<` stream is that it lets the importer reconstruct
 the tree without depending on pointer addresses. Symbol records precede the
 tree records and give the importer enough `Symbol` data for the current clone

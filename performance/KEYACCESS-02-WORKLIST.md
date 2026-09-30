@@ -1,11 +1,24 @@
 # KEYACCESS-02: KeyAccess negative-lookup scaling
 
-Status: first Release verdict complete; awaiting review
+Status: closed; first Release verdict accepted and implementation retained by
+Adrian on 2026-09-18.
+
+## Acceptance and closure
+
+Adrian's decision: **"Accept, retain and close"**, 18 September 2026.
+Retain the expected-miss logging repair introduced in
+`8ebdc5f26f4072e0493885d10ed34910e6815eb8` and the Windows Release evidence below.
+The 500,000-key negative-lookup comparison, 198.232571 s to 10.640404 s
+(approximately 18.6x faster), is accepted for its recorded workload and platform.
+Full-key verification and logging of actual failures remain required. No rework
+or further KeyAccess performance work is selected. The verdict review and this
+worklist are closed; normal exact-candidate release qualification remains
+separate. See the [durable decision](DECISIONS.md#keyaccess-decision-2026-09-18--accept-retain-and-close).
 
 ## Problem
 
-At 500,000 active keys, successful lookups take about 11 seconds while
-missing lookups take about 198 seconds.
+Before the retained fix, at 500,000 active keys successful lookups took about
+11 seconds while missing lookups took about 198 seconds.
 
 ## Root-cause investigation
 
