@@ -81,16 +81,21 @@ returned success. These are separate release blockers; AC-02 and STEP-03 remain
 open. The `hotfix` checkout, fast-forwarded to the candidate, owns repairs while
 the local `develop` checkout is in other hands.
 
-1. **B3-REL-STEP-03A — in progress** (AC-02): reproduce and repair MinGW binary
+1. **B3-REL-STEP-03A — complete** (AC-02): reproduce and repair MinGW binary
    reopen. The current KeyAccess `r+` route retains C text mode even though its
    data and index records are binary. Make the regression deterministic with a
    record containing a `0x1a` length byte; verify normal focused behavior and
-   the affected hosted MinGW lane before promotion.
-2. **B3-REL-STEP-03B — in progress** (AC-02): trace the Linux CMS host fixture's
+   the affected hosted MinGW lane before promotion. The repaired exact hotfix
+   `b86bbf19d` passed the [Windows MinGW core and focused KeyAccess gate](https://github.com/adesutherland/CREXX/actions/runs/36774002106).
+2. **B3-REL-STEP-03B — complete** (AC-02): trace the Linux CMS host fixture's
    injected write error through the raw and codec `FILE *` layers. Repair any
    lost error without changing the approved text/raw ownership boundary; verify
    the focused Debug test and maintained sanitizer shape before promotion.
-3. **B3-REL-STEP-03C — open** (AC-02): review all other terminal QA outcomes,
+   On `b86bbf19d`, the combined local macOS Debug panel passed 3/3 and the
+   Apple ASan CMS text target passed 69 checks (Apple LSan unavailable). The
+   [Linux comprehensive job](https://github.com/adesutherland/CREXX/actions/runs/36774010945/job/110087305301)
+   passed on the same hotfix revision.
+3. **B3-REL-STEP-03C — in progress** (AC-02): review all other terminal QA outcomes,
    promote reviewed fixes from `hotfix` to remote `develop`, and requalify the
    changed exact candidate. Do not tag a revision with either failure open.
 
