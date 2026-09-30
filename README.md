@@ -92,8 +92,7 @@ is searched for same-extension imports.
 ## Documentation
 
 - [Beta 3 release notes](docs/releases/v1.0.0-beta.3.md) track the beta 3 WIP
-  scope, rebased 2026-09-30 cut, original timetable, and current known
-  limitations.
+  changes, candidate preparation, distribution shape, and known limitations.
 - [Beta 2 release notes](docs/releases/v1.0.0-beta.2.md) summarize the latest
   completed beta scope, signing status, and known limitations.
 - [Release 1 plan](docs/release-1-plan.md) defines the feature-bearing beta

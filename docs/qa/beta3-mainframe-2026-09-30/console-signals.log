@@ -1,0 +1,45 @@
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say.rxbin'] rc=9
+PANIC: (SIGNAL UNICODE_ERROR)
+  at module 1 (/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say.rxas) address 2 (0x2)
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say-caught', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say-caught.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say-caught.rxbin'] rc=0
+ÉÅ§áà£
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/sayx', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/sayx.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/sayx.rxbin'] rc=9
+PANIC: (SIGNAL UNICODE_ERROR)
+  at module 1 (/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/sayx.rxas) address 2 (0x2)
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/sayx-caught', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/sayx-caught.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/sayx-caught.rxbin'] rc=0
+ÉÅ§áà£
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwrite', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwrite.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwrite.rxbin'] rc=9
+PANIC: Unable to write console text (SIGNAL UNICODE_ERROR)
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwrite-caught', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwrite-caught.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwrite-caught.rxbin'] rc=0
+ÉÅ§áà£
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwritecdpt', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwritecdpt.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwritecdpt.rxbin'] rc=9
+PANIC: Unable to write console codepoint (SIGNAL UNICODE_ERROR)
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwritecdpt-caught', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwritecdpt-caught.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwritecdpt-caught.rxbin'] rc=0
+ÉÅ§áà£
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/valid', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/valid.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/valid.rxbin'] rc=0
+¡Q
+¡QQ['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/custom', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/custom.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/custom.rxbin'] rc=0
+‚Ç¨
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say-io-error', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say-io-error.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say-io-error.rxbin'] rc=15
+PANIC: (SIGNAL NOTREADY)
+  at module 1 (/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say-io-error.rxas) address 2 (0x2)
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwrite-io-error', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwrite-io-error.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwrite-io-error.rxbin'] rc=15
+PANIC: Unable to write console text (SIGNAL NOTREADY)
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxas', '-o', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwritecdpt-io-error', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwritecdpt-io-error.rxas'] rc=0
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/fwritecdpt-io-error.rxbin'] rc=15
+PANIC: Unable to write console codepoint (SIGNAL NOTREADY)
+['/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/bin/rxvm_mainframe_console_harness', '/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say-io-error.rxbin'] rc=15
+PANIC: (SIGNAL NOTREADY)
+  at module 1 (/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debug/platform/console-signals/say-io-error.rxas) address 2 (0x2)

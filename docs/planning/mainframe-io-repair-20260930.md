@@ -170,3 +170,12 @@ replace that guard proof. The Lab CMS report retains exact product identities,
 native receipts and guest handback status. All CMS acceptance criteria here
 are complete for this bounded repair; unchanged host and TSO evidence is
 retained without another suite run.
+
+## Upstream integration follow-up
+
+Adrian authorised upstream review, develop integration and beta 3 preparation
+on 30 September. The [integration record](beta-3/mainframe-integration-2026-09-30.md)
+owns that delivery and its new console-signal criterion. The Lab source and
+its earlier guest artifacts remain unchanged; upstream signal propagation is
+a separately approved follow-up and needs exact-package native qualification.
+Historical receipts above retain their original source and scope.
