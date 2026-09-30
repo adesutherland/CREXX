@@ -1,6 +1,13 @@
 # About the Library Reference
 
-This publication contains the documentation of the cRexx standard library. All documented functionality is delivered in every distribution of the cRexx system, while platform dependent differences or supersets are relegated to the appendices. The Rexx built-in functions, traditionally seen as part of the language, are also documented in the *Language Reference*, but in this *Library Reference* there is an emphasis on platform dependent functions and cRexx specific additions.
+This publication documents the cRexx `1.0.0-beta.3` standard library and
+optional providers. Individual chapters identify language levels, optional
+plugins and platform requirements; these facilities are not all included in
+every core package. See the [beta 3 release notes](../../releases/v1.0.0-beta.3.md)
+for the release scope and known limitations. The Rexx built-in functions,
+traditionally seen as part of the language, are also documented in the
+*Language Reference*. This *Library Reference* emphasizes platform dependent
+functions and cRexx specific additions.
 
 With Classic Rexx having its origins as a language intended for command processing and procedural programming, two object oriented successors, Object Rexx and \nr{} have introduced (divergent) class concepts, types and syntax. cRexx introduced native hardware types[^java] and an object oriented notation which stays closer to Classic Rexx (with standard labels and `class` and `interface` keywords in the location of the `procedure` keyword. In cRexx, the `stem` type is implemented as a class, part of this library, and useable in procedural programs as any other type. In addition to this, a large number of other data structures are documented here, and are considered part of the runtime library instead of components of the core language. This has enabled the cRexx team to deliver a set of data structures recognisable to users of both predecessors.
 
@@ -26,4 +33,3 @@ depending on these API's. All documented API's have implementations - planned fu
 \end{shaded}
 
 [^java]: NetRexx types are still Java VM types but correspond to, and are implemented as generic hardware concepts.
-

@@ -1,6 +1,7 @@
 # CREXX Distribution Packaging Working Notes
 
-Status: working packaging plan and implementation notes. Verify against
+Documentation baseline: `1.0.0-beta.3`. These are packaging implementation and
+maintainer notes. Verify against
 `.github/workflows/build.yml`, `scripts/`, and current release assets before
 making claims about shipped behaviour.
 

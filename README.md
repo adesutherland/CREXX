@@ -1,13 +1,26 @@
-# CREXX
+# CREXX 1.0.0 Beta 3
 
 CREXX is a modern implementation of the REXX language built as a
 compiler-to-bytecode toolchain. Source programs are compiled to cREXX assembler,
 assembled into `rxbin` bytecode, optionally linked into a deployable image, and
 run by the CREXX virtual machine.
 
-Current documentation baseline: `crexx-1.0.0-beta.3` on `develop`.
-This is beta 3 work in progress until the `v1.0.0-beta.3` tag and release
-assets exist. The latest completed beta baseline is `v1.0.0-beta.2`.
+This documentation covers `crexx-1.0.0-beta.3`. Beta 3 combines the Level B
+toolchain and libraries, accumulated compiler/runtime and performance work,
+the initial Level G concurrency surface, optional native inference, and
+mainframe text and diagnostic I/O repairs.
+
+## Download And Install
+
+Get the [Beta 3 packages](https://github.com/adesutherland/CREXX/releases/tag/v1.0.0-beta.3)
+for Linux x64, Windows x64, macOS arm64, or macOS x86_64. The core runs on its
+own; `llama.rexx` is a separate optional download. Select the plugin for the
+same release and platform. See [Installing and running CREXX](INSTALL-RUN.md)
+for package selection, installers, and a first program, and the
+[release notes](docs/releases/v1.0.0-beta.3.md) for features and limitations.
+
+The [Dev Snapshot](https://github.com/adesutherland/CREXX/releases/tag/dev-snapshot)
+tracks ongoing `develop` work and is replaced after each successful publication.
 
 ## What Is Included
 
@@ -28,11 +41,12 @@ the bytecode toolchain, core standard libraries, host integration, and packaging
 on the supported desktop platforms. `rxdb` exists as an experimental debugger
 prototype and is not yet part of the stable release surface.
 
-`develop` also contains an initial Level G structured-concurrency surface:
+Beta 3 also includes an initial Level G structured-concurrency surface:
 task declarations and `DO PARALLEL`, explicit pool/scope classes, local and
 isolated-process providers, bounded byte endpoints, structured child-process
 redirection, and a concurrent HTTP client. This work has local macOS
-qualification but is not a released, stable or fully cross-platform contract.
+qualification; its language and library contract remains initial, with platform
+qualification limits described in the release notes.
 
 ## Build
 
@@ -91,10 +105,10 @@ is searched for same-extension imports.
 
 ## Documentation
 
-- [Beta 3 release notes](docs/releases/v1.0.0-beta.3.md) track the beta 3 WIP
-  changes, candidate preparation, distribution shape, and known limitations.
-- [Beta 2 release notes](docs/releases/v1.0.0-beta.2.md) summarize the latest
-  completed beta scope, signing status, and known limitations.
+- [Beta 3 release notes](docs/releases/v1.0.0-beta.3.md) describe this version's
+  features, distribution, and known limitations.
+- [Beta 2 release notes](docs/releases/v1.0.0-beta.2.md) retain the previous
+  beta's scope, signing status, and known limitations.
 - [Release 1 plan](docs/release-1-plan.md) defines the feature-bearing beta
   train through March 2027, RC1, and the 2027-05-01 Release 1 cut target while
   retaining the original gates and dependencies.

@@ -48,6 +48,13 @@ separate evidence; SDK WAIT, heap and stack changes are Lab runtime inputs.
    the real interpreter's terminal and catchable signal behavior with a native
    console host fixture, plus Debug and maintained ASan regressions.
 
+6. **INT-AC-06 — PASS:** Current public documentation is the final beta 3
+   publication copy: README, release notes, installation/security guidance,
+   documentation entry points and packaging examples agree with `VERSION`
+   `1.0.0-beta.3`. No second post-tag wording edit is required. Verify current
+   version consumers, local links, release filename conventions and the diff;
+   preserve historical release/evidence records and unchanged qualified inputs.
+
 ## Numbered implementation steps
 
 1. **INT-STEP-01 — DONE (AC-01):** Inspect repository instructions,
@@ -70,6 +77,21 @@ separate evidence; SDK WAIT, heap and stack changes are Lab runtime inputs.
    automatic workflows on the exact published revision.
 6. **INT-STEP-05 — DONE (PREPARATION) (AC-04):** Prepare curated beta 3 notes and candidate
    handoff, retaining open formal release gates and profile limits.
+
+7. **INT-STEP-06 — DONE (AC-06):** Review current version labels and
+   public documentation, replace staging/WIP prose with final beta 3 copy,
+   validate consistency without repeating unchanged product QA, then commit
+   and push the documentation follow-up to develop.
+
+## Publication documentation follow-up
+
+Adrian requested the README/version review, then clarified: "This is the
+version that will be published ... we won't update them again." The intended
+outcome is final beta 3 documentation in the source used for publication,
+including versioned download links and installation examples. This supersedes
+the earlier WIP wording requirement for current public docs. It does not claim
+that the formal tag already exists or waive any remaining release/platform
+gate in the [formal candidate handoff](formal-candidate-2026-09-30.md).
 
 ## Initial inputs
 
@@ -136,3 +158,12 @@ product/test/build hashes are unchanged, so valid local/hosted proof is reused
 and a duplicate development CI matrix is skipped. Formal tag workflows and
 release/platform requirements remain as configured. The integration/preparation
 request is complete; formal beta 3 release completion remains open.
+
+Final documentation review: VERSION and all three CMake version channels agree
+with `1.0.0-beta.3`; release display is `crexx-1.0.0-beta.3`. Retained Debug
+`rxc -v`, `rxas -v`, `rxvm -v` and `crexx --version` report the same base
+version. All newly added local links resolve; `git diff --check` passes. All
+42 frozen product/test/build inputs are unchanged, so the existing qualified
+product evidence is reused. Only Markdown files change. The versioned download
+links intentionally target the formal beta 3 tag for publication; that tag and
+its remaining qualification gates are still tracked in the candidate handoff.

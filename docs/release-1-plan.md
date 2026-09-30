@@ -1,15 +1,17 @@
 # CREXX Release 1 Plan
 
-Status: live Release 1 schedule and scope plan, rebaselined 2026-09-04.
+Status: live Release 1 schedule and scope plan, rebaselined 2026-09-04;
+beta 3 publication documentation finalized 2026-09-30.
 Beta 3 target: 2026-09-30.
 Release 1 cut target: 2027-05-01, for the planned May 2027 London Rexx
 Symposium.
 
 This plan describes the intended path from the tagged `v1.0.0-beta.2` release
 baseline through feature-bearing beta 3 to beta 6 milestones and Release 1. It
-is a planning target, not a release contract. As of 2026-09-04, beta 2 remains
-the latest versioned beta tag and current work must not be called beta 3 or
-Release 1 until the corresponding tag and assets exist.
+is a planning target, not a release contract. The current product documentation
+covers `1.0.0-beta.3` in its final publication form. Versioned tags and their
+assets identify completed releases; documentation preparation does not itself
+complete the release gates.
 
 Beta 3 moved from the original July foundation target to 2026-09-30 because the
 performance programme took longer than planned and produced substantial
@@ -94,9 +96,10 @@ Must-ship items are part of the Release 1 contract or release process.
 1. Beta 3 branch baseline
 
    Keep `v1.0.0-beta.2` release notes as the historical beta 2 baseline, point
-   current `develop` documentation at `v1.0.0-beta.3` WIP, and keep the beta 3
-   planning note aligned with this timetable. Do not call beta 3 released until
-   the `v1.0.0-beta.3` tag and assets exist.
+   current product documentation at `v1.0.0-beta.3`, and keep the beta 3
+   planning note aligned with this timetable. README, install/security guidance
+   and release notes are final publication copy; release execution status belongs
+   in the candidate handoff until the tag and assets exist.
 
 2. Release 1 governance
 
@@ -142,7 +145,7 @@ Must-ship items are part of the Release 1 contract or release process.
 
 7. Runtime lookup and late loading
 
-   The beta 3 WIP baseline now has explicit-file late-load/relink coverage and
+   The beta 3 baseline has explicit-file late-load/relink coverage and
    sorted interface method/factory registries. Exact method dispatch uses a
    binary search; factory selection binary-searches the interface/member bucket
    and scans only matching providers. Runtime loading rebuilds both indexes.
@@ -188,7 +191,7 @@ Should-ship items are important but have explicit fallback paths.
    The RXAS packed-table surface, linear/open-hash/ACPH algorithms, measured
    `auto` policy, VM execution, disassembly round trip, corruption handling,
    and conservative `rxc` integer/string/binary lowering are implemented on
-   `develop` for beta 3 WIP. Remaining Release 1 work is cross-platform QA
+   the beta 3 baseline. Remaining Release 1 work is cross-platform QA
    and documentation/release review; arbitrary RXAS branch-ladder recognition
    is explicitly post-Release 1 CFG/dataflow work.
 
@@ -400,9 +403,10 @@ Documentation dependencies:
 
 - Beta 2 release notes carry the historical beta 1 to beta 2 delta; keep them
   aligned with the actual beta 2 tag assets.
-- Beta 3 release notes carry the current WIP scope and timetable; keep README,
+- Beta 3 release notes carry the final beta's scope and limitations; keep README,
   `docs/releases`, security policy, examples, install docs, and language
-  reference aligned on beta 3 WIP versus completed beta 2 status.
+  reference aligned on `1.0.0-beta.3`. Retain prior beta notes as history and
+  keep pending release operations in the candidate handoff.
 - `docs/ai-context/CREXX_LIBS.md` should describe `rxfnsc` as the Level
   C/RexxScript runtime foundation now that the library directory exists.
 

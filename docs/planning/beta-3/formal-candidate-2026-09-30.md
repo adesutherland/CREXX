@@ -14,8 +14,11 @@ The [Release 1 plan](../../release-1-plan.md) owns release scope and cadence.
   its exact SHA from the publication receipt before tagging; compare the
   [frozen product hashes](../../qa/beta3-mainframe-2026-09-30/product-inputs.json)
   and inspect any later develop changes rather than silently moving the candidate.
-- Curated [release notes](../../releases/v1.0.0-beta.3.md) and README are aligned
-  with beta 3 WIP. Beta 2 is still the latest completed beta tag/release.
+- Curated [release notes](../../releases/v1.0.0-beta.3.md), README, installation
+  and security guidance, documentation entry points and packaging examples are
+  final beta 3 publication copy under Adrian's follow-up instruction. They
+  require no post-tag wording change. Beta 2 is still the latest completed
+  beta tag/release at preparation; public copy does not close the gates below.
 - Local proof: Debug core/staged tools and prerequisites build;
   2,293/2,293 normal correctness; 8/8 focused Apple ASan; 13/13 packaging
   guard unit tests. See [permanent review receipts](../../qa/beta3-mainframe-2026-09-30/README.md).

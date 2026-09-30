@@ -1,8 +1,8 @@
 # CREXX Roadmap
 
 Status: consolidated project direction, refreshed 2026-09-04; library discovery
-and dependency status reconciled 2026-09-13. This document is not a release
-contract.
+and dependency status reconciled 2026-09-13; beta 3 documentation baseline
+finalized 2026-09-30. This document is not a release contract.
 
 This is the single portfolio-ordering view for CREXX. It ranks product outcomes
 rather than every issue, experiment, or completed programme stage. Detailed
@@ -31,9 +31,10 @@ Use this authority split:
   RAG platform/endurance and Linux leak-specific assurance remain separate.
   [Bounded acceptance and evidence](planning/rxvector-binary-owner-20260919.md).
 
-- `v1.0.0-beta.2` remains the latest versioned beta tag. Beta 3 material on
-  `develop` is work in progress until a `v1.0.0-beta.3` tag and release assets
-  exist. The release train has been rebaselined after the extended performance
+- The current product and documentation baseline is `1.0.0-beta.3`; the
+  [beta 3 notes](releases/v1.0.0-beta.3.md) describe its scope and limitations.
+  Release publication is identified by versioned tags and their assets. The
+  release train has been rebaselined after the extended performance
   programme: beta 3 targets 2026-09-30 and Release 1 targets 2027-05-01, ready
   for the planned May 2027 London Rexx Symposium. The symposium's exact public
   dates remain TBC.

@@ -1,8 +1,10 @@
-# Installing And Running CREXX Release Packages
+# Installing And Running CREXX 1.0.0 Beta 3
 
-These instructions are for binary packages downloaded from the
-[CREXX GitHub Releases](https://github.com/adesutherland/CREXX/releases) page.
-Versioned releases are stable distribution points. The `CREXX Dev Snapshot`
+These instructions cover `crexx-1.0.0-beta.3`. Download the matching binary
+packages from the
+[Beta 3 release](https://github.com/adesutherland/CREXX/releases/tag/v1.0.0-beta.3).
+Versioned releases are fixed distribution points. The
+[CREXX Dev Snapshot](https://github.com/adesutherland/CREXX/releases/tag/dev-snapshot)
 pre-release is a moving interim build from the `develop` branch; its assets are
 replaced by the next successful `develop` build.
 The exact-revision SDK ZIPs described below retain the source SHA in their
@@ -19,6 +21,13 @@ file, and a small `examples/` directory.
 `VERSION` contains the exact build identity reported by the packaged tools.
 `BUILDINFO` includes the base version, build channel, timestamp, and source
 commit used to produce the package.
+
+Beta 3 core archives are named `CREXX-v1.0.0-beta.3-<platform>.zip`.
+Optional plugins are named
+`llama.rexx-v1.0.0-beta.3-<platform>-<backend>.zip`. For a development snapshot,
+use `dev-snapshot` in place of `v1.0.0-beta.3` in the installation examples.
+The release asset list records available installers, signing status and
+checksums; choose the files for your platform from that list.
 
 ## Installed SDK snapshots
 
@@ -53,15 +62,19 @@ the qualified RAG control uses Metal; on Intel macOS it uses CPU. A Windows
 Vulkan-labelled add-on also contains CPU support, but downstream CPU use
 requires its own qualification; the label alone is not that proof.
 
-The next inference-enabled delivery is being qualified as a small core download
-plus a separate optional `llama.rexx` plugin download. The core works on its own.
+## Optional llama.rexx plugin
+
+Beta 3 separates the core download from the optional `llama.rexx` plugin.
+The core works on its own.
 Choose a plugin for the exact same release/commit and platform. Extract both
 ZIPs into the same parent folder; they contain the same `CREXX-<platform>`
 directory and their contents combine. Windows uses one MSVC core with `rxvm`
 selecting `rxbvm`; either the Vulkan or CUDA plugin uses that same base.
 Linux offers Vulkan or CUDA; ARM Mac uses Metal and Intel Mac is CPU-only.
 Intel Metal is unsupported for this delivery. Every plugin includes CPU support.
-These candidate packages are not yet a published release.
+The versioned release offers all six backend/platform combinations; ordinary
+development snapshots publish the Vulkan, Metal and CPU variants. CUDA is an
+additional release build lane.
 
 If you installed the core with an installer, extract the plugin ZIP elsewhere
 and copy the contents of its `CREXX-<platform>` folder into the existing cREXX
@@ -99,10 +112,14 @@ Download the `windows-x64` ZIP archive and unblock it before extracting:
 Add the extracted package `bin` directory to your user or system `PATH`, or run
 the tools by their full path.
 
-The moving dev snapshot provides an automatic installer:
-`CREXX-dev-snapshot-windows-x64-unsigned-setup.exe`. It installs into
+For beta 3, prefer `CREXX-v1.0.0-beta.3-windows-x64-signed-setup.exe` for
+installation or `CREXX-v1.0.0-beta.3-windows-x64-signed.zip` for portable use
+when present. The NSIS installer installs into
 `C:\Program Files\CREXX`, sets `CREXX_HOME` and `REXX_HOME`, adds `bin` to the
 machine PATH, and registers an uninstaller. Open a new terminal after installing.
+
+The moving dev snapshot provides an automatic installer:
+`CREXX-dev-snapshot-windows-x64-unsigned-setup.exe`.
 Unsigned applications may show unknown-publisher/SmartScreen warnings or be
 blocked by Windows security policy.
 
