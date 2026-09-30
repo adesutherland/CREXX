@@ -1,0 +1,50 @@
+test_altered_core_rejected_before_copy (test_llama_installer.InstallerTests.test_altered_core_rejected_before_copy) ... ok
+test_changed_installed_plugin_not_removed (test_llama_installer.InstallerTests.test_changed_installed_plugin_not_removed) ... ok
+test_changed_payload_rejected (test_llama_installer.InstallerTests.test_changed_payload_rejected) ... ok
+test_core_overlap_rejected_at_packaging (test_llama_installer.InstallerTests.test_core_overlap_rejected_at_packaging) ... ok
+test_destination_symlink_rejected (test_llama_installer.InstallerTests.test_destination_symlink_rejected) ... ok
+test_discovery_and_ambiguous_locations (test_llama_installer.InstallerTests.test_discovery_and_ambiguous_locations) ... ok
+test_install_reinstall_remove_preserves_core_and_models (test_llama_installer.InstallerTests.test_install_reinstall_remove_preserves_core_and_models) ... ok
+test_mismatched_identity_rejected_at_packaging (test_llama_installer.InstallerTests.test_mismatched_identity_rejected_at_packaging) ... ok
+test_missing_core_rejected (test_llama_installer.InstallerTests.test_missing_core_rejected) ... ok
+test_overlapping_installer_operations_rejected (test_llama_installer.InstallerTests.test_overlapping_installer_operations_rejected) ... ok
+test_partial_copy_failure_restores_previous_plugin (test_llama_installer.InstallerTests.test_partial_copy_failure_restores_previous_plugin) ... ok
+test_signing_mode_cannot_be_mixed_with_unsigned_qa (test_llama_installer.InstallerTests.test_signing_mode_cannot_be_mixed_with_unsigned_qa) ... ok
+test_unowned_file_preserved (test_llama_installer.InstallerTests.test_unowned_file_preserved) ... ok
+test_apple_signature_passes_and_adhoc_signature_is_rejected (test_llama_installer.SignatureTests.test_apple_signature_passes_and_adhoc_signature_is_rejected) ... test-requirement: code failed to satisfy specified code requirement(s)
+ok
+test_active_reinstall_preserves_every_projected_file (test_llama_manager.NativeManagerTests.test_active_reinstall_preserves_every_projected_file) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_changed_core_and_payload_rejected (test_llama_manager.NativeManagerTests.test_changed_core_and_payload_rejected) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_coexist_switch_reinstall_and_independent_removal (test_llama_manager.NativeManagerTests.test_coexist_switch_reinstall_and_independent_removal) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_concurrent_mutation_refused (test_llama_manager.NativeManagerTests.test_concurrent_mutation_refused) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_failed_publication_rolls_back (test_llama_manager.NativeManagerTests.test_failed_publication_rolls_back) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_in_use_files_refuse_switch (test_llama_manager.NativeManagerTests.test_in_use_files_refuse_switch) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_installer_activation_option (test_llama_manager.NativeManagerTests.test_installer_activation_option) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_interrupted_transaction_refused (test_llama_manager.NativeManagerTests.test_interrupted_transaction_refused) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_removal_protects_upgraded_core_ownership (test_llama_manager.NativeManagerTests.test_removal_protects_upgraded_core_ownership) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_removing_active_does_not_select_other (test_llama_manager.NativeManagerTests.test_removing_active_does_not_select_other) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_tampered_store_rejected (test_llama_manager.NativeManagerTests.test_tampered_store_rejected) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_unknown_backend_rejected (test_llama_manager.NativeManagerTests.test_unknown_backend_rejected) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_unknown_management_schema_refused (test_llama_manager.NativeManagerTests.test_unknown_management_schema_refused) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_unowned_file_preserved (test_llama_manager.NativeManagerTests.test_unowned_file_preserved) ... skipped 'Set LLAMA_MANAGER to the compiled native tool tree'
+test_missing_file_is_not_removed_or_blessed (test_llama_release_pipeline.ManifestSigningTests.test_missing_file_is_not_removed_or_blessed) ... ok
+test_signing_invalidates_hashes_and_refresh_covers_manifest_dependency (test_llama_release_pipeline.ManifestSigningTests.test_signing_invalidates_hashes_and_refresh_covers_manifest_dependency) ... ok
+test_unknown_file_is_not_added (test_llama_release_pipeline.ManifestSigningTests.test_unknown_file_is_not_added) ... ok
+test_actual_collectors_accept_complete_sets_and_reject_missing_files (test_llama_release_pipeline.MatrixTests.test_actual_collectors_accept_complete_sets_and_reject_missing_files) ... ok
+test_collectors_require_correct_plugin_sets (test_llama_release_pipeline.MatrixTests.test_collectors_require_correct_plugin_sets) ... ok
+test_core_matrix_is_shared_and_has_no_gpu_build_flags (test_llama_release_pipeline.MatrixTests.test_core_matrix_is_shared_and_has_no_gpu_build_flags) ... ok
+test_cuda_only_for_release_or_explicit_manual_selection (test_llama_release_pipeline.MatrixTests.test_cuda_only_for_release_or_explicit_manual_selection) ... ok
+test_deep_candidate_retry_selects_only_requested_core (test_llama_release_pipeline.MatrixTests.test_deep_candidate_retry_selects_only_requested_core) ... ok
+test_deep_subset_cannot_replace_ordinary_or_scheduled_full_gate (test_llama_release_pipeline.MatrixTests.test_deep_subset_cannot_replace_ordinary_or_scheduled_full_gate) ... ok
+test_delivery_names_unique_and_required_backends_present (test_llama_release_pipeline.MatrixTests.test_delivery_names_unique_and_required_backends_present) ... ok
+test_nested_manifests_refresh_without_changing_identity_or_members (test_llama_release_pipeline.PackageSigningTests.test_nested_manifests_refresh_without_changing_identity_or_members) ... ok
+test_refresh_cannot_escape_root_or_bless_missing_bootstrap (test_llama_release_pipeline.PackageSigningTests.test_refresh_cannot_escape_root_or_bless_missing_bootstrap) ... ok
+test_signer_preserves_selected_vm_copy_and_refreshes_core_manifest (test_llama_release_pipeline.PackageSigningTests.test_signer_preserves_selected_vm_copy_and_refreshes_core_manifest) ... ok
+test_signing_rejects_mixed_source_and_overlapping_payloads (test_llama_release_pipeline.PackageSigningTests.test_signing_rejects_mixed_source_and_overlapping_payloads) ... ok
+
+----------------------------------------------------------------------
+Ran 42 tests in 2.283s
+
+OK (skipped=14)
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmppl4f00u1/rxllama.native.json
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmp2p12kobw/rxllama.native.json

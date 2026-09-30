@@ -1,0 +1,16 @@
+{
+  "original_source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp",
+  "original_sha256": "1745e853a6d015e38b89f77cd29d0445622a2f73f33b36cc6bbd667f40ea5cd6",
+  "candidate_sha256": "0d68e09a671fa9a3a39954fd959fc91ba3d503205bf3cee23d4f8d65540e2c07",
+  "only_substitutions": [
+    [
+      "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+      "cdff157dc108aee08f38024b8f046f1774f6a4a29fb3a170564232ceeb74ac17"
+    ],
+    [
+      "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+      "afb8552a500c22958467716b7991000dcc941d1f108a516c721b4cc40d41bad9"
+    ]
+  ],
+  "purpose": "S6-D01 compatibility-only scratch build; no main provider pin changed"
+}

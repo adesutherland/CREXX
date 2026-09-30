@@ -1,0 +1,61 @@
+[
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-o",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-entry-alias-repair-clkq791e/opt.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias.rxas"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-entry-alias-repair-clkq791e/opt.rxbin"
+    ],
+    "exit": 0,
+    "stdout": "42\n42\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-entry-alias-repair-clkq791e/opt.rxbin"
+    ],
+    "exit": 0,
+    "stdout": "*******************************************************************************\n* MODULE - /Users/adrian/CLionProjects/CREXX/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias.rxas\n* DESCRIPTION - /Users/adrian/CLionProjects/CREXX/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias.rxas\n\n* CONSTANT POOL - Size 0xa0.  Dump of EXPOSED entries only (option -p not used):\n\n\n* CODE SEGMENT - Size 0x2d\n\n.globals=1\n\nmain()          .locals=5\n                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci\n                load g0 /* aka r5 */,41                      * 0x000004:0001 Load op1 with op2\n                itos g0 /* aka r5 */                         * 0x000007:00e5 Set register string value from its int value\n                call mutate_global()                         * 0x000009:002c Call procedure (op1())\n                itos g0 /* aka r5 */                         * 0x00000b:00e5 Set register string value from its int value\n                say g0 /* aka r5 */                          * 0x00000d:01c2 Say op1\n                load r0,2                                    * 0x00000f:0001 Load op1 with op2\n                load r1,41                                   * 0x000012:0001 Load op1 with op2\n                link r2,r1                                   * 0x000015:00d4 Link op2 to op1\n                call r3,aliased_args(),r0                    * 0x000018:002e Call procedure (op1=op2(op3...) )\n                unlink r2                                    * 0x00001c:00d5 Unlink op1\n                say r3                                       * 0x00001e:01c2 Say op1\n                ret 0                                        * 0x000020:0032 Return op1\n\nmutate_global() .locals=0\n                inc g0 /* aka r0 */                          * 0x000022:001c Increment Int (op1++)\n                ret                                          * 0x000024:0030 Return VOID\n\naliased_args()  .locals=0\n                itos a1 /* aka r2 */                         * 0x000025:00e5 Set register string value from its int value\n                inc a2 /* aka r3 */                          * 0x000027:001c Increment Int (op1++)\n                itos a1 /* aka r2 */                         * 0x000029:00e5 Set register string value from its int value\n                ret a1 /* aka r2 */                          * 0x00002b:0031 Return op1\n*******************************************************************************\n\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-n",
+      "-o",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-entry-alias-repair-clkq791e/noopt.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias.rxas"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-entry-alias-repair-clkq791e/noopt.rxbin"
+    ],
+    "exit": 0,
+    "stdout": "42\n42\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-entry-alias-repair-clkq791e/noopt.rxbin"
+    ],
+    "exit": 0,
+    "stdout": "*******************************************************************************\n* MODULE - /Users/adrian/CLionProjects/CREXX/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias.rxas\n* DESCRIPTION - /Users/adrian/CLionProjects/CREXX/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias.rxas\n\n* CONSTANT POOL - Size 0xa0.  Dump of EXPOSED entries only (option -p not used):\n\n\n* CODE SEGMENT - Size 0x2d\n\n.globals=1\n\nmain()          .locals=5\n                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci\n                load g0 /* aka r5 */,41                      * 0x000004:0001 Load op1 with op2\n                itos g0 /* aka r5 */                         * 0x000007:00e5 Set register string value from its int value\n                call mutate_global()                         * 0x000009:002c Call procedure (op1())\n                itos g0 /* aka r5 */                         * 0x00000b:00e5 Set register string value from its int value\n                say g0 /* aka r5 */                          * 0x00000d:01c2 Say op1\n                load r0,2                                    * 0x00000f:0001 Load op1 with op2\n                load r1,41                                   * 0x000012:0001 Load op1 with op2\n                link r2,r1                                   * 0x000015:00d4 Link op2 to op1\n                call r3,aliased_args(),r0                    * 0x000018:002e Call procedure (op1=op2(op3...) )\n                unlink r2                                    * 0x00001c:00d5 Unlink op1\n                say r3                                       * 0x00001e:01c2 Say op1\n                ret 0                                        * 0x000020:0032 Return op1\n\nmutate_global() .locals=0\n                inc g0 /* aka r0 */                          * 0x000022:001c Increment Int (op1++)\n                ret                                          * 0x000024:0030 Return VOID\n\naliased_args()  .locals=0\n                itos a1 /* aka r2 */                         * 0x000025:00e5 Set register string value from its int value\n                inc a2 /* aka r3 */                          * 0x000027:001c Increment Int (op1++)\n                itos a1 /* aka r2 */                         * 0x000029:00e5 Set register string value from its int value\n                ret a1 /* aka r2 */                          * 0x00002b:0031 Return op1\n*******************************************************************************\n\n",
+    "stderr": ""
+  }
+]

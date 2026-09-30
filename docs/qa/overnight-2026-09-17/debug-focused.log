@@ -1,0 +1,52 @@
+Command: ctest --test-dir cmake-build-debug --output-on-failure -R \^\(rxpa_bundled_.\*_concurrency\|rxpa_dynamic_session_factory_failure_rollback\|rxfs_.\*\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 1691: rxpa_bundled_cipher_concurrency
+ 1/16 Test #1691: rxpa_bundled_cipher_concurrency .................   Passed    0.26 sec
+      Start 1692: rxpa_bundled_hash_concurrency
+ 2/16 Test #1692: rxpa_bundled_hash_concurrency ...................   Passed    0.01 sec
+      Start 1693: rxpa_bundled_stack_concurrency
+ 3/16 Test #1693: rxpa_bundled_stack_concurrency ..................   Passed    0.01 sec
+      Start 1694: rxpa_bundled_strings_concurrency
+ 4/16 Test #1694: rxpa_bundled_strings_concurrency ................   Passed    0.01 sec
+      Start 1695: rxpa_bundled_getpi_concurrency
+ 5/16 Test #1695: rxpa_bundled_getpi_concurrency ..................   Passed    0.03 sec
+      Start 1696: rxpa_bundled_id_concurrency
+ 6/16 Test #1696: rxpa_bundled_id_concurrency .....................   Passed    0.00 sec
+      Start 1697: rxpa_bundled_float_concurrency
+ 7/16 Test #1697: rxpa_bundled_float_concurrency ..................   Passed    0.00 sec
+      Start 1698: rxpa_bundled_stats_concurrency
+ 8/16 Test #1698: rxpa_bundled_stats_concurrency ..................   Passed    0.00 sec
+      Start 1699: rxpa_bundled_vector_concurrency
+ 9/16 Test #1699: rxpa_bundled_vector_concurrency .................   Passed    0.00 sec
+      Start 1700: rxpa_bundled_fs_concurrency
+10/16 Test #1700: rxpa_bundled_fs_concurrency .....................   Passed    0.00 sec
+      Start 1701: rxpa_bundled_platform_concurrency
+11/16 Test #1701: rxpa_bundled_platform_concurrency ...............   Passed    0.00 sec
+      Start 1702: rxpa_dynamic_session_factory_failure_rollback
+12/16 Test #1702: rxpa_dynamic_session_factory_failure_rollback ...   Passed    0.00 sec
+      Start 1769: rxfs_rxbvm_noopt
+13/16 Test #1769: rxfs_rxbvm_noopt ................................   Passed    0.07 sec
+      Start 1770: rxfs_rxbvm_opt
+14/16 Test #1770: rxfs_rxbvm_opt ..................................   Passed    0.05 sec
+      Start 1771: rxfs_rxtvm_noopt
+15/16 Test #1771: rxfs_rxtvm_noopt ................................   Passed    0.36 sec
+      Start 1772: rxfs_rxtvm_opt
+16/16 Test #1772: rxfs_rxtvm_opt ..................................   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+bundled             =   0.34 sec*proc (12 tests)
+comprehensive       =   0.86 sec*proc (16 tests)
+filesystem          =   0.52 sec*proc (4 tests)
+interpreter         =   0.34 sec*proc (12 tests)
+library             =   0.52 sec*proc (4 tests)
+linked_opt          =   0.09 sec*proc (2 tests)
+optimizer-parity    =   0.52 sec*proc (4 tests)
+plugins             =   0.86 sec*proc (16 tests)
+rxpa                =   0.86 sec*proc (16 tests)
+worker              =   0.34 sec*proc (12 tests)
+
+Total Test time (real) =   0.91 sec

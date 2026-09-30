@@ -1,0 +1,31 @@
+{
+  "outcome": "passed",
+  "artifact_id": 10412801806,
+  "commit": "2bc56249d6eda5fd33c8817948b34d93788564c5",
+  "archive": "CREXX-user-test-2bc56249d6eda5fd33c8817948b34d93788564c5-linux-x64-cuda.zip",
+  "bytes": 786190716,
+  "sha256": "c3a59f239e92e5e243009c5bdb68adc8a12837ef480218fbc8572fa99a61c184",
+  "rxvm": "relative symlink to rxtvm",
+  "provider_files_checked": 34,
+  "provider_symlinks_resolved_within_archive": true,
+  "cuda_libraries": [
+    {
+      "path": "libcublasLt.so.12",
+      "bytes": 749205904
+    },
+    {
+      "path": "libcrexx-ggml-cuda.so",
+      "bytes": 191459728
+    },
+    {
+      "path": "libcudart.so.12",
+      "bytes": 741088
+    },
+    {
+      "path": "libcublas.so.12",
+      "bytes": 105140976
+    }
+  ],
+  "cuda_notices_present": true,
+  "fixture_or_helper_shipped": false
+}

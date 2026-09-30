@@ -1,0 +1,848 @@
+argv=['cmake', '--build', PosixPath('/private/tmp/rxpa-typed-followup-installed/SDK build'), '--parallel', '4']
+rc=0
+[1/8] Building CXX object CMakeFiles/cpp_normal.dir/rxpa_objects_cpp.cpp.o
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:12:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   12 | ADDINTERFACE("cpp_probe.counter");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:595:46: note: expanded from macro 'ADDINTERFACE'
+  595 | #define ADDINTERFACE(name) rxpa_addinterface((name),"b",".unknown")
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:12:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:595:53: note: expanded from macro 'ADDINTERFACE'
+  595 | #define ADDINTERFACE(name) rxpa_addinterface((name),"b",".unknown")
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:12:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:595:57: note: expanded from macro 'ADDINTERFACE'
+  595 | #define ADDINTERFACE(name) rxpa_addinterface((name),"b",".unknown")
+      |                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   13 | ADDDEFAULTMETHODPROC(read_cpp, "cpp_probe.counter", "read", ".int", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:67: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                   ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:75: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:82: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:91: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:98: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:693:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  693 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:62: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:693:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  693 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:69: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:693:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  693 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:78: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:693:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  693 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:85: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:14:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   14 | ADDCLASS("cpp_probe.box");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:593:38: note: expanded from macro 'ADDCLASS'
+  593 | #define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
+      |                                      ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:14:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:593:45: note: expanded from macro 'ADDCLASS'
+  593 | #define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
+      |                                             ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:14:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:593:49: note: expanded from macro 'ADDCLASS'
+  593 | #define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
+      |                                                 ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:15:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   15 | ADDIMPLEMENTS("cpp_probe.box", "cpp_probe.counter");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:597:64: note: expanded from macro 'ADDIMPLEMENTS'
+  597 | #define ADDIMPLEMENTS(name, interface_name) rxpa_addimplements((name),(interface_name))
+      |                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:15:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:597:71: note: expanded from macro 'ADDIMPLEMENTS'
+  597 | #define ADDIMPLEMENTS(name, interface_name) rxpa_addimplements((name),(interface_name))
+      |                                                                       ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   16 | ADDFACTORYPROC(make_cpp, "cpp_probe.box", ".cpp_probe..box", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:67: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                   ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:75: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:82: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:91: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:98: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:696:5: note: expanded from macro 'ADDFACTORYPROC'
+  696 |     ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:62: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:696:5: note: expanded from macro 'ADDFACTORYPROC'
+  696 |     ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:69: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:696:5: note: expanded from macro 'ADDFACTORYPROC'
+  696 |     ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:78: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:696:5: note: expanded from macro 'ADDFACTORYPROC'
+  696 |     ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:85: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   17 | ADDNAMEDFACTORYPROC(make_cpp, "cpp_probe.box", "from", ".cpp_probe..box", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:67: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                   ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:75: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:82: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:91: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:98: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:699:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  699 |     ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:62: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:699:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  699 |     ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:69: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:699:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  699 |     ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:78: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:699:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  699 |     ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:85: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:18:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   18 | ADDMATCHPROC(match_cpp, "cpp_probe.box", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:701:5: note: expanded from macro 'ADDMATCHPROC'
+  701 |     ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:62: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:18:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:701:5: note: expanded from macro 'ADDMATCHPROC'
+  701 |     ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:69: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:18:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:701:5: note: expanded from macro 'ADDMATCHPROC'
+  701 |     ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:78: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:18:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:701:5: note: expanded from macro 'ADDMATCHPROC'
+  701 |     ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:85: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:19:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   19 | ADDNAMEDMATCHPROC(match_cpp, "cpp_probe.box", "from", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:703:5: note: expanded from macro 'ADDNAMEDMATCHPROC'
+  703 |     ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:62: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:19:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:703:5: note: expanded from macro 'ADDNAMEDMATCHPROC'
+  703 |     ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:69: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:19:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:703:5: note: expanded from macro 'ADDNAMEDMATCHPROC'
+  703 |     ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:78: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:19:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:703:5: note: expanded from macro 'ADDNAMEDMATCHPROC'
+  703 |     ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:85: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   20 | ADDMETHODPROC(read_cpp, "cpp_probe.box", "read", ".int", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:67: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                   ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:75: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:82: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:91: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:98: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:690:5: note: expanded from macro 'ADDMETHODPROC'
+  690 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:62: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:690:5: note: expanded from macro 'ADDMETHODPROC'
+  690 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:69: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:690:5: note: expanded from macro 'ADDMETHODPROC'
+  690 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:78: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:690:5: note: expanded from macro 'ADDMETHODPROC'
+  690 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:588:85: note: expanded from macro 'ADDPROC'
+  588 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
+      |                                                                                     ^
+52 warnings generated.
+[2/8] Building C object CMakeFiles/_rxpa_objects_decl.dir/rxpa_objects.c.o
+[3/8] Building C object CMakeFiles/_rxpa_objects_static.dir/rxpa_objects.c.o
+[4/8] Building C object CMakeFiles/_rxpa_objects.dir/rxpa_objects.c.o
+[5/8] Building CXX object CMakeFiles/cpp_decl.dir/rxpa_objects_cpp.cpp.o
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:12:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   12 | ADDINTERFACE("cpp_probe.counter");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:595:46: note: expanded from macro 'ADDINTERFACE'
+  595 | #define ADDINTERFACE(name) rxpa_addinterface((name),"b",".unknown")
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:12:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:595:53: note: expanded from macro 'ADDINTERFACE'
+  595 | #define ADDINTERFACE(name) rxpa_addinterface((name),"b",".unknown")
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:12:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:595:57: note: expanded from macro 'ADDINTERFACE'
+  595 | #define ADDINTERFACE(name) rxpa_addinterface((name),"b",".unknown")
+      |                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   13 | ADDDEFAULTMETHODPROC(read_cpp, "cpp_probe.counter", "read", ".int", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:67: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                   ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:75: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:82: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:91: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:692:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  692 |     ADDDEFAULTMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:601:53: note: expanded from macro 'ADDDEFAULTMETHOD'
+  601 | #define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
+      |                                                     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:98: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:693:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  693 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:57: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:693:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  693 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:64: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:693:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  693 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:73: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:13:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:693:5: note: expanded from macro 'ADDDEFAULTMETHODPROC'
+  693 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:80: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:14:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   14 | ADDCLASS("cpp_probe.box");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:593:38: note: expanded from macro 'ADDCLASS'
+  593 | #define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
+      |                                      ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:14:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:593:45: note: expanded from macro 'ADDCLASS'
+  593 | #define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
+      |                                             ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:14:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:593:49: note: expanded from macro 'ADDCLASS'
+  593 | #define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
+      |                                                 ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:15:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   15 | ADDIMPLEMENTS("cpp_probe.box", "cpp_probe.counter");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:597:64: note: expanded from macro 'ADDIMPLEMENTS'
+  597 | #define ADDIMPLEMENTS(name, interface_name) rxpa_addimplements((name),(interface_name))
+      |                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:15:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:597:71: note: expanded from macro 'ADDIMPLEMENTS'
+  597 | #define ADDIMPLEMENTS(name, interface_name) rxpa_addimplements((name),(interface_name))
+      |                                                                       ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   16 | ADDFACTORYPROC(make_cpp, "cpp_probe.box", ".cpp_probe..box", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:67: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                   ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:75: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:82: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:91: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:695:5: note: expanded from macro 'ADDFACTORYPROC'
+  695 |     ADDFACTORY(owner, "*", type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:98: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:696:5: note: expanded from macro 'ADDFACTORYPROC'
+  696 |     ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:57: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:696:5: note: expanded from macro 'ADDFACTORYPROC'
+  696 |     ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:64: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:696:5: note: expanded from macro 'ADDFACTORYPROC'
+  696 |     ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:73: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:16:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:696:5: note: expanded from macro 'ADDFACTORYPROC'
+  696 |     ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:80: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   17 | ADDNAMEDFACTORYPROC(make_cpp, "cpp_probe.box", "from", ".cpp_probe..box", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:67: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                   ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:75: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:82: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:91: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:698:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  698 |     ADDFACTORY(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:599:47: note: expanded from macro 'ADDFACTORY'
+  599 | #define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+      |                                               ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:98: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:699:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  699 |     ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:57: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:699:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  699 |     ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:64: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:699:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  699 |     ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:73: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:17:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:699:5: note: expanded from macro 'ADDNAMEDFACTORYPROC'
+  699 |     ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:80: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:18:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   18 | ADDMATCHPROC(match_cpp, "cpp_probe.box", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:701:5: note: expanded from macro 'ADDMATCHPROC'
+  701 |     ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:57: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:18:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:701:5: note: expanded from macro 'ADDMATCHPROC'
+  701 |     ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:64: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:18:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:701:5: note: expanded from macro 'ADDMATCHPROC'
+  701 |     ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:73: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:18:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:701:5: note: expanded from macro 'ADDMATCHPROC'
+  701 |     ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:80: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:19:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   19 | ADDNAMEDMATCHPROC(match_cpp, "cpp_probe.box", "from", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:703:5: note: expanded from macro 'ADDNAMEDMATCHPROC'
+  703 |     ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:57: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:19:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:703:5: note: expanded from macro 'ADDNAMEDMATCHPROC'
+  703 |     ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:64: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:19:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:703:5: note: expanded from macro 'ADDNAMEDMATCHPROC'
+  703 |     ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:73: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:19:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:703:5: note: expanded from macro 'ADDNAMEDMATCHPROC'
+  703 |     ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:80: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+   20 | ADDMETHODPROC(read_cpp, "cpp_probe.box", "read", ".int", "");
+      | ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:67: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                   ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:75: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:82: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:91: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                           ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:689:5: note: expanded from macro 'ADDMETHODPROC'
+  689 |     ADDMETHOD(owner, member, type, args); \
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:600:46: note: expanded from macro 'ADDMETHOD'
+  600 | #define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+      |                                              ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:598:98: note: expanded from macro 'ADDMEMBER'
+  598 | #define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+      |                                                                                                  ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:690:5: note: expanded from macro 'ADDMETHODPROC'
+  690 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:57: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:690:5: note: expanded from macro 'ADDMETHODPROC'
+  690 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:64: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:690:5: note: expanded from macro 'ADDMETHODPROC'
+  690 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:73: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                         ^
+/private/tmp/rxpa-typed-followup-installed/SDK source/rxpa_objects_cpp.cpp:20:1: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:690:5: note: expanded from macro 'ADDMETHODPROC'
+  690 |     ADDPROC(func, owner "." member, "b", type, args)
+      |     ^
+/private/tmp/rxpa-typed-followup-installed/installed Ω/include/rxpa/crexxpa.h:591:80: note: expanded from macro 'ADDPROC'
+  591 |     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
+      |                                                                                ^
+52 warnings generated.
+[6/8] Linking C static library rx_rxpa_objects_decl.a
+[7/8] Linking C shared module plugin/rx_rxpa_objects.rxplugin
+[8/8] Linking C static library rx_rxpa_objects_static.a

@@ -26,6 +26,7 @@ main: procedure = .int
   pool = .taskpool.local(1, 2)
   scope = .taskscope.collectall(pool, 60000)
   child = scope.submit(task .context_endpoint_writer(), endpoint.provider_reference())
+  child_before_observation = child
   completion = child.wait(-1)
   if completion.succeeded() = 0 then do
     say "FAIL: taskcontext endpoint task" completion.error_code() completion.message()
@@ -46,6 +47,9 @@ main: procedure = .int
   call scope.finish()
   call pool.close()
   call endpoint.close()
+  retained = child_before_observation.wait(0)
+  if retained.succeeded() = 0 | retained.value().as_integer() <> 3 then return 6
+  call child_before_observation.cancel(.channelvalue.null_value())
   if observed.succeeded() = 0 then do
     say "FAIL: taskcontext endpoint controller read" observed.error_code() observed.message()
     return 3

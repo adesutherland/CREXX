@@ -1,0 +1,14 @@
+[
+  {
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_embedding_bridge",
+      "cpu",
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidates/repeat-1/bge-small-en-v1.5-f16.gguf",
+      "cdff157dc108aee08f38024b8f046f1774f6a4a29fb3a170564232ceeb74ac17"
+    ],
+    "returncode": 1,
+    "pass": false,
+    "elapsed_seconds": 1.3335990840569139,
+    "log": "/tmp/crexx-ni-s6.zq0rk0ug/conversion/rxllama_embedding_bridge-cpu.log"
+  }
+]

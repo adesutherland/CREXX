@@ -1,0 +1,132 @@
+[
+  {
+    "label": "model-cached-verification",
+    "argv": [
+      "sh",
+      "/tmp/crexx-ni-s7.oheu5td2/verify-models.sh"
+    ],
+    "rc": 0,
+    "seconds": 0.223,
+    "marker": "Verified:"
+  },
+  {
+    "label": "model-fresh-bge-download",
+    "argv": [
+      "sh",
+      "/tmp/crexx-ni-s7.oheu5td2/verify-models.sh"
+    ],
+    "rc": 0,
+    "seconds": 8.376,
+    "marker": "Verified:"
+  },
+  {
+    "label": "embeddings-native-build",
+    "argv": [
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin/crexx",
+      "--program",
+      "/tmp/crexx-ni-s7.oheu5td2/llama-example-work/embeddings",
+      "/tmp/crexx-ni-s7.oheu5td2/install/share/crexx/llama/examples/persistent_embeddings.crexx",
+      "--jobs",
+      "1",
+      "--native"
+    ],
+    "rc": 0,
+    "seconds": 12.484,
+    "marker": "PUBLISHED: native program"
+  },
+  {
+    "label": "embeddings-native-auto",
+    "argv": [
+      "/tmp/crexx-ni-s7.oheu5td2/llama-example-work/embeddings",
+      "auto",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+      "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999"
+    ],
+    "rc": 0,
+    "seconds": 14.589,
+    "marker": "PASS: persistent typed embedding example"
+  },
+  {
+    "label": "generation-native-build",
+    "argv": [
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin/crexx",
+      "--program",
+      "/tmp/crexx-ni-s7.oheu5td2/llama-example-work/generation",
+      "/tmp/crexx-ni-s7.oheu5td2/install/share/crexx/llama/examples/persistent_generation.crexx",
+      "--jobs",
+      "1",
+      "--native"
+    ],
+    "rc": 0,
+    "seconds": 3.46,
+    "marker": "PUBLISHED: native program"
+  },
+  {
+    "label": "generation-native-auto",
+    "argv": [
+      "/tmp/crexx-ni-s7.oheu5td2/llama-example-work/generation",
+      "auto",
+      "/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf",
+      "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201"
+    ],
+    "rc": 0,
+    "seconds": 4.434,
+    "marker": "PASS: persistent typed generation example"
+  },
+  {
+    "label": "vm-compile",
+    "argv": [
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin",
+      "-o",
+      "embeddings_vm",
+      "/tmp/crexx-ni-s7.oheu5td2/install/share/crexx/llama/examples/persistent_embeddings.crexx"
+    ],
+    "rc": 0,
+    "seconds": 0.197,
+    "marker": null
+  },
+  {
+    "label": "vm-assemble",
+    "argv": [
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin/rxas",
+      "-o",
+      "embeddings_vm",
+      "embeddings_vm"
+    ],
+    "rc": 0,
+    "seconds": 0.067,
+    "marker": null
+  },
+  {
+    "label": "vm-link",
+    "argv": [
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin/rxlink",
+      "-o",
+      "embeddings_linked",
+      "embeddings_vm",
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin/library",
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin/classlib",
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin/rxfnsg"
+    ],
+    "rc": 0,
+    "seconds": 0.474,
+    "marker": null
+  },
+  {
+    "label": "vm-auto",
+    "argv": [
+      "/tmp/crexx-ni-s7.oheu5td2/install/bin/rxvm",
+      "embeddings_linked",
+      "-a",
+      "auto",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+      "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999"
+    ],
+    "rc": 0,
+    "seconds": 13.884,
+    "marker": "PASS: persistent typed embedding example"
+  }
+]

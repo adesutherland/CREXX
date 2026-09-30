@@ -1,0 +1,29 @@
+/* An unavailable interface factory must not displace the caller's arguments. */
+options levelb
+namespace interface_factory_signal_restore
+missing: interface
+  *: factory
+    arg config = .settings, capability = .string
+settings: class
+  value_ = .string
+  *: factory
+    arg value = .string
+    value_ = value
+    return
+  text: method = .string
+    return value_
+main: procedure = .int
+  config = .settings("preserved")
+  capability = "generation"
+  caught = 0
+  do
+    ignored = .missing(config, capability)
+  on signal function_not_found
+    caught = 1
+  end
+  if caught <> 1 | config.text() <> "preserved" | capability <> "generation" then do
+    say "FAIL: unavailable factory damaged caller arguments"
+    return 1
+  end
+  say "PASS: unavailable factory preserves caller arguments"
+  return 0

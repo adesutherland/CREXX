@@ -132,6 +132,47 @@ static int imported_declaration_has_runtime_reference(ASTNode *node) {
     return 0;
 }
 
+static int native_dependency_already_emitted(walker_payload *payload,
+                                            imported_func *function) {
+    size_t i;
+    for (i = 0; i < payload->emitted_native_dependencies->size; ++i)
+        if (payload->emitted_native_dependencies->pointers[i] == function) return 1;
+    dpa_add(payload->emitted_native_dependencies, function);
+    return 0;
+}
+
+/* An interface factory call has no direct implementation reference. Retain
+ * every known native factory candidate through ordinary callable/provider
+ * metadata so the existing loader can discover and check the provider before
+ * dynamic selection. Do not load it through an unrelated user-visible call. */
+static void emit_native_interface_dependencies(ASTNode *node, walker_payload *payload) {
+    char *owner, *factory;
+    dpa *functions;
+    size_t i;
+    if (!node->parent->symbolNode || !node->parent->symbolNode->symbol ||
+        !node->symbolNode || !node->symbolNode->symbol ||
+        !imported_declaration_has_runtime_reference(node)) return;
+    owner = sym_frnm(node->parent->symbolNode->symbol);
+    factory = sym_frnm(node->symbolNode->symbol);
+    if (!owner || !factory || strncmp(factory, owner, strlen(owner)) ||
+        factory[strlen(owner)] != '.') { free(owner); free(factory); return; }
+    functions = rxcp_native_interface_factories(payload->context, owner, factory + strlen(owner));
+    for (i = 0; i < functions->size; ++i) {
+        imported_func *fn = functions->pointers[i];
+        char *text;
+        if (native_dependency_already_emitted(payload, fn)) continue;
+        text = mprintf("\n§%s() .expose=%s\n"
+                       "   .meta \"%s\"=\"%s\" \"%s\" §%s() \"%s\"\n"
+                       "   .meta \"%s\"=\".provider\" \"%s\"\n",
+                       fn->fqname, fn->fqname, fn->fqname, fn->options,
+                       fn->type, fn->fqname, fn->args, fn->fqname, fn->provider_id);
+        output_append_text(node->output, text);
+        free(text);
+    }
+    free_dpa(functions);
+    free(owner); free(factory);
+}
+
 static int class_attribute_register_index(Symbol *symbol) {
     size_t i;
 
@@ -340,6 +381,7 @@ void emit_proc(ASTNode *node, void *pl) {
             if (node->node_type == FACTORY &&
                 node->parent && node->parent->node_type == INTERFACE_DEF) {
                 if (!node->output) node->output = output_f();
+                emit_native_interface_dependencies(node, payload);
                 break;
             }
             if (node->node_type == METHOD &&
@@ -358,6 +400,15 @@ void emit_proc(ASTNode *node, void *pl) {
                     !node_is_taskwork_run_method(node)) {
                     if (!node->output) node->output = output_f();
                     break;
+                }
+                if (node_is_inside_imported_file(node) && node->symbolNode && node->symbolNode->symbol) {
+                    char *name = sym_frnm(node->symbolNode->symbol);
+                    imported_func *fn = rxcp_find_imported_function_exact(payload->context, name);
+                    free(name);
+                    if (fn && fn->provider_id && native_dependency_already_emitted(payload, fn)) {
+                        if (!node->output) node->output = output_f();
+                        break;
+                    }
                 }
                 char* type = callable_effective_return_type(node);
                 char* args = meta_narg(ast_chld(node, ARGS, 0));

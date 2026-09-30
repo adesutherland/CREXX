@@ -1,10 +1,14 @@
-# Installing And Running CREXX Release Packages
+# Installing And Running CREXX 1.0.0 Beta 3
 
-These instructions are for binary packages downloaded from the
-[CREXX GitHub Releases](https://github.com/adesutherland/CREXX/releases) page.
-Versioned releases are stable distribution points. The `CREXX Dev Snapshot`
+These instructions cover `crexx-1.0.0-beta.3`. Download the matching binary
+packages from the
+[Beta 3 release](https://github.com/adesutherland/CREXX/releases/tag/v1.0.0-beta.3).
+Versioned releases are fixed distribution points. The
+[CREXX Dev Snapshot](https://github.com/adesutherland/CREXX/releases/tag/dev-snapshot)
 pre-release is a moving interim build from the `develop` branch; its assets are
 replaced by the next successful `develop` build.
+The exact-revision SDK ZIPs described below retain the source SHA in their
+names and are kept as separate assets so a downstream build can pin them.
 
 ZIP packages expand to a platform directory such as `CREXX-linux-x64`,
 `CREXX-windows-x64`, `CREXX-macos-arm64`, or `CREXX-macos-x86_64`. macOS
@@ -17,6 +21,74 @@ file, and a small `examples/` directory.
 `VERSION` contains the exact build identity reported by the packaged tools.
 `BUILDINFO` includes the base version, build channel, timestamp, and source
 commit used to produce the package.
+
+Beta 3 core archives are named `CREXX-v1.0.0-beta.3-<platform>.zip`.
+Optional plugins are named
+`llama.rexx-v1.0.0-beta.3-<platform>-<backend>.zip`. For a development snapshot,
+use `dev-snapshot` in place of `v1.0.0-beta.3` in the installation examples.
+The release asset list records available installers, signing status and
+checksums; choose the files for your platform from that list.
+
+## Installed SDK snapshots
+
+For downstream native builds on Windows x64, macOS arm64 or macOS x86_64,
+download `CREXX-sdk-<full-source-SHA>-<platform>.zip` from the Dev Snapshot
+release. Pin the full SHA and the asset SHA-256 printed in that release's
+checksum block; fail the download if either differs. Do not substitute the
+moving `CREXX-dev-snapshot-<platform>.zip` runtime archive for an SDK. The
+SDK ZIP contains the normal CMake install, public RXPA headers, runtime and
+native toolchain, SQLite and vector dynamic and static providers, and
+`sdk-package.json` with hashes for its extracted files. `BUILDINFO`,
+`core-package.json` and `sdk-package.json` must identify the pinned source
+revision and platform.
+
+Extract the ZIP into a private directory, then point CMake at its extracted
+`CREXX-sdk-<platform>` prefix, for example:
+
+```sh
+cmake -S my-application -B my-application-build \
+  -DCMAKE_PREFIX_PATH="/path with spaces/CREXX-sdk-macos-arm64"
+```
+
+The archive is checked during packaging after relocation into a path with
+spaces: `find_package(CREXX CONFIG REQUIRED)` must resolve its installed
+exports, and a native consumer must use the installed SQLite and vector
+static providers. The SDK ZIP itself is llama-free. An application requiring
+llama.rexx must separately overlay the `bin/` and `share/` contents of the
+matching `llama.rexx` archive into this SDK prefix. Check the add-on's
+`llama-package.json` source SHA, platform, toolchain and backend against the
+SDK identity and verify both archive digests before overlay. On Apple Silicon
+the qualified RAG control uses Metal; on Intel macOS it uses CPU. A Windows
+Vulkan-labelled add-on also contains CPU support, but downstream CPU use
+requires its own qualification; the label alone is not that proof.
+
+## Optional llama.rexx plugin
+
+Beta 3 separates the core download from the optional `llama.rexx` plugin.
+The core works on its own.
+Choose a plugin for the exact same release/commit and platform. Extract both
+ZIPs into the same parent folder; they contain the same `CREXX-<platform>`
+directory and their contents combine. Windows uses one MSVC core with `rxvm`
+selecting `rxbvm`; either the Vulkan or CUDA plugin uses that same base.
+Linux offers Vulkan or CUDA; ARM Mac uses Metal and Intel Mac is CPU-only.
+Intel Metal is unsupported for this delivery. Every plugin includes CPU support.
+The versioned release offers all six backend/platform combinations; ordinary
+development snapshots publish the Vulkan, Metal and CPU variants. CUDA is an
+additional release build lane.
+
+If you installed the core with an installer, extract the plugin ZIP elsewhere
+and copy the contents of its `CREXX-<platform>` folder into the existing cREXX
+installation, preserving the `bin/` and `share/` subdirectories. MinGW source
+builds remain supported and are checked in a separate Windows core QA gate
+through both VM variants; no MinGW binary download is produced.
+
+The plugin supplies `bin/rxllama.rxplugin`, its engine and dependencies under
+`bin/providers`, plus `share/crexx/llama` guides and examples. Keep those files
+together. Download a supported model separately; running programs needs no
+C/C++ build, separate llama.cpp installation or build SDK. GPU use requires a
+compatible driver. Install one matching backend variant, and do not combine
+different releases or toolchains. Older releases without the provider do not
+acquire this feature automatically.
 
 You can run tools by using their full path, for example:
 
@@ -40,15 +112,30 @@ Download the `windows-x64` ZIP archive and unblock it before extracting:
 Add the extracted package `bin` directory to your user or system `PATH`, or run
 the tools by their full path.
 
-Prefer the `windows-x64-signed` ZIP asset. The signed package contains
-Authenticode-signed Windows executables, libraries, and native plugin binaries.
-After the local signing script has uploaded the signed ZIP and verified that it
-is visible on the release, it deletes the matching unsigned Windows ZIP.
+For beta 3, prefer `CREXX-v1.0.0-beta.3-windows-x64-signed-setup.exe` for
+installation or `CREXX-v1.0.0-beta.3-windows-x64-signed.zip` for portable use
+when present. The NSIS installer installs into
+`C:\Program Files\CREXX`, sets `CREXX_HOME` and `REXX_HOME`, adds `bin` to the
+machine PATH, and registers an uninstaller. Open a new terminal after installing.
 
-For the moving dev snapshot, prefer `CREXX-dev-snapshot-windows-x64-signed.zip`
-when it is present. The unsigned `CREXX-dev-snapshot-windows-x64.zip` asset is
-published by CI first and is normally removed by the local signing script after
-the signed asset is uploaded successfully.
+The moving dev snapshot provides an automatic installer:
+`CREXX-dev-snapshot-windows-x64-unsigned-setup.exe`.
+Unsigned applications may show unknown-publisher/SmartScreen warnings or be
+blocked by Windows security policy.
+
+When present, prefer `CREXX-dev-snapshot-windows-x64-signed-setup.exe` for
+installation or `CREXX-dev-snapshot-windows-x64-signed.zip` for portable use.
+The maintainer's `scripts/sign-windows-dev-snapshot.sh` signs the core payload
+and installer and publishes both. Optional llama.rexx installers use the matching
+core/plugin signing procedure in [the installation guide](lib/plugins/llama/installation.md#maintainer-signing-of-split-windows-packages).
+Choose the core and plugin installers from the same signed delivery set.
+Unsigned downloads remain available.
+Each new snapshot replaces the automatic assets and removes the previous signed
+assets and legacy installers, so old code is not offered as the current build.
+Check the release's commit and installed `BUILDINFO`/`VERSION` for build identity.
+
+For versioned releases, prefer a signed Windows ZIP when it is present. The
+versioned-release ZIP signing helper may remove the corresponding unsigned ZIP.
 
 ## Linux
 

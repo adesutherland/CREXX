@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas', '-o', '/private/tmp/ni-s5/public-debug-01/opt-generation_overhead', '/private/tmp/ni-s5/public-debug-01/opt-generation_overhead']
+rc=0

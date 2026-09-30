@@ -1,0 +1,2 @@
+PASS: exact row/token/byte limits, query 512/513, cancellation, failed batch and recovery required-gpu
+PASS: embedding glue parity, boundaries, batching, private state and cleanup required-gpu

@@ -1,12 +1,19 @@
 # cREXX performance closeout plan
 
 Status: **Stages 1-4 complete; Stage 5 Apple scorecard complete with formal
-Linux QA-C pending; Stage 6 in progress; Stage 7 remains plan-only**
+Linux QA-C pending; Stage 6 complete; Stage 7 remains plan-only**
 
 Approved: 2026-08-18
 
 Starting candidate: `0fe5618eb` (`Merge remote-tracking branch
 'origin/develop' into develop`)
+
+Release scheduling note, 2026-09-04: beta 3 now targets 2026-09-30 after the
+extended performance programme. This plan's frozen August scorecard remains
+evidence for its exact candidate; beta 3 still needs its named exact-SHA gates,
+and the feature-bearing beta train requires a fresh bounded Release 1
+verification after the 2027-03-31 feature freeze. Neither requirement opens a
+new optimization programme.
 
 ## 1. Purpose and authority
 
@@ -27,9 +34,9 @@ Adrian approved execution of Stages 1-3, Stage 4 and, conditional on a green
 Stage 4 commit, Stage 5 on 2026-08-18. Stage 4 was committed as `81f159186`,
 and the Apple Stage 5 scorecard has run against that exact fresh source.
 Stages 6-7 are fully specified here so the closeout boundary is not lost.
-Stage 6 began with the current, less-technical [`RESULTS.md`](RESULTS.md)
-scorecard report; the wider documentation-authority consolidation remains
-open. Stage 7 remains plan-only.
+Stage 6 created the less-technical [`RESULTS.md`](RESULTS.md) scorecard report
+and completed the documentation-authority consolidation on 2026-09-04. Stage 7
+remains plan-only.
 
 ## 2. Standing measurement and claim rules
 
@@ -387,8 +394,8 @@ findings, but must not silently pool pre- and post-revision results.
 
 ## 8. Stage 6 - enduring documentation consolidation
 
-Status: **in progress — current results report created; wider consolidation
-pending**
+Status: **complete — current results and live/future/historical authorities
+consolidated on 2026-09-04**
 
 Leave these authorities:
 
@@ -404,6 +411,11 @@ Retire contradictory “live PERF3” and “active POSTPERF-05” wording. Do n
 rewrite the dated 2026-07-15 charter as though it described the final product.
 
 Exit: as-built, current results, future roadmap and historical lessons agree.
+
+The compact live performance roadmap now contains only closeout and selectable
+future candidates. The former live PERF3 register is retained as
+`PERF3-PROGRAMME-LEDGER-2026-08-17.md`; completed POSTPERF work remains closed;
+and `docs/ROADMAP.md` is the single project-ordering view.
 
 ## 9. Stage 7 - evidence clean-down and final verification
 

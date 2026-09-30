@@ -1,0 +1,5 @@
+argv=[PosixPath('/private/tmp/ni-s5/install/bin/rxc'), '--no-exe-import', '-i', PosixPath('/private/tmp/ni-s5/install/bin'), '-o', PosixPath('/private/tmp/ni-s5/installed-generation/opt-persistent_generation-dynamic'), PosixPath('/private/tmp/ni-s5/installed-generation/opt-persistent_generation.crexx')]
+cwd=/private/tmp/ni-s5/installed-generation
+rc=0
+Warning in opt-persistent_generation.crexx @ 92:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 59, column 5. Declare this binding explicitly if intentional., "duration"
+1 warning(s) in source file

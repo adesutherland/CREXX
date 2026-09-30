@@ -1,0 +1,14 @@
+[
+  {
+    "directory": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+    "command": "/usr/bin/cc -I/Users/adrian/CLionProjects/CREXX/cmake-build-debug/generated -I/Users/adrian/CLionProjects/CREXX/interpreter -I/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin -I/Users/adrian/CLionProjects/CREXX/inc -I/Users/adrian/CLionProjects/CREXX/assembler -I/Users/adrian/CLionProjects/CREXX/binutils/include -I/Users/adrian/CLionProjects/CREXX/rxpa -I/Users/adrian/CLionProjects/CREXX/platform -I/Users/adrian/CLionProjects/CREXX/avl_tree -I/Users/adrian/CLionProjects/CREXX/utf8 -I/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber -g -std=gnu11 -arch arm64 -fcolor-diagnostics -o tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxvml.dir/cri17_attached_provider_control.c.o -c /Users/adrian/CLionProjects/CREXX/tests/rxpa/cri17_attached_provider_control.c",
+    "file": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/cri17_attached_provider_control.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxvml.dir/cri17_attached_provider_control.c.o"
+  },
+  {
+    "directory": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+    "command": "/usr/bin/cc -DNTHREADED=1 -I/Users/adrian/CLionProjects/CREXX/cmake-build-debug/generated -I/Users/adrian/CLionProjects/CREXX/interpreter -I/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin -I/Users/adrian/CLionProjects/CREXX/inc -I/Users/adrian/CLionProjects/CREXX/assembler -I/Users/adrian/CLionProjects/CREXX/binutils/include -I/Users/adrian/CLionProjects/CREXX/rxpa -I/Users/adrian/CLionProjects/CREXX/platform -I/Users/adrian/CLionProjects/CREXX/avl_tree -I/Users/adrian/CLionProjects/CREXX/utf8 -I/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber -g -std=gnu11 -arch arm64 -fcolor-diagnostics -o tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxbvml.dir/cri17_attached_provider_control.c.o -c /Users/adrian/CLionProjects/CREXX/tests/rxpa/cri17_attached_provider_control.c",
+    "file": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/cri17_attached_provider_control.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxbvml.dir/cri17_attached_provider_control.c.o"
+  }
+]

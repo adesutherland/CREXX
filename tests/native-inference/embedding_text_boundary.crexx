@@ -1,0 +1,24 @@
+/* Ordinary RXPA text-boundary regression: embedded U+0000 must not truncate. */
+options levelb
+import rxfnsb
+import rxunicode
+import rxllama
+
+main: procedure = .int
+  config = .binary
+  if rxllama..configcreate(config) <> 0 then return 1
+  nul = .rxunicode..decode("00"x as .binary, "UTF-8")
+  bad = "cpu" || nul || "unexpected suffix"
+  if length(bad) <> 21 then do
+    say "FAIL: fixture length" length(bad)
+    return 1
+  end
+  status = rxllama..configtext(config, "hardware_mode", bad)
+  if status = 0 then do
+    say "FAIL: RXPA silently discarded text after embedded U+0000"
+    return 1
+  end
+  if rxllama..configtext(config, "hardware_mode", "cpu") <> 0 then return 1
+  if rxllama..close(config) <> 0 then return 1
+  say "PASS: complete text is validated"
+  return 0

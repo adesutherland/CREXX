@@ -630,7 +630,7 @@ rexxscriptcoreevaluator: class
            expr=_modify_var_symbol(expr)
            if _eval_expression(expr, stmtno) = 0 then return 0
            output_count = output_count + 1
-           output_lines[output_count] = '@.main@'eval_value
+           output_lines[output_count] = '@.mcall@'eval_value
            return 1
         end
     if _starts_keyword(text, ".TAIL") = 1 then do
@@ -689,6 +689,34 @@ rexxscriptcoreevaluator: class
       if action == "" then return _set_error("missing_expression", "missing IF body", stmtno, then_pos + 4)
       if else_pos > 0 & else_action == "" then return _set_error("missing_expression", "missing ELSE body", stmtno, else_pos + 1)
 
+      is_block_if = translate(action) == "DO"
+      end_pc = 0
+      block_else_pc = 0
+      block_else_end_pc = 0
+      block_else_action = ""
+      if is_block_if then do
+        end_pc = _find_matching_end(pc + 1)
+        if end_pc = 0 then return _set_error("syntax_error", "missing END for DO block", stmtno, then_pos + 4)
+      end
+      if else_pos = 0 then do
+        candidate_else = pc + 1
+        if is_block_if then candidate_else = end_pc + 1
+        if candidate_else <= statement_count then do
+          candidate_text = strip(statement_texts[candidate_else])
+          if _starts_keyword(candidate_text, "ELSE") = 1 then do
+            block_else_pc = candidate_else
+            block_else_action = strip(substr(candidate_text, 5))
+            if block_else_action == "" then return _set_error("missing_expression", "missing ELSE body", statement_numbers[candidate_else] + 0, 1)
+            if translate(block_else_action) == "DO" then do
+              block_else_end_pc = _find_matching_end(candidate_else + 1)
+              if block_else_end_pc = 0 then return _set_error("syntax_error", "missing END for ELSE DO block", statement_numbers[candidate_else] + 0, 1)
+            end
+            else block_else_end_pc = candidate_else
+          end
+        end
+      end
+
+      branch_result = .int
       if _eval_condition(condition, stmtno) = 0 then return 0
       if eval_value <> "0" then do
         body = strip(action)
@@ -697,23 +725,36 @@ rexxscriptcoreevaluator: class
           rest = strip(substr(body, 3))
           if _starts_keyword(rest, "WHILE") = 1 then return _set_error("syntax_error", "DO WHILE is not supported directly after THEN", stmtno, then_pos + 4)
         end
-        if translate(body) == "DO" then do
+        if is_block_if then do
           if else_pos > 0 then return _set_error("syntax_error", "ELSE with DO block is not supported", stmtno, else_pos + 1)
-          end_pc = _find_matching_end(pc + 1)
-          if end_pc = 0 then return _set_error("syntax_error", "missing END for DO block", stmtno, then_pos + 4)
-          call _push_block("block", pc, end_pc, "")
+          if block_else_pc > 0 then call _push_block("iftrue", pc, end_pc, block_else_end_pc || "")
+          else call _push_block("block", pc, end_pc, "")
         end
         else do
           result = _execute_statement(body, stmtno, pc)
           if result = 0 then return 0
           if result = 2 then return 2
+          if block_else_pc > 0 & jump_target = 0 then jump_target = block_else_end_pc + 1
         end
         if forced_return = 1 then return 1
       end
       else do
-        if translate(action) == "DO" then do
-          end_pc = _find_matching_end(pc + 1)
-          if end_pc = 0 then return _set_error("syntax_error", "missing END for DO block", stmtno, then_pos + 4)
+        if block_else_pc > 0 then do
+          if translate(block_else_action) == "DO" then do
+            call _push_block("block", block_else_pc, block_else_end_pc, "")
+            jump_target = block_else_pc + 1
+          end
+          else do
+            else_stmtno = statement_numbers[block_else_pc] + 0
+            branch_result = _execute_statement(block_else_action, else_stmtno, block_else_pc)
+            if branch_result = 0 then return 0
+            if branch_result = 2 then return 2
+            if forced_return = 1 then return 1
+            if jump_target = 0 then jump_target = block_else_pc + 1
+          end
+          return 1
+        end
+        if is_block_if then do
           jump_target = end_pc + 1
           return 1
         end
@@ -880,6 +921,10 @@ rexxscriptcoreevaluator: class
           jump_target = do_pc + 1
           return 1
         end
+      end
+      else if kind == "iftrue" then do
+        skip_pc = block_conditions[block_count] + 0
+        if skip_pc > end_pc then jump_target = skip_pc + 1
       end
       block_count = block_count - 1
       return 1

@@ -1,0 +1,9 @@
+argv=[PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-jshe71u3/installed Ω/bin/crexx'), '--program', PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-jshe71u3/checks/native workers/worker_transport_positive'), PosixPath('/Users/adrian/CLionProjects/CREXX/tests/native-inference/worker_transport_positive.crexx'), '--jobs', '1', '--native']
+cwd=/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-jshe71u3/checks
+rc=0
+WAVE: project compile/assemble jobs=1
+START: project member worker_transport_positive
+BUILT: project member worker_transport_positive
+BARRIER: link program
+PUBLISHED: program /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-jshe71u3/checks/native workers/worker_transport_positive.rxbin
+PUBLISHED: native program /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-jshe71u3/checks/native workers/worker_transport_positive

@@ -1,0 +1,3 @@
+argv=[PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/installed Ω/bin/rxc'), '--no-exe-import', '-i', PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/installed Ω/bin'), '-o', PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/consumer checks/shared_worker_embeddings-dynamic'), PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/consumer checks/shared_worker_embeddings.crexx')]
+cwd=/private/tmp/crexx-s4-installed.NQTmfd/consumer checks
+rc=0

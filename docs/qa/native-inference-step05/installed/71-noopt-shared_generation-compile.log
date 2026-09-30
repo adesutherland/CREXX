@@ -1,0 +1,3 @@
+argv=[PosixPath('/private/tmp/ni-s5/install/bin/rxc'), '--no-exe-import', '-n', '-i', PosixPath('/private/tmp/ni-s5/install/bin'), '-o', PosixPath('/private/tmp/ni-s5/installed-generation/noopt-shared_generation-dynamic'), PosixPath('/private/tmp/ni-s5/installed-generation/noopt-shared_generation.crexx')]
+cwd=/private/tmp/ni-s5/installed-generation
+rc=0

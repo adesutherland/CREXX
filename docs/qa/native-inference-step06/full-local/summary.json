@@ -1,0 +1,43 @@
+{
+  "head": "f9f87a8e8671a5e7894fbc187dbc93ee7bcf8466",
+  "working_tree": "uncommitted accepted implementation plus STEP-06 QA changes",
+  "run": {
+    "label": "asan-full",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "full",
+      "--build-jobs",
+      "4",
+      "--test-jobs",
+      "8",
+      "--build-leaks",
+      "off",
+      "--leaks",
+      "off",
+      "--exclude-label",
+      "performance-measurement",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T14:08:27.136736+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T15:00:17.608080+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-150827-full"
+  },
+  "ctest_passed": 2349,
+  "ctest_failed": 0,
+  "ctest_seconds": 2278.82,
+  "sanitizer_diagnostic_scan": [],
+  "address_sanitizer": "Apple ASan enabled",
+  "leak_sanitizer": "unsupported by Apple toolchain; Linux ASan/LSan remains open",
+  "source_inputs_unchanged_during_final_gate": true,
+  "source_input_count": 7415,
+  "ordinary_debug_reused": {
+    "passed": 2347,
+    "evidence": "../native-inference-step05/full-debug.log"
+  },
+  "platform_scope": "Apple M5 macOS arm64 CPU/Metal only",
+  "capture_time": "2026-09-15T15:02:16.140194+00:00"
+}

@@ -1,0 +1,135 @@
+{
+  "repair_commit": "65275452d90dd1d9ed8146650f7059b27ff9c56c",
+  "integrated_develop": "47168a1f16365d6c2aaa54de770889c0e8dce6a4",
+  "intervening_changes": "documentation only; repair product/test/build inputs unchanged",
+  "workflows": [
+    {
+      "head_sha": "65275452d90dd1d9ed8146650f7059b27ff9c56c",
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35387480916",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Determine Version Metadata",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T19:43:01Z",
+          "completed_at": "2026-09-18T19:43:17Z"
+        },
+        {
+          "name": "Core linux-x64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T19:43:21Z",
+          "completed_at": "2026-09-18T19:52:42Z"
+        },
+        {
+          "name": "Core macos-x86_64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T19:43:22Z",
+          "completed_at": "2026-09-18T20:06:30Z"
+        },
+        {
+          "name": "Linux Debug Optimizer Parity",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T19:43:22Z",
+          "completed_at": "2026-09-18T20:04:06Z"
+        },
+        {
+          "name": "Core windows-x64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T19:43:20Z",
+          "completed_at": "2026-09-18T19:55:26Z"
+        },
+        {
+          "name": "Core macos-arm64",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T19:43:27Z",
+          "completed_at": "2026-09-18T19:52:17Z"
+        },
+        {
+          "name": "Windows MinGW core quality gate (no binary delivery) / configurations",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T19:43:22Z",
+          "completed_at": "2026-09-18T19:43:26Z"
+        },
+        {
+          "name": "Comprehensive ${{ matrix.name }}",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-09-18T19:43:18Z",
+          "completed_at": "2026-09-18T19:43:17Z"
+        },
+        {
+          "name": "Windows MinGW core quality gate (no binary delivery) / Core windows-mingw (mingw)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T19:43:30Z",
+          "completed_at": "2026-09-18T19:58:01Z"
+        },
+        {
+          "name": "Plugin Windows x64 Vulkan (MSVC)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T20:06:33Z",
+          "completed_at": "2026-09-18T20:21:43Z"
+        },
+        {
+          "name": "Plugin macOS arm64 Metal",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T20:06:37Z",
+          "completed_at": "2026-09-18T20:13:37Z"
+        },
+        {
+          "name": "Plugin Linux x64 Vulkan",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T20:06:34Z",
+          "completed_at": "2026-09-18T20:16:04Z"
+        },
+        {
+          "name": "Plugin macOS x86_64 CPU",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T20:06:34Z",
+          "completed_at": "2026-09-18T20:21:23Z"
+        },
+        {
+          "name": "Publish Dev Snapshot",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T20:21:46Z",
+          "completed_at": "2026-09-18T20:22:03Z"
+        },
+        {
+          "name": "Create GitHub Release",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-09-18T20:21:43Z",
+          "completed_at": "2026-09-18T20:21:43Z"
+        }
+      ]
+    },
+    {
+      "head_sha": "65275452d90dd1d9ed8146650f7059b27ff9c56c",
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35387480593",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Analyze (cpp)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-09-18T19:43:01Z",
+          "completed_at": "2026-09-18T20:16:50Z"
+        }
+      ]
+    }
+  ]
+}

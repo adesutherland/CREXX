@@ -1,0 +1,521 @@
+Command: cmake --build cmake-build-debugasan --target keyaccess_test keyaccess_compact_failure_test --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.g1791970b10a3.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260807T121554Z
+-- CREXX Build Commit: 1791970b10a3
+-- CMake Generator: Unix Makefiles
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=generator default
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX/../DSL-Syntax-Highlighter
+-- C compiler flags: -fsanitize=address -fno-omit-frame-pointer
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always -fsanitize=address -fno-omit-frame-pointer
+-- Linker flags for executables: -fsanitize=address
+-- Linker flags for shared libs: -fsanitize=address
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- llama.cpp version: 0.4.0
+CMAKE_BUILD_TYPE=Debug
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: arm64
+-- GGML_SYSTEM_ARCH: ARM
+-- Including CPU backend
+-- Accelerate framework found
+-- ARM detected
+-- Checking for ARM features using flags:
+-- Adding CPU backend variant ggml-cpu:  
+-- Metal framework found
+-- Including METAL backend
+-- ggml version: 0.23.0
+-- ggml commit:  5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- Building with ODBC support enabled.
+-- Configuring done (1.1s)
+-- Generating done (1.9s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+[  5%] Built target _keyaccess
+[  5%] Built target rxbin
+[ 10%] Built target re2c_objects_autogen_ver_to_vernum
+[ 15%] Built target dslsyntax_parser
+[ 15%] Built target lemon
+[ 15%] Built target avl_tree
+[ 21%] Built target platform
+[ 21%] Built target re2c_objects_autogen
+[ 21%] Built target rxpa
+[ 21%] Built target rxvmmemory
+[ 26%] Built target rxbvm_core_objects
+[ 26%] Built target decnumber
+[ 26%] Built target rxlink
+[ 26%] Built target rxvm_platform_objects
+[ 26%] Built target rxvmref
+[ 26%] Built target rxvmplugin
+[ 26%] Built target mc_decimal_manual
+[ 26%] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvml.c.o
+[ 26%] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvmlib.c.o
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvml.c:32:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvml.c:32:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+[ 26%] Linking C static library ../bin/librxbvml.a
+[ 42%] Built target re2c
+[ 47%] Built target rxaslib
+[ 47%] Built target rxbvml
+[ 47%] Built target rxas
+[ 47%] cREXX assemble _elapsed ...
+[ 47%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpmain.c.o
+[ 47%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_core.c.o
+[ 47%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_print.c.o
+[ 47%] cREXX RXAS Library Archive ...
+[ 47%] Built target library-rxas
+/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_print.c:327:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  327 |         sprintf(reg,"%c%d",symbol->register_type,symbol->register_num);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_print.c:584:17: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  584 |                 sprintf(value_type_buffer,"\n%c%d, r%d-r%d",
+      |                 ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((/Users/adrian/CLionProjects/CREXX/compiler/rxcpmain.c:623__de:13: precatwarning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ed  623 |    __(_msg         spri)))
+      |                                                       ^
+ntf(combined_impo/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_print.c:589:rt_lo17: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+cations,  589 |   "%s    ;%s", user_impo    rt_loc     ations, exe_path);
+      |             ^
+  sprin/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1:tf(v note: 'sprintf' has been explicitly marked deprecated here
+alue_type_buffer,"  278 | __depr\n%c%d",ecated_ nodmsg("e->regThister_type, is functinode->region is prster_nuovm)ided f;
+      |                 ^
+or compatibili/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+ty reasons only.  Du  278 | __depree to securitycate concd_mserns inheg("This function isrent in the design of  provided for compatsprintibilityf(3), it is  reahighsons oly recommnly.ended that   you use snprinDue to tf(3) isecurinsteadty con.")
+      | cern^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+s inhe  227 |         #rent define __deprecin the dated_esign msg(of sprintf_msg)(3), it  __attribis highlute_y rec_((__deprecatedommend__(_msg)))
+      |                                                       ^
+ed that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_m/Users/adrian/CLionProjects/CREXX/compiler/rxcpmain.c:633:sg) __attribu13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+te  633 |    __((__deprecated__(_msg)))
+      |                                                           ^
+     sprintf(combined_import_locations, "%s", exe_path);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+[ 47%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_walk.c.o
+/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_core.c:2010:18: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2010 |             c += sprintf(result + c, "%d", num_elements[i]);
+      |                  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_core.c:2013:18: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2013 |             c += sprintf(result + c, "%d to *", base[i]);
+      |                  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_core.c:2016:18: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2016 |             c += sprintf(result + c, "%d to %d", base[i], base[i] + num_elements[i] - 1);
+      |                  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+3 warnings generated.
+[ 47%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_util.c.o
+[ 47%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_diag_fallback.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dsl.c.o
+3 warnings generated.
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_highlight_controller.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_tree.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_ext.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_srcmap.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcposcn.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopgr.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopar.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rexbscan.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbgmr.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbpar.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rexcscan.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcgmr.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcpar.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcdiag.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcsym.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcval.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_sym.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_type.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_trans.c.o
+/Users/adrian/CLionProjects/CREXX/compiler/rxcp_val_sym.c:919:37: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  919 |                                     sprintf(reg_str, "%d", next_free);
+      |                                     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/compiler/rxcp_val_type.c:51:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/compiler/rxcp_val_type.c:51:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+1 warning generated.
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_rewrite.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_check.c.o
+2 warnings generated.
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_plugin.c.o
+[ 52%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_orch.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpsymb.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_fixup.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_val.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap_build.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_task_lower.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_levelc_lower.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline_rules.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpemit.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_core.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_super.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_reg.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_expr.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_flow.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_proc.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_meta.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_opt.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_partial_call.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_flow.c.o
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dispatch.c.o
+In file included from /Users/adrian/CLionProjects/CREXX/compiler/rxcp_opt.c:75:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/compiler/rxcp_opt.c:75:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/compiler/rxcp_partial_call.c:19:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/compiler/rxcp_partial_call.c:19:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcpfunc.c.o
+2 warnings generated.
+[ 57%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_import_report.c.o
+[ 63%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_project_dependencies.c.o
+2 warnings generated.
+[ 63%] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_exit.c.o
+/Users/adrian/CLionProjects/CREXX/compiler/rxcp_import_report.c:454:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  454 |     sprintf(primary_path, "@primary-source/0/%s", owner->file_name ? owner->file_name : "unknown");
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+1 warning generated.
+In file included from /Users/adrian/CLionProjects/CREXX/compiler/rxcp_exit.c:33:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/compiler/rxcp_exit.c:33:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+[ 63%] Linking C static library ../bin/librxclib.a
+[ 63%] Built target rxclib
+[ 63%] Linking C executable ../bin/rxc
+[ 63%] Built target rxc
+[ 63%] Building token.rxbin
+[ 63%] cREXX compile and assemble _address ...
+[ 63%] Built target token_bin
+[ 63%] cREXX compile and assemble _rxsystem ...
+[ 63%] cREXX compile and assemble _jdn ...
+[ 63%] cREXX compile and assemble _datei ...
+[ 63%] cREXX compile and assemble _dateo ...
+[ 68%] cREXX compile and assemble _ftrunc ...
+[ 68%] cREXX compile and assemble _itrunc ...
+[ 68%] cREXX compile and assemble _typedformat ...
+[ 68%] cREXX compile and assemble abbrev ...
+[ 68%] cREXX compile and assemble abs ...
+[ 68%] cREXX compile and assemble intabs ...
+[ 68%] cREXX compile and assemble floatabs ...
+[ 68%] cREXX compile and assemble b2x ...
+[ 68%] cREXX compile and assemble b2d ...
+[ 68%] cREXX compile and assemble binary ...
+[ 68%] cREXX compile and assemble c2x ...
+[ 68%] cREXX compile and assemble c2d ...
+[ 68%] cREXX compile and assemble center ...
+[ 68%] cREXX compile and assemble centre ...
+[ 68%] cREXX compile and assemble changestr ...
+[ 68%] cREXX compile and assemble compare ...
+[ 68%] cREXX compile and assemble copies ...
+[ 68%] cREXX compile and assemble countstr ...
+[ 68%] cREXX compile and assemble d2b ...
+[ 68%] cREXX compile and assemble d2c ...
+[ 68%] cREXX compile and assemble d2x ...
+[ 68%] cREXX compile and assemble date ...
+[ 68%] cREXX compile and assemble delstr ...
+[ 68%] cREXX compile and assemble delword ...
+[ 68%] cREXX compile and assemble fileio ...
+[ 68%] cREXX compile and assemble filter ...
+[ 68%] cREXX compile and assemble format ...
+[ 68%] cREXX compile and assemble intformat ...
+[ 68%] cREXX compile and assemble floatformat ...
+[ 68%] cREXX compile and assemble fnv ...
+[ 68%] cREXX compile and assemble getenv ...
+[ 68%] cREXX compile and assemble insert ...
+[ 68%] cREXX compile and assemble length ...
+[ 68%] cREXX compile and assemble linesize ...
+[ 68%] cREXX compile and assemble loadmodule ...
+[ 68%] cREXX compile and assemble lower ...
+[ 68%] cREXX compile and assemble max ...
+[ 68%] cREXX compile and assemble intmax ...
+[ 73%] cREXX compile and assemble floatmax ...
+[ 73%] cREXX compile and assemble min ...
+[ 73%] cREXX compile and assemble intmin ...
+[ 73%] cREXX compile and assemble floatmin ...
+[ 78%] cREXX compile and assemble numeric ...
+[ 78%] cREXX compile and assemble overlay ...
+[ 78%] cREXX compile and assemble pos ...
+[ 78%] cREXX compile and assemble qscan ...
+[ 78%] cREXX compile and assemble qpos ...
+[ 78%] cREXX compile and assemble qsplit ...
+[ 78%] cREXX compile and assemble qsplitsafe ...
+[ 78%] cREXX compile and assemble qextractall ...
+[ 78%] cREXX compile and assemble qextractpair ...
+[ 78%] cREXX compile and assemble qstripcomment ...
+[ 78%] cREXX compile and assemble qremoveall ...
+[ 78%] cREXX compile and assemble fsayfmt ...
+[ 78%] cREXX compile and assemble lastpos ...
+[ 78%] cREXX compile and assemble left ...
+[ 78%] cREXX compile and assemble right ...
+[ 78%] cREXX compile and assemble raise ...
+[ 78%] cREXX compile and assemble reverse ...
+[ 78%] cREXX compile and assemble signal ...
+[ 84%] cREXX compile and assemble trace ...
+[ 84%] cREXX compile and assemble sign ...
+[ 84%] cREXX compile and assemble intsign ...
+[ 84%] cREXX compile and assemble floatsign ...
+[ 84%] cREXX compile and assemble space ...
+[ 84%] cREXX compile and assemble strip ...
+[ 84%] cREXX compile and assemble substr ...
+[ 84%] cREXX compile and assemble substro ...
+[ 84%] cREXX compile and assemble symbol ...
+[ 84%] cREXX compile and assemble time ...
+[ 84%] cREXX compile and assemble translate ...
+[ 84%] cREXX compile and assemble trunc ...
+[ 84%] cREXX compile and assemble floattrunc ...
+[ 84%] cREXX compile and assemble upper ...
+[ 84%] cREXX compile and assemble value ...
+[ 84%] cREXX compile and assemble verify ...
+[ 84%] cREXX compile and assemble version ...
+[ 84%] cREXX compile and assemble sourceinfo ...
+[ 84%] cREXX compile and assemble word ...
+[ 84%] cREXX compile and assemble words ...
+[ 84%] cREXX compile and assemble wordindex ...
+[ 84%] cREXX compile and assemble subword ...
+[ 84%] cREXX compile and assemble wordlength ...
+[ 84%] cREXX compile and assemble wordpos ...
+[ 84%] cREXX compile and assemble qword ...
+[ 84%] cREXX compile and assemble qwordlength ...
+[ 89%] cREXX compile and assemble qwords ...
+[ 89%] cREXX compile and assemble qwordindex ...
+[ 89%] cREXX compile and assemble qwordpos ...
+[ 89%] cREXX compile and assemble qsubword ...
+[ 89%] cREXX compile and assemble regex ...
+[ 89%] cREXX compile and assemble x2b ...
+[ 89%] cREXX compile and assemble x2c ...
+[ 89%] cREXX compile and assemble x2d ...
+[ 89%] cREXX compile and assemble random ...
+[ 89%] cREXX compile and assemble reradix ...
+[ 89%] cREXX compile and assemble sequence ...
+[ 89%] cREXX compile and assemble find ...
+[ 89%] cREXX compile and assemble index ...
+[ 89%] cREXX compile and assemble xrange ...
+[ 89%] cREXX compile and assemble parsecompile ...
+[ 89%] cREXX compile and assemble parsestring ...
+[ 89%] cREXX compile and assemble parse ...
+[ 89%] cREXX compile and assemble datatype ...
+[ 89%] cREXX compile and assemble arrayfind ...
+[ 89%] cREXX compile and assemble splice ...
+[ 89%] cREXX compile and assemble arrayinsert ...
+[ 89%] cREXX compile and assemble arraydelete ...
+[ 89%] cREXX compile and assemble arrayappend ...
+[ 89%] cREXX compile and assemble arrayprepend ...
+[ 89%] cREXX compile and assemble objectarrayinsert ...
+[ 89%] cREXX compile and assemble objectarraydelete ...
+[ 89%] cREXX compile and assemble objectarrayappend ...
+[ 89%] cREXX compile and assemble objectarrayprepend ...
+[ 89%] cREXX compile and assemble objectarraydrop ...
+[ 89%] cREXX compile and assemble objectarraymove ...
+[ 89%] cREXX compile and assemble arraypop ...
+[ 89%] cREXX compile and assemble arrayshift ...
+[ 89%] cREXX compile and assemble arrayget ...
+[ 89%] cREXX compile and assemble arrayset ...
+[ 89%] cREXX compile and assemble arraycontains ...
+[ 89%] cREXX compile and assemble arrayindexof ...
+[ 89%] cREXX compile and assemble arrayreverse ...
+[ 89%] cREXX compile and assemble arrayjoin ...
+[ 94%] cREXX compile and assemble arraysort ...
+[ 94%] cREXX compile and assemble arraycopy ...
+[ 94%] cREXX compile and assemble arraydrop ...
+[ 94%] cREXX compile and assemble arrayhi ...
+[ 94%] cREXX compile and assemble arraymove ...
+[ 94%] cREXX compile and assemble fmtmask ...
+[ 94%] cREXX compile and assemble compilemask ...
+[ 94%] cREXX compile and assemble runmask ...
+[ 94%] cREXX compile and assemble stem ...
+[ 94%] cREXX compile and assemble rxjson ...
+[ 94%] cREXX compile and assemble rxsocket ...
+[ 94%] cREXX compile and assemble wordrep ...
+[ 94%] cREXX compile and assemble rxqueue ...
+[ 94%] cREXX compile and assemble afterword ...
+[ 94%] cREXX REXX Library Archive ...
+[ 94%] Built target library-rexx
+[ 94%] cREXX Linked Library Image ...
+[ 94%] Built target library
+[ 94%] Staging deterministic compiler-exit imports ...
+[ 94%] Built target compiler_exit_imports
+[100%] Building Queue.rxbin
+[100%] Building Dump.rxbin
+[100%] Building Sort.rxbin
+[100%] Building Query.rxbin
+[100%] Built target exit_query_bin
+[100%] Built target exit_dump_bin
+[100%] Building Sortx.rxbin
+[100%] Building Address.rxbin
+[100%] Built target exit_rxqueue_bin
+[100%] Building Execio.rxbin
+[100%] Built target exit_sort_bin
+[100%] Building Add.rxbin
+[100%] Built target exit_add_bin
+[100%] Building Fsay.rxbin
+[100%] Built target exit_sortx_bin
+[100%] Building Msay.rxbin
+[100%] Built target exit_execio_bin
+[100%] Building Parse.rxbin
+[100%] Built target exit_fsay_bin
+[100%] Building Signal.rxbin
+[100%] Built target exit_msay_bin
+[100%] Building Trace.rxbin
+[100%] Built target exit_signal_bin
+[100%] Building RexxScript.rxbin
+[100%] Built target exit_trace_bin
+[100%] Building Substr.rxbin
+[100%] Built target exit_substr_bin
+[100%] Building Dummy.rxbin
+[100%] Built target exit_rexxscript_bin
+[100%] Built target exit_dummy_bin
+[100%] Built target exit_address_bin
+[100%] Built target exit_parse_bin
+[100%] Building rxcexits.rxbin (bundled via concatenation)
+[100%] Built target compiler_exit_bin
+[100%] Generating keyaccess_test_noopt.rxbin
+[100%] Generating keyaccess_test_opt.rxbin
+[100%] Built target keyaccess_test_noopt_artifact
+[100%] Built target keyaccess_test_opt_artifact
+[100%] Built target keyaccess_test
+Building C object lib/plugins/keyaccess/CMakeFiles/keyaccess_compact_failure_test.dir/keyaccess_compact_failure_test.c.o
+Linking C executable keyaccess_compact_failure_test
+Built target keyaccess_compact_failure_test

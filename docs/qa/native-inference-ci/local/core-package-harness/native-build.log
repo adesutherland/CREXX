@@ -1,0 +1,7 @@
+argv=['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-harness-n4zbz4_p/unpacked/payload/bin/crexx', '--program', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-rz29rlec/native/hello', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-rz29rlec/hello.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member hello
+BUILT: project member hello
+BARRIER: link program
+PUBLISHED: program /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-rz29rlec/native/hello.rxbin
+PUBLISHED: native program /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-rz29rlec/native/hello

@@ -10,9 +10,8 @@ complete: the combined candidate and current decimal decision are frozen, the
 redundant Mac concurrency replay is waived, and the reviewed/calibrated
 [`portfolio-v3`](portfolio/manifest-v3.md) boundary is green. The Apple Stage 5
 pre-release scorecard is complete; exact-commit formal Linux QA-C remains its
-only exit item. Stage 6 documentation consolidation has started with the
-current [`RESULTS.md`](RESULTS.md) report; Stage 7 evidence clean-down remains
-plan-only.
+only exit item. Stage 6 documentation-authority consolidation is complete;
+Stage 7 evidence clean-down remains plan-only.
 
 The original programme charter and 2026-07-15 evidence review remain in
 [`docs/planning/release-1/performance-programme-report-2026-07-15.md`](../docs/planning/release-1/performance-programme-report-2026-07-15.md).
@@ -23,10 +22,10 @@ The initial `NR-*` sweep and its evidence ledger are closed in
 [`ROADMAP-INITIAL-SWEEP-2026-07-23.md`](ROADMAP-INITIAL-SWEEP-2026-07-23.md).
 PERF2 is closed in
 [`ROADMAP-PERF2-2026-07-31.md`](ROADMAP-PERF2-2026-07-31.md).
-[`ROADMAP.md`](ROADMAP.md) is the approved live PERF3 programme: exact-current
-Mac evidence, evidence-selected copy/ownership, conversion, accessor and
-layout/stream panels, qualified-deficit closure and selected-candidate platform
-validation.
+[`ROADMAP.md`](ROADMAP.md) is the compact live performance companion for
+release closeout, maintainer decisions, and separately selectable future
+candidates. The completed PERF3 activity and idea history is preserved in
+[`PERF3-PROGRAMME-LEDGER-2026-08-17.md`](PERF3-PROGRAMME-LEDGER-2026-08-17.md).
 
 Current product verdicts and ordinary correctness runs use `rxvm`, whose
 dispatch engine is selected by the configured C compiler. A dispatch-engine
@@ -39,12 +38,13 @@ those labels using the new product mapping.
 
 | Location | Purpose |
 | --- | --- |
-| `performance/PERFORMANCE-CLOSEOUT-PLAN.md` | Complete seven-stage current-product closeout plan; Stages 1-4 and the Apple Stage 5 scorecard complete, formal Linux QA-C pending, Stage 6 in progress and Stage 7 plan-only |
+| `performance/PERFORMANCE-CLOSEOUT-PLAN.md` | Seven-stage current-product closeout plan; Stages 1-4, the Apple Stage 5 scorecard and Stage 6 complete, formal Linux QA-C pending, and Stage 7 plan-only |
 | `performance/RESULTS.md` | Current less-technical performance scorecard, comparison questions and release-versus-next-release disposition |
 | `performance/PERFORMANCE-CLOSEOUT-STAGE4-WORKLIST.md` | Completed Stage 4 portfolio-v3 inventory, source review, runtime capability classification and qualification ledger |
 | `performance/portfolio/manifest-v3.md` | Frozen Stage 5 source, capability, aggregation and calibrated-work contract |
-| `performance/DECISIONS.md` | Enduring accepted/rejected performance decisions, lessons and explicit reopening triggers; currently seeded with DECIMAL-01 Stage 3 |
-| `performance/ROADMAP.md` | Approved live PERF3 priorities, transfers, dependencies and exit gates |
+| `performance/DECISIONS.md` | Consolidated durable PERF3/POSTPERF and DECIMAL-01 decisions, lessons, rejected directions and explicit reopening triggers |
+| `performance/ROADMAP.md` | Live performance closeout, maintainer decisions and evidence-gated candidate queue |
+| `performance/PERF3-PROGRAMME-LEDGER-2026-08-17.md` | Complete historical PERF3 activity, transfer, idea and evidence register |
 | `performance/ROADMAP-PERF2-2026-07-31.md` | Closed PERF2 status, findings, decisions, future-point ledger and retained evidence links |
 | `performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md` | Closed initial-sweep status and complete historical work/idea ledger |
 | `performance/decimal/` | Independent DECIMAL-01 decimal-provider correctness and performance control plane; Stage 3 closes with current `mc_decimal` retained and no production change |
@@ -59,7 +59,7 @@ those labels using the new product mapping.
 | `performance/PERF3-11-MIGRATION-WORKLIST.md` | Completed one-authority proof migration ledger and retained classification history for the migrated semantic/mechanical consumers |
 | `performance/PERF3-12B-WORKLIST.md` | Completed compound-tail route comparison, accepted production H1 proof, first Release verdict, broad closeout and fresh current-product Mac scorecard |
 | `performance/PERF3-13-WORKLIST.md` | Historical allocator, worker-foundation and concurrency implementation record; live concurrency work has moved to `concurrency/WORKLIST.md` |
-| `performance/POST-PERF3-WORKLIST.md` | Restart-safe control plane for Full AWFY Json, DeltaBlue/CD, Havlak, generic scalar-access proof and bounded compiler follow-ons |
+| `performance/POST-PERF3-WORKLIST.md` | Completed restart-safe control plane for `POSTPERF-01` through `POSTPERF-05`; no later stage is authorized by it |
 | `concurrency/` | Independent live control plane for tasks, channels, providers, endpoints and concurrent HTTP; historical Gate records are retained under `concurrency/history/` |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |

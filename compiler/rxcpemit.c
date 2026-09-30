@@ -1945,6 +1945,7 @@ void emit(Context *context, FILE *output) {
     payload.context = context;
     payload.file = output;
     payload.globals = 0;
+    payload.emitted_native_dependencies = dpa_f();
 
     if (context->ast && context->ast->scope) {
         reset_constant_aliases(context->ast->scope);
@@ -1953,4 +1954,5 @@ void emit(Context *context, FILE *output) {
 
     reset_metaline_source_file(context->file_name);
     ast_wlkr(context->ast, emit_walker, (void *) &payload);
+    free_dpa(payload.emitted_native_dependencies);
 }

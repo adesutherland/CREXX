@@ -1,0 +1,2 @@
+argv=['D:\\a\\_temp\\plugin-package\\combined\\CREXX-windows-x64\\bin\\rxvm.exe', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-release-smoke-rgm406s9\\noopt-linked', '-a', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-release-smoke-rgm406s9\\fixture.gguf', 'bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de']
+PASS: public llama release provider discovery, profile rejection and cleanup

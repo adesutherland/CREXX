@@ -1,0 +1,36 @@
+(lldb) target create "cmake-build-debug/bin/rxc"
+Current executable set to '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc' (arm64).
+(lldb) settings set -- target.run-args  "--no-exe-import" "-n" "-i" "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa" "-o" "/tmp/rxpa-objects-expanded-before/noopt" "tests/rxpa/rxpa_objects.crexx"
+(lldb) run
+error: rx_odbc_mock.rxplugin debug map object file "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/odbc/CMakeFiles/_odbc_mock.dir/odbc.c.o" changed (actual: 0x6aa80f33, debug map: 0x6a7a2950) since this executable was linked, debug info will not be loaded
+error: rx_odbc_mock.rxplugin debug map object file "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/odbc/CMakeFiles/_odbc_mock.dir/tests/mock_odbc.c.o" changed (actual: 0x6a998018, debug map: 0x6a7a2950) since this executable was linked, debug info will not be loaded
+error: rx_cri17_attached.rxplugin debug map object file "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_cri17_attached.dir/cri17_attached_provider.c.o" changed (actual: 0x6aa80f30, debug map: 0x6a8f1479) since this executable was linked, debug info will not be loaded
+Process 57961 launched: '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc' (arm64)
+Process 57961 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+    frame #0: 0x0000000100122eec rxc`validate_symbol_in_scope(symbol=0x00000007d5b3e000, payload=0x000000016fdfe468) at rxcp_val_sym.c:1582:40
+   1579	             * a following procedure */
+   1580	        }
+   1581	        /* Search other modules */
+-> 1582	        sym_imva(scope->defining_node->context, symbol);
+    	                                       ^
+   1583	    }
+   1584	    else {
+   1585	
+Target 0: (rxc) stopped.
+(lldb) bt 10
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+  * frame #0: 0x0000000100122eec rxc`validate_symbol_in_scope(symbol=0x00000007d5b3e000, payload=0x000000016fdfe468) at rxcp_val_sym.c:1582:40
+    frame #1: 0x0000000100142dc4 rxc`scp_4all(scope=0x00000007df0c9e80, worker=(rxc`validate_symbol_in_scope at rxcp_val_sym.c:1381), payload=0x000000016fdfe468) at rxcpsymb.c:194:13
+    frame #2: 0x0000000100122248 rxc`validate_symbols(context=0x0000000100b2f620, scope=0x00000007df0c9e80) at rxcp_val_sym.c:1730:5
+    frame #3: 0x00000001001222a8 rxc`validate_symbols(context=0x0000000100b2f620, scope=0x00000007df0ca600) at rxcp_val_sym.c:1737:9
+    frame #4: 0x00000001001222a8 rxc`validate_symbols(context=0x0000000100b2f620, scope=0x00000007dd1ac100) at rxcp_val_sym.c:1737:9
+    frame #5: 0x00000001001222a8 rxc`validate_symbols(context=0x0000000100b2f620, scope=0x00000007dd1ac000) at rxcp_val_sym.c:1737:9
+    frame #6: 0x000000010013ecd8 rxc`validate_ast(context=0x0000000100b2f620) at rxcp_val_orch.c:2124:9
+    frame #7: 0x0000000100140868 rxc`rxcp_val(context=0x0000000100b2f620) at rxcp_val_orch.c:2274:5
+    frame #8: 0x0000000100003604 rxc`rxcmain(argc=8, argv=0x000000016fdfeeb0) at rxcpmain.c:899:5
+    frame #9: 0x0000000100001860 rxc`main(argc=8, argv=0x000000016fdfeeb0) at rxc_main.c:39:12
+(lldb) expression symbol->name
+(char *) $0 = 0x00000007df0d0b20 "initial"
+(lldb) frame variable scope
+(Scope *) scope = 0x00000007df0c9e80

@@ -1,0 +1,365 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 552: gate_f_task_method_import_rxbvm_noopt
+1/4 Test #552: gate_f_task_method_import_rxbvm_noopt ...***Failed    2.18 sec
+CMake Error at gate_f_task_method_import_rxbvm_noopt.cmake:38 (message):
+  Imported task-method client rxc failure:
+
+
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #RETURNS_VOID, "do
+  parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #RETVAL_MISSING, "do
+  parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #TASK_LOWERING_FAILED,
+  "do parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #RETURNS_VOID, "do
+  parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #RETVAL_MISSING, "do
+  parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #TASK_LOWERING_FAILED,
+  "do parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #RETURNS_VOID, "do
+  parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #RETVAL_MISSING, "do
+  parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #TASK_LOWERING_FAILED,
+  "do parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #RETURNS_VOID, "do
+  parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #RETVAL_MISSING, "do
+  parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #TASK_LOWERING_FAILED,
+  "do parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #RETURNS_VOID, "do
+  parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #RETVAL_MISSING, "do
+  parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #TASK_LOWERING_FAILED,
+  "do parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #RETURNS_VOID, "do
+  parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #RETVAL_MISSING, "do
+  parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #TASK_LOWERING_FAILED,
+  "do parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #RETURNS_VOID, "do
+  parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #RETVAL_MISSING, "do
+  parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #TASK_LOWERING_FAILED,
+  "do parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #RETURNS_VOID, "do
+  parallel using process_channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #RETVAL_MISSING, "do
+  parallel using process_channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #TASK_LOWERING_FAILED,
+  "do parallel using process_channel_scope"
+
+  24 error(s) in source file
+
+
+
+
+    Start 553: gate_f_task_method_import_rxbvm_opt
+2/4 Test #553: gate_f_task_method_import_rxbvm_opt .....***Failed    2.12 sec
+CMake Error at gate_f_task_method_import_rxbvm_opt.cmake:38 (message):
+  Imported task-method client rxc failure:
+
+
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #RETURNS_VOID, "do
+  parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #RETVAL_MISSING, "do
+  parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #TASK_LOWERING_FAILED,
+  "do parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #RETURNS_VOID, "do
+  parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #RETVAL_MISSING, "do
+  parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #TASK_LOWERING_FAILED,
+  "do parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #RETURNS_VOID, "do
+  parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #RETVAL_MISSING, "do
+  parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #TASK_LOWERING_FAILED,
+  "do parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #RETURNS_VOID, "do
+  parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #RETVAL_MISSING, "do
+  parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #TASK_LOWERING_FAILED,
+  "do parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #RETURNS_VOID, "do
+  parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #RETVAL_MISSING, "do
+  parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #TASK_LOWERING_FAILED,
+  "do parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #RETURNS_VOID, "do
+  parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #RETVAL_MISSING, "do
+  parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #TASK_LOWERING_FAILED,
+  "do parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #RETURNS_VOID, "do
+  parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #RETVAL_MISSING, "do
+  parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #TASK_LOWERING_FAILED,
+  "do parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #RETURNS_VOID, "do
+  parallel using process_channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #RETVAL_MISSING, "do
+  parallel using process_channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #TASK_LOWERING_FAILED,
+  "do parallel using process_channel_scope"
+
+  24 error(s) in source file
+
+
+
+
+    Start 554: gate_f_task_method_import_rxtvm_noopt
+3/4 Test #554: gate_f_task_method_import_rxtvm_noopt ...***Failed    2.05 sec
+CMake Error at gate_f_task_method_import_rxtvm_noopt.cmake:38 (message):
+  Imported task-method client rxc failure:
+
+
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #RETURNS_VOID, "do
+  parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #RETVAL_MISSING, "do
+  parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #TASK_LOWERING_FAILED,
+  "do parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #RETURNS_VOID, "do
+  parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #RETVAL_MISSING, "do
+  parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #TASK_LOWERING_FAILED,
+  "do parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #RETURNS_VOID, "do
+  parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #RETVAL_MISSING, "do
+  parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #TASK_LOWERING_FAILED,
+  "do parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #RETURNS_VOID, "do
+  parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #RETVAL_MISSING, "do
+  parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #TASK_LOWERING_FAILED,
+  "do parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #RETURNS_VOID, "do
+  parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #RETVAL_MISSING, "do
+  parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #TASK_LOWERING_FAILED,
+  "do parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #RETURNS_VOID, "do
+  parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #RETVAL_MISSING, "do
+  parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #TASK_LOWERING_FAILED,
+  "do parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #RETURNS_VOID, "do
+  parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #RETVAL_MISSING, "do
+  parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #TASK_LOWERING_FAILED,
+  "do parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #RETURNS_VOID, "do
+  parallel using process_channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #RETVAL_MISSING, "do
+  parallel using process_channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #TASK_LOWERING_FAILED,
+  "do parallel using process_channel_scope"
+
+  24 error(s) in source file
+
+
+
+
+    Start 555: gate_f_task_method_import_rxtvm_opt
+4/4 Test #555: gate_f_task_method_import_rxtvm_opt .....***Failed    2.05 sec
+CMake Error at gate_f_task_method_import_rxtvm_opt.cmake:38 (message):
+  Imported task-method client rxc failure:
+
+
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #RETURNS_VOID, "do
+  parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #RETVAL_MISSING, "do
+  parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 9:12 - #TASK_LOWERING_FAILED,
+  "do parallel using scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #RETURNS_VOID, "do
+  parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #RETVAL_MISSING, "do
+  parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 14:19 - #TASK_LOWERING_FAILED,
+  "do parallel using result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #RETURNS_VOID, "do
+  parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #RETVAL_MISSING, "do
+  parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 18:18 - #TASK_LOWERING_FAILED,
+  "do parallel using input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #RETURNS_VOID, "do
+  parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #RETVAL_MISSING, "do
+  parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 23:20 - #TASK_LOWERING_FAILED,
+  "do parallel using channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #RETURNS_VOID, "do
+  parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #RETVAL_MISSING, "do
+  parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 33:20 - #TASK_LOWERING_FAILED,
+  "do parallel using process_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #RETURNS_VOID, "do
+  parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #RETVAL_MISSING, "do
+  parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 37:27 - #TASK_LOWERING_FAILED,
+  "do parallel using process_result_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #RETURNS_VOID, "do
+  parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #RETVAL_MISSING, "do
+  parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 41:26 - #TASK_LOWERING_FAILED,
+  "do parallel using process_input_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #RETURNS_VOID, "do
+  parallel using process_channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #RETVAL_MISSING, "do
+  parallel using process_channel_scope"
+
+  Error in gate_f_task_method_import.crexx @ 45:28 - #TASK_LOWERING_FAILED,
+  "do parallel using process_channel_scope"
+
+  24 error(s) in source file
+
+
+
+
+
+0% tests passed, 4 tests failed out of 4
+
+Label Time Summary:
+compiler            =   8.40 sec*proc (4 tests)
+comprehensive       =   8.40 sec*proc (4 tests)
+concurrency         =   8.40 sec*proc (4 tests)
+concurrency-sp03    =   8.40 sec*proc (4 tests)
+concurrency-sp06    =   8.40 sec*proc (4 tests)
+f1f                 =   8.40 sec*proc (4 tests)
+gate_f              =   8.40 sec*proc (4 tests)
+import              =   8.40 sec*proc (4 tests)
+levelg              =   8.40 sec*proc (4 tests)
+linked              =   8.40 sec*proc (4 tests)
+method              =   8.40 sec*proc (4 tests)
+noopt               =   4.23 sec*proc (2 tests)
+opt                 =   4.17 sec*proc (2 tests)
+rxbvm               =   4.30 sec*proc (2 tests)
+rxtvm               =   4.10 sec*proc (2 tests)
+
+Total Test time (real) =   8.46 sec
+
+The following tests FAILED:
+	552 - gate_f_task_method_import_rxbvm_noopt (Failed)    compiler comprehensive concurrency concurrency-sp03 concurrency-sp06 f1f gate_f import levelg linked method noopt rxbvm
+	553 - gate_f_task_method_import_rxbvm_opt (Failed)      compiler comprehensive concurrency concurrency-sp03 concurrency-sp06 f1f gate_f import levelg linked method opt rxbvm
+	554 - gate_f_task_method_import_rxtvm_noopt (Failed)    compiler comprehensive concurrency concurrency-sp03 concurrency-sp06 f1f gate_f import levelg linked method noopt rxtvm
+	555 - gate_f_task_method_import_rxtvm_opt (Failed)      compiler comprehensive concurrency concurrency-sp03 concurrency-sp06 f1f gate_f import levelg linked method opt rxtvm
+Errors while running CTest

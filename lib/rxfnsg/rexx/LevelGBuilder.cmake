@@ -134,7 +134,6 @@ set(_stage_g_product_sources
   "${CMAKE_CURRENT_SOURCE_DIR}/integer.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/decimal.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/packednumeric.crexx"
-  "${CMAKE_CURRENT_SOURCE_DIR}/statsvalue.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/unicode.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/httpcodec.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/httpcore.crexx"
@@ -243,7 +242,8 @@ add_custom_command(
     "${CMAKE_BINARY_DIR}/bin/library.rxbin"
     "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
     "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
-    rxc rxas rxlink rxbvm library classlib compiler_exit_bin
+    "$<TARGET_FILE:fs>"
+    rxc rxas rxlink rxbvm library classlib compiler_exit_bin fs
     "$<TARGET_FILE:rxc>"
     "$<TARGET_FILE:rxas>"
     "$<TARGET_FILE:rxlink>"

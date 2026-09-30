@@ -27,6 +27,7 @@
  */
 
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -36,6 +37,7 @@
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
 #include "rxcp_source_ext.h"
+#include "rxcp_srcmap.h"
 #include "rxbin.h"
 #include "rxas.h"
 #include "rxpa.h"
@@ -283,6 +285,34 @@ int rxcp_import_name_may_load_namespace(Context *context,
     }
 
     return 0;
+}
+
+dpa *rxcp_native_interface_factories(Context *context, const char *interface_name,
+                                    const char *factory_suffix) {
+    struct class_tree_wrapper *it;
+    dpa *functions = dpa_f();
+    if (!context || !context->master_context || !interface_name || !factory_suffix ||
+        !context->master_context->importable_class_tree) return functions;
+    avl_tree_for_each_in_order(it, context->master_context->importable_class_tree,
+                               struct class_tree_wrapper, index_node) {
+        struct imported_class *candidate = it->cls;
+        size_t i;
+        if (!candidate || candidate->contract_type != CLASS_DEF) continue;
+        for (i = 0; i < candidate->implements_count; ++i) {
+            if (candidate->implements_fqnames[i] &&
+                !strcmp(candidate->implements_fqnames[i], interface_name)) {
+                char *name = mprintf("%s%s", candidate->fqname, factory_suffix);
+                imported_func *function = rxcp_find_imported_function_exact(context, name);
+                /* Bytecode provider linking retains its existing contract.
+                 * Native dependencies must name a real, checked callable. */
+                if (function && function->provider_id && *function->provider_id)
+                    dpa_add(functions, function);
+                free(name);
+                break;
+            }
+        }
+    }
+    return functions;
 }
 
 int rxcp_import_name_has_interface_provider(Context *context,
@@ -1411,8 +1441,21 @@ static char *generate_arg_source(ASTNode *node) {
         }
 
         char *tmp;
-        if (i == 0) tmp = mprintf("%s%s%s = %s", buffer, a->is_opt_arg ? "?" : "", name_str, type_str);
-        else tmp = mprintf("%s, %s%s = %s", buffer, a->is_opt_arg ? "?" : "", name_str, type_str);
+        if (i == 0) {
+            tmp = mprintf("%s%s%s%s = %s",
+                          buffer,
+                          a->is_ref_arg ? "expose " : "",
+                          a->is_opt_arg ? "?" : "",
+                          name_str,
+                          type_str);
+        } else {
+            tmp = mprintf("%s, %s%s%s = %s",
+                          buffer,
+                          a->is_ref_arg ? "expose " : "",
+                          a->is_opt_arg ? "?" : "",
+                          name_str,
+                          type_str);
+        }
 
         free(buffer);
         buffer = tmp;
@@ -1933,6 +1976,17 @@ typedef struct class_meta_agg {
     struct class_meta_agg *next;
 } class_meta_agg;
 
+/* A module's metadata is read in stream order. Its own contracts are forward
+ * declarations until their stubs are registered; resolving a signature must
+ * not search a same-namespace source extension for those declarations. The
+ * stack is scoped to this synchronous import, including nested module reads. */
+struct pending_import_contracts {
+    const char *file_name;
+    class_meta_agg *declarations;
+    struct pending_import_contracts *previous;
+};
+
+
 static class_meta_agg* agg_find(class_meta_agg *head, const char *fq) {
     class_meta_agg *it = head;
     while (it) {
@@ -2284,7 +2338,7 @@ static int has_task_target_for_symbol(void *constant, int meta_head, const char 
     return 0;
 }
 
-static void read_constant_pool_for_functions(Context *context, char *full_file_name, void* constant, size_t constant_size, int meta_head) {
+static void read_constant_pool_for_functions(Context *context, char *full_file_name, void* constant, size_t constant_size, int meta_head, int expose_head) {
     chameleon_constant *entry;
     int i;
     size_t exposed_ix;
@@ -2299,7 +2353,30 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
     /* Aggregator for class metadata to synthesize class stubs */
     class_meta_agg *class_aggs = 0;
 
+    struct pending_import_contracts pending;
+    Context *master = context->master_context;
+
     (void)constant_size;
+
+    pending.file_name = full_file_name;
+    pending.declarations = 0;
+    pending.previous = master->pending_import_contracts;
+    i = meta_head;
+    while (i != -1) {
+        entry = (chameleon_constant *)((unsigned char *)constant + (size_t)i);
+        if (entry->type == META_CLASS || entry->type == META_INTERFACE) {
+            char *symbol = entry->type == META_CLASS ?
+                get_const_string(constant, ((meta_class_constant *)entry)->symbol) :
+                get_const_string(constant, ((meta_interface_constant *)entry)->symbol);
+            if (symbol) {
+                agg_find_or_add(&pending.declarations, symbol,
+                               entry->type == META_CLASS ? CLASS_DEF : INTERFACE_DEF);
+                free(symbol);
+            }
+        }
+        i = ((meta_entry *)entry)->next;
+    }
+    master->pending_import_contracts = &pending;
 
     /* Walk only the module metadata chain so shared constant pools stay module-local in effect. */
     i = meta_head;
@@ -2525,34 +2602,36 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
             if (args_str) free(args_str);
         }
 
-        /* A exposed global variable */
-        else if (entry->type == EXPOSE_REG_CONST) {
-            fqname = ((expose_reg_constant *)entry)->index;
-            meta_reg_constant *mentry = get_variable_type(fqname, constant, meta_head);
-            if (mentry) {
-                option = get_const_string(constant, mentry->option);
-                type = get_const_string(constant, mentry->type);
-
-                rximpf_f(context, full_file_name, fqname, option, type, "", "", 1, 0);
-
-                if (option) {
-                    free(option);
-                    option = 0;
-                }
-                if (type) {
-                    free(type);
-                    type = 0;
-                }
-            }
-        }
-
         i = ((meta_entry *)entry)->next;
+    }
+
+    /* Exports have a separate module-local chain. They are never META entries,
+     * even when several modules share one constant pool. Older modules may
+     * omit a global contract; retain their existing caller-declared typing. */
+    for (i = expose_head; i != -1;
+         i = ((expose_reg_constant *)entry)->next) {
+        entry = (chameleon_constant *)((unsigned char *)constant + (size_t)i);
+        if (entry->type == EXPOSE_REG_CONST) {
+            meta_reg_constant *mentry;
+            fqname = ((expose_reg_constant *)entry)->index;
+            mentry = get_variable_type(fqname, constant, meta_head);
+            if (!mentry) continue;
+            option = get_const_string(constant, mentry->option);
+            type = get_const_string(constant, mentry->type);
+            rximpf_f(context, full_file_name, fqname,
+                      option ? option : "b", type ? type : "", "", "", 1, 0);
+            free(option);
+            free(type);
+            option = type = 0;
+        }
     }
 
     if (class_aggs) {
         import_class_meta_aggs(context, full_file_name, class_aggs);
         agg_free_all(class_aggs);
     }
+    master->pending_import_contracts = pending.previous;
+    agg_free_all(pending.declarations);
 }
 
 // RXPA Disabler Function
@@ -2914,7 +2993,7 @@ static void parseRxasFileForFunctions(Context *context, char* file_name, char* l
     /* Parse & Process */
     rxaspars(&scanner);
     read_constant_pool_for_functions(context, file_name, scanner.binary.const_pool,
-                                     scanner.binary.const_size, scanner.meta_head);
+                                     scanner.binary.const_size, scanner.meta_head, scanner.expose_head);
 
     rxasclrc(&scanner);
 }
@@ -2943,7 +3022,8 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
                 full_file_name = mprintf("%s@%s", file_module_section->name, file_name);
 
                 read_constant_pool_for_functions(context, full_file_name, file_module_section->constant,
-                                                 file_module_section->header.constant_size, file_module_section->header.meta_head);
+                                                 file_module_section->header.constant_size, file_module_section->header.meta_head,
+                                                 file_module_section->header.expose_head);
                 free(full_file_name);
                 free_module(file_module_section);
                 modules_processed++;
@@ -2960,7 +3040,12 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
 
             default: /* error */
                 if (file_module_section) free_module(file_module_section);
-                if (context->debug_mode >= 2) printf("Importing Procedures - Error reading file\n");
+                {
+                    const char *detail = rxbin_last_error();
+                    fprintf(stderr, "RXBIN_IMPORT_READ_ERROR: %s (code %d): %s\n",
+                            file_name, loaded_rc, detail ? detail : "no RXBIN detail");
+                    mknd_err1(context->ast, "RXBIN_IMPORT_READ_ERROR", "file", file_name);
+                }
                 fclose(fp);
                 return;
         }
@@ -2998,7 +3083,10 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
 
     buff_start = file2buf(context->file_pointer, &bytes);
     /* Close file */
-    fclose(context->file_pointer);
+    if (fclose(context->file_pointer) != 0) {
+        free(buff_start);
+        buff_start = 0;
+    }
     context->file_pointer  = 0;
 
     if (buff_start == NULL) {
@@ -3032,6 +3120,20 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     /* Deallocate memory and reset context */
     free_ast(context);
     free_tok(context);
+    /* Source imports must consume the same RXPP source-map representation as
+     * a directly compiled file. Otherwise @ directives enter the grammar as
+     * instructions, corrupting callable boundaries and argument diagnostics. */
+    if (context->source_has_srcmap) {
+        char *cleaned = 0;
+        size_t cleaned_bytes = 0;
+        if (rxcp_srcmap_preprocess(context, &cleaned, &cleaned_bytes) != 0) {
+            prnterrs(context);
+            goto finish;
+        }
+        free(buff_start);
+        buff_start = cleaned;
+        bytes = cleaned_bytes;
+    }
     cntx_buf(context, buff_start, bytes);
 
     /* Parse program for real */
@@ -3105,7 +3207,9 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
         if (symbols[i]->symbol_type == VARIABLE_SYMBOL && symbols[i]->exposed) {
             /* import symbol */
             char* fqname = sym_frnm(symbols[i]);
-            rximpf_f(parent_context, file_name, fqname, 0, type_nm(symbols[i]->type), 0, 0, 1, 0);
+            char* type = sym_2tp(symbols[i]);
+            rximpf_f(parent_context, file_name, fqname, 0, type, 0, 0, 1, 0);
+            free(type);
             free(fqname);
         }
     }
@@ -3149,7 +3253,29 @@ static void ensure_importable_source_header(importable_file *file, RexxLevel cli
     file->header_scanned = 1;
 }
 
+static int source_node_imports_namespace(ASTNode *node, const char *namespace_name) {
+    ASTNode *child;
+    if (!node) return 0;
+    if (node->node_type == IMPORT && node->child) {
+        char *name = rxcp_normalize_source_symbol_name(node->child->node_string,
+                                                      node->child->node_string_length,
+                                                      0, 1);
+        int matches = name && strcmp(name, namespace_name) == 0;
+        free(name);
+        return matches;
+    }
+    /* Parsed header imports are children of REXX_OPTIONS; generated imports
+     * can be direct file children. Never inspect executable or imported bodies. */
+    if (node->node_type != PROGRAM_FILE && node->node_type != REXX_OPTIONS) return 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (source_node_imports_namespace(child, namespace_name)) return 1;
+    }
+    return 0;
+}
+
 static int source_import_file_is_visible(Context *context, importable_file *file) {
+    ASTNode *program;
+    Scope *namespace_scope;
     if (!file || file->type != REXX_FILE) return 1;
 
     ensure_importable_source_header(file,
@@ -3159,7 +3285,57 @@ static int source_import_file_is_visible(Context *context, importable_file *file
     if (!file->namespace_name || !file->namespace_name[0]) return 1;
     if (!context || !context->ast || !context->ast->scope) return 1;
 
-    return find_visible_namespace_scope(context, 0, file->namespace_name) != 0;
+    namespace_scope = find_visible_namespace_scope(context, 0, file->namespace_name);
+    if (!namespace_scope) return 0;
+
+    /* A materialized callable/class dependency also creates a namespace scope.
+     * It does not import every source extension in that namespace. In particular,
+     * closefile's exact inline dependency on _rxsysb._close must not recursively
+     * load unrelated source bodies while their callers' contracts are unfinished.
+     * Use the current program's own namespace and actual IMPORT nodes (including
+     * compiler-generated imports); keep imported declaration stubs out of this
+     * source-discovery decision. Recheck live nodes so later imports remain usable.
+     */
+    for (program = context->ast->child; program; program = program->sibling) {
+        if (program->node_type != PROGRAM_FILE) continue;
+        if (program->scope == namespace_scope) return 1;
+        if (source_node_imports_namespace(program, file->namespace_name)) return 1;
+    }
+    return 0;
+}
+
+/* The dependency checker uses exactly the resolver's header interpretation. */
+const char *rxcp_importable_source_namespace(Context *context, importable_file *file) {
+    ensure_importable_source_header(file, context->cli_level_override);
+    return file->namespace_name;
+}
+
+/* Source roots are ordered by the caller. A namespace can span several files
+ * within one root, but a later root must not replace an already loaded
+ * provider merely because its file has a different name. Check lazily so
+ * constrained ports do not read every source header during discovery. */
+static int source_namespace_claimed_by_earlier_root(Context *context,
+                                                    importable_file **list,
+                                                    size_t current) {
+    importable_file *candidate = list[current];
+    const char *namespace_name;
+    size_t i;
+
+    if (!candidate || candidate->type != REXX_FILE) return 0;
+    namespace_name = rxcp_importable_source_namespace(context, candidate);
+    if (!namespace_name || !namespace_name[0]) return 0;
+    for (i = 0; i < current; i++) {
+        importable_file *earlier = list[i];
+        const char *earlier_namespace;
+
+        if (!earlier || earlier->type != REXX_FILE || !earlier->imported) continue;
+        if (earlier->root_kind == candidate->root_kind &&
+            earlier->root_index == candidate->root_index) continue;
+        earlier_namespace = rxcp_importable_source_namespace(context, earlier);
+        if (earlier_namespace && strcmp(earlier_namespace, namespace_name) == 0)
+            return 1;
+    }
+    return 0;
 }
 
 /* Parse and rxcp_val a rexx program in a string and return the context */
@@ -3299,9 +3475,16 @@ static int load_another_file(Context *context) {
 
     for (f = 0; master_context->importable_file_list[f]; f++) {
         /* Already imported? */
-        if (!master_context->importable_file_list[f]->imported) {
+        if (!master_context->importable_file_list[f]->imported &&
+            !master_context->importable_file_list[f]->shadowed) {
             if (master_context->importable_file_list[f]->type == REXX_FILE &&
                 !source_import_file_is_visible(context, master_context->importable_file_list[f])) {
+                continue;
+            }
+            if (source_namespace_claimed_by_earlier_root(master_context,
+                                                         master_context->importable_file_list,
+                                                         f)) {
+                master_context->importable_file_list[f]->shadowed = 1;
                 continue;
             }
             master_context->importable_file_list[f]->imported = 1;
@@ -3417,9 +3600,32 @@ static int ast_declares_local_contract(ASTNode *node, const char *short_name) {
             return 1;
         }
 
-        if (node->child && ast_declares_local_contract(node->child, short_name)) return 1;
+        /* Source structure normalization puts contracts directly under a
+         * file node. Executable bodies cannot declare a class or interface;
+         * walking them here makes each inline type check scan every expanded
+         * body in the compilation unit. Inspect the live declaration level
+         * instead, so newly inserted declarations remain visible without a
+         * cache or any dependency on optimizer invalidation. */
+        if ((node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE) &&
+            node->child && ast_declares_local_contract(node->child, short_name)) return 1;
     }
 
+    return 0;
+}
+
+static int current_binary_declares_contract(Context *context, const char *name) {
+    struct pending_import_contracts *pending;
+    class_meta_agg *declaration;
+    if (!context || !context->master_context || !context->file_name) return 0;
+    for (pending = context->master_context->pending_import_contracts;
+         pending; pending = pending->previous) {
+        if (strcmp(context->file_name, pending->file_name) != 0) continue;
+        for (declaration = pending->declarations; declaration; declaration = declaration->next) {
+            if (strcmp(name, declaration->fq) == 0) return 1;
+            if (strcmp(name, declaration->name) == 0 &&
+                find_visible_namespace_scope(context, 0, declaration->ns)) return 1;
+        }
+    }
     return 0;
 }
 
@@ -3474,6 +3680,16 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     }
 
     if (context->debug_mode >= 2) fprintf(stderr, "Importing Class for file %s Looking for Class %s\n", context->file_name, name);
+
+    /* A known forward contract in this binary is registered later in the
+     * same metadata read. Reuse it if already available, otherwise leave this
+     * declaration unresolved for the ordinary consumer validation pass. */
+    if (current_binary_declares_contract(context, name)) {
+        if (src_fqcl(context, name, &found_cls))
+            found_symbol = load_imported_contract(context, found_cls);
+        free(name);
+        return found_symbol;
+    }
 
     /* Process all the unread files */
     do {
@@ -3744,6 +3960,32 @@ Symbol *ensure_function_imported_exact(Context *context,
     return sym_imfn_impl(context, &lookup_node, 1);
 }
 
+/* Parse a global's complete type with the same declaration grammar used for
+ * callable metadata. Keep the private declaration with the import record; it
+ * supplies type shape only and is never added to the consumer's symbol table. */
+static ASTNode *imported_variable_type_node(Context *context, imported_func *var) {
+    ASTNode *procedure;
+
+    if (!var->type || !*var->type) return 0;
+    if (!var->context) {
+        char *source = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\n",
+                               var->namespace, var->name,
+                               var->type ? var->type : ".unknown");
+        if (!source) return 0;
+        var->context = parseRexx(context, context->location, var->file_name,
+                                 LEVELB, context->debug_mode, source,
+                                 strlen(source), 1);
+        if (!var->context) {
+            free(source);
+            return 0;
+        }
+    }
+    if (!var->context->ast || error_in_node(var->context->ast) ||
+        !var->context->ast->child) return 0;
+    procedure = ast_chld(var->context->ast->child, PROCEDURE, 0);
+    return procedure ? ast_type_child(procedure) : 0;
+}
+
 /* Set the type of a symbol from imported modules */
 void sym_imva(Context *context, Symbol *symbol) {
     imported_func *var;
@@ -3752,6 +3994,11 @@ void sym_imva(Context *context, Symbol *symbol) {
     ValueType tp;
     char error = 0;
     char* defining_file = 0;
+    ASTNode *type_node = 0;
+    size_t dims = 0;
+    int *dim_base = 0;
+    int *dim_elements = 0;
+    char *class_name = 0;
 
     if (context->debug_mode >= 2) printf("Importing Globals - Looking for Global %s\n", symbol->name);
 
@@ -3770,7 +4017,6 @@ void sym_imva(Context *context, Symbol *symbol) {
 
     if (found_var) {
         /* Compare found variable with the type defined in the master file being compiled */
-        tp = type_from_string(found_var->type);
         if (!found_var->is_variable) {
             mknd_err3(sym_trnd(symbol, 0)->node, "PROC_VAR_MISMATCH",
                       "name", symbol->name,
@@ -3778,16 +4024,29 @@ void sym_imva(Context *context, Symbol *symbol) {
                       "import_file", found_var->file_name);
             error = 1;
         }
-        else if (symbol->type != TP_UNKNOWN) {
-            if ((tp != TP_UNKNOWN) && (tp != symbol->type)) {
+        else {
+            type_node = imported_variable_type_node(context, found_var);
+            if (!type_node) {
+                mknd_err2(sym_trnd(symbol, 0)->node, "SYNTAX_ERROR_IN_IMPORT_DECL",
+                          "name", symbol->name, "import_file", found_var->file_name);
+                error = 1;
+            } else {
+                tp = node_to_type(context, type_node, &dims, &dim_base,
+                                  &dim_elements, &class_name);
+            }
+        }
+        if (!error && symbol->type != TP_UNKNOWN && tp != TP_UNKNOWN) {
+            char *local_type = sym_2tp(symbol);
+            if (!metadata_type_strings_equivalent(context, local_type, found_var->type)) {
                 mknd_err5(sym_trnd(symbol, 0)->node, "TYPE_MISMATCH",
                           "name", symbol->name,
-                          "expected_type", type_nm(symbol->type),
+                          "expected_type", local_type,
                           "defining_file", defining_file,
                           "actual_type", found_var->type,
                           "import_file", found_var->file_name);
                 error = 1;
             }
+            free(local_type);
         }
 
         /* Produce Errors for all import inconsistencies */
@@ -3801,7 +4060,8 @@ void sym_imva(Context *context, Symbol *symbol) {
                 error = 1;
             }
 
-            if (safe_strcmp(found_var->type, inconsistent_var->type)) {
+            if (!metadata_type_strings_equivalent(context, found_var->type,
+                                                   inconsistent_var->type)) {
                 mknd_err5(sym_trnd(symbol, 0)->node,
                           "TYPE_MISMATCH",
                           "name", found_var->name,
@@ -3813,11 +4073,34 @@ void sym_imva(Context *context, Symbol *symbol) {
             }
             inconsistent_var = inconsistent_var->duplicate;
         }
-        if (!error) {
+        if (!error && tp != TP_UNKNOWN) {
+            free(symbol->dim_base);
+            free(symbol->dim_elements);
+            free(symbol->value_class);
             symbol->type = tp;
+            symbol->value_dims = dims;
+            symbol->dim_base = dim_base;
+            symbol->dim_elements = dim_elements;
+            symbol->value_class = class_name;
+            dim_base = dim_elements = 0;
+            class_name = 0;
+            rxcp_set_symbol_reference_type_from_node(symbol, type_node);
             symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
+            /* The private type declaration may already have cached its type
+             * without loading the class into this consumer. Global objects,
+             * object arrays and references need the same on-demand class
+             * import as ordinary declarations before member/indexer lowering. */
+            if (symbol->value_class)
+                ensure_class_imported(context, symbol->value_class,
+                                      strlen(symbol->value_class));
+            if (symbol->reference_class)
+                ensure_class_imported(context, symbol->reference_class,
+                                      strlen(symbol->reference_class));
         }
     }
+    free(dim_base);
+    free(dim_elements);
+    free(class_name);
 }
 
 /* imported_func factory - returns null if the function is not in an applicable namespace or is a duplicate */
@@ -4142,6 +4425,7 @@ static importable_file* importable_file_f(char* name, file_type type, char *loca
     }
     else file->location = 0;
     file->imported = 0;
+    file->shadowed = 0;
     file->source_root = 0;
     file->source_default_level = UNKNOWN;
     file->mtime = read_importable_mtime(location, name);
@@ -4177,7 +4461,20 @@ static void free_directory_names(char **names, size_t count) {
     free(names);
 }
 
-static char **scan_directory_names(const char *directory, char *prefix, char *type, size_t *count) {
+/* Missing optional roots are empty; an incomplete native/desktop enumeration
+ * is a compilation error, including a deferred iterator close failure. */
+static void import_directory_error(Context *context, const char *directory, int error) {
+    if (!error) return;
+    if (!context->import_discovery_error) {
+        context->import_discovery_error = error;
+        fprintf(stderr, "IMPORT_DIRECTORY_READ_ERROR: %s: %s (%d)\n",
+                directory ? directory : ".", strerror(error), error);
+        if (context->ast) mknd_err1(context->ast, "IMPORT_DIRECTORY_READ_ERROR",
+                                  "directory", directory ? directory : ".");
+    }
+}
+
+static char **scan_directory_names(Context *context, const char *directory, char *prefix, char *type, size_t *count) {
     void *dir_ptr;
     char *name;
     char **names;
@@ -4188,7 +4485,9 @@ static char **scan_directory_names(const char *directory, char *prefix, char *ty
     *count = 0;
     names = 0;
     dir_ptr = 0;
+    errno = 0;
     name = dirfstfl(directory, prefix, type, &dir_ptr);
+    if (!name && !dir_ptr && (errno == ENOENT || errno == ENOTDIR)) errno = 0;
     while (name) {
         copy_size = strlen(name) + 1;
         copy = strdup(name);
@@ -4211,6 +4510,12 @@ static char **scan_directory_names(const char *directory, char *prefix, char *ty
         name = dirnxtfl(&dir_ptr);
     }
     dirclose(&dir_ptr);
+    import_directory_error(context, directory, errno);
+    if (context->import_discovery_error) {
+        free_directory_names(names, *count);
+        *count = 0;
+        return NULL;
+    }
 
     if (*count > 1) qsort(names, *count, sizeof(char *), directory_name_compare);
     return names;
@@ -4285,7 +4590,7 @@ static void discard_missing_directory_names(const char *directory, char **names,
 /* readdir() does not define a coherent result while another process mutates
  * the directory. Prefer two matching scans. Under continuous activity, merge
  * a bounded number of observations and discard entries that no longer exist. */
-static char **snapshot_directory_names(const char *directory, char *prefix, char *type,
+static char **snapshot_directory_names(Context *context, const char *directory, char *prefix, char *type,
                                        size_t *count, int debug_mode) {
     char **previous;
     char **current;
@@ -4295,11 +4600,18 @@ static char **snapshot_directory_names(const char *directory, char *prefix, char
     size_t observed_count;
     int attempt;
 
-    previous = scan_directory_names(directory, prefix, type, &previous_count);
+    previous = scan_directory_names(context, directory, prefix, type, &previous_count);
+    if (context->import_discovery_error) { *count = 0; return NULL; }
     observed = 0;
     observed_count = 0;
     for (attempt = 1; attempt < RXCP_DIRECTORY_SNAPSHOT_MAX_SCANS; attempt++) {
-        current = scan_directory_names(directory, prefix, type, &current_count);
+        current = scan_directory_names(context, directory, prefix, type, &current_count);
+        if (context->import_discovery_error) {
+            free_directory_names(previous, previous_count);
+            free_directory_names(observed, observed_count);
+            *count = 0;
+            return NULL;
+        }
         if (directory_names_equal(previous, previous_count, current, current_count)) {
             free_directory_names(observed, observed_count);
             free_directory_names(previous, previous_count);
@@ -4333,7 +4645,7 @@ static char **snapshot_directory_names(const char *directory, char *prefix, char
 }
 
 /* Get a list of files of a type in a directory (can be null), skipping skip_name (can be null) */
-static void list_files_in_dir(char *directory, file_type type, char* skip_name, char *skip_module,
+static void list_files_in_dir(Context *context, char *directory, file_type type, char* skip_name, char *skip_module,
                               importable_file ***list, size_t *number, int debug_mode, char source_root,
                               RxcpImportRootKind root_kind, size_t root_index) {
 
@@ -4363,7 +4675,7 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
             return;
     }
 
-    names = snapshot_directory_names(directory, file_prefix, type_name, &name_count, debug_mode);
+    names = snapshot_directory_names(context, directory, file_prefix, type_name, &name_count, debug_mode);
     for (i = 0; i < name_count; i++) {
         name = names[i];
         if ((!skip_name || strcmp(name, skip_name) != 0) &&
@@ -4381,7 +4693,7 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
     free_directory_names(names, name_count);
 }
 
-static void list_source_files_in_dir(char *directory, const char *extension, RexxLevel default_level,
+static void list_source_files_in_dir(Context *context, char *directory, const char *extension, RexxLevel default_level,
                                      char* skip_name, char *skip_module,
                                      importable_file ***list, size_t *number, int debug_mode, char source_root,
                                      RxcpImportRootKind root_kind, size_t root_index) {
@@ -4392,7 +4704,10 @@ static void list_source_files_in_dir(char *directory, const char *extension, Rex
 
     if (!extension || !extension[0]) return;
 
+    dir_ptr = NULL;
+    errno = 0;
     name = dirfstfl(directory, 0, (char*) extension, &dir_ptr);
+    if (!name && !dir_ptr && (errno == ENOENT || errno == ENOTDIR)) errno = 0;
     while (name) {
         if ((!skip_name || strcmp(name, skip_name) != 0) &&
             (!skip_module || !module_name_equals(name, skip_module))) {
@@ -4409,6 +4724,7 @@ static void list_source_files_in_dir(char *directory, const char *extension, Rex
         name = dirnxtfl(&dir_ptr);
     }
     dirclose(&dir_ptr);
+    import_directory_error(context, directory, errno);
 }
 
 static importable_file *find_stage_module(importable_file **list, int stage, const char *name) {
@@ -4454,7 +4770,7 @@ static void collect_root_files(Context *context, char *directory, file_type type
     root_list[0] = 0;
     root_count = 0;
 
-    list_files_in_dir(directory, type, skip_name, skip_module, &root_list, &root_count,
+    list_files_in_dir(context, directory, type, skip_name, skip_module, &root_list, &root_count,
                       debug_mode, source_root, root_kind, root_index);
     for (i = 0; i < root_count; i++) {
         add_unique_stage_file(context, list, number, root_list[i]);
@@ -4477,7 +4793,7 @@ static void collect_source_root_files(Context *context, char *directory, const R
     root_list[0] = 0;
     root_count = 0;
 
-    list_source_files_in_dir(directory, extension->extension, extension->default_level,
+    list_source_files_in_dir(context, directory, extension->extension, extension->default_level,
                              skip_name, skip_module, &root_list, &root_count, debug_mode, source_root,
                              root_kind, root_index);
     for (i = 0; i < root_count; i++) {
@@ -4499,7 +4815,7 @@ static void collect_binary_root_files(Context *context, char *directory, char *s
     root_list[0] = 0;
     root_count = 0;
 
-    list_files_in_dir(directory, RXBIN_FILE, 0, skip_module, &root_list, &root_count,
+    list_files_in_dir(context, directory, RXBIN_FILE, 0, skip_module, &root_list, &root_count,
                       debug_mode, 0, root_kind, root_index);
     if (auto_import_rxas) {
         importable_file **rxas_list;
@@ -4513,7 +4829,7 @@ static void collect_binary_root_files(Context *context, char *directory, char *s
         }
         rxas_list[0] = 0;
         rxas_count = 0;
-        list_files_in_dir(directory, RXAS_FILE, 0, skip_module, &rxas_list, &rxas_count,
+        list_files_in_dir(context, directory, RXAS_FILE, 0, skip_module, &rxas_list, &rxas_count,
                           debug_mode, 0, root_kind, root_index);
 
         for (i = 0; i < rxas_count; i++) {
@@ -4560,8 +4876,10 @@ importable_file **rxfl_lst(Context *context) {
     size_t source_extension_count;
     size_t e;
 
+    if (!context) { errno = EINVAL; return NULL; }
+    if (context->import_discovery_error) { errno = context->import_discovery_error; return NULL; }
     list = malloc(sizeof(importable_file *));
-    if (!list) return 0;
+    if (!list) RX_PANIC_OOM("malloc importable list", sizeof(importable_file *), 0);
     list[0] = 0;
     skip_module = context ? context->file_name : 0;
     source_extension_count = rxcp_source_extension_list(context ? context->initial_source_extension : 0,
@@ -4621,6 +4939,11 @@ importable_file **rxfl_lst(Context *context) {
         }
     }
 
+    if (context->import_discovery_error) {
+        rxfl_fre(list);
+        errno = context->import_discovery_error;
+        return NULL;
+    }
     if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files finished. Found %zu files.\n", number);
     return list;
 }

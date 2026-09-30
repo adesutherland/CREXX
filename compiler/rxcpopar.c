@@ -137,9 +137,13 @@ int rxcp_scan_source_header(const char *location, const char *file_name, RexxLev
     }
 
     buff_start = file2buf(context->file_pointer, &bytes);
-    fclose(context->file_pointer);
+    if (fclose(context->file_pointer) != 0) {
+        free(buff_start);
+        buff_start = 0;
+    }
     context->file_pointer = 0;
     if (!buff_start) {
+        fprintf(stderr, "Can't read input file header %s\n", file_name);
         fre_cntx(context);
         return -1;
     }

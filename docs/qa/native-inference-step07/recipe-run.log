@@ -1,0 +1,10 @@
+PASS model-cached-verification
+PASS model-fresh-bge-download
+PASS embeddings-native-build
+PASS embeddings-native-auto
+PASS generation-native-build
+PASS generation-native-auto
+PASS vm-compile
+PASS vm-assemble
+PASS vm-link
+PASS vm-auto

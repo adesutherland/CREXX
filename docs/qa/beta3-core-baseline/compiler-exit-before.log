@@ -1,0 +1,27 @@
+missing library status=2
+Error in main.crexx @ 3:21 - #EXTRANEOUS, "with"
+1 error(s) in source file
+parse status=0
+address status=0
+
+/*
+ * SOURCE                 : parse.crexx
+ */
+
+.globals=0
+
+main() .locals=1
+   .meta "parse.main"="b" ".void" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "parse.crexx" 2 1 13 "say \"before\""
+   .meta "parse.main.rc"="b" ".int" "0"
+   say "before"
+   .srcstep 2 2 17 "parse.crexx" 4 1 12 "say \"after\""
+   .meta "parse.main.parse"="b" ".string" "parse"
+   .meta "parse.main.word"="b" ".string" "word"
+   say "after"
+   .srcstep 3 3 1 "parse.crexx" 4 12 12 "say \"after\""
+   ret
+   .meta "parse.main.parse"
+   .meta "parse.main.rc"
+   .meta "parse.main.word"

@@ -1,0 +1,30 @@
+{
+  "result": "PASS",
+  "checks": [
+    {
+      "source": "tests/native-inference/direct_control.cpp",
+      "reconstructed": "v2",
+      "sha256": "d743da57993544781f99c804f4c142d70e81791aba15e092d42d83dafdec9cb4"
+    },
+    {
+      "source": "tests/native-inference/direct_control.cpp",
+      "reconstructed": "v1",
+      "sha256": "df8733133bd1ac5f80f9afa1eafa37f815720af4ecc2f02e0f9c36b2bbc0e76f"
+    },
+    {
+      "source": "tests/native-inference/CMakeLists.txt",
+      "reconstructed": "v2",
+      "sha256": "e7a289fe8a464ac27e4fbacf7368df619a294e1b0465ad813aba3a2ad5b9c19a"
+    },
+    {
+      "source": "tests/native-inference/direct_control.cpp",
+      "reconstructed": "whole-prefill",
+      "sha256": "deef42e03d8e4d9484b970613e5b6489440de8d61d15f19b5597464e26b5c386"
+    },
+    {
+      "source": "tests/native-inference/provider_acceptance.crexx",
+      "reconstructed": "v1",
+      "sha256": "f19784d03e8e9b1e7cff22a50200acdabc8a72f38ec220826b6ff1bca096563f"
+    }
+  ]
+}

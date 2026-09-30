@@ -1,0 +1,12 @@
+-- Install configuration: "Debug"
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/README.md
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/installation.md
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/models.md
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/reference.md
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/qualification.md
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/examples
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/examples/shared_generation.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/examples/shared_embeddings.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/examples/persistent_generation.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/examples/persistent_embeddings.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/share/crexx/llama/examples/README.md

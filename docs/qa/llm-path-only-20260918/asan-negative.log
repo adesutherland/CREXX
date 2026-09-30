@@ -1,0 +1,10 @@
+PASS: rejected hash with actionable diagnostic
+PASS: rejected malformed-hash with actionable diagnostic
+PASS: rejected missing-file with actionable diagnostic
+PASS: rejected preset with actionable diagnostic
+PASS: rejected template with actionable diagnostic
+PASS: rejected missing-template with actionable diagnostic
+PASS: rejected budget with actionable diagnostic
+PASS: rejected context with actionable diagnostic
+PASS: rejected pooling with actionable diagnostic
+PASS: rejected tokenizer with actionable diagnostic

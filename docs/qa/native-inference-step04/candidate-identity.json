@@ -1,0 +1,21 @@
+{
+  "baseline_head": "c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8",
+  "source_files": {
+    "lib/plugins/llama/bridge.h": "faedf2bfc0d12844930eaf4ce95fb44877a8f3f86205ccc63e1f3db11f279632",
+    "lib/plugins/llama/bridge.cpp": "88fd43c93c55a03442d46916741eb6e57fdff70cd84187763e7ee50920f10785",
+    "lib/plugins/llama/rxllama.c": "d7b78237467ca850b9fc764cc41c045b22bf8c3ec60c474dd14b2f00dbb26654",
+    "lib/plugins/llama/CMakeLists.txt": "794ebed5e67bf4118e986eb753a812722b8122834b081bc101cd6e7f239c6fd9",
+    "tests/native-inference/embedding_acceptance.crexx": "7d02ea82488c9c672033b3c2bab7379d3593cfe27c32af72895b8b093576143f",
+    "tests/native-inference/embedding_bridge.cpp": "1a065895ad5ceccf1d016c53d8789d3ffa9285ebe1523b7515ece3fbcfb2a68c",
+    "tests/native-inference/embedding_text_boundary.crexx": "1158b384bff558f2703a2fa5aa1d48ffd8a094e3a99ebde941f5f230d7c402f0",
+    "tests/native-inference/step04_toolchain.cmake": "848d315dfe69c90df97141ebfbd8abd8d953f1734c7cdd2b6ee36c700af4d3fa"
+  },
+  "debug_artifacts": {
+    "cmake-build-debug/bin/rxllama.rxplugin": "102e53eb419b74c82c4e156279a43719f031251dd22d34cf23f1f152039514f6",
+    "cmake-build-debug/bin/providers/libcrexx-llama.1.dylib": "5e4c7c1e32b001aeba243952583909b4ded7c6f20d0aed3230435529d1b915d7",
+    "cmake-build-debug/lib/plugins/llama/tests/rxllama_embedding_bridge": "504a3d98cb5a89a86034a90cc379a3ae6dfa4051806edd65a3563155d353c577"
+  },
+  "qualified": "initial ordinary CPU/Metal four-tool and fixed direct numeric controls; S4-D01 remains a reproduced failure",
+  "first_release": "not started; text boundary correction awaits approval",
+  "sanitizer_gate": "STEP-06 native-inference release QA, Codex under Adrian direction"
+}

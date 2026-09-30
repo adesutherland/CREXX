@@ -78,6 +78,12 @@ window	= .int[0 to 10]
 grow	= .int[-2 to *]
 ```
 
+These are declarations, not calls that produce fresh arrays on each execution.
+An exposed array keeps its existing elements across calls to a procedure that
+declares its type. Use `call arraydrop words` (from `rxfnsb`) to clear an
+existing growable array. This differs from an object factory expression such
+as `.stem()`, which constructs an object when called.
+
 An array value carries its element type and dimensions. Procedure signatures can
 accept arrays in the same way:
 

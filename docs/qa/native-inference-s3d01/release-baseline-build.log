@@ -1,0 +1,149 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.gc2cf28a4f5c6.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260903T090430Z
+-- CREXX Build Commit: c2cf28a4f5c6
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX/../DSL-Syntax-Highlighter
+-- C compiler flags: 
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always 
+-- Linker flags for executables: 
+-- Linker flags for shared libs: 
+-- Release C compiler flags: -O3 -DNDEBUG
+-- Release C++ compiler flags: -O3 -DNDEBUG
+-- Release linker flags for executables: 
+-- Release linker flags for shared libs: 
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (1.0s)
+-- Generating done (0.7s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-release
+[0/4] Re-checking globbed directories...
+[1/124] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[2/124] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[3/124] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[4/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprogram.c.o
+[5/124] Linking C static library bin/librxvmplugin.a
+[6/124] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[7/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_process.c.o
+[8/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel.c.o
+[9/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprocessworker.c.o
+[10/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmexecutor.c.o
+[11/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmbyteendpoint.c.o
+[12/124] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[13/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmactive.c.o
+[14/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_byte.c.o
+[15/124] Linking C static library bin/librxbin.a
+[16/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_child.c.o
+[17/124] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[18/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxastoke.c.o
+[19/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[20/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxaseror.c.o
+[21/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_batch.c.o
+[22/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_pass.c.o
+[23/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxasscan.c.o
+[24/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[25/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o
+[26/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_rewrite.c.o
+[27/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_graph.c.o
+[28/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_analysis.c.o
+[29/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_signal.c.o
+[30/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o
+[31/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o
+[32/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_use.c.o
+[33/124] Building C object assembler/CMakeFiles/rxaslib.dir/__/binutils/rxopmeta.c.o
+[34/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o
+[35/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o
+[36/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o
+[37/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[38/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpacallmethod.c.o
+[39/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[40/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[41/124] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvmlib.c.o
+[42/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[43/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[44/124] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o
+[45/124] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[46/124] Linking C static library bin/librxpa.a
+[47/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[48/124] Linking C static library bin/librxaslib.a
+[49/124] Linking C static library bin/librxpashim.a
+[50/124] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[51/124] Building C object tests/rxpa/CMakeFiles/_rxpa_bench_reentrant.dir/rxpa_call_kernel.c.o
+[52/124] Building C object tests/rxpa/CMakeFiles/_rxpa_bench_legacy.dir/rxpa_call_kernel.c.o
+[53/124] Building C object assembler/CMakeFiles/rxas.dir/rxasmain.c.o
+[54/124] Building C object tests/rxpa/CMakeFiles/_rxpa_bench_session.dir/rxpa_call_kernel.c.o
+[55/124] Linking C shared module tests/rxpa/rx_rxpa_bench_legacy.rxplugin
+[56/124] Linking C shared module tests/rxpa/rx_rxpa_bench_reentrant.rxplugin
+[57/124] Linking C executable bin/rxas
+[58/124] Linking C shared module tests/rxpa/rx_rxpa_bench_session.rxplugin
+[59/124] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvml.c.o
+[60/124] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[61/124] Linking C static library bin/librxbvml.a
+[62/124] Linking C executable bin/rxbvm
+[63/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_walk.c.o
+[64/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_diag_fallback.c.o
+[65/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_print.c.o
+[66/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpmain.c.o
+[67/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_util.c.o
+[68/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dsl.c.o
+[69/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_ext.c.o
+[70/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_source_tree.c.o
+[71/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopgr.c.o
+[72/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_core.c.o
+[73/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpopar.c.o
+[74/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_srcmap.c.o
+[75/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbpar.c.o
+[76/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_highlight_controller.c.o
+[77/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcposcn.c.o
+[78/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcgmr.c.o
+[79/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcpar.c.o
+[80/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcsym.c.o
+[81/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpbgmr.c.o
+[82/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcval.c.o
+[83/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpcdiag.c.o
+[84/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_trans.c.o
+[85/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_rewrite.c.o
+[86/124] Building C object compiler/CMakeFiles/rxclib.dir/rexcscan.c.o
+[87/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_plugin.c.o
+[88/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_sym.c.o
+[89/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_fixup.c.o
+[90/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_check.c.o
+[91/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_ast_val.c.o
+[92/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_type.c.o
+[93/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap.c.o
+[94/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_val_orch.c.o
+[95/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_remap_build.c.o
+[96/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpsymb.c.o
+[97/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_task_lower.c.o
+[98/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline_rules.c.o
+[99/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpemit.c.o
+[100/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_levelc_lower.c.o
+[101/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_core.c.o
+[102/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_super.c.o
+[103/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_reg.c.o
+[104/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_flow.c.o
+[105/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_expr.c.o
+[106/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_proc.c.o
+[107/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_emit_meta.c.o
+[108/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_dispatch.c.o
+[109/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_partial_call.c.o
+[110/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_opt.c.o
+[111/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_import_report.c.o
+[112/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_flow.c.o
+[113/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_project_dependencies.c.o
+[114/124] Creating rxvm symlink to rxbvm
+[115/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_instr.c.o
+[116/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_inline.c.o
+[117/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcp_exit.c.o
+[118/124] Building C object compiler/CMakeFiles/rxclib.dir/rxcpfunc.c.o
+[119/124] Building C object compiler/CMakeFiles/rxclib.dir/rexbscan.c.o
+[120/124] Linking C static library bin/librxclib.a
+[121/124] Linking C executable bin/rxc

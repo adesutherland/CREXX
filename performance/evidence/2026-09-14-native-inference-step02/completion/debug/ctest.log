@@ -1,0 +1,30 @@
+Command: ctest --test-dir cmake-build-llama-debug --output-on-failure -R \^native_inference_ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-llama-debug
+      Start  1: native_inference_control_usage
+ 1/11 Test  #1: native_inference_control_usage ........   Passed    0.36 sec
+      Start  2: native_inference_embedding_tripwire
+ 2/11 Test  #2: native_inference_embedding_tripwire ...   Passed    0.02 sec
+      Start  3: native_inference_bge_cpu
+ 3/11 Test  #3: native_inference_bge_cpu ..............   Passed   21.96 sec
+      Start  4: native_inference_smol_cpu
+ 4/11 Test  #4: native_inference_smol_cpu .............   Passed   33.24 sec
+      Start  5: native_inference_co_resident_cpu
+ 5/11 Test  #5: native_inference_co_resident_cpu ......   Passed   24.03 sec
+      Start  6: native_inference_bge_metal
+ 6/11 Test  #6: native_inference_bge_metal ............   Passed    1.56 sec
+      Start  7: native_inference_smol_metal
+ 7/11 Test  #7: native_inference_smol_metal ...........   Passed   22.34 sec
+      Start  8: native_inference_co_resident_metal
+ 8/11 Test  #8: native_inference_co_resident_metal ....   Passed    3.27 sec
+      Start  9: native_inference_scratch
+ 9/11 Test  #9: native_inference_scratch ..............   Passed    0.78 sec
+      Start 10: native_inference_template
+10/11 Test #10: native_inference_template .............   Passed    0.24 sec
+      Start 11: native_inference_generated_scratch
+11/11 Test #11: native_inference_generated_scratch ....   Passed    1.05 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Total Test time (real) = 108.86 sec

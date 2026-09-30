@@ -81,3 +81,5 @@ foreach(_cri08_cpp_target IN ITEMS _cri08_const_cpp _cri08_const_cpp_static)
 endforeach()
 add_custom_target(_cri08_const_consumers
         DEPENDS _cri08_const_cpp _cri08_const_cpp_static)
+
+include(sdk_incremental_link.cmake)

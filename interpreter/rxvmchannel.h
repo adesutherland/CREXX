@@ -88,6 +88,9 @@ typedef struct rxvm_channel_provider_operations {
             const void *reason,
             size_t reason_length);
     rxvm_channel_status (*close)(void *channel_state, int64_t mode);
+    /* On success all physical request users have detached and storage is
+     * destroyed. On failure request_state remains owned and retryable. May
+     * run after observation while the channel is still open. */
     rxvm_channel_status (*request_destroy)(
             void *channel_state,
             void *request_state);
@@ -157,6 +160,14 @@ rxvm_channel_status rxvm_channel_close(
         struct rxvm_context *context,
         int64_t channel,
         int64_t mode);
+
+/* Release only an observed terminal request. Pending/unobserved requests
+ * return WOULD_BLOCK. A successful release invalidates every ticket copy;
+ * independently materialized completion binaries remain caller-owned. */
+rxvm_channel_status rxvm_channel_release(
+        struct rxvm_context *context,
+        int64_t channel,
+        int64_t ticket);
 
 void rxvm_channel_binary_free(rxvm_channel_binary *binary);
 

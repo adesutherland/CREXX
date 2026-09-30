@@ -889,8 +889,15 @@ PROCEDURE(compact_database) {
     renameDataRc = -1;
     renameIndexRc = -1;
     if (tempDataCloseRc == 0 && tempIndexCloseRc == 0) {
+#ifdef _WIN32
+        // MSVC rename() refuses existing destinations. Match the filesystem
+        // provider's replace-file operation without deleting originals first.
+        renameDataRc = MoveFileExA(tempData, handle->dataPath, MOVEFILE_REPLACE_EXISTING) ? 0 : -1;
+        renameIndexRc = MoveFileExA(tempIndex, handle->indexPath, MOVEFILE_REPLACE_EXISTING) ? 0 : -1;
+#else
         renameDataRc = rename(tempData, handle->dataPath);
         renameIndexRc = rename(tempIndex, handle->indexPath);
+#endif
     }
     if (tempDataCloseRc != 0 || tempIndexCloseRc != 0 ||
         renameDataRc != 0 || renameIndexRc != 0) {
@@ -1358,8 +1365,10 @@ PROCEDURE(closefile) {
     free(handle->transactionIndexSnapshot);
     hash_index_discard(handle);
 
-    fclose(handle->dataFile);
-    fclose(handle->indexFile);
+    // A failed compaction can leave the streams closed while the handle still
+    // owns its cache and paths. Release those resources without fclose(NULL).
+    if (handle->dataFile && fclose(handle->dataFile) != 0) close_rc = KA_ERROR_IO;
+    if (handle->indexFile && fclose(handle->indexFile) != 0) close_rc = KA_ERROR_IO;
     free(handle->dataPath);
     free(handle->indexPath);
     free(handle);

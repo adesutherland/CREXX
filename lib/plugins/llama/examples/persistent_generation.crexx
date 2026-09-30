@@ -1,0 +1,110 @@
+/**
+ * Prepare one model/session, process twenty bounded batches, then shut down.
+ * Run with: cpu|auto|required-gpu, local SmolLM2 GGUF path, pinned SHA256.
+ * Model files are provisioned separately; this program needs no model server.
+ * @docType example
+ */
+options levelg floats_binary
+namespace llama_generation_example
+import rxfnsb
+import _rxsysb
+import rxfnsg
+import llama
+
+/** @param okay checked condition @param message operation context */
+require: procedure = .void
+  arg okay = .boolean, message = .string
+  if okay then return
+  call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
+  return
+
+/** @param model asynchronously opened model; waits at most ten minutes */
+ready_model: procedure = .void
+  arg model = .llama..model
+  started = time("us")
+  do forever
+    state = model.state()
+    call require model.status() = 0, model.diagnostic().message()
+    if state = "ready" then return
+    call require state = "loading", model.info_text("error")
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require duration < 600000000, "model load deadline"
+  end
+
+/** @param args hardware mode, GGUF path, SHA256 @return zero on success */
+main: procedure = .int
+  arg args = .string[]
+  if args[0] <> 3 then do
+    say "Usage: persistent_generation cpu|auto|required-gpu MODEL SHA256"
+    return 2
+  end
+  config = .llama..configuration()
+  call require config.status() = 0, config.diagnostic().message()
+  call require config.set_text("hardware_mode", args[1]) = 0, config.diagnostic().message()
+  runtime = .llama..runtime(config)
+  call require runtime.status() = 0, runtime.diagnostic().message()
+  model = runtime.model(args[2], args[3], "smollm2-360m-instruct", config)
+  call require model.status() = 0, model.diagnostic().message()
+  call ready_model model
+  say "Device:" model.info_text("device") "backend:" model.info_text("backend")
+  session = model.generation_session(config)
+  call require session.status() = 0, session.diagnostic().message()
+  state = ""
+  started = time("us")
+  do forever
+    state = session.prepare(128)
+    call require session.status() = 0, session.diagnostic().message()
+    if state = "ready" then leave
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require state = "preparing" & duration < 600000000, "preparation deadline"
+  end
+  call require session.status() = 0 & state = "ready", session.diagnostic().message()
+  prompts = .string[]
+  prompts[1] = "Name one animal."
+  prompts[2] = "What is two plus two?"
+  prompts[3] = "Say hello in French."
+  prompts[4] = "Name one planet."
+  replies = .string[]
+  row = .int
+  do batch = 1 to 20
+    request = session.request(config)
+    call require request.status() = 0, request.diagnostic().message()
+    call require request.add_all(prompts, "") = 0, request.diagnostic().message()
+    call require request.submit() = 0, request.diagnostic().message()
+    do row = 1 to 4
+      replies[row] = ""
+    end
+    started = time("us")
+    do forever
+      state = request.process(128)
+      call require request.status() = 0, request.diagnostic().message()
+      do row = 1 to 4
+        chunk = request.read(row)
+        call require chunk.status() = 0, chunk.diagnostic().message()
+        /* Consume new complete UTF-8 here. A chunk owns its text; a token may
+         * extend a scalar without yet producing a complete text fragment. */
+        replies[row] = replies[row] || chunk.text()
+        if state = "complete" then call require chunk.finish() = "eos" | chunk.finish() = "output_limit", "finished row"
+      end
+      if state = "complete" then leave
+      duration = time("us") - started
+      if duration < 0 then duration = duration + 86400000000
+      call require state = "running" & duration < 600000000, "request deadline"
+      /* An application may handle other work or cancel between process calls. */
+    end
+    call require request.close() = 0, request.diagnostic().message()
+    do row = 1 to 4
+      call require replies[row] <> "", "owned complete reply"
+      if batch = 1 then say "Row" row || ":" replies[row]
+    end
+  end
+  call require model.info_int("load_count") = 1, "persistent model ownership"
+  call require session.info_int("completed_requests") = 20, "twenty batches"
+  call require session.close() = 0, session.diagnostic().message()
+  call require model.close() = 0, model.diagnostic().message()
+  call require runtime.close() = 0, runtime.diagnostic().message()
+  call require config.close() = 0, config.diagnostic().message()
+  say "PASS: persistent typed generation example, one load and twenty batches"
+  return 0

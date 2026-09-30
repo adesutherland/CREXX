@@ -1,0 +1,17 @@
+{
+  ".github/workflows/build.yml": "13d728ab04a1270e473ada0f4c1e5d59f59a49beefad31d16880b5b5e5957beb",
+  ".github/workflows/deep-build.yml": "6c14690f6fadd7c20ffdee3b3e5af7903c788ad9e9ad172573c99d4b6ef360c6",
+  ".github/workflows/sanitizers.yml": "04de28d9b62935d61c76654f6fa513e3816b200a8a3d9ef2c80b5e9ea88bc12f",
+  ".github/llama/release-matrix.json": "d0218194ba61faf74740b7f50d2f07faf6de1fd7e600bcd86a7948d126a9b67d",
+  ".github/llama/cuda-12.9.1.json": "1a1ef2946600ea617ad5a013acdf739be48cc2cbb3fc74b30366262bfad1504a",
+  "lib/plugins/llama/CMakeLists.txt": "81ea6676e75e2ed6e2cea334759dbd0074da99b8b7e75244ded2eae8e7bddc5d",
+  "rxpa/RXPluginFunction.cmake": "029e8ee47718d14a55a362f0b3e345b0e2fa6d90b82dbd00aa20237057f29754",
+  "rxpa/WriteProviderPackage.cmake": "4cd3c494dd8e58330c720015c49edaf3a65025ed9af0efd036ad14218d0c0906",
+  "tests/native-inference/ReleaseSmoke.cmake": "42234f863e05c5b7a32b84187a37ad0e292902ffec45c83f0ba3d8d81fd4209a",
+  "tests/native-inference/release_smoke.py": "e40638373a8057cebf6e96ac0f47b7e5c63a1082d130057d36b47a71005dee1a",
+  "tests/native-inference/release_engine_smoke.cpp": "5219d3047f9e39f6e0a12db976a17758c53909926d684c46b11aa76cda2ad017",
+  "tests/native-inference/release_provider_smoke.crexx": "234df34010c5d14f89ac352117c22bc903b5efc33a0c5c0197a782afd0523557",
+  "tests/native-inference/fixtures/llama-dense.gguf": "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de",
+  "compiler/tests/CMakeLists.txt": "a5975bc5ce832d141deaf0dd795c5369f432fa6c3b88429560cf8849630fd034",
+  "compiler/tests/run_inline_receiver_signal_cleanup.cmake": "6dcab917b6b3dc6dd042e7c7f12a04f19bdd0d13c50c4faf13aa014d7d5b5871"
+}

@@ -1,0 +1,16 @@
+argv=[PosixPath('/private/tmp/ni-s5/install/bin/rxtvm'), '/private/tmp/ni-s5/installed-generation/opt-generation_overhead-dynamic-linked', '-a', 'cpu', PosixPath('/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf'), '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201', '4', '1']
+cwd=/private/tmp/ni-s5/installed-generation
+rc=0
+PREPARE_US=6503922
+FIRST_US=5406974
+WARM_US=4470390 us
+TOKENS=24
+TEXT1=4F6E6520616E696D616C2069732061206361742E
+FINISH1=eos
+TEXT2=4F6E6520616E696D616C2069732061206361742E
+FINISH2=eos
+TEXT3=4F6E6520616E696D616C2069732061206361742E
+FINISH3=eos
+TEXT4=4F6E6520616E696D616C2069732061206361742E
+FINISH4=eos
+PASS: NI-S5 fixed generation work 4 1 load_count=1

@@ -26,6 +26,7 @@ options levelb comments_dash
 namespace system expose os
 import rxfs
 import rxplatform
+import rxfnsb
 
 /**
  * Operating-system services backed by the narrow rxfs and rxplatform
@@ -64,7 +65,17 @@ os: class
      */
   loadpath: method = .string
     return rxfs..loadpath()
-    
+
+    /**
+     * Tests whether a path names a regular file.
+     *
+     * @param path Path to inspect.
+     * @return .int 1 when the path is a regular file, otherwise 0.
+     */
+  isfile: method = .int
+    arg path=.string
+    return rxfs..isfile(path)
+
     /**
      * Returns the operating system name.
      *
@@ -110,8 +121,87 @@ os: class
      * @return .int Status code from the native implementation.
      */
   listDir: method = .int
-    arg file = .string, entries = .string[]
+    arg file = .string, expose entries = .string[]
     return rxfs..listdir(file,entries)
+
+    /**
+     * Lists the files in a directory.
+     *
+     * @param file Directory path.
+     * @param entries Output array receiving directory entries.
+     * @return contents of the directory.
+     */
+  dirEntries: method = .string[]
+    arg path = .string
+    entries = .string[]
+    call rxfs..listdir(path, entries)
+  return entries
+
+
+  /**
+   * Parses a filesystem path into its component parts.
+   *
+   * The path is interpreted lexically; the filesystem is not accessed and
+   * the supplied path does not need to exist. Unless the path ends with a
+   * directory separator, the final path component is treated as a filename.
+   *
+   * The returned stem contains:
+   *   _path       Directory portion of the path.
+   *   _filename   Filename including its extension.
+   *   _file       Filename without its extension.
+   *   _extension  Filename extension without the leading period.
+   *
+   * A leading period in a filename does not by itself constitute an
+   * extension. For example, ".profile" has no extension.
+   *
+   * @param source Path string to parse.
+   * @return .stem Stem containing the parsed path components.
+   */
+  pathInfo: method = .stem
+    arg source = .string
+    info = .stem()
+    info._path = ''
+    info._filename = ''
+    info._file = ''
+    info._extension = ''
+
+    /* Accept both filesystem separator styles. */
+    source = changestr('\', source, '/')
+
+    /* A trailing separator denotes a path without a filename. */
+    if right(source, 1) = '/' then do
+      info._path = strip(source, 'T', '/')
+      info._filename = ''
+      info._file = ''
+      info._extension = ''
+      return info
+    end
+
+    /* Separate the final component from its path. */
+    separator = lastpos('/', source)
+
+    if separator > 0 then do
+      info._path = left(source, separator - 1)
+      info._filename = substr(source, separator + 1)
+    end
+    else do
+      info._path = ''
+      info._filename = source
+    end
+
+    /* Split the filename at its final period. */
+    extension = lastpos('.', info._filename)
+
+    if extension > 1 then do
+      info._file = left(info._filename, extension - 1)
+      info._extension = substr(info._filename, extension + 1)
+    end
+    else do
+      info._file = info._filename
+      info._extension = ''
+    end
+
+  return info
 
     /**
      * Returns the contents of an environment variable.
@@ -125,6 +215,57 @@ os: class
     value = ""
     assembler getenv value,env_name
     return value
+
+    /**
+     * Returns the embedded name/path of the first module loaded by the VM.
+     *
+     * This is normally the main RXBIN module. The returned value is the
+     * module name recorded in the RXBIN and is not necessarily the path used
+     * to locate the file at runtime.
+     *
+     * @param none
+     * @return .string Embedded name/path of the first loaded module.
+     */
+  callermodule: method = .string
+    modules = .string[]
+    assembler metaloadedmodules modules
+  return modules[1]
+
+    /**
+     * Returns the current working directory of the process.
+     *
+     * The returned path represents the directory from which the current
+     * CREXX process is operating. It is independent of the location of the
+     * currently executing RXBIN module.
+     *
+     * @param none
+     * @return .string Current working directory.
+     */
+  cwd: method = .string
+    return rxfs..cwd()
+
+    /**
+     * Changes the current working directory of the process.
+     *
+     * The specified path becomes the working directory used for subsequent
+     * relative file and directory operations.
+     *
+     * @param path New working directory.
+     * @return .int 0 on success, otherwise a negative error code.
+     */
+  chdir: method = .int
+    arg path = .string
+    return rxfs..chdir(path)
+
+    /**
+     * Tests whether a path names a directory.
+     *
+     * @param path Path to inspect.
+     * @return .int 1 when the path is a directory, otherwise 0.
+     */
+  isdir: method = .int
+    arg path = .string
+    return rxfs..isdir(path)
 
     /**
      * Displays an informational message to the user.
@@ -189,4 +330,3 @@ os: class
   file: method = .string
     arg message = .string, save = 0, initial = ""
     return rxplatform..file(message, save, initial)
-

@@ -1,0 +1,20 @@
+{
+  "base_commit": "d612e66c2be81272b96eef27162d7c8bcd369d37",
+  "retained_product": "f10e70ee5f12ce49cc5088abc867748522d1d19c",
+  "source_run": 35076278681,
+  "scope": "Mac expanded native package lifecycle and installed consumer; unsigned, no system installation",
+  "core_preserved": true,
+  "package_sha256": "b29829baaa23ec807d76e16bcbf3219bb8e49565384507f15c23152bfd9000a6",
+  "source_files": {
+    "packaging/llama/postinstall": "63b916c2ca03f6f9441315649c399080733304868f0de0a214aad6236d082639",
+    "packaging/llama/manage.ps1": "9f29ef5018da0d2a6c37afe02dac184c20c48bc11cd982d34e7773e82e08a1a3",
+    "packaging/llama/manage.sh": "18e9d90c51dfb9e6252b9acd600dcf56673a891d693505ade89b8a3968b6ccf6",
+    "packaging/llama/README.md": "3b446a462e8f3b1b5b523eaa64ffd6915aff4f90ab8b5539e807999966a8c004",
+    "packaging/llama/preinstall": "ec7f9a2b8b8351723330b936f97e083097534eacb69018c0c952e5ffcd832376",
+    "scripts/package-llama-installer.py": "59694f95f1b567e759dc9e5ba5f82dea8088ac5d916ae65f421c976a3d54e8c8",
+    "scripts/test-llama-installed.py": "a8df33a4ed69817a1018f9fc8ee69f78caf9484f802c3913a3f262050dcb0433",
+    "scripts/tests/test_llama_installer.py": "c7568e1f1a86c89fcf8f2c92ed6a5bf9329d4b7a40937e7f42fffc1131aed2bb",
+    ".github/workflows/llama-installer-qa.yml": "549c48dce9e05f8a22450b869833d23821cf3c10ecbdff5f1caae6b10fc9302b",
+    ".github/workflows/build.yml": "e98ddcb8afb89304e8461d05a27f89317c7e308d340323ec80f640b18dc39af0"
+  }
+}

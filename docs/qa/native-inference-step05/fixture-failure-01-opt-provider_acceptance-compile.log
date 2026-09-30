@@ -1,0 +1,4 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin', '-o', '/private/tmp/ni-s5/public-closeout-debug/opt-provider_acceptance', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/provider_acceptance.crexx']
+rc=0
+Warning in provider_acceptance.crexx @ 120:48 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 103, column 5. Declare this binding explicitly if intentional., "state"
+1 warning(s) in source file

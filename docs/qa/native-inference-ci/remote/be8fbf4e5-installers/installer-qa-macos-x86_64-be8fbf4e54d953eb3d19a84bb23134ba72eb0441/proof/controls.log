@@ -1,0 +1,18 @@
+test_altered_core_rejected_before_copy (test_llama_installer.InstallerTests.test_altered_core_rejected_before_copy) ... ok
+test_changed_installed_plugin_not_removed (test_llama_installer.InstallerTests.test_changed_installed_plugin_not_removed) ... ok
+test_changed_payload_rejected (test_llama_installer.InstallerTests.test_changed_payload_rejected) ... ok
+test_core_overlap_rejected_at_packaging (test_llama_installer.InstallerTests.test_core_overlap_rejected_at_packaging) ... ok
+test_destination_symlink_rejected (test_llama_installer.InstallerTests.test_destination_symlink_rejected) ... ok
+test_discovery_and_ambiguous_locations (test_llama_installer.InstallerTests.test_discovery_and_ambiguous_locations) ... ok
+test_install_reinstall_remove_preserves_core_and_models (test_llama_installer.InstallerTests.test_install_reinstall_remove_preserves_core_and_models) ... ok
+test_mismatched_identity_rejected_at_packaging (test_llama_installer.InstallerTests.test_mismatched_identity_rejected_at_packaging) ... ok
+test_missing_core_rejected (test_llama_installer.InstallerTests.test_missing_core_rejected) ... ok
+test_overlapping_installer_operations_rejected (test_llama_installer.InstallerTests.test_overlapping_installer_operations_rejected) ... ok
+test_partial_copy_failure_restores_previous_plugin (test_llama_installer.InstallerTests.test_partial_copy_failure_restores_previous_plugin) ... ok
+test_signing_mode_cannot_be_mixed_with_unsigned_qa (test_llama_installer.InstallerTests.test_signing_mode_cannot_be_mixed_with_unsigned_qa) ... ok
+test_unowned_file_preserved (test_llama_installer.InstallerTests.test_unowned_file_preserved) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 2.258s
+
+OK

@@ -1,0 +1,43 @@
+{
+  "qualified_code_head": "e99136a1d5725d0c44128f64f505e1b46c64a51f",
+  "issues": [
+    {
+      "closedAt": "2026-09-18T18:58:05Z",
+      "number": 699,
+      "state": "CLOSED",
+      "url": "https://github.com/adesutherland/CREXX/issues/699"
+    },
+    {
+      "closedAt": "2026-09-18T19:48:55Z",
+      "number": 700,
+      "state": "CLOSED",
+      "url": "https://github.com/adesutherland/CREXX/issues/700"
+    },
+    {
+      "closedAt": "2026-09-18T19:48:57Z",
+      "number": 702,
+      "state": "CLOSED",
+      "url": "https://github.com/adesutherland/CREXX/issues/702"
+    }
+  ],
+  "runs": [
+    {
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122",
+      "headSha": "e99136a1d5725d0c44128f64f505e1b46c64a51f",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383124920",
+      "headSha": "e99136a1d5725d0c44128f64f505e1b46c64a51f",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "artifact_sha256": {
+    "hosted-build.json": "6cc1bf7719eba2dc9ecc94b19caccb983066964cd155aaf7fc3a910a008696f1",
+    "hosted-codeql.json": "063cff9ed7a673113dea645f59130866ae77de901a09263b176119c06bb06b0c",
+    "hosted-parity-job.json": "87b24c66b3cd6a068862a222eaaa62fce7a6d326561e58b8fe6ee632f03c08db",
+    "hosted-parity.log.gz": "1cef57f5cc353aa5eef8919198f799ce3b30c91abd2f38a96b44d3f89545b630"
+  }
+}

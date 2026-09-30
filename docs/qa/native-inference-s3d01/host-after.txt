@@ -1,0 +1,7 @@
+Mon Sep 14 15:00:28 UTC 2026
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+16:00  up 16 days, 13:55, 2 users, load averages: 3.09 3.20 3.65

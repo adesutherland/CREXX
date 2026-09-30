@@ -1,0 +1,1 @@
+argv=['D:/a/_temp/core-package/extracted/CREXX-windows-mingw/bin/rxc.exe', '--no-exe-import', '-n', '-i', 'D:/a/_temp/core-package/extracted/CREXX-windows-mingw/bin', '-o', 'D:/a/_temp/msys64/tmp/crexx-core-consumer-dy9xi_o3/noopt', 'D:/a/_temp/msys64/tmp/crexx-core-consumer-dy9xi_o3/hello.crexx']

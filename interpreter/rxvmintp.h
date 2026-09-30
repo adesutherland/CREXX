@@ -40,7 +40,9 @@
 #include "crexx_version.h"
 #include <assert.h>
 #include <signal.h>
+#ifndef CREXX_VM_SINGLE_THREADED
 #include <stdatomic.h>
+#endif
 #include <stdint.h>
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
@@ -568,6 +570,8 @@ typedef struct rxvm_active_state {
      * correlated worker mailbox through this worker-owned callback. */
     void *external_mailbox_owner;
     sig_atomic_t (*external_mailbox_claim)(void *owner);
+    /* Optional synchronous callback outcome, scoped by run_with_signal(). */
+    int *callback_signal;
 } rxvm_active_state;
 
 /* Runtime context */
@@ -641,6 +645,9 @@ rxsignal rxvm_getsignalcode(char* signalText);
 int initialz();
 int finalize();
 int run(rxvm_context *context, int argc, char *argv[]);
+/* Internal typed external-call boundary: zero means successful RETURN;
+ * genuine signals/startup/EXIT failures remain distinct from value fields. */
+int rxvm_run_external_status(rxvm_context *context, int argc, char *argv[]);
 
 /* Checked thread-local locator for the worker-owned active VM context. */
 rxvm_context *rxvm_active_context_current(void);
@@ -711,6 +718,8 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
 void rxvm_callfunc_direct(void* function, int args, value** argv,
                           value* ret, value* signal);
+void rxvm_callfunc_legacy_direct(void* function, int args, value** argv,
+                                 value* ret, value* signal);
 void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal);
 void rxvm_callfunc_session(void* binding, int args, value** argv,
                            value* ret, value* signal);
@@ -731,6 +740,7 @@ struct rxvm_byte_endpoint;
 /* Resolve an internal native-payload redirect endpoint value. */
 REDIRECT *rxspawn_redirect_from_value(value *redirect_reg);
 
+#ifndef CREXX_VM_SINGLE_THREADED
 /* Private reusable child-I/O adapters. Their background owners retain only a
  * C byte endpoint plus copied bytes; they never retain a live Rexx value. */
 REDIRECT *rxspawn_redirect_from_byte_endpoint(
@@ -744,12 +754,14 @@ int rxspawn_redirect_write_close(REDIRECT *redirect,
                                  const char *data,
                                  size_t length);
 
+#endif
+
 /* Get Environment Value
  * Sets value (null terminated) (and a handle) from env variable name length name_length (not null terminated)
  * Value can be set to point to a zero length string (if the variable is not set)
  *
- * Returns 1 if value should bee free()d
- * Otherwise returns 0
+ * Returns 1 if value should be free()d, 0 for borrowed/absent values, or
+ * -1/errno on a native environment failure.
  */
 int getEnvVal(char **value, char *name, size_t name_length);
 
@@ -776,6 +788,7 @@ int shellspawn(const char *command,
                int *rc,
                char **errorText);
 
+#ifndef CREXX_VM_SINGLE_THREADED
 int shellspawn_snapshot(const char *command,
                         REDIRECT *pIn,
                         REDIRECT *pOut,
@@ -822,6 +835,8 @@ int shellspawn_argv_snapshot(const char *const *argv,
                              int *termination_reason,
                              int *rc,
                              char **errorText);
+
+#endif
 
 // SPAWN Error codes
 #define SHELLSPAWN_OK         0

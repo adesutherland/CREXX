@@ -39,7 +39,9 @@ typedef struct rxpa_pool_node {
     struct rxpa_pool_node* next;
 } rxpa_pool_node;
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXPA_THREAD_LOCAL
+#elif defined(_MSC_VER)
 #define RXPA_THREAD_LOCAL __declspec(thread)
 #else
 #define RXPA_THREAD_LOCAL __thread
@@ -132,8 +134,12 @@ static rxpa_utf8_validation_result rxpa_validate_value_tree(
         }
         rxvm_value_set_string_chars_known(v, chars);
         string_cache_reset(v);
-        if (chars == v->string_length) mark_ascii_string_valid_count(v);
-        else mark_utf8_valid_count(v);
+        /* This is validation, not a value write. The general string-writer
+         * helpers also clear object initialization state; leave that state
+         * (and any other unrelated VM flags) untouched at this boundary. */
+        v->status.all_type_flags |= RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID;
+        if (chars == v->string_length)
+            mark_string_normalization_certificates(v, RXFLAG_LANG_NORMAL_FORM_MASK);
     }
 #endif
 
@@ -222,6 +228,13 @@ void rxvm_callfunc_direct(void* function, int args, value** argv,
 
     *pool_slot = saved_head;
     rxpa_compat_pool_slot = saved_compat_slot;
+}
+
+void rxvm_callfunc_legacy_direct(void* function, int args, value** argv,
+                                 value* ret, value* signal) {
+    rxpa_compatibility_callback_enter();
+    rxvm_callfunc_direct(function, args, argv, ret, signal);
+    rxpa_compatibility_callback_leave();
 }
 
 void rxvm_callfunc(void* function, int args, value** argv, value* ret,
@@ -341,6 +354,40 @@ char* rxvm_getsignaltext(rxsignal signal) {
         }
         return SIGNAL_OTHER;
  }
+
+/* Borrow existing string storage without adding a terminator or a copy-out pool
+ * allocation. The native signature/VM boundary owns type and UTF-8 validation. */
+int rxvm_string_view(rxpa_attribute_value attribute, const char **data, size_t *length) {
+    const value *val = (const value *)attribute;
+    if (data) *data = NULL;
+    if (length) *length = 0;
+    if (!val || !data || !length) return -1;
+    *data = val->string_value ? val->string_value : "";
+    *length = val->string_length;
+    return 0;
+}
+
+/* Counted UTF-8 publication. Preserve a borrowed destination view before the
+ * existing setter releases/reuses storage. Ordinary external input needs no
+ * intermediate copy; validation and codepoint accounting belong to the VM. */
+int rxvm_string_set(rxpa_attribute_value destination, const char *data, size_t length) {
+    value *val = (value *)destination;
+    char *owned = NULL;
+    int status;
+    if (!val || (!data && length) || !rxvm_value_string_metric_fits(length)) return -1;
+    if (length && val->string_value && (uintptr_t)data >= (uintptr_t)val->string_value &&
+        (uintptr_t)data - (uintptr_t)val->string_value < RXVM_VALUE_STRING_CAPACITY(val)) {
+        size_t offset = (uintptr_t)data - (uintptr_t)val->string_value;
+        if (offset > val->string_length || length > val->string_length - offset) return -1;
+        owned = rxvm_memory_alloc_bytes(rxvm_memory_current_worker(), length);
+        if (!owned) return -1;
+        memcpy(owned, data, length);
+        data = owned;
+    }
+    status = set_string_validated(val, data, length);
+    if (owned) (void)rxvm_memory_release(owned);
+    return status;
+}
 
 /* Get a string from an attribute value */
 char* rxvm_getstring(rxpa_attribute_value attributeValue) {

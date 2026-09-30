@@ -1,0 +1,57 @@
+cmake_minimum_required(VERSION 3.24)
+project(crexx_first_party_probe LANGUAGES C CXX)
+enable_testing()
+find_package(Threads REQUIRED)
+foreach(required CREXX_SOURCE LLAMA_SOURCE PROVIDER_DIRECTORY)
+    if(NOT IS_DIRECTORY "${${required}}")
+        message(FATAL_ERROR "${required} must name an existing verified directory")
+    endif()
+endforeach()
+option(PROBE_ASAN "Instrument the first-party probe and bridge" OFF)
+set(CMAKE_CXX_STANDARD 17)
+if(PROBE_ASAN)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+if(APPLE)
+    set(origin "@loader_path")
+    set(extension dylib)
+else()
+    set(origin "$ORIGIN")
+    set(extension so)
+endif()
+set(plugin "${CREXX_SOURCE}/lib/plugins/llama")
+set(identity "first-party-probe;${CMAKE_CXX_COMPILER_ID};${CMAKE_CXX_COMPILER_VERSION};${PROBE_ASAN}")
+foreach(file bridge.cpp bridge.h package.hpp generation.h generation_utf8.h)
+    file(SHA256 "${plugin}/${file}" hash)
+    string(APPEND identity ";${file}:${hash}")
+endforeach()
+string(SHA256 build_id "${identity}")
+add_library(crexx_llama_bridge SHARED
+    "${plugin}/bridge.cpp" "${CREXX_SOURCE}/binutils/rxsha256.c")
+target_compile_definitions(crexx_llama_bridge PRIVATE CREXX_LLAMA_BUILD CREXX_LLAMA_TESTING
+    CREXX_LLAMA_BUILD_ID="${build_id}:first-party-probe"
+    CREXX_LLAMA_PLATFORM="${CMAKE_SYSTEM_NAME}" CREXX_LLAMA_ARCH="${CMAKE_SYSTEM_PROCESSOR}")
+target_include_directories(crexx_llama_bridge PRIVATE
+    "${LLAMA_SOURCE}/include" "${LLAMA_SOURCE}/ggml/include" "${LLAMA_SOURCE}/vendor"
+    "${CREXX_SOURCE}/binutils/include")
+foreach(library llama-engine ggml ggml-base)
+    set(path "${PROVIDER_DIRECTORY}/libcrexx-${library}.${extension}")
+    if(NOT EXISTS "${path}")
+        message(FATAL_ERROR "Missing ordinary engine library: ${path}")
+    endif()
+    target_link_libraries(crexx_llama_bridge PRIVATE "${path}")
+endforeach()
+target_link_libraries(crexx_llama_bridge PRIVATE Threads::Threads ${CMAKE_DL_LIBS})
+set_target_properties(crexx_llama_bridge PROPERTIES
+    OUTPUT_NAME crexx-llama VERSION 1 SOVERSION 1
+    LIBRARY_OUTPUT_DIRECTORY "${PROVIDER_DIRECTORY}"
+    BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "${origin}")
+add_executable(rxllama_bridge_lifecycle
+    "${CREXX_SOURCE}/tests/native-inference/bridge_lifecycle.cpp")
+target_include_directories(rxllama_bridge_lifecycle PRIVATE "${plugin}")
+target_link_libraries(rxllama_bridge_lifecycle PRIVATE crexx_llama_bridge Threads::Threads)
+set_target_properties(rxllama_bridge_lifecycle PROPERTIES
+    BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "${PROVIDER_DIRECTORY}")
+add_test(NAME rxllama_backend_probe_cycle COMMAND rxllama_bridge_lifecycle --probe-cycle)
+set_tests_properties(rxllama_backend_probe_cycle PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800)

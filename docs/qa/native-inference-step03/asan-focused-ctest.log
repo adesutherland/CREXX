@@ -1,0 +1,348 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260914-151335-ctest
+==> ctest
+    log: cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260914-151335-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+==> ctest passed
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_\(backend_probe_cycle\|bridge_.\*\|toolchain_lifecycle\)\|crexx_project_build_contract\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/9 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.63 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/9 Test #1735: rxllama_bridge_bge_cpu .............   Passed    6.50 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/9 Test #1736: rxllama_bridge_smol_cpu ............   Passed   55.23 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/9 Test #1737: rxllama_bridge_both_cpu ............   Passed   24.80 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/9 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed   13.62 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/9 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   62.45 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/9 Test #1740: rxllama_bridge_both_required-gpu ...   Passed   18.15 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/9 Test #1741: rxllama_toolchain_lifecycle ........   Passed   11.58 sec
+    Start 2479: crexx_project_build_contract
+9/9 Test #2479: crexx_project_build_contract .......   Passed  294.63 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Label Time Summary:
+autoload             = 294.63 sec*proc (1 test)
+build                = 294.63 sec*proc (1 test)
+driver               = 294.63 sec*proc (1 test)
+incremental          = 294.63 sec*proc (1 test)
+library              = 192.98 sec*proc (8 tests)
+llama                = 192.98 sec*proc (8 tests)
+model-provisioned    = 192.34 sec*proc (7 tests)
+parallel             = 294.63 sec*proc (1 test)
+regression           = 295.27 sec*proc (2 tests)
+rxpa                 = 192.98 sec*proc (8 tests)
+smoke                = 294.63 sec*proc (1 test)
+
+Total Test time (real) = 487.68 sec
+ASan run complete: cmake-build-debugasan/asan-logs/20260914-151335-ctest

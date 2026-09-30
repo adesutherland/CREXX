@@ -1,0 +1,10 @@
+capture,metric,samples,mean,min,max,mean_t95_low,mean_t95_high,relative_halfwidth_percent
+/tmp/crexx-ni-reducer-fixture.LmjaIJ,backend_setup_ms,10,5.5,1,10,3.33414941033011,7.66585058966989,39.3791016303616
+/tmp/crexx-ni-reducer-fixture.LmjaIJ,model_load_ms,10,5.5,1,10,3.33414941033011,7.66585058966989,39.3791016303616
+/tmp/crexx-ni-reducer-fixture.LmjaIJ,context_create_ms.1,10,5.5,1,10,3.33414941033011,7.66585058966989,39.3791016303616
+/tmp/crexx-ni-reducer-fixture.LmjaIJ,first_request_ms,10,5.5,1,10,3.33414941033011,7.66585058966989,39.3791016303616
+/tmp/crexx-ni-reducer-fixture.LmjaIJ,preparation_requests_ms,10,5.5,1,10,3.33414941033011,7.66585058966989,39.3791016303616
+/tmp/crexx-ni-reducer-fixture.LmjaIJ,warm_single_total_ms,10,5.5,1,10,3.33414941033011,7.66585058966989,39.3791016303616
+/tmp/crexx-ni-reducer-fixture.LmjaIJ,warm_batch_total_ms,10,5.5,1,10,3.33414941033011,7.66585058966989,39.3791016303616
+/tmp/crexx-ni-reducer-fixture.LmjaIJ,retained_growth_bytes,10,5.5,1,10,3.33414941033011,7.66585058966989,39.3791016303616
+/tmp/crexx-ni-reducer-fixture.LmjaIJ,load_cancel_elapsed_ms,10,5.5,1,10,3.33414941033011,7.66585058966989,39.3791016303616

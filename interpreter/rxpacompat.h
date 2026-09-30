@@ -49,10 +49,12 @@ typedef struct rxpa_compatibility_context {
     size_t legacy_invoker_count;
     size_t legacy_invoker_capacity;
     size_t execution_depth;
+    struct rxpa_compatibility_context *execution_thread_next;
     struct rxpa_compatibility_context *coordinator_next;
     rxvm_native_invoker direct_invoker;
     rxvm_native_invoker locked_invoker;
     unsigned char legacy_registered;
+    unsigned char execution_parked;
 } rxpa_compatibility_context;
 
 void rxpa_compatibility_enter(void);
@@ -69,6 +71,13 @@ void rxpa_compatibility_execution_enter(
         rxpa_compatibility_context *context);
 void rxpa_compatibility_execution_leave(
         rxpa_compatibility_context *context);
+/* Cold attached-worker startup boundary. Park every executing VM on this OS
+ * thread without changing nesting depths. Returns zero inside legacy callbacks
+ * or protected provider callbacks; successful suspension requires one resume. */
+int rxpa_compatibility_suspend_thread(void);
+void rxpa_compatibility_resume_thread(void);
+void rxpa_compatibility_callback_enter(void);
+void rxpa_compatibility_callback_leave(void);
 /* Internal test synchronization for the cold legacy-binding transition.
  * The caller must arrange for a transition to start; the owning CTest timeout
  * bounds a missing transition. */

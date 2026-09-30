@@ -1,0 +1,23 @@
+Adding Authenticode signature to /tmp/crexx-sign-probe.Ffqc2Q/rxc.exe
+jsign: Couldn't sign /tmp/crexx-sign-probe.Ffqc2Q/rxc.exe
+java.security.ProviderException: sun.security.pkcs11.wrapper.PKCS11Exception: CKR_FUNCTION_FAILED
+	at jdk.crypto.cryptoki/sun.security.pkcs11.P11Signature.engineSign(P11Signature.java:685)
+	at java.base/java.security.Signature$Delegate.engineSign(Signature.java:1359)
+	at java.base/java.security.Signature.sign(Signature.java:672)
+	at net.jsign.bouncycastle.operator.jcajce.JcaContentSignerBuilder$1.getSignature(JcaContentSignerBuilder.java:245)
+	at net.jsign.bouncycastle.cms.SignerInfoGenerator.generate(SignerInfoGenerator.java:176)
+	at net.jsign.bouncycastle.cms.CMSSignedDataGenerator.generateSignerInfo(CMSSignedDataGenerator.java:247)
+	at net.jsign.bouncycastle.cms.CMSSignedDataGenerator.generate(CMSSignedDataGenerator.java:186)
+	at net.jsign.asn1.authenticode.AuthenticodeSignedDataGenerator.getSignerInfo(AuthenticodeSignedDataGenerator.java:56)
+	at net.jsign.asn1.authenticode.AuthenticodeSignedDataGenerator.generate(AuthenticodeSignedDataGenerator.java:43)
+	at net.jsign.AuthenticodeSigner.createSignedData(AuthenticodeSigner.java:393)
+	at net.jsign.AuthenticodeSigner.sign(AuthenticodeSigner.java:370)
+	at net.jsign.SignerHelper.sign(SignerHelper.java:475)
+	at net.jsign.SignerHelper.execute(SignerHelper.java:325)
+	at net.jsign.JsignCLI.execute(JsignCLI.java:229)
+	at net.jsign.JsignCLI.main(JsignCLI.java:58)
+Caused by: sun.security.pkcs11.wrapper.PKCS11Exception: CKR_FUNCTION_FAILED
+	at jdk.crypto.cryptoki/sun.security.pkcs11.wrapper.PKCS11.C_SignFinal(Native Method)
+	at jdk.crypto.cryptoki/sun.security.pkcs11.P11Signature.engineSign(P11Signature.java:635)
+	... 14 more
+Try `jsign --help' for more information.

@@ -1,0 +1,16 @@
+{
+  "scope": "read-only native surface review; normal Debug diagnostic; no repair, sanitizer or performance run",
+  "scratch": "/tmp/crexx-native-shape.GbKZuW",
+  "files": {
+    "rxpa/crexxpa.h": "a13675fa3e5f6409242c53f21f427ca7bf961f024d423d7297090badce413a5e",
+    "tests/rxpa/rxpa_classdecl.c": "8ad6eb0bc2ad82332c7fb2e993d2cd5f9fe882528a19435b519a8f3fcd1d5126",
+    "lib/plugins/stats/rxstats.c": "d65dd644184ff915b58f4f563c07e09aeec9fbaca950ac7064533602d0e58c18",
+    "lib/rxfnsg/rexx/statsvalue.crexx": "f24c92ed86e8b15baace4042993f48972dd8b805f9bd583d4f4eadf2b47e0496",
+    "cmake-build-debug/bin/rxc": "d07e91ccdb1692eeb31566e29c10d40d670e4c7ad247c55a094c62a873891299",
+    "cmake-build-debug/bin/rxas": "203c1f8a4967689bdca981aac81706dde560fed7c50fd4422e9f86735e2bd0f7",
+    "cmake-build-debug/bin/rxlink": "c0fbac4c3c78f66113bd29c5d25184a0fb4c6fa1f98aceb8ba5ed38b7f80f7c3",
+    "cmake-build-debug/bin/rxbvm": "f3dfe1ca3f1ce7d5ade2e66621775feaa8704af8779d2d86719ed617eb53b530",
+    "cmake-build-debug/bin/rxstats.rxplugin": "69f246637af2e1e86951495c6fac8e8548c422c45cddb27afe5f1622b6017d40",
+    "cmake-build-debug/bin/rxfnsg.rxbin": "eb7010598f76ee350f5b1cb35b4b550a6cec302b16caf14ae9f7d8914a2575e3"
+  }
+}

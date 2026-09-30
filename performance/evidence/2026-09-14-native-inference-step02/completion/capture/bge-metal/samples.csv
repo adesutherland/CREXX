@@ -1,0 +1,13 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,warmup,1,1249650000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,warmup,2,1317066000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,1,1230183000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,2,1260060000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,3,1259405000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,4,1229687000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,5,1296085000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,6,1282091000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,7,1231790000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,8,1302686000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,9,1239844000,0,pass,,
+native-inference-bge-persistent,llama-metal-m5,step02-completion,complete-control-process,recorded,10,1280479000,0,pass,,

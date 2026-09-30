@@ -1,0 +1,5 @@
+workload,vm,metric,pairs,control_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,median_absolute_us,guard_hit
+NI-S5-cpu-1,rxvm,warm_us,12,928455.500000,901811.500000,-8.043777,-4.381845,-0.244732,2.775967,12.807885,-0.002240,-3.718495,3.714014,noisy_inconclusive,7,12,-26644.000000,no
+NI-S5-cpu-4,rxvm,warm_us,12,2245182.000000,2333396.500000,-10.149209,-2.214230,3.875625,5.303917,16.279752,2.656371,-1.553834,6.866575,noisy_inconclusive,4,12,88214.500000,no
+NI-S5-required-gpu-1,rxvm,warm_us,12,669128.500000,556209.500000,-30.327904,-23.656130,-15.721973,-12.207628,-0.707054,-16.815781,-22.368430,-11.263131,clear_favorable,12,12,-112919.000000,no
+NI-S5-required-gpu-4,rxvm,warm_us,12,1853442.500000,1786605.000000,-16.043081,-9.819553,-3.295416,4.320991,13.502725,-2.517027,-8.075656,3.041602,noisy_inconclusive,8,12,-66837.500000,no

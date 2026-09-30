@@ -1,0 +1,12 @@
+options levelb
+
+namespace project_link_class_consumer
+import project_link_class_provider
+
+main: procedure = .int
+  box = .projectlinkbox()
+  output = "unchanged"
+  if box.update("project", output) <> 7 then return 1
+  if output <> "project-linked" then return 2
+  say "PASS: project source-import class method"
+  return 0

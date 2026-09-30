@@ -1,0 +1,13 @@
+{
+  "scope": "Published dependency scan: ordinary/ASan-built tiny libraries, no llama engine or model, no instrumented library execution",
+  "debug_ctest_seconds": 0.09,
+  "asan_ctest_seconds": 0.09,
+  "source_sha256": {
+    "rxpa/WriteProviderPackage.cmake": "55222fa81106a1bd63de54c45493eff4f79d8e2927974223dc82c4414b6d8de4",
+    "tests/rxpa/provider-package-copy/CMakeLists.txt": "2b74bfe6ac3e8207a330d978d84d8a289f1bcd80532369fb0faa680aaaaf6d18",
+    "tests/rxpa/provider-package-copy/check.py": "c53c8918ff2c3c51944b4d95b66683b41a9de73f48deed9967afa8954f55abea",
+    "tests/rxpa/provider-package-copy/root.c": "81b1f3209f1dd1180233d8f2e791e7e881c4de27601e368a894a3a3b7eaefc81",
+    "tests/rxpa/provider-package-copy/README.md": "fc54f433de98ec98f82f1416981d38f3d3fac616b5e4fd3d872f28af0427f7e1",
+    "tests/rxpa/provider-package-copy/dependency.c": "68e35c2a05116720bf3dc47e50d88c9e8887cdc374ac398c30ef74133c7880d3"
+  }
+}

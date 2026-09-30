@@ -1479,13 +1479,13 @@ int rxas_flow_structural_dump(
         fprintf(stream,
                 "PERF3 flow-analysis-block id=%llu rpo=%llu idom=",
                 (unsigned long long)block, (unsigned long long)index);
-        if (idom == analysis->virtual_root) fputc('-', stream);
+        if (idom == analysis->virtual_root) platform_text_putc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)idom);
         if (analysis->loops_ready)
             fprintf(stream, " scc=%llu loop=",
                     (unsigned long long)analysis->scc[block]);
         else fputs(" scc=- loop=", stream);
-        if (loop == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (loop == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)loop);
         fprintf(stream, " predecessors=%llu frontier=%llu\n",
                 (unsigned long long)(analysis->predecessor_offsets[block + 1] -
@@ -1501,7 +1501,7 @@ int rxas_flow_structural_dump(
                 "PERF3 flow-loop id=%llu header=%llu parent=",
                 (unsigned long long)loop->id,
                 (unsigned long long)loop->header);
-        if (loop->parent == RXAS_FLOW_ID_NONE) fputc('-', stream);
+        if (loop->parent == RXAS_FLOW_ID_NONE) platform_text_putc('-', stream);
         else fprintf(stream, "%llu", (unsigned long long)loop->parent);
         fprintf(stream,
                 " depth=%llu flags=%u latches=%llu members=",
@@ -1509,12 +1509,12 @@ int rxas_flow_structural_dump(
                 (unsigned long long)loop->latch_count);
         for (member_index = 0; member_index < loop->member_count;
              member_index++) {
-            if (member_index) fputc(',', stream);
+            if (member_index) platform_text_putc(',', stream);
             fprintf(stream, "%llu",
                     (unsigned long long)analysis->loop_members[
                             loop->member_offset + member_index]);
         }
-        fputc('\n', stream);
+        platform_text_putc('\n', stream);
     }
     return 1;
 }

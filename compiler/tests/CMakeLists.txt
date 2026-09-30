@@ -12,6 +12,28 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_C_STANDARD 90)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+add_executable(test_symbol_allocation test_symbol_allocation.c)
+get_target_property(symbol_test_includes rxclib INCLUDE_DIRECTORIES)
+target_include_directories(test_symbol_allocation PRIVATE ${symbol_test_includes})
+target_link_libraries(test_symbol_allocation PRIVATE rxclib)
+add_test(NAME symbol_allocation_failure COMMAND test_symbol_allocation)
+set_tests_properties(symbol_allocation_failure PROPERTIES
+        LABELS "unit;compiler;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_symbol_allocation)
+
+add_executable(test_ast_allocation test_ast_allocation.c)
+target_include_directories(test_ast_allocation PRIVATE ${symbol_test_includes})
+target_link_libraries(test_ast_allocation PRIVATE rxclib)
+add_test(NAME ast_allocation_failure COMMAND test_ast_allocation)
+set_tests_properties(ast_allocation_failure PROPERTIES
+        LABELS "unit;compiler;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_ast_allocation)
+
+add_executable(test_import_directory_errors test_import_directory_errors.c)
+target_include_directories(test_import_directory_errors PRIVATE ${symbol_test_includes})
+target_link_libraries(test_import_directory_errors PRIVATE rxclib)
+add_test(NAME import_directory_errors COMMAND test_import_directory_errors)
+set_tests_properties(import_directory_errors PROPERTIES
+    LABELS "unit;compiler;imports" TIMEOUT 30 CREXX_PREP_TARGETS test_import_directory_errors)
+
 # The test driver itself must be compiled as strict C90
 add_executable(crexx_test_driver src/test_driver.c)
 
@@ -137,6 +159,123 @@ add_test(NAME rxc_help_import_resolution_report COMMAND $<TARGET_FILE:rxc> -h)
 set_tests_properties(rxc_help_import_resolution_report PROPERTIES
         PASS_REGULAR_EXPRESSION "--import-resolution-report"
         LABELS "compiler;imports;newbuild")
+
+add_test(NAME source_root_namespace_order
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXBVM=$<TARGET_FILE:rxbvm>
+        -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/fixtures/source_root_namespace_order
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/source_root_namespace_order_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/source_root_namespace_order.cmake)
+set_tests_properties(source_root_namespace_order PROPERTIES
+    LABELS "compiler;imports;regression"
+    RUN_SERIAL TRUE TIMEOUT 300
+    CREXX_PREP_TARGETS "rxc;rxas;rxbvm")
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(compiler_load_failure_command ${Python3_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/compiler_load_failures.py
+    --rxc $<TARGET_FILE:rxc> --rxas $<TARGET_FILE:rxas> --vm $<TARGET_FILE:rxbvm>
+    --library ${CMAKE_BINARY_DIR}/bin/library.rxbin
+    --exits ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+    --work ${CMAKE_CURRENT_BINARY_DIR}/compiler-load-failures)
+add_custom_target(check_compiler_load_failures COMMAND ${compiler_load_failure_command}
+    DEPENDS rxc rxas rxbvm compiler_exit_bin library VERBATIM)
+add_test(NAME compiler_load_failures COMMAND ${compiler_load_failure_command})
+set_tests_properties(compiler_load_failures PROPERTIES
+    LABELS "compiler;imports;regression" RUN_SERIAL TRUE TIMEOUT 300
+    CREXX_PREP_TARGETS "rxc;rxas;rxbvm;compiler_exit_bin;library")
+
+add_executable(test_project_dependencies test_project_dependencies.c)
+target_link_libraries(test_project_dependencies PRIVATE rxclib)
+target_include_directories(test_project_dependencies PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
+add_test(NAME project_dependencies COMMAND test_project_dependencies)
+set_tests_properties(project_dependencies PROPERTIES
+        LABELS "compiler;imports;incremental;regression"
+        CREXX_PREP_TARGETS "test_project_dependencies")
+
+add_test(NAME binary_forward_dependencies
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_forward_dependencies_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_forward_dependencies.cmake)
+set_tests_properties(binary_forward_dependencies PROPERTIES
+    LABELS "compiler;imports;incremental;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib")
+
+foreach(kind IN ITEMS convergence provider)
+    add_test(NAME source_import_private_dependency_${kind}
+        COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+            -DBIN=${CMAKE_BINARY_DIR}/bin
+            -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/fixtures/issue699
+            -DKIND=${kind}
+            -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/source_import_private_dependency_${kind}_ws
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/source_import_private_dependency.cmake)
+    set_tests_properties(source_import_private_dependency_${kind} PROPERTIES
+        LABELS "compiler;imports;inline;incremental;regression;smoke"
+        CREXX_PREP_TARGETS "rxc;rxas;library;classlib"
+        # Each test runs an isolated opt/noopt import-control matrix.
+        RUN_SERIAL TRUE TIMEOUT 300)
+endforeach()
+
+add_test(NAME inline_return_conversions
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXBVM=$<TARGET_FILE:rxbvm> -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_return_conversions.crexx
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/inline_return_conversions_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/inline_return_conversions.cmake)
+set_tests_properties(inline_return_conversions PROPERTIES
+    LABELS "compiler;imports;inline;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxbvm;rxvm;library;classlib"
+    TIMEOUT 600)
+
+add_test(NAME global_import_types
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/global_import_types.crexx
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/global_import_types_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/global_import_types.cmake)
+set_tests_properties(global_import_types PROPERTIES
+    LABELS "compiler;imports;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib"
+    TIMEOUT 240)
+
+add_test(NAME binary_global_import_types
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXBVM=$<TARGET_FILE:rxbvm> -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_global_import_types.crexx
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_global_import_types_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_global_import_types.cmake)
+set_tests_properties(binary_global_import_types PROPERTIES
+    LABELS "compiler;imports;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxbvm;rxvm;library;classlib"
+    # This matrix launches many complete compiler/assembler/linker/VM paths.
+    # Running it beside other aggregate tests can exhaust its outer timeout
+    # even though the unchanged matrix passes comfortably in isolation.
+    RUN_SERIAL TRUE
+    TIMEOUT 900)
+
+add_test(NAME binary_storage_selector_dependencies
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_storage_selector_dependencies_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_storage_selector_dependencies.cmake)
+set_tests_properties(binary_storage_selector_dependencies PROPERTIES
+    LABELS "compiler;imports;incremental;binary;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib;compiler_exit_bin")
 
 add_executable(test_import_resolution_report test_import_resolution_report.c)
 target_link_libraries(test_import_resolution_report PRIVATE rxclib)
@@ -296,6 +435,15 @@ file(GENERATE OUTPUT "${RXAS_DIAG_SCRIPT}" CONTENT "${RXAS_DIAG_CONTENT}")
 add_test(NAME rxas_invalid_diagnostic
          COMMAND ${CMAKE_COMMAND} -P "${RXAS_DIAG_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_test(NAME rxas_exposed_global_bounds
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/rxas_exposed_global_bounds_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/rxas_exposed_global_bounds.cmake)
+set_tests_properties(rxas_exposed_global_bounds PROPERTIES
+        LABELS "rxas;assembler;negative;regression"
+        CREXX_PREP_TARGETS "rxas")
 
 set(RXAS_INVALID_UTF8_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_utf8_string.cmake")
 set(RXAS_INVALID_UTF8_CONTENT "")
@@ -1451,7 +1599,8 @@ add_test(NAME nr21_fixed_call_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr21_fixed_call_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr21_fixed_call_contract.cmake)
 set_tests_properties(nr21_fixed_call_contract PROPERTIES
-        LABELS "compiler;performance;rxbin")
+        LABELS "compiler;codegen;rxbin"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxdas;rxvm;rxbvm;library;mutate_rxbin_feature")
 
 add_test(NAME nr14_frozen_parse_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1467,7 +1616,8 @@ add_test(NAME nr14_frozen_parse_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr14_frozen_parse_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr14_frozen_parse_contract.cmake)
 set_tests_properties(nr14_frozen_parse_contract PROPERTIES
-        LABELS "compiler;performance;rxbin;parse")
+        LABELS "compiler;codegen;rxbin;parse"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxdas;rxvm;rxbvm;library;mutate_rxbin_feature")
 
 add_test(NAME nr15_native_stem_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1481,7 +1631,8 @@ add_test(NAME nr15_native_stem_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr15_native_stem_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr15_native_stem_contract.cmake)
 set_tests_properties(nr15_native_stem_contract PROPERTIES
-        LABELS "compiler;performance;rxbin;stem;nr15")
+        LABELS "compiler;codegen;rxbin;stem;nr15"
+        CREXX_PREP_TARGETS "rxas;rxlink;rxdas;rxvm;rxbvm;mutate_rxbin_feature")
 
 add_test(NAME gate_f_channel_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1493,7 +1644,8 @@ add_test(NAME gate_f_channel_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/gate_f_channel_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/gate_f_channel_contract.cmake)
 set_tests_properties(gate_f_channel_contract PROPERTIES
-        LABELS "compiler;performance;rxas;rxbin;gate-f;channels")
+        LABELS "compiler;codegen;rxas;rxbin;gate-f;channels"
+        CREXX_PREP_TARGETS "rxas;rxlink;rxdas;mutate_rxbin_feature")
 crexx_label_concurrency_tests(SP02 gate_f_channel_contract)
 
 add_test(NAME nr09_numeric_context_contract
@@ -2266,6 +2418,7 @@ add_crexx_isolated_run_test(interface_method_arg_same_module rexx_src/interface_
 add_crexx_isolated_run_test(interface_method_object_arg_same_module rexx_src/interface_method_object_arg_same_module.crexx)
 add_crexx_isolated_run_test(interface_signature_static_positive rexx_src/interface_signature_static_positive.crexx)
 add_crexx_isolated_run_test(interface_factory_tiebreak rexx_src/interface_factory_tiebreak.crexx)
+add_crexx_isolated_run_test(interface_factory_signal_restore rexx_src/interface_factory_signal_restore.crexx)
 add_crexx_isolated_run_fail_test(interface_no_impl rexx_src/interface_no_impl.crexx)
 add_crexx_compiler_test(interface_default_codegen rexx_src/interface_default_codegen.crexx)
 add_crexx_isolated_run_test(interface_default_same_module rexx_src/interface_default_same_module.crexx)
@@ -2386,6 +2539,11 @@ string(REGEX MATCH
        parallel_leave_unwind \"\${rxas}\")
 if(parallel_leave_unwind STREQUAL \"\")
   message(FATAL_ERROR \"Parallel LEAVE WITH did not unwind its signal handler\")
+endif()
+string(FIND \"\${rxas}\" \"sigpush \\\"POSIX_CHLD\\\"\" parallel_posix_chld_handler)
+if(NOT parallel_posix_chld_handler EQUAL -1)
+  message(FATAL_ERROR
+          \"Compiler-generated parallel guard intercepted POSIX_CHLD\")
 endif()
 execute_process(
   COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
@@ -3355,6 +3513,14 @@ add_test(NAME source_import_optional_factory_arg
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(source_import_optional_factory_arg PROPERTIES LABELS "compiler;imports")
 
+add_test(NAME source_import_srcmap_factory
+        COMMAND ${CMAKE_COMMAND} -DRXC=$<TARGET_FILE:rxc>
+                -DLIBRARY_DIR=${CMAKE_BINARY_DIR}/bin
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/source_import_srcmap_factory_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/run_source_import_srcmap.cmake)
+set_tests_properties(source_import_srcmap_factory PROPERTIES LABELS "compiler;imports;srcmap;regression")
+crexx_register_test_prep_targets(TESTS source_import_srcmap_factory TARGETS rxc library)
+
 set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_import_contract_stub_covariant_cycle.cmake")
 set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_import_contract_stub_covariant_cycle_ws\")\n")
 string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -3691,13 +3857,19 @@ add_test(NAME signal_crossed_loop_cleanup_opt_rewrites
 set_tests_properties(signal_crossed_loop_cleanup_opt_rewrites PROPERTIES
         LABELS "compiler;flow;signals;correctness;linked_opt")
 
+set(_inline_receiver_threaded_vm)
+# Compiler tests are declared before the interpreter targets. Use the shared
+# capability decision, not TARGET existence at this point in configuration.
+if(CREXX_THREADED_VM_SUPPORTED)
+    set(_inline_receiver_threaded_vm "-DRXTVM=$<TARGET_FILE:rxtvm>")
+endif()
 add_test(NAME inline_receiver_signal_cleanup
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
                  -DRXDAS=$<TARGET_FILE:rxdas>
                  -DRXLINK=$<TARGET_FILE:rxlink>
-                 -DRXTVM=$<TARGET_FILE:rxtvm>
+                 ${_inline_receiver_threaded_vm}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
@@ -3932,6 +4104,11 @@ add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
 add_crexx_run_test(deferred_register_outer_if_lifetime
         rexx_src/deferred_register_outer_if_lifetime.crexx)
+add_crexx_run_test(short_circuit_linked_left
+        rexx_src/short_circuit_linked_left.crexx)
+set_tests_properties(short_circuit_linked_left_run_noopt
+        short_circuit_linked_left_run_opt PROPERTIES
+        LABELS "compiler;register-lifetime;regression")
 set_tests_properties(deferred_register_outer_if_lifetime_run_noopt
         deferred_register_outer_if_lifetime_run_opt PROPERTIES
         LABELS "compiler;register-lifetime;regression")
@@ -5362,8 +5539,6 @@ target_compile_definitions(test_address_bridge PRIVATE
 set(CREXX_CMS_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/cms")
 set(CREXX_LLM_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/llm")
 set(CREXX_NATIVE_KV_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/native/kv")
-set(CREXX_NATIVE_SQLITE_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/native/sqlite")
-
 add_custom_command(
         OUTPUT address_cms_provider.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_provider ${CREXX_CMS_DEMO_DIR}/cms_address_environment.crexx
@@ -5449,55 +5624,6 @@ target_compile_definitions(native_kv_address_demo PRIVATE
         CREXX_NATIVE_KV_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_NATIVE_KV_DEMO_MODULE="${CMAKE_CURRENT_BINARY_DIR}/native_kv_address_demo.rxbin")
 add_dependencies(native_kv_address_demo native_kv_address_demo_bin library)
-
-if(CREXX_BUILD_SQLITE_ADDRESS_DEMO)
-    if(NOT CREXX_ALLOW_NETWORK_DOWNLOADS)
-        message(FATAL_ERROR
-                "CREXX_BUILD_SQLITE_ADDRESS_DEMO=ON requires CREXX_ALLOW_NETWORK_DOWNLOADS=ON")
-    endif()
-    include(FetchContent)
-    message(STATUS "Fetching SQLite amalgamation ${CREXX_SQLITE_AMALGAMATION_VERSION} for native ADDRESS demo")
-    FetchContent_Declare(
-            crexx_sqlite_amalgamation
-            URL "https://www.sqlite.org/${CREXX_SQLITE_AMALGAMATION_YEAR}/sqlite-amalgamation-${CREXX_SQLITE_AMALGAMATION_VERSION}.zip"
-            URL_HASH "SHA3_256=${CREXX_SQLITE_AMALGAMATION_SHA3_256}"
-    )
-    FetchContent_MakeAvailable(crexx_sqlite_amalgamation)
-    FetchContent_GetProperties(crexx_sqlite_amalgamation)
-
-    add_library(crexx_demo_sqlite3 STATIC
-            "${crexx_sqlite_amalgamation_SOURCE_DIR}/sqlite3.c")
-    target_include_directories(crexx_demo_sqlite3 PUBLIC
-            "${crexx_sqlite_amalgamation_SOURCE_DIR}")
-    target_compile_definitions(crexx_demo_sqlite3 PRIVATE
-            SQLITE_THREADSAFE=0
-            SQLITE_OMIT_LOAD_EXTENSION
-            SQLITE_DQS=0)
-    if (CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
-        target_compile_options(crexx_demo_sqlite3 PRIVATE -w)
-    elseif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-        target_compile_options(crexx_demo_sqlite3 PRIVATE /w)
-    endif()
-
-    add_custom_command(
-            OUTPUT native_sqlite_address_demo.rxbin
-            COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o native_sqlite_address_demo ${CREXX_NATIVE_SQLITE_DEMO_DIR}/sqlite_address_demo.crexx
-            COMMAND $<TARGET_FILE:rxas> native_sqlite_address_demo
-            DEPENDS rxc rxas library compiler_exit_bin ${CREXX_NATIVE_SQLITE_DEMO_DIR}/sqlite_address_demo.crexx
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            COMMENT "Compiling sqlite_address_demo.crexx ..."
-    )
-
-    add_custom_target(native_sqlite_address_demo_bin DEPENDS native_sqlite_address_demo.rxbin)
-
-    add_executable(native_sqlite_address_demo ${CREXX_NATIVE_SQLITE_DEMO_DIR}/sqlite_address_demo.c)
-    target_link_libraries(native_sqlite_address_demo PRIVATE rxvml rxpashim crexx_demo_sqlite3)
-    target_include_directories(native_sqlite_address_demo PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
-    target_compile_definitions(native_sqlite_address_demo PRIVATE
-            CREXX_NATIVE_SQLITE_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
-            CREXX_NATIVE_SQLITE_DEMO_MODULE="${CMAKE_CURRENT_BINARY_DIR}/native_sqlite_address_demo.rxbin")
-    add_dependencies(native_sqlite_address_demo native_sqlite_address_demo_bin library)
-endif()
 
 add_custom_command(
         OUTPUT address_callback_host.rxbin
@@ -5755,10 +5881,6 @@ set_tests_properties(address_llm_provider PROPERTIES
 crexx_label_concurrency_tests(SP07 address_llm_provider)
 add_test(NAME address_native_kv_demo COMMAND native_kv_address_demo)
 set_tests_properties(address_native_kv_demo PROPERTIES LABELS "compiler;stage3")
-if(CREXX_BUILD_SQLITE_ADDRESS_DEMO)
-    add_test(NAME address_native_sqlite_demo COMMAND native_sqlite_address_demo)
-    set_tests_properties(address_native_sqlite_demo PROPERTIES LABELS "compiler;stage3")
-endif()
 add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME e2_active_context_isolation COMMAND test_e2_active_context)
@@ -5848,7 +5970,9 @@ if (ENABLE_PARSER_MODE)
             RUN_SERIAL TRUE)
 
     add_test(NAME source_semantics COMMAND test_source_semantics)
-    set_tests_properties(source_semantics PROPERTIES LABELS "compiler;syntax_highlighting;stage5")
+    set_tests_properties(source_semantics PROPERTIES
+            LABELS "compiler;syntax_highlighting;stage5"
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
     add_test(NAME highlight_editor_diagnostics COMMAND test_highlight_editor_diagnostics)
     set_tests_properties(highlight_editor_diagnostics PROPERTIES LABELS "compiler;syntax_highlighting;stage5")
@@ -6092,7 +6216,10 @@ if(ENABLE_PARSER_MODE)
             TARGETS parser_tester)
     crexx_register_test_prep_targets(
             TESTS source_semantics
-            TARGETS test_source_semantics)
+            TARGETS test_source_semantics library compiler_exit_bin)
+    crexx_register_test_prep_targets(
+            TESTS highlight_cache
+            TARGETS test_highlight_cache library compiler_exit_bin)
 endif()
 
 function(crexx_force_raw_diagnostics_for_directory_tests)

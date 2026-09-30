@@ -1,0 +1,48 @@
+[
+  {
+    "label": "asan-package-failures",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_package_measure",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T14:01:53.905737+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T14:08:27.136176+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-150153-build"
+  },
+  {
+    "label": "asan-full",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "full",
+      "--build-jobs",
+      "4",
+      "--test-jobs",
+      "8",
+      "--build-leaks",
+      "off",
+      "--leaks",
+      "off",
+      "--exclude-label",
+      "performance-measurement",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T14:08:27.136736+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T15:00:17.608080+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-150827-full"
+  }
+]

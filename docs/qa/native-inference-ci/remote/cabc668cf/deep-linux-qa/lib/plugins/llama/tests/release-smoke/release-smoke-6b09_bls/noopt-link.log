@@ -1,0 +1,1 @@
+argv=['/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxlink', '-o', '/tmp/crexx-release-smoke-cmyg_28t/noopt-linked', '/tmp/crexx-release-smoke-cmyg_28t/noopt', '/tmp/crexx-release-smoke-cmyg_28t/payload/bin/library', '/tmp/crexx-release-smoke-cmyg_28t/payload/bin/classlib', '/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxfnsg']

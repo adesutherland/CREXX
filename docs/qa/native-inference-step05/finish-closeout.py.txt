@@ -1,0 +1,56 @@
+from pathlib import Path
+import subprocess,os,time,json,hashlib,datetime,ast
+root=Path('/Users/adrian/CLionProjects/CREXX'); work=Path('/tmp/ni-s5'); build=root/'cmake-build-debug'; models=Path('/Users/adrian/Library/Caches/crexx/native-inference')
+smol=models/'smollm2-360m-instruct-q8_0.gguf'; sh='48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201'; bge=models/'bge-small-en-v1.5-f16.gguf'; bh='f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999'
+assert hashlib.sha256(smol.read_bytes()).hexdigest()==sh and hashlib.sha256(bge.read_bytes()).hexdigest()==bh
+while True:
+ try:os.kill(7964,0)
+ except ProcessLookupError:break
+ time.sleep(5)
+assert 'PASS: typed STEP-05 installed and relocated native consumers, opt/noopt' in (work/'installed-generation.log').read_text(),'Package matrix did not pass; stopped before further work'
+print('Package matrix complete; remaining Debug consumers start',datetime.datetime.now(datetime.timezone.utc).isoformat(),flush=True)
+outdir=work/'public-closeout-remainder';outdir.mkdir(exist_ok=False);runs=[];number=0
+before=json.loads((work/'closeout-identity-before.json').read_text())['sources']
+cases=[('provider_acceptance',root/'tests/native-inference/provider_acceptance.crexx','PASS: rxllama persistent embedding and generation acceptance'),('persistent_generation',root/'lib/plugins/llama/examples/persistent_generation.crexx','PASS: persistent typed generation example'),('shared_generation',root/'lib/plugins/llama/examples/shared_generation.crexx','PASS: four typed generation workers')]
+for _,p,_ in cases:assert before[str(p.relative_to(root))]==hashlib.sha256(p.read_bytes()).hexdigest(),('changed consumer',p)
+def run(label,argv,marker=None):
+ global number
+ number+=1;argv=list(map(str,argv));log=outdir/f'{number:02}-{label}.log'
+ result=subprocess.run(argv,cwd=outdir,capture_output=True,text=True,timeout=300);output=result.stdout+result.stderr
+ log.write_text('argv='+repr(argv)+'\nrc='+str(result.returncode)+'\n'+output)
+ assert result.returncode==0 and not any(x in output for x in ('FAIL:','PANIC:','ERROR:')),(label,output[-2000:])
+ if marker:assert marker in output; runs.append(dict(label=label,log=str(log)))
+ print('PASS:',label,flush=True)
+for vm in ('rxbvm','rxtvm'):
+ run('opt-shared_generation-required-gpu-'+vm,[build/'bin'/vm,work/'public-closeout-debug-final/opt-shared_generation-linked','-a','required-gpu',smol,sh],'PASS: four typed generation workers')
+for name,source,marker in cases:
+ program=outdir/('noopt-'+name)
+ run(name+'-compile',[build/'bin/rxc','--no-exe-import','-n','-i',build/'bin','-o',program,source])
+ run(name+'-assemble',[build/'bin/rxas','-o',program,program]); linked=str(program)+'-linked'
+ run(name+'-link',[build/'bin/rxlink','-o',linked,program,build/'bin/library',build/'bin/classlib',build/'bin/rxfnsg'])
+ for mode in ('cpu','required-gpu'):
+  args=[bge,bh,smol,sh,mode] if name=='provider_acceptance' else [mode,smol,sh]
+  for vm in ('rxbvm','rxtvm'):run('noopt-'+name+'-'+mode+'-'+vm,[build/'bin'/vm,linked,'-a',*args],marker)
+assert len(runs)==14
+retained=[]
+for p in sorted((work/'public-closeout-debug-final').glob('*.log')):
+ lines=p.read_text().splitlines()
+ if len(lines)<2 or lines[1]!='rc=0':continue
+ argv=ast.literal_eval(lines[0][5:])
+ if Path(argv[0]).name not in ('rxbvm','rxtvm'):continue
+ assert any('PASS:' in line for line in lines[2:]) and not any('FAIL:' in line or 'PANIC:' in line for line in lines[2:])
+ retained.append(str(p))
+assert len(retained)==9
+isolated=(work/'shared-cpu-rxtvm-isolated.log').read_text()
+assert 'PASS: four typed generation workers' in isolated and '\nrc=0\n' in isolated
+(outdir/'results.json').write_text(json.dumps(dict(new_runs=runs,retained_pass_logs=retained,isolated_replay=str(work/'shared-cpu-rxtvm-isolated.log'),total_distinct=24),indent=2)+'\n')
+print('PASS: 24 distinct Debug closeout consumers, 9 retained + 1 isolated replay + 14 remaining',flush=True)
+records=[]
+for label,argv in [('qa-prep-final',['cmake','--build',str(build),'--target','qa-prep','--parallel','6']),('full-debug',['ctest','--test-dir',str(build),'--parallel','30','--output-on-failure','-LE','performance-measurement'])]:
+ start=datetime.datetime.now(datetime.timezone.utc).isoformat(); log=work/(label+'.log')
+ with log.open('w') as out:
+  out.write('argv='+repr(argv)+'\nstarted='+start+'\n');out.flush();result=subprocess.run(argv,cwd=root,stdout=out,stderr=subprocess.STDOUT)
+ records.append(dict(label=label,argv=argv,start=start,end=datetime.datetime.now(datetime.timezone.utc).isoformat(),status=result.returncode));(work/'broad-commands.json').write_text(json.dumps(records,indent=2)+'\n')
+ print(label,'exit',result.returncode,records[-1]['end'],flush=True)
+ if result.returncode:raise SystemExit(result.returncode)
+print('PASS: required ordinary full Debug regression',flush=True)

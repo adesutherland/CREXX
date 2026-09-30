@@ -197,6 +197,7 @@ static int worker_redirect_standard_streams(int *input_out, int *output_out) {
 static int worker_execute(int input_descriptor,
                           int output_descriptor,
                           const char *program_path,
+                          const char *provider_location,
                           const rxvm_process_frame *invoke_frame) {
     rxvm_channel_task_invoke invoke;
     rxvm_executor *executor = 0;
@@ -210,8 +211,8 @@ static int worker_execute(int input_descriptor,
     if (rxvm_channel_parse_task_invoke(
             invoke_frame->payload, invoke_frame->payload_length,
             &invoke) != RXVM_CHANNEL_OK) return 0;
-    executor = rxvm_executor_create(
-            program_path, 1u, 1u, &executor_result);
+    executor = rxvm_executor_create_with_provider_path(
+            program_path, provider_location, 1u, 1u, &executor_result);
     if (!executor) goto cleanup;
     executor_result = rxvm_executor_submit_task_binding_registers_result(
             executor, 0u, invoke.task_binding,
@@ -278,7 +279,8 @@ cleanup:
     return okay;
 }
 
-int rxvm_process_worker_main(const char *program_path) {
+int rxvm_process_worker_main(const char *program_path,
+                             const char *provider_location) {
     int input_descriptor = -1;
     int output_descriptor = -1;
     int result = 2;
@@ -299,7 +301,7 @@ int rxvm_process_worker_main(const char *program_path) {
         if (frame.type != RXVM_PROCESS_FRAME_INVOKE || !frame.request_id ||
             !frame.payload_length ||
             !worker_execute(input_descriptor, output_descriptor,
-                            program_path, &frame)) {
+                            program_path, provider_location, &frame)) {
             rxvm_process_frame_free(&frame);
             break;
         }

@@ -1,0 +1,10 @@
+/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llama-real-payload-fixed-hxl0hago
+install completed for vulkan in /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llama-real-payload-fixed-hxl0hago/core/CREXX-windows-x64
+Active backend: vulkan
+PASS install
+install completed for vulkan in /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llama-real-payload-fixed-hxl0hago/core/CREXX-windows-x64
+Active backend: vulkan
+PASS install
+remove completed for vulkan in /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llama-real-payload-fixed-hxl0hago/core/CREXX-windows-x64
+Active backend: none. Use crexx-llama use <backend> to select another installed variant.
+PASS remove

@@ -1,0 +1,72 @@
+Command: cmake --build cmake-build-debugasan --target rxllama_qualify_embedding_legacy --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[  0%] Built target avl_tree
+[  0%] Built target rxpa
+[  2%] Built target platform
+[  5%] Built target rxbin
+[  5%] Built target rxvmmemory
+[  8%] Built target rxpashim
+[  8%] Built target rxvm_platform_objects
+[ 11%] Built target rxtvm_core_objects
+[ 11%] Built target rxlink
+[ 11%] Built target decnumber
+[ 14%] Built target dslsyntax_parser
+[ 14%] Built target re2c_objects_autogen_ver_to_vernum
+[ 14%] Built target lemon
+[ 17%] Built target re2c_objects_autogen
+[ 17%] Built target _hash
+[ 20%] Built target rxbvm_core_objects
+[ 22%] Built target ggml-base
+[ 22%] Built target rxvmref
+[ 22%] Built target rxvmplugin
+[ 28%] Built target ggml-metal
+[ 31%] Built target ggml-cpu
+[ 31%] Built target mc_decimal_manual
+[ 31%] Built target rxtvm
+[ 31%] Built target ggml
+[ 31%] Built target rxbvml
+[ 31%] Built target rxbvm
+[ 40%] Built target re2c
+[ 40%] Built target rxaslib
+[ 40%] Built target rxas
+[ 40%] Built target library-rxas
+[ 62%] Built target llama
+[ 71%] Built target rxclib
+[ 71%] Built target rxc
+[ 71%] Built target crexx_llama_bridge
+[ 71%] Built target token_bin
+[ 71%] Built target llama_provider_static
+[ 71%] Built target llama_provider
+[ 88%] Built target library-rexx
+[ 88%] Built target library
+[ 88%] Staging deterministic compiler-exit imports ...
+[ 88%] Built target compiler_exit_imports
+[ 88%] Built target exit_rxqueue_bin
+[ 88%] Built target exit_dump_bin
+[ 88%] Built target exit_query_bin
+[ 88%] Built target exit_sortx_bin
+[ 88%] Built target exit_address_bin
+[ 88%] Built target exit_sort_bin
+[ 88%] Built target exit_fsay_bin
+[ 88%] Built target exit_add_bin
+[ 88%] Built target exit_execio_bin
+[ 88%] Built target exit_msay_bin
+[ 91%] Built target exit_signal_bin
+[ 91%] Built target exit_parse_bin
+[ 91%] Built target exit_substr_bin
+[ 91%] Built target exit_rexxscript_bin
+[ 91%] Built target exit_trace_bin
+[ 91%] Built target exit_dummy_bin
+[ 91%] Built target compiler_exit_bin
+[ 91%] Staging immutable class library compiler imports ...
+[ 91%] Built target classlib_imports
+[100%] Built target classlib
+[100%] Staging exact imports for the Level B Level G builder ...
+[100%] Built target stage_g_builder_imports
+[100%] Built target rxfnsg
+[100%] Built target llama_provider_runtime_package
+QUALIFICATION_RECORD=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7
+PASS: STEP-06 embedding-legacy modes=cpu,required-gpu
+Elapsed time (seconds): 69.8529
+[100%] Built target rxllama_qualify_embedding_legacy

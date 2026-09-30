@@ -9,6 +9,9 @@ space. It is intended for packed lookup structures, indexes, parsers, protocol
 records, and other cases where repeatedly copying strings or binary slices would
 dominate runtime cost.
 
+Examples using the `binresize` library procedure require `import rxfnsb`.
+The binary-memory intrinsics themselves do not require that import.
+
 ## Core Rules
 
 - Offsets are zero-based byte offsets.
@@ -116,9 +119,10 @@ The fixed-width write form is:
 inside the current logical byte length. Binary-memory writes do not resize the
 buffer.
 
-<!-- rexx-example name="binary-memory-fixed-fields" test="pending" -->
+<!-- rexx-example name="binary-memory-fixed-fields" test="passed" verification="manual-opt-noopt-2026-09-18" -->
 ```rexx
 options levelb
+import rxfnsb
 
 main: procedure = .int
   constant NODE_LEFT = 0

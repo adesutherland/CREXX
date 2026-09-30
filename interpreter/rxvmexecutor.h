@@ -99,6 +99,14 @@ rxvm_executor *rxvm_executor_create(
         size_t queue_capacity,
         rxvm_executor_result *result_out);
 
+/* Reopen only the controller's existing trusted provider directories. */
+rxvm_executor *rxvm_executor_create_with_provider_path(
+        const char *rxbin_path,
+        const char *provider_location,
+        size_t worker_count,
+        size_t queue_capacity,
+        rxvm_executor_result *result_out);
+
 /* Start workers in an existing runtime and attach them to its already sealed
  * immutable program generation. PROVIDER_LOCATION is copied before workers
  * start; each worker resolves the generation's declared providers through that

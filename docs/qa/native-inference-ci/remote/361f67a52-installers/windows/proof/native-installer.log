@@ -1,0 +1,136 @@
+RUN: C:\Program Files (x86)/NSIS/makensis.exe /V2 /DCREXX_PAYLOAD_DIR=D:\a\_temp\core\CREXX-windows-x64 /DCREXX_OUTFILE=D:\a\_temp\core-qa-setup.exe D:\a\CREXX\CREXX\packaging\windows\crexx.nsi
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+RUN: C:\hostedtoolcache\windows\Python\3.13.15\x64\python.exe D:\a\CREXX\CREXX\scripts\package-llama-installer.py --core D:\a\_temp\core\CREXX-windows-x64 --plugin D:\a\_temp\plugin-vulkan\CREXX-windows-x64 --manager D:\a\_temp\manager --unsigned-qa --makensis C:\Program Files (x86)/NSIS/makensis.exe --output D:\a\_temp\llama-vulkan-qa-setup.exe
+Packaged optional plugin installer: D:\a\_temp\llama-vulkan-qa-setup.exe
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+
+cREXX: D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+Installed: vulkan (f10e70ee5f12ce49cc5088abc867748522d1d19c)
+
+RUN: D:\a\_temp\cREXX installed with spaces\bin\crexx-llama.exe use vulkan
+Already active: vulkan
+RUN: C:\hostedtoolcache\windows\Python\3.13.15\x64\python.exe D:\a\CREXX\CREXX\scripts\test-llama-installed.py --prefix D:\a\_temp\cREXX installed with spaces --logs D:\a\_temp\proof\consumer-vulkan
+PASS: installed compile
+PASS: installed assemble
+PASS: installed link
+PASS: installed run
+RUN: D:\a\_temp\cREXX installed with spaces\bin\crexx-llama.exe use vulkan
+Already active: vulkan
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Action: remove
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 1
+ERROR: Missing package file: D:/a/_temp/cREXX installed with spaces/bin/crexx-provider-package.exe
+llama.rexx operation failed; no backend change is committed.
+
+
+Remaining files:
+installer.json
+payload
+uninstall.exe
+payload\bin
+payload\llama-package.json
+payload\share
+payload\bin\crexx-ggml-base.dll
+payload\bin\crexx-ggml.dll
+payload\bin\crexx-llama-engine.dll
+payload\bin\crexx-llama.dll
+payload\bin\crexx-provider-package.exe
+payload\bin\providers
+payload\bin\rxllama.rxplugin
+payload\share\crexx
+payload\share\crexx\llama
+payload\share\crexx\llama\examples
+payload\share\crexx\llama\installation.md
+payload\share\crexx\llama\models.md
+payload\share\crexx\llama\qualification.md
+payload\share\crexx\llama\README.md
+payload\share\crexx\llama\reference.md
+payload\share\crexx\llama\examples\persistent_embeddings.crexx
+payload\share\crexx\llama\examples\persistent_generation.crexx
+payload\share\crexx\llama\examples\README.md
+payload\share\crexx\llama\examples\shared_embeddings.crexx
+payload\share\crexx\llama\examples\shared_generation.crexx
+payload\bin\providers\concrt140.dll
+payload\bin\providers\crexx-ggml-base.dll
+payload\bin\providers\crexx-ggml-base.exp
+payload\bin\providers\crexx-ggml-base.lib
+payload\bin\providers\crexx-ggml-cpu-alderlake.dll
+payload\bin\providers\crexx-ggml-cpu-alderlake.exp
+payload\bin\providers\crexx-ggml-cpu-alderlake.lib
+payload\bin\providers\crexx-ggml-cpu-cannonlake.dll
+payload\bin\providers\crexx-ggml-cpu-cannonlake.exp
+payload\bin\providers\crexx-ggml-cpu-cannonlake.lib
+payload\bin\providers\crexx-ggml-cpu-cascadelake.dll
+payload\bin\providers\crexx-ggml-cpu-cascadelake.exp
+payload\bin\providers\crexx-ggml-cpu-cascadelake.lib
+payload\bin\providers\crexx-ggml-cpu-haswell.dll
+payload\bin\providers\crexx-ggml-cpu-haswell.exp
+payload\bin\providers\crexx-ggml-cpu-haswell.lib
+payload\bin\providers\crexx-ggml-cpu-icelake.dll
+payload\bin\providers\crexx-ggml-cpu-icelake.exp
+payload\bin\providers\crexx-ggml-cpu-icelake.lib
+payload\bin\providers\crexx-ggml-cpu-sandybridge.dll
+payload\bin\providers\crexx-ggml-cpu-sandybridge.exp
+payload\bin\providers\crexx-ggml-cpu-sandybridge.lib
+payload\bin\providers\crexx-ggml-cpu-skylakex.dll
+payload\bin\providers\crexx-ggml-cpu-skylakex.exp
+payload\bin\providers\crexx-ggml-cpu-skylakex.lib
+payload\bin\providers\crexx-ggml-cpu-sse42.dll
+payload\bin\providers\crexx-ggml-cpu-sse42.exp
+payload\bin\providers\crexx-ggml-cpu-sse42.lib
+payload\bin\providers\crexx-ggml-cpu-x64.dll
+payload\bin\providers\crexx-ggml-cpu-x64.exp
+payload\bin\providers\crexx-ggml-cpu-x64.lib
+payload\bin\providers\crexx-ggml-vulkan.dll
+payload\bin\providers\crexx-ggml-vulkan.exp
+payload\bin\providers\crexx-ggml-vulkan.lib
+payload\bin\providers\crexx-ggml.dll
+payload\bin\providers\crexx-ggml.exp
+payload\bin\providers\crexx-ggml.lib
+payload\bin\providers\crexx-llama-engine.dll
+payload\bin\providers\crexx-llama-engine.exp
+payload\bin\providers\crexx-llama-engine.lib
+payload\bin\providers\crexx-llama.dll
+payload\bin\providers\crexx-llama.exp
+payload\bin\providers\crexx-llama.lib
+payload\bin\providers\msvcp140.dll
+payload\bin\providers\msvcp140_1.dll
+payload\bin\providers\msvcp140_2.dll
+payload\bin\providers\msvcp140_atomic_wait.dll
+payload\bin\providers\msvcp140_codecvt_ids.dll
+payload\bin\providers\rxllama-NOTICES.txt
+payload\bin\providers\rxllama.lib
+payload\bin\providers\rxllama.native.json
+payload\bin\providers\rxllama.runtime.json
+payload\bin\providers\rxllama.rxplugin
+payload\bin\providers\rxllama_static.lib
+payload\bin\providers\vccorlib140.dll
+payload\bin\providers\vcruntime140.dll
+payload\bin\providers\vcruntime140_1.dll
+payload\bin\providers\vcruntime140_threads.dll
+Traceback (most recent call last):
+  File "D:\a\CREXX\CREXX\scripts\test-llama-windows-installer.py", line 145, in <module>
+    main()
+    ~~~~^^
+  File "D:\a\CREXX\CREXX\scripts\test-llama-windows-installer.py", line 114, in main
+    wait_removed(store)
+    ~~~~~~~~~~~~^^^^^^^
+  File "D:\a\CREXX\CREXX\scripts\test-llama-windows-installer.py", line 44, in wait_removed
+    raise RuntimeError('Uninstaller did not remove ' + str(path))
+RuntimeError: Uninstaller did not remove D:\a\_temp\cREXX installed with spaces\.llama-backends\vulkan

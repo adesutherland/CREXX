@@ -6,6 +6,10 @@ RXPP is a **source-to-source pre-compiler** for CREXX (levelb) Rexx programs. It
 
 RXPP is intended for developers who want to structure larger Rexx programs cleanly while keeping the runtime environment simple and transparent.
 
+For a focused introduction to creating and using RXPP macros, see the
+[RXPP Macro User's Guide](rxpp-macro-users-guide.md). This document remains
+the broader guide to RXPP preprocessing features.
+
 ---
 
 ## 2. Basic Usage and Workflow
@@ -46,6 +50,39 @@ Options:
 This section documents the RXPP macro system in more depth. RXPP macros are **compile-time only** constructs: they are fully expanded by the RXPP preprocessor and do not exist at runtime. After preprocessing, only standard CREXX Rexx code remains.
 
 Macros are intended to improve readability, reduce repetition, and provide small, reusable language extensions without runtime overhead.
+
+#### External script macros
+
+An RXPP source file can register script-macro packages from an additional
+directory:
+
+```rexx
+##loadMacro path-to-macros
+```
+
+RXPP scans the directory for `.rxpm` filenames during its early preprocessing
+pass, before any macro expansion takes place. Only the names are registered at
+that point. The package body is loaded lazily the first time its directive is
+used.
+
+The selected `maclib` directory is searched first, followed by `syspath`, then
+each `##loadMacro` directory in source order. If the same macro name is found
+again, the later registration replaces the earlier one; therefore the last
+matching `##loadMacro` wins. The directive is consumed by RXPP and does not
+remain in generated CREXX.
+
+With verbose output enabled, `CRX0170I` shows registration or replacement and
+`CRX0171I` shows the file selected for lazy loading.
+
+RXPP accepts relative paths for `##INCLUDE`, `##USE`, and `##loadMacro`.
+They are resolved against the configured RXPP macro/system path and normalized
+across `/` and `\\` separators, including `.` and `..` components.
+
+For `.rxpp` inputs, `##buildDir path` tells the `crexx` driver where to place
+the generated `.crexx`, `.rxas`, and `.rxbin` artifacts. The path is relative
+to the driver’s current working directory when it is not absolute. The
+driver’s working directory is unchanged. Place the directive within the first
+64 physical source lines; comments and blank lines count toward this limit.
 
 ---
 
@@ -855,8 +892,138 @@ Define macros.
 ### `##INCLUDE` / `##USE`
 Inline file inclusion.
 
+### `##loadMacro`
+Register `.rxpm` script-macro names from an additional directory. Registration
+happens before expansion; package contents are loaded lazily on first use.
+Later registrations override earlier registrations of the same name.
+
+### `##buildDir`
+Route generated `.crexx`, `.rxas`, and `.rxbin` artifacts to the specified
+directory when the source is compiled through `crexx`.
+
+### `##EXTERNAL`
+
+Adds an existing RXBIN module to the final build stage.
+
+```rexx
+##EXTERNAL ../lib/CallCatalog.rxbin
+```
+
+For RXBINs in the system binary directory, use the case-insensitive `&syslib/` prefix:
+
+```rexx
+##EXTERNAL &syslib/library.rxbin
+##EXTERNAL &syslib/classlib.rxbin
+##EXTERNAL &syslib/rxfnsg.rxbin
+```
+
+RXPP resolves `&syslib/` using the system path returned by `env.LoadPath()` and
+writes the resulting full path into the `.inc` manifest. The compiler driver
+uses that manifest path unchanged, so no corresponding `crexx.crexx` setting
+is required. Other external paths are resolved relative to the `.rxpp` source
+file.
+
+The current `.rxpp` source is still preprocessed, compiled, and assembled
+normally.
+
+Without `##LINK`, the generated RXBIN and all declared external modules are
+passed to `rxvme`:
+
+```text
+rxvme generated.rxbin external1.rxbin external2.rxbin ...
+```
+
+Multiple `##EXTERNAL` directives may be used when a program depends on more
+than one external RXBIN module.
+
+### `##LINK`
+
+Requests creation of a linked RXBIN instead of executing the generated module.
+
+```rexx
+##LINK MyApplication
+```
+
+The source still passes through the normal RXPP, compiler, and assembler
+stages. The generated RXBIN is then linked together with all modules declared
+using `##EXTERNAL`:
+
+```text
+source.rxpp
+  -> RXPP
+  -> RXC
+  -> RXAS
+  -> generated.rxbin
+  -> RXLINK generated.rxbin + external modules
+  -> MyApplication.rxbin
+```
+
+`##LINK` accepts a bare member name, without a path or `.rxbin` suffix.
+
+When combined with `##BUILDDIR`, the build directory determines where the
+linked member is written:
+
+```rexx
+##BUILDDIR ../build
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK MyApplication
+```
+
+This produces:
+
+```text
+../build/MyApplication.rxbin
+```
+
+Without `##LINK`, the equivalent build ends by running the generated RXBIN with
+the external modules instead of producing a linked member.
+
+
 ### `##SET` / `##UNSET`
 Set compile-time variables.
+
+RXPP also supplies these built-in compile-time variables. Use braces to
+expand them in source, macros, or `##DATA` content:
+
+| Variable | Meaning |
+| --- | --- |
+| `{date}` | Compilation date |
+| `{time}` | Compilation time |
+| `{syslib}` | RXPP system binary/library path |
+| `{syspath}` | RXPP system or macro search path |
+| `{macpath}` | Directory containing the selected macro library |
+| `{inpath}` | Directory containing the input source |
+| `{buildpath}` | Directory containing the generated build output |
+| `{sourcefile}` | Normalized path of the input source file |
+| `{outputfile}` | Normalized path of the generated output file |
+| `{platform}` | Host platform reported by the RXPP runtime |
+| `{rxpp_version}` | CREXX version reported by the RXPP runtime |
+| `{rxpp_rexx}` | Input module/file name (legacy compatibility) |
+| `{rxpp_date}` | Combined compilation date and time (legacy compatibility) |
+
+```rexx
+say 'Build {date} {time}'
+say 'Libraries: {syslib}'
+say 'Source: {inpath}'
+say 'Version: {rxpp_version} on {platform}'
+```
+
+Expansion happens during preprocessing, and the variable names are
+case-insensitive. `{syslib}` is the value form of the `&syslib/` prefix used
+in `##EXTERNAL` declarations. `cflags` and `printgen` are also initialized
+control variables; see the `##CFLAG` and `PRINTGEN` sections. Additional
+user-defined variables can be declared with `##SET`.
+
+Ordinary comments are not expanded. For an opt-in metadata comment, place
+`/* RXPP:EXPAND */` at the beginning of the line:
+
+```rexx
+/* RXPP:EXPAND */ -- Created {date} at {time}; RXPP {rxpp_version}
+/* RXPP:EXPAND */ -- Source {sourcefile}; system library {syslib}
+```
+
+RXPP removes the marker and expands the rest of the line. Use `--` for the
+remaining comment text; a remainder beginning with `/*` remains protected.
 
 ### `##IF` / `##IFN` / `##ELSE` / `##END`
 Conditional compilation.
@@ -880,26 +1047,147 @@ Example:
 ##CFLAG dotisstem parse iflink
 ```
 
-Notable flag:
+Notable flags:
 
 - `dotisstem`: **By default, RXPP requires at least two tail segments to recognize a stem**, else it is interpreted as a CREXX array. Setting `dotisstem` relaxes that rule so a single tail can be treated as a stem.
+- `format`: Applies the indentation-only formatter to the final generated CREXX source before it is written. It is opt-in and does not change the default output path.
+- `4buf`: Prints the final buffer after optional formatting and before writing. `n4buf` is enabled by default, so this report is silent unless `4buf` is specified.
 
-### `##DATA name` and `##END`
+### `##DATA name [callback]` and `##END`
 
-`##DATA` captures all subsequent lines up to the matching `##END` directive and converts them into array assignments of the form:
+`##DATA` captures all subsequent lines up to the matching `##END` directive and converts them into a cREXX string array.
 
+For example:
+
+```rexx
+##DATA names
+Alice
+Bob
+Carol
+##END
 ```
-name.1 = ...
-name.2 = ...
-name.3 = ...
+
+generates, in effect:
+
+```rexx
+names.1 = 'Alice'
+names.2 = 'Bob'
+names.3 = 'Carol'
+names.0 = 3
 ```
 
-All lines between `##DATA` and `##END` are treated as **plain, free-form text**. They are **not parsed, tokenized, or interpreted** in any special way by RXPP. No quoting rules, delimiters, or formatting constraints apply.
+All lines between `##DATA` and `##END` are treated as **plain, free-form text**. They are not parsed, tokenized, or interpreted specially by `##DATA`. Each line is collected in order and stored as an element of the generated array.
 
-This design allows you to write ordinary text exactly as it should appear, without escaping or syntactic decoration. RXPP simply stores each line verbatim into the associated array element.
+Macro calls or RXPP variables contained in the captured text may still be processed by later preprocessing stages.
 
-This makes `##DATA` especially useful for embedding inline data blocks—such as templates, configuration fragments, scripts, messages, or documentation text—directly into the source code without relying on external files. Each line is preserved exactly as written and stored sequentially, which keeps later processing simple and predictable.
+#### Optional callback
 
+A callback may optionally be specified after the array name:
+
+```rexx
+##DATA person prolog..PrologSourceAppendArray
+  person(alice).
+  person(bob).
+##END
+```
+
+After the complete array has been generated, RXPP emits a normal cREXX call with the array as its argument. The example above therefore becomes, in effect:
+
+```rexx
+person.1 = 'person(alice).'
+person.2 = 'person(bob).'
+person.0 = 2
+
+call prolog..PrologSourceAppendArray person
+```
+
+The callback is invoked **once after the complete block has been converted**, not once for each line.
+
+The callback is optional. A normal:
+
+```rexx
+##DATA person
+...
+##END
+```
+
+continues to generate only the array.
+
+An optional descriptive keyword may also be placed before the callback name:
+
+```text
+##DATA name keyword callback
+```
+
+The keyword does not change the callback semantics; it provides a more descriptive form of the declaration.
+
+#### `##RELATION`, `##PROGRAM`, `##LIBRARY` and `##RULE`
+
+`##RELATION`, `##PROGRAM`, `##LIBRARY` and `##RULE` are aliases for `##DATA`. They use the same block collection, array generation, and optional callback mechanism. The directive names have no semantic effect and are alternative spellings only.
+
+#### `##DALIAS alias1 [, alias2 ...]`
+
+`##DALIAS` defines application-specific directive names that use the `##DATA` block syntax and semantics. Alias names are registered for subsequent input, are matched without regard to case, and may be separated by commas or blanks.
+
+For example, an application that processes configuration entries could define a more descriptive directive name:
+
+```rexx
+##DALIAS CONFIG
+
+##CONFIG settings process_settings
+host localhost
+port 8080
+mode development
+##END
+```
+
+Here `##CONFIG` behaves exactly like `##DATA`: it generates the `settings.` stem from the block contents and invokes:
+
+```rexx
+process_settings settings
+```
+
+The alias declaration must appear before the aliased directive.
+
+`##DALIAS` aliases the **directive name**. It does not define an alias for the generated stem or its contents.
+
+For example, a program can be described as:
+
+```rexx
+##PROGRAM prolog_sample
+prolog_sample.rxpp
+##END
+```
+
+and a library as:
+
+```rexx
+##LIBRARY prolog
+prolog.crexx
+crexxcallback.crexx
+##END
+```
+
+A callback can be attached in exactly the same way:
+
+```rexx
+##LIBRARY prolog processLibrary
+prolog.crexx
+crexxcallback.crexx
+##END
+```
+
+`##RELATION relation-name [keyword] [callback]` is simply an alternative spelling of the corresponding `##DATA` form.
+
+After the `prolog` array has been generated, RXPP emits, in effect:
+
+```rexx
+call processLibrary prolog
+```
+
+At this level, `##PROGRAM`, `##LIBRARY` and `##RULE` do not themselves compile, link, execute, or otherwise interpret their contents. They collect the block into an array and, when specified, pass that completed array to a callback. The callback determines what further processing is performed.
+
+This mechanism is useful for embedding not only ordinary data, but also configuration fragments, scripts, templates, messages, Prolog facts and rules, program member lists, library member lists, or other structured text directly in an RXPP source file.
 ---
 
 ### `##SYSxxx`

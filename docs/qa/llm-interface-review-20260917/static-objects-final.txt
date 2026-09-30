@@ -1,0 +1,185 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 2435: rxpa_objects_static_rxbvm_noopt
+ 1/16 Test #2435: rxpa_objects_static_rxbvm_noopt ...............   Passed    0.68 sec
+      Start 2437: rxpa_objects_static_rxtvm_noopt
+ 2/16 Test #2437: rxpa_objects_static_rxtvm_noopt ...............   Passed    0.65 sec
+      Start 2439: rxpa_objects_static_rxbvm_opt
+ 3/16 Test #2439: rxpa_objects_static_rxbvm_opt .................   Passed    0.37 sec
+      Start 2441: rxpa_objects_static_rxtvm_opt
+ 4/16 Test #2441: rxpa_objects_static_rxtvm_opt .................   Passed    0.37 sec
+      Start 2443: rxpa_objects_class_only_static_rxbvm_noopt
+ 5/16 Test #2443: rxpa_objects_class_only_static_rxbvm_noopt ....   Passed    0.36 sec
+      Start 2445: rxpa_objects_class_only_static_rxtvm_noopt
+ 6/16 Test #2445: rxpa_objects_class_only_static_rxtvm_noopt ....   Passed    0.36 sec
+      Start 2447: rxpa_objects_class_only_static_rxbvm_opt
+ 7/16 Test #2447: rxpa_objects_class_only_static_rxbvm_opt ......   Passed    0.36 sec
+      Start 2449: rxpa_objects_class_only_static_rxtvm_opt
+ 8/16 Test #2449: rxpa_objects_class_only_static_rxtvm_opt ......   Passed    0.37 sec
+      Start 2451: rxpa_objects_workers_static_rxbvm_noopt
+ 9/16 Test #2451: rxpa_objects_workers_static_rxbvm_noopt .......   Passed    0.99 sec
+      Start 2453: rxpa_objects_workers_static_rxtvm_noopt
+10/16 Test #2453: rxpa_objects_workers_static_rxtvm_noopt .......   Passed    0.98 sec
+      Start 2455: rxpa_objects_workers_static_rxbvm_opt
+11/16 Test #2455: rxpa_objects_workers_static_rxbvm_opt .........   Passed    0.98 sec
+      Start 2457: rxpa_objects_workers_static_rxtvm_opt
+12/16 Test #2457: rxpa_objects_workers_static_rxtvm_opt .........   Passed    0.98 sec
+      Start 2459: rxpa_objects_text_worker_static_rxbvm_noopt
+13/16 Test #2459: rxpa_objects_text_worker_static_rxbvm_noopt ...   Passed    0.99 sec
+      Start 2461: rxpa_objects_text_worker_static_rxtvm_noopt
+14/16 Test #2461: rxpa_objects_text_worker_static_rxtvm_noopt ...   Passed    0.99 sec
+      Start 2463: rxpa_objects_text_worker_static_rxbvm_opt
+15/16 Test #2463: rxpa_objects_text_worker_static_rxbvm_opt .....   Passed    0.98 sec
+      Start 2465: rxpa_objects_text_worker_static_rxtvm_opt
+16/16 Test #2465: rxpa_objects_text_worker_static_rxtvm_opt .....   Passed    0.98 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+classes             =  27.14 sec*proc (16 tests)
+comprehensive       =  27.14 sec*proc (16 tests)
+native-objects      =  27.14 sec*proc (16 tests)
+optimizer-parity    =  27.14 sec*proc (16 tests)
+regression          =  27.14 sec*proc (16 tests)
+rxpa                =  27.14 sec*proc (16 tests)
+static              =  27.14 sec*proc (16 tests)
+
+Total Test time (real) =  11.46 sec
+ASan run directory: cmake-build-debugasan/asan-logs/20260917-224138-build
+==> build
+    log: cmake-build-debugasan/asan-logs/20260917-224138-build/build.log
+==> build passed
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:388:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  388 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+[100%] Linking C executable ../objects_rxtvm
+[100%] Built target objects_rxtvm
+[  0%] Built target rxbin
+[  4%] Built target dslsyntax_parser
+[  4%] Built target re2c_objects_autogen_ver_to_vernum
+[  4%] Built target lemon
+[  9%] Built target re2c_objects_autogen
+[  9%] Built target platform
+[  9%] Built target avl_tree
+[  9%] Built target rxpa
+[ 13%] Built target rxvmmemory
+[ 13%] Built target rxbvm_core_objects
+[ 13%] Built target decnumber
+[ 13%] Built target rxvm_platform_objects
+[ 13%] Built target _hash
+[ 18%] Built target fs
+[ 18%] Built target rxpashim
+[ 18%] Building C object tests/rxpa/CMakeFiles/_rxpa_objects.dir/rxpa_objects.c.o
+[ 18%] Built target rxvmref
+[ 18%] Built target rxlink
+[ 18%] Built target rxvmplugin
+[ 18%] Linking C shared module rx_rxpa_objects.rxplugin
+[ 18%] Built target mc_decimal_manual
+[ 22%] Built target rxbvm
+[ 22%] Built target rxbvml
+[ 22%] Built target _rxpa_objects
+[ 31%] Built target re2c
+[ 36%] Built target rxaslib
+[ 36%] Built target rxas
+[ 36%] Built target library-rxas
+[ 50%] Built target rxclib
+[ 54%] Built target rxc
+[ 54%] Built target token_bin
+[ 81%] Built target library-rexx
+[ 81%] Built target library
+[ 81%] Staging deterministic compiler-exit imports ...
+[ 81%] Built target compiler_exit_imports
+[ 86%] Built target exit_query_bin
+[ 86%] Built target exit_rxqueue_bin
+[ 86%] Built target exit_sort_bin
+[ 86%] Built target exit_dump_bin
+[ 86%] Built target exit_address_bin
+[ 86%] Built target exit_sortx_bin
+[ 86%] Built target exit_execio_bin
+[ 86%] Built target exit_add_bin
+[ 86%] Built target exit_parse_bin
+[ 86%] Built target exit_signal_bin
+[ 86%] Built target exit_fsay_bin
+[ 86%] Built target exit_msay_bin
+[ 86%] Built target exit_rexxscript_bin
+[ 86%] Built target exit_trace_bin
+[ 86%] Built target exit_substr_bin
+[ 86%] Built target exit_dummy_bin
+[ 86%] Built target compiler_exit_bin
+[ 86%] Staging immutable class library compiler imports ...
+[ 86%] Built target classlib_imports
+[100%] Built target classlib
+[100%] Staging exact imports for the Level B Level G builder ...
+[100%] Built target stage_g_builder_imports
+[100%] Built target rxfnsg
+[100%] Generating rxpa_objects_noopt-linked.rxbin
+[100%] Generating rxpa_objects_opt-linked.rxbin
+[100%] Generating rxpa_objects_class_only_noopt-linked.rxbin
+[100%] Generating rxpa_objects_class_only_opt-linked.rxbin
+[100%] Generating rxpa_objects_workers_noopt-linked.rxbin
+[100%] Generating rxpa_objects_workers_opt-linked.rxbin
+[100%] Generating rxpa_objects_text_worker_noopt-linked.rxbin
+[100%] Generating rxpa_objects_text_worker_opt-linked.rxbin
+[100%] Built target rxpa_objects_artifacts
+ASan run complete: cmake-build-debugasan/asan-logs/20260917-224138-build
+ASan run directory: cmake-build-debugasan/asan-logs/20260917-224206-ctest
+==> ctest
+    log: cmake-build-debugasan/asan-logs/20260917-224206-ctest/ctest.log
+==> ctest passed
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^rxpa_objects.\*_static_\(rxbvm\|rxtvm\)_\(noopt\|opt\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start 2437: rxpa_objects_static_rxbvm_noopt
+ 1/16 Test #2437: rxpa_objects_static_rxbvm_noopt ...............   Passed    0.97 sec
+      Start 2439: rxpa_objects_static_rxtvm_noopt
+ 2/16 Test #2439: rxpa_objects_static_rxtvm_noopt ...............   Passed    0.95 sec
+      Start 2441: rxpa_objects_static_rxbvm_opt
+ 3/16 Test #2441: rxpa_objects_static_rxbvm_opt .................   Passed    0.60 sec
+      Start 2443: rxpa_objects_static_rxtvm_opt
+ 4/16 Test #2443: rxpa_objects_static_rxtvm_opt .................   Passed    0.62 sec
+      Start 2445: rxpa_objects_class_only_static_rxbvm_noopt
+ 5/16 Test #2445: rxpa_objects_class_only_static_rxbvm_noopt ....   Passed    0.60 sec
+      Start 2447: rxpa_objects_class_only_static_rxtvm_noopt
+ 6/16 Test #2447: rxpa_objects_class_only_static_rxtvm_noopt ....   Passed    0.64 sec
+      Start 2449: rxpa_objects_class_only_static_rxbvm_opt
+ 7/16 Test #2449: rxpa_objects_class_only_static_rxbvm_opt ......   Passed    0.59 sec
+      Start 2451: rxpa_objects_class_only_static_rxtvm_opt
+ 8/16 Test #2451: rxpa_objects_class_only_static_rxtvm_opt ......   Passed    0.59 sec
+      Start 2453: rxpa_objects_workers_static_rxbvm_noopt
+ 9/16 Test #2453: rxpa_objects_workers_static_rxbvm_noopt .......   Passed    1.45 sec
+      Start 2455: rxpa_objects_workers_static_rxtvm_noopt
+10/16 Test #2455: rxpa_objects_workers_static_rxtvm_noopt .......   Passed    1.46 sec
+      Start 2457: rxpa_objects_workers_static_rxbvm_opt
+11/16 Test #2457: rxpa_objects_workers_static_rxbvm_opt .........   Passed    1.44 sec
+      Start 2459: rxpa_objects_workers_static_rxtvm_opt
+12/16 Test #2459: rxpa_objects_workers_static_rxtvm_opt .........   Passed    1.45 sec
+      Start 2461: rxpa_objects_text_worker_static_rxbvm_noopt
+13/16 Test #2461: rxpa_objects_text_worker_static_rxbvm_noopt ...   Passed    1.45 sec
+      Start 2463: rxpa_objects_text_worker_static_rxtvm_noopt
+14/16 Test #2463: rxpa_objects_text_worker_static_rxtvm_noopt ...   Passed    1.46 sec
+      Start 2465: rxpa_objects_text_worker_static_rxbvm_opt
+15/16 Test #2465: rxpa_objects_text_worker_static_rxbvm_opt .....   Passed    1.47 sec
+      Start 2467: rxpa_objects_text_worker_static_rxtvm_opt
+16/16 Test #2467: rxpa_objects_text_worker_static_rxtvm_opt .....   Passed    1.46 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+classes             =  40.45 sec*proc (16 tests)
+comprehensive       =  40.45 sec*proc (16 tests)
+native-objects      =  40.45 sec*proc (16 tests)
+optimizer-parity    =  40.45 sec*proc (16 tests)
+regression          =  40.45 sec*proc (16 tests)
+rxpa                =  40.45 sec*proc (16 tests)
+static              =  40.45 sec*proc (16 tests)
+
+Total Test time (real) =  17.24 sec
+ASan run complete: cmake-build-debugasan/asan-logs/20260917-224206-ctest

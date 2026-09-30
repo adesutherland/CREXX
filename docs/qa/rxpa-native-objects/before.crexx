@@ -1,0 +1,25 @@
+options levelb
+namespace rxpa_objects_test
+import rxpa_objects
+
+main: procedure = .int
+  native = make(10)
+  direct = .box(20)
+  named = .box.from(30)
+  if native.read() \= 10 | direct.add(2) \= 22 | named.read() \= 30 then do
+    say "FAIL: C native member binding"
+    return 1
+  end
+  say "PASS: C native factory and concrete method binding"
+  if <typeof>(native) \= ".rxpa_objects..box" | <typeof>(direct) \= ".rxpa_objects..box" | <typeof>(named) \= ".rxpa_objects..box" then do
+    say "FAIL: C native class identity" <typeof>(native) <typeof>(direct) <typeof>(named)
+    return 1
+  end
+  object = native as .object
+  if \(object is .box) | \initialized(native) then return 2
+  contract = object as .counter
+  if contract.add(7) \= 17 | contract.read() \= 17 then return 3
+  selected = .counter(40)
+  if selected.read() \= 40 | <typeof>(selected) \= ".rxpa_objects..box" then return 4
+  say "PASS: C native objects, factories, identity and interface dispatch"
+  return 0

@@ -1,0 +1,123 @@
+/* S5: minimum typed generation semantics before the first Release verdict. */
+options levelg floats_binary
+import rxfnsb
+import _rxsysb
+import rxfnsg
+import rxunicode
+import llama
+
+require: procedure = .void
+  arg okay = .boolean, message = .string
+  if okay then return
+  call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
+  return
+
+ready_model: procedure = .void
+  arg model = .llama..model
+  started = time("us")
+  do forever
+    state = model.state()
+    call require model.status() = 0, "model state"
+    if state = "ready" then return
+    call require state = "loading", "model loading"
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require duration < 600000000, "model deadline"
+  end
+
+main: procedure = .int
+  arg args = .string[]
+  if args[0] <> 3 then return 2
+  config = .llama..configuration()
+  call require config.status() = 0, "configuration"
+  call require config.set_text("hardware_mode", args[1]) = 0, "hardware policy"
+  runtime = .llama..runtime(config)
+  call require runtime.status() = 0, "runtime"
+  model = runtime.model(args[2], args[3], "smollm2-360m-instruct", config)
+  call require model.status() = 0, "model"
+  call ready_model model
+  if args[1] = "required-gpu" then call require model.info_int("gpu_layers") > 0, "GPU offload"
+  session = model.generation_session(config)
+  call require session.status() = 0, "generation session"
+  do until session.prepare(128) = "ready"
+    call require session.status() = 0, "session prepare"
+  end
+  rows = .string[]
+  rows[1] = "Name one animal."
+  rows[2] = "What is two plus two?"
+  rows[3] = "Say hello in French."
+  rows[4] = "Name one planet."
+  limited = .llama..configuration()
+  call require limited.set_text("hardware_mode", args[1]) = 0, "matching hardware"
+  call require limited.set_int("request_tokens", 512) = 0, "matching row token limit"
+  call require limited.set_int("request_rows", 1) = 0, "row limit"
+  partial = session.request(limited)
+  call require partial.add_all(rows, "") <> 0, "partial batch rejection"
+  diagnostic = partial.diagnostic()
+  call require diagnostic.operation() = "addprompt" & diagnostic.code() <> 0, "retained row diagnostic"
+  call require partial.state() = "cancelled", "partial batch cancelled"
+  call require partial.close() = 0 & limited.close() = 0, "failed request close"
+  row = .int
+  previous = .string[]
+  combined = .string[]
+  do iteration = 1 to 2
+    request = session.request(config)
+    call require request.status() = 0, "persistent request"
+    busy = session.request(config)
+    call require busy.status() <> 0 & busy.close() = 0, "one active request"
+    call require request.add_all(rows, "") = 0, "batch input"
+    early = request.read(1)
+    call require early.status() <> 0 & early.text() = "" & early.tokens() = 0, "early read"
+    call require request.submit() = 0, "submit"
+    do row = 1 to 4
+      combined[row] = ""
+    end
+    started = time("us")
+    total = 0
+    state = ""
+    chunk = .llama..generation_chunk
+    saved = .llama..generation_chunk
+    saved_text = ""
+    do forever
+      state = request.process(128)
+      call require request.status() = 0, "process"
+      do row = 1 to 4
+        chunk = request.read(row)
+        call require chunk.status() = 0 & chunk.row() = row, "ordered chunk"
+        total = total + chunk.tokens()
+        combined[row] = combined[row] || chunk.text()
+        if row = 1 & chunk.text() <> "" then do
+          saved = chunk
+          saved_text = saved.text()
+        end
+        if state = "complete" then call require chunk.finish() = "eos" | chunk.finish() = "output_limit", "terminal reason"
+      end
+      if state = "complete" then leave
+      duration = time("us") - started
+      if duration < 0 then duration = duration + 86400000000
+      call require state = "running" & duration < 600000000, "bounded completion"
+    end
+    call require total > 0 & total <= 128, "output budget"
+    again = request.read(1)
+    call require again.text() = "" & again.tokens() = 0, "no repeated delta"
+    call require request.close() = 0, "request close"
+    call require saved.text() = saved_text, "owned chunk survives reads and close"
+    do row = 1 to 4
+      call require combined[row] <> "", "nonempty row"
+      if iteration = 2 then call require combined[row] = previous[row], "repeat equality"
+      previous[row] = combined[row]
+    end
+  end
+  cancelled = session.request(config)
+  call require cancelled.add("", "Name three animals.") = 1, "single add"
+  call require cancelled.submit() = 0 & cancelled.process(1) = "running", "bounded prefill"
+  call require cancelled.cancel() = 0, "cancel"
+  terminal = cancelled.read(1)
+  call require terminal.finish() = "cancelled", "cancel finish"
+  call require cancelled.close() = 0, "cancel close"
+  call require model.info_int("load_count") = 1, "one model load"
+  call require session.close() = 0 & model.close() = 0, "close persistent owners"
+  call require runtime.info_int("reserved_bytes") = 0, "reservations released"
+  call require runtime.close() = 0 & config.close() = 0, "shutdown"
+  say "PASS: typed llama generation"
+  return 0

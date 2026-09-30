@@ -249,6 +249,7 @@ void free_tok(Context *context) {
 /* ASTNode Factory - With node type*/
 ASTNode *ast_ft(Context* context, NodeType type) {
     ASTNode *node = malloc(sizeof(ASTNode));
+    if (!node) RX_PANIC_OOM("malloc compiler AST node", sizeof(ASTNode), 0);
     node->context = context;
     node->file_name = context->file_name;
     node->parent = 0;
@@ -585,7 +586,19 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             }
             else {
                 /* Need to make a new symbol */
-                new_symbol = sym_afqn(context->dest, fqname);
+                /* Class named factory/match labels contain a literal dot.
+                 * Recreate their symbol in the already-copied class scope;
+                 * sym_afqn would invent a namespace inside §factory/§match,
+                 * corrupting the default factory's scope on later attachment. */
+                if ((node->node_type == FACTORY || node->node_type == MATCH) &&
+                    node->scope->type == SCOPE_PROCEDURE &&
+                    new_node->parent->scope &&
+                    new_node->parent->scope->type == SCOPE_CLASS) {
+                    new_symbol = sym_fn(new_node->parent->scope,
+                                         node->scope->name, strlen(node->scope->name));
+                } else {
+                    new_symbol = sym_afqn(context->dest, fqname);
+                }
                 new_node->scope = scp_f(new_node->context, new_node->parent->scope, new_node, new_symbol, node->scope->type);
                 if (node->scope->type == SCOPE_NAMESPACE) {
                     new_symbol->symbol_type = NAMESPACE_SYMBOL;

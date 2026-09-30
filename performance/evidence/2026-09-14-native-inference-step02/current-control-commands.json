@@ -1,0 +1,54 @@
+[
+  {
+    "case": "bge-cpu-current",
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-controls/bin",
+      "cpu",
+      "bge",
+      "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/controls/bge-cpu-current.json",
+      "100",
+      "20",
+      "4",
+      "2"
+    ],
+    "exit_code": 1,
+    "result_file": "performance/evidence/2026-09-14-native-inference-step02/controls/bge-cpu-current.json"
+  },
+  {
+    "case": "bge-metal-current",
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-controls/bin",
+      "metal",
+      "bge",
+      "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/controls/bge-metal-current.json",
+      "100",
+      "20",
+      "4",
+      "2",
+      "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/controls/bge-cpu-current.json"
+    ],
+    "exit_code": 1,
+    "result_file": "performance/evidence/2026-09-14-native-inference-step02/controls/bge-metal-current.json"
+  },
+  {
+    "case": "stories-cpu-current",
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control",
+      "/Users/adrian/Library/Caches/crexx/native-inference/stories260K.gguf",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-controls/bin",
+      "cpu",
+      "scratch",
+      "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/controls/stories-cpu-current.json",
+      "100",
+      "20",
+      "4",
+      "2"
+    ],
+    "exit_code": 0,
+    "result_file": "performance/evidence/2026-09-14-native-inference-step02/controls/stories-cpu-current.json"
+  }
+]

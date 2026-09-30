@@ -75,6 +75,7 @@ crexx_add_import_root(crexx_driver_imports
                 "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
                 "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
                 "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin"
+                "${CMAKE_BINARY_DIR}/bin/rxplatform.rxplugin"
                 "${CMAKE_BINARY_DIR}/bin/rx_hash.rxplugin"
         DEPENDS
                 library
@@ -84,6 +85,7 @@ crexx_add_import_root(crexx_driver_imports
                 rexxscript
                 compiler_exit_bin
                 fs
+                _platform
                 _hash
         COMMENT "Staging deterministic crexx driver imports ...")
 
@@ -167,6 +169,8 @@ add_custom_command(
                 rxpa
                 fs
                 fs_static
+                _platform
+                _platform_static
                 _hash
                 _hash_static
                 crexx_driver_imports
@@ -184,12 +188,13 @@ add_custom_command(
 add_executable(crexx ${CMAKE_CURRENT_BINARY_DIR}/crexx.c)
 
 configure_linker_for_static_lib(crexx fs)
+configure_linker_for_static_lib(crexx _platform PROVIDER_ID rxplatform)
 configure_linker_for_static_lib(crexx _hash)
 
 target_link_libraries(crexx rxvml rxpashim)
 
 add_dependencies(crexx rxvme rxvml rxpa avl_tree rxbin platform
-        fs fs_static _hash _hash_static float float_static
+        fs fs_static _platform _platform_static _hash _hash_static float float_static
         _treemap _treemap_static
         _llist _llist_static
         _keyaccess _keyaccess_static)

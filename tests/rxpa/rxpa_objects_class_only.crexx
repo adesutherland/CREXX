@@ -1,0 +1,12 @@
+/* No plain native procedure call: class metadata must retain the provider. */
+options levelb
+import rxpa_objects
+
+main: procedure = .int
+  /* Interface discovery must work before any concrete factory/native call. */
+  first = .counter(7)
+  if first.read() \= 7 | <typeof>(first) \= ".rxpa_objects..box" then return 2
+  instance = .counter.from(42)
+  if instance.read() \= 42 | <typeof>(instance) \= ".rxpa_objects..box" then return 1
+  say "PASS: C native class-only provider loading"
+  return 0

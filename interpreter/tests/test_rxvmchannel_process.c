@@ -174,6 +174,12 @@ static int run_one(rxvm_context *context,
                     description, (long long)actual_state, expected_state);
             failures++;
         }
+        CHECK(rxvm_channel_release(context, channel, ticket) == RXVM_CHANNEL_OK,
+              "release observed process request while its pool remains open");
+        CHECK(rxvm_channel_release(context, channel, ticket) == RXVM_CHANNEL_STALE_CAPABILITY,
+              "released process ticket is stale");
+        CHECK(completion_state(&completion) == actual_state,
+              "saved process completion survives release");
     }
     rxvm_channel_binary_free(&completion);
     return status == RXVM_CHANNEL_OK;
@@ -287,6 +293,10 @@ int main(int argc, char **argv) {
               completion_state(&completion) == 3,
               "running fail-fast sibling is cooperatively cancelled");
         rxvm_channel_binary_free(&completion);
+        CHECK(rxvm_channel_release(context, scope_channel, missing_ticket) == RXVM_CHANNEL_OK,
+              "release observed failed process request");
+        CHECK(rxvm_channel_release(context, scope_channel, loop_ticket) == RXVM_CHANNEL_OK,
+              "release observed cancelled process request");
         CHECK(rxvm_channel_close(
                   context, scope_channel, 1) == RXVM_CHANNEL_OK,
               "close isolated fail-fast scope");

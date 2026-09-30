@@ -1,0 +1,19 @@
+/* Test-only composition wraps the real feature and copies its real commands.
+ * The common observer deliberately vetoes one close request. */
+options levelg
+namespace text_inspector_test_host expose make_observed_session
+import ui_contract
+import ui_driver_probe
+import text_inspector
+
+make_observed_session: procedure = .uisession
+  arg caps = .uicapabilities, journal = reference .string
+  original = make_text_inspector_session("reference-test", caps)
+  session = .uisession("reference-test", caps)
+  rc = session.add_component("root", .driver_probe(.text_inspector_component(caps.has("ui.dialog")), journal))
+  rc = session.register_event("document.open.requested")
+  rc = session.register_event("document.clear.requested")
+  do i = 1 to original.command_count()
+    rc = session.register_command(original.command(i))
+  end
+  return session

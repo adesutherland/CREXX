@@ -1,0 +1,84 @@
+[0/2] Re-checking globbed directories...
+[1/84] Creating rxvm symlink to rxbvm
+[2/84] Assembling PERF3-13 E5 sparse progress fixture ...
+[3/84] Building C object interpreter/CMakeFiles/_e5native_static.dir/tests/e5_native_return_plugin.c.o
+[4/84] Building C object interpreter/CMakeFiles/_e5native.dir/tests/e5_native_return_plugin.c.o
+[5/84] Building C object lib/plugins/CMakeFiles/_rxpa_session_failure.dir/__/__/interpreter/tests/rxpa_session_failure_plugin.c.o
+[6/84] Building C object interpreter/CMakeFiles/rxvml.dir/rxvmlib.c.o
+[7/84] Building C object lib/plugins/float/CMakeFiles/float.dir/rxfloat.c.o
+[8/84] Linking C shared module bin/rx_e5native.rxplugin
+[9/84] Building C object lib/plugins/float/CMakeFiles/float_static.dir/rxfloat.c.o
+[10/84] Building C object lib/plugins/stats/CMakeFiles/stats.dir/rxstats.c.o
+[11/84] Building C object lib/plugins/stats/CMakeFiles/stats_static.dir/rxstats.c.o
+[12/84] Building C object lib/plugins/vector/CMakeFiles/vector.dir/rxvector.c.o
+[13/84] Building C object interpreter/CMakeFiles/rxvml.dir/rxvml.c.o
+[14/84] Building C object lib/plugins/vector/CMakeFiles/vector_static.dir/rxvector.c.o
+[15/84] Building C object lib/plugins/stack/CMakeFiles/_stack.dir/stack.c.o
+[16/84] Building C object lib/plugins/stack/CMakeFiles/_stack_static.dir/stack.c.o
+[17/84] Building C object lib/plugins/cipher/CMakeFiles/_cipher.dir/cipher.c.o
+[18/84] Building C object lib/plugins/cipher/CMakeFiles/_cipher_static.dir/cipher.c.o
+[19/84] Building C object lib/plugins/hash/CMakeFiles/_hash_static.dir/rx_hash.c.o
+[20/84] Building C object lib/plugins/getpi/CMakeFiles/_getpi.dir/getpi.c.o
+[21/84] Building C object lib/plugins/strings/CMakeFiles/_strings.dir/strings.c.o
+[22/84] Building C object lib/plugins/id/CMakeFiles/id.dir/id.c.o
+[23/84] Building C object lib/plugins/id/CMakeFiles/id_static.dir/id.c.o
+[24/84] Building C object lib/plugins/fs/CMakeFiles/fs.dir/rxfs.c.o
+[25/84] Building C object lib/plugins/fs/CMakeFiles/fs_static.dir/rxfs.c.o
+[26/84] Building C object lib/plugins/platform/CMakeFiles/_platform.dir/rxplatform.c.o
+[27/84] Building C object tests/rxpa/CMakeFiles/_rxpa_objects_decl.dir/rxpa_objects.c.o
+[28/84] Building C object lib/plugins/platform/CMakeFiles/_platform_static.dir/rxplatform.c.o
+[29/84] Building C object tests/rxpa/CMakeFiles/funcvm.dir/__/__/interpreter/rxvmmain.c.o
+[30/84] Linking C static library interpreter/rx_e5native_static.a
+[31/84] Linking C shared module bin/rx_rxpa_session_failure.rxplugin
+[32/84] Building C object interpreter/CMakeFiles/test_rxpa_concurrency.dir/tests/test_rxpa_concurrency.c.o
+[33/84] Building C object interpreter/CMakeFiles/test_rxpa_host_services.dir/tests/test_rxpa_host_services.c.o
+[34/84] Linking C static library bin/librxvml.a
+[35/84] Building C object interpreter/CMakeFiles/test_rxpa_worker_startup.dir/tests/test_rxpa_worker_startup.c.o
+[36/84] Linking C shared module bin/rxfloat.rxplugin
+[37/84] Linking C static library bin/rxfloat_static.a
+[38/84] Linking C shared module bin/rxstats.rxplugin
+[39/84] Linking C shared module bin/rxvector.rxplugin
+[40/84] Linking C static library bin/rxstats_static.a
+[41/84] Linking C static library bin/rxvector_static.a
+[42/84] Linking C shared module bin/rx_stack.rxplugin
+[43/84] Linking C shared module bin/rx_cipher.rxplugin
+[44/84] Linking C static library bin/rx_stack_static.a
+[45/84] Linking C shared module bin/rx_strings.rxplugin
+[46/84] Linking C static library bin/rx_cipher_static.a
+[47/84] Linking C shared module bin/rx_getpi.rxplugin
+[48/84] Linking C static library bin/rx_hash_static.a
+[49/84] Linking C shared module bin/rxid.rxplugin
+[50/84] Linking C shared module bin/rxfs.rxplugin
+[51/84] Linking C static library bin/rxid_static.a
+[52/84] Linking C shared module bin/rxplatform.rxplugin
+[53/84] Linking C static library bin/rxfs_static.a
+[54/84] Linking C static library tests/rx_rxpa_objects_decl.a
+[55/84] Linking C static library bin/rxplatform_static.a
+[56/84] Linking C executable tests/funcvm
+[57/84] Linking C executable interpreter/test_rxpa_host_services
+[58/84] Linking C executable interpreter/test_rxpa_worker_startup
+[59/84] Linking C executable interpreter/test_rxpa_concurrency
+[60/84] Assembling Gate F F1c local channel fixture ...
+[61/84] Linking C executable tests/rxc_classdecl_static
+[62/84] Linking C executable tests/rxc_objects_static
+[63/84] Compiling PERF3-13 E5 native-doorbell control ...
+[64/84] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxvml.dir/tests/test_persistent_worker_executor.c.o
+[65/84] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxbvml.dir/tests/test_persistent_worker_executor.c.o
+[66/84] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/tests/test_persistent_worker_executor.c.o
+[67/84] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/rxvml.c.o
+[68/84] Linking C executable interpreter/persistent_worker_executor-rxvml
+[69/84] Linking C executable interpreter/persistent_worker_executor-rxbvml
+[70/84] Linking C executable interpreter/persistent_worker_executor-rxtvml
+[71/84] Compiling PERF3-13 E4 program-generation controls ...
+[72/84] Generating rxpa_callmethod_run_opt.rxbin
+[73/84] Generating rxpa_callmethod_run_noopt.rxbin
+[74/84] Generating rxpa_callmethod_static_run_opt.rxbin
+[75/84] Generating rxpa_callmethod_static_run_noopt.rxbin
+[76/84] Generating rxpa_native_payload_funcs_dynamic_noopt.rxbin
+[77/84] Generating rxpa_native_payload_funcs_dynamic_opt.rxbin
+[78/84] Generating rxpa_native_payload_funcs_static_noopt.rxbin
+[79/84] Generating rxpa_native_unwind_funcs_dynamic_noopt.rxbin
+[80/84] Generating rxpa_native_unwind_funcs_dynamic_opt.rxbin
+[81/84] Generating rxpa_native_payload_funcs_static_opt.rxbin
+[82/84] Generating rxpa_native_unwind_funcs_static_noopt.rxbin
+[83/84] Generating rxpa_native_unwind_funcs_static_opt.rxbin

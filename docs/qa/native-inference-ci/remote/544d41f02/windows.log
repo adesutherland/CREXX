@@ -1,0 +1,923 @@
+﻿2026-09-15T16:13:01.7169112Z Current runner version: '2.337.0'
+2026-09-15T16:13:01.7195704Z ##[group]Runner Image Provisioner
+2026-09-15T16:13:01.7196575Z Hosted Compute Agent
+2026-09-15T16:13:01.7197226Z Version: 20260828.587
+2026-09-15T16:13:01.7197976Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-15T16:13:01.7198727Z Build Date: 2026-08-28T16:44:25Z
+2026-09-15T16:13:01.7199486Z Worker ID: {1c7744c2-3c8d-4676-9f62-72a8d963d8e5}
+2026-09-15T16:13:01.7200240Z Azure Region: westus
+2026-09-15T16:13:01.7200953Z ##[endgroup]
+2026-09-15T16:13:01.7202670Z ##[group]Operating System
+2026-09-15T16:13:01.7203490Z Microsoft Windows Server 2025
+2026-09-15T16:13:01.7204358Z 10.0.26100
+2026-09-15T16:13:01.7204968Z Datacenter
+2026-09-15T16:13:01.7205579Z ##[endgroup]
+2026-09-15T16:13:01.7206148Z ##[group]Runner Image
+2026-09-15T16:13:01.7206836Z Image: windows-2025-vs2026
+2026-09-15T16:13:01.7207505Z Version: 20260907.229.1
+2026-09-15T16:13:01.7209034Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20260907.229/images/windows/Windows2025-VS2026-Readme.md
+2026-09-15T16:13:01.7210734Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20260907.229
+2026-09-15T16:13:01.7211728Z ##[endgroup]
+2026-09-15T16:13:01.7212895Z ##[group]GITHUB_TOKEN Permissions
+2026-09-15T16:13:01.7214776Z Contents: read
+2026-09-15T16:13:01.7215440Z Metadata: read
+2026-09-15T16:13:01.7216283Z ##[endgroup]
+2026-09-15T16:13:01.7218575Z Secret source: Actions
+2026-09-15T16:13:01.7219588Z Cache mode: write
+2026-09-15T16:13:01.7220466Z Prepare workflow directory
+2026-09-15T16:13:01.7588334Z Prepare all required actions
+2026-09-15T16:13:01.7662405Z Getting action download info
+2026-09-15T16:13:02.1434911Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-09-15T16:13:02.2932716Z Download action repository 'msys2/setup-msys2@v2' (SHA:66cd2cce69caa17b53920067426061ca1de3a884)
+2026-09-15T16:13:02.5850081Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+2026-09-15T16:13:02.7310345Z Download action repository 'ilammy/msvc-dev-cmd@v1' (SHA:0b201ec74fa43914dc39ae48a89fd1d8cb592756)
+2026-09-15T16:13:03.1102576Z Download action repository 'actions/cache@v5' (SHA:caa296126883cff596d87d8935842f9db880ef25)
+2026-09-15T16:13:03.2509122Z Download action repository 'actions/upload-artifact@v7' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-09-15T16:13:03.5429730Z Complete job name: Windows x64
+2026-09-15T16:13:03.7398735Z ##[group]Run actions/checkout@v5
+2026-09-15T16:13:03.7400279Z with:
+2026-09-15T16:13:03.7401179Z   submodules: recursive
+2026-09-15T16:13:03.7402241Z   ref: 544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:13:03.7403485Z   repository: adesutherland/CREXX
+2026-09-15T16:13:03.7411369Z   token: ***
+2026-09-15T16:13:03.7412402Z   ssh-strict: true
+2026-09-15T16:13:03.7413308Z   ssh-user: git
+2026-09-15T16:13:03.7414260Z   persist-credentials: true
+2026-09-15T16:13:03.7415277Z   clean: true
+2026-09-15T16:13:03.7416227Z   sparse-checkout-cone-mode: true
+2026-09-15T16:13:03.7417290Z   fetch-depth: 1
+2026-09-15T16:13:03.7418186Z   fetch-tags: false
+2026-09-15T16:13:03.7419107Z   show-progress: true
+2026-09-15T16:13:03.7420041Z   lfs: false
+2026-09-15T16:13:03.7420961Z   set-safe-directory: true
+2026-09-15T16:13:03.7422011Z   allow-unsafe-pr-checkout: false
+2026-09-15T16:13:03.7423342Z ##[endgroup]
+2026-09-15T16:13:03.8946927Z Syncing repository: adesutherland/CREXX
+2026-09-15T16:13:03.8949654Z ##[group]Getting Git version info
+2026-09-15T16:13:03.8950834Z Working directory is 'D:\a\CREXX\CREXX'
+2026-09-15T16:13:03.9918829Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-09-15T16:13:04.3899968Z git version 2.55.0.windows.5
+2026-09-15T16:13:04.3955678Z ##[endgroup]
+2026-09-15T16:13:04.3977771Z Temporarily overriding HOME='D:\a\_temp\674f3baf-8d9e-4ca2-a41a-bce18daa858a' before making global git config changes
+2026-09-15T16:13:04.3980336Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T16:13:04.3988866Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\CREXX\CREXX
+2026-09-15T16:13:04.4674315Z Deleting the contents of 'D:\a\CREXX\CREXX'
+2026-09-15T16:13:04.4680631Z ##[group]Initializing the repository
+2026-09-15T16:13:04.4689320Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\CREXX\CREXX
+2026-09-15T16:13:04.5659445Z Initialized empty Git repository in D:/a/CREXX/CREXX/.git/
+2026-09-15T16:13:04.5704172Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/adesutherland/CREXX
+2026-09-15T16:13:04.6390707Z ##[endgroup]
+2026-09-15T16:13:04.6392300Z ##[group]Disabling automatic garbage collection
+2026-09-15T16:13:04.6399295Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-09-15T16:13:04.6697569Z ##[endgroup]
+2026-09-15T16:13:04.6699100Z ##[group]Setting up auth
+2026-09-15T16:13:04.6711202Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T16:13:04.7023402Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-09-15T16:13:06.3009026Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T16:13:06.3312439Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-09-15T16:13:06.8704517Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T16:13:06.9004277Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-09-15T16:13:07.4289955Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-09-15T16:13:07.4589966Z ##[endgroup]
+2026-09-15T16:13:07.4590642Z ##[group]Fetching the repository
+2026-09-15T16:13:07.4602443Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:13:13.9316902Z From https://github.com/adesutherland/CREXX
+2026-09-15T16:13:13.9317967Z  * branch              544d41f02de50d97598b21fb4a09a8a05756b7e7 -> FETCH_HEAD
+2026-09-15T16:13:13.9365302Z ##[endgroup]
+2026-09-15T16:13:13.9366150Z ##[group]Determining the checkout info
+2026-09-15T16:13:13.9368577Z ##[endgroup]
+2026-09-15T16:13:13.9380068Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-09-15T16:13:13.9854050Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-09-15T16:13:14.0189053Z ##[group]Checking out the ref
+2026-09-15T16:13:14.0198876Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force 544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:13:15.1878577Z Updating files:   9% (3457/37401)
+2026-09-15T16:13:15.2777030Z Updating files:  10% (3741/37401)
+2026-09-15T16:13:15.3802547Z Updating files:  11% (4115/37401)
+2026-09-15T16:13:15.4658838Z Updating files:  12% (4489/37401)
+2026-09-15T16:13:15.5638491Z Updating files:  13% (4863/37401)
+2026-09-15T16:13:15.6724596Z Updating files:  14% (5237/37401)
+2026-09-15T16:13:15.8027963Z Updating files:  15% (5611/37401)
+2026-09-15T16:13:16.0311088Z Updating files:  16% (5985/37401)
+2026-09-15T16:13:16.1261831Z Updating files:  17% (6359/37401)
+2026-09-15T16:13:16.1605604Z Updating files:  17% (6593/37401)
+2026-09-15T16:13:16.2463302Z Updating files:  18% (6733/37401)
+2026-09-15T16:13:16.3373924Z Updating files:  19% (7107/37401)
+2026-09-15T16:13:16.4268620Z Updating files:  20% (7481/37401)
+2026-09-15T16:13:16.5026534Z Updating files:  21% (7855/37401)
+2026-09-15T16:13:16.5802847Z Updating files:  22% (8229/37401)
+2026-09-15T16:13:16.6548728Z Updating files:  23% (8603/37401)
+2026-09-15T16:13:16.7351077Z Updating files:  24% (8977/37401)
+2026-09-15T16:13:16.8052909Z Updating files:  25% (9351/37401)
+2026-09-15T16:13:16.8894746Z Updating files:  26% (9725/37401)
+2026-09-15T16:13:16.9670707Z Updating files:  27% (10099/37401)
+2026-09-15T16:13:17.0391384Z Updating files:  28% (10473/37401)
+2026-09-15T16:13:17.1092316Z Updating files:  29% (10847/37401)
+2026-09-15T16:13:17.1253793Z Updating files:  30% (11221/37401)
+2026-09-15T16:13:17.1830588Z Updating files:  30% (11262/37401)
+2026-09-15T16:13:17.3368844Z Updating files:  31% (11595/37401)
+2026-09-15T16:13:17.4062274Z Updating files:  32% (11969/37401)
+2026-09-15T16:13:17.4817250Z Updating files:  33% (12343/37401)
+2026-09-15T16:13:17.5988248Z Updating files:  34% (12717/37401)
+2026-09-15T16:13:17.6823949Z Updating files:  35% (13091/37401)
+2026-09-15T16:13:17.7871378Z Updating files:  36% (13465/37401)
+2026-09-15T16:13:17.9179553Z Updating files:  37% (13839/37401)
+2026-09-15T16:13:18.1269733Z Updating files:  38% (14213/37401)
+2026-09-15T16:13:18.1371447Z Updating files:  38% (14569/37401)
+2026-09-15T16:13:18.2540249Z Updating files:  39% (14587/37401)
+2026-09-15T16:13:18.3113789Z Updating files:  40% (14961/37401)
+2026-09-15T16:13:18.3116560Z warning: created file symlink 'performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/asan/20260719-205746-full/current.log' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-18-nr-09-large-instruction-batch-first-release-verdict\qa-closeout\asan\20260719-205746-full\build.log';
+2026-09-15T16:13:18.3119747Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.3144673Z warning: created file symlink 'performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/asan/20260719-205848-full/current.log' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-18-nr-09-large-instruction-batch-first-release-verdict\qa-closeout\asan\20260719-205848-full\ctest.log';
+2026-09-15T16:13:18.3147602Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.3156786Z warning: created file symlink 'performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/asan/20260719-212042-ctest/current.log' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-18-nr-09-large-instruction-batch-first-release-verdict\qa-closeout\asan\20260719-212042-ctest\ctest.log';
+2026-09-15T16:13:18.3158431Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.3172193Z warning: created file symlink 'performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/asan/20260719-212239-ctest/current.log' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-18-nr-09-large-instruction-batch-first-release-verdict\qa-closeout\asan\20260719-212239-ctest\ctest.log';
+2026-09-15T16:13:18.3175086Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.3181047Z warning: created file symlink 'performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/asan/latest' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-18-nr-09-large-instruction-batch-first-release-verdict\qa-closeout\asan\20260719-212239-ctest';
+2026-09-15T16:13:18.3182542Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.4445184Z Updating files:  41% (15335/37401)
+2026-09-15T16:13:18.5344155Z Updating files:  42% (15709/37401)
+2026-09-15T16:13:18.6916512Z Updating files:  43% (16083/37401)
+2026-09-15T16:13:18.6918350Z warning: created file symlink 'performance/evidence/2026-07-22-nr-15-first-release-verdict/qa-closeout/asan/20260722-215009-build/current.log' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-22-nr-15-first-release-verdict\qa-closeout\asan\20260722-215009-build\build.log';
+2026-09-15T16:13:18.6920599Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.6928090Z warning: created file symlink 'performance/evidence/2026-07-22-nr-15-first-release-verdict/qa-closeout/asan/20260722-220435-ctest/current.log' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-22-nr-15-first-release-verdict\qa-closeout\asan\20260722-220435-ctest\ctest.log';
+2026-09-15T16:13:18.6930546Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.6939889Z warning: created file symlink 'performance/evidence/2026-07-22-nr-15-first-release-verdict/qa-closeout/asan/20260722-220509-ctest/current.log' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-22-nr-15-first-release-verdict\qa-closeout\asan\20260722-220509-ctest\ctest.log';
+2026-09-15T16:13:18.6942346Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.6951460Z warning: created file symlink 'performance/evidence/2026-07-22-nr-15-first-release-verdict/qa-closeout/asan/20260722-220547-build/current.log' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-22-nr-15-first-release-verdict\qa-closeout\asan\20260722-220547-build\build.log';
+2026-09-15T16:13:18.6953918Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.6963249Z Updating files:  44% (16457/37401)
+2026-09-15T16:13:18.6965473Z warning: created file symlink 'performance/evidence/2026-07-22-nr-15-first-release-verdict/qa-closeout/asan/20260722-220557-ctest/current.log' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-22-nr-15-first-release-verdict\qa-closeout\asan\20260722-220557-ctest\ctest.log';
+2026-09-15T16:13:18.6967902Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.6977499Z warning: created file symlink 'performance/evidence/2026-07-22-nr-15-first-release-verdict/qa-closeout/asan/latest' pointing to '\Users\adrian\CLionProjects\CREXX\performance\evidence\2026-07-22-nr-15-first-release-verdict\qa-closeout\asan\20260722-220557-ctest';
+2026-09-15T16:13:18.6980367Z set the `symlink` gitattribute to `dir` if a directory symlink is required
+2026-09-15T16:13:18.8879869Z Updating files:  45% (16831/37401)
+2026-09-15T16:13:18.9755915Z Updating files:  46% (17205/37401)
+2026-09-15T16:13:19.0675099Z Updating files:  47% (17579/37401)
+2026-09-15T16:13:19.1274866Z Updating files:  48% (17953/37401)
+2026-09-15T16:13:19.1540838Z Updating files:  48% (18207/37401)
+2026-09-15T16:13:19.2395962Z Updating files:  49% (18327/37401)
+2026-09-15T16:13:19.3480267Z Updating files:  50% (18701/37401)
+2026-09-15T16:13:19.4464935Z Updating files:  51% (19075/37401)
+2026-09-15T16:13:19.5440811Z Updating files:  52% (19449/37401)
+2026-09-15T16:13:19.6314240Z Updating files:  53% (19823/37401)
+2026-09-15T16:13:19.7104543Z Updating files:  54% (20197/37401)
+2026-09-15T16:13:19.8054935Z Updating files:  55% (20571/37401)
+2026-09-15T16:13:19.8781761Z Updating files:  56% (20945/37401)
+2026-09-15T16:13:20.0663256Z Updating files:  57% (21319/37401)
+2026-09-15T16:13:20.1325274Z Updating files:  58% (21693/37401)
+2026-09-15T16:13:20.1501631Z Updating files:  58% (21990/37401)
+2026-09-15T16:13:20.2365068Z Updating files:  59% (22067/37401)
+2026-09-15T16:13:20.3637157Z Updating files:  60% (22441/37401)
+2026-09-15T16:13:20.4733144Z Updating files:  61% (22815/37401)
+2026-09-15T16:13:20.5597098Z Updating files:  62% (23189/37401)
+2026-09-15T16:13:20.6445206Z Updating files:  63% (23563/37401)
+2026-09-15T16:13:20.7507881Z Updating files:  64% (23937/37401)
+2026-09-15T16:13:21.1943406Z Updating files:  65% (24311/37401)
+2026-09-15T16:13:21.2180711Z Updating files:  65% (24595/37401)
+2026-09-15T16:13:21.4061916Z Updating files:  66% (24685/37401)
+2026-09-15T16:13:21.4801801Z Updating files:  67% (25059/37401)
+2026-09-15T16:13:21.5680213Z Updating files:  68% (25433/37401)
+2026-09-15T16:13:21.6565490Z Updating files:  69% (25807/37401)
+2026-09-15T16:13:21.7378382Z Updating files:  70% (26181/37401)
+2026-09-15T16:13:21.8213336Z Updating files:  71% (26555/37401)
+2026-09-15T16:13:21.9064848Z Updating files:  72% (26929/37401)
+2026-09-15T16:13:22.0052933Z Updating files:  73% (27303/37401)
+2026-09-15T16:13:22.1103400Z Updating files:  74% (27677/37401)
+2026-09-15T16:13:22.1476447Z Updating files:  75% (28051/37401)
+2026-09-15T16:13:22.2047133Z Updating files:  75% (28174/37401)
+2026-09-15T16:13:22.3071782Z Updating files:  76% (28425/37401)
+2026-09-15T16:13:22.4081513Z Updating files:  77% (28799/37401)
+2026-09-15T16:13:22.5136292Z Updating files:  78% (29173/37401)
+2026-09-15T16:13:22.6105500Z Updating files:  79% (29547/37401)
+2026-09-15T16:13:22.7147857Z Updating files:  80% (29921/37401)
+2026-09-15T16:13:22.8609851Z Updating files:  81% (30295/37401)
+2026-09-15T16:13:22.9759109Z Updating files:  82% (30669/37401)
+2026-09-15T16:13:23.0778507Z Updating files:  83% (31043/37401)
+2026-09-15T16:13:23.2097169Z Updating files:  84% (31417/37401)
+2026-09-15T16:13:23.2167978Z Updating files:  84% (31752/37401)
+2026-09-15T16:13:23.2851801Z Updating files:  85% (31791/37401)
+2026-09-15T16:13:23.3893994Z Updating files:  86% (32165/37401)
+2026-09-15T16:13:23.5380597Z Updating files:  87% (32539/37401)
+2026-09-15T16:13:23.6794405Z Updating files:  88% (32913/37401)
+2026-09-15T16:13:23.7914145Z Updating files:  89% (33287/37401)
+2026-09-15T16:13:23.8906163Z Updating files:  90% (33661/37401)
+2026-09-15T16:13:23.9821584Z Updating files:  91% (34035/37401)
+2026-09-15T16:13:24.0651042Z Updating files:  92% (34409/37401)
+2026-09-15T16:13:24.1396083Z Updating files:  93% (34783/37401)
+2026-09-15T16:13:24.1542640Z Updating files:  94% (35157/37401)
+2026-09-15T16:13:24.2348236Z Updating files:  94% (35225/37401)
+2026-09-15T16:13:24.3250650Z Updating files:  95% (35531/37401)
+2026-09-15T16:13:24.4395119Z Updating files:  96% (35905/37401)
+2026-09-15T16:13:24.5354288Z Updating files:  97% (36279/37401)
+2026-09-15T16:13:24.6227429Z Updating files:  98% (36653/37401)
+2026-09-15T16:13:24.7478255Z Updating files:  99% (37027/37401)
+2026-09-15T16:13:24.7478867Z Updating files: 100% (37401/37401)
+2026-09-15T16:13:24.7479776Z Updating files: 100% (37401/37401), done.
+2026-09-15T16:13:24.8093827Z Note: switching to '544d41f02de50d97598b21fb4a09a8a05756b7e7'.
+2026-09-15T16:13:24.8094293Z 
+2026-09-15T16:13:24.8094693Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-15T16:13:24.8095567Z changes and commit them, and you can discard any commits you make in this
+2026-09-15T16:13:24.8096431Z state without impacting any branches by switching back to a branch.
+2026-09-15T16:13:24.8096956Z 
+2026-09-15T16:13:24.8097328Z If you want to create a new branch to retain commits you create, you may
+2026-09-15T16:13:24.8098239Z do so (now or later) by using -c with the switch command. Example:
+2026-09-15T16:13:24.8098614Z 
+2026-09-15T16:13:24.8098785Z   git switch -c <new-branch-name>
+2026-09-15T16:13:24.8099014Z 
+2026-09-15T16:13:24.8099150Z Or undo this operation with:
+2026-09-15T16:13:24.8099362Z 
+2026-09-15T16:13:24.8099476Z   git switch -
+2026-09-15T16:13:24.8099637Z 
+2026-09-15T16:13:24.8099934Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-15T16:13:24.8100344Z 
+2026-09-15T16:13:24.8100655Z HEAD is now at 544d41f0 ci(llama): package GPU runtimes and qualify isolated candidates
+2026-09-15T16:13:24.8313594Z ##[endgroup]
+2026-09-15T16:13:24.8314404Z ##[group]Setting up auth for fetching submodules
+2026-09-15T16:13:24.8325158Z [command]"C:\Program Files\Git\bin\git.exe" config --global http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-09-15T16:13:24.8639290Z [command]"C:\Program Files\Git\bin\git.exe" config --global --unset-all url.https://github.com/.insteadOf
+2026-09-15T16:13:24.8933024Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add url.https://github.com/.insteadOf git@github.com:
+2026-09-15T16:13:24.9224680Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add url.https://github.com/.insteadOf org-4367482@github.com:
+2026-09-15T16:13:24.9515414Z ##[endgroup]
+2026-09-15T16:13:24.9515845Z ##[group]Fetching submodules
+2026-09-15T16:13:24.9525056Z [command]"C:\Program Files\Git\bin\git.exe" submodule sync --recursive
+2026-09-15T16:13:25.5067718Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 submodule update --init --force --depth=1 --recursive
+2026-09-15T16:13:26.0878024Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local gc.auto 0"
+2026-09-15T16:13:26.6144932Z ##[endgroup]
+2026-09-15T16:13:26.6145609Z ##[group]Persisting credentials for submodules
+2026-09-15T16:13:26.6156887Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'url\.https\:\/\/github\.com\/\.insteadOf' && git config --local --unset-all 'url.https://github.com/.insteadOf' || :\""
+2026-09-15T16:13:27.1762981Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local 'http.https://github.com/.extraheader' 'AUTHORIZATION: basic ***' && git config --local --show-origin --name-only --get-regexp remote.origin.url\""
+2026-09-15T16:13:27.7398048Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --add 'url.https://github.com/.insteadOf' 'git@github.com:'"
+2026-09-15T16:13:28.2848717Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --add 'url.https://github.com/.insteadOf' 'org-4367482@github.com:'"
+2026-09-15T16:13:28.8351730Z ##[endgroup]
+2026-09-15T16:13:28.8668568Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-09-15T16:13:28.8924931Z 544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:13:28.9384781Z ##[group]Run msys2/setup-msys2@v2
+2026-09-15T16:13:28.9385139Z with:
+2026-09-15T16:13:28.9385349Z   update: true
+2026-09-15T16:13:28.9385570Z   install: base-devel git
+2026-09-15T16:13:28.9386068Z   pacboy: toolchain:p cmake:p ninja:p openssl:p pkgconf:p python:p shaderc:p vulkan-headers:p vulkan-loader:p
+2026-09-15T16:13:28.9386584Z   msystem: MINGW64
+2026-09-15T16:13:28.9386809Z   path-type: minimal
+2026-09-15T16:13:28.9387032Z   release: true
+2026-09-15T16:13:28.9387268Z   platform-check-severity: fatal
+2026-09-15T16:13:28.9387524Z   cache: true
+2026-09-15T16:13:28.9387726Z ##[endgroup]
+2026-09-15T16:13:29.0858764Z ##[group]Downloading MSYS2...
+2026-09-15T16:13:29.8820563Z ##[endgroup]
+2026-09-15T16:13:29.8821326Z ##[group]Extracting MSYS2...
+2026-09-15T16:13:29.8838567Z [command]C:\hostedtoolcache\windows\msys2-installer\0.0.20260611\x64\base.exe -y
+2026-09-15T16:13:30.2001201Z 
+2026-09-15T16:13:30.2002532Z 7-Zip SFX 25.01 ZS v1.5.7 R4 (x64) : Copyright (c) 1999-2025 Igor Pavlov, 2016-2026 Tino Reichardt, 2022-2026 Sergey G. Brester : 2026-01-10
+2026-09-15T16:13:30.2003437Z 
+2026-09-15T16:13:30.2003931Z Extracting archive: C:\hostedtoolcache\windows\msys2-installer\0.0.20260611\x64\base.exe
+2026-09-15T16:13:30.2006434Z --
+2026-09-15T16:13:30.2007144Z Path = C:\hostedtoolcache\windows\msys2-installer\0.0.20260611\x64\base.exe
+2026-09-15T16:13:30.2008010Z Type = 7z
+2026-09-15T16:13:30.2008273Z 
+2026-09-15T16:13:30.3924646Z   0%
+2026-09-15T16:13:30.3924954Z     
+2026-09-15T16:13:30.5964325Z   0% 611 - msys64\usr\share\perl5\core_perl\CPAN\LWP
+2026-09-15T16:13:30.5965390Z                                                     
+2026-09-15T16:13:30.7986235Z   0% 1196 - msys64\usr\bin\repo-elephant
+2026-09-15T16:13:30.7986864Z                                         
+2026-09-15T16:13:31.0030880Z   3% 1628 - msys64\usr\lib\terminfo\61\ambassador
+2026-09-15T16:13:31.0032385Z                                                  
+2026-09-15T16:13:31.2047531Z   3% 2101 - msys64\usr\lib\terminfo\64\d430-dg-ccc
+2026-09-15T16:13:31.2048009Z                                                   
+2026-09-15T16:13:31.4089477Z   4% 2620 - msys64\usr\lib\terminfo\69\ibm8514-c
+2026-09-15T16:13:31.4090001Z                                                 
+2026-09-15T16:13:31.6116443Z   4% 3152 - msys64\usr\lib\terminfo\70\pccon0
+2026-09-15T16:13:31.6116891Z                                              
+2026-09-15T16:13:31.8142885Z   4% 3675 - msys64\usr\lib\terminfo\74\tvi920b-unk-vb
+2026-09-15T16:13:31.8143346Z                                                      
+2026-09-15T16:13:32.0178008Z   4% 4189 - msys64\usr\lib\terminfo\78\xnuppc-200x64
+2026-09-15T16:13:32.0178683Z                                                     
+2026-09-15T16:13:32.2208510Z   5% 4716 - msys64\usr\share\bash-completion\completions\isort
+2026-09-15T16:13:32.2209280Z                                                               
+2026-09-15T16:13:32.4239608Z   5% 5236 - msys64\usr\share\bash-completion\completions\_black
+2026-09-15T16:13:32.4240200Z                                                                
+2026-09-15T16:13:32.6280780Z   7% 5696 - msys64\usr\share\doc\xz\api\bcj_8h.html
+2026-09-15T16:13:32.6281387Z                                                    
+2026-09-15T16:13:32.8302693Z  13% 6115 - msys64\usr\share\locale\de\LC_TIME\coreutils.mo
+2026-09-15T16:13:32.8303345Z                                                            
+2026-09-15T16:13:33.0332014Z  20% 6475 - msys64\usr\share\locale\ky\LC_MESSAGES\tar.mo
+2026-09-15T16:13:33.0332668Z                                                          
+2026-09-15T16:13:33.2368552Z  29% 6800 - msys64\usr\share\locale\uk\LC_MESSAGES\libalpm.mo
+2026-09-15T16:13:33.2369358Z                                                              
+2026-09-15T16:13:33.4399890Z  32% 7244 - msys64\usr\share\man\man1\h2ph.1perl.gz
+2026-09-15T16:13:33.4400610Z                                                    
+2026-09-15T16:13:33.6429323Z  33% 7726 - msys64\usr\share\man\man3\CURLINFO_CONN_ID.3.gz
+2026-09-15T16:13:33.6430099Z                                                            
+2026-09-15T16:13:33.8457478Z  33% 8217 - msys64\usr\share\man\man3\curl_url_get.3.gz
+2026-09-15T16:13:33.8458129Z                                                        
+2026-09-15T16:13:34.0496385Z  33% 8704 - msys64\usr\share\man\man3\libssh2_publickey_init.3.gz
+2026-09-15T16:13:34.0497086Z                                                                  
+2026-09-15T16:13:34.2524056Z  34% 9182 - msys64\usr\share\man\man3\tgetnum.3x.gz
+2026-09-15T16:13:34.2524738Z                                                    
+2026-09-15T16:13:34.4547236Z  39% 9623 - msys64\usr\share\nano\texinfo.nanorc
+2026-09-15T16:13:34.4547871Z                                                 
+2026-09-15T16:13:34.6579886Z  42% 10009 - msys64\usr\share\perl5\core_perl\TAP\Base.pm
+2026-09-15T16:13:34.6580601Z                                                          
+2026-09-15T16:13:34.8608782Z  43% 10375 - msys64\usr\share\perl5\core_perl\Unicode\Collate\Locale\zh_pin.pl
+2026-09-15T16:13:34.8609652Z                                                                               
+2026-09-15T16:13:35.0648683Z  44% 10795 - msys64\usr\share\perl5\core_perl\unicore\lib\Sc\Hira.pl
+2026-09-15T16:13:35.0649429Z                                                                     
+2026-09-15T16:13:35.2689944Z  46% 11251 - msys64\usr\share\terminfo\61\ansi-m
+2026-09-15T16:13:35.2690427Z                                                 
+2026-09-15T16:13:35.4709914Z  47% 11704 - msys64\usr\share\terminfo\64\d460-dg
+2026-09-15T16:13:35.4710449Z                                                  
+2026-09-15T16:13:35.6736128Z  47% 12242 - msys64\usr\share\terminfo\69\iterm
+2026-09-15T16:13:35.6736591Z                                                
+2026-09-15T16:13:35.8768568Z  47% 12751 - msys64\usr\share\terminfo\70\pcz19
+2026-09-15T16:13:35.8769014Z                                                
+2026-09-15T16:13:36.0809902Z  47% 13287 - msys64\usr\share\terminfo\74\tvi955-w
+2026-09-15T16:13:36.0810456Z                                                   
+2026-09-15T16:13:36.2831920Z  47% 13819 - msys64\usr\share\terminfo\78\xterm+pcf0
+2026-09-15T16:13:36.2832599Z                                                     
+2026-09-15T16:13:36.4858956Z  48% 14349 - msys64\usr\share\zoneinfo\Etc\UCT
+2026-09-15T16:13:36.4859564Z                                               
+2026-09-15T16:13:36.6898826Z  48% 14769 - msys64\usr\share\zoneinfo\posix\Asia\Gaza
+2026-09-15T16:13:36.6899495Z                                                       
+2026-09-15T16:13:36.8935783Z  48% 15200 - msys64\usr\share\zoneinfo\right\America\Coral_Harbour
+2026-09-15T16:13:36.8936562Z                                                                   
+2026-09-15T16:13:37.0982534Z  48% 15653 - msys64\usr\share\zoneinfo\right\Pacific\Majuro
+2026-09-15T16:13:37.0983222Z                                                            
+2026-09-15T16:13:37.3006067Z  50% 16084 - msys64\usr\bin\b2sum.exe
+2026-09-15T16:13:37.3006666Z                                      
+2026-09-15T16:13:37.5096791Z  62% 16304 - msys64\usr\bin\msys-intl-8.dll
+2026-09-15T16:13:37.5097698Z                                            
+2026-09-15T16:13:37.6480547Z  91% 16436 - msys64\usr\bin\testpkg.exe
+2026-09-15T16:13:37.6481166Z                                        
+2026-09-15T16:13:37.6481623Z Everything is Ok
+2026-09-15T16:13:37.6508296Z ##[endgroup]
+2026-09-15T16:13:37.6509004Z ##[group]Disable Key Refresh...
+2026-09-15T16:13:37.6529172Z ##[endgroup]
+2026-09-15T16:13:37.6552736Z ##[group]Restoring package cache...
+2026-09-15T16:13:38.0392386Z Cache hit for restore-key: msys2-pkgs-upd:true-conf:dae72d96-files:575e42a33352b67f10ca2ba21a40d9839a24406c97277f1bfff04054d48e18db
+2026-09-15T16:13:39.3110950Z Received 20971520 of 210449531 (10.0%), 19.9 MBs/sec
+2026-09-15T16:13:40.3165609Z Received 130023424 of 210449531 (61.8%), 61.8 MBs/sec
+2026-09-15T16:13:41.3241124Z Received 206255227 of 210449531 (98.0%), 65.2 MBs/sec
+2026-09-15T16:13:41.5279534Z Received 210449531 of 210449531 (100.0%), 62.3 MBs/sec
+2026-09-15T16:13:41.5284720Z Cache Size: ~201 MB (210449531 B)
+2026-09-15T16:13:41.5366519Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/b8959faf-4798-4b1f-be65-1b2c965fa9ba/cache.tzst -P -C D:/a/CREXX/CREXX --force-local --use-compress-program "zstd -d"
+2026-09-15T16:13:42.1443710Z Cache restored successfully
+2026-09-15T16:13:42.1545666Z Cache restore for msys2-pkgs-upd:true-conf:dae72d96, got msys2-pkgs-upd:true-conf:dae72d96-files:575e42a33352b67f10ca2ba21a40d9839a24406c97277f1bfff04054d48e18db
+2026-09-15T16:13:42.1547753Z Cache restore for msys2-pkgs-upd:true-conf:dae72d96, got msys2-pkgs-upd:true-conf:dae72d96-files:575e42a33352b67f10ca2ba21a40d9839a24406c97277f1bfff04054d48e18db
+2026-09-15T16:13:42.1549468Z ##[endgroup]
+2026-09-15T16:13:42.1549941Z ##[group]Starting MSYS2 for the first time...
+2026-09-15T16:13:42.2965765Z [command]C:\Windows\system32\cmd.exe /D /S /C D:\a\_temp\setup-msys2\msys2.cmd -c "'uname' '-a'"
+2026-09-15T16:13:42.3632613Z [1;32mMSYS2 is starting for the first time. Executing the initial setup.[1;0m
+2026-09-15T16:13:42.4882591Z Copying skeleton files.
+2026-09-15T16:13:42.4883582Z These files are for the users to personalise their msys2 experience.
+2026-09-15T16:13:42.4883971Z 
+2026-09-15T16:13:42.4884157Z They will never be overwritten nor automatically updated.
+2026-09-15T16:13:42.4884414Z 
+2026-09-15T16:13:42.5457172Z './.bashrc' -> '/home/runneradmin/.bashrc'
+2026-09-15T16:13:42.5640247Z './.bash_profile' -> '/home/runneradmin/.bash_profile'
+2026-09-15T16:13:42.5840073Z './.profile' -> '/home/runneradmin/.profile'
+2026-09-15T16:13:42.6525237Z 'C:\Windows\system32\drivers\etc\hosts' -> '/etc/hosts'
+2026-09-15T16:13:42.7114191Z 'C:\Windows\system32\drivers\etc\protocol' -> '/etc/protocols'
+2026-09-15T16:13:42.7722751Z 'C:\Windows\system32\drivers\etc\services' -> '/etc/services'
+2026-09-15T16:13:42.8295220Z 'C:\Windows\system32\drivers\etc\networks' -> '/etc/networks'
+2026-09-15T16:13:43.0451051Z gpg: /etc/pacman.d/gnupg/trustdb.gpg: trustdb created
+2026-09-15T16:13:43.0537778Z gpg: no ultimately trusted keys found
+2026-09-15T16:13:43.3638949Z gpg: starting migration from earlier GnuPG versions
+2026-09-15T16:13:43.4676651Z gpg: porting secret keys from '/etc/pacman.d/gnupg/secring.gpg' to gpg-agent
+2026-09-15T16:13:43.4679990Z gpg: migration succeeded
+2026-09-15T16:13:43.5197276Z ==> Generating pacman master key. This may take some time.
+2026-09-15T16:13:43.5396984Z gpg: Generating pacman keyring master key...
+2026-09-15T16:13:44.3657508Z gpg: directory '/etc/pacman.d/gnupg/openpgp-revocs.d' created
+2026-09-15T16:13:44.3911693Z gpg: revocation certificate stored as '/etc/pacman.d/gnupg/openpgp-revocs.d/B1C4E050B52CB15B09D78F42FACE43B66D9596A1.rev'
+2026-09-15T16:13:44.3913349Z gpg: Done
+2026-09-15T16:13:44.4118931Z ==> Updating trust database...
+2026-09-15T16:13:44.4556875Z gpg: marginals needed: 3  completes needed: 1  trust model: pgp
+2026-09-15T16:13:44.4558146Z gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+2026-09-15T16:13:44.5909041Z ==> Appending keys from msys2.gpg...
+2026-09-15T16:13:45.2313124Z ==> Locally signing trusted keys in keyring...
+2026-09-15T16:13:45.7990466Z   -> Locally signed 5 keys.
+2026-09-15T16:13:45.8163437Z ==> Importing owner trust values...
+2026-09-15T16:13:45.8368651Z gpg: setting ownertrust to 4
+2026-09-15T16:13:45.8369178Z gpg: setting ownertrust to 4
+2026-09-15T16:13:45.8369527Z gpg: setting ownertrust to 4
+2026-09-15T16:13:45.8369805Z gpg: setting ownertrust to 4
+2026-09-15T16:13:45.8370068Z gpg: setting ownertrust to 4
+2026-09-15T16:13:45.8680601Z ==> Disabling revoked keys in keyring...
+2026-09-15T16:13:46.1511699Z   -> Disabled 4 keys.
+2026-09-15T16:13:46.1671144Z ==> Updating trust database...
+2026-09-15T16:13:46.2109263Z gpg: marginals needed: 3  completes needed: 1  trust model: pgp
+2026-09-15T16:13:46.2140219Z gpg: depth: 0  valid:   1  signed:   5  trust: 0-, 0q, 0n, 0m, 0f, 1u
+2026-09-15T16:13:46.2176029Z gpg: depth: 1  valid:   5  signed:   6  trust: 0-, 0q, 0n, 5m, 0f, 0u
+2026-09-15T16:13:46.2191839Z gpg: depth: 2  valid:   3  signed:   2  trust: 3-, 0q, 0n, 0m, 0f, 0u
+2026-09-15T16:13:46.2607168Z pacman-key (pacman) 6.1.0
+2026-09-15T16:13:46.2607693Z Copyright (c) 2010-2024 Pacman Development Team <pacman-dev@lists.archlinux.org>.
+2026-09-15T16:13:46.2608157Z 
+2026-09-15T16:13:46.2768117Z This is free software; see the source for copying conditions.
+2026-09-15T16:13:46.2769159Z There is NO WARRANTY, to the extent permitted by law.
+2026-09-15T16:13:46.5172653Z [1;32mInitial setup complete. MSYS2 is now ready to use.[1;0m
+2026-09-15T16:13:46.5364186Z MINGW64_NT-10.0-26100 runnervmvmocb 3.6.9-01d6c708.x86_64 2026-05-24 10:45 UTC x86_64 Msys
+2026-09-15T16:13:46.5417110Z ##[endgroup]
+2026-09-15T16:13:46.5417889Z ##[group]Disable CheckSpace...
+2026-09-15T16:13:46.6315882Z [command]C:\Windows\system32\cmd.exe /D /S /C D:\a\_temp\setup-msys2\msys2.cmd -c "'sed' '-i' 's/^CheckSpace/#CheckSpace/g' '/etc/pacman.conf'"
+2026-09-15T16:13:46.8494179Z ##[endgroup]
+2026-09-15T16:13:46.8494894Z ##[group]Updating packages...
+2026-09-15T16:13:46.9306126Z [command]C:\Windows\system32\cmd.exe /D /S /C D:\a\_temp\setup-msys2\msys2.cmd -c "'pacman' '--noconfirm' '-Syuu' '--overwrite' '*'"
+2026-09-15T16:13:47.8054785Z :: Synchronizing package databases...
+2026-09-15T16:13:49.4242440Z  clangarm64 downloading...
+2026-09-15T16:13:49.4243088Z  mingw32 downloading...
+2026-09-15T16:13:49.4243618Z  mingw64 downloading...
+2026-09-15T16:13:49.4244102Z  ucrt64 downloading...
+2026-09-15T16:13:49.4244574Z  clang64 downloading...
+2026-09-15T16:13:49.4244989Z  msys downloading...
+2026-09-15T16:13:50.0056774Z :: Starting core system upgrade...
+2026-09-15T16:13:50.1977294Z warning: terminate other MSYS2 programs before proceeding
+2026-09-15T16:13:50.1979132Z resolving dependencies...
+2026-09-15T16:13:50.1979650Z looking for conflicting packages...
+2026-09-15T16:13:50.2097828Z 
+2026-09-15T16:13:50.2098398Z Packages (1) msys2-runtime-3.6.10-4
+2026-09-15T16:13:50.2098908Z 
+2026-09-15T16:13:50.2099147Z Total Installed Size:   6.33 MiB
+2026-09-15T16:13:50.2099800Z Net Upgrade Size:      -0.20 MiB
+2026-09-15T16:13:50.2100200Z 
+2026-09-15T16:13:50.2102992Z :: Proceed with installation? [Y/n] 
+2026-09-15T16:13:50.2103686Z checking keyring...
+2026-09-15T16:13:50.2731783Z checking package integrity...
+2026-09-15T16:13:50.4406595Z loading package files...
+2026-09-15T16:13:50.4429728Z checking for file conflicts...
+2026-09-15T16:13:50.4452251Z :: Processing package changes...
+2026-09-15T16:13:50.4452903Z upgrading msys2-runtime...
+2026-09-15T16:13:50.6217733Z :: To complete this update all MSYS2 processes including this terminal will be closed. Confirm to proceed [Y/n] 
+2026-09-15T16:13:50.9397434Z ##[endgroup]
+2026-09-15T16:13:50.9398262Z ##[group]Killing remaining tasks...
+2026-09-15T16:13:51.0329802Z [command]C:\Windows\system32\taskkill.exe /F /FI "MODULES eq msys-2.0.dll"
+2026-09-15T16:13:51.1741385Z 
+2026-09-15T16:13:51.1741997Z INFO: No tasks running with the specified criteria.
+2026-09-15T16:13:51.1779235Z ##[endgroup]
+2026-09-15T16:13:51.1779716Z ##[group]Final system upgrade...
+2026-09-15T16:13:51.2606572Z [command]C:\Windows\system32\cmd.exe /D /S /C D:\a\_temp\setup-msys2\msys2.cmd -c "'pacman' '--noconfirm' '-Syuu' '--overwrite' '*'"
+2026-09-15T16:13:52.0855200Z :: Synchronizing package databases...
+2026-09-15T16:13:53.2122237Z  clangarm64 downloading...
+2026-09-15T16:13:53.2122881Z  mingw32 downloading...
+2026-09-15T16:13:53.2123687Z  mingw64 downloading...
+2026-09-15T16:13:53.2124195Z  ucrt64 downloading...
+2026-09-15T16:13:53.2124703Z  clang64 downloading...
+2026-09-15T16:13:53.2125185Z  msys downloading...
+2026-09-15T16:13:53.7414277Z :: Starting core system upgrade...
+2026-09-15T16:13:53.9298221Z  there is nothing to do
+2026-09-15T16:13:53.9298920Z :: Starting full system upgrade...
+2026-09-15T16:13:53.9630231Z resolving dependencies...
+2026-09-15T16:13:53.9698349Z looking for conflicting packages...
+2026-09-15T16:13:53.9842687Z 
+2026-09-15T16:13:53.9846629Z Packages (37) bash-completion-2.18.0-1  bsdtar-3.8.9-1  ca-certificates-20260816-1  curl-8.22.0-1  findutils-4.11.0-2  gawk-5.4.1-1  gcc-libs-15.3.0-1  gnupg-2.4.9-3  inetutils-2.8-1  libcurl-8.22.0-1  libexpat-2.8.4-1  libffi-3.8.0-1  libgcrypt-1.12.4-1  libgnutls-3.8.13-2  libhogweed-4.0-1  libksba-1.8.1-1  liblzma-5.8.4-1  libnettle-4.0-1  libnghttp2-1.70.0-1  libnghttp3-1.18.0-1  libngtcp2-1.25.0-1  libopenssl-3.6.4-1  libp11-kit-0.26.5-1  libpcre2_8-10.48-1  libpsl-0.23.2-1  libsqlite-3.53.4-1  msys2-keyring-1~20260814-1  nano-9.2-1  nettle-4.0-1  openssl-3.6.4-1  p11-kit-0.26.5-1  pacman-contrib-1.10.6-2  perl-5.42.3-1  pinentry-1.3.3-1  tzcode-2026d-1  wget-1.25.0-2  xz-5.8.4-1
+2026-09-15T16:13:53.9849643Z 
+2026-09-15T16:13:53.9849791Z Total Installed Size:  115.69 MiB
+2026-09-15T16:13:53.9850179Z Net Upgrade Size:       -1.09 MiB
+2026-09-15T16:13:53.9850415Z 
+2026-09-15T16:13:53.9906265Z :: Proceed with installation? [Y/n] 
+2026-09-15T16:13:53.9906697Z checking keyring...
+2026-09-15T16:13:54.0446023Z checking package integrity...
+2026-09-15T16:13:59.0918914Z loading package files...
+2026-09-15T16:13:59.1735685Z checking for file conflicts...
+2026-09-15T16:13:59.2285889Z :: Running pre-transaction hooks...
+2026-09-15T16:13:59.2286630Z (1/1) Removing old entries from the info directory file...
+2026-09-15T16:13:59.3634774Z :: Processing package changes...
+2026-09-15T16:13:59.3635534Z upgrading bash-completion...
+2026-09-15T16:14:00.4744895Z upgrading gcc-libs...
+2026-09-15T16:14:00.4933968Z upgrading libexpat...
+2026-09-15T16:14:00.4984735Z upgrading liblzma...
+2026-09-15T16:14:00.5037040Z upgrading libopenssl...
+2026-09-15T16:14:00.5302845Z upgrading bsdtar...
+2026-09-15T16:14:00.5407821Z upgrading openssl...
+2026-09-15T16:14:00.6731268Z upgrading findutils...
+2026-09-15T16:14:00.7634042Z upgrading libffi...
+2026-09-15T16:14:00.7758161Z upgrading libpcre2_8...
+2026-09-15T16:14:00.7815667Z upgrading libp11-kit...
+2026-09-15T16:14:00.7889774Z upgrading p11-kit...
+2026-09-15T16:14:00.9841957Z upgrading ca-certificates...
+2026-09-15T16:14:01.6095971Z upgrading libnghttp3...
+2026-09-15T16:14:01.6171962Z upgrading libngtcp2...
+2026-09-15T16:14:01.6270732Z upgrading libnghttp2...
+2026-09-15T16:14:01.6343853Z upgrading libpsl...
+2026-09-15T16:14:01.6456978Z upgrading libcurl...
+2026-09-15T16:14:01.6527422Z upgrading curl...
+2026-09-15T16:14:02.1916976Z upgrading gawk...
+2026-09-15T16:14:02.3109018Z upgrading libgcrypt...
+2026-09-15T16:14:02.3238976Z upgrading libhogweed...
+2026-09-15T16:14:02.3291248Z upgrading libnettle...
+2026-09-15T16:14:02.3346256Z upgrading libgnutls...
+2026-09-15T16:14:02.3937664Z upgrading libksba...
+2026-09-15T16:14:02.4033913Z upgrading libsqlite...
+2026-09-15T16:14:02.4141947Z upgrading nettle...
+2026-09-15T16:14:02.4237673Z upgrading pinentry...
+2026-09-15T16:14:02.4311521Z upgrading gnupg...
+2026-09-15T16:14:07.1572859Z ==> Appending keys from msys2.gpg...
+2026-09-15T16:14:07.7469390Z ==> Updating trust database...
+2026-09-15T16:14:07.7692826Z gpg: no need for a trustdb check
+2026-09-15T16:14:07.8790092Z upgrading inetutils...
+2026-09-15T16:14:07.8985879Z upgrading msys2-keyring...
+2026-09-15T16:14:08.3214159Z ==> Appending keys from msys2.gpg...
+2026-09-15T16:14:08.9340229Z ==> Updating trust database...
+2026-09-15T16:14:08.9556813Z gpg: next trustdb check due at 2027-02-10
+2026-09-15T16:14:09.0618534Z upgrading nano...
+2026-09-15T16:14:09.1964605Z upgrading xz...
+2026-09-15T16:14:09.6192572Z upgrading pacman-contrib...
+2026-09-15T16:14:09.6905081Z New optional dependencies for pacman-contrib
+2026-09-15T16:14:09.6906061Z     perl: for pacsearch [installed]
+2026-09-15T16:14:09.6906618Z     vim: default diff program for pacdiff
+2026-09-15T16:14:09.6907196Z upgrading perl...
+2026-09-15T16:14:11.8702201Z upgrading tzcode...
+2026-09-15T16:14:14.2140598Z upgrading wget...
+2026-09-15T16:14:14.3520403Z :: Running post-transaction hooks...
+2026-09-15T16:14:14.3521085Z (1/1) Updating the info directory file...
+2026-09-15T16:14:16.7570556Z ##[endgroup]
+2026-09-15T16:14:16.7571101Z ##[group]Installing additional packages through pacman...
+2026-09-15T16:14:16.8503628Z [command]C:\Windows\system32\cmd.exe /D /S /C D:\a\_temp\setup-msys2\msys2.cmd -c "'pacman' '--noconfirm' '-S' '--needed' '--overwrite' '*' 'base-devel' 'git' 'pactoys'"
+2026-09-15T16:14:17.8167154Z resolving dependencies...
+2026-09-15T16:14:17.8290425Z looking for conflicting packages...
+2026-09-15T16:14:17.8350604Z 
+2026-09-15T16:14:17.8355918Z Packages (46) binutils-2.47-1  bison-3.8.2-5  diffutils-3.12-1  dos2unix-7.5.7-1  flex-2.6.4-4  heimdal-7.8.0-5  heimdal-libs-7.8.0-5  libcbor-0.14.0-2  libedit-20240808_3.1-1  libfido2-1.17.0-1  m4-1.4.21-1  make-4.4.1-3  openssh-10.5p1-2  patch-2.7.6-3  perl-Authen-SASL-2.2100-1  perl-Clone-0.50-2  perl-Convert-BinHex-1.125-2  perl-Encode-Locale-1.05-2  perl-Error-0.17030-1  perl-File-Listing-6.16-1  perl-HTML-Parser-3.85-1  perl-HTML-Tagset-3.24-1  perl-HTTP-Cookies-6.12-1  perl-HTTP-Daemon-6.17-1  perl-HTTP-Date-6.08-1  perl-HTTP-Message-7.04-1  perl-HTTP-Negotiate-6.01-3  perl-IO-HTML-1.004-2  perl-IO-Socket-SSL-2.099-1  perl-IO-Stringy-2.113-3  perl-LWP-MediaTypes-6.05-1  perl-MIME-tools-5.518-1  perl-MailTools-2.22-1  perl-Net-HTTP-6.24-1  perl-Net-SMTP-SSL-1.04-2  perl-Net-SSLeay-1.96-1  perl-TermReadKey-2.38-8  perl-TimeDate-2.35-1  perl-Try-Tiny-0.32-1  perl-URI-5.37-1  perl-WWW-RobotRules-6.03-1  perl-http-cookiejar-0.014-1  perl-libwww-6.83-2  base-devel-2026.08-3  git-2.55.0-1  pactoys-r65.b5fcc0f-1
+2026-09-15T16:14:17.8362519Z 
+2026-09-15T16:14:17.8362687Z Total Installed Size:  111.85 MiB
+2026-09-15T16:14:17.8362957Z 
+2026-09-15T16:14:17.8432730Z :: Proceed with installation? [Y/n] 
+2026-09-15T16:14:17.8433368Z checking keyring...
+2026-09-15T16:14:17.8907116Z checking package integrity...
+2026-09-15T16:14:22.7438594Z loading package files...
+2026-09-15T16:14:22.8189113Z checking for file conflicts...
+2026-09-15T16:14:22.9920348Z :: Processing package changes...
+2026-09-15T16:14:22.9920942Z installing binutils...
+2026-09-15T16:14:23.2724208Z installing m4...
+2026-09-15T16:14:23.2812442Z installing bison...
+2026-09-15T16:14:23.4884294Z installing diffutils...
+2026-09-15T16:14:23.5340283Z installing dos2unix...
+2026-09-15T16:14:23.6721006Z installing flex...
+2026-09-15T16:14:23.7111785Z installing make...
+2026-09-15T16:14:23.7502898Z installing patch...
+2026-09-15T16:14:23.7551371Z Optional dependencies for patch
+2026-09-15T16:14:23.7552344Z     ed: for patch -e functionality
+2026-09-15T16:14:23.7552901Z installing base-devel...
+2026-09-15T16:14:23.7579152Z installing libedit...
+2026-09-15T16:14:23.7986056Z installing heimdal-libs...
+2026-09-15T16:14:23.8191804Z installing heimdal...
+2026-09-15T16:14:24.6324165Z installing libcbor...
+2026-09-15T16:14:24.6358447Z installing libfido2...
+2026-09-15T16:14:24.6398534Z installing openssh...
+2026-09-15T16:14:24.6837436Z installing perl-Error...
+2026-09-15T16:14:24.6939056Z installing perl-Authen-SASL...
+2026-09-15T16:14:24.7230690Z installing perl-Encode-Locale...
+2026-09-15T16:14:24.7303238Z installing perl-HTTP-Date...
+2026-09-15T16:14:24.7377855Z installing perl-File-Listing...
+2026-09-15T16:14:24.7449987Z installing perl-HTML-Tagset...
+2026-09-15T16:14:24.7527722Z installing perl-Clone...
+2026-09-15T16:14:24.7593866Z installing perl-IO-HTML...
+2026-09-15T16:14:24.7665829Z installing perl-LWP-MediaTypes...
+2026-09-15T16:14:24.7750703Z installing perl-URI...
+2026-09-15T16:14:24.8561444Z installing perl-HTTP-Message...
+2026-09-15T16:14:24.8798879Z installing perl-HTML-Parser...
+2026-09-15T16:14:24.8981293Z installing perl-HTTP-Cookies...
+2026-09-15T16:14:24.9080979Z installing perl-HTTP-Daemon...
+2026-09-15T16:14:24.9137138Z installing perl-http-cookiejar...
+2026-09-15T16:14:24.9220051Z installing perl-HTTP-Negotiate...
+2026-09-15T16:14:24.9277966Z installing perl-Net-HTTP...
+2026-09-15T16:14:24.9416309Z installing perl-WWW-RobotRules...
+2026-09-15T16:14:24.9530543Z installing perl-Try-Tiny...
+2026-09-15T16:14:24.9615731Z installing perl-libwww...
+2026-09-15T16:14:25.0056344Z Optional dependencies for perl-libwww
+2026-09-15T16:14:25.0057088Z     perl-LWP-Protocol-https: for https:// url schemes
+2026-09-15T16:14:25.0058049Z installing perl-Convert-BinHex...
+2026-09-15T16:14:25.1581000Z module test... pass.
+2026-09-15T16:14:25.1594249Z installing perl-IO-Stringy...
+2026-09-15T16:14:25.1790182Z installing perl-TimeDate...
+2026-09-15T16:14:25.2688415Z installing perl-MailTools...
+2026-09-15T16:14:25.3037895Z installing perl-MIME-tools...
+2026-09-15T16:14:25.3512315Z installing perl-Net-SSLeay...
+2026-09-15T16:14:25.4419737Z installing perl-IO-Socket-SSL...
+2026-09-15T16:14:25.4569442Z installing perl-Net-SMTP-SSL...
+2026-09-15T16:14:25.4622228Z installing perl-TermReadKey...
+2026-09-15T16:14:25.4723430Z installing git...
+2026-09-15T16:14:26.1168001Z Optional dependencies for git
+2026-09-15T16:14:26.1168638Z     python: various helper scripts
+2026-09-15T16:14:26.1169157Z     subversion: git svn
+2026-09-15T16:14:26.1169618Z     aspell: spell checking in git gui
+2026-09-15T16:14:26.1170130Z installing pactoys...
+2026-09-15T16:14:26.1405845Z :: Running post-transaction hooks...
+2026-09-15T16:14:26.1406454Z (1/1) Updating the info directory file...
+2026-09-15T16:14:27.2221369Z ##[endgroup]
+2026-09-15T16:14:27.2221983Z ##[group]Installing additional packages through pacboy...
+2026-09-15T16:14:27.3106233Z [command]C:\Windows\system32\cmd.exe /D /S /C D:\a\_temp\setup-msys2\msys2.cmd -c "'pacboy' '--noconfirm' '-S' '--needed' 'toolchain:p' 'cmake:p' 'ninja:p' 'openssl:p' 'pkgconf:p' 'python:p' 'shaderc:p' 'vulkan-headers:p' 'vulkan-loader:p'"
+2026-09-15T16:14:28.3530893Z :: There are 13 members in group mingw-w64-x86_64-toolchain:
+2026-09-15T16:14:28.3532033Z :: Repository mingw64
+2026-09-15T16:14:28.3534487Z    1) mingw-w64-x86_64-binutils  2) mingw-w64-x86_64-crt  3) mingw-w64-x86_64-gcc  4) mingw-w64-x86_64-gdb  5) mingw-w64-x86_64-gdb-multiarch  6) mingw-w64-x86_64-headers  7) mingw-w64-x86_64-libmangle  8) mingw-w64-x86_64-libwinpthread  9) mingw-w64-x86_64-make  10) mingw-w64-x86_64-pkgconf  11) mingw-w64-x86_64-tools  12) mingw-w64-x86_64-winpthreads  13) mingw-w64-x86_64-winstorecompat
+2026-09-15T16:14:28.3536831Z 
+2026-09-15T16:14:28.3537026Z Enter a selection (default=all): 
+2026-09-15T16:14:28.3537547Z resolving dependencies...
+2026-09-15T16:14:28.3740894Z looking for conflicting packages...
+2026-09-15T16:14:28.3836366Z 
+2026-09-15T16:14:28.3852086Z Packages (71) mingw-w64-x86_64-brotli-1.2.0-1  mingw-w64-x86_64-bzip2-1.0.8-4  mingw-w64-x86_64-c-ares-1.34.8-1  mingw-w64-x86_64-ca-certificates-20260816-1  mingw-w64-x86_64-cppdap-1.65.r11.g6464cd7-1  mingw-w64-x86_64-curl-8.22.0-1  mingw-w64-x86_64-expat-2.8.4-2  mingw-w64-x86_64-gcc-libs-16.2.0-3  mingw-w64-x86_64-gettext-runtime-1.0-1  mingw-w64-x86_64-glslang-16.3.0-1  mingw-w64-x86_64-gmp-6.3.0-2  mingw-w64-x86_64-gnutls-3.8.13-3  mingw-w64-x86_64-isl-0.28-1  mingw-w64-x86_64-jsoncpp-1.9.8-1  mingw-w64-x86_64-libarchive-3.8.9-6  mingw-w64-x86_64-libb2-0.98.1-3  mingw-w64-x86_64-libffi-3.8.0-1  mingw-w64-x86_64-libiconv-1.19-1  mingw-w64-x86_64-libidn2-2.3.8-4  mingw-w64-x86_64-libpsl-0.21.5-3  mingw-w64-x86_64-libssh2-1.11.1-2  mingw-w64-x86_64-libsystre-1.0.2-3  mingw-w64-x86_64-libtasn1-4.21.0-1  mingw-w64-x86_64-libtre-0.9.0-2  mingw-w64-x86_64-libunistring-1.4.2-1  mingw-w64-x86_64-libuv-1.52.1-1  mingw-w64-x86_64-lz4-1.10.0-1  mingw-w64-x86_64-mpc-1.4.1-1  mingw-w64-x86_64-mpdecimal-4.0.1-3  mingw-w64-x86_64-mpfr-4.2.2-3  mingw-w64-x86_64-ncurses-6.6-4  mingw-w64-x86_64-nettle-4.0-1  mingw-w64-x86_64-nghttp2-1.70.0-1  mingw-w64-x86_64-nghttp3-1.18.0-1  mingw-w64-x86_64-ngtcp2-1.25.0-1  mingw-w64-x86_64-p11-kit-0.26.5-1  mingw-w64-x86_64-pcre2-10.48-3  mingw-w64-x86_64-readline-8.3.003-1  mingw-w64-x86_64-rhash-1.4.6-1  mingw-w64-x86_64-spirv-tools-3~1.4.357.0-1  mingw-w64-x86_64-sqlite3-3.53.4-1  mingw-w64-x86_64-tcl-8.6.18-1  mingw-w64-x86_64-termcap-1.3.1-7  mingw-w64-x86_64-tk-8.6.18-1  mingw-w64-x86_64-tzdata-2026d-1  mingw-w64-x86_64-windows-default-manifest-20260815-1  mingw-w64-x86_64-wineditline-2.208-1  mingw-w64-x86_64-xxhash-0.8.3-2  mingw-w64-x86_64-xz-5.8.4-1  mingw-w64-x86_64-zlib-1.3.2-2  mingw-w64-x86_64-zstd-1.5.7-2  mingw-w64-x86_64-binutils-2.47-3  mingw-w64-x86_64-cmake-4.4.3-2  mingw-w64-x86_64-crt-14.0.0.r375.g9c1abbbf5-1  mingw-w64-x86_64-gcc-16.2.0-3  mingw-w64-x86_64-gdb-17.2-1  mingw-w64-x86_64-gdb-multiarch-17.2-1  mingw-w64-x86_64-headers-14.0.0.r375.g9c1abbbf5-1  mingw-w64-x86_64-libmangle-14.0.0.r375.g9c1abbbf5-1  mingw-w64-x86_64-libwinpthread-14.0.0.r375.g9c1abbbf5-1  mingw-w64-x86_64-make-4.4.1-5  mingw-w64-x86_64-ninja-1.13.2-1  mingw-w64-x86_64-openssl-3.6.4-1  mingw-w64-x86_64-pkgconf-1~3.0.7-1  mingw-w64-x86_64-python-3.14.7-1  mingw-w64-x86_64-shaderc-2026.3-1  mingw-w64-x86_64-tools-14.0.0.r375.g9c1abbbf5-1  mingw-w64-x86_64-vulkan-headers-1~1.4.357.0-1  mingw-w64-x86_64-vulkan-loader-1~1.4.357.0-1  mingw-w64-x86_64-winpthreads-14.0.0.r375.g9c1abbbf5-1  mingw-w64-x86_64-winstorecompat-14.0.0.r375.g9c1abbbf5-1
+2026-09-15T16:14:28.3867618Z 
+2026-09-15T16:14:28.3867832Z Total Download Size:     10.94 MiB
+2026-09-15T16:14:28.3868360Z Total Installed Size:  1092.85 MiB
+2026-09-15T16:14:28.3868690Z 
+2026-09-15T16:14:28.3961367Z :: Proceed with installation? [Y/n] 
+2026-09-15T16:14:28.3961918Z :: Retrieving packages...
+2026-09-15T16:14:30.2295235Z  mingw-w64-x86_64-shaderc-2026.3-1-any downloading...
+2026-09-15T16:14:30.2296198Z  mingw-w64-x86_64-spirv-tools-3~1.4.357.0-1-any downloading...
+2026-09-15T16:14:30.2296949Z  mingw-w64-x86_64-glslang-16.3.0-1-any downloading...
+2026-09-15T16:14:30.2297643Z  mingw-w64-x86_64-vulkan-headers-1~1.4.357.0-1-any downloading...
+2026-09-15T16:14:30.2298423Z  mingw-w64-x86_64-vulkan-loader-1~1.4.357.0-1-any downloading...
+2026-09-15T16:14:30.2299501Z checking keyring...
+2026-09-15T16:14:30.3022410Z checking package integrity...
+2026-09-15T16:14:43.4439509Z loading package files...
+2026-09-15T16:14:43.7480591Z checking for file conflicts...
+2026-09-15T16:14:45.7247114Z :: Processing package changes...
+2026-09-15T16:14:45.7247855Z installing mingw-w64-x86_64-libwinpthread...
+2026-09-15T16:14:45.7304389Z installing mingw-w64-x86_64-tzdata...
+2026-09-15T16:14:47.7018278Z installing mingw-w64-x86_64-gcc-libs...
+2026-09-15T16:14:47.7196640Z installing mingw-w64-x86_64-libiconv...
+2026-09-15T16:14:47.7478180Z installing mingw-w64-x86_64-gettext-runtime...
+2026-09-15T16:14:47.9091971Z installing mingw-w64-x86_64-zlib...
+2026-09-15T16:14:47.9194916Z installing mingw-w64-x86_64-zstd...
+2026-09-15T16:14:47.9427900Z installing mingw-w64-x86_64-binutils...
+2026-09-15T16:14:48.2042506Z installing mingw-w64-x86_64-headers...
+2026-09-15T16:14:49.6714722Z installing mingw-w64-x86_64-crt...
+2026-09-15T16:14:50.4750715Z installing mingw-w64-x86_64-gmp...
+2026-09-15T16:14:50.4912946Z installing mingw-w64-x86_64-isl...
+2026-09-15T16:14:50.5650194Z installing mingw-w64-x86_64-mpfr...
+2026-09-15T16:14:50.5905635Z installing mingw-w64-x86_64-mpc...
+2026-09-15T16:14:50.5982475Z installing mingw-w64-x86_64-windows-default-manifest...
+2026-09-15T16:14:50.6015225Z installing mingw-w64-x86_64-winpthreads...
+2026-09-15T16:14:50.6132438Z installing mingw-w64-x86_64-gcc...
+2026-09-15T16:14:52.0550597Z installing mingw-w64-x86_64-expat...
+2026-09-15T16:14:52.0733029Z installing mingw-w64-x86_64-bzip2...
+2026-09-15T16:14:52.0949726Z installing mingw-w64-x86_64-wineditline...
+2026-09-15T16:14:52.1047463Z installing mingw-w64-x86_64-pcre2...
+2026-09-15T16:14:52.3178053Z installing mingw-w64-x86_64-libtre...
+2026-09-15T16:14:52.3324006Z installing mingw-w64-x86_64-libsystre...
+2026-09-15T16:14:52.3431235Z installing mingw-w64-x86_64-ncurses...
+2026-09-15T16:14:57.8108947Z installing mingw-w64-x86_64-libffi...
+2026-09-15T16:14:57.8270064Z installing mingw-w64-x86_64-mpdecimal...
+2026-09-15T16:14:57.8489591Z installing mingw-w64-x86_64-openssl...
+2026-09-15T16:15:04.6383150Z Optional dependencies for mingw-w64-x86_64-openssl
+2026-09-15T16:15:04.6383888Z     mingw-w64-x86_64-ca-certificates [pending]
+2026-09-15T16:15:04.6384441Z installing mingw-w64-x86_64-tcl...
+2026-09-15T16:15:06.4941238Z installing mingw-w64-x86_64-sqlite3...
+2026-09-15T16:15:06.6472386Z installing mingw-w64-x86_64-tk...
+2026-09-15T16:15:07.2724396Z installing mingw-w64-x86_64-libb2...
+2026-09-15T16:15:07.2798204Z installing mingw-w64-x86_64-xz...
+2026-09-15T16:15:07.4157576Z installing mingw-w64-x86_64-python...
+2026-09-15T16:15:16.8364387Z installing mingw-w64-x86_64-termcap...
+2026-09-15T16:15:16.8428975Z installing mingw-w64-x86_64-readline...
+2026-09-15T16:15:16.8862799Z installing mingw-w64-x86_64-xxhash...
+2026-09-15T16:15:16.9020237Z installing mingw-w64-x86_64-gdb...
+2026-09-15T16:15:17.0713274Z Optional dependencies for mingw-w64-x86_64-gdb
+2026-09-15T16:15:17.0714129Z     mingw-w64-x86_64-python-pygments: for syntax highlighting
+2026-09-15T16:15:17.0714885Z installing mingw-w64-x86_64-gdb-multiarch...
+2026-09-15T16:15:17.1364271Z Optional dependencies for mingw-w64-x86_64-gdb-multiarch
+2026-09-15T16:15:17.1365111Z     mingw-w64-x86_64-python-pygments: for syntax highlighting
+2026-09-15T16:15:17.1365806Z installing mingw-w64-x86_64-libmangle...
+2026-09-15T16:15:17.1420777Z installing mingw-w64-x86_64-make...
+2026-09-15T16:15:17.1491847Z installing mingw-w64-x86_64-pkgconf...
+2026-09-15T16:15:17.1740247Z installing mingw-w64-x86_64-tools...
+2026-09-15T16:15:17.1846068Z installing mingw-w64-x86_64-winstorecompat...
+2026-09-15T16:15:17.1889736Z installing mingw-w64-x86_64-cppdap...
+2026-09-15T16:15:17.2173331Z installing mingw-w64-x86_64-c-ares...
+2026-09-15T16:15:17.3630601Z installing mingw-w64-x86_64-brotli...
+2026-09-15T16:15:17.3884665Z installing mingw-w64-x86_64-libunistring...
+2026-09-15T16:15:17.4421656Z installing mingw-w64-x86_64-libidn2...
+2026-09-15T16:15:17.4775584Z installing mingw-w64-x86_64-libpsl...
+2026-09-15T16:15:17.4889133Z installing mingw-w64-x86_64-libtasn1...
+2026-09-15T16:15:17.5715811Z installing mingw-w64-x86_64-p11-kit...
+2026-09-15T16:15:17.8408499Z installing mingw-w64-x86_64-ca-certificates...
+2026-09-15T16:15:18.5341498Z installing mingw-w64-x86_64-libssh2...
+2026-09-15T16:15:18.7041514Z installing mingw-w64-x86_64-nghttp2...
+2026-09-15T16:15:18.7249528Z installing mingw-w64-x86_64-nettle...
+2026-09-15T16:15:18.7939372Z installing mingw-w64-x86_64-gnutls...
+2026-09-15T16:15:19.9895654Z installing mingw-w64-x86_64-ngtcp2...
+2026-09-15T16:15:20.0155834Z installing mingw-w64-x86_64-nghttp3...
+2026-09-15T16:15:20.0321004Z installing mingw-w64-x86_64-curl...
+2026-09-15T16:15:20.6056914Z installing mingw-w64-x86_64-jsoncpp...
+2026-09-15T16:15:20.6277607Z installing mingw-w64-x86_64-lz4...
+2026-09-15T16:15:20.6446307Z installing mingw-w64-x86_64-libarchive...
+2026-09-15T16:15:20.7434907Z installing mingw-w64-x86_64-libuv...
+2026-09-15T16:15:20.7746434Z installing mingw-w64-x86_64-ninja...
+2026-09-15T16:15:20.7806412Z installing mingw-w64-x86_64-rhash...
+2026-09-15T16:15:20.8289137Z installing mingw-w64-x86_64-cmake...
+2026-09-15T16:15:25.1484295Z Optional dependencies for mingw-w64-x86_64-cmake
+2026-09-15T16:15:25.1485060Z     mingw-w64-x86_64-emacs: for cmake emacs mode
+2026-09-15T16:15:25.1485705Z installing mingw-w64-x86_64-spirv-tools...
+2026-09-15T16:15:25.2718093Z installing mingw-w64-x86_64-glslang...
+2026-09-15T16:15:25.3630755Z installing mingw-w64-x86_64-shaderc...
+2026-09-15T16:15:25.4180489Z installing mingw-w64-x86_64-vulkan-headers...
+2026-09-15T16:15:25.5459948Z installing mingw-w64-x86_64-vulkan-loader...
+2026-09-15T16:15:25.6589835Z ##[endgroup]
+2026-09-15T16:15:25.6590324Z ##[group]Saving package cache...
+2026-09-15T16:15:25.7868400Z [command]C:\Windows\system32\cmd.exe /D /S /C D:\a\_temp\setup-msys2\msys2.cmd -c "'paccache' '-r' '-f' '-u' '-k0'"
+2026-09-15T16:15:26.9158592Z ==> no candidate packages found for pruning
+2026-09-15T16:15:27.0375111Z [command]C:\Windows\system32\cmd.exe /D /S /C D:\a\_temp\setup-msys2\msys2.cmd -c "'paccache' '-r' '-f' '-k1'"
+2026-09-15T16:15:27.4973181Z ==> no candidate packages found for pruning
+2026-09-15T16:15:28.3277823Z [command]"C:\Program Files\Git\usr\bin\tar.exe" --posix -cf cache.tzst --exclude cache.tzst -P -C D:/a/CREXX/CREXX --files-from manifest.txt --force-local --use-compress-program "zstd -T0"
+2026-09-15T16:15:30.6557007Z Sent 0 of 221891617 (0.0%), 0.0 MBs/sec
+2026-09-15T16:15:31.6570028Z Sent 20565025 of 221891617 (9.3%), 9.8 MBs/sec
+2026-09-15T16:15:32.6612178Z Sent 221891617 of 221891617 (100.0%), 70.3 MBs/sec
+2026-09-15T16:15:33.0606332Z Cache saved as ID 7724806061 using key msys2-pkgs-upd:true-conf:dae72d96-files:d5246c2df373147553a4b2cc2325787fa9ea75dbe94b5e0aa90e39a618bd827d
+2026-09-15T16:15:33.1529545Z [command]C:\Windows\system32\cmd.exe /D /S /C D:\a\_temp\setup-msys2\msys2.cmd -c "'pacman' '--noconfirm' '-Scc'"
+2026-09-15T16:15:34.1020198Z 
+2026-09-15T16:15:34.1020824Z Cache directory: /var/cache/pacman/pkg/
+2026-09-15T16:15:34.1490908Z :: Do you want to remove ALL files from cache? [Y/n] 
+2026-09-15T16:15:34.1491419Z removing all files from cache...
+2026-09-15T16:15:34.1491630Z 
+2026-09-15T16:15:34.1491756Z Database directory: /var/lib/pacman/
+2026-09-15T16:15:34.1512964Z :: Do you want to remove unused repositories? [Y/n] 
+2026-09-15T16:15:34.1514526Z removing unused sync repositories...
+2026-09-15T16:15:34.1580901Z ##[endgroup]
+2026-09-15T16:15:34.2031098Z ##[group]Run cmake -S . -G Ninja -B "D:\a\_temp/build" \
+2026-09-15T16:15:34.2031650Z [36;1mcmake -S . -G Ninja -B "D:\a\_temp/build" \[0m
+2026-09-15T16:15:34.2032025Z [36;1m  -DCMAKE_BUILD_TYPE=Release \[0m
+2026-09-15T16:15:34.2032332Z [36;1m  -DCREXX_QA_CTEST_JOBS=2 \[0m
+2026-09-15T16:15:34.2032660Z [36;1m  -DCREXX_VERSION_OVERRIDE="1.0.0-beta.3" \[0m
+2026-09-15T16:15:34.2033013Z [36;1m  -DCREXX_BUILD_CHANNEL="local" \[0m
+2026-09-15T16:15:34.2033596Z [36;1m  -DCREXX_BUILD_TIMESTAMP="20260915T161253Z" \[0m
+2026-09-15T16:15:34.2034030Z [36;1m  -DCREXX_BUILD_COMMIT="544d41f02de50d97598b21fb4a09a8a05756b7e7" \[0m
+2026-09-15T16:15:34.2034513Z [36;1m  -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON \[0m
+2026-09-15T16:15:34.2035040Z [36;1m  -DCREXX_FORCE_SYSTEM_OPENSSL=ON -DENABLE_PARSER_MODE=OFF -DCREXX_LLAMA_VULKAN=ON[0m
+2026-09-15T16:15:34.2042110Z shell: D:\a\_temp\setup-msys2\msys2.CMD {0}
+2026-09-15T16:15:34.2042434Z env:
+2026-09-15T16:15:34.2042688Z   MSYSTEM: MINGW64
+2026-09-15T16:15:34.2042917Z ##[endgroup]
+2026-09-15T16:15:51.6768147Z -- The C compiler identification is GNU 16.2.0
+2026-09-15T16:15:51.8579355Z -- The CXX compiler identification is GNU 16.2.0
+2026-09-15T16:15:51.9086932Z -- Detecting C compiler ABI info
+2026-09-15T16:15:52.2968664Z -- Detecting C compiler ABI info - done
+2026-09-15T16:15:52.3333497Z -- Check for working C compiler: D:/a/_temp/msys64/mingw64/bin/cc.exe - skipped
+2026-09-15T16:15:52.3338128Z -- Detecting C compile features
+2026-09-15T16:15:52.3344132Z -- Detecting C compile features - done
+2026-09-15T16:15:52.3801272Z -- Detecting CXX compiler ABI info
+2026-09-15T16:15:52.7784385Z -- Detecting CXX compiler ABI info - done
+2026-09-15T16:15:52.8146628Z -- Check for working CXX compiler: D:/a/_temp/msys64/mingw64/bin/c++.exe - skipped
+2026-09-15T16:15:52.8151490Z -- Detecting CXX compile features
+2026-09-15T16:15:52.8161316Z -- Detecting CXX compile features - done
+2026-09-15T16:15:52.8396133Z -- CMake Version: 4.4.3
+2026-09-15T16:15:52.8396646Z -- CREXX Version: crexx-1.0.0-beta.3+local.g544d41f02de5.dirty
+2026-09-15T16:15:52.8397129Z -- CREXX Build Channel: local
+2026-09-15T16:15:52.8397506Z -- CREXX Build Timestamp: 20260915T161253Z
+2026-09-15T16:15:52.8397894Z -- CREXX Build Commit: 544d41f02de5
+2026-09-15T16:15:52.8398622Z -- CMake Generator: Ninja
+2026-09-15T16:15:52.8399465Z -- cREXX build resources: profile=portable, vm-compile=2, native-link=2, backend=Ninja pools
+2026-09-15T16:15:52.8573982Z -- Performing Test cxxflag__W
+2026-09-15T16:15:53.0716612Z -- Performing Test cxxflag__W - Success
+2026-09-15T16:15:53.0730086Z -- Performing Test cxxflag__Wall
+2026-09-15T16:15:53.2820139Z -- Performing Test cxxflag__Wall - Success
+2026-09-15T16:15:53.2833366Z -- Performing Test cxxflag__Wextra
+2026-09-15T16:15:53.4884417Z -- Performing Test cxxflag__Wextra - Success
+2026-09-15T16:15:53.4898148Z -- Performing Test cxxflag__Weffc__
+2026-09-15T16:15:53.7035973Z -- Performing Test cxxflag__Weffc__ - Success
+2026-09-15T16:15:53.7049290Z -- Performing Test cxxflag__pedantic
+2026-09-15T16:15:53.9107014Z -- Performing Test cxxflag__pedantic - Success
+2026-09-15T16:15:53.9120661Z -- Performing Test cxxflag__Wformat_2
+2026-09-15T16:15:54.1154277Z -- Performing Test cxxflag__Wformat_2 - Success
+2026-09-15T16:15:54.1167990Z -- Performing Test cxxflag__Wredundant_decls
+2026-09-15T16:15:54.3315372Z -- Performing Test cxxflag__Wredundant_decls - Success
+2026-09-15T16:15:54.3330987Z -- Performing Test cxxflag__Wsuggest_attribute_format
+2026-09-15T16:15:54.5382125Z -- Performing Test cxxflag__Wsuggest_attribute_format - Success
+2026-09-15T16:15:54.5395469Z -- Performing Test cxxflag__Wconversion
+2026-09-15T16:15:54.7481472Z -- Performing Test cxxflag__Wconversion - Success
+2026-09-15T16:15:54.7498082Z -- Performing Test cxxflag__Wsign_conversion
+2026-09-15T16:15:54.9611361Z -- Performing Test cxxflag__Wsign_conversion - Success
+2026-09-15T16:15:54.9624584Z -- Performing Test cxxflag__Werror_return_type
+2026-09-15T16:15:55.1683381Z -- Performing Test cxxflag__Werror_return_type - Success
+2026-09-15T16:15:55.1693805Z -- Performing Test cxxflag__Weverything
+2026-09-15T16:15:55.2608173Z -- Performing Test cxxflag__Weverything - Failed
+2026-09-15T16:15:55.2621704Z -- Performing Test cxxflag__fdiagnostics_color_always
+2026-09-15T16:15:55.4815268Z -- Performing Test cxxflag__fdiagnostics_color_always - Success
+2026-09-15T16:15:55.4817748Z -- C compiler flags:  -D__USE_MINGW_ANSI_STDIO=1
+2026-09-15T16:15:55.4819601Z -- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wsuggest-attribute=format -Wconversion -Wsign-conversion -Werror=return-type -fdiagnostics-color=always  -D__USE_MINGW_ANSI_STDIO=1
+2026-09-15T16:15:55.4821022Z -- Linker flags for executables: 
+2026-09-15T16:15:55.4821390Z -- Linker flags for shared libs: 
+2026-09-15T16:15:55.4821766Z -- Release C compiler flags: -O3 -DNDEBUG
+2026-09-15T16:15:55.4822163Z -- Release C++ compiler flags: -O3 -DNDEBUG
+2026-09-15T16:15:55.4822572Z -- Release linker flags for executables: 
+2026-09-15T16:15:55.4822957Z -- Release linker flags for shared libs: 
+2026-09-15T16:15:55.4834777Z -- Looking for sys/types.h
+2026-09-15T16:15:55.6864191Z -- Looking for sys/types.h - found
+2026-09-15T16:15:55.6866590Z -- Looking for sys/stat.h
+2026-09-15T16:15:55.9044494Z -- Looking for sys/stat.h - found
+2026-09-15T16:15:55.9046589Z -- Looking for fcntl.h
+2026-09-15T16:15:56.1108029Z -- Looking for fcntl.h - found
+2026-09-15T16:15:56.1110033Z -- Looking for unistd.h
+2026-09-15T16:15:56.3188723Z -- Looking for unistd.h - found
+2026-09-15T16:15:56.3191047Z -- Looking for io.h
+2026-09-15T16:15:56.5292414Z -- Looking for io.h - found
+2026-09-15T16:15:56.5307796Z -- Writing config.h
+2026-09-15T16:15:56.5641295Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-09-15T16:15:56.7812593Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+2026-09-15T16:15:56.7830754Z -- Found Threads: TRUE
+2026-09-15T16:15:56.9001855Z -- Smoke test 'rxc_help_syntaxhighlight' is not present in this configuration; skipping
+2026-09-15T16:15:56.9004737Z -- Smoke test 'syntaxhighlight_trace_keywords' is not present in this configuration; skipping
+2026-09-15T16:15:56.9006580Z -- Smoke test 'source_semantics' is not present in this configuration; skipping
+2026-09-15T16:15:57.0732718Z -- cREXX VM handler panel: profile-20
+2026-09-15T16:15:57.0821218Z -- cREXX VM core socket TLS backend: SCHANNEL
+2026-09-15T16:15:57.0825340Z -- cREXX product VM: rxvm -> rxtvm (GNU)
+2026-09-15T16:15:57.1518572Z -- Smoke test 'rxpp_sh_tokens' is not present in this configuration; skipping
+2026-09-15T16:16:05.2123366Z -- llama.cpp version: 0.4.0
+2026-09-15T16:16:05.2123762Z CMAKE_BUILD_TYPE=Release
+2026-09-15T16:16:05.2145468Z -- Found Git: D:/a/_temp/msys64/usr/bin/git.exe (found version "2.55.0")
+2026-09-15T16:16:05.2319868Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-15T16:16:05.2494218Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-15T16:16:05.2745582Z -- The ASM compiler identification is GNU
+2026-09-15T16:16:05.2803008Z -- Found assembler: D:/a/_temp/msys64/mingw64/bin/cc.exe
+2026-09-15T16:16:05.3049032Z -- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+2026-09-15T16:16:05.3654575Z -- CMAKE_SYSTEM_PROCESSOR: AMD64
+2026-09-15T16:16:05.3655120Z -- GGML_SYSTEM_ARCH: x86
+2026-09-15T16:16:05.3687140Z -- Including CPU backend
+2026-09-15T16:16:05.3693100Z -- x86 detected
+2026-09-15T16:16:05.3696055Z -- Adding CPU backend variant ggml-cpu-x64:  
+2026-09-15T16:16:05.3700902Z -- x86 detected
+2026-09-15T16:16:05.3703825Z -- Adding CPU backend variant ggml-cpu-sse42: -msse4.2 GGML_SSE42
+2026-09-15T16:16:05.3708747Z -- x86 detected
+2026-09-15T16:16:05.3711892Z -- Adding CPU backend variant ggml-cpu-sandybridge: -msse4.2;-mavx GGML_SSE42;GGML_AVX
+2026-09-15T16:16:05.3717122Z -- x86 detected
+2026-09-15T16:16:05.3721434Z -- Adding CPU backend variant ggml-cpu-ivybridge: -msse4.2;-mf16c;-mavx GGML_SSE42;GGML_F16C;GGML_AVX
+2026-09-15T16:16:05.3725372Z -- x86 detected
+2026-09-15T16:16:05.3728501Z -- Adding CPU backend variant ggml-cpu-piledriver: -msse4.2;-mf16c;-mfma;-mavx GGML_SSE42;GGML_F16C;GGML_FMA;GGML_AVX
+2026-09-15T16:16:05.3732902Z -- x86 detected
+2026-09-15T16:16:05.3736834Z -- Adding CPU backend variant ggml-cpu-haswell: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2
+2026-09-15T16:16:05.3741187Z -- x86 detected
+2026-09-15T16:16:05.3745579Z -- Adding CPU backend variant ggml-cpu-skylakex: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512
+2026-09-15T16:16:05.3749550Z -- x86 detected
+2026-09-15T16:16:05.3753630Z -- Adding CPU backend variant ggml-cpu-cannonlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI
+2026-09-15T16:16:05.3757559Z -- x86 detected
+2026-09-15T16:16:05.3761914Z -- Adding CPU backend variant ggml-cpu-cascadelake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VNNI
+2026-09-15T16:16:05.3766697Z -- x86 detected
+2026-09-15T16:16:05.3771084Z -- Adding CPU backend variant ggml-cpu-icelake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI
+2026-09-15T16:16:05.3774977Z -- x86 detected
+2026-09-15T16:16:05.3779248Z -- Adding CPU backend variant ggml-cpu-cooperlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vnni;-mavx512bf16 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VNNI;GGML_AVX512_BF16
+2026-09-15T16:16:05.3783928Z -- x86 detected
+2026-09-15T16:16:05.3788376Z -- Adding CPU backend variant ggml-cpu-zen4: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni;-mavx512bf16 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI;GGML_AVX512_BF16
+2026-09-15T16:16:05.3791981Z -- x86 detected
+2026-09-15T16:16:05.3795583Z -- Adding CPU backend variant ggml-cpu-alderlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavxvnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX_VNNI
+2026-09-15T16:16:05.3799897Z -- x86 detected
+2026-09-15T16:16:05.3805055Z -- Adding CPU backend variant ggml-cpu-sapphirerapids: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni;-mavx512bf16;-mamx-tile;-mamx-int8 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI;GGML_AVX512_BF16;GGML_AMX_TILE;GGML_AMX_INT8
+2026-09-15T16:16:05.4674646Z -- Found Vulkan: D:/a/_temp/msys64/mingw64/lib/libvulkan-1.dll.a (found version "1.4.357") found components: glslc glslangValidator
+2026-09-15T16:16:05.5465788Z CMake Error at D:/a/_temp/build/_deps/crexx_llama_source-src/ggml/src/ggml-vulkan/CMakeLists.txt:14 (find_package):
+2026-09-15T16:16:05.5467580Z   Could not find a package configuration file provided by "SPIRV-Headers"
+2026-09-15T16:16:05.5468597Z   with any of the following names:
+2026-09-15T16:16:05.5468935Z 
+2026-09-15T16:16:05.5469100Z     SPIRV-Headers.cps
+2026-09-15T16:16:05.5469489Z     spirv-headers.cps
+2026-09-15T16:16:05.5469884Z     SPIRV-HeadersConfig.cmake
+2026-09-15T16:16:05.5470361Z     spirv-headers-config.cmake
+2026-09-15T16:16:05.5470548Z 
+2026-09-15T16:16:05.5470782Z   Add the installation prefix of "SPIRV-Headers" to CMAKE_PREFIX_PATH or set
+2026-09-15T16:16:05.5471600Z   "SPIRV-Headers_DIR" to a directory containing one of the above files.  If
+2026-09-15T16:16:05.5472160Z   "SPIRV-Headers" provides a separate development package or SDK, be sure it
+2026-09-15T16:16:05.5472579Z   has been installed.
+2026-09-15T16:16:05.5472725Z 
+2026-09-15T16:16:05.5472733Z 
+2026-09-15T16:16:05.5522993Z -- Configuring incomplete, errors occurred!
+2026-09-15T16:16:05.5893402Z ##[error]Process completed with exit code 1.
+2026-09-15T16:16:05.6185918Z ##[group]Run actions/upload-artifact@v7
+2026-09-15T16:16:05.6186286Z with:
+2026-09-15T16:16:05.6186672Z   name: package-qa-CREXX-windows-x64-544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:16:05.6187605Z   path: D:\a\_temp/release-smoke
+D:\a\_temp/build/Testing/Temporary
+D:\a\_temp/build/lib/plugins/llama/tests/release-smoke
+D:\a\_temp/build/CMakeFiles/CMakeConfigureLog.yaml
+
+2026-09-15T16:16:05.6188354Z   if-no-files-found: warn
+2026-09-15T16:16:05.6188607Z   retention-days: 14
+2026-09-15T16:16:05.6188848Z   compression-level: 6
+2026-09-15T16:16:05.6189080Z   overwrite: false
+2026-09-15T16:16:05.6202996Z   include-hidden-files: false
+2026-09-15T16:16:05.6203336Z   archive: true
+2026-09-15T16:16:05.6203561Z env:
+2026-09-15T16:16:05.6203771Z   MSYSTEM: MINGW64
+2026-09-15T16:16:05.6204000Z ##[endgroup]
+2026-09-15T16:16:05.8185706Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-09-15T16:16:05.8190323Z The least common ancestor is D:\a\_temp. This will be the root directory of the artifact
+2026-09-15T16:16:05.8192108Z With the provided path, there will be 1 file uploaded
+2026-09-15T16:16:05.8197269Z Artifact name is valid!
+2026-09-15T16:16:05.8198073Z Root directory input is valid!
+2026-09-15T16:16:06.1884806Z Uploading artifact: package-qa-CREXX-windows-x64-544d41f02de50d97598b21fb4a09a8a05756b7e7.zip
+2026-09-15T16:16:06.1933370Z Beginning upload of artifact content to blob storage
+2026-09-15T16:16:06.5867928Z Uploaded bytes 17358
+2026-09-15T16:16:06.6656074Z Finished uploading artifact content to blob storage!
+2026-09-15T16:16:06.6657198Z SHA256 digest of uploaded artifact is 4a3a511d4b767f0774196e3f1ecdfbe44e74e7065bde33a25184a121edcc2f1a
+2026-09-15T16:16:06.6658141Z Finalizing artifact upload
+2026-09-15T16:16:07.0634274Z Artifact package-qa-CREXX-windows-x64-544d41f02de50d97598b21fb4a09a8a05756b7e7 successfully finalized. Artifact ID 10406162882
+2026-09-15T16:16:07.0636382Z Artifact package-qa-CREXX-windows-x64-544d41f02de50d97598b21fb4a09a8a05756b7e7 has been successfully uploaded! Final size is 17358 bytes. Artifact ID is 10406162882
+2026-09-15T16:16:07.0643771Z Artifact download URL: https://github.com/adesutherland/CREXX/actions/runs/34993532373/artifacts/10406162882
+2026-09-15T16:16:07.1124492Z Post job cleanup.
+2026-09-15T16:16:07.4048890Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-09-15T16:16:07.4399866Z git version 2.55.0.windows.5
+2026-09-15T16:16:07.4477017Z Temporarily overriding HOME='D:\a\_temp\a8f7679a-d4e0-4eba-96c0-c99b46c979f6' before making global git config changes
+2026-09-15T16:16:07.4480188Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T16:16:07.4491666Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\CREXX\CREXX
+2026-09-15T16:16:07.4863103Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T16:16:07.5223341Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-09-15T16:16:08.1202479Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T16:16:08.1478395Z http.https://github.com/.extraheader
+2026-09-15T16:16:08.1532779Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-09-15T16:16:08.1869928Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-09-15T16:16:08.7575900Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T16:16:08.7879301Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-09-15T16:16:09.3398990Z Cleaning up orphan processes

@@ -1,0 +1,36 @@
+{
+  "suite": "package-typed",
+  "modes": "cpu,required-gpu",
+  "elapsed_seconds": 534.181,
+  "build": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+  "source": "/Users/adrian/CLionProjects/CREXX",
+  "models": "/Users/adrian/Library/Caches/crexx/native-inference",
+  "asan_options": "detect_leaks=0",
+  "commands": [
+    {
+      "label": "install",
+      "argv": [
+        "cmake",
+        "--install",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+        "--prefix",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl/install"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "suite",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/typed_package_consumer.py",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl/install",
+        "/Users/adrian/CLionProjects/CREXX",
+        "/Users/adrian/Library/Caches/crexx/native-inference",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl/work",
+        "cpu,required-gpu"
+      ],
+      "returncode": 0
+    }
+  ],
+  "driver_sha256": "3be59060c75e186e35f2c39678c08a549ca193d5b5f0c5b71a3e16ee31cf3690"
+}

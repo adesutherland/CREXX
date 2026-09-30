@@ -1,0 +1,13 @@
+[0/2] Re-checking globbed directories...
+[1/13] Building C object interpreter/CMakeFiles/rxvml.dir/rxvmlib.c.o
+[2/13] Building C object interpreter/CMakeFiles/test_rxspawn_diagnostics.dir/tests/test_rxspawn_diagnostics.c.o
+[3/13] Building C object interpreter/CMakeFiles/rxvml.dir/rxvml.c.o
+[4/13] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[5/13] Building C object interpreter/CMakeFiles/test_rxspawn_inheritance.dir/tests/test_rxspawn_inheritance.c.o
+[6/13] Linking C static library bin/librxvml.a
+[7/13] Linking C static library bin/librxbvml.a
+[8/13] Linking C executable bin/rxbvm
+[9/13] Creating rxvm symlink to rxbvm
+[10/13] Linking C executable bin/test_rxspawn_inheritance
+[11/13] Linking C executable bin/test_rxspawn_diagnostics
+[12/13] Linking C executable bin/rxc

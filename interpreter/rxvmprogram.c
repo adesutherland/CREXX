@@ -12,7 +12,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(_WIN32)
+#if defined(CREXX_VM_SINGLE_THREADED)
+/* No other execution thread or asynchronous callback exists in this build. */
+typedef unsigned char rxvm_program_mutex;
+static int rxvm_program_mutex_init(rxvm_program_mutex *mutex) {
+    *mutex = 0; return 1;
+}
+static void rxvm_program_mutex_destroy(rxvm_program_mutex *mutex) { (void)mutex; }
+static void rxvm_program_mutex_lock(rxvm_program_mutex *mutex) { (void)mutex; }
+static void rxvm_program_mutex_unlock(rxvm_program_mutex *mutex) { (void)mutex; }
+#elif defined(_WIN32)
 #include <windows.h>
 typedef CRITICAL_SECTION rxvm_program_mutex;
 static int rxvm_program_mutex_init(rxvm_program_mutex *mutex) {

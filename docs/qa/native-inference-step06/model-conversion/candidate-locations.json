@@ -1,0 +1,12 @@
+[
+  {
+    "path": "/Users/adrian/Library/Caches/crexx/native-inference/candidates/s6-d01-2026-09-15/smollm2-360m-instruct-q8_0.gguf",
+    "sha256": "afb8552a500c22958467716b7991000dcc941d1f108a516c721b4cc40d41bad9",
+    "size": 386405280
+  },
+  {
+    "path": "/Users/adrian/Library/Caches/crexx/native-inference/candidates/s6-d01-2026-09-15/bge-small-en-v1.5-f16.gguf",
+    "sha256": "cdff157dc108aee08f38024b8f046f1774f6a4a29fb3a170564232ceeb74ac17",
+    "size": 67582784
+  }
+]

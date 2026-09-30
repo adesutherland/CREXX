@@ -1,0 +1,141 @@
+Start testing: Sep 16 10:12 Coordinated Universal Time
+----------------------------------------------------------
+1670/2452 Testing: keyaccess_test_noopt
+1670/2452 Test: keyaccess_test_noopt
+Command: "D:/a/_temp/core-build/bin/rxvm.exe" "keyaccess_test_noopt" "rx_keyaccess" "D:/a/_temp/core-build/bin/library" "-a" "keyaccess_test_noopt"
+Directory: D:/a/_temp/core-build/lib/plugins/keyaccess
+"keyaccess_test_noopt" start time: Sep 16 10:12 Coordinated Universal Time
+Output:
+----------------------------------------------------------
+openkeying database...
+
+listkeying all keys:
+50 keys found
+Native traversal with readkey:
+first key: Tokyo
+value: Japan
+next key after readkey: New York City
+invalid firstkey handle: ERROR
+invalid nextkey handle: ERROR
+
+readkey values:
+City: Peru
+City: Colombia
+
+Deleting Berlin...
+
+Keys after deletion:
+49 keys found
+
+Database statistics:
+Statistics:
+Uptime: 0 seconds
+Reads: 0
+Writes: 50
+Deletes: 1
+Transactions: 2
+Total bytes written: 386
+Total bytes read: 0
+Cache hits: 3
+Cache misses: 0
+Cache hit ratio: 100.00%
+
+
+Validating database...
+No errors found
+
+Creating backup...
+
+Compacting database...
+
+Closing database...
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"keyaccess_test_noopt" end time: Sep 16 10:12 Coordinated Universal Time
+"keyaccess_test_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1671/2452 Testing: keyaccess_test_opt
+1671/2452 Test: keyaccess_test_opt
+Command: "D:/a/_temp/msys64/mingw64/bin/cmake.exe" "-P" "D:/a/_temp/core-build/lib/plugins/keyaccess/keyaccess_test_opt_linked_runtime.cmake"
+Directory: D:/a/_temp/core-build/lib/plugins/keyaccess
+"keyaccess_test_opt" start time: Sep 16 10:12 Coordinated Universal Time
+Output:
+----------------------------------------------------------
+openkeying database...
+
+listkeying all keys:
+50 keys found
+Native traversal with readkey:
+first key: Tokyo
+value: Japan
+next key after readkey: New York City
+invalid firstkey handle: ERROR
+invalid nextkey handle: ERROR
+
+readkey values:
+City: Peru
+City: Colombia
+
+Deleting Berlin...
+
+Keys after deletion:
+49 keys found
+
+Database statistics:
+Statistics:
+Uptime: 0 seconds
+Reads: 0
+Writes: 50
+Deletes: 1
+Transactions: 2
+Total bytes written: 386
+Total bytes read: 0
+Cache hits: 3
+Cache misses: 0
+Cache hit ratio: 100.00%
+
+
+Validating database...
+No errors found
+
+Creating backup...
+
+Compacting database...
+
+Closing database...
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"keyaccess_test_opt" end time: Sep 16 10:12 Coordinated Universal Time
+"keyaccess_test_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1672/2452 Testing: keyaccess_compact_failure
+1672/2452 Test: keyaccess_compact_failure
+Command: "D:/a/_temp/core-build/lib/plugins/keyaccess/keyaccess_compact_failure_test.exe"
+Directory: D:/a/_temp/core-build/lib/plugins/keyaccess
+"keyaccess_compact_failure" start time: Sep 16 10:12 Coordinated Universal Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"keyaccess_compact_failure" end time: Sep 16 10:12 Coordinated Universal Time
+"keyaccess_compact_failure" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 16 10:12 Coordinated Universal Time
+
+comprehensive =   0.09 sec*proc
+
+linked_opt =   0.09 sec*proc
+
+optimizer-parity =   0.13 sec*proc
+
+smoke =   0.04 sec*proc
+

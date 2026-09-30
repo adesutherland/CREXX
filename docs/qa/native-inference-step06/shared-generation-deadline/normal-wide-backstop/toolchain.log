@@ -1,0 +1,17 @@
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc;--no-exe-import;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;-o;/tmp/crexx-ni-s6.zq0rk0ug/shared-deadline/normal-wide-backstop/embedding;/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/examples/shared_generation.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/tmp/crexx-ni-s6.zq0rk0ug/shared-deadline/normal-wide-backstop/embedding;/tmp/crexx-ni-s6.zq0rk0ug/shared-deadline/normal-wide-backstop/embedding
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/tmp/crexx-ni-s6.zq0rk0ug/shared-deadline/normal-wide-backstop/embedding-linked;/tmp/crexx-ni-s6.zq0rk0ug/shared-deadline/normal-wide-backstop/embedding;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm;/tmp/crexx-ni-s6.zq0rk0ug/shared-deadline/normal-wide-backstop/embedding-linked;-a;cpu;/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf;48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201
+PASS: four typed generation workers, 20 ordered batches each, shared weights/private outputs cpu
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm;/tmp/crexx-ni-s6.zq0rk0ug/shared-deadline/normal-wide-backstop/embedding-linked;-a;cpu;/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf;48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201
+PASS: four typed generation workers, 20 ordered batches each, shared weights/private outputs cpu
+
+

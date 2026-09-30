@@ -1,0 +1,29 @@
+Test project /tmp/crexx-channel-release.1v4pFt/debug
+    Start 1161: rxvmchannel_byte_provider
+    Start 1162: rxvmchannel_request_lifetime
+    Start 1247: rxvmchannel_process_crash_replacement
+1/3 Test #1162: rxvmchannel_request_lifetime ............   Passed    0.59 sec
+2/3 Test #1161: rxvmchannel_byte_provider ...............   Passed    0.77 sec
+3/3 Test #1247: rxvmchannel_process_crash_replacement ...   Passed    1.11 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+byte-endpoint         =   1.37 sec*proc (2 tests)
+channels              =   2.47 sec*proc (3 tests)
+comprehensive         =   2.47 sec*proc (3 tests)
+concurrency           =   1.88 sec*proc (2 tests)
+concurrency-sp03      =   0.77 sec*proc (1 test)
+concurrency-sp04      =   1.88 sec*proc (2 tests)
+concurrency-sp08      =   1.11 sec*proc (1 test)
+crash                 =   1.11 sec*proc (1 test)
+f1d                   =   0.77 sec*proc (1 test)
+f1e                   =   1.11 sec*proc (1 test)
+gate-f                =   1.88 sec*proc (2 tests)
+interpreter           =   2.47 sec*proc (3 tests)
+lifecycle             =   1.70 sec*proc (2 tests)
+perf3                 =   1.88 sec*proc (2 tests)
+process               =   1.11 sec*proc (1 test)
+provider-reference    =   0.77 sec*proc (1 test)
+
+Total Test time (real) =   1.16 sec

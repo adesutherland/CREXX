@@ -1,0 +1,3 @@
+argv=[PosixPath('/private/tmp/llama-typed-release-installed/installed Ω/bin/rxc'), '--no-exe-import', '-n', '-i', PosixPath('/private/tmp/llama-typed-release-installed/installed Ω/bin'), '-o', PosixPath('/private/tmp/llama-typed-release-consumers-final/noopt-typed_embeddings-dynamic'), PosixPath('/private/tmp/llama-typed-release-consumers-final/noopt-typed_embeddings.crexx')]
+cwd=/private/tmp/llama-typed-release-consumers-final
+rc=0

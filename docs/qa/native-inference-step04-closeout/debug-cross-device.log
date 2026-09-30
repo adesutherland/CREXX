@@ -1,0 +1,1 @@
+PASS: CPU/GPU embedding parity for document/query layouts 1/4/8; absolute<=0.002 cosine>=0.9999

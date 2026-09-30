@@ -221,7 +221,9 @@ handle = openkey("mystore.dat", "w+")
 Closes an open KeyAccess store.
 
 Closing the store also releases handle-local resources such as the cache,
-in-memory lookup index, and traversal state.
+in-memory lookup index, and traversal state. It is safe to close the handle
+after compaction has returned an I/O error, including when its streams were
+already closed. Closing does not make the failed compaction successful.
 
 **Parameters:**
 
@@ -641,6 +643,12 @@ Compacts the store by removing deleted entries.
 Compaction changes the physical index layout and therefore invalidates the
 in-memory keyed lookup index. The index is rebuilt lazily when subsequent
 keyed access requires it.
+
+Check the returned status before further access. An I/O failure during file
+replacement or reopening can leave the handle's streams closed; close the
+handle rather than continuing to use it. Replacement of the data and index
+files is not a single atomic operation, so retain a backup for recovery from
+an interrupted or partially failed replacement.
 
 **Parameters:**
 

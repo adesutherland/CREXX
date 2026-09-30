@@ -1,0 +1,2891 @@
+{
+  "conclusion": "success",
+  "headSha": "e99136a1d5725d0c44128f64f505e1b46c64a51f",
+  "jobs": [
+    {
+      "completedAt": "2026-09-18T18:57:13Z",
+      "conclusion": "success",
+      "databaseId": 105723741655,
+      "name": "Determine Version Metadata",
+      "startedAt": "2026-09-18T18:56:56Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T18:56:58Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T18:56:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:09Z",
+          "conclusion": "success",
+          "name": "Checkout version file",
+          "number": 2,
+          "startedAt": "2026-09-18T18:56:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:09Z",
+          "conclusion": "success",
+          "name": "Determine metadata",
+          "number": 3,
+          "startedAt": "2026-09-18T18:57:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:09Z",
+          "conclusion": "success",
+          "name": "Select candidate package lanes",
+          "number": 4,
+          "startedAt": "2026-09-18T18:57:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:09Z",
+          "conclusion": "success",
+          "name": "Check Windows publication safeguards",
+          "number": 5,
+          "startedAt": "2026-09-18T18:57:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:10Z",
+          "conclusion": "success",
+          "name": "Check provider signing and release matrix guards",
+          "number": 6,
+          "startedAt": "2026-09-18T18:57:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:10Z",
+          "conclusion": "success",
+          "name": "Check split package and shared runtime guards",
+          "number": 7,
+          "startedAt": "2026-09-18T18:57:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:10Z",
+          "conclusion": "success",
+          "name": "Post Checkout version file",
+          "number": 14,
+          "startedAt": "2026-09-18T18:57:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:10Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 15,
+          "startedAt": "2026-09-18T18:57:10Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723741655"
+    },
+    {
+      "completedAt": "2026-09-18T19:18:14Z",
+      "conclusion": "success",
+      "databaseId": 105723856283,
+      "name": "Core macos-x86_64",
+      "startedAt": "2026-09-18T18:57:20Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T18:57:26Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T18:57:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:08Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-18T18:57:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:09Z",
+          "conclusion": "success",
+          "name": "Python for package validation",
+          "number": 3,
+          "startedAt": "2026-09-18T18:58:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:09Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 4,
+          "startedAt": "2026-09-18T18:58:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:42Z",
+          "conclusion": "success",
+          "name": "Configure",
+          "number": 5,
+          "startedAt": "2026-09-18T18:58:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:10:13Z",
+          "conclusion": "success",
+          "name": "Build Release user product",
+          "number": 6,
+          "startedAt": "2026-09-18T18:58:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:28Z",
+          "conclusion": "success",
+          "name": "Run fast candidate QA",
+          "number": 7,
+          "startedAt": "2026-09-18T19:10:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:28Z",
+          "conclusion": "skipped",
+          "name": "Configure, build and check MSVC Release product",
+          "number": 8,
+          "startedAt": "2026-09-18T19:16:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:29Z",
+          "conclusion": "success",
+          "name": "Stage release payload",
+          "number": 9,
+          "startedAt": "2026-09-18T19:16:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:29Z",
+          "conclusion": "skipped",
+          "name": "Stage release payload",
+          "number": 10,
+          "startedAt": "2026-09-18T19:16:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:30Z",
+          "conclusion": "success",
+          "name": "Configure Apple signing keychain",
+          "number": 11,
+          "startedAt": "2026-09-18T19:16:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:30Z",
+          "conclusion": "skipped",
+          "name": "Require signing identities for explicit candidate proof",
+          "number": 12,
+          "startedAt": "2026-09-18T19:16:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:36Z",
+          "conclusion": "success",
+          "name": "Sign macOS release payload",
+          "number": 13,
+          "startedAt": "2026-09-18T19:16:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:39Z",
+          "conclusion": "success",
+          "name": "Verify macOS signatures",
+          "number": 14,
+          "startedAt": "2026-09-18T19:16:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:46Z",
+          "conclusion": "success",
+          "name": "Package and smoke the actual core ZIP",
+          "number": 15,
+          "startedAt": "2026-09-18T19:16:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:50Z",
+          "conclusion": "success",
+          "name": "Retain core QA evidence",
+          "number": 16,
+          "startedAt": "2026-09-18T19:16:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:54Z",
+          "conclusion": "success",
+          "name": "Upload qualified core for consumers and plugin jobs",
+          "number": 17,
+          "startedAt": "2026-09-18T19:16:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:54Z",
+          "conclusion": "skipped",
+          "name": "Retain unqualified archive after a core packaging failure",
+          "number": 18,
+          "startedAt": "2026-09-18T19:16:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:54Z",
+          "conclusion": "success",
+          "name": "Package release asset",
+          "number": 19,
+          "startedAt": "2026-09-18T19:16:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:16:54Z",
+          "conclusion": "skipped",
+          "name": "Package release asset",
+          "number": 20,
+          "startedAt": "2026-09-18T19:16:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:17:01Z",
+          "conclusion": "success",
+          "name": "Package macOS installer",
+          "number": 21,
+          "startedAt": "2026-09-18T19:16:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:17:01Z",
+          "conclusion": "skipped",
+          "name": "Package Linux Debian dev snapshot",
+          "number": 22,
+          "startedAt": "2026-09-18T19:17:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:17:01Z",
+          "conclusion": "skipped",
+          "name": "Build and test unsigned Windows snapshot installer",
+          "number": 23,
+          "startedAt": "2026-09-18T19:17:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:17:01Z",
+          "conclusion": "success",
+          "name": "Report macOS package status",
+          "number": 24,
+          "startedAt": "2026-09-18T19:17:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:17:29Z",
+          "conclusion": "success",
+          "name": "Notarize macOS ZIP asset",
+          "number": 25,
+          "startedAt": "2026-09-18T19:17:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:01Z",
+          "conclusion": "success",
+          "name": "Notarize and staple macOS installer",
+          "number": 26,
+          "startedAt": "2026-09-18T19:17:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:01Z",
+          "conclusion": "skipped",
+          "name": "Build shared native Rexx plugin manager",
+          "number": 27,
+          "startedAt": "2026-09-18T19:18:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:01Z",
+          "conclusion": "skipped",
+          "name": "Retain native manager for both Windows plugin installers",
+          "number": 28,
+          "startedAt": "2026-09-18T19:18:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:07Z",
+          "conclusion": "success",
+          "name": "Upload packaged asset",
+          "number": 29,
+          "startedAt": "2026-09-18T19:18:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:07Z",
+          "conclusion": "success",
+          "name": "Cleanup Apple signing keychain",
+          "number": 30,
+          "startedAt": "2026-09-18T19:18:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:08Z",
+          "conclusion": "success",
+          "name": "Post Python for package validation",
+          "number": 59,
+          "startedAt": "2026-09-18T19:18:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:08Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 60,
+          "startedAt": "2026-09-18T19:18:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:10Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 61,
+          "startedAt": "2026-09-18T19:18:08Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723856283"
+    },
+    {
+      "completedAt": "2026-09-18T19:06:27Z",
+      "conclusion": "success",
+      "databaseId": 105723856437,
+      "name": "Core linux-x64",
+      "startedAt": "2026-09-18T18:57:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T18:57:55Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T18:57:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:05Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-18T18:57:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:05Z",
+          "conclusion": "success",
+          "name": "Python for package validation",
+          "number": 3,
+          "startedAt": "2026-09-18T18:58:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:05Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 4,
+          "startedAt": "2026-09-18T18:58:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:11Z",
+          "conclusion": "success",
+          "name": "Configure",
+          "number": 5,
+          "startedAt": "2026-09-18T18:58:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:04:06Z",
+          "conclusion": "success",
+          "name": "Build Release user product",
+          "number": 6,
+          "startedAt": "2026-09-18T18:58:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:02Z",
+          "conclusion": "success",
+          "name": "Run fast candidate QA",
+          "number": 7,
+          "startedAt": "2026-09-18T19:04:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:02Z",
+          "conclusion": "skipped",
+          "name": "Configure, build and check MSVC Release product",
+          "number": 8,
+          "startedAt": "2026-09-18T19:06:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:02Z",
+          "conclusion": "success",
+          "name": "Stage release payload",
+          "number": 9,
+          "startedAt": "2026-09-18T19:06:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:02Z",
+          "conclusion": "skipped",
+          "name": "Stage release payload",
+          "number": 10,
+          "startedAt": "2026-09-18T19:06:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:02Z",
+          "conclusion": "skipped",
+          "name": "Configure Apple signing keychain",
+          "number": 11,
+          "startedAt": "2026-09-18T19:06:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:02Z",
+          "conclusion": "skipped",
+          "name": "Require signing identities for explicit candidate proof",
+          "number": 12,
+          "startedAt": "2026-09-18T19:06:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:02Z",
+          "conclusion": "skipped",
+          "name": "Sign macOS release payload",
+          "number": 13,
+          "startedAt": "2026-09-18T19:06:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:02Z",
+          "conclusion": "skipped",
+          "name": "Verify macOS signatures",
+          "number": 14,
+          "startedAt": "2026-09-18T19:06:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:07Z",
+          "conclusion": "success",
+          "name": "Package and smoke the actual core ZIP",
+          "number": 15,
+          "startedAt": "2026-09-18T19:06:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:08Z",
+          "conclusion": "success",
+          "name": "Retain core QA evidence",
+          "number": 16,
+          "startedAt": "2026-09-18T19:06:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:10Z",
+          "conclusion": "success",
+          "name": "Upload qualified core for consumers and plugin jobs",
+          "number": 17,
+          "startedAt": "2026-09-18T19:06:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:10Z",
+          "conclusion": "skipped",
+          "name": "Retain unqualified archive after a core packaging failure",
+          "number": 18,
+          "startedAt": "2026-09-18T19:06:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:10Z",
+          "conclusion": "success",
+          "name": "Package release asset",
+          "number": 19,
+          "startedAt": "2026-09-18T19:06:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:10Z",
+          "conclusion": "skipped",
+          "name": "Package release asset",
+          "number": 20,
+          "startedAt": "2026-09-18T19:06:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:10Z",
+          "conclusion": "skipped",
+          "name": "Package macOS installer",
+          "number": 21,
+          "startedAt": "2026-09-18T19:06:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:23Z",
+          "conclusion": "success",
+          "name": "Package Linux Debian dev snapshot",
+          "number": 22,
+          "startedAt": "2026-09-18T19:06:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:23Z",
+          "conclusion": "skipped",
+          "name": "Build and test unsigned Windows snapshot installer",
+          "number": 23,
+          "startedAt": "2026-09-18T19:06:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:23Z",
+          "conclusion": "skipped",
+          "name": "Report macOS package status",
+          "number": 24,
+          "startedAt": "2026-09-18T19:06:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:23Z",
+          "conclusion": "skipped",
+          "name": "Notarize macOS ZIP asset",
+          "number": 25,
+          "startedAt": "2026-09-18T19:06:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:23Z",
+          "conclusion": "skipped",
+          "name": "Notarize and staple macOS installer",
+          "number": 26,
+          "startedAt": "2026-09-18T19:06:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:23Z",
+          "conclusion": "skipped",
+          "name": "Build shared native Rexx plugin manager",
+          "number": 27,
+          "startedAt": "2026-09-18T19:06:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:23Z",
+          "conclusion": "skipped",
+          "name": "Retain native manager for both Windows plugin installers",
+          "number": 28,
+          "startedAt": "2026-09-18T19:06:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:25Z",
+          "conclusion": "success",
+          "name": "Upload packaged asset",
+          "number": 29,
+          "startedAt": "2026-09-18T19:06:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:25Z",
+          "conclusion": "skipped",
+          "name": "Cleanup Apple signing keychain",
+          "number": 30,
+          "startedAt": "2026-09-18T19:06:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:25Z",
+          "conclusion": "success",
+          "name": "Post Python for package validation",
+          "number": 59,
+          "startedAt": "2026-09-18T19:06:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:25Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 60,
+          "startedAt": "2026-09-18T19:06:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:25Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 61,
+          "startedAt": "2026-09-18T19:06:25Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723856437"
+    },
+    {
+      "completedAt": "2026-09-18T19:06:34Z",
+      "conclusion": "success",
+      "databaseId": 105723856524,
+      "name": "Core macos-arm64",
+      "startedAt": "2026-09-18T18:57:24Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T18:57:25Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T18:57:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:41Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-18T18:57:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:41Z",
+          "conclusion": "success",
+          "name": "Python for package validation",
+          "number": 3,
+          "startedAt": "2026-09-18T18:57:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:41Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 4,
+          "startedAt": "2026-09-18T18:57:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:52Z",
+          "conclusion": "success",
+          "name": "Configure",
+          "number": 5,
+          "startedAt": "2026-09-18T18:57:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:01:20Z",
+          "conclusion": "success",
+          "name": "Build Release user product",
+          "number": 6,
+          "startedAt": "2026-09-18T18:57:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:04:54Z",
+          "conclusion": "success",
+          "name": "Run fast candidate QA",
+          "number": 7,
+          "startedAt": "2026-09-18T19:01:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:04:54Z",
+          "conclusion": "skipped",
+          "name": "Configure, build and check MSVC Release product",
+          "number": 8,
+          "startedAt": "2026-09-18T19:04:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:04:54Z",
+          "conclusion": "success",
+          "name": "Stage release payload",
+          "number": 9,
+          "startedAt": "2026-09-18T19:04:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:04:54Z",
+          "conclusion": "skipped",
+          "name": "Stage release payload",
+          "number": 10,
+          "startedAt": "2026-09-18T19:04:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:04:54Z",
+          "conclusion": "success",
+          "name": "Configure Apple signing keychain",
+          "number": 11,
+          "startedAt": "2026-09-18T19:04:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:04:54Z",
+          "conclusion": "skipped",
+          "name": "Require signing identities for explicit candidate proof",
+          "number": 12,
+          "startedAt": "2026-09-18T19:04:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:04:58Z",
+          "conclusion": "success",
+          "name": "Sign macOS release payload",
+          "number": 13,
+          "startedAt": "2026-09-18T19:04:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:00Z",
+          "conclusion": "success",
+          "name": "Verify macOS signatures",
+          "number": 14,
+          "startedAt": "2026-09-18T19:04:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:04Z",
+          "conclusion": "success",
+          "name": "Package and smoke the actual core ZIP",
+          "number": 15,
+          "startedAt": "2026-09-18T19:05:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:06Z",
+          "conclusion": "success",
+          "name": "Retain core QA evidence",
+          "number": 16,
+          "startedAt": "2026-09-18T19:05:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:09Z",
+          "conclusion": "success",
+          "name": "Upload qualified core for consumers and plugin jobs",
+          "number": 17,
+          "startedAt": "2026-09-18T19:05:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:09Z",
+          "conclusion": "skipped",
+          "name": "Retain unqualified archive after a core packaging failure",
+          "number": 18,
+          "startedAt": "2026-09-18T19:05:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:09Z",
+          "conclusion": "success",
+          "name": "Package release asset",
+          "number": 19,
+          "startedAt": "2026-09-18T19:05:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:09Z",
+          "conclusion": "skipped",
+          "name": "Package release asset",
+          "number": 20,
+          "startedAt": "2026-09-18T19:05:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:12Z",
+          "conclusion": "success",
+          "name": "Package macOS installer",
+          "number": 21,
+          "startedAt": "2026-09-18T19:05:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:12Z",
+          "conclusion": "skipped",
+          "name": "Package Linux Debian dev snapshot",
+          "number": 22,
+          "startedAt": "2026-09-18T19:05:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:12Z",
+          "conclusion": "skipped",
+          "name": "Build and test unsigned Windows snapshot installer",
+          "number": 23,
+          "startedAt": "2026-09-18T19:05:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:12Z",
+          "conclusion": "success",
+          "name": "Report macOS package status",
+          "number": 24,
+          "startedAt": "2026-09-18T19:05:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:05:43Z",
+          "conclusion": "success",
+          "name": "Notarize macOS ZIP asset",
+          "number": 25,
+          "startedAt": "2026-09-18T19:05:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:24Z",
+          "conclusion": "success",
+          "name": "Notarize and staple macOS installer",
+          "number": 26,
+          "startedAt": "2026-09-18T19:05:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:24Z",
+          "conclusion": "skipped",
+          "name": "Build shared native Rexx plugin manager",
+          "number": 27,
+          "startedAt": "2026-09-18T19:06:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:24Z",
+          "conclusion": "skipped",
+          "name": "Retain native manager for both Windows plugin installers",
+          "number": 28,
+          "startedAt": "2026-09-18T19:06:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:27Z",
+          "conclusion": "success",
+          "name": "Upload packaged asset",
+          "number": 29,
+          "startedAt": "2026-09-18T19:06:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:27Z",
+          "conclusion": "success",
+          "name": "Cleanup Apple signing keychain",
+          "number": 30,
+          "startedAt": "2026-09-18T19:06:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:28Z",
+          "conclusion": "success",
+          "name": "Post Python for package validation",
+          "number": 59,
+          "startedAt": "2026-09-18T19:06:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:28Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 60,
+          "startedAt": "2026-09-18T19:06:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:06:31Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 61,
+          "startedAt": "2026-09-18T19:06:28Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723856524"
+    },
+    {
+      "completedAt": "2026-09-18T19:09:17Z",
+      "conclusion": "success",
+      "databaseId": 105723856551,
+      "name": "Core windows-x64",
+      "startedAt": "2026-09-18T18:57:20Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T18:57:22Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T18:57:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:54Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-18T18:57:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:55Z",
+          "conclusion": "success",
+          "name": "Python for package validation",
+          "number": 3,
+          "startedAt": "2026-09-18T18:57:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:01Z",
+          "conclusion": "success",
+          "name": "Select MSVC C11 toolchain",
+          "number": 4,
+          "startedAt": "2026-09-18T18:57:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:01Z",
+          "conclusion": "skipped",
+          "name": "Configure",
+          "number": 5,
+          "startedAt": "2026-09-18T18:58:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:01Z",
+          "conclusion": "skipped",
+          "name": "Build Release user product",
+          "number": 6,
+          "startedAt": "2026-09-18T18:58:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:01Z",
+          "conclusion": "skipped",
+          "name": "Run fast candidate QA",
+          "number": 7,
+          "startedAt": "2026-09-18T18:58:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:07Z",
+          "conclusion": "success",
+          "name": "Configure, build and check MSVC Release product",
+          "number": 8,
+          "startedAt": "2026-09-18T18:58:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:07Z",
+          "conclusion": "skipped",
+          "name": "Stage release payload",
+          "number": 9,
+          "startedAt": "2026-09-18T19:08:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:08Z",
+          "conclusion": "success",
+          "name": "Stage release payload",
+          "number": 10,
+          "startedAt": "2026-09-18T19:08:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:08Z",
+          "conclusion": "skipped",
+          "name": "Configure Apple signing keychain",
+          "number": 11,
+          "startedAt": "2026-09-18T19:08:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:08Z",
+          "conclusion": "skipped",
+          "name": "Require signing identities for explicit candidate proof",
+          "number": 12,
+          "startedAt": "2026-09-18T19:08:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:08Z",
+          "conclusion": "skipped",
+          "name": "Sign macOS release payload",
+          "number": 13,
+          "startedAt": "2026-09-18T19:08:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:08Z",
+          "conclusion": "skipped",
+          "name": "Verify macOS signatures",
+          "number": 14,
+          "startedAt": "2026-09-18T19:08:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:14Z",
+          "conclusion": "success",
+          "name": "Package and smoke the actual core ZIP",
+          "number": 15,
+          "startedAt": "2026-09-18T19:08:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:15Z",
+          "conclusion": "success",
+          "name": "Retain core QA evidence",
+          "number": 16,
+          "startedAt": "2026-09-18T19:08:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:17Z",
+          "conclusion": "success",
+          "name": "Upload qualified core for consumers and plugin jobs",
+          "number": 17,
+          "startedAt": "2026-09-18T19:08:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:17Z",
+          "conclusion": "skipped",
+          "name": "Retain unqualified archive after a core packaging failure",
+          "number": 18,
+          "startedAt": "2026-09-18T19:08:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:17Z",
+          "conclusion": "skipped",
+          "name": "Package release asset",
+          "number": 19,
+          "startedAt": "2026-09-18T19:08:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:17Z",
+          "conclusion": "success",
+          "name": "Package release asset",
+          "number": 20,
+          "startedAt": "2026-09-18T19:08:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:17Z",
+          "conclusion": "skipped",
+          "name": "Package macOS installer",
+          "number": 21,
+          "startedAt": "2026-09-18T19:08:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:17Z",
+          "conclusion": "skipped",
+          "name": "Package Linux Debian dev snapshot",
+          "number": 22,
+          "startedAt": "2026-09-18T19:08:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:59Z",
+          "conclusion": "success",
+          "name": "Build and test unsigned Windows snapshot installer",
+          "number": 23,
+          "startedAt": "2026-09-18T19:08:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:59Z",
+          "conclusion": "skipped",
+          "name": "Report macOS package status",
+          "number": 24,
+          "startedAt": "2026-09-18T19:08:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:59Z",
+          "conclusion": "skipped",
+          "name": "Notarize macOS ZIP asset",
+          "number": 25,
+          "startedAt": "2026-09-18T19:08:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:08:59Z",
+          "conclusion": "skipped",
+          "name": "Notarize and staple macOS installer",
+          "number": 26,
+          "startedAt": "2026-09-18T19:08:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:09:10Z",
+          "conclusion": "success",
+          "name": "Build shared native Rexx plugin manager",
+          "number": 27,
+          "startedAt": "2026-09-18T19:08:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:09:11Z",
+          "conclusion": "success",
+          "name": "Retain native manager for both Windows plugin installers",
+          "number": 28,
+          "startedAt": "2026-09-18T19:09:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:09:13Z",
+          "conclusion": "success",
+          "name": "Upload packaged asset",
+          "number": 29,
+          "startedAt": "2026-09-18T19:09:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:09:13Z",
+          "conclusion": "skipped",
+          "name": "Cleanup Apple signing keychain",
+          "number": 30,
+          "startedAt": "2026-09-18T19:09:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:09:13Z",
+          "conclusion": "success",
+          "name": "Post Python for package validation",
+          "number": 59,
+          "startedAt": "2026-09-18T19:09:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:09:15Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 60,
+          "startedAt": "2026-09-18T19:09:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:09:15Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 61,
+          "startedAt": "2026-09-18T19:09:15Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723856551"
+    },
+    {
+      "completedAt": "2026-09-18T19:18:56Z",
+      "conclusion": "success",
+      "databaseId": 105723856578,
+      "name": "Linux Debug Optimizer Parity",
+      "startedAt": "2026-09-18T18:57:19Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T18:57:21Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T18:57:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:31Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-18T18:57:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:39Z",
+          "conclusion": "success",
+          "name": "Configure Debug parity build",
+          "number": 3,
+          "startedAt": "2026-09-18T18:57:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:53Z",
+          "conclusion": "success",
+          "name": "Run optimized/non-optimized correctness parity",
+          "number": 4,
+          "startedAt": "2026-09-18T18:57:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:53Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 8,
+          "startedAt": "2026-09-18T19:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:53Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-09-18T19:18:53Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723856578"
+    },
+    {
+      "completedAt": "2026-09-18T18:57:14Z",
+      "conclusion": "skipped",
+      "databaseId": 105723857812,
+      "name": "Comprehensive ${{ matrix.name }}",
+      "startedAt": "2026-09-18T18:57:14Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723857812"
+    },
+    {
+      "completedAt": "2026-09-18T18:57:24Z",
+      "conclusion": "success",
+      "databaseId": 105723858392,
+      "name": "Windows MinGW core quality gate (no binary delivery) / configurations",
+      "startedAt": "2026-09-18T18:57:20Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T18:57:21Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T18:57:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:21Z",
+          "conclusion": "success",
+          "name": "Run import json, os",
+          "number": 2,
+          "startedAt": "2026-09-18T18:57:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:57:21Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 3,
+          "startedAt": "2026-09-18T18:57:21Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723858392"
+    },
+    {
+      "completedAt": "2026-09-18T19:12:28Z",
+      "conclusion": "success",
+      "databaseId": 105723914102,
+      "name": "Windows MinGW core quality gate (no binary delivery) / Core windows-mingw (mingw)",
+      "startedAt": "2026-09-18T18:57:28Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T18:57:30Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T18:57:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:58:05Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v5",
+          "number": 2,
+          "startedAt": "2026-09-18T18:57:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:59:59Z",
+          "conclusion": "success",
+          "name": "Run msys2/setup-msys2@v2",
+          "number": 3,
+          "startedAt": "2026-09-18T18:58:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:59:59Z",
+          "conclusion": "skipped",
+          "name": "Run actions/setup-python@v6",
+          "number": 4,
+          "startedAt": "2026-09-18T18:59:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:59:59Z",
+          "conclusion": "skipped",
+          "name": "Run ilammy/msvc-dev-cmd@v1",
+          "number": 5,
+          "startedAt": "2026-09-18T18:59:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T18:59:59Z",
+          "conclusion": "skipped",
+          "name": "Configure core without inference dependencies",
+          "number": 6,
+          "startedAt": "2026-09-18T18:59:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:00:29Z",
+          "conclusion": "success",
+          "name": "Configure core without inference dependencies (MinGW)",
+          "number": 7,
+          "startedAt": "2026-09-18T18:59:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:00:29Z",
+          "conclusion": "skipped",
+          "name": "Build core product",
+          "number": 8,
+          "startedAt": "2026-09-18T19:00:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:09:36Z",
+          "conclusion": "success",
+          "name": "Build core product (MinGW)",
+          "number": 9,
+          "startedAt": "2026-09-18T19:00:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:09:36Z",
+          "conclusion": "skipped",
+          "name": "Check core correctness",
+          "number": 10,
+          "startedAt": "2026-09-18T19:09:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:10Z",
+          "conclusion": "success",
+          "name": "Check core correctness (MinGW)",
+          "number": 11,
+          "startedAt": "2026-09-18T19:09:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:10Z",
+          "conclusion": "skipped",
+          "name": "Check focused KeyAccess modes",
+          "number": 12,
+          "startedAt": "2026-09-18T19:12:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:12Z",
+          "conclusion": "success",
+          "name": "Check focused KeyAccess modes (MinGW)",
+          "number": 13,
+          "startedAt": "2026-09-18T19:12:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:12Z",
+          "conclusion": "skipped",
+          "name": "Package and test the actual core ZIP",
+          "number": 14,
+          "startedAt": "2026-09-18T19:12:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:19Z",
+          "conclusion": "success",
+          "name": "Package and test the actual core ZIP (MinGW)",
+          "number": 15,
+          "startedAt": "2026-09-18T19:12:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:20Z",
+          "conclusion": "success",
+          "name": "Retain core evidence",
+          "number": 16,
+          "startedAt": "2026-09-18T19:12:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:20Z",
+          "conclusion": "skipped",
+          "name": "Retain qualified core for plugin jobs",
+          "number": 17,
+          "startedAt": "2026-09-18T19:12:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:20Z",
+          "conclusion": "skipped",
+          "name": "Retain failed core archive for packaging diagnosis",
+          "number": 18,
+          "startedAt": "2026-09-18T19:12:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:22Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v5",
+          "number": 36,
+          "startedAt": "2026-09-18T19:12:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:12:22Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 37,
+          "startedAt": "2026-09-18T19:12:22Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723914102"
+    },
+    {
+      "completedAt": "2026-09-18T19:27:58Z",
+      "conclusion": "success",
+      "databaseId": 105730296605,
+      "name": "Plugin Linux x64 Vulkan",
+      "startedAt": "2026-09-18T19:18:18Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T19:18:21Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T19:18:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:31Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-18T19:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:31Z",
+          "conclusion": "success",
+          "name": "Python for package validation",
+          "number": 3,
+          "startedAt": "2026-09-18T19:18:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:41Z",
+          "conclusion": "success",
+          "name": "Vulkan build prerequisites",
+          "number": 4,
+          "startedAt": "2026-09-18T19:18:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:41Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 5,
+          "startedAt": "2026-09-18T19:18:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:41Z",
+          "conclusion": "skipped",
+          "name": "Cache pinned Windows Vulkan SDK",
+          "number": 6,
+          "startedAt": "2026-09-18T19:18:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:41Z",
+          "conclusion": "skipped",
+          "name": "Prepare pinned Windows Vulkan SDK",
+          "number": 7,
+          "startedAt": "2026-09-18T19:18:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:41Z",
+          "conclusion": "skipped",
+          "name": "Cache pinned CUDA build SDK",
+          "number": 8,
+          "startedAt": "2026-09-18T19:18:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:41Z",
+          "conclusion": "skipped",
+          "name": "Assemble pinned CUDA build SDK",
+          "number": 9,
+          "startedAt": "2026-09-18T19:18:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:41Z",
+          "conclusion": "skipped",
+          "name": "Retain verified CUDA SDK before compilation",
+          "number": 10,
+          "startedAt": "2026-09-18T19:18:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:41Z",
+          "conclusion": "skipped",
+          "name": "Cache CUDA compiler outputs",
+          "number": 11,
+          "startedAt": "2026-09-18T19:18:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:42Z",
+          "conclusion": "success",
+          "name": "Download the qualified matching core",
+          "number": 12,
+          "startedAt": "2026-09-18T19:18:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:47Z",
+          "conclusion": "success",
+          "name": "Check dependency scanning with tiny package libraries",
+          "number": 13,
+          "startedAt": "2026-09-18T19:18:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:00Z",
+          "conclusion": "success",
+          "name": "Configure plugin and engine only",
+          "number": 14,
+          "startedAt": "2026-09-18T19:18:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:00Z",
+          "conclusion": "skipped",
+          "name": "Check MSVC runtime identity before engine compilation",
+          "number": 15,
+          "startedAt": "2026-09-18T19:19:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:11Z",
+          "conclusion": "success",
+          "name": "Build plugin, dependency and focused QA targets",
+          "number": 16,
+          "startedAt": "2026-09-18T19:19:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:12Z",
+          "conclusion": "success",
+          "name": "Check provider lifecycle and package boundaries",
+          "number": 17,
+          "startedAt": "2026-09-18T19:27:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:12Z",
+          "conclusion": "success",
+          "name": "Stage optional plugin against the unchanged core",
+          "number": 18,
+          "startedAt": "2026-09-18T19:27:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:12Z",
+          "conclusion": "skipped",
+          "name": "Configure Apple signing keychain",
+          "number": 19,
+          "startedAt": "2026-09-18T19:27:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:12Z",
+          "conclusion": "skipped",
+          "name": "Require signing identities for explicit candidate proof",
+          "number": 20,
+          "startedAt": "2026-09-18T19:27:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:12Z",
+          "conclusion": "skipped",
+          "name": "Sign macOS release payload",
+          "number": 21,
+          "startedAt": "2026-09-18T19:27:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:12Z",
+          "conclusion": "skipped",
+          "name": "Verify macOS signatures",
+          "number": 22,
+          "startedAt": "2026-09-18T19:27:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:12Z",
+          "conclusion": "skipped",
+          "name": "Refresh verified macOS provider hashes",
+          "number": 23,
+          "startedAt": "2026-09-18T19:27:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:12Z",
+          "conclusion": "skipped",
+          "name": "Preserve CUDA redistributable notices",
+          "number": 24,
+          "startedAt": "2026-09-18T19:27:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:17Z",
+          "conclusion": "success",
+          "name": "Package plugin and reconstruct the actual downloads",
+          "number": 25,
+          "startedAt": "2026-09-18T19:27:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:51Z",
+          "conclusion": "success",
+          "name": "Smoke combined core and plugin downloads",
+          "number": 26,
+          "startedAt": "2026-09-18T19:27:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:51Z",
+          "conclusion": "skipped",
+          "name": "Record CUDA compiler cache statistics",
+          "number": 27,
+          "startedAt": "2026-09-18T19:27:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:52Z",
+          "conclusion": "success",
+          "name": "Retain plugin QA evidence",
+          "number": 28,
+          "startedAt": "2026-09-18T19:27:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:54Z",
+          "conclusion": "success",
+          "name": "Upload qualified optional plugin",
+          "number": 29,
+          "startedAt": "2026-09-18T19:27:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:54Z",
+          "conclusion": "success",
+          "name": "Name optional plugin release asset",
+          "number": 30,
+          "startedAt": "2026-09-18T19:27:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:54Z",
+          "conclusion": "skipped",
+          "name": "Download matching Windows snapshot installer manager",
+          "number": 31,
+          "startedAt": "2026-09-18T19:27:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:54Z",
+          "conclusion": "skipped",
+          "name": "Build and test unsigned Windows llama snapshot installer",
+          "number": 32,
+          "startedAt": "2026-09-18T19:27:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:54Z",
+          "conclusion": "skipped",
+          "name": "Retain Windows llama snapshot installer proof",
+          "number": 33,
+          "startedAt": "2026-09-18T19:27:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:54Z",
+          "conclusion": "skipped",
+          "name": "Notarize macOS ZIP asset",
+          "number": 34,
+          "startedAt": "2026-09-18T19:27:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:54Z",
+          "conclusion": "skipped",
+          "name": "Package, notarize and staple optional macOS plugin installer",
+          "number": 35,
+          "startedAt": "2026-09-18T19:27:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:55Z",
+          "conclusion": "success",
+          "name": "Upload plugin release asset",
+          "number": 36,
+          "startedAt": "2026-09-18T19:27:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:55Z",
+          "conclusion": "skipped",
+          "name": "Cleanup Apple signing keychain",
+          "number": 37,
+          "startedAt": "2026-09-18T19:27:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:56Z",
+          "conclusion": "success",
+          "name": "Post Python for package validation",
+          "number": 73,
+          "startedAt": "2026-09-18T19:27:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:56Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 74,
+          "startedAt": "2026-09-18T19:27:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:27:56Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 75,
+          "startedAt": "2026-09-18T19:27:56Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105730296605"
+    },
+    {
+      "completedAt": "2026-09-18T19:30:43Z",
+      "conclusion": "success",
+      "databaseId": 105730296626,
+      "name": "Plugin macOS x86_64 CPU",
+      "startedAt": "2026-09-18T19:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T19:18:20Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T19:18:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-18T19:18:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "success",
+          "name": "Python for package validation",
+          "number": 3,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "skipped",
+          "name": "Vulkan build prerequisites",
+          "number": 4,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 5,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "skipped",
+          "name": "Cache pinned Windows Vulkan SDK",
+          "number": 6,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "skipped",
+          "name": "Prepare pinned Windows Vulkan SDK",
+          "number": 7,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "skipped",
+          "name": "Cache pinned CUDA build SDK",
+          "number": 8,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "skipped",
+          "name": "Assemble pinned CUDA build SDK",
+          "number": 9,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "skipped",
+          "name": "Retain verified CUDA SDK before compilation",
+          "number": 10,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:46Z",
+          "conclusion": "skipped",
+          "name": "Cache CUDA compiler outputs",
+          "number": 11,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:48Z",
+          "conclusion": "success",
+          "name": "Download the qualified matching core",
+          "number": 12,
+          "startedAt": "2026-09-18T19:18:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:54Z",
+          "conclusion": "success",
+          "name": "Check dependency scanning with tiny package libraries",
+          "number": 13,
+          "startedAt": "2026-09-18T19:18:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:23Z",
+          "conclusion": "success",
+          "name": "Configure plugin and engine only",
+          "number": 14,
+          "startedAt": "2026-09-18T19:18:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:23Z",
+          "conclusion": "skipped",
+          "name": "Check MSVC runtime identity before engine compilation",
+          "number": 15,
+          "startedAt": "2026-09-18T19:19:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:47Z",
+          "conclusion": "success",
+          "name": "Build plugin, dependency and focused QA targets",
+          "number": 16,
+          "startedAt": "2026-09-18T19:19:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:47Z",
+          "conclusion": "success",
+          "name": "Check provider lifecycle and package boundaries",
+          "number": 17,
+          "startedAt": "2026-09-18T19:28:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:48Z",
+          "conclusion": "success",
+          "name": "Stage optional plugin against the unchanged core",
+          "number": 18,
+          "startedAt": "2026-09-18T19:28:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:49Z",
+          "conclusion": "success",
+          "name": "Configure Apple signing keychain",
+          "number": 19,
+          "startedAt": "2026-09-18T19:28:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:49Z",
+          "conclusion": "skipped",
+          "name": "Require signing identities for explicit candidate proof",
+          "number": 20,
+          "startedAt": "2026-09-18T19:28:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:53Z",
+          "conclusion": "success",
+          "name": "Sign macOS release payload",
+          "number": 21,
+          "startedAt": "2026-09-18T19:28:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:54Z",
+          "conclusion": "success",
+          "name": "Verify macOS signatures",
+          "number": 22,
+          "startedAt": "2026-09-18T19:28:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:54Z",
+          "conclusion": "success",
+          "name": "Refresh verified macOS provider hashes",
+          "number": 23,
+          "startedAt": "2026-09-18T19:28:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:54Z",
+          "conclusion": "skipped",
+          "name": "Preserve CUDA redistributable notices",
+          "number": 24,
+          "startedAt": "2026-09-18T19:28:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:56Z",
+          "conclusion": "success",
+          "name": "Package plugin and reconstruct the actual downloads",
+          "number": 25,
+          "startedAt": "2026-09-18T19:28:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:44Z",
+          "conclusion": "success",
+          "name": "Smoke combined core and plugin downloads",
+          "number": 26,
+          "startedAt": "2026-09-18T19:28:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:44Z",
+          "conclusion": "skipped",
+          "name": "Record CUDA compiler cache statistics",
+          "number": 27,
+          "startedAt": "2026-09-18T19:29:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:45Z",
+          "conclusion": "success",
+          "name": "Retain plugin QA evidence",
+          "number": 28,
+          "startedAt": "2026-09-18T19:29:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:46Z",
+          "conclusion": "success",
+          "name": "Upload qualified optional plugin",
+          "number": 29,
+          "startedAt": "2026-09-18T19:29:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:46Z",
+          "conclusion": "success",
+          "name": "Name optional plugin release asset",
+          "number": 30,
+          "startedAt": "2026-09-18T19:29:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:46Z",
+          "conclusion": "skipped",
+          "name": "Download matching Windows snapshot installer manager",
+          "number": 31,
+          "startedAt": "2026-09-18T19:29:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:46Z",
+          "conclusion": "skipped",
+          "name": "Build and test unsigned Windows llama snapshot installer",
+          "number": 32,
+          "startedAt": "2026-09-18T19:29:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:46Z",
+          "conclusion": "skipped",
+          "name": "Retain Windows llama snapshot installer proof",
+          "number": 33,
+          "startedAt": "2026-09-18T19:29:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:30:11Z",
+          "conclusion": "success",
+          "name": "Notarize macOS ZIP asset",
+          "number": 34,
+          "startedAt": "2026-09-18T19:29:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:30:37Z",
+          "conclusion": "success",
+          "name": "Package, notarize and staple optional macOS plugin installer",
+          "number": 35,
+          "startedAt": "2026-09-18T19:30:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:30:39Z",
+          "conclusion": "success",
+          "name": "Upload plugin release asset",
+          "number": 36,
+          "startedAt": "2026-09-18T19:30:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:30:39Z",
+          "conclusion": "success",
+          "name": "Cleanup Apple signing keychain",
+          "number": 37,
+          "startedAt": "2026-09-18T19:30:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:30:40Z",
+          "conclusion": "success",
+          "name": "Post Python for package validation",
+          "number": 73,
+          "startedAt": "2026-09-18T19:30:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:30:40Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 74,
+          "startedAt": "2026-09-18T19:30:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:30:41Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 75,
+          "startedAt": "2026-09-18T19:30:40Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105730296626"
+    },
+    {
+      "completedAt": "2026-09-18T19:25:34Z",
+      "conclusion": "success",
+      "databaseId": 105730296638,
+      "name": "Plugin macOS arm64 Metal",
+      "startedAt": "2026-09-18T19:18:22Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T19:18:24Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T19:18:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:39Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-18T19:18:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:40Z",
+          "conclusion": "success",
+          "name": "Python for package validation",
+          "number": 3,
+          "startedAt": "2026-09-18T19:18:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:40Z",
+          "conclusion": "skipped",
+          "name": "Vulkan build prerequisites",
+          "number": 4,
+          "startedAt": "2026-09-18T19:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:40Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 5,
+          "startedAt": "2026-09-18T19:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:40Z",
+          "conclusion": "skipped",
+          "name": "Cache pinned Windows Vulkan SDK",
+          "number": 6,
+          "startedAt": "2026-09-18T19:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:40Z",
+          "conclusion": "skipped",
+          "name": "Prepare pinned Windows Vulkan SDK",
+          "number": 7,
+          "startedAt": "2026-09-18T19:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:40Z",
+          "conclusion": "skipped",
+          "name": "Cache pinned CUDA build SDK",
+          "number": 8,
+          "startedAt": "2026-09-18T19:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:40Z",
+          "conclusion": "skipped",
+          "name": "Assemble pinned CUDA build SDK",
+          "number": 9,
+          "startedAt": "2026-09-18T19:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:40Z",
+          "conclusion": "skipped",
+          "name": "Retain verified CUDA SDK before compilation",
+          "number": 10,
+          "startedAt": "2026-09-18T19:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:40Z",
+          "conclusion": "skipped",
+          "name": "Cache CUDA compiler outputs",
+          "number": 11,
+          "startedAt": "2026-09-18T19:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:42Z",
+          "conclusion": "success",
+          "name": "Download the qualified matching core",
+          "number": 12,
+          "startedAt": "2026-09-18T19:18:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:47Z",
+          "conclusion": "success",
+          "name": "Check dependency scanning with tiny package libraries",
+          "number": 13,
+          "startedAt": "2026-09-18T19:18:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:09Z",
+          "conclusion": "success",
+          "name": "Configure plugin and engine only",
+          "number": 14,
+          "startedAt": "2026-09-18T19:18:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:09Z",
+          "conclusion": "skipped",
+          "name": "Check MSVC runtime identity before engine compilation",
+          "number": 15,
+          "startedAt": "2026-09-18T19:19:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:02Z",
+          "conclusion": "success",
+          "name": "Build plugin, dependency and focused QA targets",
+          "number": 16,
+          "startedAt": "2026-09-18T19:19:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:30Z",
+          "conclusion": "success",
+          "name": "Check provider lifecycle and package boundaries",
+          "number": 17,
+          "startedAt": "2026-09-18T19:21:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:31Z",
+          "conclusion": "success",
+          "name": "Stage optional plugin against the unchanged core",
+          "number": 18,
+          "startedAt": "2026-09-18T19:21:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:31Z",
+          "conclusion": "success",
+          "name": "Configure Apple signing keychain",
+          "number": 19,
+          "startedAt": "2026-09-18T19:21:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:31Z",
+          "conclusion": "skipped",
+          "name": "Require signing identities for explicit candidate proof",
+          "number": 20,
+          "startedAt": "2026-09-18T19:21:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:33Z",
+          "conclusion": "success",
+          "name": "Sign macOS release payload",
+          "number": 21,
+          "startedAt": "2026-09-18T19:21:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:33Z",
+          "conclusion": "success",
+          "name": "Verify macOS signatures",
+          "number": 22,
+          "startedAt": "2026-09-18T19:21:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:33Z",
+          "conclusion": "success",
+          "name": "Refresh verified macOS provider hashes",
+          "number": 23,
+          "startedAt": "2026-09-18T19:21:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:33Z",
+          "conclusion": "skipped",
+          "name": "Preserve CUDA redistributable notices",
+          "number": 24,
+          "startedAt": "2026-09-18T19:21:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:21:34Z",
+          "conclusion": "success",
+          "name": "Package plugin and reconstruct the actual downloads",
+          "number": 25,
+          "startedAt": "2026-09-18T19:21:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:24:34Z",
+          "conclusion": "success",
+          "name": "Smoke combined core and plugin downloads",
+          "number": 26,
+          "startedAt": "2026-09-18T19:21:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:24:34Z",
+          "conclusion": "skipped",
+          "name": "Record CUDA compiler cache statistics",
+          "number": 27,
+          "startedAt": "2026-09-18T19:24:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:24:35Z",
+          "conclusion": "success",
+          "name": "Retain plugin QA evidence",
+          "number": 28,
+          "startedAt": "2026-09-18T19:24:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:24:37Z",
+          "conclusion": "success",
+          "name": "Upload qualified optional plugin",
+          "number": 29,
+          "startedAt": "2026-09-18T19:24:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:24:37Z",
+          "conclusion": "success",
+          "name": "Name optional plugin release asset",
+          "number": 30,
+          "startedAt": "2026-09-18T19:24:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:24:37Z",
+          "conclusion": "skipped",
+          "name": "Download matching Windows snapshot installer manager",
+          "number": 31,
+          "startedAt": "2026-09-18T19:24:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:24:37Z",
+          "conclusion": "skipped",
+          "name": "Build and test unsigned Windows llama snapshot installer",
+          "number": 32,
+          "startedAt": "2026-09-18T19:24:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:24:37Z",
+          "conclusion": "skipped",
+          "name": "Retain Windows llama snapshot installer proof",
+          "number": 33,
+          "startedAt": "2026-09-18T19:24:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:24:57Z",
+          "conclusion": "success",
+          "name": "Notarize macOS ZIP asset",
+          "number": 34,
+          "startedAt": "2026-09-18T19:24:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:25:26Z",
+          "conclusion": "success",
+          "name": "Package, notarize and staple optional macOS plugin installer",
+          "number": 35,
+          "startedAt": "2026-09-18T19:24:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:25:28Z",
+          "conclusion": "success",
+          "name": "Upload plugin release asset",
+          "number": 36,
+          "startedAt": "2026-09-18T19:25:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:25:28Z",
+          "conclusion": "success",
+          "name": "Cleanup Apple signing keychain",
+          "number": 37,
+          "startedAt": "2026-09-18T19:25:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:25:28Z",
+          "conclusion": "success",
+          "name": "Post Python for package validation",
+          "number": 73,
+          "startedAt": "2026-09-18T19:25:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:25:29Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 74,
+          "startedAt": "2026-09-18T19:25:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:25:30Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 75,
+          "startedAt": "2026-09-18T19:25:29Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105730296638"
+    },
+    {
+      "completedAt": "2026-09-18T19:31:58Z",
+      "conclusion": "success",
+      "databaseId": 105730296690,
+      "name": "Plugin Windows x64 Vulkan (MSVC)",
+      "startedAt": "2026-09-18T19:18:17Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T19:18:21Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T19:18:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:49Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-18T19:18:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:50Z",
+          "conclusion": "success",
+          "name": "Python for package validation",
+          "number": 3,
+          "startedAt": "2026-09-18T19:18:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:18:50Z",
+          "conclusion": "skipped",
+          "name": "Vulkan build prerequisites",
+          "number": 4,
+          "startedAt": "2026-09-18T19:18:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:05Z",
+          "conclusion": "success",
+          "name": "Select MSVC C11 toolchain",
+          "number": 5,
+          "startedAt": "2026-09-18T19:18:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:13Z",
+          "conclusion": "success",
+          "name": "Cache pinned Windows Vulkan SDK",
+          "number": 6,
+          "startedAt": "2026-09-18T19:19:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:14Z",
+          "conclusion": "success",
+          "name": "Prepare pinned Windows Vulkan SDK",
+          "number": 7,
+          "startedAt": "2026-09-18T19:19:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:14Z",
+          "conclusion": "skipped",
+          "name": "Cache pinned CUDA build SDK",
+          "number": 8,
+          "startedAt": "2026-09-18T19:19:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:14Z",
+          "conclusion": "skipped",
+          "name": "Assemble pinned CUDA build SDK",
+          "number": 9,
+          "startedAt": "2026-09-18T19:19:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:14Z",
+          "conclusion": "skipped",
+          "name": "Retain verified CUDA SDK before compilation",
+          "number": 10,
+          "startedAt": "2026-09-18T19:19:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:14Z",
+          "conclusion": "skipped",
+          "name": "Cache CUDA compiler outputs",
+          "number": 11,
+          "startedAt": "2026-09-18T19:19:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:16Z",
+          "conclusion": "success",
+          "name": "Download the qualified matching core",
+          "number": 12,
+          "startedAt": "2026-09-18T19:19:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:19:29Z",
+          "conclusion": "success",
+          "name": "Check dependency scanning with tiny package libraries",
+          "number": 13,
+          "startedAt": "2026-09-18T19:19:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:20:00Z",
+          "conclusion": "success",
+          "name": "Configure plugin and engine only",
+          "number": 14,
+          "startedAt": "2026-09-18T19:19:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:20:01Z",
+          "conclusion": "success",
+          "name": "Check MSVC runtime identity before engine compilation",
+          "number": 15,
+          "startedAt": "2026-09-18T19:20:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:41Z",
+          "conclusion": "success",
+          "name": "Build plugin, dependency and focused QA targets",
+          "number": 16,
+          "startedAt": "2026-09-18T19:20:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:42Z",
+          "conclusion": "success",
+          "name": "Check provider lifecycle and package boundaries",
+          "number": 17,
+          "startedAt": "2026-09-18T19:28:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:43Z",
+          "conclusion": "success",
+          "name": "Stage optional plugin against the unchanged core",
+          "number": 18,
+          "startedAt": "2026-09-18T19:28:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:43Z",
+          "conclusion": "skipped",
+          "name": "Configure Apple signing keychain",
+          "number": 19,
+          "startedAt": "2026-09-18T19:28:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:43Z",
+          "conclusion": "skipped",
+          "name": "Require signing identities for explicit candidate proof",
+          "number": 20,
+          "startedAt": "2026-09-18T19:28:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:43Z",
+          "conclusion": "skipped",
+          "name": "Sign macOS release payload",
+          "number": 21,
+          "startedAt": "2026-09-18T19:28:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:43Z",
+          "conclusion": "skipped",
+          "name": "Verify macOS signatures",
+          "number": 22,
+          "startedAt": "2026-09-18T19:28:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:43Z",
+          "conclusion": "skipped",
+          "name": "Refresh verified macOS provider hashes",
+          "number": 23,
+          "startedAt": "2026-09-18T19:28:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:43Z",
+          "conclusion": "skipped",
+          "name": "Preserve CUDA redistributable notices",
+          "number": 24,
+          "startedAt": "2026-09-18T19:28:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:28:50Z",
+          "conclusion": "success",
+          "name": "Package plugin and reconstruct the actual downloads",
+          "number": 25,
+          "startedAt": "2026-09-18T19:28:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:24Z",
+          "conclusion": "success",
+          "name": "Smoke combined core and plugin downloads",
+          "number": 26,
+          "startedAt": "2026-09-18T19:28:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:24Z",
+          "conclusion": "skipped",
+          "name": "Record CUDA compiler cache statistics",
+          "number": 27,
+          "startedAt": "2026-09-18T19:29:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:26Z",
+          "conclusion": "success",
+          "name": "Retain plugin QA evidence",
+          "number": 28,
+          "startedAt": "2026-09-18T19:29:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:29Z",
+          "conclusion": "success",
+          "name": "Upload qualified optional plugin",
+          "number": 29,
+          "startedAt": "2026-09-18T19:29:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:29Z",
+          "conclusion": "success",
+          "name": "Name optional plugin release asset",
+          "number": 30,
+          "startedAt": "2026-09-18T19:29:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:29:31Z",
+          "conclusion": "success",
+          "name": "Download matching Windows snapshot installer manager",
+          "number": 31,
+          "startedAt": "2026-09-18T19:29:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:48Z",
+          "conclusion": "success",
+          "name": "Build and test unsigned Windows llama snapshot installer",
+          "number": 32,
+          "startedAt": "2026-09-18T19:29:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:49Z",
+          "conclusion": "success",
+          "name": "Retain Windows llama snapshot installer proof",
+          "number": 33,
+          "startedAt": "2026-09-18T19:31:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:49Z",
+          "conclusion": "skipped",
+          "name": "Notarize macOS ZIP asset",
+          "number": 34,
+          "startedAt": "2026-09-18T19:31:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:49Z",
+          "conclusion": "skipped",
+          "name": "Package, notarize and staple optional macOS plugin installer",
+          "number": 35,
+          "startedAt": "2026-09-18T19:31:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:53Z",
+          "conclusion": "success",
+          "name": "Upload plugin release asset",
+          "number": 36,
+          "startedAt": "2026-09-18T19:31:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:53Z",
+          "conclusion": "skipped",
+          "name": "Cleanup Apple signing keychain",
+          "number": 37,
+          "startedAt": "2026-09-18T19:31:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:53Z",
+          "conclusion": "success",
+          "name": "Post Cache pinned Windows Vulkan SDK",
+          "number": 72,
+          "startedAt": "2026-09-18T19:31:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:53Z",
+          "conclusion": "success",
+          "name": "Post Python for package validation",
+          "number": 73,
+          "startedAt": "2026-09-18T19:31:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:55Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 74,
+          "startedAt": "2026-09-18T19:31:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:31:56Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 75,
+          "startedAt": "2026-09-18T19:31:55Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105730296690"
+    },
+    {
+      "completedAt": "2026-09-18T19:33:00Z",
+      "conclusion": "success",
+      "databaseId": 105734415973,
+      "name": "Publish Dev Snapshot",
+      "startedAt": "2026-09-18T19:32:01Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-18T19:32:03Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-18T19:32:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:32:14Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-09-18T19:32:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:32:15Z",
+          "conclusion": "success",
+          "name": "Verify develop still points at this commit",
+          "number": 3,
+          "startedAt": "2026-09-18T19:32:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:32:18Z",
+          "conclusion": "success",
+          "name": "Download packaged assets",
+          "number": 4,
+          "startedAt": "2026-09-18T19:32:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:32:18Z",
+          "conclusion": "success",
+          "name": "Collect dev snapshot assets",
+          "number": 5,
+          "startedAt": "2026-09-18T19:32:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:32:18Z",
+          "conclusion": "success",
+          "name": "Prepare dev snapshot notes",
+          "number": 6,
+          "startedAt": "2026-09-18T19:32:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:32:58Z",
+          "conclusion": "success",
+          "name": "Publish dev snapshot release",
+          "number": 7,
+          "startedAt": "2026-09-18T19:32:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:32:58Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 14,
+          "startedAt": "2026-09-18T19:32:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-18T19:32:58Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 15,
+          "startedAt": "2026-09-18T19:32:58Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105734415973"
+    },
+    {
+      "completedAt": "2026-09-18T19:31:59Z",
+      "conclusion": "skipped",
+      "databaseId": 105734419180,
+      "name": "Create GitHub Release",
+      "startedAt": "2026-09-18T19:31:59Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105734419180"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122"
+}

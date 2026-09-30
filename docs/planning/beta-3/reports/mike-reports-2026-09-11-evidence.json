@@ -1,0 +1,653 @@
+{
+  "date": "2026-09-11",
+  "validation_revision": "beee17322956a86cbdb3fcbf8fc0db6d560fc02b",
+  "platform": "macOS ARM64",
+  "build_type": "Debug",
+  "reporter_revision": "48ebc1f610a948a39972348379fd02fff4b156ad",
+  "reporter_platform": "Linux 64 (not rerun locally)",
+  "issues": [
+    {
+      "report": 1,
+      "url": "https://github.com/adesutherland/CREXX/issues/685",
+      "title": "Source imports and runtime library loading: clarify missing-module panic and automation boundary"
+    },
+    {
+      "report": 2,
+      "url": "https://github.com/adesutherland/CREXX/issues/686",
+      "title": "Investigate filename-dependent TYPE_MISMATCH and BAD_CONVERSION in Prolog source"
+    },
+    {
+      "report": 3,
+      "url": "https://github.com/adesutherland/CREXX/issues/687",
+      "title": "Document Level B rc integer typing and conversion failures"
+    },
+    {
+      "report": 4,
+      "url": "https://github.com/adesutherland/CREXX/issues/688",
+      "title": "Clarify that a bare exposed array declaration does not clear existing elements"
+    },
+    {
+      "report": 5,
+      "url": "https://github.com/adesutherland/CREXX/issues/689",
+      "title": "Investigate reported stale value in Prolog SolveFunctor across returning branches"
+    },
+    {
+      "report": 6,
+      "url": "https://github.com/adesutherland/CREXX/issues/690",
+      "title": "Explain Level B block scope and NOT_IN_SAME_SCOPE for Classic Rexx migration"
+    },
+    {
+      "report": 7,
+      "url": "https://github.com/adesutherland/CREXX/issues/691",
+      "title": "Record unreproduced datatype(\".\", \"N\") observation and current passing checks"
+    }
+  ],
+  "tool_sha256": {
+    "crexx": "5e5a5cc63f041e67c6eae5eb9a81a3735900d40a8101a5152989b47517ea4ed8",
+    "rxc": "b4986be14aee9dfeff10654256db9dfc03e56b659da236c37fc1ead7b14717ef",
+    "rxas": "0b8705c21e893a0ab414ab2c5a61fcb3ec7af18ceeb24c5a6c5bba916a2fd33c",
+    "rxlink": "896899f106e3baf62ba79af3f66156a45a7c20084c3f6ecf432c0d6016c361de",
+    "rxbvm": "6ef86bea5d00eea4a21afe14b332f0bcc70970e2bc159de247a31d082d51f47d",
+    "rxtvm": "0ba5554d10ebecd2b9785734262e7105f6943d485c19ce1ec008fbd1f81b8aa8",
+    "rxvme": "ed56a93f17688664ff7de351fcb72e6de6359d0d80110b2b0cf68952dbc55e81"
+  },
+  "fixtures": {
+    "rc_b_named.crexx": "options levelb numeric_classic\nimport rxfnsb\ncall Init\nresult_text = Bar()\nsay \"rc=[\" || result_text || \"]\"\nexit 0\nInit: procedure = .void expose VARSET\n  VARSET = .stem()\n  return\nBar: procedure = .string expose VARSET\n  return \"nonempty\"\n",
+    "usemod.crexx": "options levelb\nimport libmod\nsay libmod..A()\nexit 0\n",
+    "int_a.crexx": "options levelb numeric_classic\nimport rxfnsb\nordinary = .int\nordinary = MyFunc()\nsay ordinary\nexit 0\nMyFunc: procedure = .string\n  return \"expected-value\"\n",
+    "rc_a_named.crexx": "options levelb numeric_classic\nimport rxfnsb\nresult_text = MyFunc()\nsay result_text\nexit 0\nMyFunc: procedure = .string\n  return \"expected-value\"\n",
+    "int_b.crexx": "options levelb numeric_classic\nimport rxfnsb\ncall Init\nordinary = .int\nordinary = Bar()\nsay \"rc=[\" || ordinary || \"]\"\nexit 0\nInit: procedure = .void expose VARSET\n  VARSET = .stem()\n  return\nBar: procedure = .string expose VARSET\n  return \"nonempty\"\n",
+    "array.crexx": "options levelb numeric_classic\nimport rxfnsb\ncall Dump \"a b c\"\ncall Dump \"x y\"\nexit 0\nTokenize: procedure = .void expose TOK\n  arg line = .string\n  TOK = .string[]\n  do i = 1 to words(line)\n    call arrayappend TOK, word(line, i)\n  end\n  return\nDump: procedure = .void expose TOK\n  arg line = .string\n  call Tokenize line\n  do i = 1 to TOK[0]\n    say \"tok:\" TOK[i]\n  end\n  return\n",
+    "array_clear.crexx": "options levelb numeric_classic\nimport rxfnsb\ncall Dump \"a b c\"\ncall Dump \"x y\"\nexit 0\nTokenize: procedure = .void expose TOK\n  arg line = .string\n  TOK = .string[]\n  call arraydrop TOK\n  do i = 1 to words(line)\n    call arrayappend TOK, word(line, i)\n  end\n  return\nDump: procedure = .void expose TOK\n  arg line = .string\n  call Tokenize line\n  do i = 1 to TOK[0]\n    say \"tok:\" TOK[i]\n  end\n  return\n",
+    "scope_fixed.crexx": "options levelb numeric_classic\nimport rxfnsb\nsay Foo(\"1\")\nsay Foo(\"0\")\nexit 0\nFoo: procedure = .string\n  arg flag = .string\n  x = .string\n  if flag = \"1\" then do\n    x = \"from-if\"\n  end\n  else do\n    x = \"from-else\"\n  end\n  return x\n",
+    "rc_b.crexx": "options levelb numeric_classic\nimport rxfnsb\ncall Init\nrc = Bar()\nsay \"rc=[\" || rc || \"]\"\nexit 0\nInit: procedure = .void expose VARSET\n  VARSET = .stem()\n  return\nBar: procedure = .string expose VARSET\n  return \"nonempty\"\n",
+    "libmod.crexx": "options levelb\nnamespace libmod expose A\nA: procedure = .string\n  return B(\"fixed\")\nB: procedure = .string\n  arg y = .string\n  return \"hello from B with \" || y\n",
+    "scope.crexx": "options levelb numeric_classic\nimport rxfnsb\nsay Foo(\"1\")\nsay Foo(\"0\")\nexit 0\nFoo: procedure = .string\n  arg flag = .string\n  if flag = \"1\" then do\n    x = \"from-if\"\n  end\n  else do\n    x = \"from-else\"\n  end\n  return x\n",
+    "rc_typed.crexx": "options levelb numeric_classic\nimport rxfnsb\nrc = .string\nrc = MyFunc()\nsay rc\nexit 0\nMyFunc: procedure = .string\n  return \"expected-value\"\n",
+    "rc_a.crexx": "options levelb numeric_classic\nimport rxfnsb\nrc = MyFunc()\nsay rc\nexit 0\nMyFunc: procedure = .string\n  return \"expected-value\"\n",
+    "datatype.crexx": "options levelb numeric_classic\nimport rxfnsb\nsay datatype(\".\", \"N\")\nsrc = \"likes(mary, wine).\"\ni = 1\ndo while i <= length(src)\n  say i \":\" substr(src,i,1) \"-> datatype N=\" datatype(substr(src,i,1), \"N\")\n  i = i + 1\nend\nsay \"negative N:\" datatype(\"-2\", \"N\")\nsay \"negative W:\" datatype(\"-2\", \"W\")\nsay \"subword:\" subword(\"a b c d\", 1, 2)\nsay \"charout:\" charout(\"written.txt\", \"hello world\")\ncall charout \"written.txt\"\nexit 0\n",
+    "literal/usemod.crexx": "options levelb\nimport libmod\nsay libmod..A()\nexit 0\n",
+    "literal/libmod.crexx": "options levelb\nnamespace libmod expose A\nA: procedure = .string\n  return \"literal\"\n",
+    "noargs/usemod.crexx": "options levelb\nimport libmod\nsay libmod..A()\nexit 0\n",
+    "noargs/libmod.crexx": "options levelb\nnamespace libmod expose A\nA: procedure = .string\n  return B()\nB: procedure = .string\n  return \"no arguments\"\n",
+    "argument/usemod.crexx": "options levelb\nimport libmod\nsay libmod..A()\nexit 0\n",
+    "argument/libmod.crexx": "options levelb\nnamespace libmod expose A\nA: procedure = .string\n  return B(\"fixed\")\nB: procedure = .string\n  arg y = .string\n  return \"hello from B with \" || y\n",
+    "packaged/usemod.crexx": "options levelb\nimport libmod\nsay libmod..A()\nexit 0\n",
+    "program_clean/usemod.crexx": "options levelb\nimport libmod\nsay libmod..A()\nexit 0\n",
+    "program_clean/libmod.crexx": "options levelb\nnamespace libmod expose A\nA: procedure = .string\n  return B(\"fixed\")\nB: procedure = .string\n  arg y = .string\n  return \"hello from B with \" || y\n",
+    "documented_scope.crexx": "options levelb\nsay choose(\"1\")\nsay choose(\"0\")\nexit 0\nchoose: procedure = .string\n  arg flag = .string\n  text = .string\n  if flag = \"1\" then do\n    text = \"from-if\"\n  end\n  else do\n    text = \"from-else\"\n  end\n  return text\n"
+  },
+  "runs": [
+    {
+      "name": "version",
+      "args": [
+        "crexx",
+        "-version"
+      ],
+      "exit": 0,
+      "output": "\u001b[33mCREXX compiler driver \u001b[34mcrexx-1.0.0-beta.3+local.gbeee17322956 \u001b[0m (macOS 64 20260911)\ncREXX License (MIT)\nCopyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Ren\u00e9 Jansen\nSee https://github.com/adesutherland/CREXX for project details\n"
+    },
+    {
+      "name": "rc_a",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "rc_a.crexx"
+      ],
+      "exit": 2,
+      "output": "> rxc warning: Warning in rc_a.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: 1 warning(s) in source file\n> rxc error: Error in rc_a.crexx @ 3:6 - #BAD_CONVERSION: Value cannot be converted to the required type., \"MyFunc\"\n> rxc error: Error in rc_a.crexx @ 3:1 - #BAD_CONVERSION: Value cannot be converted to the required type., \"rc\"\n> rxc error: 2 error(s) in source file\n"
+    },
+    {
+      "name": "rc_a_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "rc_a.crexx"
+      ],
+      "exit": 6,
+      "output": "> rxc warning: Warning in rc_a.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: 1 warning(s) in source file\nPANIC: (SIGNAL CONVERSION_ERROR)\n  at module 1 (rc_a) address 7 (0x7)\n  source: rc_a.crexx:3:1: rc = MyFunc()\n"
+    },
+    {
+      "name": "rc_b",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "rc_b.crexx"
+      ],
+      "exit": 6,
+      "output": "PANIC: (SIGNAL CONVERSION_ERROR)\n  at module 1 (rc_b) address 10 (0xa)\n  source: rc_b.crexx:4:1: rc = Bar()\n"
+    },
+    {
+      "name": "rc_b_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "rc_b.crexx"
+      ],
+      "exit": 6,
+      "output": "PANIC: (SIGNAL CONVERSION_ERROR)\n  at module 1 (rc_b) address 10 (0xa)\n  source: rc_b.crexx:4:1: rc = Bar()\n"
+    },
+    {
+      "name": "array",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "array.crexx"
+      ],
+      "exit": 0,
+      "output": "tok: a\ntok: b\ntok: c\ntok: a\ntok: b\ntok: c\ntok: x\ntok: y\n"
+    },
+    {
+      "name": "array_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "array.crexx"
+      ],
+      "exit": 0,
+      "output": "tok: a\ntok: b\ntok: c\ntok: a\ntok: b\ntok: c\ntok: x\ntok: y\n"
+    },
+    {
+      "name": "scope",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "scope.crexx"
+      ],
+      "exit": 0,
+      "output": "> rxc warning: Warning in scope.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: Warning in scope.crexx @ 12:5 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 9, column 5. Declare this binding explicitly if intentional., \"x\"\n> rxc warning: Warning in scope.crexx @ 14:10 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 9, column 5. Declare this binding explicitly if intentional., \"x\"\n> rxc warning: 3 warning(s) in source file\nx\nx\n"
+    },
+    {
+      "name": "scope_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "scope.crexx"
+      ],
+      "exit": 0,
+      "output": "> rxc warning: Warning in scope.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: Warning in scope.crexx @ 12:5 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 9, column 5. Declare this binding explicitly if intentional., \"x\"\n> rxc warning: Warning in scope.crexx @ 14:10 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 9, column 5. Declare this binding explicitly if intentional., \"x\"\n> rxc warning: 3 warning(s) in source file\nx\nx\n"
+    },
+    {
+      "name": "datatype",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "datatype.crexx"
+      ],
+      "exit": 0,
+      "output": "0\n1 : l -> datatype N= 0\n2 : i -> datatype N= 0\n3 : k -> datatype N= 0\n4 : e -> datatype N= 0\n5 : s -> datatype N= 0\n6 : ( -> datatype N= 0\n7 : m -> datatype N= 0\n8 : a -> datatype N= 0\n9 : r -> datatype N= 0\n10 : y -> datatype N= 0\n11 : , -> datatype N= 0\n12 :   -> datatype N= 0\n13 : w -> datatype N= 0\n14 : i -> datatype N= 0\n15 : n -> datatype N= 0\n16 : e -> datatype N= 0\n17 : ) -> datatype N= 0\n18 : . -> datatype N= 0\nnegative N: 1\nnegative W: 1\nsubword: a b\ncharout: 0\n"
+    },
+    {
+      "name": "datatype_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "datatype.crexx"
+      ],
+      "exit": 0,
+      "output": "0\n1 : l -> datatype N= 0\n2 : i -> datatype N= 0\n3 : k -> datatype N= 0\n4 : e -> datatype N= 0\n5 : s -> datatype N= 0\n6 : ( -> datatype N= 0\n7 : m -> datatype N= 0\n8 : a -> datatype N= 0\n9 : r -> datatype N= 0\n10 : y -> datatype N= 0\n11 : , -> datatype N= 0\n12 :   -> datatype N= 0\n13 : w -> datatype N= 0\n14 : i -> datatype N= 0\n15 : n -> datatype N= 0\n16 : e -> datatype N= 0\n17 : ) -> datatype N= 0\n18 : . -> datatype N= 0\nnegative N: 1\nnegative W: 1\nsubword: a b\ncharout: 0\n"
+    },
+    {
+      "name": "array_clear",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "array_clear.crexx"
+      ],
+      "exit": 0,
+      "output": "tok: a\ntok: b\ntok: c\ntok: x\ntok: y\n"
+    },
+    {
+      "name": "array_clear_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "array_clear.crexx"
+      ],
+      "exit": 0,
+      "output": "tok: a\ntok: b\ntok: c\ntok: x\ntok: y\n"
+    },
+    {
+      "name": "scope_fixed",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "scope_fixed.crexx"
+      ],
+      "exit": 0,
+      "output": "> rxc warning: Warning in scope_fixed.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: 1 warning(s) in source file\nfrom-if\nfrom-else\n"
+    },
+    {
+      "name": "scope_fixed_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "scope_fixed.crexx"
+      ],
+      "exit": 0,
+      "output": "> rxc warning: Warning in scope_fixed.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: 1 warning(s) in source file\nfrom-if\nfrom-else\n"
+    },
+    {
+      "name": "rc_a_named",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "rc_a_named.crexx"
+      ],
+      "exit": 0,
+      "output": "> rxc warning: Warning in rc_a_named.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: 1 warning(s) in source file\nexpected-value\n"
+    },
+    {
+      "name": "rc_a_named_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "rc_a_named.crexx"
+      ],
+      "exit": 0,
+      "output": "> rxc warning: Warning in rc_a_named.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: 1 warning(s) in source file\nexpected-value\n"
+    },
+    {
+      "name": "rc_b_named",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "rc_b_named.crexx"
+      ],
+      "exit": 0,
+      "output": "rc=[nonempty]\n"
+    },
+    {
+      "name": "rc_b_named_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "rc_b_named.crexx"
+      ],
+      "exit": 0,
+      "output": "rc=[nonempty]\n"
+    },
+    {
+      "name": "source_import_only",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-verbose3",
+        "usemod.crexx"
+      ],
+      "exit": 11,
+      "output": "CREXX compiler driver crexx-1.0.0-beta.3+local.gbeee17322956 (macOS 64 20260911)\ncREXX License (MIT)\nCopyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Ren\u00e9 Jansen\nSee https://github.com/adesutherland/CREXX for project details\n======> RexxLA cREXX compiler crexx-1.0.0-beta.3+local.gbeee17322956            11 Sep 2026 12:59:39\nINVOCATION OPTIONS\nOptions in effect:\nNOCOLOR\n  DECIMAL\n  EXEC\nNONATIVE\n  KEEP\n  OPTIMIZE\nNOIMPORT-RXAS\nVERBOSE 3\nSOURCE ROOTS \nBINARY ROOTS \n\n\n\nusing relpath   : /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/\nusing lpath     : bin\nusing s roots   : \nusing i roots   : \nrxc command     : \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc\" \"-i\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin\" \"-o\" \"usemod\" \"usemod.crexx\"\n[ OK ] rxc      - Compiled        usemod.crexx\nrxas command    : \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas\" \"-o\" \"usemod\" \"usemod\"\n[ OK ] rxas     - Assembled       usemod.rxas\n======> RexxLA cREXX compiler crexx-1.0.0-beta.3+local.gbeee17322956            11 Sep 2026 12:59:39\ncrexx executes: \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvme\" \"usemod\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rx_treemap\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rx_llist\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rx_keyaccess\" \"-a\"\nPANIC: libmod.a (SIGNAL FUNCTION_NOT_FOUND)\n"
+    },
+    {
+      "name": "libmod_rxc",
+      "args": [
+        "rxc",
+        "libmod.crexx"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "libmod_rxas",
+      "args": [
+        "rxas",
+        "libmod.rxas"
+      ],
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "binary_import_default",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-verbose3",
+        "usemod.crexx"
+      ],
+      "exit": 11,
+      "output": "CREXX compiler driver crexx-1.0.0-beta.3+local.gbeee17322956 (macOS 64 20260911)\ncREXX License (MIT)\nCopyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Ren\u00e9 Jansen\nSee https://github.com/adesutherland/CREXX for project details\n======> RexxLA cREXX compiler crexx-1.0.0-beta.3+local.gbeee17322956            11 Sep 2026 12:59:40\nINVOCATION OPTIONS\nOptions in effect:\nNOCOLOR\n  DECIMAL\n  EXEC\nNONATIVE\n  KEEP\n  OPTIMIZE\nNOIMPORT-RXAS\nVERBOSE 3\nSOURCE ROOTS \nBINARY ROOTS \n\n\n\nusing relpath   : /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/\nusing lpath     : bin\nusing s roots   : \nusing i roots   : \nrxc command     : \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc\" \"-i\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin\" \"-o\" \"usemod\" \"usemod.crexx\"\n[ OK ] rxc      - Compiled        usemod.crexx\nrxas command    : \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas\" \"-o\" \"usemod\" \"usemod\"\n[ OK ] rxas     - Assembled       usemod.rxas\n======> RexxLA cREXX compiler crexx-1.0.0-beta.3+local.gbeee17322956            11 Sep 2026 12:59:41\ncrexx executes: \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvme\" \"usemod\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rx_treemap\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rx_llist\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rx_keyaccess\" \"-a\"\nPANIC: libmod.a (SIGNAL FUNCTION_NOT_FOUND)\n"
+    },
+    {
+      "name": "explicit_module",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-verbose3",
+        "-l",
+        "./libmod.rxbin",
+        "usemod.crexx"
+      ],
+      "exit": 0,
+      "output": "CREXX compiler driver crexx-1.0.0-beta.3+local.gbeee17322956 (macOS 64 20260911)\ncREXX License (MIT)\nCopyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Ren\u00e9 Jansen\nSee https://github.com/adesutherland/CREXX for project details\n======> RexxLA cREXX compiler crexx-1.0.0-beta.3+local.gbeee17322956            11 Sep 2026 12:59:42\nINVOCATION OPTIONS\nOptions in effect:\nNOCOLOR\n  DECIMAL\n  EXEC\nNONATIVE\n  KEEP\n  OPTIMIZE\nNOIMPORT-RXAS\nVERBOSE 3\nSOURCE ROOTS \nBINARY ROOTS \n\n\n\nusing relpath   : /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/\nusing lpath     : bin;.\nusing s roots   : \nusing i roots   : \nrxc command     : \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc\" \"-i\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin;.\" \"-o\" \"usemod\" \"usemod.crexx\"\n[ OK ] rxc      - Compiled        usemod.crexx\nrxas command    : \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxas\" \"-o\" \"usemod\" \"usemod\"\n[ OK ] rxas     - Assembled       usemod.rxas\n======> RexxLA cREXX compiler crexx-1.0.0-beta.3+local.gbeee17322956            11 Sep 2026 12:59:42\ncrexx executes: \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxvme\" \"usemod\" \"./libmod.rxbin\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rx_treemap\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rx_llist\" \"/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rx_keyaccess\" \"-a\"\nhello from B with fixed\n"
+    },
+    {
+      "name": "literal_opt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "usemod.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/literal",
+      "exit": 0,
+      "output": "literal\n"
+    },
+    {
+      "name": "literal_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "usemod.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/literal",
+      "exit": 11,
+      "output": "PANIC: libmod.a (SIGNAL FUNCTION_NOT_FOUND)\n"
+    },
+    {
+      "name": "noargs_opt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "usemod.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/noargs",
+      "exit": 0,
+      "output": "no arguments\n"
+    },
+    {
+      "name": "noargs_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "usemod.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/noargs",
+      "exit": 11,
+      "output": "PANIC: libmod.a (SIGNAL FUNCTION_NOT_FOUND)\n"
+    },
+    {
+      "name": "argument_opt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "usemod.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/argument",
+      "exit": 11,
+      "output": "PANIC: libmod.a (SIGNAL FUNCTION_NOT_FOUND)\n"
+    },
+    {
+      "name": "argument_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "usemod.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/argument",
+      "exit": 11,
+      "output": "PANIC: libmod.a (SIGNAL FUNCTION_NOT_FOUND)\n"
+    },
+    {
+      "name": "packaged_opt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-i",
+        ".",
+        "usemod.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/packaged",
+      "exit": 0,
+      "output": "hello from B with fixed\n"
+    },
+    {
+      "name": "packaged_rxbvm_opt",
+      "args": [
+        "rxbvm",
+        "usemod.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/packaged",
+      "exit": 0,
+      "output": "hello from B with fixed\n"
+    },
+    {
+      "name": "packaged_rxtvm_opt",
+      "args": [
+        "rxtvm",
+        "usemod.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/packaged",
+      "exit": 0,
+      "output": "hello from B with fixed\n"
+    },
+    {
+      "name": "packaged_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-i",
+        ".",
+        "-nooptimize",
+        "usemod.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/packaged",
+      "exit": 0,
+      "output": "hello from B with fixed\n"
+    },
+    {
+      "name": "packaged_rxbvm_noopt",
+      "args": [
+        "rxbvm",
+        "usemod.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/packaged",
+      "exit": 0,
+      "output": "hello from B with fixed\n"
+    },
+    {
+      "name": "packaged_rxtvm_noopt",
+      "args": [
+        "rxtvm",
+        "usemod.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3/packaged",
+      "exit": 0,
+      "output": "hello from B with fixed\n"
+    },
+    {
+      "name": "link_modules",
+      "args": [
+        "rxlink",
+        "-o",
+        "combined",
+        "usemod.rxbin",
+        "libmod.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "linked_rxbvm",
+      "args": [
+        "rxbvm",
+        "combined.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": "hello from B with fixed\n"
+    },
+    {
+      "name": "linked_rxtvm",
+      "args": [
+        "rxtvm",
+        "combined.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": "hello from B with fixed\n"
+    },
+    {
+      "name": "program_build",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "--program",
+        "combined_project",
+        "usemod.crexx",
+        "libmod.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 1,
+      "output": "WAVE: project compile/assemble jobs=2\nSTART: project member libmod\nSTART: project member usemod\nBUILT: project member libmod\nBUILT: project member usemod\nFAILED: project inputs changed during compilation; retry the build\n"
+    },
+    {
+      "name": "program_run",
+      "args": [
+        "rxvm",
+        "combined_project.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 255,
+      "output": "ERROR reading module file combined_project.rxbin\n"
+    },
+    {
+      "name": "ordinary_int_a",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "int_a.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 2,
+      "output": "> rxc warning: Warning in int_a.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: 1 warning(s) in source file\n> rxc error: Error in int_a.crexx @ 4:12 - #BAD_CONVERSION: Value cannot be converted to the required type., \"MyFunc\"\n> rxc error: Error in int_a.crexx @ 4:1 - #BAD_CONVERSION: Value cannot be converted to the required type., \"ordinary\"\n> rxc error: 2 error(s) in source file\n"
+    },
+    {
+      "name": "ordinary_int_b",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "int_b.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 6,
+      "output": "PANIC: (SIGNAL CONVERSION_ERROR)\n  at module 1 (int_b) address 12 (0xc)\n  source: int_b.crexx:5:1: ordinary = Bar()\n"
+    },
+    {
+      "name": "array_assemble",
+      "args": [
+        "rxas",
+        "array.rxas"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "array_link",
+      "args": [
+        "rxlink",
+        "-o",
+        "array_linked",
+        "array.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "array_rxbvm",
+      "args": [
+        "rxbvm",
+        "array_linked.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": "tok: a\ntok: b\ntok: c\ntok: a\ntok: b\ntok: c\ntok: x\ntok: y\n"
+    },
+    {
+      "name": "array_rxtvm",
+      "args": [
+        "rxtvm",
+        "array_linked.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": "tok: a\ntok: b\ntok: c\ntok: a\ntok: b\ntok: c\ntok: x\ntok: y\n"
+    },
+    {
+      "name": "array_clear_assemble",
+      "args": [
+        "rxas",
+        "array_clear.rxas"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "array_clear_link",
+      "args": [
+        "rxlink",
+        "-o",
+        "array_clear_linked",
+        "array_clear.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/library.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "array_clear_rxbvm",
+      "args": [
+        "rxbvm",
+        "array_clear_linked.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": "tok: a\ntok: b\ntok: c\ntok: x\ntok: y\n"
+    },
+    {
+      "name": "array_clear_rxtvm",
+      "args": [
+        "rxtvm",
+        "array_clear_linked.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-reports.n746j3",
+      "exit": 0,
+      "output": "tok: a\ntok: b\ntok: c\ntok: x\ntok: y\n"
+    }
+  ],
+  "additional_verified_outputs": {
+    "program_clean_first": "WAVE: project compile/assemble jobs=2\nSTART: project member usemod\nSTART: project member libmod\nBUILT: project member libmod\nBUILT: project member usemod\nBARRIER: link program\nPUBLISHED: program /private/tmp/crexx-mike-reports.n746j3/program_clean/combined.rxbin\n",
+    "program_clean_second": "SKIP: project current /private/tmp/crexx-mike-reports.n746j3/program_clean/combined.rxbin\n",
+    "program_clean_run": "hello from B with fixed\n",
+    "rc_typed": "> rxc warning: Warning in rc_typed.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., \"rxfnsb\"\n> rxc warning: 1 warning(s) in source file\n> rxc error: Error in rc_typed.crexx @ 4:6 - #BAD_CONVERSION: Value cannot be converted to the required type., \"MyFunc\"\n> rxc error: Error in rc_typed.crexx @ 4:1 - #BAD_CONVERSION: Value cannot be converted to the required type., \"rc\"\n> rxc error: 2 error(s) in source file\n",
+    "historical_opt": "0\n1 : l -> datatype N= 0\n2 : i -> datatype N= 0\n3 : k -> datatype N= 0\n4 : e -> datatype N= 0\n5 : s -> datatype N= 0\n6 : ( -> datatype N= 0\n7 : m -> datatype N= 0\n8 : a -> datatype N= 0\n9 : r -> datatype N= 0\n10 : y -> datatype N= 0\n11 : , -> datatype N= 0\n12 :   -> datatype N= 0\n13 : w -> datatype N= 0\n14 : i -> datatype N= 0\n15 : n -> datatype N= 0\n16 : e -> datatype N= 0\n17 : ) -> datatype N= 0\n18 : . -> datatype N= 0\nnegative N: 1\nnegative W: 1\nsubword: a b\ncharout: 0\n",
+    "historical_noopt": "0\n1 : l -> datatype N= 0\n2 : i -> datatype N= 0\n3 : k -> datatype N= 0\n4 : e -> datatype N= 0\n5 : s -> datatype N= 0\n6 : ( -> datatype N= 0\n7 : m -> datatype N= 0\n8 : a -> datatype N= 0\n9 : r -> datatype N= 0\n10 : y -> datatype N= 0\n11 : , -> datatype N= 0\n12 :   -> datatype N= 0\n13 : w -> datatype N= 0\n14 : i -> datatype N= 0\n15 : n -> datatype N= 0\n16 : e -> datatype N= 0\n17 : ) -> datatype N= 0\n18 : . -> datatype N= 0\nnegative N: 1\nnegative W: 1\nsubword: a b\ncharout: 0\n",
+    "documented_scope": "from-if\nfrom-else\n"
+  },
+  "assertions": [
+    "Original/corrected array output matched exact expected text in both optimization modes and after linking under both concrete VMs.",
+    "Scope correction returned from-if/from-else in both optimization modes without NOT_IN_SAME_SCOPE.",
+    "Each historical recheck started with a fresh written.txt and independently asserted exit zero and exact hello world file content.",
+    "Optimized RXAS for literal/noargs variants contains no retained call to libmod.a."
+  ],
+  "notes": [
+    "AST logs retained in local scratch directory; DEFINE at TOK declaration and .string[*] GLOBAL EXPOSED symbol were inspected.",
+    "Mixed scratch-root program build rejected changing inputs; its subsequent VM launch had no published output. The isolated two-source program build, unchanged rebuild and execution all succeeded. The failed attempt is retained below and is not counted as success."
+  ]
+}

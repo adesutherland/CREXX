@@ -1,0 +1,190 @@
+{
+  "outcome": "passed",
+  "elapsed_seconds": 224.287,
+  "commands": [
+    {
+      "label": "engine",
+      "argv": [
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/engine/rxllama_release_engine_smoke",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/fixture.gguf"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "altered-backend-rejected",
+      "argv": [
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/engine/rxllama_release_engine_smoke",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/fixture.gguf"
+      ],
+      "returncode": 1,
+      "consumer_environment": true
+    },
+    {
+      "label": "missing-manifest-rejected",
+      "argv": [
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/engine/rxllama_release_engine_smoke",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/fixture.gguf"
+      ],
+      "returncode": 1,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-compile",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxc",
+        "--no-exe-import",
+        "-i",
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin",
+        "-o",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/opt",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/smoke.crexx"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-assemble",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxas",
+        "-o",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/opt",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/opt"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-link",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxlink",
+        "-o",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/opt-linked",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/opt",
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/library",
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/classlib",
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxfnsg"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-rxvm",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxvm",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/opt-linked",
+        "-a",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-rxtvm",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxtvm",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/opt-linked",
+        "-a",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-compile",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxc",
+        "--no-exe-import",
+        "-n",
+        "-i",
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin",
+        "-o",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/noopt",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/smoke.crexx"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-assemble",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxas",
+        "-o",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/noopt",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/noopt"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-link",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxlink",
+        "-o",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/noopt-linked",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/noopt",
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/library",
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/classlib",
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxfnsg"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-rxvm",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxvm",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/noopt-linked",
+        "-a",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-rxtvm",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/rxtvm",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/noopt-linked",
+        "-a",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "native-build",
+      "argv": [
+        "/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/crexx",
+        "--program",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/native/smoke",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/smoke.crexx",
+        "--jobs",
+        "1",
+        "--native"
+      ],
+      "returncode": 0,
+      "consumer_environment": false
+    },
+    {
+      "label": "relocated-native",
+      "argv": [
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/relocated/smoke",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    }
+  ],
+  "work": "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-k3ef7uzq",
+  "build": "/Users/runner/work/_temp/build",
+  "required_backends": "cpu,metal",
+  "preferred_vm": "rxbvm",
+  "model_downloads": 0,
+  "scope": "package and fixture smoke; not full BGE/Smol or device qualification"
+}

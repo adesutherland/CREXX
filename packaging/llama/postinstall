@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+[ "${3:-/}" = / ] || exit 1
+here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)
+/bin/sh "$here/manage.sh" install

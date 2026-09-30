@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g32efa89a2daa.dirty 20260904",
+  "workload": "native-inference-smol-persistent",
+  "runtime": "llama-cpu-m5",
+  "variant": "step02-bounded128-threads4",
+  "lifecycle": "complete-control-process",
+  "warmups": 2,
+  "recorded_runs": 10,
+  "sampling": "serial",
+  "correctness_expectation": "PASS native inference direct control",
+  "metric_prefix": null,
+  "command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control","/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf","/Users/adrian/CLionProjects/CREXX/cmake-build-llama-controls/bin","cpu","smol","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/completion/release/smol-cpu-bounded128.json","100","20","4","4"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-09-14T12:12:18+0000",
+  "completed_utc": "2026-09-14T12:16:39+0000",
+  "result": "pass"
+}

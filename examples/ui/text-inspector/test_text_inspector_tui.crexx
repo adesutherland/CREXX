@@ -1,9 +1,11 @@
 options levelg
 namespace text_inspector_tui_test
 import rxfnsb
-import ui
+import ui_contract
 import ui_tui
 import text_inspector
+import ui_driver_probe
+import text_inspector_test_host
 
 arg test_args = .string[]
 if test_args[0] < 1 then do
@@ -14,12 +16,19 @@ end
 commands = .string[]
 commands[1] = "o"
 commands[2] = test_args[1]
-commands[3] = "q"
+commands[3] = "c"
+commands[4] = "cancel"
+commands[5] = "c"
+commands[6] = "ok"
+commands[7] = "o"
+commands[8] = ""
+commands[9] = "o"
+commands[10] = test_args[1] || ".missing"
+commands[11] = "q"
 
-app = .text_inspector..text_inspector_app()
-runtime = .ui..uiruntime(app)
+session = make_text_inspector_session("line-test", ui_tui..capabilities())
 driver = .ui_tui..tuidriver.scripted(commands)
-run_rc = driver.run(runtime)
+run_rc = driver.run(session)
 transcript = driver.transcript()
 
 if run_rc \= 0 then do
@@ -34,9 +43,48 @@ if pos("Lines: 2    Words: 5    Characters: 26", transcript) = 0 | pos("--------
   say "FAIL: Text Inspector TUI did not render shared relative layout"
   exit 1
 end
-if runtime.event_count() \= 5 then do
-  say "FAIL: Text Inspector TUI delivered" runtime.event_count() "events instead of 5"
+if pos("Status: Clear cancelled", transcript) = 0 | pos("Status: Open cancelled", transcript) = 0 | pos("Cannot read file", transcript) = 0 then do
+  say "FAIL: standard dialog cancellation or read failure missing"
   exit 1
+end
+
+/* GTK asserts this identical event journal using native signals. */
+shared = .string[]
+shared[1] = "o"
+shared[2] = test_args[1]
+shared[3] = "c"
+shared[4] = "cancel"
+shared[5] = "c"
+shared[6] = "ok"
+shared[7] = "o"
+shared[8] = ""
+shared[9] = "q"
+shared[10] = "q"
+journal = ""
+observed = make_observed_session(ui_tui..capabilities(), reference journal)
+probe_driver = .tuidriver.scripted(shared)
+run_rc = probe_driver.run(observed)
+if run_rc \= 0 | journal \= expected_journal() then do
+  say "FAIL: shared driver lifecycle" run_rc journal
+  exit 1
+end
+
+do mode = 1 to 4
+  journal = ""
+  session = .uisession("line-edge-" || mode, ui_tui..capabilities())
+  rc = session.add_component("root", .host_edge_probe(mode, reference journal))
+  empty_input = .string[]
+  edge_driver = .tuidriver.scripted(empty_input)
+  run_rc = edge_driver.run(session)
+  expected = expected_edge_journal(mode)
+  if journal \= expected then do
+    say "FAIL: line cleanup journal" mode journal
+    exit 1
+  end
+  if mode = 2 then do
+    if run_rc \= 2 then exit 1
+  end
+  else if run_rc \= 0 then exit 1
 end
 
 say "PASS: Text Inspector TUI end-to-end"

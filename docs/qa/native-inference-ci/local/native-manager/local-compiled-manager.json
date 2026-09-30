@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "core_commit": "f10e70ee5f12ce49cc5088abc867748522d1d19c",
+  "files": {
+    "bin/crexx-llama": "00fe5851316896fa0ba9eb6162ed414704e25e0c910d35f459598d5f57852899",
+    "share/llama-management/crexx-llama.crexx": "31521c32b141d72dbb8d299c1f1518cbf4d8064d7acde13b27488ffae3621bc8",
+    "share/llama-management/rxfs.c": "646e999efd3b73ac242a28a93f15876f8f08b837d31e6af60c3b237a64c0c204",
+    "share/llama-management/rxfs_ops.h": "efb01bfaa5553b446a6c5cf27a559ddf51710268ca947d803587a19ae4cd9c9e"
+  },
+  "bootstrap_files": {}
+}

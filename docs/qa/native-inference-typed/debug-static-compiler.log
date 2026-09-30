@@ -1,0 +1,7 @@
+CMake Error at tests/rxpa/check_native_objects.cmake:26 (message):
+  Native objects command failed (no such file or directory); see
+  /tmp/rxpa-typed-static-final/toolchain.log
+Call Stack (most recent call first):
+  tests/rxpa/check_native_objects.cmake:56 (run)
+
+

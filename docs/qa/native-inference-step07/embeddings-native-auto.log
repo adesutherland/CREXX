@@ -1,0 +1,5 @@
+argv=['/tmp/crexx-ni-s7.oheu5td2/llama-example-work/embeddings', 'auto', '/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf', 'f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999']
+cwd=/tmp/crexx-ni-s7.oheu5td2/llama-example-work
+rc=0
+Device: MTL0 backend: metal
+PASS: persistent typed embedding example, one load and twenty batches

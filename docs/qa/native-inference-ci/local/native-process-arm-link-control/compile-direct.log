@@ -1,0 +1,7 @@
+Undefined symbols for architecture arm64:
+  "_ggml_backend_reg_dev_count", referenced from:
+      _main in direct-ggml-dc79ad.o
+  "_ggml_log_set", referenced from:
+      _main in direct-ggml-dc79ad.o
+ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)

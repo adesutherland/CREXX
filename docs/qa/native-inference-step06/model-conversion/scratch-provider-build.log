@@ -1,0 +1,1 @@
+ninja: error: '/tmp/crexx-ni-s6.zq0rk0ug/conversion/provider-candidate/providers/libggml.dylib', needed by '/tmp/crexx-ni-s6.zq0rk0ug/conversion/provider-candidate/providers/libcrexx-llama.1.dylib', missing and no known rule to make it

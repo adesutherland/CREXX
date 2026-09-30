@@ -1,0 +1,131 @@
+/* Terminal presentation and hit geometry, independent of the native console.
+ * The conservative cell projection is an explicit policy seam: this initial
+ * renderer displays ASCII/Latin-1, replacing controls and uncertain-width
+ * scalars. Original Unicode model values/filenames are never changed.
+ */
+options levelg
+namespace ui_terminal_view expose uiterminal_canvas terminal_text
+import rxfnsb
+import ui
+
+/** Safe single-cell projection. Untrusted file names cannot inject VT codes.
+ * @param text model text @return terminal-safe, known single-cell display
+ */
+terminal_text: procedure = .string
+  arg text = .string
+  result = ""
+  do i = 1 to length(text)
+    char = substr(text, i, 1)
+    code = c2d(char)
+    if (code >= 32 & code <= 126) | (code >= 160 & code <= 255 & code \= 173) then result = result || char
+    else result = result || "?"
+  end
+  return result
+
+/** Render logical rows/columns and retain exactly the geometry drawn. */
+uiterminal_canvas: class
+  _columns = .int
+  _rows = .int
+  _x = .int[]
+  _y = .int[]
+  _width = .int[]
+  _ids = .string[]
+  _count = .int
+  *: factory
+    _columns = 80
+    _rows = 24
+    _count = 0
+    return
+  /** @param columns visible cell width @param rows visible cell height */
+  resize: method = .void
+    arg columns = .int, rows = .int
+    _columns = max(1, min(1000, columns))
+    _rows = max(1, min(1000, rows))
+    return
+  /** @return true when ordinary interaction must wait for a usable size */
+  small: method = .int
+    return _columns < 32 | _rows < 10
+  /** @param view logical nodes @param focus stable focused ID
+   * @return one batched VT frame, with no scrolling past the viewport
+   */
+  render: method = .string
+    arg view = .uiview, focus = .string
+    esc = '1B'x
+    result = esc || "[?25l" || esc || "[0m" || esc || "[2J" || esc || "[H"
+    _count = 0
+    title = terminal_text(view.title())
+    result = result || esc || "[1;36m" || left(title, max(0, _columns - 1)) || esc || "[0m"
+    if small() then do
+      if _rows > 2 then result = result || esc || "[3;1H" || left("Resize terminal (minimum 32x10)", _columns - 1)
+      return result
+    end
+    widths = .int[]
+    i = .int
+    column = .int
+    text = .string
+    max_column = 1
+    do i = 1 to view.count()
+      max_column = max(max_column, view.node_column(i) + 1)
+    end
+    do i = 1 to max_column
+      widths[i] = 0
+    end
+    do i = 1 to view.count()
+      column = view.node_column(i) + 1
+      text = terminal_text(view.node_text(i))
+      size = min(max(8, (_columns - 4) <idiv> max_column - 1), length(text) + 4)
+      widths[column] = max(widths[column], size)
+    end
+    do i = 1 to view.count()
+      column = view.node_column(i) + 1
+      x = 1
+      do c = 1 to column - 1
+        x = x + widths[c] + 1
+      end
+      y = view.node_row(i) + 2
+      if y >= _rows - 1 | x >= _columns - 1 then iterate
+      kind = view.node_kind(i)
+      text = terminal_text(view.node_text(i))
+      if kind = "line" then text = copies("-", _columns - x - 1)
+      if kind = "button" then text = "[ " || text || " ]"
+      if kind = "input" then text = "> " || text
+      available = _columns - x - 1
+      /* A wide label must not paint over a sibling or leave a stale hit area. */
+      do sibling = 1 to view.count()
+        if view.node_row(sibling) = view.node_row(i) & view.node_column(sibling) > view.node_column(i) then available = min(available, widths[column])
+      end
+      text = left(text, min(length(text), available))
+      result = result || esc || "[" || (y + 1) || ";" || (x + 1) || "H"
+      if view.node_id(i) = focus then result = result || esc || "[7m"
+      result = result || text || esc || "[0m"
+      if kind = "button" | kind = "input" then do
+        _count = _count + 1
+        _ids[_count] = view.node_id(i)
+        _x[_count] = x
+        _y[_count] = y
+        _width[_count] = length(text)
+      end
+    end
+    result = result || esc || "[" || _rows || ";1H" || left("Tab: focus  Enter: activate  Esc: cancel  Ctrl-C: close", _columns - 1)
+    return result
+  /** @param x zero-based cell column @param y zero-based cell row
+   * @return stable interactive node ID or empty for background/clipped nodes
+   */
+  hit: method = .string
+    arg x = .int, y = .int
+    do i = 1 to _count
+      if y = _y[i] & x >= _x[i] & x < _x[i] + _width[i] then return _ids[i]
+    end
+    return ""
+  /** @param current stable focused ID @param delta +/-1 @return next drawn control */
+  next_focus: method = .string
+    arg current = .string, delta = 1
+    if _count = 0 then return ""
+    slot = 0
+    do i = 1 to _count
+      if _ids[i] = current then slot = i
+    end
+    slot = slot + delta
+    if slot < 1 then slot = _count
+    if slot > _count then slot = 1
+    return _ids[slot]

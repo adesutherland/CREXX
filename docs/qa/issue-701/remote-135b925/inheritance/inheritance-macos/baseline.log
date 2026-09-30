@@ -1,0 +1,3 @@
+FAIL: child pipe end is close-on-exec before launch
+FAIL: sibling did not inherit owner's pipe writer
+POSIX inheritance: 2 failures

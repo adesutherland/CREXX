@@ -1,6 +1,6 @@
-# CREXX Documentation
+# CREXX 1.0.0 Beta 3 Documentation
 
-_Release documentation for `crexx-1.0.0-beta.3` on `develop`._
+_Release documentation for `crexx-1.0.0-beta.3`._
 
 This site is the public entry point for current CREXX documentation. It should
 describe what is implemented in the release branch, not old plans or speculative
@@ -8,11 +8,13 @@ designs.
 
 ## Start Here
 
-- [README](https://github.com/adesutherland/CREXX/blob/develop/README.md): short project overview, build commands, and first run
-- [Beta 3 release notes](releases/v1.0.0-beta.3.md): current beta 3 WIP scope,
-  timetable, and limitations
+- [README](https://github.com/adesutherland/CREXX/blob/v1.0.0-beta.3/README.md): short project overview, build commands, and first run
+- [Beta 3 downloads](https://github.com/adesutherland/CREXX/releases/tag/v1.0.0-beta.3)
+- [Installing and running CREXX](https://github.com/adesutherland/CREXX/blob/v1.0.0-beta.3/INSTALL-RUN.md): packages, installers, and a first program
+- [Beta 3 release notes](releases/v1.0.0-beta.3.md): features, distribution,
+  and limitations
 - [Beta 2 release notes](releases/v1.0.0-beta.2.md): what is included in the
-  latest completed CREXX 1.0.0 beta 2 baseline
+  previous CREXX 1.0.0 beta 2 baseline
 - [Documentation map](DOCS_MAP.md): where each kind of information belongs
 - [Building CREXX](books/crexx_programming_guide/Building_cRexx.md)
 - [Running CREXX](books/crexx_programming_guide/running.md)
@@ -31,6 +33,9 @@ designs.
 - [Mathematics](books/crexx_library_reference/mathematics.md)
 - [Unicode text services](books/crexx_library_reference/unicode.md)
 - [Packed vectors](books/crexx_library_reference/rxvector.md)
+- [SQLite typed provider and ADDRESS façade](books/crexx_library_reference/rxsqlite.md)
+- [llama.rexx native embeddings and generation](../lib/plugins/llama/README.md)
+  (optional plugin; see its platform, backend and model qualification limits)
 - [Language levels](books/crexx_language_reference/crexx_levels.md)
 - [Data types](books/crexx_language_reference/data_types.md)
 - [Statements](books/crexx_language_reference/statements.md)
@@ -78,10 +83,11 @@ designs.
 
 ## Project Direction
 
-- [Release 1 plan](release-1-plan.md): fixed-date path to Release 1, scope
-  tiers, gates, provisional owners, and issue candidates
-- [Roadmap](ROADMAP.md): future direction, research themes, and non-commitment
-  planning notes
+- [Release 1 plan](release-1-plan.md): live beta 3-to-beta 6 cadence, RC1 and
+  2027-05-01 Release 1 cut target, plus original scope, gates, dependencies,
+  provisional owners, and issue candidates
+- [Roadmap](ROADMAP.md): consolidated current priority order, below-cut queue,
+  research themes, and explicit non-commitments
 - The [GitHub wiki](https://github.com/adesutherland/CREXX/wiki) is retained
   for project vision, direction, and history. It is intentionally not the
   technical source of truth for the current release.

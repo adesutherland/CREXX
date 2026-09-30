@@ -47,9 +47,51 @@ For tasks that write or edit Level B `.rexx`, start with `docs/ai-context/CREXX_
 
 For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the current protocol reference. The pre-release command-only native callback registration form has been retired; use the current environment object/function protocol and `rxvml_address_register_callback_environment(ctx, name, id, command_cb, function_cb, userdata)`. ADDRESS host-variable anchors (`:name` and `${name}`) are compiler auto-expose syntax only; their command meaning belongs to the selected environment handler.
 
+## Development publication and overnight assurance
+
+For ordinary changes, a successful core product build and appropriate functional
+regressions are sufficient to promote to `develop`. Run focused tests for the
+affected behavior and the relevant normal correctness suite; retain evidence for
+the code/test/build inputs actually qualified. The normal automatic publication
+workflows provide Release product/smoke, optimizer-parity and CodeQL checks.
+Do not turn every development publication into release qualification.
+
+Full hosted deep/comprehensive matrices, build-graph comparisons, stress and
+full Linux ASan/LSan/macOS ASan assurance normally run overnight. Do not manually
+dispatch them, or wait for them before ordinary `develop` publication, merely
+because a change touches the compiler/runtime or is called a hotfix. Their
+purpose is to find issues for prompt remedial work after integration; that work
+may justify a targeted repeat of the relevant deep gate. This is an intentional
+tradeoff to keep development feedback and publication fast.
+
+Avoidable testing delay is an engineering cost, not evidence of diligence.
+It delays integration and user feedback, occupies runners, and blocks useful
+work. Before adding a long run, identify the unresolved risk, why retained or
+focused evidence is insufficient, and why the expected benefit justifies its
+elapsed-time cost. Choose the smallest decisive check. Repeating unchanged
+valid tests or routinely holding development publication for overnight assurance
+is a process defect to correct, not the safe default. Do not accumulate extra
+checks simply to obtain more green results.
+
+Additional pre-publication qualification is an exception: for example an
+explicitly agreed novel native-inference change, a release candidate, or repair
+and closure of an actual sanitizer finding. Record the concrete risk, additional
+checks and why they gate that work in its plan. Do not infer the exception from
+general requests to test, qualify, publish or obtain green CI. Preserve explicit
+user-required gates. Actual first-party sanitizer findings still follow the
+SAN worklist and closure rules below; overnight scheduling does not waive known
+defects or permit unsupported sanitizer-clean/release-ready claims.
+
+Reuse unchanged valid evidence. Promotion, history-only merges and documentation
+edits do not require repeating broad testing. Check the automatic publication
+workflows for the pushed revision without dispatching extra overnight lanes.
+
 ## Working Rules
 
-- For tasks that change compiler logic, syntax, scoping, or architecture, present a numbered implementation plan before editing.
+- For tasks that change compiler logic, syntax, scoping, or architecture,
+  present an implementation plan before editing. Include the vision and intended
+  outcomes, numbered checkable acceptance criteria, and numbered implementation
+  steps, following the plan and session-continuity rules below.
 - Pause for user approval before making language-design decisions, syntax changes, or architectural shifts. The user is the final authority on language direction.
 - For complex bugs or crashes, start with a minimal reproducer in cREXX where practical before changing core C code.
 - Run focused tests frequently during compiler work. If a change causes regressions, stop, report them clearly, and distinguish expected from unintended fallout.
@@ -57,9 +99,45 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
   test/build input has changed. Verify that with the relevant diff or tree
   hashes and reuse the retained evidence. A history-only merge or
   documentation-only commit does not by itself invalidate completed testing.
-  Exact-SHA hosted workflows required for publication remain separate gates;
-  they do not justify repeating unchanged local QA.
+  Normal automatic publication workflows remain separate checks; use the
+  development-publication policy above to choose gates, and do not infer a
+  requirement to dispatch overnight assurance or repeat unchanged local QA.
+- Before registering or materially expanding an aggregate CTest that launches
+  nested builds, compilers, assemblers, linkers, VMs, or scenario matrices,
+  measure it in isolation in normal Debug and the maintained sanitizer build.
+  Set explicit scheduling and timeout properties from that evidence. Do not
+  inherit an old timeout after materially increasing the test workload, and do
+  not let nested end-to-end aggregates compete in the broad pool when host load
+  can make their inner or outer deadlines nondeterministic.
+- In functional QA, use generous wall-clock limits as hang-protection backstops,
+  not incidental performance requirements. Avoid short nested or whole-workload
+  deadlines that make slower or busy GitHub runners fail correct work. Serialize
+  deadline-sensitive tests where practical, while retaining deliberate
+  concurrency inside ownership and worker tests. Keep explicit timeout or
+  cancellation-contract tests and isolated Release performance criteria intact.
+- When a broad run fails only through explicit CTest timeouts, inspect the log
+  first for sanitizer diagnostics and non-timeout failures, then replay the
+  unchanged timed-out tests once under their declared isolated scheduling. If
+  they pass, classify and repair the QA scheduling or timeout defect before
+  repeating a broad run. Do not create a new product defect or spend another
+  full-suite cycle on a timeout-only result unless the isolated test reproduces
+  a product failure or establishes a distinct mechanism.
+- Keep a discovered finding on the current issue unless it has a distinct
+  reproduced cause, affected component, repair, approval path, or shared
+  cross-cutting impact. Preserve separate reviewable commits where causes do
+  differ, but publish compatible commits together and use one combined
+  exact-head hosted qualification when that avoids redundant long-running
+  gates. Sanitizer worklist requirements below still apply to actual
+  first-party sanitizer findings.
 - Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
+- For native object providers, use the C RXPA factories/method bindings and
+  checked `SETOBJECTTYPE` service documented in `docs/ai-context/CREXX_LIBS.md`.
+  Do not add duplicate Rexx construction or forwarding classes when those C
+  bindings already implement the contract. Use `tests/rxpa/rxpa_objects.c` and
+  `lib/plugins/llama/typed.h` as executable examples; `rxpa_classdecl` is only a
+  metadata compilation fixture. Preserve Rexx classes that still own behavior.
+  When replacing a shim, remove its obsolete source/build entries and update
+  human and agent guides together; mark retained historical evidence as such.
 - Treat library development as an opportunity to validate the complete product
   toolchain. Library changes should exercise `rxc`, `rxas`, `rxlink`, and
   `rxvm`, and a library-discovered defect in any of those layers should gain a
@@ -69,6 +147,47 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
   call only when the required equivalence cannot be proved; do not use a broad
   fail-closed guard as the final fix for a representable inline shape.
 - Treat source documentation tags as first-class code-adjacent assets during refactors. When rewriting or replacing `.crexx` classes, methods, plugins, or library surfaces, preserve existing `/** ... */` RexxDoc blocks and tags such as `@param`, `@parm`, `@return`, `@author`, examples, and notes wherever the documented API still exists. If behaviour, signatures, backing implementation, or return contracts change, update the tags in the same change instead of dropping them. Before large classlib or library refactors, compare relevant doc-tag coverage before and after; if tags are intentionally removed because an API is removed, call that out explicitly in the change summary.
+
+## Plans, Acceptance and Session Continuity
+
+Every required implementation plan, and every plan for work spanning sessions,
+must contain all three of the following:
+
+1. **Vision and intended outcomes:** explain the problem, why the work matters,
+   and the complete intended end state from the user's perspective. Preserve
+   the requested capabilities, platforms, integration and delivery requirements,
+   constraints, and any explicitly agreed scope boundaries. A list of immediate
+   implementation tasks is not a substitute for the intended outcome.
+2. **Numbered checkable acceptance criteria:** give each criterion a stable ID
+   such as `AC-01`, an observable pass condition, and the test, inspection or
+   retained evidence needed to verify it. Together the criteria must cover the
+   full intended outcome, including required failure, lifecycle, packaging and
+   platform behavior where applicable. Keep unverified criteria visibly open.
+3. **Numbered implementation steps:** give each step a stable ID such as
+   `STEP-01`, identify the acceptance criteria it serves, and record dependencies
+   and applicable decision gates. Separate phased delivery from overall success.
+
+Before implementation, record this plan in the appropriate repository planning
+or worklist file so it survives conversation compaction and session takeover.
+Reuse an existing authoritative plan where one exists; do not create competing
+scope records. Include its path in progress handoffs, and keep criterion/step
+status and evidence references current. Preserve IDs when updating the plan.
+
+After compaction or at session takeover, read the repository instructions and
+the authoritative plan, including its vision and every acceptance criterion,
+before continuing implementation. Reconcile completed and outstanding work with
+the current checkout and retained evidence. Handoffs must identify the plan,
+accepted scope decisions, unmet criteria, blockers and next steps; they must not
+reduce the objective to the latest task or the easiest remaining subset.
+
+Do not silently remove, weaken, defer or reinterpret outcomes or acceptance
+criteria because of context loss, implementation difficulty, elapsed time or a
+partial implementation. Record explicit user-approved scope changes and their
+effect on acceptance. Until then, preserve the original requirement as open.
+Report phase completion separately from overall completion, and claim the
+overall outcome complete only when every acceptance criterion in the current
+explicitly agreed scope is verified. A scope revision does not itself satisfy
+the criteria that remain.
 
 ## Performance Programme
 

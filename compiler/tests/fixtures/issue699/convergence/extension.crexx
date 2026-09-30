@@ -1,0 +1,8 @@
+options levelg
+namespace _rxsysb expose extension
+import issue699model
+extension: procedure = .void
+  arg records = .record[]
+  fields = records[1].fields()
+  fields[fields.0+1] = .field()
+  return

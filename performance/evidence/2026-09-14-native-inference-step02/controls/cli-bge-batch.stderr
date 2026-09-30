@@ -1,0 +1,8 @@
+0.00.044.658 I main: n_parallel == 1 -> unified KV cache is enabled
+0.00.070.449 W load: special_eos_id is not in special_eog_ids - the tokenizer config may be incorrect
+0.00.075.003 W llama_context: n_ctx_seq (4096) > n_ctx_train (512) -- possible training context overflow
+0.00.077.116 I cmn          init: llama threadpool init, n_threads = 2
+0.00.078.561 W main: warning: model was trained on only 512 context tokens (4096 specified)
+0.00.078.564 I 
+0.00.078.585 I system_info: n_threads = 2 (n_threads_batch = 2) / 10 | MTL : EMBED_LIBRARY = 1 | CPU : NEON = 1 | ARM_FMA = 1 | FP16_VA = 1 | DOTPROD = 1 | LLAMAFILE = 1 | ACCELERATE = 1 | REPACK = 1 | 
+0.00.079.173 I batch_decode: n_tokens = 599, n_seq = 8

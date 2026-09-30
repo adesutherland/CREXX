@@ -1,0 +1,39 @@
+{
+  "asan_focused": {
+    "capability": "Apple ASan only; Apple LSan unsupported; full platform matrix not run for this changed candidate",
+    "command": "tools/asan-run.sh --phase ctest --test-jobs 1 --leaks off --regex '^(mainframe_handlers_(utf8|byte)|mainframe_stdio|mainframe_console_signals|oom_mainframe|record_allocation_failure|ast_allocation_failure|platform_cms_text)$'",
+    "result": "8/8 pass",
+    "seconds": 23.26
+  },
+  "config": "Debug; ENABLE_LLAMA=OFF; CREXX_QA_CTEST_JOBS=30; parser mode disabled; switch product VM; TLS NETWORK",
+  "debug_build": "cmake --build cmake-build-debug --target stage-product stage-optional qa-prep-comprehensive rxvm_mainframe_console_harness test_mainframe_stdio test_oom_mainframe --parallel 8",
+  "host": "Darwin 25.6.0 arm64; AppleClang 21.0.0.21000101; CMake 4.3.2",
+  "log_sha256": {
+    "asan-build.log": "a21d7a9cdc45f19a2ef7d13d58a13e612f035e908c3bcbdd21217ace92934ab7",
+    "asan-focused.log": "850d4f420709ba3df88a61cbc3a8b82dbf999fa8b5abf93845f654e14ecb54ec",
+    "console-signals.log": "830c685d56d21aa60294cc708e89eb5c3c34518dfb6a1a1a851599104d8cd707",
+    "debug-build.log": "00cde18da915f5d6a07230d4a3b8fe3b09d633fed1fbc4ffe72fedd13fdaf892",
+    "debug-correctness.log": "cb931eb842c72b58046c6093af865707923e48bf18841beae168492fb70fa709",
+    "release-guards.log": "4897121f5047270513529ddff15db6296fac8d0ef36850bff7c74a284848f839"
+  },
+  "normal_correctness": {
+    "command": "ctest --test-dir cmake-build-debug --parallel 30 --output-on-failure --label-regex '^(essential|smoke|comprehensive)$'",
+    "result": "2293/2293 pass",
+    "seconds": 766.24
+  },
+  "publication": "Build CREXX and CodeQL pass on e15392da705c5e9e0e1e57b70586b53fc8cb64ed. See publication.json for terminal jobs, package identities, CodeQL findings and the documentation-only follow-up.",
+  "qualified_product_commit": "6a09f7786b79c025981bda5d7a891982f8304dc0",
+  "raw_log_sha256": {
+    "asan-build.log": "a21d7a9cdc45f19a2ef7d13d58a13e612f035e908c3bcbdd21217ace92934ab7",
+    "asan-focused.log": "850d4f420709ba3df88a61cbc3a8b82dbf999fa8b5abf93845f654e14ecb54ec",
+    "console-signals.log": "830c685d56d21aa60294cc708e89eb5c3c34518dfb6a1a1a851599104d8cd707",
+    "debug-build.log": "cc0553193313fb57c04ece9961b70ef8c1bbe45e48fb9eb2964750486f4bb749",
+    "debug-correctness.log": "cb931eb842c72b58046c6093af865707923e48bf18841beae168492fb70fa709",
+    "release-guards.log": "4897121f5047270513529ddff15db6296fac8d0ef36850bff7c74a284848f839"
+  },
+  "release_guards": {
+    "command": "python3 -B -m unittest discover -s scripts/tests -p test_split_release.py",
+    "result": "13/13 pass; packaging guard unit tests, not actual distribution package proof"
+  },
+  "retained_log_normalization": "Trailing line whitespace removed from retained text copies only; raw logs remain at their original local paths."
+}

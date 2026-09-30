@@ -1,0 +1,70 @@
+/* Local resource authority is deliberately separate from widgets and feature
+ * logic. A display name is never used to resolve a grant supplied by an app.
+ */
+options levelg
+namespace ui_local_resources expose uilocal_resources
+import rxfnsb
+import ui_contract
+
+/** Bounded, session-owned grants for the local read-only tracer. */
+uilocal_resources: class
+  _paths = .string[]
+  _id = .string
+  /** @param id unique owning session identity */
+  *: factory
+    arg id = .string
+    _id = id
+    return
+  /** @param path selected by the provider's own file dialog
+   * @return opaque grant; empty ID on limit; display name is not authority
+   */
+  grant: method = .uiresource
+    arg path = .string
+    do i = 1 to _paths[0]
+      if _paths[i] = path then return .uiresource(_id || ":file:" || i, "session", path)
+    end
+    if _paths[0] >= 64 | length(path) > 4096 | path = "" then return .uiresource("", "session", "")
+    _paths[_paths[0] + 1] = path
+    return .uiresource(_id || ":file:" || _paths[0], "session", path)
+  /** Execute one text-read request. @param effect correlated request
+   * @return correlated completion/failure ready for session admission
+   */
+  read: method = .uimessage
+    arg effect = .uimessage
+    input = effect.body()
+    resource = input.resource("resource")
+    path = ""
+    do i = 1 to _paths[0]
+      if effect.session_id() = _id & resource.id() = _id || ":file:" || i & resource.scope() = "session" then path = _paths[i]
+    end
+    output = .uipayload()
+    if path = "" then do
+      call output.put_text("code", "invalid_resource")
+      call output.put_text("message", "Unknown or expired local resource")
+      return .uimessage("ui.effect.failed", output, effect.target(), "event", effect.request_id(), effect.session_id())
+    end
+    /* Keep errors out of the data channel: readlines' legacy sentinel is also
+     * a legal one-line file. The Level B library owns and closes the stream;
+     * this Level G executor converts its condition into a correlated failure. */
+    records = .string[]
+    failed = 0
+    do
+      records = readlines(path, 1, 4097, "raise")
+    on signal
+      failed = 1
+    end
+    if failed | records[0] > 4096 then do
+      call output.put_text("code", "read_failed")
+      call output.put_text("message", "Cannot read file within tracer limits")
+      return .uimessage("ui.effect.failed", output, effect.target(), "event", effect.request_id(), effect.session_id())
+    end
+    /* Resolve display text from the grant registry, not untrusted request data. */
+    call output.put_resource("resource", .uiresource(resource.id(), "session", path))
+    call output.put_texts("records", records)
+    candidate = .uimessage("io.text.read.completed", output, effect.target(), "event", effect.request_id(), effect.session_id())
+    registry = .uiregistry()
+    if registry.validate(candidate) = "" then return candidate
+    output = .uipayload()
+    call output.put_text("code", "resource_too_large")
+    call output.put_text("message", "File exceeds the tracer message limits")
+    return .uimessage("ui.effect.failed", output, effect.target(), "event", effect.request_id(), effect.session_id())

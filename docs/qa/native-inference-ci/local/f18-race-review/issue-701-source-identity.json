@@ -1,0 +1,9 @@
+{
+  "issue": "https://github.com/adesutherland/CREXX/issues/701",
+  "path": "interpreter/rxspawn.c",
+  "revisions": {
+    "037e7939bc29eb91b29ed41e9b1b8debdef6353d": "c88ab671291d5ddf8f5a7d276c553a44babba3b0",
+    "f10e70ee5f12ce49cc5088abc867748522d1d19c": "c88ab671291d5ddf8f5a7d276c553a44babba3b0"
+  },
+  "identical_source_blob": true
+}

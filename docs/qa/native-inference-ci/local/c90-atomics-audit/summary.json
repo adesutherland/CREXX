@@ -1,0 +1,1206 @@
+[
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lemon/lemon.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lemon/CMakeFiles/lemon.dir/lemon.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/0.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/platform/platform.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/platform/CMakeFiles/platform.dir/platform.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/1.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/platform/rxinteger.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/platform/CMakeFiles/platform.dir/rxinteger.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/2.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/platform/platform_terminal_harness.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/platform/CMakeFiles/platform_terminal_harness.dir/platform_terminal_harness.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/3.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/avl_tree/avl_tree.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/4.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cpacker/rxcpack.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/cpacker/CMakeFiles/rxcpack.dir/rxcpack.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/5.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxastoke.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxastoke.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/6.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxaseror.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxaseror.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/7.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/rxasscan.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxasscan.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/8.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_opt.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/9.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/10.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow_batch.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow_batch.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/11.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow_pass.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow_pass.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/12.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow_graph.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow_graph.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/13.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow_analysis.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow_analysis.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/14.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow_rewrite.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow_rewrite.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/15.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow_signal.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow_signal.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/16.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow_ssa.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/17.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow_use.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow_use.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/18.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_flow_proof.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/19.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/rxasgrmr.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/20.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxasassm.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/21.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/binutils/rxopmeta.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/__/binutils/rxopmeta.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/22.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxaslib.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/23.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_dsl.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/24.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxasmain.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxas.dir/rxasmain.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/25.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/assembler/rxas_test_flatten.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/assembler/CMakeFiles/rxas_test_flatten.dir/rxas_test_flatten.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/26.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpmain.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpmain.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/27.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_core.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_ast_core.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/28.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_print.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_ast_print.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/29.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_walk.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_ast_walk.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/30.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_util.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_util.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/31.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_diag.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_diag.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/32.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_diag_fallback.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_diag_fallback.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/33.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_dsl.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_dsl.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/34.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_highlight_controller.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_highlight_controller.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/35.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_source_tree.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_source_tree.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/36.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_source_ext.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_source_ext.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/37.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_srcmap.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_srcmap.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/38.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/rxcposcn.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcposcn.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/39.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/rxcpopgr.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpopgr.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/40.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpopar.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpopar.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/41.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/rexbscan.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rexbscan.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/42.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/rxcpbgmr.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpbgmr.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/43.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpbpar.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpbpar.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/44.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/rexcscan.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rexcscan.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/45.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/rxcpcgmr.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpcgmr.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/46.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpcpar.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpcpar.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/47.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpcdiag.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpcdiag.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/48.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpcsym.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpcsym.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/49.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpcval.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpcval.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/50.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_val_sym.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_val_sym.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/51.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_val_type.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_val_type.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/52.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_val_trans.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_val_trans.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/53.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_rewrite.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_ast_rewrite.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/54.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_val_check.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_val_check.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/55.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_val_plugin.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_val_plugin.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/56.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_val_orch.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_val_orch.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/57.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpsymb.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpsymb.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/58.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_fixup.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_fixup.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/59.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_ast_val.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_ast_val.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/60.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_remap.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_remap.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/61.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_remap_build.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_remap_build.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/62.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_task_lower.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_task_lower.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/63.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_levelc_lower.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_levelc_lower.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/64.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_inline.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_inline.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/65.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_inline_rules.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_inline_rules.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/66.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpemit.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpemit.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/67.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_emit_core.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_emit_core.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/68.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_emit_super.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_emit_super.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/69.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_emit_reg.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_emit_reg.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/70.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_emit_expr.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_emit_expr.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/71.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_emit_flow.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_emit_flow.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/72.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_emit_proc.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_emit_proc.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/73.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_emit_meta.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_emit_meta.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/74.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_opt.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_opt.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/75.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_partial_call.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_partial_call.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/76.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_flow.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_flow.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/77.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_dispatch.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_dispatch.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/78.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/platform/platform.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/__/platform/platform.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/79.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/platform/rxinteger.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/__/platform/rxinteger.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/80.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcpfunc.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcpfunc.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/81.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_import_report.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_import_report.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/82.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_project_dependencies.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_project_dependencies.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/83.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_import_publish.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_import_publish.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/84.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_exit.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_exit.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/85.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxcp_instr.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxclib.dir/rxcp_instr.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/86.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxc_main.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/CMakeFiles/rxc.dir/rxc_main.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/87.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_driver.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/crexx_test_driver.dir/src/test_driver.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/88.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/mutate_rxbin_feature.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/mutate_rxbin_feature.dir/mutate_rxbin_feature.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/89.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/test_import_discovery_snapshot.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_import_discovery_snapshot.dir/test_import_discovery_snapshot.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/90.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/fake_editor.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/crexx_fake_editor.dir/src/fake_editor.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/91.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/test_project_dependencies.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_project_dependencies.dir/test_project_dependencies.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/92.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/test_import_resolution_report.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_import_resolution_report.dir/test_import_resolution_report.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/93.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/test_rxcp_super_combiner.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_rxcp_super_combiner.dir/test_rxcp_super_combiner.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/94.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_bridge.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_bridge.dir/src/test_bridge.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/95.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_address_bridge.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_address_bridge.dir/src/test_address_bridge.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/96.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/demos/native/kv/kv_address_demo.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/native_kv_address_demo.dir/__/__/demos/native/kv/kv_address_demo.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/97.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_address_callback_host.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_address_callback_host.dir/src/test_address_callback_host.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/98.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_e2_active_context.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_e2_active_context.dir/src/test_e2_active_context.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/99.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_dynamic_load.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_dynamic_load.dir/src/test_dynamic_load.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/100.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_rxvml_utf_boundaries.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_rxvml_utf_boundaries.dir/src/test_rxvml_utf_boundaries.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/101.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_crexxsaa_variables.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_crexxsaa_variables.dir/src/test_crexxsaa_variables.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/102.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_crexxsaa_status.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_crexxsaa_status.dir/src/test_crexxsaa_status.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/103.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_source_provenance.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_source_provenance.dir/src/test_source_provenance.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/104.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_highlight_cache.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_highlight_cache.dir/src/test_highlight_cache.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/105.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_source_semantics.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_source_semantics.dir/src/test_source_semantics.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/106.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/tests/src/test_highlight_editor_diagnostics.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/CMakeFiles/test_highlight_editor_diagnostics.dir/src/test_highlight_editor_diagnostics.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/107.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/exits/address/address_spawn_group_fixture.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/exits/address/CMakeFiles/address_spawn_group_fixture.dir/address_spawn_group_fixture.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/108.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/disassembler/rxdamain.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/CMakeFiles/rxdas.dir/rxdamain.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/109.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/disassembler/rxdadism.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/CMakeFiles/rxdas.dir/rxdadism.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/110.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/disassembler/tests/mutate_graph_rxbin.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/CMakeFiles/mutate_graph_rxbin.dir/tests/mutate_graph_rxbin.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/111.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/disassembler/tests/test_disassembler_dump.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/CMakeFiles/test_disassembler_dump.dir/tests/test_disassembler_dump.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/112.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/disassembler/rxdadism.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/CMakeFiles/test_disassembler_dump.dir/rxdadism.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/113.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/debugger/rxdb.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/debugger/CMakeFiles/rxdb.dir/rxdb.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/114.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugin_framework.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/115.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/116.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decContext.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/117.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber_test.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber_test.dir/decnumber_test.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/118.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_dynamic.dir/mc_decimal.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/119.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal.dir/mc_decimal.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/120.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_sanity_harness_test.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_test_harness.dir/mc_decimal_sanity_harness_test.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/121.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_sanity_harness_test.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_dyn_test_harness.dir/mc_decimal_sanity_harness_test.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/122.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/123.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_sanity_harness_test.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual_test_harness.dir/mc_decimal_sanity_harness_test.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/124.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_full_tests.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_full_tests.dir/mc_decimal_full_tests.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/125.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_dynamic.dir/db_decimal.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/126.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_manual.dir/db_decimal.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/127.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal_tests.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_tests.dir/db_decimal_tests.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/128.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/stack/stack.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/stack/CMakeFiles/_stack.dir/stack.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/129.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/stack/stack.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/stack/CMakeFiles/_stack_static.dir/stack.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/130.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/cipher/cipher.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/cipher/CMakeFiles/_cipher.dir/cipher.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/131.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/cipher/cipher.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/cipher/CMakeFiles/_cipher_static.dir/cipher.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/132.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/getpi/getpi.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/getpi/CMakeFiles/_getpi.dir/getpi.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/133.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/llist/llist.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llist/CMakeFiles/_llist.dir/llist.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/134.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/llist/llist.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llist/CMakeFiles/_llist_static.dir/llist.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/135.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/rxtcp/rxtcp.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/rxtcp/CMakeFiles/_rxtcp.dir/rxtcp.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/136.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/lib/plugins/rxtcp/rxtcp.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/rxtcp/CMakeFiles/_rxtcp_static.dir/rxtcp.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/137.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/test_rxinteger_contract.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/CMakeFiles/test_rxinteger_contract.dir/test_rxinteger_contract.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/138.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/test_rxop_metadata.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/CMakeFiles/test_rxop_metadata.dir/test_rxop_metadata.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/139.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/binutils/include/opdata.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/CMakeFiles/test_rxop_metadata.dir/__/binutils/include/opdata.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/140.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/binutils/rxopmeta.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/CMakeFiles/test_rxop_metadata.dir/__/binutils/rxopmeta.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/141.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/test_rxas_flow_graph.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/CMakeFiles/test_rxas_flow_graph.dir/test_rxas_flow_graph.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/142.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_dynlink.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_dynlink.dir/rxpa_dynlink.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/143.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rcc_provider.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rcc_provider.dir/rcc_provider.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/144.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rcc_provider.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rcc_provider_static.dir/rcc_provider.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/145.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/cri17_attached_provider.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_cri17_attached.dir/cri17_attached_provider.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/146.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/cri17_attached_provider.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_cri17_attached_static.dir/cri17_attached_provider.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/147.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/cri17_attached_provider_control.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxvml.dir/cri17_attached_provider_control.c.o",
+    "returncode": 0,
+    "atomic": true,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/148.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/cri17_attached_provider_control.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxbvml.dir/cri17_attached_provider_control.c.o",
+    "returncode": 0,
+    "atomic": true,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/149.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_invalid_manifest.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_invalid_manifest.dir/rxpa_invalid_manifest.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/150.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_call_kernel.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_bench_reentrant.dir/rxpa_call_kernel.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/151.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_call_kernel.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_bench_legacy.dir/rxpa_call_kernel.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/152.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_call_kernel.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_bench_session.dir/rxpa_call_kernel.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/153.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_classdecl.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_classdecl.dir/rxpa_classdecl.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/154.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_objects.dir/rxpa_objects.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/155.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_objects_static.dir/rxpa_objects.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/156.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_objects_decl.dir/rxpa_objects.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/157.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxc_main.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/rxc_objects_static.dir/__/__/compiler/rxc_main.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/158.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_callmethod.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_callmethod.dir/rxpa_callmethod.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/159.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_callmethod.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_callmethod_static.dir/rxpa_callmethod.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/160.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_bad_signatures.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_bad_signatures.dir/rxpa_bad_signatures.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/161.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_staticlink.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpalink_decl.dir/rxpa_staticlink.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/162.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxc_main.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/rxc_staticlink.dir/__/__/compiler/rxc_main.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/163.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_classdecl.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpa_classdecl_static_decl.dir/rxpa_classdecl.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/164.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/compiler/rxc_main.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/rxc_classdecl_static.dir/__/__/compiler/rxc_main.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/165.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_staticlink.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_rxpalink_static.dir/rxpa_staticlink.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/166.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_functests.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_testfuncs_dynamic.dir/rxpa_functests.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/167.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_functests.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/CMakeFiles/_testfuncs_static.dir/rxpa_functests.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/168.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/multplugins/plugin1.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/multplugins/CMakeFiles/_plugin1.dir/plugin1.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/169.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/tests/rxpa/multplugins/plugin2.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/multplugins/CMakeFiles/_plugin2.dir/plugin2.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/170.log"
+  },
+  {
+    "source": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/crexx.c",
+    "output": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/CMakeFiles/crexx.dir/crexx.c.o",
+    "returncode": 0,
+    "atomic": false,
+    "log": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-c90-dependency-audit-e3vv8233/171.log"
+  }
+]

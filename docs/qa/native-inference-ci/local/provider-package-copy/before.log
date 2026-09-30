@@ -1,0 +1,7 @@
+CMake Error at rxpa/WriteProviderPackage.cmake:35 (file):
+  file Multiple conflicting paths found for shared.dylib:
+
+    /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-package-location-control-ze6tjgrp/a/shared.dylib
+    /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-package-location-control-ze6tjgrp/b/shared.dylib
+
+

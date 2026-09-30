@@ -293,13 +293,48 @@ add_test(NAME crexx_project_build_contract
                  -DCREXX=$<TARGET_FILE:crexx>
                  -DRXVME=$<TARGET_FILE:rxvme>
                  -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/crexx_project_build_ws
+                 -DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_project_build.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(crexx_project_build_contract PROPERTIES
         LABELS "driver;build;incremental;parallel;autoload;regression"
         CREXX_PREP_TARGETS "crexx;rxvme"
         RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
-        TIMEOUT 180)
+        # The expanded matrix runs many complete project actions, including
+        # tool/environment changes. Keep all scenarios in the ASan gate and
+        # isolate the aggregate from other compiler-heavy CTests.
+        RUN_SERIAL TRUE
+        TIMEOUT 900)
+add_test(NAME crexx_rxpp_builddir
+         COMMAND ${CMAKE_COMMAND}
+                 -DCREXX=$<TARGET_FILE:crexx>
+                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/crexx_rxpp_builddir_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_rxpp_builddir.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(crexx_rxpp_builddir PROPERTIES
+        LABELS "driver;preprocessor;build;regression"
+        CREXX_PREP_TARGETS "crexx;rxpp"
+        RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
+        TIMEOUT 60)
+foreach(metadata_case IN ITEMS link link_invalid_source external_bare
+        external_spaces external_names external_missing norun)
+    add_test(NAME crexx_rxpp_metadata_${metadata_case}
+            COMMAND ${CMAKE_COMMAND}
+                    -DCREXX=$<TARGET_FILE:crexx>
+                    -DRXVME=$<TARGET_FILE:rxvme>
+                    -DRXPP=$<TARGET_FILE:rxpp>
+                    -DMACLIB=${CMAKE_BINARY_DIR}/bin/maclib.rexx
+                    -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/rxpp_metadata_${metadata_case}
+                    -DCASE=${metadata_case}
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_rxpp_metadata.cmake)
+    set_tests_properties(crexx_rxpp_metadata_${metadata_case} PROPERTIES
+            LABELS "driver;preprocessor;build;regression"
+            CREXX_PREP_TARGETS "crexx;rxpp;rxvme"
+            RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
+            TIMEOUT 180)
+    crexx_label_smoke_tests(crexx_rxpp_metadata_${metadata_case}
+            PREP_TARGETS crexx rxpp rxvme)
+endforeach()
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_rexx_levelc_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
@@ -530,14 +565,76 @@ crexx_label_smoke_tests(
         crexx_headerless_simple_smoke
         crexx_args_smoke
         crexx_rexxscript_smoke
+        crexx_levelc_classic_runtime_smoke
         crexx_status_diagnostics
         crexx_source_root_compile_only
         crexx_native_explicit_header_smoke
         crexx_native_rx_hash_provider
         crexx_native_default_link_strip
         crexx_project_build_contract
-        PREP_TARGETS crexx rxdas
+        crexx_rxpp_builddir
+        PREP_TARGETS crexx rxdas rxpp
 )
+
+add_test(NAME crexx_process_runtime
+    COMMAND ${CMAKE_COMMAND}
+        -DCREXX=$<TARGET_FILE:crexx>
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DRXVME=$<TARGET_FILE:rxvme>
+        -DRXBVME=$<TARGET_FILE:rxbvme>
+        -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+        -DEXAMPLE_DIR=${CMAKE_SOURCE_DIR}/docs/books/crexx_programming_guide/examples
+        -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/crexx_process_runtime_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_process_runtime.cmake)
+set_tests_properties(crexx_process_runtime PROPERTIES
+    LABELS "driver;concurrency;process;regression"
+    CREXX_PREP_TARGETS "crexx;rxvme;rxbvme;rxvm"
+    # The test contains its own bounded compiler and process operations. Avoid
+    # turning their inner deadlines into load-dependent broad-suite failures.
+    RUN_SERIAL TRUE
+    TIMEOUT 600)
+
+# Measured as a standalone aggregate in normal Debug and macOS ASan before
+# registration. Its deliberate process contention must not compete with other
+# compiler or VM aggregates in the broad pool.
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+add_test(NAME crexx_driver_output_lock
+    COMMAND "${Python3_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/crexx_driver_output_lock.py"
+        --crexx "$<TARGET_FILE:crexx>"
+        --rxvme "$<TARGET_FILE:rxvme>"
+        --work "${CMAKE_CURRENT_BINARY_DIR}/crexx_driver_output_lock_ws")
+set_tests_properties(crexx_driver_output_lock PROPERTIES
+    LABELS "driver;concurrency;regression"
+    CREXX_PREP_TARGETS "crexx;rxpp;rxvme"
+    RUN_SERIAL TRUE
+    TIMEOUT 240)
+crexx_label_smoke_tests(crexx_driver_output_lock
+    PREP_TARGETS crexx rxpp rxvme)
+
+add_executable(project_failure_helper project_failure_helper.c)
+set(issue701_diagnostic_command ${CMAKE_COMMAND}
+        -DCREXX=$<TARGET_FILE:crexx>
+        -DHELPER=$<TARGET_FILE:project_failure_helper>
+        -DWORKER=${_crexx_build_worker_rxbin}
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/issue701-diagnostics
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/project_worker_failures.crexx
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/project_worker_failures.cmake)
+add_custom_target(qa-issue701-diagnostics
+        COMMAND ${issue701_diagnostic_command}
+        DEPENDS crexx project_failure_helper)
+
+add_test(NAME crexx_project_worker_diagnostics COMMAND ${issue701_diagnostic_command})
+set_tests_properties(crexx_project_worker_diagnostics PROPERTIES
+        LABELS "driver;spawn;diagnostics;concurrency;regression;smoke"
+        CREXX_PREP_TARGETS "crexx;project_failure_helper"
+        RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
+        # Isolated matrix: Debug 2.99s, Apple ASan 14s. Keep nested compiler
+        # work out of the broad pool; 180s is a functional hang guard.
+        RUN_SERIAL TRUE TIMEOUT 180)
 
 function(crexx_isolate_bin_test_environment)
     get_property(_crexx_tests DIRECTORY PROPERTY TESTS)

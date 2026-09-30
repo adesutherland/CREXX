@@ -1,0 +1,89 @@
+[0/2] Re-checking globbed directories...
+[1/89] Building C object lib/plugins/stats/CMakeFiles/stats_static.dir/rxstats.c.o
+[2/89] Building C object lib/plugins/stats/CMakeFiles/stats.dir/rxstats.c.o
+[3/89] Linking C static library bin/rxstats_static.a
+[4/89] Linking C shared module bin/rxstats.rxplugin
+[5/89] Generating ts_math_numeric_rxbvm_noopt.rxbin
+[6/89] Generating ts_math_numeric_rxtvm_noopt.rxbin
+[7/89] Generating ts_math_numeric_rxbvm_opt.rxbin
+[8/89] Generating ts_math_numeric_rxtvm_opt.rxbin
+[9/89] Generating rxstats_rxbvm_noopt.rxbin
+[10/89] C Packing cREXX Core Libraries ...
+[11/89] Generating ts_math_integer_contract_rxbvm_noopt.rxbin
+[12/89] Generating rxstats_rxtvm_noopt.rxbin
+[13/89] Generating ts_math_integer_contract_rxbvm_opt.rxbin
+[14/89] Generating rxstats_rxbvm_opt.rxbin
+[15/89] Generating rxstats_rxtvm_opt.rxbin
+[16/89] Generating ts_math_integer_contract_rxtvm_noopt.rxbin
+[17/89] Generating ts_math_integer_contract_rxtvm_opt.rxbin
+[18/89] Generating ts_math_decimal_contract_rxbvm_noopt.rxbin
+[19/89] Generating ts_math_decimal_contract_rxtvm_noopt.rxbin
+[20/89] Generating ts_packed_numeric_rxbvm_noopt.rxbin
+[21/89] Generating ts_packed_numeric_rxbvm_opt.rxbin
+[22/89] Generating ts_packed_numeric_rxtvm_noopt.rxbin
+[23/89] Generating ts_unicode_casefold_rxbvm_noopt.rxbin
+[24/89] Generating ts_packed_numeric_rxtvm_opt.rxbin
+[25/89] Generating ts_math_decimal_contract_rxbvm_opt.rxbin
+[26/89] Generating ts_unicode_casefold_rxtvm_noopt.rxbin
+[27/89] Generating ts_math_decimal_contract_rxtvm_opt.rxbin
+[28/89] Building C object interpreter/CMakeFiles/rxvme.dir/library.c.o
+[29/89] Linking C executable bin/rxvme
+[30/89] Generating ts_unicode_case_mapping_rxbvm_noopt.rxbin
+[31/89] Building C object interpreter/CMakeFiles/rxbvme.dir/library.c.o
+[32/89] Linking C executable bin/rxbvme
+[33/89] Building the linein(stdin) prompt regression
+[34/89] Generating ts_unicode_casefold_rxbvm_opt.rxbin
+[35/89] Generating ts_unicode_casefold_rxtvm_opt.rxbin
+[36/89] Generating ts_unicode_case_mapping_rxtvm_noopt.rxbin
+[37/89] Generating ts_unicode_grapheme_rxbvm_noopt.rxbin
+[38/89] Generating ts_unicode_case_mapping_rxbvm_opt.rxbin
+[39/89] Generating ts_unicode_grapheme_rxtvm_noopt.rxbin
+[40/89] Generating ts_unicode_grapheme_rxbvm_opt.rxbin
+[41/89] Generating ts_unicode_codec_rxbvm_noopt.rxbin
+[42/89] Generating ts_unicode_grapheme_rxtvm_opt.rxbin
+[43/89] Generating ts_unicode_case_mapping_rxtvm_opt.rxbin
+[44/89] Generating ts_unicode_codec_rxtvm_noopt.rxbin
+[45/89] Generating ts_unicode_normalization_rxbvm_noopt.rxbin
+[46/89] Generating ts_unicode_normalization_rxtvm_noopt.rxbin
+[47/89] Generating ts_unicode_normalization_rxbvm_opt.rxbin
+[48/89] Generating ts_http_service_contract_noopt.rxbin
+[49/89] Generating ts_http_service_contract_opt.rxbin
+[50/89] Generating ts_unicode_normalization_rxtvm_opt.rxbin
+[51/89] Generating ts_llm_ollama_noopt.rxbin
+[52/89] Generating ts_llm_providers_noopt.rxbin
+[53/89] Generating ts_llm_ollama_opt.rxbin
+[54/89] Generating ts_llm_providers_opt.rxbin
+[55/89] Generating ts_http_server_rxbvm_noopt.rxbin
+[56/89] Generating ts_unicode_codec_rxbvm_opt.rxbin
+[57/89] Generating ts_http_server_rxtvm_noopt.rxbin
+[58/89] Generating ts_http_server_rxbvm_opt.rxbin
+[59/89] Generating ts_unicode_codec_rxtvm_opt.rxbin
+[60/89] Generating ts_http_server_failures_rxbvm_noopt.rxbin
+[61/89] Generating ts_http_server_failures_rxbvm_opt.rxbin
+[62/89] Generating ts_http_server_failures_rxtvm_noopt.rxbin
+[63/89] Generating ts_http_server_rxtvm_opt.rxbin
+[64/89] Generating ts_http_pooled_rxbvm_noopt.rxbin
+[65/89] Generating ts_http_server_failures_rxtvm_opt.rxbin
+[66/89] Generating ts_http_pooled_rxtvm_noopt.rxbin
+[67/89] Generating ts_http_streaming_rxbvm_noopt.rxbin
+[68/89] Generating ts_http_pooled_rxbvm_opt.rxbin
+[69/89] Generating ts_http_streaming_rxtvm_noopt.rxbin
+[70/89] Generating ts_http_pooled_rxtvm_opt.rxbin
+[71/89] Generating ts_http_crexx_rag_rxbvm_noopt.rxbin
+[72/89] Generating ts_http_streaming_rxbvm_opt.rxbin
+[73/89] Generating ts_http_crexx_rag_rxtvm_noopt.rxbin
+[74/89] Generating ts_http_streaming_rxtvm_opt.rxbin
+[75/89] Generating ts_http_crexx_rag_rxbvm_opt.rxbin
+[76/89] Generating ts_http_tls_live_rxbvm_noopt.rxbin
+[77/89] Generating ts_http_crexx_rag_rxtvm_opt.rxbin
+[78/89] Generating ts_http_tls_live_rxbvm_opt.rxbin
+[79/89] Generating ts_http_tls_live_rxtvm_noopt.rxbin
+[80/89] Generating ts_http_tls_live_rxtvm_opt.rxbin
+[81/89] Generating ts_http_policy_rxbvm_noopt.rxbin
+[82/89] Generating ts_http_policy_rxtvm_noopt.rxbin
+[83/89] Generating ts_http_codec_rxbvm_noopt.rxbin
+[84/89] Generating ts_http_codec_rxbvm_opt.rxbin
+[85/89] Generating ts_http_codec_rxtvm_noopt.rxbin
+[86/89] Generating ts_http_policy_rxbvm_opt.rxbin
+[87/89] Generating ts_http_policy_rxtvm_opt.rxbin
+[88/89] Generating ts_http_codec_rxtvm_opt.rxbin

@@ -1,0 +1,86 @@
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxc_objects_static;--no-exe-import;-n;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;-o;/tmp/rxpa-objects-debug-static-t/noopt-callback;/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects_callback_compile.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxc_objects_static;--no-exe-import;-n;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;--import-resolution-report;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects-imports.json;-o;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects;/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects-linked;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/objects_rxtvm;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects-linked
+PASS: C native factory and concrete method binding
+PASS: C native objects, factories, identity and interface dispatch
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxc_objects_static;--no-exe-import;-n;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;--import-resolution-report;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_class_only-imports.json;-o;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_class_only;/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects_class_only.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_class_only;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_class_only
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_class_only-linked;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_class_only;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/objects_rxtvm;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_class_only-linked
+PASS: C native class-only provider loading
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxc_objects_static;--no-exe-import;-n;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;--import-resolution-report;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_workers-imports.json;-o;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_workers;/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects_workers.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_workers;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_workers
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_workers-linked;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_workers;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/objects_rxtvm;/tmp/rxpa-objects-debug-static-t/noopt-rxpa_objects_workers-linked
+PASS: C native objects in isolated attached worker sessions
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxc_objects_static;--no-exe-import;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;-o;/tmp/rxpa-objects-debug-static-t/opt-callback;/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects_callback_compile.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxc_objects_static;--no-exe-import;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;--import-resolution-report;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects-imports.json;-o;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects;/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects-linked;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/objects_rxtvm;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects-linked
+PASS: C native factory and concrete method binding
+PASS: C native objects, factories, identity and interface dispatch
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxc_objects_static;--no-exe-import;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;--import-resolution-report;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_class_only-imports.json;-o;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_class_only;/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects_class_only.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_class_only;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_class_only
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_class_only-linked;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_class_only;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/objects_rxtvm;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_class_only-linked
+PASS: C native class-only provider loading
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxc_objects_static;--no-exe-import;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;--import-resolution-report;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_workers-imports.json;-o;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_workers;/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects_workers.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_workers;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_workers
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_workers-linked;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_workers;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/objects_rxtvm;/tmp/rxpa-objects-debug-static-t/opt-rxpa_objects_workers-linked
+PASS: C native objects in isolated attached worker sessions
+
+

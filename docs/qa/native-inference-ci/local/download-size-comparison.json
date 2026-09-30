@@ -1,0 +1,74 @@
+{
+  "baseline": {
+    "release": "CREXX Dev Snapshot 20260915T090627Z",
+    "tag": "dev-snapshot",
+    "assets": [
+      {
+        "name": "CREXX-dev-snapshot-linux-x64.deb",
+        "size": 16209290
+      },
+      {
+        "name": "CREXX-dev-snapshot-linux-x64.zip",
+        "size": 26156239
+      },
+      {
+        "name": "CREXX-dev-snapshot-macos-arm64.pkg",
+        "size": 20560002
+      },
+      {
+        "name": "CREXX-dev-snapshot-macos-arm64.zip",
+        "size": 19871129
+      },
+      {
+        "name": "CREXX-dev-snapshot-macos-x86_64.pkg",
+        "size": 21534723
+      },
+      {
+        "name": "CREXX-dev-snapshot-macos-x86_64.zip",
+        "size": 20851406
+      },
+      {
+        "name": "CREXX-dev-snapshot-windows-x64-unsigned-setup.exe",
+        "size": 13310878
+      },
+      {
+        "name": "CREXX-dev-snapshot-windows-x64.zip",
+        "size": 25417440
+      }
+    ]
+  },
+  "candidate_archives": [
+    {
+      "archive": "CREXX-user-test-2bc56249d6eda5fd33c8817948b34d93788564c5-linux-x64.zip",
+      "bytes": 49740278,
+      "provider_entries_compressed_bytes": 25349013,
+      "other_entries_compressed_bytes": 24338505
+    },
+    {
+      "archive": "CREXX-user-test-2bc56249d6eda5fd33c8817948b34d93788564c5-linux-x64-cuda.zip",
+      "bytes": 786190716,
+      "provider_entries_compressed_bytes": 761793967,
+      "other_entries_compressed_bytes": 24338505
+    },
+    {
+      "archive": "CREXX-user-test-2bc56249d6eda5fd33c8817948b34d93788564c5-macos-arm64.zip",
+      "bytes": 22143164,
+      "provider_entries_compressed_bytes": 3324371,
+      "other_entries_compressed_bytes": 18771205
+    },
+    {
+      "archive": "CREXX-user-test-e39916f2a03d2abf9beefbc02a543acb8c0512c8-macos-x86_64.zip",
+      "bytes": 29847924,
+      "provider_entries_compressed_bytes": 10432711,
+      "other_entries_compressed_bytes": 19363959
+    },
+    {
+      "archive": "CREXX-user-test-4a0924ee1a7aea3cf894c0f22d72f17fd4a539f9-windows-x64.zip",
+      "bytes": 57562461,
+      "provider_entries_compressed_bytes": 32233855,
+      "other_entries_compressed_bytes": 25289116
+    }
+  ],
+  "scope": "Read-only size assessment for Adrian; splitting delivery is proposed, not approved. Entry sums are indicative, not built separate archives. Version/build differences affect total changes.",
+  "models_included": false
+}

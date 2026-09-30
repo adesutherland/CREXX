@@ -1,0 +1,2 @@
+argv=['sh', '/tmp/crexx-plugin-installers-retained/unpacked-core/CREXX-macos-arm64/.llama-installer/manage.sh', 'remove', '/tmp/crexx-plugin-installers-retained/unpacked-core/CREXX-macos-arm64']
+Removed llama.rexx; cREXX and models retained: /private/tmp/crexx-plugin-installers-retained/unpacked-core/CREXX-macos-arm64

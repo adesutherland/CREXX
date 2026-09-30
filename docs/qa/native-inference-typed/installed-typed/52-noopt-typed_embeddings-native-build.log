@@ -1,0 +1,9 @@
+argv=[PosixPath('/private/tmp/llama-typed-release-installed/installed Ω/bin/crexx'), '--program', PosixPath('/private/tmp/llama-typed-release-consumers-final/noopt-typed_embeddings native Ω/persistent'), PosixPath('/private/tmp/llama-typed-release-consumers-final/noopt-typed_embeddings.crexx'), '--jobs', '1', '--native', '--nooptimize']
+cwd=/private/tmp/llama-typed-release-consumers-final
+rc=0
+WAVE: project compile/assemble jobs=1
+START: project member noopt-typed_embeddings
+BUILT: project member noopt-typed_embeddings
+BARRIER: link program
+PUBLISHED: program /private/tmp/llama-typed-release-consumers-final/noopt-typed_embeddings native Ω/persistent.rxbin
+PUBLISHED: native program /private/tmp/llama-typed-release-consumers-final/noopt-typed_embeddings native Ω/persistent

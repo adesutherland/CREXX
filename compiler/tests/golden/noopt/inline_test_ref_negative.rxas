@@ -8,6 +8,8 @@ g1 .expose=refneg.values
 
 main() .locals=3
    .meta "refneg.main"="b" ".int" main() ""
+   .meta "refneg.idx"="b" ".int" g0
+   .meta "refneg.values"="b" ".int[3]" g1
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_ref_negative.crexx" 4 1 43 "say \"Starting ref inline negative test...\""
    say "Starting ref inline negative test..."
@@ -65,10 +67,13 @@ l35iffalse:
    say "Ref inline negative test finished."
    .srcstep 11 11 17 "inline_test_ref_negative.crexx" 14 1 9 "return 0"
    ret 0
+   .meta "refneg.idx"
+   .meta "refneg.values"
 
 refBump() .locals=1
    .meta "refneg.refbump"="b" ".int" refBump() "expose value=.int"
    .srcstep 16 16 17 "inline_test_ref_negative.crexx" 16 1 26 "refBump: procedure = .int"
+   .meta "refneg.idx"="b" ".int" g0
    numsci 18,1,1
    .srcstep 12 12 17 "inline_test_ref_negative.crexx" 17 7 26 "  arg expose value = .int"
    .meta "refneg.refbump.value"="b" ".int" a1
@@ -86,3 +91,4 @@ refBump() .locals=1
    .traceevent "V" 6 "R" "I" "a" 1 15 15 0 "value" ""
    ret a1
    .meta "refneg.refbump.value"
+   .meta "refneg.idx"

@@ -1,0 +1,958 @@
+
+[install CREXX into fresh scratch prefix]
+command=/opt/homebrew/bin/cmake;--install;/Users/adrian/CLionProjects/CREXX/cmake-build-debug;--prefix;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix
+exit=0
+stdout:
+-- Install configuration: "Debug"
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/messages
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/messages/diagnostics.en_GB.msg
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/messages/diagnostics.nl_NL.msg
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/messages/diagnostics.de_DE.msg
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/messages/diagnostics.en_US.msg
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/crexx_version.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/./VERSION
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/./BUILDINFO
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/libcrexxsaa.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/crexxsaa.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexxsaa
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/rxpa/crexxpa.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/platform/rxinteger.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/rxpa/crexx_version.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/maclib.rexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/macsys.rexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/mathlib.rexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/syslib.rexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxpp-sh
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/libcrexx-ggml-cpu.so
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/libcrexx-ggml-metal.so
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/libcrexx-ggml.0.23.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/libcrexx-ggml.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/libcrexx-ggml.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-cpu.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-alloc.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-backend.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-blas.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-cann.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-cpp.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-cuda.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-opt.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-metal.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-rpc.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-virtgpu.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-sycl.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-vulkan.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-webgpu.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-zendnn.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/ggml-openvino.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/gguf.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/libcrexx-ggml-base.0.23.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/libcrexx-ggml-base.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/libcrexx-ggml-base.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/ggml/ggml-config.cmake
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/ggml/ggml-config-version.cmake
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/libcrexx-llama-engine.0.4.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/libcrexx-llama-engine.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/libcrexx-llama-engine.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/llama.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/llama-cpp.h
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/llama/llama-config.cmake
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/llama/llama-config-version.cmake
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/pkgconfig/llama.pc
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/llama/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/llama/examples
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/llama/examples/shared_embeddings.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/llama/examples/persistent_embeddings.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/rxconsole/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_catalog.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_contract.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/contracts/catalogue.json
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/contracts/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/contracts/conformance.jsonl
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/contracts/ui-contract.ts
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/contracts/ui-contract.schema.json
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/contracts/CATALOGUE.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_dialogs.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_terminal_view.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_local_resources.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_ansi.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_tui.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/TERMINAL.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/EXTENDING.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/rxpp/ui
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/rxpp/ui/ui_launcher.rxpm
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/rxpp/ui/ui_node.rxpm
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/share/crexx/ui/rxpp/ui/ui_command.rxpm
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/functions/array-formatting/arrayformatdemo.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/exits/pprint/pprint_example.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/text_inspector.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/text_inspector_tui.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/text_inspector_ansi.rxbin
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/hello.dSYM
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/hello.dSYM/Contents
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/hello.dSYM/Contents/Resources
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/hello.dSYM/Contents/Resources/Relocations
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/hello.dSYM/Contents/Resources/Relocations/aarch64
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/hello.dSYM/Contents/Resources/DWARF
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/text_inspector_tui.rxpp
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/text_inspector_ansi.rxpp
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/text_inspector_gtk.rxpp
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/test_text_inspector_tui.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/test_host.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/test_text_inspector_gtk.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/test_text_inspector_core.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/text_inspector.rxpp
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ui/text-inspector/fixtures
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/date1.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/stems_the_hidden_gems.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/rxqueue_named.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/time_sample.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/system.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/nthroot.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/sort.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/xref.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/classes
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/classes/global_object_keys.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/classes/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/plugins
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/plugins/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/userInteractions.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/lcm.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/metaRexx-sample-api.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/Service_registry.rxpp
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/anagram.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/sieveEratosthenes.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/classFactory.rxpp
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/caesar.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/exposeVars.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/strings1.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/stems.rxpp
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ooBank.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/gausssqr.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/gcd.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/fibonacci.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/metaRexx-sample.crexx
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/functions
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/functions/array-formatting
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/functions/array-formatting/array_formatting_example.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/functions/array-formatting/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/functions/array-formatting/arrayformat.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/functions/array-formatting/arraydump.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/functions/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/factorial.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/keydb_traversal.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/keydb_lookup_benchmark.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/objects_the_hidden_gems.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/MonteCarlo.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/hello.crexx
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/exits
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/exits/pprint
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/exits/pprint/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/exits/pprint/pprint_example.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/exits/pprint/Pprint.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/exits/README.md
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/rexxscript_test.crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/examples/ts_subtask_min.rxpp
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/CREXX/CREXXTargets.cmake
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/CREXX/CREXXConfig.cmake
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/CREXX/CREXXConfigVersion.cmake
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/CREXX/CrexxOperationContract.cmake
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/CREXX/RXPluginFunction.cmake
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/lib/cmake/CREXX/WriteProviderPackage.cmake
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxprecomp.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvector_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxplatform.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/address_spawn_group_fixture
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxtvm_instrumented
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfnsc.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_rxmath_static.a
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxpp-sh
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxvmmemory.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_treemap.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/test_rxvmmeta
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_strings.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxllama.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_cipher.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_keyaccess.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx-contract
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxpashim.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_getpi.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/messages
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/messages/diagnostics.en_GB.msg
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/messages/diagnostics.nl_NL.msg
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/messages/diagnostics.de_DE.msg
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/messages/diagnostics.en_US.msg
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx_native_compiler
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_id_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/exittestsupport.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxvmref.a
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_local_resources.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxpa.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfnsg.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexxsaa
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxconsole.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_odbc_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_odbc_mock.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_ui_gtk_native.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxdb
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxbinutils.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxbin.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxconsole_decoder_test
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_map.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_gui.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/test_rxseqfile
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/libplatform.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/address_spawn_transfer_fixture
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfloat_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_hash_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxstats_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxvector_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxconsole.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxplatform.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-ggml.0.23.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxvector.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxllama.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxllama.runtime.json
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxllama.native.json
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rx_hash.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-llama-engine.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-ggml-metal.so
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxconsole.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxfs.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxfloat.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxplatform.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxfloat_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rx_hash_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxstats_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxsqlite_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-llama-engine.0.4.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-ggml-base.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxid.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxfs.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxsqlite.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-llama.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxconsole_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxplatform_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxvector.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxid.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxllama_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxllama-NOTICES.txt
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-ggml-base.0.23.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-ggml-cpu.so
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-llama-engine.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-ggml.0.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-ggml-base.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxfs_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxid_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxstats.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rx_hash.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxfloat.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxsqlite.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxllama.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-llama.1.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/libcrexx-ggml.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/providers/rxstats.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/libavl_tree.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/test_rxcrexxcmd_flush
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx_native_libs_argv
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxsqlite_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx-provider-package
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm_db_decimal_manual.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxlink
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_rxtcp_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_e5native.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_llist_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx_native_cflags
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxclib.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_system.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/linein_tty_harness
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvme
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxcpack
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_recv390.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rexxscript
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx_native_ldflags
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxtvm
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/maclib.rexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxid.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfs.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm_mc_decimal.rxvmplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_stack_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx_native_ldflags_argv
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_id.rxplugin
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_dialogs.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx_native_cflags_argv
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/test_rxsha256
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm_instrumented
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/test_rxspawn_diagnostics
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_odbc.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxconsole_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxvmplugin.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx_native_compiler_style
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxpp
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/macsys.rexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxplatform_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvector.rxplugin
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_ansi.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/mathlib.rexx
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxprecomp_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxbvml.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas_test_flatten
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_treemap_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/address_argv_fixture
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_rxmath.rxplugin
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_catalog.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxvml.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_cipher_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxllama_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rexxscript.rxbin
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_contract.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_keyaccess_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfnsl.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_rcc_provider.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx_native_libs
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/linein_stdin_harness
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_system_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_llist.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvme
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/classlib.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/platform_terminal_harness
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm_mc_decimal.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm_db_decimal.rxvmplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_recv390_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfs_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxid_static.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_gtk.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_stack.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxseq
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/libdecnumber.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm_mc_decimal_manual.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxsqlite_address.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/syslib.rexx
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_terminal_view.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxstats.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_hash.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_arrays.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/classlib_native.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfloat.rxplugin
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_rxpa_session_failure.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/test_rxgraph
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxsqlite.rxplugin
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/ui_tui.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/test_rxspawn_posix_termination
+-- Up-to-date: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/libcrexxsaa.dylib
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxcexits.rxbin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rx_rxtcp.rxplugin
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/librxaslib.a
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxdas
+-- Installing: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm_instrumented
+
+stderr:
+
+
+[reject version mismatch]
+exit=1
+stdout:
+-- The C compiler identification is AppleClang 21.0.0.21000101
+-- The CXX compiler identification is AppleClang 21.0.0.21000101
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring incomplete, errors occurred!
+
+stderr:
+CMake Error at CMakeLists.txt:17 (message):
+  CREXX SDK version mismatch: expected
+  definitely-not-1.0.0-beta.3+local.g6a3306655079.dirty, found
+  1.0.0-beta.3+local.g6a3306655079.dirty
+
+
+
+
+[configure external plugin from installed CREXX package]
+command=/opt/homebrew/bin/cmake;-S;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source;-B;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build;-G;Ninja;-DCMAKE_PREFIX_PATH=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix;-DEXPECTED_CREXX_CORE_VERSION=1.0.0;-DEXPECTED_CREXX_PREFIX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix;-DEXPECTED_CREXX_VERSION=1.0.0-beta.3+local.g6a3306655079.dirty;-DFORBIDDEN_CREXX_SOURCE_DIR=/Users/adrian/CLionProjects/CREXX
+exit=0
+stdout:
+-- The C compiler identification is AppleClang 21.0.0.21000101
+-- The CXX compiler identification is AppleClang 21.0.0.21000101
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build
+
+stderr:
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    FORBIDDEN_CREXX_SOURCE_DIR
+
+
+
+
+[build external plugin verbosely]
+command=/opt/homebrew/bin/cmake;--build;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build;--target;_cri07_sdk_probe;_cri08_const_consumers;rxpa_incremental_consumers;--verbose
+exit=0
+stdout:
+Change Dir: '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build'
+
+Run Build Command(s): /opt/homebrew/bin/ninja -v _cri07_sdk_probe _cri08_const_consumers rxpa_incremental_consumers
+[1/15] /usr/bin/cc   -arch arm64 -MD -MT CMakeFiles/incremental_decl.dir/incremental-library.c.o -MF CMakeFiles/incremental_decl.dir/incremental-library.c.o.d -o CMakeFiles/incremental_decl.dir/incremental-library.c.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental-library.c
+[2/15] /usr/bin/cc   -arch arm64 -MD -MT CMakeFiles/incremental_static.dir/incremental-library.c.o -MF CMakeFiles/incremental_static.dir/incremental-library.c.o.d -o CMakeFiles/incremental_static.dir/incremental-library.c.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental-library.c
+[3/15] /usr/bin/cc   -arch arm64 -MD -MT CMakeFiles/incremental_decl_consumer.dir/incremental-main.c.o -MF CMakeFiles/incremental_decl_consumer.dir/incremental-main.c.o.d -o CMakeFiles/incremental_decl_consumer.dir/incremental-main.c.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental-main.c
+[4/15] /usr/bin/cc   -arch arm64 -MD -MT CMakeFiles/incremental_relative_consumer.dir/incremental-main.c.o -MF CMakeFiles/incremental_relative_consumer.dir/incremental-main.c.o.d -o CMakeFiles/incremental_relative_consumer.dir/incremental-main.c.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental-main.c
+[5/15] /usr/bin/cc -DBUILD_DLL -DPLUGIN_ID=rx_cri07_sdk_probe -D_cri07_sdk_probe_EXPORTS -isystem /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include -isystem /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/rxpa -arch arm64 -fPIC -Wall -Wextra -Werror -Wwrite-strings -MD -MT CMakeFiles/_cri07_sdk_probe.dir/sdk_probe.c.o -MF CMakeFiles/_cri07_sdk_probe.dir/sdk_probe.c.o.d -o CMakeFiles/_cri07_sdk_probe.dir/sdk_probe.c.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/sdk_probe.c
+[6/15] /usr/bin/c++ -DBUILD_DLL -DPLUGIN_ID=rx_cri08_const_cpp -D_cri08_const_cpp_EXPORTS -isystem /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include -isystem /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/rxpa -std=gnu++17 -arch arm64 -fPIC -Wall -Wextra -Werror -MD -MT CMakeFiles/_cri08_const_cpp.dir/sdk_const_probe.cpp.o -MF CMakeFiles/_cri08_const_cpp.dir/sdk_const_probe.cpp.o.d -o CMakeFiles/_cri08_const_cpp.dir/sdk_const_probe.cpp.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/sdk_const_probe.cpp
+[7/15] /usr/bin/cc   -arch arm64 -MD -MT CMakeFiles/incremental_static_consumer.dir/incremental-main.c.o -MF CMakeFiles/incremental_static_consumer.dir/incremental-main.c.o.d -o CMakeFiles/incremental_static_consumer.dir/incremental-main.c.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental-main.c
+[8/15] /usr/bin/c++  -isystem /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include -isystem /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/include/rxpa -std=gnu++17 -arch arm64 -Wall -Wextra -Werror -MD -MT CMakeFiles/_cri08_const_cpp_static.dir/sdk_const_probe.cpp.o -MF CMakeFiles/_cri08_const_cpp_static.dir/sdk_const_probe.cpp.o.d -o CMakeFiles/_cri08_const_cpp_static.dir/sdk_const_probe.cpp.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/sdk_const_probe.cpp
+[9/15] : && /opt/homebrew/bin/cmake -E rm -f libincremental_decl.a && /usr/bin/ar qc libincremental_decl.a  CMakeFiles/incremental_decl.dir/incremental-library.c.o && /usr/bin/ranlib libincremental_decl.a && /opt/homebrew/bin/cmake -E touch libincremental_decl.a && :
+[10/15] : && /opt/homebrew/bin/cmake -E rm -f libincremental_static.a && /usr/bin/ar qc libincremental_static.a  CMakeFiles/incremental_static.dir/incremental-library.c.o && /usr/bin/ranlib libincremental_static.a && /opt/homebrew/bin/cmake -E touch libincremental_static.a && :
+[11/15] : && /usr/bin/c++  -arch arm64 -bundle -Wl,-headerpad_max_install_names -o plugin/rx_cri08_const_cpp.rxplugin CMakeFiles/_cri08_const_cpp.dir/sdk_const_probe.cpp.o   && :
+[12/15] : && /usr/bin/cc  -arch arm64 -bundle -Wl,-headerpad_max_install_names -o plugin/rx_cri07_sdk_probe.rxplugin CMakeFiles/_cri07_sdk_probe.dir/sdk_probe.c.o   && :
+[13/15] : && /usr/bin/cc -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/incremental_static_consumer.dir/incremental-main.c.o -o incremental_static_consumer  -Wl,-force_load,"/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/libincremental_static.a" && :
+[14/15] : && /usr/bin/cc -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/incremental_relative_consumer.dir/incremental-main.c.o -o incremental_relative_consumer  -Wl,-force_load,"/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/libincremental_static.a" && :
+[15/15] : && /usr/bin/cc -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/incremental_decl_consumer.dir/incremental-main.c.o -o incremental_decl_consumer  -Wl,-force_load,"/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/libincremental_decl.a" && :
+
+
+stderr:
+
+
+[initial static archive value: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_decl_consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_decl_consumer;41
+exit=0
+stdout:
+
+stderr:
+
+
+[initial static archive value: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_static_consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_static_consumer;41
+exit=0
+stdout:
+
+stderr:
+
+
+[initial static archive value: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_relative_consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_relative_consumer;41
+exit=0
+stdout:
+
+stderr:
+
+
+[rebuild after static archive source changes]
+command=/opt/homebrew/bin/cmake;--build;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build;--target;rxpa_incremental_consumers;--verbose
+exit=0
+stdout:
+Change Dir: '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build'
+
+Run Build Command(s): /opt/homebrew/bin/ninja -v rxpa_incremental_consumers
+[1/7] /usr/bin/cc   -arch arm64 -MD -MT CMakeFiles/incremental_decl.dir/incremental-library.c.o -MF CMakeFiles/incremental_decl.dir/incremental-library.c.o.d -o CMakeFiles/incremental_decl.dir/incremental-library.c.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental-library.c
+[2/7] /usr/bin/cc   -arch arm64 -MD -MT CMakeFiles/incremental_static.dir/incremental-library.c.o -MF CMakeFiles/incremental_static.dir/incremental-library.c.o.d -o CMakeFiles/incremental_static.dir/incremental-library.c.o -c /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental-library.c
+[3/7] : && /opt/homebrew/bin/cmake -E rm -f libincremental_decl.a && /usr/bin/ar qc libincremental_decl.a  CMakeFiles/incremental_decl.dir/incremental-library.c.o && /usr/bin/ranlib libincremental_decl.a && /opt/homebrew/bin/cmake -E touch libincremental_decl.a && :
+[4/7] : && /opt/homebrew/bin/cmake -E rm -f libincremental_static.a && /usr/bin/ar qc libincremental_static.a  CMakeFiles/incremental_static.dir/incremental-library.c.o && /usr/bin/ranlib libincremental_static.a && /opt/homebrew/bin/cmake -E touch libincremental_static.a && :
+[5/7] : && /usr/bin/cc -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/incremental_static_consumer.dir/incremental-main.c.o -o incremental_static_consumer  -Wl,-force_load,"/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/libincremental_static.a" && :
+[6/7] : && /usr/bin/cc -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/incremental_relative_consumer.dir/incremental-main.c.o -o incremental_relative_consumer  -Wl,-force_load,"/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/libincremental_static.a" && :
+[7/7] : && /usr/bin/cc -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/incremental_decl_consumer.dir/incremental-main.c.o -o incremental_decl_consumer  -Wl,-force_load,"/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/libincremental_decl.a" && :
+
+
+stderr:
+
+
+[updated static archive value: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_decl_consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_decl_consumer;42
+exit=0
+stdout:
+
+stderr:
+
+
+[updated static archive value: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_static_consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_static_consumer;42
+exit=0
+stdout:
+
+stderr:
+
+
+[updated static archive value: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_relative_consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_relative_consumer;42
+exit=0
+stdout:
+
+stderr:
+
+
+[compile installed rx_hash consumer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rx_hash_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble installed rx_hash consumer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-opt
+exit=0
+stdout:
+
+stderr:
+
+
+[compile installed rx_hash consumer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rx_hash_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble installed rx_hash consumer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-noopt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-noopt
+exit=0
+stdout:
+
+stderr:
+
+
+[autoload installed rx_hash with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+PASS: installed rx_hash complete SHA-256 family
+
+stderr:
+
+
+[autoload installed rx_hash with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+PASS: installed rx_hash complete SHA-256 family
+
+stderr:
+
+
+[autoload installed rx_hash with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+PASS: installed rx_hash complete SHA-256 family
+
+stderr:
+
+
+[autoload installed rx_hash with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rx-hash-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+PASS: installed rx_hash complete SHA-256 family
+
+stderr:
+
+
+[native-package installed rx_hash consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx;-native;rx_hash_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[run native-packaged installed rx_hash consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rx_hash_installed
+exit=0
+stdout:
+PASS: installed rx_hash complete SHA-256 family
+
+stderr:
+
+
+[compile installed rxsqlite consumer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rxsqlite_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble installed rxsqlite consumer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-opt
+exit=0
+stdout:
+
+stderr:
+
+
+[compile installed rxsqlite consumer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rxsqlite_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble installed rxsqlite consumer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-noopt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-noopt
+exit=0
+stdout:
+
+stderr:
+
+
+[autoload installed rxsqlite with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+PASS: installed rxsqlite dynamic and native contract
+
+stderr:
+
+
+[autoload installed rxsqlite with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+PASS: installed rxsqlite dynamic and native contract
+
+stderr:
+
+
+[autoload installed rxsqlite with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+PASS: installed rxsqlite dynamic and native contract
+
+stderr:
+
+
+[autoload installed rxsqlite with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+PASS: installed rxsqlite dynamic and native contract
+
+stderr:
+
+
+[native-package installed rxsqlite consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx;-native;rxsqlite_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[run native-packaged installed rxsqlite consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rxsqlite_installed
+exit=0
+stdout:
+PASS: installed rxsqlite dynamic and native contract
+
+stderr:
+
+
+[compile installed rxsqlite ADDRESS consumer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rxsqlite_address_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble installed rxsqlite ADDRESS consumer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-opt
+exit=0
+stdout:
+
+stderr:
+
+
+[compile installed rxsqlite ADDRESS consumer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rxsqlite_address_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble installed rxsqlite ADDRESS consumer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-noopt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-noopt
+exit=0
+stdout:
+
+stderr:
+
+
+[run installed rxsqlite ADDRESS with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxsqlite_address
+exit=0
+stdout:
+PASS: installed rxsqlite ADDRESS facade
+
+stderr:
+
+
+[run installed rxsqlite ADDRESS with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxsqlite_address
+exit=0
+stdout:
+PASS: installed rxsqlite ADDRESS facade
+
+stderr:
+
+
+[run installed rxsqlite ADDRESS with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxsqlite_address
+exit=0
+stdout:
+PASS: installed rxsqlite ADDRESS facade
+
+stderr:
+
+
+[run installed rxsqlite ADDRESS with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rxsqlite-address-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxsqlite_address
+exit=0
+stdout:
+PASS: installed rxsqlite ADDRESS facade
+
+stderr:
+
+
+[native-package installed rxsqlite ADDRESS consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx;-native;-l;rxsqlite_address;rxsqlite_address_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[run native-packaged installed rxsqlite ADDRESS consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rxsqlite_address_installed
+exit=0
+stdout:
+PASS: installed rxsqlite ADDRESS facade
+
+stderr:
+
+
+[compile installed RCC-5 consumer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rcc5de_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble installed RCC-5 consumer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-opt
+exit=0
+stdout:
+
+stderr:
+
+
+[compile installed RCC-5 consumer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rcc5de_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble installed RCC-5 consumer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-noopt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-noopt
+exit=0
+stdout:
+
+stderr:
+
+
+[autoload installed RCC-5 providers with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfnsg
+exit=0
+stdout:
+PASS: installed RCC-5 providers
+
+stderr:
+
+
+[autoload installed RCC-5 providers with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfnsg
+exit=0
+stdout:
+PASS: installed RCC-5 providers
+
+stderr:
+
+
+[autoload installed RCC-5 providers with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfnsg
+exit=0
+stdout:
+PASS: installed RCC-5 providers
+
+stderr:
+
+
+[autoload installed RCC-5 providers with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/rcc5de-installed-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxfnsg
+exit=0
+stdout:
+PASS: installed RCC-5 providers
+
+stderr:
+
+
+[native-package installed RCC-5 consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/crexx;-native;-l;rxfnsg;rcc5de_installed.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[run native-packaged installed RCC-5 consumer]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/rcc5de_installed
+exit=0
+stdout:
+PASS: installed RCC-5 providers
+
+stderr:
+
+
+[reject missing compiler import path]
+exit=2
+stdout:
+
+stderr:
+Warning in sdk_probe.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognised but not used., "cri07_sdk_probe"
+Warning in sdk_probe.crexx @ 5:8 - #UNUSED_IMPORT: Import is recognised but not used., "cri08_const_cpp"
+2 warning(s) in source file
+Error in sdk_probe.crexx @ 8:13 - #FUNCTION_NOT_FOUND: Function was not found., "sdkversion"
+Error in sdk_probe.crexx @ 9:9 - #FUNCTION_NOT_FOUND: Function was not found., "addints"
+Error in sdk_probe.crexx @ 10:12 - #FUNCTION_NOT_FOUND: Function was not found., "copycontract"
+Error in sdk_probe.crexx @ 11:9 - #FUNCTION_NOT_FOUND: Function was not found., "cppconst"
+4 error(s) in source file
+
+
+[compile external cREXX importer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/sdk_probe.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble external cREXX importer opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-opt
+exit=0
+stdout:
+
+stderr:
+
+
+[compile external cREXX importer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxc;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source/sdk_probe.crexx
+exit=0
+stdout:
+
+stderr:
+
+
+[assemble external cREXX importer noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxas;-n;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-noopt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-noopt
+exit=0
+stdout:
+
+stderr:
+
+
+[reject missing runtime plugin path]
+exit=255
+stdout:
+
+stderr:
+ERROR reading module file rx_cri07_sdk_probe
+
+
+[load external plugin with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin/rx_cri07_sdk_probe;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin/rx_cri08_const_cpp;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+SDK_VERSION=crexx-1.0.0-beta.3+local.g6a3306655079.dirty
+SDK_ADD_RESULT=42
+SDK_COPY_RESULT=copy-owned
+SDK_CPP_RESULT=cpp-immutable
+
+stderr:
+
+
+[load external plugin with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin/rx_cri07_sdk_probe;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin/rx_cri08_const_cpp;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+SDK_VERSION=crexx-1.0.0-beta.3+local.g6a3306655079.dirty
+SDK_ADD_RESULT=42
+SDK_COPY_RESULT=copy-owned
+SDK_CPP_RESULT=cpp-immutable
+
+stderr:
+
+
+[load external plugin with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm opt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-opt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin/rx_cri07_sdk_probe;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin/rx_cri08_const_cpp;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+SDK_VERSION=crexx-1.0.0-beta.3+local.g6a3306655079.dirty
+SDK_ADD_RESULT=42
+SDK_COPY_RESULT=copy-owned
+SDK_CPP_RESULT=cpp-immutable
+
+stderr:
+
+
+[load external plugin with /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm noopt]
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/sdk-probe-noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin/rx_cri07_sdk_probe;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/plugin/rx_cri08_const_cpp;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/prefix/bin/library
+exit=0
+stdout:
+SDK_VERSION=crexx-1.0.0-beta.3+local.g6a3306655079.dirty
+SDK_ADD_RESULT=42
+SDK_COPY_RESULT=copy-owned
+SDK_CPP_RESULT=cpp-immutable
+
+stderr:
+

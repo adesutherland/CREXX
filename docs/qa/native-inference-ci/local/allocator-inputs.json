@@ -1,0 +1,12 @@
+{
+  "base_commit": "cabc668cf242a969994dc750f6a71d41b15d385e",
+  "changed_test": "tests/native-inference/generation_qualification.hpp",
+  "sha256": "5634149bc7388642d26685199599dbe66717b49e6fb942266e74634e3a9ff9da",
+  "target": "rxllama_generation_qualify_cpu",
+  "normal_seconds": 83.1685,
+  "apple_asan_seconds": 109.027,
+  "allocation_guard_bytes": 33554432,
+  "apple_asan_observed_live_growth_bytes": 1456,
+  "model_workload_unchanged": true,
+  "gcc_platform_retry_pending": true
+}

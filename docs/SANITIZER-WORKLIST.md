@@ -58,15 +58,295 @@ QA and Build CREXX both pass for the exact published code revision. A failure
 in either workflow leaves the affected item open; do not claim the current
 hotfix or Release 1 line is sanitizer-clean before that condition is satisfied.
 
-## Open findings
+Status at 2026-09-12: all remaining registered findings are closed on exact
+code revision `1dde1dd14fbc288cc0a3041adab4244d533dc528`. GitHub
+[Build CREXX 34718340724](https://github.com/adesutherland/CREXX/actions/runs/34718340724),
+[CodeQL 34718340684](https://github.com/adesutherland/CREXX/actions/runs/34718340684),
+and [Deep Build QA 34718575156](https://github.com/adesutherland/CREXX/actions/runs/34718575156)
+pass. [Sanitizer QA 34718578056](https://github.com/adesutherland/CREXX/actions/runs/34718578056)
+passes 2,303/2,303 tests on both Linux x64 ASan/LSan and macOS arm64 ASan.
+SAN-006 through SAN-008, SAN-QA-008 through SAN-QA-012, SAN-QA-014 and
+SAN-QA-015 therefore satisfy their recorded closure conditions. SAN-QA-013
+was already closed by its focused evidence.
+
+The three nested aggregates that previously produced contention-driven timeout
+failures all pass under the retained serial scheduling. On macOS, binary
+imports, project build and process runtime take 467.03, 365.50 and 219.55
+seconds; on Linux they take 561.59, 462.71 and 187.81 seconds. The complete
+CTest phases take 3,708.62 seconds on macOS and 4,385.57 seconds on Linux. No
+AddressSanitizer or LeakSanitizer diagnostic appears in either retained
+artifact.
+
+## Native inference integration finding
+
+Status at 2026-09-16: SAN-009 is closed within the approved first-party scope.
+The platform and packaging acceptance criteria remain separate release gates.
+
+### SAN-009 — CPU backend probe unload/reload re-registers Apple-ASan globals
+
+Status: closed 2026-09-16. Discovered
+2026-09-14 during STEP-03. Current owner: Codex, STEP-06 qualification. Adrian's
+initial direction was to diagnose/fix SAN-009 while he reviewed S3-D01, but
+**do not rerun the sanitizer yet**. That historical hold lasted until the
+STEP-06 approval below. Required platform proof remains open. Adrian approved
+STEP-03 closure and the named STEP-06
+native-inference release-QA handoff, owned by Codex under his direction.
+The historical pending statements below are superseded by this closure record;
+no sanitizer suppression was used.
+
+- **Closure, 2026-09-16:** the permanent original/reversion reproducer, matching
+  Debug/Apple-ASan regression, original four-tool lifecycle trigger and full
+  local 2,349-test Apple-ASan gate are retained below. The separate Linux
+  first-party probe passes Debug and ASan/LSan at `9152850e8` with ordinary,
+  unchanged engine libraries and leak detection enabled. Broad core Sanitizer
+  QA [35026470003](https://github.com/adesutherland/CREXX/actions/runs/35026470003)
+  at `21666b6bcf0c5a14986652ef0b0a76bddc43611b` now passes both platforms:
+  Linux 2,340/2,340 tests (4,493.34 s, build/test leaks on), Apple 2,340/2,340
+  (4,506.68 s, unsupported Apple LSan off). Build, preparation and CTest logs
+  contain no sanitizer diagnostic. Retained logs/settings/job identities are
+  under `docs/qa/native-inference-ci/remote/21666b6bc/sanitizer-{linux,macos}/`.
+  The bridge/CPU residency repair is unchanged; intervening Windows packaging
+  and helper-variable fixes do not alter it. This closes SAN-009, not overall
+  native-inference delivery or real-GPU qualification.
+
+- **Supported first-party probe, 2026-09-15:** isolated Linux run
+  `35027428540` at `9152850e8` passes the permanent probe in normal Debug and
+  ASan/LSan with `detect_leaks=1`. It rebuilds only the current first-party
+  bridge, SHA256 support and probe harness. The ordinary engine/backend files
+  come from the verified `76df02be3` release-layout archive; symbol inspection
+  and unchanged file hashes confirm they were neither rebuilt nor instrumented.
+  Build graphs, identities and maintained-runner logs are retained under
+  `docs/qa/native-inference-ci/remote/9152850e8/first-party-probe/`.
+  The equivalent local ARM control passes with Apple's documented leak limit.
+  The subsequent CI-F11 change only renames the helper's private co-residency
+  variable; it does not change the probe entry point or bridge implementation.
+  Full core Linux ASan/LSan `35026470003` is still pending, so the item stays open.
+
+- **First-party scope clarification, 2026-09-15:** Adrian explicitly limits
+  the maintained sanitizer programme to cREXX code, excluding upstream
+  llama.cpp/CUDA qualification. Hosted core jobs now build without llama;
+  adapter ownership checks are a separate gate and may link an ordinary
+  uninstrumented engine. Reuse the retained instrumented Apple regression
+  evidence above/below rather than repeating upstream builds. Supported Linux
+  first-party ASan/LSan closure evidence is still required; a core-only pass
+  does not close this provider finding. Resume it after the approved four-core
+  gate. This is no suppression or waiver of the first-party defect.
+
+- **STEP-06 commencement, 2026-09-15:** Adrian approved the completed STEP-07
+  documentation/examples and the planned transition to full QA. The earlier
+  sanitizer hold is lifted for the named STEP-06 qualification gate, owned by
+  Codex under Adrian. Follow matching normal controls, the maintained runner
+  and every closure condition below; this approval does not close SAN-009.
+- **Focused STEP-06 proof, 2026-09-15:** current `rxllama_backend_probe_cycle`
+  and `rxpa_host_text_services` pass together in normal Debug (2/2, 0.74 s)
+  and Apple ASan (2/2, 1.80 s). Sustained generation CPU/Metal controls also
+  pass under ASan. [Current evidence](qa/native-inference-step06/README.md)
+  retains commands/logs. The expanded package/native matrix now passes Apple
+  ASan (385.991 s, `20260915-150153-build`), including native foreign-handle
+  rejection and four-worker BGE/Smol CPU/Metal ownership after S3-D01. Installed
+  typed embedding and generation matrices also pass. The original broader
+  lifecycle workload passes as `rxllama_toolchain_lifecycle` (7.25 s) in
+  `20260915-150827-full`; this CTest invokes the same `step03_toolchain.cmake`
+  CPU/BGE compile/assemble/link/both-VM workload as the original measurement
+  target, in a separate output directory. The full local build/preparation and
+  2,349/2,349 Apple-ASan CTests pass (CTest 2,278.82 s), with no sanitizer
+  diagnostic in retained build, preparation or test logs. See
+  [full local result](qa/native-inference-step06/full-local/summary.json).
+  Supported Linux ASan/LSan remains outstanding.
+  The item stays open.
+
+- **Hosted cold-start guard, 2026-09-15:** the probe also performs full backend
+  initialization, including Metal library creation. Widen its serial CTest hang
+  backstop from 30 to 1,800 seconds after observing a roughly 70-second cold
+  Intel consumer in the package campaign. The unchanged permanent probe passes
+  normal Debug (0.66 s) and Apple ASan (1.02 s); see
+  [pipeline guard evidence](qa/native-inference-ci/README.md#cold-backend-initialization-guard).
+  This is not a suppression or an explanation of the separate original Intel
+  engine stall. SAN-009 still requires supported Linux ASan/LSan closure.
+
+- Affected revision: baseline `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`
+  plus the uncommitted STEP-03 provider implementation.
+- Original trigger: `tools/asan-run.sh --build-dir cmake-build-debugasan
+  --phase build --build-target rxllama_toolchain_measure --build-leaks off`,
+  with `ENABLE_LLAMA=ON`, the pinned archive and explicit test models. The first
+  rxbvm lifecycle reports an ODR violation for `ggml_arm_arch_features` while
+  the bridge probes the packaged CPU backend.
+- Retained [original report](qa/native-inference-step03/asan-odr-original.log).
+  The scanner also copied the compiler's sanitizer runtime into the package.
+  Excluding/removing that copy did **not** repair the reproducer. That initial
+  hypothesis is not the cause established by the controlled experiment.
+- Reproduced cause: first-party `cpu_score()` calls `dlopen`, probes capabilities,
+  then `dlclose`; the subsequent load re-registers instrumented Mach-O globals.
+  The permanent `rxllama_backend_probe_cycle` control fails with the original
+  close behavior restored and passes when probe references remain resident.
+  The controlled reversion changed only the Unix probe close operation, then
+  restored the repaired source. See
+  [permanent regression before repair](qa/native-inference-step03/asan-probe-cycle-red.log).
+- Repair: retain probe DSOs for process lifetime, skip an unnecessary feature
+  probe when only one CPU variant is packaged, and follow pinned upstream's
+  process-lifetime backend-DSO policy. No engine inference mathematics changed.
+  Upstream `ggml/src/ggml-backend-reg.cpp` explicitly retains its loaded DSOs
+  because backend background threads can outlive registry destruction.
+  Instrumentation runtimes are independently excluded from product bundles.
+- Before the S3-D01 VM edit, matching Debug/Apple-ASan probe, six CPU/Metal bridge controls and
+  four-tool lifecycle all pass (8/8 in each build). The full scratch-install,
+  native relocation and dynamic-worker matrices also pass in both builds.
+  The existing native-project contract passes in both builds. See
+  [the retained evidence index](qa/native-inference-step03/README.md).
+  These observations do not close broader platform gates.
+- Follow-up review, 2026-09-14, after Adrian's sanitizer hold: inspected
+  `cpu_score()`, engine cleanup, the permanent probe-cycle control, the retained
+  original/reversion failures and pinned upstream registry destruction. The
+  repair was already present in the working tree; no further source correction
+  is needed for the reproduced failure. All 20 source/test/build-input hashes
+  and both recorded build configurations match `source-and-configuration.json`;
+  all 99 retained evidence checksums passed before this documentation update.
+  Existing test results above predate the hold and are reused, not new runs.
+  No build or test was launched, no interpreter source changed, and S3-D01
+  remains under review. Backend-library residency is process-wide; model and
+  private-context allocations still follow their ordinary release paths.
+- Adrian subsequently approved S3-D01 and accepted its measured per-legacy-call
+  cost. The expanded native/dynamic model-worker matrix and all 2,314
+  non-measurement CTests pass in normal Debug;
+  the earlier sanitizer evidence predates that VM repair and matrix expansion.
+  Adrian subsequently approved STEP-03 closure and assigned the remaining
+  proof to STEP-06 native-inference release QA, owned by Codex under his
+  direction. Include S3-D01, the expanded native matrix and its isolated sanitizer
+  scheduling measurement alongside the SAN-009 regression and broad platform
+  gates. The sanitizer hold remains until STEP-06; SAN-009 is still open.
+- Closure requires the permanent regression, matching normal/maintained sanitizer
+  checks, the original trigger and applicable broad platform gates in
+  [the sanitizer guide](ai-context/CREXX_ASAN_TESTING.md). Apple LSan is unsupported;
+  supported Linux ASan/LSan remains required. STEP-06 is the explicitly approved named gate.  No release-ready or sanitizer-clean claim.
+
+## Findings closed on 2026-09-12
+
+### SAN-008 — array size shorthand reads beyond an imported array's bounds table
+
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; GitHub Build CREXX and both
+Sanitizer QA platforms pass, including the permanent #694 regression.
+
+- Affected revision: `fa887be158213403b9b1de458cfdecc7e4c86122` plus the local
+  #694 import repair. The unchecked access in `set_node_types_walker()` also
+  exists in that base revision; the new permanent import matrix exposes it.
+- Reproducer: import the `binary_global_import_types` provider with
+  `grid = .int[-2 to 2, 1 to 3]`, then compile a consumer that reads
+  `grid[-2, 1, 1]`. The normal Debug compiler returns
+  `ARRAY_DIMS_MISMATCH`; maintained Apple ASan first reports a four-byte
+  heap-buffer-overflow just beyond the two-element `dim_base` allocation.
+- Original maintained command: `tools/asan-run.sh --build-dir
+  cmake-build-debugasan --phase ctest --regex
+  '^(binary_global_import_types|global_import_types|inline_return_conversions|binary_forward_dependencies|binary_storage_selector_dependencies|crexx_process_runtime)$'
+  --test-jobs 2 --leaks off --no-live-tail`. Leak detection is unavailable
+  on Apple ASan; no supported sanitizer has been disabled.
+- Retained log:
+  `cmake-build-debugasan/asan-logs/20260912-150240-ctest/ctest.log`.
+  The report names `rxcp_val_type.c:1788` in `set_node_types_walker()` and
+  the allocation in `node_to_type()` via `sym_imva()`.
+- Cause: the earlier type-setting pass checks the last subscript's base for
+  the literal-zero array-size shorthand before validating that the subscript
+  ordinal exists. Guarding the later type-safety and optimization passes
+  alone does not cover this earlier read.
+- Repair: retain the signed `ast_chdi()` result, require it to be non-negative,
+  cast only after that check, and require it to be below the `size_t`
+  dimension count before reading `dim_base`. The permanent matrix includes
+  both extra final-one and final-zero cases, so the size shorthand cannot hide
+  an excess dimension. Existing valid one-based final-zero queries retain
+  their rewrite.
+- Local proof: the final normal-Debug focused panel passed 14/14 at
+  `cmake-build-debug/asan-logs/20260912-154901-ctest`; the identical maintained
+  Apple-ASan trigger passed 6/6 at
+  `cmake-build-debugasan/asan-logs/20260912-155610-ctest`; Release passed the
+  binary import matrix at
+  `cmake-build-release/asan-logs/20260912-160205-ctest`; and normal Debug
+  `qa-prep` plus all 2,302 non-performance tests passed at
+  `cmake-build-debug/asan-logs/20260912-160326-build` and
+  `cmake-build-debug/asan-logs/20260912-160637-ctest`. Apple ASan provides no
+  leak-closure authority. At candidate time both exact-commit hosted sanitizer
+  lanes remained required; run 34718578056 now supplies them.
+- Permanent closure test: `binary_global_import_types`, including excess
+  final subscripts of both one and zero, source/RXAS/RXBIN/shared-pool imports,
+  and both compiler modes. Required closure is the identical normal Debug
+  and maintained ASan focused command passing, then the full supported
+  platform sanitizer gates and ordinary Debug correctness QA. No suppression,
+  test exclusion, or waiver is authorized.
+
+### SAN-QA-015 — PTY restoration observation races Darwin pending-input state
+
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX, Deep Build QA and
+both Sanitizer QA platforms pass. This was a shared maintained test-harness
+failure, not an ASan memory diagnostic.
+
+- Affected revision: `d9982d0004fc712849366419eab10a26debe8cd8`.
+  The full Debug correctness run passed 2,285/2,286, failing only
+  `ui_ansi_host_edges_opt` with `terminal modes not restored`. Retained log:
+  `cmake-build-debug/asan-logs/20260909-065711-ctest/ctest.log`.
+- Reproducer: eight independent processes each repeat the actual optimized
+  ANSI host-edge image against the existing `Terminal` harness 100 times.
+  Four processes reproduced the failure; all before/after fields were identical
+  except `c_lflag ^ before = 0x20000000`, Darwin's `PENDIN` state. The retained
+  diagnostic is `/tmp/crexx-ci-20260909.wjmUik/ansi-edges-parallel.log`.
+  A 200-run serial control passed, as did a 200-run shell-only control.
+- Cause: Darwin sets `PENDIN` when raw input returns to canonical mode and
+  clears it on a terminal read. The harness observes the child's exit marker
+  before its holding shell is guaranteed to have performed that read.
+- Repair: complete a newline/read/acknowledgement handshake with the holding
+  shell before comparing terminal attributes. The complete equality check,
+  alternate-screen assertion and cursor assertion remain unchanged.
+- Permanent regression surface: `ui_ansi_host_edges_{noopt,opt}`,
+  `rxconsole_pty` and `text_inspector_ansi_pty` retain their real terminal
+  conversations. Hotfix QA owns focused Debug and Apple-ASan validation,
+  concurrent replay and hosted qualification before closure. The unaffected
+  2,282 tests from the completed broad run need no repetition for this
+  Python-harness-only edit.
+- Local qualification: all four affected tests pass in normal Debug
+  (`/tmp/crexx-ci-20260909.wjmUik/pty-fixed-debug.log`) and maintained Apple
+  ASan (`cmake-build-debugasan/asan-logs/20260909-071031-ctest`). The same
+  eight-process panel passes all 800 repetitions after repair at
+  `/tmp/crexx-ci-20260909.wjmUik/ansi-edges-parallel-fixed.log`. A negative
+  control deliberately leaving ECHO disabled still fails the exact attribute
+  assertion (`pty-negative-control.log`). The current exact-head hosted gates
+  supply the final proof.
+
+### SAN-QA-014 — RXPP loses macros outside the input-source directory
+
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX, Deep Build QA and
+both Sanitizer QA platforms pass.
+
+- Affected revision: `82730b495c07a6fb1bc34ffe4e9ad8b33aba50d3`.
+  `CMD_loadMacro` changed the relative `##LOADMACRO` root from the selected
+  macro-library directory to the input-source directory. Text Inspector stages
+  its UI macros separately, so its generated application loses the macro bodies.
+- Evidence: Sanitizer QA [34308566325](https://github.com/adesutherland/CREXX/actions/runs/34308566325),
+  Build CREXX [34211281347](https://github.com/adesutherland/CREXX/actions/runs/34211281347),
+  and Deep Build QA [34303936426](https://github.com/adesutherland/CREXX/actions/runs/34303936426).
+  Full downloaded logs are retained at `/tmp/crexx-ci-20260909.wjmUik/`.
+- Permanent reproducer: `rxpp_loadmacro` now separates the input and selected
+  macro-library roots, with a conflicting source-relative package. The earlier
+  fixture placed both roots in the same directory and could not detect this.
+- Original broad trigger: maintained full Linux ASan/LSan and macOS ASan;
+  Text Inspector generation, core, TUI and ANSI PTY coverage. The macOS PTY
+  also recorded exit 139 without an ASan stack; retain this as unqualified
+  until the complete repaired application passes the maintained lane.
+- Closure evidence: hotfix QA restored the documented macro-library lookup and
+  passed focused Debug/ASan plus the current full hosted Build, Deep Build and
+  Sanitizer QA gates.
+- Repair: the documented macro-library lookup is restored. The strengthened
+  fixture fails before repair and passes after it; all six Text Inspector
+  tests pass in normal Debug. The same code now passes focused Apple-ASan and
+  the complete hosted gates above. Investigation and evidence are in
+  [the hotfix report](planning/beta-3/reports/ci-hotfix-2026-09-09.md).
 
 ### SAN-007 — imported inline-payload AST freed during recursive function replacement
 
-Status: closure candidate and release-blocking pending exact-SHA hosted proof.
-The ownership repair and permanent regression pass normal Debug and the full
-maintained Apple-ASan gate. No suppression, exclusion or waiver is authorized;
-closure still requires GitHub Sanitizer QA's supported Linux ASan/LSan and
-macOS ASan lanes on the exact published code revision.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX and both Sanitizer
+QA platforms pass. The ownership repair and permanent regression also retain
+their focused normal Debug and Apple-ASan evidence. No suppression, exclusion
+or waiver was used.
 
 - Scope: compiler imported-function replacement and inline-payload attachment
   during recursive source-import validation.
@@ -119,9 +399,9 @@ macOS ASan lanes on the exact published code revision.
   parser or package surfaces. The complete post-repair Apple-ASan build and
   2,398/2,398 CTest run supplies broad final-tree execution. No local gate was
   repeated after the source-identical develop merge.
-- Owner/next action: hotfix QA. Require exact-SHA hosted Build CREXX and
-  Sanitizer QA for published code revision
-  `c0ac864d59428a807102a7b266933967f3b2e294` before closing this item.
+- Closure evidence: the later exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528`, which retains this repair and
+  regression, passes hosted Build CREXX and both Sanitizer QA platforms.
 - Closure checks: the permanent focused regression must pass in normal Debug
   and Apple ASan; the focused `httpcore` target must pass through the runner;
   cumulative normal-product evidence and the full local Apple-ASan build/CTest
@@ -132,12 +412,10 @@ macOS ASan lanes on the exact published code revision.
 
 ### SAN-006 — superseded imported class context freed during recursive validation
 
-Status: closure candidate; the imported-context ownership repair is implemented
-and passes focused plus broad macOS qualification. SAN-006 remains open and
-release-blocking until the exact published commit passes GitHub Sanitizer QA,
-including its supported Linux x64 ASan/LSan and macOS arm64 ASan lanes, plus
-Build CREXX. When both workflows pass on that commit, this conditional record
-marks SAN-006 closed without weakening any sanitizer closure requirement.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX and both Sanitizer
+QA platforms pass. The imported-context ownership repair also retains its
+focused and broad macOS qualification evidence.
 
 - Scope: compiler symbol construction in `sym_fn()` while a Level G class or
   interface import recursively loads further class metadata.
@@ -191,13 +469,11 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
   - complete Apple-ASan build and 2,391/2,391 CTest pass with build/test leak
     detection off:
     `cmake-build-debugasan/asan-logs/20260826-210616-full`.
-- Conditional closure gate: GitHub Sanitizer QA and Build CREXX must both pass
-  for the exact published commit containing this record. GitHub Sanitizer QA is
-  the named release-QA owner for the supported Linux x64 ASan/LSan and macOS
-  arm64 ASan proof. Apple LeakSanitizer is unsupported, so the local macOS
-  result is address-safety evidence only and does not satisfy the Linux
-  leak-closure authority. If either workflow fails or does not run, SAN-006
-  remains open and release-blocking.
+- Closure evidence: exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes GitHub Build CREXX and
+  Sanitizer QA. The hosted run supplies both Linux x64 ASan/LSan and macOS
+  arm64 ASan proof. Apple LeakSanitizer remains unsupported locally; the hosted
+  Linux lane supplies leak-closure authority.
 
 ## Platform coverage at task close
 
@@ -208,19 +484,122 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
 - GitHub Build CREXX supplies the final-head MinSizeRel build, CTest and package
   coverage across Linux, macOS and Windows. GitHub Sanitizer QA supplies the
   final-head Linux x64 ASan/LSan and macOS arm64 ASan gates.
-- SAN-006, SAN-007, SAN-QA-008, SAN-QA-010, SAN-QA-011 and SAN-QA-012 are the
-  currently registered closure candidates pending exact-SHA hosted proof.
+- Exact revision `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes Build
+  CREXX and both Sanitizer QA platforms, closing every candidate listed here.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-017 — vector concurrency assertion assumes obsolete plugin-wide policy
+
+Status: closed, 2026-09-21; owner Codex under Adrian. QA assertion failure; no
+ASan/LSan memory diagnostic in retained failing artifacts.
+
+- Affected revision: `4468c7d75925cc158a568392f4abe97a59156df6`; introduced
+  with the RXVECTOR-02 owner change `5949ef27e`.
+- Original triggers: Deep `35555049283` and Sanitizer `35559006744` on
+  21 September; same failures in `35484487476` / `35487589362` on 20 September.
+  All platforms fail `rxpa_bundled_vector_concurrency` with
+  `rc=0 capabilities=0 expected=1 handles=1 before=0`. Handle accounting is valid.
+- Reproducer: `ctest --test-dir cmake-build-debug -R
+  '^rxpa_bundled_vector_concurrency$' --output-on-failure`.
+- Cause: the provider now has four process-reentrant procedures and session-affine
+  immutable-owner APIs; the test still requires blanket plugin reentrancy. Deep
+  also exposes the related missing codec-test preparation dependency.
+- Plan/closure: [RXVECTOR-02 AC-09–12](planning/rxvector-binary-owner-20260919.md#overnight-qa-repair-21-september-2026).
+  Retain permanent mixed-policy coverage, focused Debug/Apple ASan, normal QA
+  preparation and exact-head hosted Deep plus Linux ASan/LSan and Apple ASan.
+- Local repair evidence: Debug 21/21 (3.86 s), maintained Apple ASan 21/21
+  (6.84 s), four invalid-provider controls rejected, clean QA preparation and
+  normal correctness 2344/2344 (817.05 s). No product source change or sanitizer
+  diagnostic. Apple LeakSanitizer is unavailable.
+- Published revision: `45571319f49f2fd4ad09ad4ebf3f337b20482a00`. Build
+  `35574178258`, CodeQL `35574177834` and Deep `35574185432` all pass.
+  All five Deep comprehensive platforms pass both repaired tests.
+- Closure: [Sanitizer QA 35574187408](https://github.com/adesutherland/CREXX/actions/runs/35574187408)
+  is terminal success on that exact revision. Linux ASan/LSan passes 2358/2358
+  (3265.95 s); build, QA preparation and CTest all retain `detect_leaks=1`.
+  macOS arm64 ASan passes 2358/2358 (4122.91 s). Both repaired tests pass on
+  both platforms; no sanitizer diagnostic appears in the complete retained
+  build/preparation/test logs. Apple LeakSanitizer is unavailable and Linux
+  supplies leak qualification. No suppression, exclusion or timeout change.
+- Evidence: `docs/qa/overnight-2026-09-21/`, including full logs, terminal
+  workflow metadata and `hosted/verdict.json`. No remaining action for this item.
+
+
+### SAN-QA-016 — filesystem concurrency test assumes obsolete plugin-wide policy
+
+Status: closed, 2026-09-17; owner Codex under Adrian. QA assertion failure, with
+no observed AddressSanitizer/LeakSanitizer memory diagnostic. The approved
+repair and delivery criteria are CI-F20 / F20-AC-01–04 in
+[`native-inference-ci.md`](planning/native-inference-ci.md).
+
+- Affected revision: develop `59fc02eb905ea2a0878e4055b7114921d5e6a294`.
+  Sanitizer run `35179649593` fails on Linux x64 and macOS arm64; Deep run
+  `35175162069` fails on Linux, Windows and both Mac architectures. All six
+  failures are `rxpa_bundled_fs_concurrency` with
+  `RXPA manifest query failed: rc=0 capabilities=0 handles=1/0`.
+- Reproducer: `ctest --test-dir cmake-build-debug -R
+  '^rxpa_bundled_fs_concurrency$' --output-on-failure`. The unchanged local
+  harness reproduces the identical assertion in 0.02 seconds.
+- Cause: `03bf7855b` added the VM-session-owned `rxfs.fileguard` and converted
+  rxfs to its documented mixed V2 procedure policy. The test still expects the
+  old blanket process-reentrant capability. The library handle count is valid.
+- Retained logs and run metadata: `docs/qa/overnight-2026-09-17/`.
+- Focused qualification: Debug 16/16 (0.91 s) and maintained Apple ASan 16/16
+  (2.58 s) pass, including all bundled plugin concurrency checks, session-load
+  rollback and all four filesystem VM/optimization cells. Three deliberately
+  invalid policy/lifecycle variants are rejected by the repaired test.
+- Closure: published repair `d8f59732d4d4abeb18ec20509821fd30ecf8962e` passes
+  [Sanitizer QA 35189897956](https://github.com/adesutherland/CREXX/actions/runs/35189897956)
+  with 2,345/2,345 on Linux ASan/LSan and macOS arm64 ASan. Linux build,
+  QA preparation and CTest logs all retain `detect_leaks=1`. No ASan/LSan
+  diagnostic appears in the complete retained artifacts. Apple LeakSanitizer
+  is unavailable. Deep `35189896087`, Build `35189886874` and CodeQL
+  `35189886774` are also terminal success on that exact revision. Deep passes
+  five comprehensive platforms and the original filesystem regression on each.
+  No exclusions, suppression, scheduling or timeout changes were introduced.
+
+### SAN-QA-013 — expanded project-build matrix exceeds its aggregate timeout
+
+Status: closed for the observed macOS harness timeout. The expanded permanent
+contract passes normal Debug and Apple-ASan, accounting with the unchanged broad
+passes for all 2,271 applicable macOS sanitizer checks. Owner: RXC-PROJECT-01
+(Adrian/Codex). This is not Linux or cross-platform sanitizer closure.
+
+- Affected revision: e0e67ad3e plus the local RXC-PROJECT-01 compiler/wrapper
+  and expanded `bin/tests/crexx_project_build.cmake` matrix, 2026-09-06.
+- Reproducer: `tools/asan-run.sh --build-dir ../build-debugasan --phase full
+  --build-jobs 4 --test-jobs 8 --build-leaks off --leaks off
+  --exclude-label performance-measurement --no-live-tail`, from the isolated
+  `crexx-scaling-20260906.1lT795/source` worktree on macOS ARM64.
+- Retained failure:
+  `../build-debugasan/asan-logs/20260906-110736-full/ctest.log`:
+  `crexx_project_build_contract` exceeded 180 seconds; the other 2,270 checks
+  passed. There is no ASan memory diagnostic. The expanded contract adds many
+  complete project checks/builds, including environment, tool-content and
+  installed-candidate matrices, but retained the earlier aggregate deadline.
+- Repair: retain every assertion and subprocess, expose the current scenario
+  label in the test log, and allow the expanded composite a bounded 600 seconds.
+  This does not change compiler performance, child options or test coverage.
+- Focused proof: normal Debug passes in 77.01 seconds at
+  `../build-debug/asan-logs/20260906-120138-ctest/ctest.log`; Apple-ASan passes
+  in 193.84 seconds at
+  `../build-debugasan/asan-logs/20260906-120320-ctest/ctest.log`. The latter
+  exceeds the previous 180-second aggregate bound and completes below the new
+  bound, with every assertion retained. These logs and the original broad log
+  are copied into the RXC-PROJECT-01 qualification evidence bundle.
+- Closure: the same permanent contract passes normal Debug and maintained
+  Apple-ASan; retain those logs with the 2,270 unchanged broad passes to account
+  for all 2,271 applicable macOS checks. Linux is not the failing platform and
+  no Linux or leak-clean claim follows from this timeout repair.
+
 ### SAN-QA-012 — concurrency fixtures assume scheduler timing or assignment
 
-Status: local closure candidate and release-blocking pending exact-SHA hosted
-proof. Focused final-tree normal-Debug and Apple-ASan controls pass. Earlier in
-the same hotfix, comprehensive Debug QA and the maintained broad Apple-ASan
-gate passed before the hosted Windows matrix exposed a second test scheduling
-assumption. This is a maintained sanitizer test failure, not an ASan memory
-diagnostic and not a product timeout.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX, Deep Build QA and
+both Sanitizer QA platforms pass. Focused final-tree normal-Debug and Apple-ASan
+controls also pass. This was a maintained sanitizer test failure, not an ASan
+memory diagnostic or a product timeout.
 
 - Scope: the E5 persistent-worker native-return cancellation test, adjacent
   RXPA concurrency fixtures, and the CRI-17 attached-provider worker-session
@@ -325,18 +704,17 @@ diagnostic and not a product timeout.
     panel passed in normal Debug and focused Apple ASan at
     `cmake-build-debugasan/asan-logs/20260903-110318-ctest/`, with no sanitizer
     diagnostic.
-- Owner/next action: hotfix QA. Publish the locally qualified candidate and
-  run exact-SHA Build CREXX, Sanitizer QA and Deep Build QA together on
-  `hotfix`, treating Windows x64 Build and Linux x64 ASan/LSan as the highest
-  risk gates. Promote the source-identical commit to `develop` and `master`
-  only after the hosted workflows pass.
+- Closure evidence: exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes Build CREXX, Sanitizer QA
+  and Deep Build QA, including Windows x64 Build and Linux x64 ASan/LSan.
 
 ### SAN-QA-011 — private bootstrap rules assume their working directories exist
 
-Status: local closure candidate and release-blocking pending exact-SHA hosted
-sanitizer qualification. Focused normal-Debug and Apple-ASan controls plus the
-maintained broad Apple-ASan gate pass. This was a maintained sanitizer build
-failure, not an ASan memory diagnostic.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX and both Sanitizer
+QA platforms pass. Focused normal-Debug and Apple-ASan controls plus the
+maintained broad Apple-ASan gate also pass. This was a maintained sanitizer
+build failure, not an ASan memory diagnostic.
 
 - Scope: private CMake bootstrap rules for the installed `crexx --library` /
   `--tool` Level B worker and the `rxpp` member image.
@@ -384,16 +762,17 @@ failure, not an ASan memory diagnostic.
   instrumented build, explicit `qa-prep` barrier and all 2,238 non-performance
   CTests. No AddressSanitizer diagnostic was present; logs are retained under
   `cmake-build-debugasan/asan-logs/20260901-114245-full`.
-- Owner/next action: new-build Phase 4 P4.4. Require exact-SHA GitHub Build and
-  Sanitizer QA for the published P4.4 commit. Linux ASan/LSan remains the
-  leak-closure authority.
+- Closure evidence: exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes GitHub Build and
+  Sanitizer QA. Linux ASan/LSan supplies the leak-closure authority.
 
 ### SAN-QA-010 — parallel spawn stress exceeds its scope under contended ASan
 
-Status: repair implemented; focused and designed-slice Apple-ASan proof passes.
-The item remains open and release-blocking pending exact-SHA hosted sanitizer
-qualification. No sanitizer suppression, product assertion or launcher
-cancellation behavior is weakened.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX and both Sanitizer
+QA platforms pass after the focused and designed-slice Apple-ASan proof. No
+sanitizer suppression, product assertion or launcher cancellation behavior was
+weakened.
 
 - Scope: CTest scheduling for the new
   `test_address_parallel_spawn_{noopt,opt}` launcher-race regressions.
@@ -429,16 +808,16 @@ cancellation behavior is weakened.
   64 seconds. The 256-launch focused Apple-ASan pair subsequently passed in
   12.88 and 15.15 seconds, retaining the eight-worker race shape with ample
   correctness-watchdog margin.
-- Owner/acceptance: new-build Phase 3D. Final exact-SHA GitHub Build and both
-  Sanitizer QA lanes remain required. Linux ASan/LSan remains the leak-closure
-  authority.
+- Closure evidence: exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes final GitHub Build and
+  both Sanitizer QA lanes. Linux ASan/LSan supplies the leak-closure authority.
 
 ### SAN-QA-009 — interactive stdin watchdogs expire under contended Apple ASan
 
-Status: repair implemented; focused normal-Debug and Apple-ASan proof passes.
-The item remains open and release-blocking pending exact-SHA hosted sanitizer
-qualification. No sanitizer suppression, test exclusion or product-behaviour
-waiver is authorized.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; both Sanitizer QA platforms pass
+after the focused normal-Debug and Apple-ASan proof. No sanitizer suppression,
+test exclusion or product-behaviour waiver was used.
 
 - Scope: the three interactive `linein(stdin)` correctness tests which launch
   a VM or the `crexx` driver through pipe/PTY harnesses.
@@ -451,7 +830,7 @@ waiver is authorized.
   watchdog; the PTY driver exceeded its 15-second watchdog while another
   instrumented `crexx` driver case was running. The sibling driver case passed
   in 15.32 seconds. The uploaded sanitizer artifact contains no ASan memory
-  diagnostic; this remains a first-party maintained-lane failure.
+  diagnostic; this was a first-party maintained-lane failure until closure.
 - Original trigger: the workflow's maintained full Apple-ASan build and CTest
   command, `tools/asan-run.sh --phase full --build-jobs 4 --test-jobs 8
   --build-leaks off --leaks off`, as retained by the run above.
@@ -474,9 +853,9 @@ waiver is authorized.
   tests at `cmake-build-debugasan/asan-logs/20260831-171637-ctest`. The ASan
   tree also exposed and qualified clean-Make working-directory ownership for
   the private classlib, Level C and RexxScript member families.
-- Owner/next action: new-build Phase 2 hosted qualification. Require a clean
-  enough full exact-SHA GitHub Sanitizer QA run. Linux x64 ASan/LSan must also
-  pass before closure; Apple ASan provides no leak-closure authority.
+- Closure evidence: the clean full exact-SHA GitHub Sanitizer QA run passes on
+  Linux x64 ASan/LSan and macOS arm64 ASan. Apple ASan provides no local
+  leak-closure authority; the hosted Linux lane supplies it.
 - Acceptance: retain all three permanent conversations, prove their focused
   build/test prerequisites from a clean-enough tree, pass the focused normal
   Debug and maintained Apple-ASan shapes, rerun the original broad trigger,
@@ -484,9 +863,66 @@ waiver is authorized.
 
 ### SAN-QA-008 — saturated child redirect loses typed timeout completion
 
-Status: reopened and release-blocking. The original failure recurred in two
-maintained macOS arm64 lanes. The provider remains parallel; exact-SHA hosted
-qualification with the strengthened diagnostic is pending.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; both Sanitizer QA platforms pass,
+including `rxspawn_posix_termination` and `rxvmchannel_byte_provider`. The
+provider remains parallel and the strengthened diagnostic remains active.
+
+- 2026-09-12 recurrence: Sanitizer QA
+  [34702281757](https://github.com/adesutherland/CREXX/actions/runs/34702281757),
+  macOS arm64 job [103576080611](https://github.com/adesutherland/CREXX/actions/runs/34702281757/job/103576080611),
+  checked out `99d500eb99ecc947ce819643eccc14b430760e8a` and failed only
+  `rxvmchannel_byte_provider` with the same saturated-redirect assertion,
+  `state=2`, `errorCode=17`, and `Failure spawn terminate. Details: RC=1
+  Text=Operation not permitted`. The retained artifact is
+  `/tmp/crexx-693-macos-artifact.lceTQL/20260912-152819-full/ctest.log`
+  (SHA-256 `0c817d5fbffbe095e0193f07426f312323e75aaadae84b11637b2b4c05e42f8a`).
+  No ASan/LSan memory diagnostic appears. The new #693 regression was
+  selected later and passed; the earlier termination repair has therefore
+  not covered every occurrence. Owner: resumed hotfix maintenance, tracked in
+  [#697](https://github.com/adesutherland/CREXX/issues/697).
+- 2026-09-12 repair candidate: a pipe-synchronized native probe verifies a
+  signalable live group, releases its owned child to exit, and observes group
+  `EPERM` before `waitid` exposes terminal status. All 1,000 iterations failed
+  with the old helper; all 1,000 pass after retrying the signal against the
+  still-owned, unreaped direct child. A denied direct signal still requires
+  confirmed terminal status, and post-reap cleanup remains group-only. The
+  strengthened `rxspawn_posix_termination` regression fails before repair and
+  passes afterward; real permission errors and reap ownership remain covered.
+  The identical termination/launch/byte-provider panel passes 3/3 in normal
+  Debug at `cmake-build-debug/asan-logs/20260912-180805-ctest` and maintained
+  Apple ASan at `cmake-build-debugasan/asan-logs/20260912-180909-ctest`.
+  The maintained Apple-ASan full run at
+  `cmake-build-debugasan/asan-logs/20260912-185113-full` passes 2,299/2,302;
+  `rxspawn_posix_termination`, `rxspawn_posix_launch_diagnostic`, and
+  `rxvmchannel_byte_provider` all pass, with no sanitizer diagnostic. Three
+  aggregate/build-driver tests time out under the eight-way run and then pass
+  unchanged with one test job at
+  `cmake-build-debugasan/asan-logs/20260912-193456-ctest` in 305.57, 266.14,
+  and 3.01 seconds. All 33,795 frozen non-documentation inputs match their
+  pre-run SHA-256 manifest. Exact-commit run 34718578056 now supplies the
+  required hosted Linux ASan/LSan and macOS ASan qualification; see the
+  [repair report](planning/beta-3/reports/mike-fix-697-2026-09-12.md).
+- 2026-09-09 recurrence: Sanitizer QA
+  [34308566325](https://github.com/adesutherland/CREXX/actions/runs/34308566325)
+  actually checked out `82730b495c07a6fb1bc34ffe4e9ad8b33aba50d3`.
+  The retained macOS artifact at
+  `/tmp/crexx-ci-20260909.wjmUik/sanitizer/sanitizer-logs-macos/20260909-034939-full/ctest.log`
+  identifies `Failure spawn terminate. Details: RC=1 Text=Operation not permitted`,
+  `state=2`, `errorCode=17`. This establishes termination, not launch setup,
+  as the failing stage. Hotfix QA owns a deterministic exited-child reproducer
+  and normal Debug/maintained sanitizer qualification; no assertion is relaxed.
+- Repair candidate, 2026-09-09: the new `rxspawn_posix_termination` regression
+  deterministically reproduces Darwin's group `EPERM` for an exited but
+  unreaped child. The private signalling helper now confirms terminal child
+  state using nonblocking `waitid` with `WNOWAIT` before accepting that result.
+  Reap ownership and post-reap group-only cleanup remain intact; live-child and
+  unrelated failures remain errors. The regression, byte-provider test and
+  launch diagnostic pass together in normal Debug and Apple ASan (3/3 at
+  `cmake-build-debugasan/asan-logs/20260909-065238-ctest`). At that point closure
+  remained conditional on the original broad trigger and both exact-code
+  hosted sanitizer lanes passing; see the
+  [hotfix report](planning/beta-3/reports/ci-hotfix-2026-09-09.md).
 
 - Scope: the byte-channel child-process provider's deadline and saturated
   output-redirect completion path, exercised by `rxvmchannel_byte_provider`.

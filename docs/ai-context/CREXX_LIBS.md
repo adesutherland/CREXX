@@ -28,6 +28,17 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
   native providers replacing the historical mixed `rxmath` and broad `system`
   bundles)
 
+`rxfs` also provides `pathkind` (no-follow final-path inspection), `abspath`,
+non-overwriting `copy`/`hardlink`/`move`, and the C-bound `.rxfs..fileguard(path,
+mode)` owner. Modes are explicit `exclusive` (nonblocking lock-file acquisition)
+and `lease` (existing-file write/delete sharing on Windows; cooperative flock on
+Unix). Use `held()`, `busy()`, `status()` and explicit idempotent `close()`; copies share
+the resource, and last-value/VM teardown finalizes it. Lexical scope exit is not
+a promise of immediate finalization. Guards are VM-local and cannot be worker
+message handles. Reuse these main-library facilities in tools instead of adding
+private OS plugins or shell wrappers. See the human `rxfs` reference and
+`lib/plugins/fs/rxfs_test.crexx` for executable ownership/failure controls.
+
 - `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
   integer and decimal mathematics authored in Level B)
 
@@ -111,17 +122,27 @@ The product master documentation is in `rexxscript/doc/`.
 `lib/ui` contains the experimental Level G UI tracer architecture. Its public
 cREXX library, drivers, applications, launchers, and tests explicitly use
 `OPTIONS LEVELG`; the native GTK/RXPA C plugin remains lower-level mechanism.
-`ui.rxbin` owns semantic events, explicit effects, logical views, the application/driver
-interfaces, and the runtime. `ui_tui.rxbin` is always built; with
-`ENABLE_GTK=ON`, `ui_gtk.rxbin` and `rx_ui_gtk_native` provide the separate GTK
-driver. Logical `label`, `line`, and `button` nodes use stable IDs and
-relative `root`/`below`/`right` placement resolved into rows and columns for
-both drivers. RXPP generates both logical-node calls and the small backend
-launchers. The GTK callback is same-thread and synchronous. Since cREXX classes
-are values, the driver uses an explicit weak reference to the active runtime
-for the duration of its native loop. See `lib/ui/README.md` for the lifecycle,
-vocabulary, ANSI-driver feasibility assessment, and implementation trail, and
-`examples/ui/text-inspector/README.md` for the executable example.
+`ui.rxbin` owns logical views; `ui_contract.rxbin` owns typed messages,
+effect collections, component/driver interfaces and owner-driven sessions.
+The line, ANSI and optional GTK hosts all implement `uidriver.run(session)`
+directly. Each supplies `capabilities()`; there is no scalar adapter.
+With `ENABLE_GTK=ON`, `ui_gtk.rxbin` and `rx_ui_gtk_native` provide GTK.
+Nodes use stable IDs and relative `root`/`below`/`right` placement.
+RXPP's single `UI_LAUNCHER` composes every host with the same session factory.
+GTK signals enter an owning idle mailbox; dialog responses are deferred, and
+close intent is distinct from destruction. RXPA calls remain synchronous:
+the callback receiver holds a weak reference to the live host only for the
+duration of native run. See `lib/ui/README.md`, `lib/ui/EXTENDING.md` and
+`examples/ui/text-inspector/README.md` for the lifecycle and executable trail.
+
+The first full-screen terminal host is `ui_ansi.rxbin`, using `ui_contract`
+directly. `ui_dialogs`, `ui_terminal_view` and `ui_local_resources` are Level G
+modules for standard confirmation/file selection, cell projection and scoped
+file grants. `lib/plugins/console` supplies the independent Level B `rxconsole`
+C provider: explicit console lease, timed key/text/paste input, resize, mouse,
+batched output and restoration. It has no ncurses or GTK dependency. RXPP's
+`UI_LAUNCHER` composes the same Text Inspector feature with this host.
+See `lib/ui/TERMINAL.md` for the lifecycle, precise limits and platform QA boundary.
 
 `lib/rxfnsb/rexx/rxjson.crexx` contains the first JSON foundation library module
 for Level B web-service and transport work. It is implemented in Rexx, ships in
@@ -278,11 +299,20 @@ module is `options levelg`, builds into `rxfnsg.rxbin`, uses `rxjson`, and sends
 through the public Level G `.httpclient` plus the shared private `_rxhttpcore`.
 It exposes a class-shaped interface in the `rxfnsg` namespace:
 
-- `llm`: provider-selecting interface for the local Ollama default
-- `ollama`: concrete local Ollama implementation over plain HTTP
-- `openai`: concrete OpenAI Responses API implementation over HTTPS
-- `anthropic`: concrete Anthropic Messages API implementation over HTTPS
-- `gemini`: concrete Gemini `generateContent` implementation over HTTPS
+- `.llm.open(.llmconfig(driver,model))`: common generation client for Ollama,
+  OpenAI, Anthropic, Gemini and optional in-process llama.
+- `.llm(model,host,port,timeout)`: compatible factory, always Ollama.
+- `.ollama`, `.openai`, `.anthropic`, `.gemini`: existing concrete HTTP clients.
+- `.llmrequest`, `.llmchunk`, `.llmresult`: requests and owned common output.
+- `.embedding.open(config)`, `.embeddingresult`: independent packed embeddings.
+
+The [common guide](../../lib/plugins/llama/common.md) defines setup, truthful
+capabilities, statuses/finishes and optional-plugin NOTREADY handling. The
+[implementation plan](../planning/llm-provider-interface.md) retains acceptance
+evidence and outstanding platform checks. Native C RXPA bindings implement
+internal `.llmnative`; do not require common consumers to import the optional
+provider. ADDRESS generation uses the common client and explicit `LLM_NATIVE`
+configuration while retaining existing aliases and HTTP helpers.
 
 The first provider posts JSON to a local Ollama `/api/generate` endpoint with
 `stream:false`. It keeps reconstructed HTTP diagnostics plus the decoded JSON
@@ -641,10 +671,10 @@ Plugins can be compiled in two ways:
 
 An unmodified RXPA plugin remains valid in a multi-VM process. The host treats
 it as a **legacy process-shared plugin**. While the process has only one VM that
-has loaded a legacy plugin, its procedures use the same direct adapter as the
-single-threaded product. Loading a legacy plugin into a second VM starts one
-cold, sticky transition: the host waits for existing direct legacy execution
-to leave its VM execution boundary, rebinds every live legacy procedure to one
+has loaded a legacy plugin, its procedures use a direct legacy adapter that
+records callback entry and exit on the current thread. Loading a legacy plugin
+into a second VM starts one cold, sticky transition: the host waits for existing
+direct legacy execution to leave its VM execution boundary, rebinds every live legacy procedure to one
 process-wide recursive compatibility lock, and publishes the new load only
 after rebinding. A VM that loads only process-reentrant plugins does not trigger
 the transition. Once concurrent legacy mode has been entered, later legacy
@@ -654,8 +684,19 @@ This is conservative because the existing initializer ABI has no way to prove
 that the plugin's C statics, its dependencies, or its error paths tolerate
 concurrent entry. Recursive locking allows a legacy plugin to make a nested
 call that reaches another legacy RXPA procedure without deadlocking. The cold
-transition can wait for a long-running legacy-capable VM invocation to return;
-plugin load must not assume that publication is instantaneous.
+transition can wait for a long-running legacy-capable VM invocation to return
+or reach the attached-worker startup boundary; plugin load must not assume
+that publication is instantaneous.
+
+Attached-worker startup temporarily parks every active VM on the calling
+thread, including nested VM execution, so a child can finish the transition
+while the parent waits. Startup from inside a live legacy callback or protected
+initializer/payload callback fails with the existing worker-start/channel
+provider-failure result: shared C state cannot safely be parked mid-callback.
+All success and failure paths restore the parent's execution state. This does
+not change the procedure ABI or the separate process-reentrant/session-affine
+dispatch paths. See the [interpreter protocol](RXVM_INTERPRETER.md) and
+[S3-D01 repair record](../planning/native-inference-worker-transition-proposal.md).
 
 An audited plugin that is safe for concurrent entry can opt in by adding one
 file-scope declaration after including `crexxpa.h`:
@@ -736,7 +777,8 @@ Current bundled classification is deliberately conservative:
 
 | Classification | Bundled examples | Rule |
 | --- | --- | --- |
-| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxstats`, `rxvector`, `rxid`, `rxfs`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
+| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxid`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
+| Mixed V2 procedures | `rxstats`, `rxfs`, `rxvector` | `rxfs` filesystem functions are process-reentrant; native fileguard factories/methods are VM-session-affine. Scalar statistics and immutable `linearfit` accessors remain process-reentrant. The C `linearfit` factory and regression result publication use the owning VM's checked type service through session-affine calls. The four original `rxvector` packed procedures are process-reentrant; its immutable `vectorindex` factory, import procedures and methods use VM-session host services. |
 | Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
 | Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
 
@@ -763,6 +805,28 @@ The VM passes arguments as opaque handles mapped to internal VM registers. The R
 
 - `ARG(n)`: Retrieves the opaque handle for the *n*th argument.
 
+- Complete UTF-8 text (including U+0000): session plugins may use
+  `RXPA_PLUGIN_SESSION_WITH_HOST(old_create, destroy, enter, leave, capabilities,
+  create_with_host)`. Check `rxpa_host_has_string_view(host)` before retaining the
+  immutable callback in the session. `host->string_view(value, &data, &bytes)`
+  returns zero and a borrowed read-only view on success; it allocates/copies
+  nothing and makes no NUL-termination promise. Its lifetime ends at value
+  mutation/reentrant mutation or native-call return. Copy any retained input into
+  provider-owned bounded storage. The V2 manifest tail is size checked on dynamic
+  and static paths; the unversioned initializer and old factories are unchanged.
+  A service-requiring plugin must return NULL from its old factory and reject
+  calls without a session on pre-V2 hosts, rather than silently using GETSTRING.
+- Complete UTF-8 output: `SETSTRINGLENGTH(host, value, data, byte_length)` is the
+  checked, optional `string_set` host service. It copies into VM-owned storage,
+  accepts embedded U+0000 and requires no terminator or padding. Length counts
+  bytes; the VM validates UTF-8 and maintains codepoint counts. NULL data is
+  valid only at length zero. Invalid/oversized text or an unavailable service
+  returns -1 without modifying the destination. A borrowed destination view is
+  also safe as input. Use `rxpa_host_has_string_set` to negotiate the complete
+  sized tail; require it for operations that publish arbitrary complete text.
+  Borrowed views remain counted, without a terminator guarantee. The legacy
+  C-string getter provides one trailing NUL; extra NUL padding would not make
+  C-string consumers preserve embedded U+0000.
 - `GETINT()`, `GETFLOAT()`, `GETSTRING()`: Extracts the native C value from a register handle.
 
 - `SETINT()`, `SETFLOAT()`, `SETSTRING()`: Writes a native C value into a target register.
@@ -940,9 +1004,9 @@ delivery route:
 | Provider ID | Public namespace and procedures | Contract note |
 |---|---|---|
 | `rxstats` | `rxstats.mean`, `stddev`, `covariance`, `correlation`, `regression` | Level G statistics over borrowed read-only `.packedfloat` payloads. Compensated shifted-origin accumulation plus a compensated second pass protects ill-conditioned central moments; regression returns immutable `.linearfit`. Boxed arrays, `.packedint`, and raw `.binary` are not production overloads. |
-| `rxvector` | `rxvector.decodef32le`, `encodef32le`, `cosine`, `topkcosine` | Level G exact vector computation over borrowed `.packedfloat`/`.packedint` payloads, with explicit canonical little-endian float32 conversion. The provider is stateless and process-reentrant; prepared/ANN indexes are not part of this contract. |
+| `rxvector` | `rxvector.decodef32le`, `encodef32le`, `cosine`, `topkcosine`; `.vectorindex`, `openindex`, `decodeindex` | Level G exact vector computation. The original borrowed packed-payload procedures remain stateless and process-reentrant. The session-affine immutable float32 owner adds RXVIDX/1 binary import/export, exact search and independent copy/close lifetime, with no USearch/C++ dependency. ANN remains separate. See the [rxvector reference](../books/crexx_library_reference/rxvector.md). |
 | `rxid` | `rxid.uuid4`, `uuid7`, `ulid`, `nanoid`, `snowflake`, `base58` | Bundled optional Level G identifier strings, callable from B when installed; random forms use platform cryptographic randomness and generation failures signal. |
-| `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append` | Narrow filesystem and directory operations. Return/status contracts are documented in the library reference. |
+| `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append`, `pathkind`, `abspath`, `copy`, `hardlink`, `move`; `.fileguard` | Narrow filesystem operations plus non-overwriting publication primitives and owning locks/leases. Return/status contracts are documented in the library reference. |
 | `rxplatform` | `rxplatform.uptime`, `user`, `host`, `osname`, `sleep` | Bundled optional Level G host/platform information and millisecond sleep, callable from B when installed. Clipboard, beep, process-global and developer functions from the old draft `system` surface were retired. |
 | `rxunicode` | `version`; four normalization transforms and predicates; `toUppercase`, `toLowercase`; full/simple/Turkic folding; typed `encode`, `decode`, and codec predicates; grapheme count, substring, position, reverse, and `.graphemes` | Level G Unicode 17.0.0 services over `.string` plus explicit `.binary` codec boundaries. The pure Level G facade delegates to private Level B codepoint executors and generated immutable tables. See the [Unicode library reference](../books/crexx_library_reference/unicode.md) and [implementation context](CREXX_UNICODE.md). |
 
@@ -950,6 +1014,142 @@ The source CMake target for `rxplatform` is named `_platform` to avoid a target
 collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,
 RXBIN dependency, runtime lookup, and native archive identity consistently
 `rxplatform`.
+
+### `rxllama` native inference lifecycle
+
+The optional `ENABLE_LLAMA` build adds the session-aware llama.rexx / `rxllama`
+provider. `import llama` exposes typed configuration, runtime, model, embedding
+and generation sessions/requests, owned results/chunks and diagnostics directly
+implemented in C RXPA.
+Load and prepare once, then process repeated inputs or batches using private
+contexts over shared compatible model weights. CPU/GPU discovery, inspection
+and cleanup remain explicit. Generation uses bounded prefill/decode units,
+ordered incremental complete UTF-8, token deltas and explicit finish reasons.
+Use the negotiated counted output service, not a C-string or Rexx conversion
+facade. See `generation_toolchain.py` and `generation_package_consumer.py` for
+explicit generation checks; do not register their nested aggregates before
+STEP-06 establishes Debug/sanitizer scheduling.
+Use [the installed provider guide](../../lib/plugins/llama/README.md),
+[installation](../../lib/plugins/llama/installation.md),
+[model provisioning](../../lib/plugins/llama/models.md),
+[operating reference](../../lib/plugins/llama/reference.md) and
+[example walkthrough](../../lib/plugins/llama/examples/README.md) as the current
+human/agent contract. The [qualification page](../../lib/plugins/llama/qualification.md)
+distinguishes trained-model CPU/Metal evidence, multi-platform fixture/package
+checks and remaining real-device/model acceptance. SAN-009 is closed in the
+sanitizer worklist; its old STEP-06 handoff is historical. The
+[STEP-07 ledger](../qa/native-inference-step07/README.md) retains documentation
+coverage and [STEP-05](../planning/native-inference-step-05.md) retains the local
+generation evidence. Preserve those evidence boundaries at takeover.
+Do not interpret the historical STEP-01 Rexx-facade proposal as authority to add
+wrappers. Do not silently re-pin models to close the recorded conversion
+provenance gap. CPU/Metal proof does not qualify Windows/Linux/CUDA/Vulkan.
+The common [LLM API](../../lib/plugins/llama/common.md) now selects all five
+drivers through `.llm.open(.llmconfig(driver,model))`. Core-only applications do
+not import llama: the internal `.llmnative` factory is late-loaded from a trusted
+explicit provider path or beside the executable. Missing/incompatible providers
+raise catchable NOTREADY with stable provider_unavailable/provider_incompatible
+message categories. The same native bridge supplies separate `.embedding` results.
+General `generation`/`embedding` profiles validate model geometry and explicit
+preprocessing, with dynamic dimensions and conservative model-dependent admission.
+Native common setup needs only `.llmconfig("llama", path)` for model selection.
+The optional `sha256` pins expected bytes; omitted/empty computes identity during
+opening before the existing shared-weight lookup, with one synchronous file read.
+Explicit hashes retain background verification; tensor loading stays asynchronous.
+The direct `runtime.model` API accepts an empty hash for the same behavior.
+The two BGE/Smol presets retain their original strict hashes and behavior.
+Keep the fixed `.llmchunk` RXPA attribute layout and fully qualified factory/type
+signatures synchronized with `common_driver.h`. `[*]` is the native unbounded
+array descriptor. The common adapter must reuse existing checked owners and
+registries; do not add a parallel model registry or Rexx native owner facade.
+[LLM-API-01](../planning/llm-provider-interface.md) records acceptance and evidence.
+
+The candidate binary-delivery work is tracked by numbered CI-OUT/CI-AC/CI
+steps in [the pipeline plan](../planning/native-inference-ci.md). Ordinary source
+builds default to `ENABLE_LLAMA=OFF`; explicit opt-in includes CPU, defaults to
+Metal on Apple, and leaves CUDA/Vulkan as separate SDK-dependent choices. The
+approved release design first builds four llama-free core archives, then builds
+only the optional provider/dependency/helper targets and tests them against
+those exact core artifacts. Windows has one MSVC/`rxbvm` base for Vulkan or CUDA.
+CI-D03 makes Vulkan the general Windows/Linux download and CUDA an optional
+separate download that remains mandatory to build/package/smoke for every full
+release build, including beta. Otherwise CUDA runs only on explicit manual
+GitHub Actions requests; ordinary pushes, PRs and development snapshots must
+not automatically select it, even for relevant input changes. Smoke means
+bounded checks inside that selected CUDA build, not a separate routine trigger.
+Valid compiler-cache reuse is allowed. CI-06 implements the cadence and both
+asset collectors; manual dispatch defaults to `base` and requires explicit
+`all`/CUDA selection for CUDA. Do not interpret optional installation
+or a skipped routine lane as permission to omit full-release CUDA qualification.
+ARM Mac ships CPU/Metal; Intel Mac ships CPU only (`CREXX_LLAMA_METAL=OFF`).
+CI-D02 explicitly excludes Intel Metal from this delivery after repeated
+compiler-service startup stalls. Do not restore that backend or claim its
+failure repaired from a successful CPU package check. Source defaults still
+enable Metal on Apple; Intel builders must explicitly disable it.
+A fifth Windows/MinGW core-only gate checks both VM variants, retains QA
+evidence without binaries, and must pass before plugin jobs. Core jobs own
+core QA; backend jobs own llama-specific QA. Core sanitizer jobs
+use `ENABLE_LLAMA=OFF` and never compile CUDA. Adapter sanitizer checks concern
+first-party code and may link an uninstrumented upstream engine. The separate
+core/plugin delivery is still under qualification; do not claim it released.
+CI-D04 adds separate optional Mac/Windows plugin installers which must locate
+and verify a matching installed core before copying plugin-owned files. Track
+INST-AC-01–05 in the pipeline plan; native Mac lifecycle evidence exists for
+ARM and Intel. Later retained candidate checks also cover signed/notarized Mac
+installers, fresh-host offline Gatekeeper and signed Windows lifecycle; use the
+[pipeline evidence ledger](../qa/native-inference-ci/README.md) for exact inputs
+and results rather than treating an older pending note as current. Staple the Mac package
+ticket; do not disable quarantine/Gatekeeper or promise no Apple network access.
+Windows coexistence is approved: both variants are stored separately with one
+explicitly active. Either installer supplies the shared `crexx-llama` native
+executable written in cREXX, using `rxjson`, `rxhash` and the expanded standard
+`rxfs`. The PowerShell manager is removed. `status`/`use vulkan`/`use cuda`
+do not load inference, invoke a shell, compile source or use a first-run cache.
+Keep the command while either variant remains installed. Portable ZIP paths
+still collide and cannot simply be overlaid. INST-04 has actual Windows native
+installer proof from run `35119980116` at `182516b4a`, covering both backends,
+switching, reinstall and removal. That is the earlier unsigned functional
+lifecycle baseline. Later candidate signing/offline checks are recorded in the
+ledger; full release and later snapshot publication remain separate claims.
+The small generated-fixture smoke does not relax the public model
+hash/profile gate or replace retained BGE/Smol qualification. Keep helpers and
+fixture weights outside the user payload. Rehash declared provider manifests
+only after a trusted staging/signing step has verified signatures, before
+final-payload smoke; runtime consumers must still reject changed hashes.
+
+`add_rxpa_provider_package` accepts optional `LINK_TARGETS`, `RUNTIME_TARGETS`,
+`BACKEND_TARGETS`, `RUNTIME_FILES`, `RUNTIME_SEARCH_DIRECTORIES` and `ENGINE_ID`.
+Search directories locate redistributable SDK dependencies at build time only;
+they are not runtime search overrides or user manifest paths. Its runtime-package target
+writes relative, hashed `.native.json` and `.runtime.json` files. The native
+driver invokes `crexx-provider-package` only for selected providers carrying
+metadata; the helper validates dependencies before copying or emitting linker
+arguments. Native project caching also revalidates the selected package bytes.
+Providers without this metadata retain the established archive-only delivery.
+
+### `rxsqlite` typed database provider
+
+`rxsqlite` is a standard session-aware RXPA provider rather than an incubator
+or demo. It owns opaque database/statement native payloads, gives every VM its
+own handle registry and diagnostic state, and marks its procedures
+`SESSION_AFFINE`. Copied payloads retain their resource; explicit close,
+finalization, stale/wrong-kind/cross-session rejection and session teardown are
+all provider-owned.
+
+The provider preserves SQLite NULL, signed 64-bit integer, real, UTF-8 text and
+exact binary blob types. Its public surface covers prepared statements and
+metadata, modes, busy timeout, WAL checkpoint, bounded online backup and
+integrity checking, changes/row identity, and primary plus extended errors.
+The separate `rxsqlite_address.rxbin` Level G module implements SQL commands
+and named host bindings only through that typed API.
+
+The source-controlled SQLite 3.53.2 amalgamation is compiled with
+`SQLITE_THREADSAFE=1`, `SQLITE_ENABLE_FTS5=1`, FULLMUTEX connections and the
+documented extension/security policy. It is embedded in
+`rxsqlite.rxplugin` and the canonical `providers/rxsqlite` static archive, so
+installed native packaging requires no downstream SQLite SDK or extra link
+metadata. See the maintained [rxsqlite
+reference](../books/crexx_library_reference/rxsqlite.md).
 
 ### Level G packed numeric owners
 
@@ -1001,20 +1201,16 @@ post-release language work.
 
 RXPA can also publish class/interface contract metadata to the compiler and VM.
 Use this when a native or hybrid provider needs to expose the same class-shaped
-contract that Rexx source would normally declare.
+contract that Rexx source would normally declare. The following snippet declares
+an interface only. For executable concrete factories and methods, use the C
+bindings in [Constructing and binding objects entirely in C](#constructing-and-binding-objects-entirely-in-c).
 
 ```c
 LOADFUNCS
 ADDINTERFACE("demo.environment");
-ADDFACTORY("demo.environment", "*", ".environment", "name=.string");
+ADDFACTORY("demo.environment", "*", ".demo..environment", "name=.string");
 ADDMETHOD("demo.environment", "describe", ".string", "");
 
-ADDCLASS("demo.nativeenvironment");
-ADDIMPLEMENTS("demo.nativeenvironment", "demo.environment");
-ADDFACTORY("demo.nativeenvironment", "*", ".nativeenvironment", "name=.string");
-ADDMETHOD("demo.nativeenvironment", "describe", ".string", "");
-
-ADDPROC(make_env, "demo.make", "b", ".environment", "");
 ENDLOADFUNCS
 ```
 
@@ -1063,15 +1259,17 @@ PROCEDURE(invoke)
 ```
 
 The receiver must be a live, initialized cREXX object. The descriptor is the
-canonical `rxsig1|name|return_type|arguments` form and is checked against the
+canonical `rxsig1|name|return_type|arguments` form, with fully qualified user
+types in the argument signature, and is checked against the
 concrete receiver class at runtime. The argument array and result are borrowed
 RXPA handles; the call copies the result into the supplied result slot and
 copies receiver/argument mutations back before it returns. `CALLMETHODX` is the
 same operation with an explicit signal handle for native callbacks outside the
 lexical `PROCEDURE` body.
 
-An unhandled signal raised by the cREXX method is propagated through the RXPA
-signal handle. Ordinary non-zero `.int` and `.boolean` method results remain
+A signal escaping a nested cREXX or C method is propagated through the RXPA
+signal handle. A catchable callback signal does not print a terminal panic;
+an uncaught outer program signal retains the ordinary panic diagnostic. Ordinary non-zero `.int` and `.boolean` method results remain
 ordinary results rather than being confused with signal status codes.
 
 The call is same-thread, synchronous, and valid only while an RXPA procedure is
@@ -1081,24 +1279,114 @@ trampoline and recursively enters the existing worker lifecycle, so the cREXX
 method may itself call RXPA procedures. Legacy plugin calls use the recursive
 compatibility lane, which prevents that nested native re-entry from deadlocking.
 
-Declaration is not construction. `ADDCLASS`, `ADDINTERFACE`,
-`ADDIMPLEMENTS`, and the member macros tell the compiler and VM that a contract
-exists, but they do not by themselves run a factory or stamp class identity on
-a return value. Existing RXPA return helpers such as `SETSTRING`, `SETINT`, and
-array attribute helpers fill a return value slot; factory/class construction is
-still a separate operation.
+### Constructing and binding objects entirely in C
 
-That means a native procedure can advertise a typed signature, for example:
+Use the RXPA CMake linker helpers for static and declaration providers. They
+retain the platform whole-archive/init-symbol flags and track archive changes
+as relink inputs. A build-order dependency alone can leave an executable with
+an older provider; the installed SDK regression checks incremental relinking.
+
+Declare the class before dependent signatures, bind C bodies with the member
+macros below, then publish the concrete class with `SETOBJECTTYPE`. A typed
+return declaration alone does not establish runtime class identity. Publish
+these bindings directly from the provider; a duplicate Rexx factory or
+forwarding class is unnecessary. Existing Rexx classes with their own behavior
+remain valid implementations. This surface is implemented; platform/sanitizer qualification
+is tracked in [RXPA native objects](../planning/rxpa-native-objects.md).
 
 ```c
-ADDPROC(make_env, "demo.make", "b", ".environment", "");
+/* active_host comes from this VM's session_create_with_host(host) callback.
+ * Require rxpa_host_has_object_set_type(host) when creating the session. */
+PROCEDURE(make_counter)
+{
+    SETNUMATTRS(RETURN, 1);
+    SETINT(GETATTR(RETURN, 0), GETINT(ARG0));
+    if (SETOBJECTTYPE(active_host, RETURN, "demo.counter") != 0) {
+        RETURNSIGNAL(SIGNAL_FAILURE, "Cannot publish demo.counter")
+    }
+    RESETSIGNAL
+}
+METHODPROCEDURE(add_counter)
+{
+    rxinteger total = GETINT(GETATTR(ARG0, 0)) + GETINT(ARG1);
+    SETINT(GETATTR(ARG0, 0), total);
+    SETINT(RETURN, total);
+    RESETSIGNAL
+}
+LOADFUNCS
+ADDCLASS("demo.counter");
+ADDFACTORYPROC(make_counter, "demo.counter", ".demo..counter", "initial=.int");
+ADDNAMEDFACTORYPROC(make_counter, "demo.counter", "from", ".demo..counter", "initial=.int");
+ADDMETHODPROC(add_counter, "demo.counter", "add", ".int", "amount=.int");
+ENDLOADFUNCS
 ```
 
-but the C body must still create or receive an object value that has the right
-shape and class identity. For complete object creation today, use a small Rexx
-factory/class shim to create the typed Rexx object, and let that object
-delegate selected work to native C functions. A future RXPA helper should cover
-the pure-C operation of constructing/stamping a typed object directly.
+The consumer can use `.demo..counter(10)`, `.demo..counter.from(10)` and
+`counter.add(2)`, with ordinary type identity, casts and interface dispatch.
+The complete executable session, ownership and callback example is
+[`tests/rxpa/rxpa_objects.c`](../../tests/rxpa/rxpa_objects.c), with its
+[Rexx consumer](../../tests/rxpa/rxpa_objects.crexx).
+
+| Binding | Declaration and body |
+| --- | --- |
+| `ADDMETHODPROC(fn, owner, member, type, args)` | Concrete method; use `METHODPROCEDURE(fn)` |
+| `ADDDEFAULTMETHODPROC(fn, owner, member, type, args)` | Interface default method; use `METHODPROCEDURE(fn)` |
+| `ADDFACTORYPROC(fn, owner, type, args)` | Default factory; use `PROCEDURE(fn)` |
+| `ADDNAMEDFACTORYPROC(fn, owner, member, type, args)` | Named factory; use `PROCEDURE(fn)` |
+| `ADDMATCHPROC(fn, owner, args)` | Default factory selection score; use `PROCEDURE(fn)` |
+| `ADDNAMEDMATCHPROC(fn, owner, member, args)` | Named factory selection score; use `PROCEDURE(fn)` |
+
+Owner/member/type/argument strings in these macros are string literals.
+Owners use metadata names such as `demo.counter`; user types in signatures use
+fully qualified source names such as `.demo..counter`. These bindings emit both
+metadata and callable symbols and work with dynamic, static and `DECL_ONLY`
+providers. Keep C bodies/session code under `#ifndef DECL_ONLY`, as in the
+fixture. `ADDFACTORY` and `ADDMETHOD` remain useful for interface declarations
+that have no body. Default interface implementations use the existing final
+method metadata. An implementing class's match body supplies an integer score
+for interface factory selection; a nonpositive score rejects that candidate.
+
+An interface-only factory consumer also retains each known native factory's
+ordinary callable/provider dependency. It does not need an earlier concrete
+constructor or an unrelated native call to load the provider. Native array
+member descriptors use the canonical unbounded spelling `[*]`; ordinary source
+declarations may still use `[]`.
+
+A native method receives the implicit receiver in `ARG0`; declared arguments
+start at `ARG1`. Use `METHODPROCEDURE` to enforce the ordinary
+`OBJECT_NOT_INITIALIZED` receiver guard before the body touches its attributes.
+Factories and match bodies have no implicit receiver: their declared arguments
+start at `ARG0`, and factories construct `RETURN`. Receiver mutations and
+`expose` arguments follow the existing call/copyback rules. Native payload
+copy/finalize hooks still govern resources; the type service adds no ownership
+registry and does not make VM value handles transferable between workers.
+
+The typed [llama.rexx example](../../lib/plugins/llama/README.md) uses this C
+surface for configuration/runtime/model/session/request owners, diagnostic
+snapshots and owned packed results. Its persistent and four-worker examples
+retain the same VM ownership and existing packed/vector representation.
+
+`SETOBJECTTYPE(host, value, name)` returns zero on success and -1 on failure.
+It is an optional, size-checked tail in `rxpa_host_services_v1`, obtained through
+`RXPA_PLUGIN_SESSION_WITH_HOST`; it does not extend `rxpa_initctx`. Check
+`rxpa_host_has_object_set_type(host)` before requiring the feature. Prefix-only,
+partial-tail, unknown-version and null-service hosts are rejected safely.
+Existing plugins that only use earlier host services continue to work.
+
+The operation requires an active owning VM call and a borrowed live value.
+It resolves a loaded concrete class (`demo.counter` or `.demo..counter`),
+preserves the value's payload/attributes and other flags, and clears the
+uninitialized-object marker. It neither allocates fields nor calls a factory:
+the C provider must construct a valid representation first. Unknown classes,
+interfaces, builtins, missing arguments and calls outside an active VM fail
+without changing the destination. On construction failure, clean up any
+provider-owned resources not yet attached to a managed value and report the
+signal/status appropriate to the public API. Do not retain the value handle.
+
+Native module type graphs are created lazily on the first successful lookup
+and retained by that VM's module. Repeated construction reuses the graph;
+there is no graph rebuild for each method call. This is not a new model-loading
+or inference boundary.
 
 Ordering matters when a native procedure signature references a class or
 interface type. Put the relevant `ADDCLASS`/`ADDINTERFACE` metadata before the
@@ -1110,7 +1398,7 @@ LOADFUNCS
 ADDINTERFACE("demo.environment");
 ADDMETHOD("demo.environment", "describe", ".string", "");
 
-ADDPROC(make_env, "demo.make", "b", ".environment", "");
+ADDPROC(make_env, "demo.make", "b", ".demo..environment", "");
 ENDLOADFUNCS
 ```
 

@@ -1,0 +1,6 @@
+set(platform "Darwin")
+set(provider copy_control)
+set(arch "arm64")
+set(engine fixture)
+set(runtime_files "/Users/runner/work/_temp/package-scan/a/libcopy_root_a.dylib" "/Users/runner/work/_temp/package-scan/b/libcopy_root_b.dylib" "/Users/runner/work/_temp/package-scan/a/libcopy-dependency.dylib")
+set(output "/Users/runner/work/_temp/package-scan/proof/complete")

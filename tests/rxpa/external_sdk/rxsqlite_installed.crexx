@@ -1,0 +1,32 @@
+/* Consumer intentionally compiled and run only against an installed CREXX. */
+options levelb
+
+import rxsqlite
+
+main: procedure = .int
+  database = .binary
+  statement = .binary
+  if sqliteopen(":memory:", database) <> 0 then return 1
+  fts5 = 0
+  threadsafe = 0
+  if sqlitecapability(database, "fts5", fts5) <> 0 | fts5 <> 1 then return 2
+  if sqlitecapability(database, "threadsafe", threadsafe) <> 0 | threadsafe <> 1 then return 3
+  if sqliteexec(database, "CREATE TABLE installed_values(v INTEGER, t TEXT); CREATE VIRTUAL TABLE installed_search USING fts5(body)") <> 0 then return 4
+  if sqliteprepare(database, "INSERT INTO installed_values VALUES(?1,?2)", statement) <> 0 then return 5
+  if sqlitebindint(statement, 1, 9223372036854775807) <> 0 then return 6
+  if sqlitebindtext(statement, 2, "installed-rxsqlite") <> 0 then return 7
+  if sqlitestep(statement) <> 101 then return 8
+  if sqlitefinalize(statement) <> 0 then return 9
+  statement = .binary
+  if sqliteprepare(database, "SELECT v,t FROM installed_values", statement) <> 0 then return 10
+  if sqlitestep(statement) <> 100 then return 11
+  value = 0
+  text = ""
+  if sqlitecolumnint(statement, 0, value) <> 0 | value <> 9223372036854775807 then return 12
+  if sqlitecolumntext(statement, 1, text) <> 0 | text <> "installed-rxsqlite" then return 13
+  if sqlitefinalize(statement) <> 0 then return 14
+  if sqliteclose(database) <> 0 then return 15
+  say "PASS: installed rxsqlite dynamic and native contract"
+  return 0
+
+exit main()

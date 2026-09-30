@@ -1,0 +1,49 @@
+name: Windows Installer QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [temp/windows-installer-qa]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  installer:
+    name: Installer QA from retained Windows payload
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Select the latest develop build payload
+        id: payload
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $commit = gh api "repos/$env:GITHUB_REPOSITORY/branches/develop" --jq '.commit.sha'
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve develop' }
+          $runs = gh api "repos/$env:GITHUB_REPOSITORY/actions/workflows/build.yml/runs" --method GET -f "head_sha=$commit" -F per_page=10 | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot read develop builds' }
+          $run = $runs.workflow_runs | Where-Object { $_.head_sha -eq $commit -and $_.event -eq 'push' } | Sort-Object id -Descending | Select-Object -First 1
+          if (!$run) { throw "No pushed develop build found for $commit" }
+          "run_id=$($run.id)" >> $env:GITHUB_OUTPUT
+          "commit=$($run.head_sha)" >> $env:GITHUB_OUTPUT
+          "Retained product: $($run.head_sha), build run $($run.id); packaging scripts: $env:GITHUB_SHA" >> $env:GITHUB_STEP_SUMMARY
+      - uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.payload.outputs.run_id }}
+          name: user-test-${{ steps.payload.outputs.commit }}-CREXX-windows-x64
+          path: ${{ runner.temp }}/retained-windows
+      - name: Build and test installer without rebuilding the product
+        shell: pwsh
+        run: |
+          $archive = Get-ChildItem '${{ runner.temp }}/retained-windows' -Filter '*.zip' -File
+          if (@($archive).Count -ne 1) { throw 'Expected one retained Windows ZIP' }
+          $unpacked = Join-Path $env:RUNNER_TEMP 'retained-payload'
+          Expand-Archive -LiteralPath $archive.FullName -DestinationPath $unpacked
+          $payload = Join-Path $unpacked 'CREXX-windows-x64'
+          $installer = Join-Path $env:RUNNER_TEMP 'installer-qa\CREXX-qa-unsigned-setup.exe'
+          & "$env:GITHUB_WORKSPACE/.github/scripts/build-windows-installer.ps1" -Payload $payload -Installer $installer -Commit '${{ steps.payload.outputs.commit }}'

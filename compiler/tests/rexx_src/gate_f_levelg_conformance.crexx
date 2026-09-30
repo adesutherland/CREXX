@@ -93,6 +93,12 @@ main: procedure = .int
   end
   if right <> 2 then errors = errors + 1
 
+  do parallel
+    signal posix_chld
+    signal_answer = plusone(41)
+  end
+  if signal_answer <> 42 then errors = errors + 1
+
   answer = do parallel
     block_left = twice(20)
     block_right = plusone(1)

@@ -4,10 +4,15 @@
 options levelb
 import rxfnsb
 
+##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes nosrcmap nmaclog
+
+
 square = .int[]
 cube = .int[]
 cumulative = .int[]
 label = .string[]
+
+##dalias fred, mike, berta
 
 ##MACRO MAKE_TABLE square_name, cube_name, total_name, label_name, count, title
     title = unquote(title)
@@ -41,5 +46,24 @@ say "row 5:" names[5] squares[5] cubes[5] totals[5]
 
 say "Generated report"
 ##emit report
+
+##fred abc
+ 111
+ 222
+ 333
+ 444
+##end
+##mike def
+ 111
+ 222
+ 333
+ 444
+##end
+##berta xyz
+ 111
+ 222
+ 333
+ 444
+##end
 
 exit 0

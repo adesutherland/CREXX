@@ -1,0 +1,3 @@
+Darwin 25.6.0 arm64
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true

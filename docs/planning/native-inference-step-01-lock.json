@@ -1,0 +1,342 @@
+{
+  "schema": "crexx-native-inference-step01-evidence-v1",
+  "recorded_date": "2026-09-14",
+  "authoritative_plan": "native-inference-backlog.md",
+  "review_record": "native-inference-step-01.md",
+  "crexx_revision_inspected": "037e7939bc29eb91b29ed41e9b1b8debdef6353d",
+  "status": "source/artifact inspection record; STEP-01 output approved; all product ACs open",
+  "llama_cpp": {
+    "repository": "https://github.com/ggml-org/llama.cpp",
+    "tag": "v0.4.0",
+    "annotated_tag_object": "5ac847190e979e0da7c4a21806630805f396d487",
+    "commit": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+    "tree": "0424752fbbc3bb01469ec830a30f2bc035497cd4",
+    "ggml": "in-tree at the same commit",
+    "license": "MIT",
+    "build_and_inference_tested": false,
+    "inspected_source_files": [
+      {
+        "path": ".gitmodules",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/.gitmodules"
+      },
+      {
+        "path": "CMakeLists.txt",
+        "sha256": "2904ff5f58eecf40ccfee5e18f2c9f01d23d5fc149efd005e260ba278d1193f6",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/CMakeLists.txt"
+      },
+      {
+        "path": "LICENSE",
+        "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/LICENSE"
+      },
+      {
+        "path": "common/CMakeLists.txt",
+        "sha256": "e15f28090782582b554183a3509f9d80646d9568bc3d9da4135f972c1a8d169e",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/common/CMakeLists.txt"
+      },
+      {
+        "path": "common/fit.cpp",
+        "sha256": "de4993970c03e5a8f3e7bd0f6feebfdd5affe9fc7d75bbe75d9036c1b7c8ce14",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/common/fit.cpp"
+      },
+      {
+        "path": "convert_hf_to_gguf.py",
+        "sha256": "e38975e1c68d98ac1664dfd530616eb35c72294382a4dd873d4746b23f27779f",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/convert_hf_to_gguf.py"
+      },
+      {
+        "path": "docs/build.md",
+        "sha256": "7acf214194de477a38ff54233016c23494fdfc9bdc5bc08005217c104274ce81",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/docs/build.md"
+      },
+      {
+        "path": "examples/embedding/embedding.cpp",
+        "sha256": "4c6f396dfd32b13c10132213fb38a51ff3519d5c80a29e38b7e3291f66c6a125",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/examples/embedding/embedding.cpp"
+      },
+      {
+        "path": "ggml/CMakeLists.txt",
+        "sha256": "febd1d7f548657f02cc643b6871b9362fe67de42190176f47ee3ce12e07f2f11",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/ggml/CMakeLists.txt"
+      },
+      {
+        "path": "ggml/include/ggml-backend.h",
+        "sha256": "46d84cb998105f871240864fd0f55446939a2fe86c5c281afa63a010fb1f65a2",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/ggml/include/ggml-backend.h"
+      },
+      {
+        "path": "ggml/src/CMakeLists.txt",
+        "sha256": "38ddf053a1adfc14bb84b7722e3c4ec01909694f7e51e32013f36e7a324fa4f0",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/ggml/src/CMakeLists.txt"
+      },
+      {
+        "path": "ggml/src/ggml-backend-reg.cpp",
+        "sha256": "0f63c69ad083e0744872f57d59d049b069283303f5bbc646222907d779afe4d1",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/ggml/src/ggml-backend-reg.cpp"
+      },
+      {
+        "path": "include/llama.h",
+        "sha256": "3d1b18eda626c1b9ecf5bda0798e65b974a8f70f30d56726610633a980cb4160",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/include/llama.h"
+      },
+      {
+        "path": "src/CMakeLists.txt",
+        "sha256": "de67b437cfc5b45751e728a550510718a0477c0186e31ed3994d649e143f18f9",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/src/CMakeLists.txt"
+      },
+      {
+        "path": "src/llama-context.cpp",
+        "sha256": "e42d929c98b36ef6ed9360969073a63526f9bbb378341cec85d53abfca46d320",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/src/llama-context.cpp"
+      },
+      {
+        "path": "src/llama-model-saver.cpp",
+        "sha256": "a93678b30f718fcfecec9b811197416ae1b5949c35bcbbecf7aa21b146328583",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/src/llama-model-saver.cpp"
+      },
+      {
+        "path": "src/llama-model.cpp",
+        "sha256": "931a9229ffdb2a6e6832055abc7f3310adbafc57f0eb81a81d60790a5f3bc356",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/src/llama-model.cpp"
+      },
+      {
+        "path": "src/llama-model.h",
+        "sha256": "71ecb7a84c8fba404528d2735c82bde18245a30c0ae3c6b80ccbc2835977c0bf",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/src/llama-model.h"
+      },
+      {
+        "path": "tests/CMakeLists.txt",
+        "sha256": "5832b89145eb88c90a2f1b4bae1f4e2015e69545e1e92143c2eb767772558dd7",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/tests/CMakeLists.txt"
+      },
+      {
+        "path": "tests/gguf-model-data.cpp",
+        "sha256": "ed9d2374393680e17ab8d528821e0991bc8092cbbc8704a450f0cf765ec8889a",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/tests/gguf-model-data.cpp"
+      },
+      {
+        "path": "tests/gguf-model-data.h",
+        "sha256": "580032269800c2807cf00dbb74db495e5a9564cccff9d2894e3eeb7d6a7a8cde",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/tests/gguf-model-data.h"
+      },
+      {
+        "path": "tests/test-llama-archs.cpp",
+        "sha256": "506e104559676f9e64e6bb1d11fb2df9f2496e7c74c0e8272287487bb768a3a7",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/tests/test-llama-archs.cpp"
+      },
+      {
+        "path": "tests/test-model-load-cancel.cpp",
+        "sha256": "92b561c68b058db20722873c5f9dbced7c240fba37de5ffbda4f4296b111e2b6",
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/5266f24da75dc449bd56cbed7addb9c8e4a6a73e/tests/test-model-load-cancel.cpp"
+      }
+    ]
+  },
+  "models": [
+    {
+      "file": "bge-small-en-v1.5-f16.gguf",
+      "url": "https://huggingface.co/ggml-org/models/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/bert-bge-small/ggml-model-f16.gguf",
+      "size_bytes": 67308128,
+      "sha256": "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+      "sha256_verified": true,
+      "inference_tested": false,
+      "gguf_inspection": {
+        "gguf_version": 3,
+        "tensor_count": 197,
+        "metadata": {
+          "general.architecture": "bert",
+          "general.name": "bge-small-en-v1.5",
+          "bert.block_count": 12,
+          "bert.context_length": 512,
+          "bert.embedding_length": 384,
+          "bert.feed_forward_length": 1536,
+          "bert.attention.head_count": 12,
+          "bert.attention.layer_norm_epsilon": 9.999999960041972e-13,
+          "general.file_type": 1,
+          "bert.attention.causal": false,
+          "bert.pooling_type": 2,
+          "tokenizer.ggml.token_type_count": 2,
+          "tokenizer.ggml.bos_token_id": 101,
+          "tokenizer.ggml.eos_token_id": 102,
+          "tokenizer.ggml.model": "bert",
+          "tokenizer.ggml.tokens": {
+            "array_count": 30522
+          },
+          "tokenizer.ggml.scores": {
+            "array_count": 30522
+          },
+          "tokenizer.ggml.token_type": {
+            "array_count": 30522
+          },
+          "tokenizer.ggml.unknown_token_id": 100,
+          "tokenizer.ggml.seperator_token_id": 102,
+          "tokenizer.ggml.padding_token_id": 0,
+          "tokenizer.ggml.cls_token_id": 101,
+          "tokenizer.ggml.mask_token_id": 103
+        }
+      },
+      "role": "embedding_reference",
+      "repository": "ggml-org/models-moved",
+      "download_repository_alias": "ggml-org/models",
+      "revision": "499bc8821c6b12b4e53c5bffcb21ec206f212d81",
+      "repository_path": "bert-bge-small/ggml-model-f16.gguf",
+      "reported_model_license": "MIT",
+      "license_source_url": "https://huggingface.co/BAAI/bge-small-en-v1.5/blob/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/README.md",
+      "source_comparison": {
+        "repository": "BAAI/bge-small-en-v1.5",
+        "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+        "relationship": "comparison checkpoint; not proven conversion ancestor"
+      },
+      "matching_conversion": {
+        "repository": "CompendiumLabs/bge-small-en-v1.5-gguf",
+        "revision": "d32f8c040ea3b516330eeb75b72bcc2d3a780ab7",
+        "path": "bge-small-en-v1.5-f16.gguf",
+        "same_artifact_sha256": true
+      },
+      "conversion_provenance_status": "exact converter and original source revision unresolved",
+      "preprocessing": {
+        "query_prefix": "Represent this sentence for searching relevant passages: ",
+        "document_prefix": "",
+        "pooling": "CLS",
+        "normalization": "L2",
+        "maximum_tokens_including_specials_and_instruction": 512,
+        "dimensions": 384,
+        "oversize": "reject"
+      }
+    },
+    {
+      "file": "smollm2-360m-instruct-q8_0.gguf",
+      "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct-GGUF/resolve/593b5a2e04c8f3e4ee880263f93e0bd2901ad47f/smollm2-360m-instruct-q8_0.gguf",
+      "size_bytes": 386404992,
+      "sha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+      "sha256_verified": true,
+      "inference_tested": false,
+      "gguf_inspection": {
+        "gguf_version": 3,
+        "tensor_count": 290,
+        "metadata": {
+          "general.architecture": "llama",
+          "general.type": "model",
+          "general.name": "Smollm2 360M 8k Lc100K Mix1 Ep2",
+          "general.organization": "Loubnabnl",
+          "general.finetune": "8k-lc100k-mix1-ep2",
+          "general.basename": "smollm2",
+          "general.size_label": "360M",
+          "general.license": "apache-2.0",
+          "general.languages": {
+            "array_count": 1
+          },
+          "llama.block_count": 32,
+          "llama.context_length": 8192,
+          "llama.embedding_length": 960,
+          "llama.feed_forward_length": 2560,
+          "llama.attention.head_count": 15,
+          "llama.attention.head_count_kv": 5,
+          "llama.rope.freq_base": 100000.0,
+          "llama.attention.layer_norm_rms_epsilon": 9.999999747378752e-06,
+          "general.file_type": 7,
+          "llama.vocab_size": 49152,
+          "llama.rope.dimension_count": 64,
+          "tokenizer.ggml.add_space_prefix": false,
+          "tokenizer.ggml.add_bos_token": false,
+          "tokenizer.ggml.model": "gpt2",
+          "tokenizer.ggml.pre": "smollm",
+          "tokenizer.ggml.tokens": {
+            "array_count": 49152
+          },
+          "tokenizer.ggml.token_type": {
+            "array_count": 49152
+          },
+          "tokenizer.ggml.merges": {
+            "array_count": 48900
+          },
+          "tokenizer.ggml.bos_token_id": 1,
+          "tokenizer.ggml.eos_token_id": 2,
+          "tokenizer.ggml.unknown_token_id": 0,
+          "tokenizer.ggml.padding_token_id": 2,
+          "tokenizer.chat_template": "{% for message in messages %}{% if loop.first and messages[0]['role'] != 'system' %}{{ '<|im_start|>system\nYou are a helpful AI assistant named SmolLM, trained by Hugging Face<|im_end|>\n' }}{% endif %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
+          "general.quantization_version": 2
+        }
+      },
+      "role": "generation_reference",
+      "repository": "HuggingFaceTB/SmolLM2-360M-Instruct-GGUF",
+      "revision": "593b5a2e04c8f3e4ee880263f93e0bd2901ad47f",
+      "repository_path": "smollm2-360m-instruct-q8_0.gguf",
+      "reported_model_license": "Apache-2.0",
+      "license_source_url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct-GGUF/blob/593b5a2e04c8f3e4ee880263f93e0bd2901ad47f/README.md",
+      "source_comparison": {
+        "repository": "HuggingFaceTB/SmolLM2-360M-Instruct",
+        "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+        "relationship": "comparison checkpoint; not proven conversion ancestor"
+      },
+      "conversion_provenance_status": "exact converter and original source revision unresolved",
+      "generation_control": {
+        "sampler": "greedy baseline proposed; token golden controls pending",
+        "context_and_output_budgets": "STEP-02 must declare before testing",
+        "chat_template": "exact tokenizer.chat_template metadata retained below"
+      }
+    },
+    {
+      "file": "stories260K.gguf",
+      "url": "https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf",
+      "size_bytes": 1185376,
+      "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+      "sha256_verified": true,
+      "inference_tested": false,
+      "role": "generation_smoke_candidate",
+      "repository": "ggml-org/models-moved",
+      "revision": "499bc8821c6b12b4e53c5bffcb21ec206f212d81",
+      "repository_path": "tinyllamas/stories260K.gguf",
+      "model_license_status": "redistribution provenance/notices to resolve before bundling"
+    }
+  ],
+  "scratch_generator": {
+    "source": "tests/test-llama-archs.cpp",
+    "proposed_arguments": [
+      "--arch",
+      "llama",
+      "--seed",
+      "1234",
+      "--out",
+      "FIXTURE_DIRECTORY"
+    ],
+    "executed": false,
+    "repeatability_note": "tensor initializer uses std::hash; retain output hash and toolchain, not seed alone",
+    "bert_fixture_status": "explicitly skipped by arch_supported at this pin: TODO vocab"
+  },
+  "hardware_inventory": {
+    "local": {
+      "os": "Darwin 25.6.0",
+      "architecture": "arm64",
+      "cpu": "Apple M5",
+      "logical_cpus": 10,
+      "memory_bytes": 25769803776,
+      "gpu_cores": 10,
+      "metal_reported": "Metal 4",
+      "evidence": "uname, sysctl, filtered system_profiler inventory; no llama execution"
+    },
+    "other_local_hosts": {
+      "intel_linux": "user-reported; CPU/GPU/driver inventory pending",
+      "intel_windows": "user-reported; CPU/GPU/driver inventory pending"
+    },
+    "ci_labels_inspected": [
+      "ubuntu-24.04",
+      "windows-2025",
+      "macos-15",
+      "macos-15-intel"
+    ],
+    "ci_gpu_execution": "not established by runner labels"
+  },
+  "open_items": [
+    "Reference-model exact conversion provenance or recorded reconversion",
+    "Model and runtime redistribution dependency inventory",
+    "STEP-02 direct model controls, tiny fixture execution and golden preprocessing",
+    "STEP-02 numerical, memory, cancellation and performance thresholds",
+    "Real CPU/GPU matrix and shared-model qualification"
+  ],
+  "contract_approval": {
+    "date": "2026-09-14",
+    "authority": "Adrian",
+    "decision": "STEP-01 output approved; proceed to STEP-02"
+  }
+}

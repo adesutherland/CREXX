@@ -1,0 +1,9 @@
+{"version":1,"provider":"rxllama","platform":"Darwin","arch":"arm64","engine":"5266f24da75dc449bd56cbed7addb9c8e4a6a73e","backends":[{
+  "backend" : "cpu",
+  "path" : "libcrexx-ggml-cpu.so",
+  "sha256" : "295c783cacea299e7ddfb4ba8eade4775c6f0ad858d9444a372d404dac615e59"
+},{
+  "backend" : "metal",
+  "path" : "libcrexx-ggml-metal.so",
+  "sha256" : "5264279a33a0ca918064ccf40ab1be983176042fb4e7309efa9b25839b78aca9"
+}]}

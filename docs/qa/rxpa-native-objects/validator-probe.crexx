@@ -1,0 +1,27 @@
+options levelb
+import rxpa_objects
+main: procedure = .int
+  blank = .box
+  raw = blank as .object
+  say "before" initialized(blank) initialized(raw)
+  caught = 0
+  do
+    ignored = blank.read()
+  on signal object_not_initialized
+    caught = 1
+  end
+  raw_after = blank as .object
+  say "after" caught initialized(blank) initialized(raw_after) <typeof>(blank)
+  rexx = .localbox
+  do
+    ignored_rexx = rexx.read()
+  on signal object_not_initialized
+    caught = 2
+  end
+  say "rexx after" caught initialized(rexx) <typeof>(rexx)
+  return 0
+localbox: class
+  *: factory
+    return
+  read: method = .int
+    return 1

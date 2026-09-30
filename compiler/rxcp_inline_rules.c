@@ -477,7 +477,7 @@ static void inline_summary_print_selector(FILE *out, const RxcpRemapRule *rule) 
         } else if (step->op == RXCP_REMAP_SEL_MATCH_TYPESET) {
             fprintf(out, " typeset=%s", inline_summary_typeset_name(step->value));
         }
-        fputc('\n', out);
+        platform_text_putc('\n', out);
     }
 }
 
@@ -496,7 +496,7 @@ static void inline_summary_print_steps(FILE *out,
     } else if (rewrites) {
         for (i = 0; rewrites[i].fn; i++) fprintf(out, " %s", rewrites[i].id ? rewrites[i].id : "(unnamed)");
     }
-    fputc('\n', out);
+    platform_text_putc('\n', out);
 }
 
 static void inline_summary_print_rule(FILE *out, const RxcpRemapRule *rule) {

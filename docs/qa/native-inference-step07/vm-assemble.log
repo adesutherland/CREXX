@@ -1,0 +1,3 @@
+argv=['/tmp/crexx-ni-s7.oheu5td2/install/bin/rxas', '-o', 'embeddings_vm', 'embeddings_vm']
+cwd=/tmp/crexx-ni-s7.oheu5td2/llama-example-work
+rc=0

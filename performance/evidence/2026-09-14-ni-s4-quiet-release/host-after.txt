@@ -1,0 +1,67 @@
+Mon Sep 14 17:55:38 UTC 2026
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+18:55  up 16 days, 16:50, 1 user, load averages: 3.02 2.16 1.80
+ 38.0 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 21.9 qemu-system-aarch64
+  2.0 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+  2.0 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+  1.5 /usr/libexec/syspolicyd
+  0.9 /usr/libexec/trustd
+  0.9 /System/Library/PrivateFrameworks/TCC.framework/Support/tccd
+  0.3 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd
+  0.3 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+  0.2 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds_stores
+  0.1 /usr/sbin/notifyd
+  0.1 /usr/sbin/cfprefsd
+Processes: 500 total, 3 running, 497 sleeping, 3205 threads 
+2026/09/14 18:55:39
+Load Avg: 3.02, 2.16, 1.80 
+CPU usage: 5.33% user, 12.0% sys, 82.66% idle 
+SharedLibs: 695M resident, 145M data, 104M linkedit.
+MemRegions: 191156 total, 4039M resident, 164M private, 3241M shared.
+PhysMem: 18G used (3166M wired, 5226M compressor), 4796M unused.
+VM: 210T vsize, 6144M framework vsize, 3900748(0) swapins, 5737292(0) swapouts.
+Networks: packets: 405962313/32G in, 401131021/36G out.
+Disks: 588223770/8062G read, 78734264/2358G written.
+
+PID    COMMAND          %CPU
+94997  ssh              0.0 
+94406  qemu-system-aarc 0.0 
+94350  netbiosd         0.0 
+94074  node_repl        0.0 
+94073  node             0.0 
+94072  node_repl        0.0 
+94071  node             0.0 
+91407  com.apple.Safari 0.0 
+91301  distnoted        0.0 
+90890  crashpad_handler 0.0 
+90815  Codex (Service)  0.0 
+90814  Codex (Service)  0.0 
+Processes: 500 total, 3 running, 497 sleeping, 3206 threads 
+2026/09/14 18:55:40
+Load Avg: 3.02, 2.16, 1.80 
+CPU usage: 6.92% user, 6.64% sys, 86.43% idle 
+SharedLibs: 695M resident, 145M data, 104M linkedit.
+MemRegions: 0 total, 0B resident, 164M private, 3241M shared.
+PhysMem: 18G used (3156M wired, 5226M compressor), 4802M unused.
+VM: 210T vsize, 6144M framework vsize, 3900748(0) swapins, 5737292(0) swapouts.
+Networks: packets: 405962350/32G in, 401131041/36G out.
+Disks: 588223770/8062G read, 78734277/2358G written.
+
+PID    COMMAND          %CPU
+599    WindowServer     41.2
+94406  qemu-system-aarc 26.7
+0      kernel_task      8.7 
+32806  Codex (Service)  8.4 
+32870  Codex (Renderer) 4.9 
+54382  top              4.3 
+32798  ChatGPT          3.5 
+32859  codex            0.7 
+88694  AppleCentauriAlp 0.5 
+566    opendirectoryd   0.4 
+1418   Finder           0.3 
+649    airportd         0.3 

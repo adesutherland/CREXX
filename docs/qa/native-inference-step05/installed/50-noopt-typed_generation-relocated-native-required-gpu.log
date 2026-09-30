@@ -1,0 +1,4 @@
+argv=[PosixPath('/private/tmp/ni-s5/installed-generation/noopt-typed_generation relocated Å/persistent'), 'required-gpu', PosixPath('/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf'), '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201']
+cwd=/private/tmp/ni-s5/installed-generation/noopt-typed_generation relocated Å
+rc=0
+PASS: typed llama generation

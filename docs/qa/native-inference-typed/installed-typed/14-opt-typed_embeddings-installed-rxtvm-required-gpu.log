@@ -1,0 +1,4 @@
+argv=[PosixPath('/private/tmp/llama-typed-release-installed/installed Ω/bin/rxtvm'), '/private/tmp/llama-typed-release-consumers-final/opt-typed_embeddings-dynamic-linked', '-a', 'required-gpu', PosixPath('/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf'), 'f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999']
+cwd=/private/tmp/llama-typed-release-consumers-final
+rc=0
+PASS: typed llama embeddings

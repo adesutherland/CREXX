@@ -1,6 +1,8 @@
 /*
  * cREXX License (MIT)
  *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
  * Native statistics over host-native packed float owners.
  */
 
@@ -12,8 +14,37 @@
 #include "crexxpa.h"
 #include "rxstats_kernel.h"
 
-#ifndef RXSTATS_KERNEL_ONLY
-RXPA_PLUGIN_PROCESS_REENTRANT
+#if !defined(RXSTATS_KERNEL_ONLY) && !defined(DECL_ONLY)
+/* Only object publication needs the owning VM's host service. Pure numerical
+ * calls and immutable accessors keep their process-reentrant dispatch. */
+#if defined(_MSC_VER)
+#define RXSTATS_LOCAL __declspec(thread)
+#else
+#define RXSTATS_LOCAL __thread
+#endif
+static RXSTATS_LOCAL const rxpa_host_services_v1 *rxstats_host;
+static void *rxstats_old_host(void) { return NULL; }
+static void *rxstats_create(const rxpa_host_services_v1 *host) {
+    return rxpa_host_has_object_set_type(host) ? (void *)host : NULL;
+}
+static void rxstats_destroy(void *session) { (void)session; }
+static int rxstats_enter(void *session, uint32_t caps, void **previous) {
+    (void)caps;
+    *previous = (void *)rxstats_host;
+    rxstats_host = session;
+    return 0;
+}
+static void rxstats_leave(void *previous) { rxstats_host = previous; }
+static uint32_t rxstats_capabilities(const char *name) {
+    if (!name) return 0;
+    if (!strcmp(name, "rxstats.regression") ||
+        !strcmp(name, "rxstats.linearfit.\xc2\xa7" "factory")) {
+        return RXPA_PROCEDURE_CAP_SESSION_AFFINE;
+    }
+    return RXPA_PROCEDURE_CAP_PROCESS_REENTRANT;
+}
+RXPA_PLUGIN_SESSION_WITH_HOST(rxstats_old_host, rxstats_destroy,
+        rxstats_enter, rxstats_leave, rxstats_capabilities, rxstats_create)
 #endif
 
 typedef struct rxstats_compensated_sum {
@@ -337,6 +368,65 @@ rxstats_status rxstats_accumulate_pairs(
 
 #ifndef RXSTATS_KERNEL_ONLY
 
+#ifndef DECL_ONLY
+/* Publish the same private two-double representation used by the former
+ * Rexx carrier, now with concrete runtime identity on every native result. */
+static int rxstats_publish_fit(rxpa_attribute_value value,
+                              const double coefficients[2]) {
+    return SETNATIVEPAYLOAD(value, coefficients, 2u * sizeof(double), NULL, 0u) ||
+           SETOBJECTTYPE(rxstats_host, value, "rxstats.linearfit");
+}
+
+/**
+ * Immutable slope and intercept returned by ordinary least-squares fitting.
+ * The private representation uses host-native packed floats; it is not a
+ * public positional or binary interface.
+ * @docType native-module
+ */
+/** Construct a linear-fit value.
+ * @param slope fitted gradient
+ * @param intercept fitted value at x equals zero
+ * @return initialized immutable linearfit value
+ */
+PROCEDURE(make_linearfit)
+{
+    double coefficients[2];
+    coefficients[0] = GETFLOAT(ARG0);
+    coefficients[1] = GETFLOAT(ARG1);
+    if (rxstats_publish_fit(RETURN, coefficients))
+        RETURNSIGNAL(SIGNAL_FAILURE, "RXSTATS.LINEARFIT could not publish its result")
+    RESETSIGNAL
+}
+
+static int rxstats_fit_coefficient(rxpa_attribute_value value, size_t index,
+                                  double *coefficient) {
+    size_t length = 0;
+    const unsigned char *bytes = GETNATIVEPAYLOAD(value, &length, NULL, NULL);
+    if (!bytes || length != 2u * sizeof(double)) return -1;
+    memcpy(coefficient, bytes + index * sizeof(double), sizeof(double));
+    return 0;
+}
+
+/** @return fitted gradient */
+METHODPROCEDURE(linearfit_slope)
+{
+    double result;
+    if (rxstats_fit_coefficient(ARG0, 0u, &result))
+        RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXSTATS.LINEARFIT has an invalid payload")
+    RETURNFLOAT(result);
+    RESETSIGNAL
+}
+
+/** @return fitted value at x equals zero */
+METHODPROCEDURE(linearfit_intercept)
+{
+    double result;
+    if (rxstats_fit_coefficient(ARG0, 1u, &result))
+        RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXSTATS.LINEARFIT has an invalid payload")
+    RETURNFLOAT(result);
+    RESETSIGNAL
+}
+
 PROCEDURE(mean)
 {
     rxstats_span values;
@@ -530,14 +620,20 @@ PROCEDURE(regression)
     if (!isfinite(coefficients[0]) || !isfinite(coefficients[1]))
         RETURNSIGNAL(SIGNAL_OVERFLOW_UNDERFLOW,
                      "RXSTATS.REGRESSION result is outside the native float range")
-    if (SETNATIVEPAYLOAD(RETURN, coefficients, sizeof(coefficients),
-                         NULL, 0u) != 0)
+    if (rxstats_publish_fit(RETURN, coefficients))
         RETURNSIGNAL(SIGNAL_FAILURE,
-                     "RXSTATS.REGRESSION could not allocate its result")
+                     "RXSTATS.REGRESSION could not publish its result")
     RESETSIGNAL
 }
 
+#endif /* !DECL_ONLY */
+
 LOADFUNCS
+    ADDCLASS("rxstats.linearfit");
+    ADDFACTORYPROC(make_linearfit, "rxstats.linearfit", ".rxstats..linearfit",
+                   "slope=.float,intercept=.float");
+    ADDMETHODPROC(linearfit_slope, "rxstats.linearfit", "slope", ".float", "");
+    ADDMETHODPROC(linearfit_intercept, "rxstats.linearfit", "intercept", ".float", "");
     ADDPROC(mean, "rxstats.mean", "b", ".float",
             "values = .packedfloat");
     ADDPROC(stddev, "rxstats.stddev", "b", ".float",

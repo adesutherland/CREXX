@@ -1,0 +1,1238 @@
+Command: ctest --test-dir /Users/runner/work/_temp/debugasan --output-on-failure -LE \^performance-measurement\$ --parallel 8
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/runner/work/_temp/debugasan
+          Start    1: platform_terminal_restore
+          Start    2: platform_terminal_disconnect
+          Start    3: rxsha256_unit
+          Start    4: rxgraph_unit
+          Start    5: crexx_contract_generation
+          Start    7: test_rxas_01_init
+          Start    8: test_rxas_02_edits
+          Start    9: test_rxas_03_token_types
+   1/2340 Test    #1: platform_terminal_restore .....................................   Passed    0.22 sec
+          Start   10: test_rxas_04_errors
+   2/2340 Test    #4: rxgraph_unit ..................................................   Passed    0.25 sec
+          Start   11: rxas_reject_non_source_mnemonics
+   3/2340 Test    #2: platform_terminal_disconnect ..................................   Passed    0.28 sec
+          Start   12: rxas_constant_aliases
+   4/2340 Test    #7: test_rxas_01_init .............................................   Passed    0.69 sec
+   5/2340 Test    #9: test_rxas_03_token_types ......................................   Passed    0.64 sec
+          Start   13: import_discovery_snapshot
+          Start   14: rxc_help_syntaxhighlight
+   6/2340 Test    #8: test_rxas_02_edits ............................................   Passed    0.72 sec
+          Start   15: rxc_help_no_exe_import
+   7/2340 Test    #3: rxsha256_unit .................................................   Passed    0.75 sec
+          Start   16: rxc_help_import_resolution_report
+   8/2340 Test   #12: rxas_constant_aliases .........................................   Passed    0.52 sec
+          Start   17: project_dependencies
+   9/2340 Test   #15: rxc_help_no_exe_import ........................................   Passed    0.09 sec
+          Start   18: binary_forward_dependencies
+  10/2340 Test   #10: test_rxas_04_errors ...........................................   Passed    0.65 sec
+          Start   19: inline_return_conversions
+  11/2340 Test   #16: rxc_help_import_resolution_report .............................   Passed    0.24 sec
+          Start   20: global_import_types
+  12/2340 Test   #14: rxc_help_syntaxhighlight ......................................   Passed    0.31 sec
+          Start   22: binary_storage_selector_dependencies
+  13/2340 Test   #17: project_dependencies ..........................................   Passed    0.35 sec
+          Start   23: import_resolution_report
+  14/2340 Test   #23: import_resolution_report ......................................   Passed    0.14 sec
+          Start   24: rxc_import_resolution_report_cli
+  15/2340 Test   #24: rxc_import_resolution_report_cli ..............................   Passed    0.08 sec
+          Start   26: rxas_invalid_diagnostic
+  16/2340 Test   #26: rxas_invalid_diagnostic .......................................   Passed    0.09 sec
+          Start   27: rxas_exposed_global_bounds
+  17/2340 Test   #13: import_discovery_snapshot .....................................   Passed    1.06 sec
+          Start   28: rxas_invalid_utf8_string
+  18/2340 Test   #28: rxas_invalid_utf8_string ......................................   Passed    0.11 sec
+          Start   29: rxc_invalid_utf8_hex_literal
+  19/2340 Test   #27: rxas_exposed_global_bounds ....................................   Passed    0.39 sec
+          Start   30: rxc_invalid_utf8_binary_literal
+  20/2340 Test   #11: rxas_reject_non_source_mnemonics ..............................   Passed    2.29 sec
+          Start   31: rxc_invalid_binary_assign_literal
+  21/2340 Test   #29: rxc_invalid_utf8_hex_literal ..................................   Passed    5.89 sec
+          Start   32: rxc_invalid_binary_literal_as_string
+  22/2340 Test   #30: rxc_invalid_utf8_binary_literal ...............................   Passed    6.39 sec
+          Start   33: rxc_function_lookup_diagnostic
+  23/2340 Test   #31: rxc_invalid_binary_assign_literal .............................   Passed    6.37 sec
+          Start   34: rxc_invalid_binary_to_string_runtime
+  24/2340 Test   #32: rxc_invalid_binary_literal_as_string ..........................   Passed    6.79 sec
+          Start   35: rxc_binary_literal_load
+  25/2340 Test   #33: rxc_function_lookup_diagnostic ................................   Passed    6.83 sec
+          Start   36: rxc_binary_memory_source
+  26/2340 Test   #34: rxc_invalid_binary_to_string_runtime ..........................   Passed    8.69 sec
+          Start   37: rxc_binary_constant_alias_opt
+  27/2340 Test    #5: crexx_contract_generation .....................................   Passed   22.29 sec
+          Start   38: rxc_packed_numeric_source
+  28/2340 Test   #36: rxc_binary_memory_source ......................................   Passed    7.48 sec
+          Start   39: rxc_binary_memory_packed_lookup
+  29/2340 Test   #37: rxc_binary_constant_alias_opt .................................   Passed    7.91 sec
+          Start   40: rxc_constants_levelb
+  30/2340 Test   #38: rxc_packed_numeric_source .....................................   Passed    6.66 sec
+          Start   41: rxc_register_flag_views
+  31/2340 Test   #35: rxc_binary_literal_load .......................................   Passed   14.58 sec
+          Start   42: rxc_scoped_register_reuse
+  32/2340 Test   #39: rxc_binary_memory_packed_lookup ...............................   Passed    6.64 sec
+          Start   43: rxc_call_statement_register_reuse
+  33/2340 Test   #42: rxc_scoped_register_reuse .....................................   Passed    7.11 sec
+          Start   44: rxc_inline_byvalue_arg_reuse
+  34/2340 Test   #40: rxc_constants_levelb ..........................................   Passed   13.57 sec
+          Start   45: robustness_set1_main
+  35/2340 Test   #43: rxc_call_statement_register_reuse .............................   Passed   12.35 sec
+          Start   46: robustness_set2_main
+  36/2340 Test   #41: rxc_register_flag_views .......................................   Passed   13.71 sec
+          Start   47: robustness_set3_main
+  37/2340 Test   #44: rxc_inline_byvalue_arg_reuse ..................................   Passed    6.58 sec
+          Start   48: robustness_set4_main
+  38/2340 Test   #45: robustness_set1_main ..........................................   Passed   14.85 sec
+          Start   49: robustness_set6_main
+  39/2340 Test   #46: robustness_set2_main ..........................................   Passed   14.71 sec
+          Start   50: robustness_set5_encapsulation
+  40/2340 Test   #47: robustness_set3_main ..........................................   Passed   14.76 sec
+          Start   51: 01_assign_noopt
+  41/2340 Test   #50: robustness_set5_encapsulation .................................   Passed    7.97 sec
+          Start   52: 01_assign_opt
+  42/2340 Test   #51: 01_assign_noopt ...............................................   Passed    7.89 sec
+          Start   53: 02_flow_noopt
+  43/2340 Test   #48: robustness_set4_main ..........................................   Passed   23.07 sec
+          Start   54: 02_flow_opt
+  44/2340 Test   #52: 01_assign_opt .................................................   Passed    7.44 sec
+          Start   55: 03_calc_noopt
+  45/2340 Test   #53: 02_flow_noopt .................................................   Passed    7.50 sec
+          Start   56: 03_calc_opt
+  46/2340 Test   #54: 02_flow_opt ...................................................   Passed    7.54 sec
+          Start   57: 04_literals_noopt
+  47/2340 Test   #49: robustness_set6_main ..........................................   Passed   25.07 sec
+          Start   58: 04_literals_opt
+  48/2340 Test   #55: 03_calc_noopt .................................................   Passed    8.98 sec
+          Start   59: 05_ops_common_noopt
+  49/2340 Test   #56: 03_calc_opt ...................................................   Passed    9.21 sec
+          Start   60: 05_ops_common_opt
+  50/2340 Test   #57: 04_literals_noopt .............................................   Passed    9.33 sec
+          Start   61: 05_ops_classic_noopt
+  51/2340 Test   #19: inline_return_conversions .....................................   Passed   86.56 sec
+          Start   62: 05_ops_classic_opt
+  52/2340 Test   #58: 04_literals_opt ...............................................   Passed    9.11 sec
+          Start   63: err_xor_common_fail
+  53/2340 Test   #63: err_xor_common_fail ...........................................   Passed    1.54 sec
+          Start   64: int64_literal_overflow_fail
+  54/2340 Test   #59: 05_ops_common_noopt ...........................................   Passed    9.38 sec
+          Start   65: int64_fold_overflow_fail
+  55/2340 Test   #18: binary_forward_dependencies ...................................   Passed   89.88 sec
+          Start   66: int64_fold_division_zero_fail
+  56/2340 Test   #60: 05_ops_common_opt .............................................   Passed    8.98 sec
+          Start   67: strict_compare_codegen_noopt
+  57/2340 Test   #61: 05_ops_classic_noopt ..........................................   Passed    8.89 sec
+          Start   68: strict_compare_codegen_opt
+  58/2340 Test   #62: 05_ops_classic_opt ............................................   Passed    7.76 sec
+          Start   69: address_expose_noopt
+  59/2340 Test   #64: int64_literal_overflow_fail ...................................   Passed    7.59 sec
+          Start   70: address_expose_opt
+  60/2340 Test   #65: int64_fold_overflow_fail ......................................   Passed    7.53 sec
+          Start   71: div_ops_common_noopt
+  61/2340 Test   #66: int64_fold_division_zero_fail .................................   Passed    7.66 sec
+          Start   72: div_ops_common_opt
+  62/2340 Test   #67: strict_compare_codegen_noopt ..................................   Passed    7.89 sec
+          Start   73: div_ops_classic_noopt
+  63/2340 Test   #68: strict_compare_codegen_opt ....................................   Passed    7.57 sec
+          Start   74: div_ops_classic_opt
+  64/2340 Test   #69: address_expose_noopt ..........................................   Passed    8.75 sec
+          Start   75: 06_logic_noopt
+  65/2340 Test   #70: address_expose_opt ............................................   Passed    9.95 sec
+          Start   76: 06_logic_opt
+  66/2340 Test   #71: div_ops_common_noopt ..........................................   Passed   10.01 sec
+          Start   77: named_operators_noopt
+  67/2340 Test   #72: div_ops_common_opt ............................................   Passed   10.00 sec
+          Start   78: named_operators_opt
+  68/2340 Test   #73: div_ops_classic_noopt .........................................   Passed   10.24 sec
+          Start   79: 07_loops_noopt
+  69/2340 Test   #74: div_ops_classic_opt ...........................................   Passed   10.49 sec
+          Start   80: 07_loops_opt
+  70/2340 Test   #75: 06_logic_noopt ................................................   Passed   10.03 sec
+          Start   81: 08_select_noopt
+  71/2340 Test   #76: 06_logic_opt ..................................................   Passed    9.37 sec
+          Start   82: 08_select_opt
+  72/2340 Test   #77: named_operators_noopt .........................................   Passed    9.26 sec
+          Start   83: test_select_classic_noopt
+  73/2340 Test   #78: named_operators_opt ...........................................   Passed    9.61 sec
+          Start   84: test_select_classic_opt
+  74/2340 Test   #79: 07_loops_noopt ................................................   Passed    9.65 sec
+          Start   85: test_select_c_noopt
+  75/2340 Test   #80: 07_loops_opt ..................................................   Passed    9.71 sec
+          Start   86: test_select_c_opt
+  76/2340 Test   #81: 08_select_noopt ...............................................   Passed    9.21 sec
+          Start   87: select_dispatch_integer_noopt
+  77/2340 Test   #82: 08_select_opt .................................................   Passed    9.21 sec
+          Start   88: select_dispatch_integer_opt
+  78/2340 Test   #83: test_select_classic_noopt .....................................   Passed    9.39 sec
+          Start   89: select_dispatch_fallback_noopt
+  79/2340 Test   #84: test_select_classic_opt .......................................   Passed    9.33 sec
+          Start   90: select_dispatch_fallback_opt
+  80/2340 Test   #85: test_select_c_noopt ...........................................   Passed    9.24 sec
+          Start   91: select_dispatch_mixed_noopt
+  81/2340 Test   #86: test_select_c_opt .............................................   Passed    9.10 sec
+          Start   92: select_dispatch_mixed_opt
+  82/2340 Test   #87: select_dispatch_integer_noopt .................................   Passed    8.69 sec
+          Start   93: select_dispatch_general_noopt
+  83/2340 Test   #20: global_import_types ...........................................   Passed  131.25 sec
+          Start   94: select_dispatch_general_opt
+  84/2340 Test   #88: select_dispatch_integer_opt ...................................   Passed    8.34 sec
+          Start   95: select_dispatch_strings_noopt
+  85/2340 Test   #89: select_dispatch_fallback_noopt ................................   Passed    8.28 sec
+          Start   96: select_dispatch_strings_opt
+  86/2340 Test   #90: select_dispatch_fallback_opt ..................................   Passed    8.57 sec
+          Start   97: repro_duplicate_call_argument_noopt
+  87/2340 Test   #91: select_dispatch_mixed_noopt ...................................   Passed    8.63 sec
+          Start   98: repro_duplicate_call_argument_opt
+  88/2340 Test   #92: select_dispatch_mixed_opt .....................................   Passed    8.74 sec
+          Start   99: 09_nested_noopt
+  89/2340 Test   #93: select_dispatch_general_noopt .................................   Passed    8.97 sec
+          Start  100: 09_nested_opt
+  90/2340 Test   #94: select_dispatch_general_opt ...................................   Passed    9.19 sec
+          Start  101: 10_procs_noopt
+  91/2340 Test   #95: select_dispatch_strings_noopt .................................   Passed    8.92 sec
+          Start  102: 10_procs_opt
+  92/2340 Test   #96: select_dispatch_strings_opt ...................................   Passed    8.96 sec
+          Start  103: 11_scope_noopt
+  93/2340 Test   #97: repro_duplicate_call_argument_noopt ...........................   Passed    8.74 sec
+          Start  104: 11_scope_opt
+  94/2340 Test   #98: repro_duplicate_call_argument_opt .............................   Passed    8.88 sec
+          Start  105: 12_arrays_lvlb_noopt
+  95/2340 Test   #99: 09_nested_noopt ...............................................   Passed    8.64 sec
+          Start  106: 12_arrays_lvlb_opt
+  96/2340 Test  #100: 09_nested_opt .................................................   Passed    9.23 sec
+          Start  107: array_mutation_statements_noopt
+  97/2340 Test  #101: 10_procs_noopt ................................................   Passed    8.95 sec
+          Start  108: array_mutation_statements_opt
+  98/2340 Test  #102: 10_procs_opt ..................................................   Passed    9.19 sec
+          Start  109: 13_stems_noopt
+  99/2340 Test  #103: 11_scope_noopt ................................................   Passed    8.88 sec
+          Start  110: 13_stems_opt
+ 100/2340 Test  #104: 11_scope_opt ..................................................   Passed    9.34 sec
+          Start  111: repro_multi_tail_stems_noopt
+ 101/2340 Test  #105: 12_arrays_lvlb_noopt ..........................................   Passed    8.98 sec
+          Start  112: repro_multi_tail_stems_opt
+ 102/2340 Test  #106: 12_arrays_lvlb_opt ............................................   Passed    9.14 sec
+          Start  113: 14_strings_noopt
+ 103/2340 Test   #22: binary_storage_selector_dependencies ..........................   Passed  156.82 sec
+          Start  114: 14_strings_opt
+ 104/2340 Test  #107: array_mutation_statements_noopt ...............................   Passed    8.46 sec
+          Start  115: 17_string_arrays_noopt
+ 105/2340 Test  #108: array_mutation_statements_opt .................................   Passed    8.39 sec
+          Start  116: 17_string_arrays_opt
+ 106/2340 Test  #109: 13_stems_noopt ................................................   Passed    8.74 sec
+          Start  117: 18_array_class_noopt
+ 107/2340 Test  #110: 13_stems_opt ..................................................   Passed    8.79 sec
+          Start  118: 18_array_class_opt
+ 108/2340 Test  #111: repro_multi_tail_stems_noopt ..................................   Passed    8.47 sec
+          Start  119: val_magic_01_noopt
+ 109/2340 Test  #112: repro_multi_tail_stems_opt ....................................   Passed    8.34 sec
+          Start  120: val_magic_01_opt
+ 110/2340 Test  #113: 14_strings_noopt ..............................................   Passed    8.53 sec
+          Start  121: val_magic_02_noopt
+ 111/2340 Test  #114: 14_strings_opt ................................................   Passed    9.00 sec
+          Start  122: val_magic_02_opt
+ 112/2340 Test  #115: 17_string_arrays_noopt ........................................   Passed    8.79 sec
+          Start  123: opt_decimal_safety_noopt
+ 113/2340 Test  #116: 17_string_arrays_opt ..........................................   Passed    8.64 sec
+          Start  124: opt_decimal_safety_opt
+ 114/2340 Test  #117: 18_array_class_noopt ..........................................   Passed    8.58 sec
+          Start  125: opt_numeric_safety_noopt
+ 115/2340 Test  #118: 18_array_class_opt ............................................   Passed    8.89 sec
+          Start  126: opt_numeric_safety_opt
+ 116/2340 Test  #119: val_magic_01_noopt ............................................   Passed    8.81 sec
+          Start  127: 15_imports_noopt
+ 117/2340 Test  #120: val_magic_01_opt ..............................................   Passed    9.05 sec
+          Start  128: 15_imports_opt
+ 118/2340 Test  #121: val_magic_02_noopt ............................................   Passed    9.13 sec
+          Start  129: class_import_noopt
+ 119/2340 Test  #122: val_magic_02_opt ..............................................   Passed    9.72 sec
+          Start  130: class_import_opt
+ 120/2340 Test  #124: opt_decimal_safety_opt ........................................   Passed    9.39 sec
+          Start  131: 16_classes_parse
+ 121/2340 Test  #123: opt_decimal_safety_noopt ......................................   Passed    9.87 sec
+          Start  132: err_01_type_fail
+ 122/2340 Test  #125: opt_numeric_safety_noopt ......................................   Passed   10.06 sec
+          Start  133: err_02_syntax_fail
+ 123/2340 Test  #126: opt_numeric_safety_opt ........................................   Passed    9.86 sec
+          Start  134: err_04_getter_fail
+ 124/2340 Test  #133: err_02_syntax_fail ............................................   Passed    1.28 sec
+          Start  135: err_05_setter_fail
+ 125/2340 Test  #127: 15_imports_noopt ..............................................   Passed    9.68 sec
+          Start  136: err_06_missing_method_fail
+ 126/2340 Test  #128: 15_imports_opt ................................................   Passed    9.87 sec
+          Start  137: array_mutation_bad_index_fail
+ 127/2340 Test  #129: class_import_noopt ............................................   Passed   10.21 sec
+          Start  138: array_mutation_bad_value_fail
+ 128/2340 Test  #131: 16_classes_parse ..............................................   Passed    8.85 sec
+          Start  139: array_mutation_fixed_target_fail
+ 129/2340 Test  #132: err_01_type_fail ..............................................   Passed    8.88 sec
+          Start  140: array_mutation_scalar_target_fail
+ 130/2340 Test  #130: class_import_opt ..............................................   Passed    9.75 sec
+          Start  141: err_symbol_boundary_whitespace_fail
+ 131/2340 Test  #134: err_04_getter_fail ............................................   Passed    8.52 sec
+          Start  142: err_loop_class_fail
+ 132/2340 Test  #136: err_06_missing_method_fail ....................................   Passed    9.03 sec
+          Start  143: err_select_no_when_fail
+ 133/2340 Test  #135: err_05_setter_fail ............................................   Passed    9.29 sec
+          Start  144: err_select_c_no_when_fail
+ 134/2340 Test  #137: array_mutation_bad_index_fail .................................   Passed    9.27 sec
+          Start  145: err_class_assign_fail
+ 135/2340 Test  #143: err_select_no_when_fail .......................................   Passed    1.39 sec
+          Start  146: err_register_flag_compiler_write_fail
+ 136/2340 Test  #144: err_select_c_no_when_fail .....................................   Passed    1.38 sec
+          Start  147: err_register_flag_language_write_fail
+ 137/2340 Test  #138: array_mutation_bad_value_fail .................................   Passed    9.05 sec
+          Start  148: err_register_flag_unknown_fail
+ 138/2340 Test  #145: err_class_assign_fail .........................................   Passed    1.54 sec
+          Start  149: err_register_flag_type_fail
+ 139/2340 Test  #148: err_register_flag_unknown_fail ................................   Passed    1.33 sec
+          Start  150: err_address_commandless_sandbox_fail
+ 140/2340 Test  #149: err_register_flag_type_fail ...................................   Passed    1.59 sec
+          Start  151: err_block_expr_type_mismatch_fail
+ 141/2340 Test  #139: array_mutation_fixed_target_fail ..............................   Passed    9.40 sec
+          Start  152: err_block_expr_no_leave_fail
+ 142/2340 Test  #140: array_mutation_scalar_target_fail .............................   Passed    9.58 sec
+          Start  153: err_block_expr_leave_plain_fail
+ 143/2340 Test  #141: err_symbol_boundary_whitespace_fail ...........................   Passed    9.44 sec
+          Start  154: err_block_expr_missing_end_fail
+ 144/2340 Test  #154: err_block_expr_missing_end_fail ...............................   Passed    1.29 sec
+          Start  155: err_block_expr_incomplete_fail
+ 145/2340 Test  #142: err_loop_class_fail ...........................................   Passed    9.56 sec
+          Start  156: err_leave_with_not_in_block_fail
+ 146/2340 Test  #155: err_block_expr_incomplete_fail ................................   Passed    1.22 sec
+          Start  157: initializer_direct_call_fail
+ 147/2340 Test  #146: err_register_flag_compiler_write_fail .........................   Passed    9.53 sec
+          Start  158: initializer_namespace_expose_fail
+ 148/2340 Test  #147: err_register_flag_language_write_fail .........................   Passed    9.42 sec
+          Start  159: initializer_argument_fail
+ 149/2340 Test  #159: initializer_argument_fail .....................................   Passed    1.25 sec
+          Start  160: initializer_return_value_fail
+ 150/2340 Test  #150: err_address_commandless_sandbox_fail ..........................   Passed    9.20 sec
+          Start  161: interface_missing_impl_fail
+ 151/2340 Test  #151: err_block_expr_type_mismatch_fail .............................   Passed    9.12 sec
+          Start  162: interface_match_bad_args_fail
+ 152/2340 Test  #152: err_block_expr_no_leave_fail ..................................   Passed    9.10 sec
+          Start  163: interface_match_without_factory_fail
+ 153/2340 Test  #153: err_block_expr_leave_plain_fail ...............................   Passed    8.67 sec
+          Start  164: interface_default_redefine_fail
+ 154/2340 Test  #156: err_leave_with_not_in_block_fail ..............................   Passed    8.93 sec
+          Start  165: interface_factory_return_type_fail
+ 155/2340 Test  #157: initializer_direct_call_fail ..................................   Passed    8.99 sec
+          Start  166: interface_signature_static_bad_method_fail
+ 156/2340 Test  #165: interface_factory_return_type_fail ............................   Passed    1.35 sec
+          Start  167: qualified_namespace_missing_import_fail
+ 157/2340 Test  #158: initializer_namespace_expose_fail .............................   Passed    8.91 sec
+          Start  168: type_ops_reserved_keyword_fail
+ 158/2340 Test  #160: initializer_return_value_fail .................................   Passed    9.10 sec
+          Start  169: reference_source_value_to_ref_fail
+ 159/2340 Test  #168: type_ops_reserved_keyword_fail ................................   Passed    1.77 sec
+          Start  170: reference_source_ref_to_value_fail
+ 160/2340 Test  #161: interface_missing_impl_fail ...................................   Passed    9.41 sec
+          Start  171: reference_source_non_storage_fail
+ 161/2340 Test  #162: interface_match_bad_args_fail .................................   Passed    9.47 sec
+          Start  172: reference_source_ref_target_fail
+ 162/2340 Test  #163: interface_match_without_factory_fail ..........................   Passed    8.98 sec
+          Start  173: reference_source_nested_type_fail
+ 163/2340 Test  #164: interface_default_redefine_fail ...............................   Passed    9.31 sec
+          Start  174: reference_source_deref_nonref_fail
+ 164/2340 Test  #166: interface_signature_static_bad_method_fail ....................   Passed    8.38 sec
+          Start  175: reference_source_deref_expr_fail
+ 165/2340 Test  #167: qualified_namespace_missing_import_fail .......................   Passed    8.51 sec
+          Start  176: reference_source_deref_attr_fail
+ 166/2340 Test  #170: reference_source_ref_to_value_fail ............................   Passed    8.81 sec
+          Start  177: reference_source_deref_index_fail
+ 167/2340 Test  #169: reference_source_value_to_ref_fail ............................   Passed    9.42 sec
+          Start  178: reference_source_deref_global_fail
+ 168/2340 Test  #171: reference_source_non_storage_fail .............................   Passed    9.08 sec
+          Start  179: reference_source_refvalid_nonref_fail
+ 169/2340 Test  #172: reference_source_ref_target_fail ..............................   Passed    9.17 sec
+          Start  180: reference_source_comparison_fail
+ 170/2340 Test  #173: reference_source_nested_type_fail .............................   Passed    9.10 sec
+          Start  181: reference_source_refsame_nonref_fail
+ 171/2340 Test  #174: reference_source_deref_nonref_fail ............................   Passed    9.09 sec
+          Start  182: reference_source_refsame_type_fail
+ 172/2340 Test  #175: reference_source_deref_expr_fail ..............................   Passed    9.05 sec
+          Start  183: eq_levelb_fail
+ 173/2340 Test  #176: reference_source_deref_attr_fail ..............................   Passed    8.78 sec
+          Start  184: eq_missing_interface_fail
+ 174/2340 Test  #177: reference_source_deref_index_fail .............................   Passed    8.85 sec
+          Start  185: eq_nonobject_fail
+ 175/2340 Test  #179: reference_source_refvalid_nonref_fail .........................   Passed    8.94 sec
+          Start  186: crexx_driver_reference_failure_propagation
+ 176/2340 Test  #178: reference_source_deref_global_fail ............................   Passed    9.38 sec
+          Start  187: binary_memory_invalid_storage_fail
+ 177/2340 Test  #180: reference_source_comparison_fail ..............................   Passed    9.46 sec
+          Start  188: binary_memory_fixed_for_fail
+ 178/2340 Test  #181: reference_source_refsame_nonref_fail ..........................   Passed    9.24 sec
+          Start  189: binary_memory_missing_offset_fail
+ 179/2340 Test  #182: reference_source_refsame_type_fail ............................   Passed    9.51 sec
+          Start  190: binary_memory_readonly_write_fail
+ 180/2340 Test  #183: eq_levelb_fail ................................................   Passed    9.68 sec
+          Start  191: binary_memory_span_write_fail
+ 181/2340 Test  #184: eq_missing_interface_fail .....................................   Passed    9.91 sec
+          Start  192: binary_memory_target_not_binary_fail
+ 182/2340 Test  #185: eq_nonobject_fail .............................................   Passed   10.30 sec
+          Start  193: binary_memory_length_required_fail
+ 183/2340 Test  #187: binary_memory_invalid_storage_fail ............................   Passed    9.53 sec
+          Start  194: binary_memory_decimal_length_fail
+ 184/2340 Test  #186: crexx_driver_reference_failure_propagation ....................   Passed   11.25 sec
+          Start  195: binary_memory_extra_argument_fail
+ 185/2340 Test  #189: binary_memory_missing_offset_fail .............................   Passed   10.07 sec
+          Start  196: binary_memory_missing_length_argument_fail
+ 186/2340 Test  #188: binary_memory_fixed_for_fail ..................................   Passed   10.24 sec
+          Start  197: packed_invalid_storage_fail
+ 187/2340 Test  #190: binary_memory_readonly_write_fail .............................   Passed    9.86 sec
+          Start  198: packed_missing_index_fail
+ 188/2340 Test  #195: binary_memory_extra_argument_fail .............................   Passed    1.51 sec
+          Start  199: packed_extra_argument_fail
+ 189/2340 Test  #198: packed_missing_index_fail .....................................   Passed    1.21 sec
+          Start  200: packed_target_not_binary_fail
+ 190/2340 Test  #199: packed_extra_argument_fail ....................................   Passed    1.17 sec
+          Start  201: packed_readonly_write_fail
+ 191/2340 Test  #191: binary_memory_span_write_fail .................................   Passed    9.67 sec
+          Start  202: binary_memory_generic_types_unsupported_fail
+ 192/2340 Test  #192: binary_memory_target_not_binary_fail ..........................   Passed    9.41 sec
+          Start  203: binary_memory_blen_syntax_fail
+ 193/2340 Test  #202: binary_memory_generic_types_unsupported_fail ..................   Passed    1.22 sec
+          Start  204: binary_memory_blen_target_not_binary_fail
+ 194/2340 Test  #203: binary_memory_blen_syntax_fail ................................   Passed    1.57 sec
+          Start  205: binary_memory_compare_arguments_fail
+ 195/2340 Test  #194: binary_memory_decimal_length_fail .............................   Passed    9.70 sec
+          Start  206: binary_memory_compare_explicit_length_fail
+ 196/2340 Test  #193: binary_memory_length_required_fail ............................   Passed    9.98 sec
+          Start  207: binary_memory_compare_needle_type_fail
+ 197/2340 Test  #196: binary_memory_missing_length_argument_fail ....................   Passed    8.89 sec
+          Start  208: binary_memory_compare_target_not_binary_fail
+ 198/2340 Test  #197: packed_invalid_storage_fail ...................................   Passed    8.92 sec
+          Start  209: binary_memory_compare_type_fail
+ 199/2340 Test  #200: packed_target_not_binary_fail .................................   Passed    8.31 sec
+          Start  210: literal_continuation_suffix_error_fail
+ 200/2340 Test  #201: packed_readonly_write_fail ....................................   Passed    8.39 sec
+          Start  211: intrinsic_argexists_invalid_fail
+ 201/2340 Test  #210: literal_continuation_suffix_error_fail ........................   Passed    1.12 sec
+          Start  212: legacy_arg_call_removed_fail
+ 202/2340 Test  #204: binary_memory_blen_target_not_binary_fail .....................   Passed    7.93 sec
+          Start  213: legacy_arg_stem_removed_fail
+ 203/2340 Test  #211: intrinsic_argexists_invalid_fail ..............................   Passed    1.04 sec
+          Start  214: legacy_typeof_removed_fail
+ 204/2340 Test  #212: legacy_arg_call_removed_fail ..................................   Passed    1.06 sec
+          Start  215: legacy_refvalid_removed_fail
+ 205/2340 Test  #205: binary_memory_compare_arguments_fail ..........................   Passed    7.44 sec
+          Start  216: err_address_exit_disabled_fail
+ 206/2340 Test  #213: legacy_arg_stem_removed_fail ..................................   Passed    1.09 sec
+          Start  217: err_parse_exit_disabled_fail
+ 207/2340 Test  #214: legacy_typeof_removed_fail ....................................   Passed    1.11 sec
+          Start  218: err_parse_inline_then_exit_disabled_fail
+ 208/2340 Test  #215: legacy_refvalid_removed_fail ..................................   Passed    1.03 sec
+          Start  219: err_trace_exit_disabled_fail
+ 209/2340 Test  #207: binary_memory_compare_needle_type_fail ........................   Passed    6.06 sec
+          Start  220: err_parse_missing_arguments_fail
+ 210/2340 Test  #206: binary_memory_compare_explicit_length_fail ....................   Passed    6.27 sec
+          Start  221: loop_warn
+ 211/2340 Test  #208: binary_memory_compare_target_not_binary_fail ..................   Passed    6.31 sec
+          Start  222: implicit_member_call_address_warn
+ 212/2340 Test  #209: binary_memory_compare_type_fail ...............................   Passed    6.36 sec
+          Start  223: implicit_exit_reject_address_warn
+ 213/2340 Test  #216: err_address_exit_disabled_fail ................................   Passed    5.31 sec
+          Start  224: procedure_expose_no_duplicate_warn
+ 214/2340 Test  #217: err_parse_exit_disabled_fail ..................................   Passed    5.38 sec
+          Start  225: unused_import_warn
+ 215/2340 Test  #218: err_parse_inline_then_exit_disabled_fail ......................   Passed    5.40 sec
+          Start  226: unused_import_used_proc_warn
+ 216/2340 Test  #219: err_trace_exit_disabled_fail ..................................   Passed    5.67 sec
+          Start  227: unused_import_used_type_warn
+ 217/2340 Test  #220: err_parse_missing_arguments_fail ..............................   Passed    7.70 sec
+          Start  228: unused_import_inline_used_warn
+ 218/2340 Test  #222: implicit_member_call_address_warn .............................   Passed    8.24 sec
+          Start  229: repro_dotted_index_noopt
+ 219/2340 Test  #223: implicit_exit_reject_address_warn .............................   Passed    8.26 sec
+          Start  230: repro_dotted_index_opt
+ 220/2340 Test  #221: loop_warn .....................................................   Passed   11.32 sec
+          Start  231: repro_expand_until_noopt
+ 221/2340 Test  #224: procedure_expose_no_duplicate_warn ............................   Passed   10.12 sec
+          Start  232: repro_expand_until_opt
+ 222/2340 Test  #225: unused_import_warn ............................................   Passed   10.24 sec
+          Start  233: repro_array_arg_noopt
+ 223/2340 Test  #226: unused_import_used_proc_warn ..................................   Passed   10.79 sec
+          Start  234: repro_array_arg_opt
+ 224/2340 Test  #227: unused_import_used_type_warn ..................................   Passed   10.66 sec
+          Start  235: repro_opt_args_noopt
+ 225/2340 Test  #228: unused_import_inline_used_warn ................................   Passed   11.77 sec
+          Start  236: repro_opt_args_opt
+ 226/2340 Test  #229: repro_dotted_index_noopt ......................................   Passed   11.76 sec
+          Start  237: arg_semantics_scalar_noopt
+ 227/2340 Test  #230: repro_dotted_index_opt ........................................   Passed   11.78 sec
+          Start  238: arg_semantics_scalar_opt
+ 228/2340 Test  #231: repro_expand_until_noopt ......................................   Passed   11.82 sec
+          Start  239: arg_semantics_array_noopt
+ 229/2340 Test  #232: repro_expand_until_opt ........................................   Passed   11.99 sec
+          Start  240: arg_semantics_array_opt
+ 230/2340 Test  #233: repro_array_arg_noopt .........................................   Passed   12.16 sec
+          Start  241: arg_semantics_object_noopt
+ 231/2340 Test  #234: repro_array_arg_opt ...........................................   Passed   12.35 sec
+          Start  242: arg_semantics_object_opt
+ 232/2340 Test  #235: repro_opt_args_noopt ..........................................   Passed   12.28 sec
+          Start  243: object_reference_regression_noopt
+ 233/2340 Test  #236: repro_opt_args_opt ............................................   Passed   13.08 sec
+          Start  244: object_reference_regression_opt
+ 234/2340 Test  #238: arg_semantics_scalar_opt ......................................   Passed   12.46 sec
+          Start  245: basic_loops_noopt
+ 235/2340 Test  #237: arg_semantics_scalar_noopt ....................................   Passed   12.69 sec
+          Start  246: basic_loops_opt
+ 236/2340 Test  #239: arg_semantics_array_noopt .....................................   Passed   12.24 sec
+          Start  247: basic_strings_noopt
+ 237/2340 Test  #240: arg_semantics_array_opt .......................................   Passed   12.43 sec
+          Start  248: basic_strings_opt
+ 238/2340 Test  #241: arg_semantics_object_noopt ....................................   Passed   11.82 sec
+          Start  249: basic_arrays_noopt
+ 239/2340 Test  #242: arg_semantics_object_opt ......................................   Passed   11.79 sec
+          Start  250: basic_arrays_opt
+ 240/2340 Test  #243: object_reference_regression_noopt .............................   Passed   11.75 sec
+          Start  251: block_expr_basic_noopt
+ 241/2340 Test  #244: object_reference_regression_opt ...............................   Passed   10.62 sec
+          Start  252: block_expr_basic_opt
+ 242/2340 Test  #246: basic_loops_opt ...............................................   Passed    9.72 sec
+          Start  253: block_expr_short_circuit_noopt
+ 243/2340 Test  #245: basic_loops_noopt .............................................   Passed    9.90 sec
+          Start  254: block_expr_short_circuit_opt
+ 244/2340 Test  #247: basic_strings_noopt ...........................................   Passed   10.25 sec
+          Start  255: inline_test1_noopt
+ 245/2340 Test  #249: basic_arrays_noopt ............................................   Passed    9.09 sec
+          Start  256: inline_test1_opt
+ 246/2340 Test  #248: basic_strings_opt .............................................   Passed    9.45 sec
+          Start  257: inline_test2_noopt
+ 247/2340 Test  #250: basic_arrays_opt ..............................................   Passed    9.44 sec
+          Start  258: inline_test2_opt
+ 248/2340 Test  #251: block_expr_basic_noopt ........................................   Passed    9.56 sec
+          Start  259: inline_test_call_noopt
+ 249/2340 Test  #252: block_expr_basic_opt ..........................................   Passed   10.17 sec
+          Start  260: inline_test_call_opt
+ 250/2340 Test  #254: block_expr_short_circuit_opt ..................................   Passed    9.78 sec
+          Start  261: inline_test_expr_noopt
+ 251/2340 Test  #253: block_expr_short_circuit_noopt ................................   Passed    9.96 sec
+          Start  262: inline_test_expr_opt
+ 252/2340 Test  #255: inline_test1_noopt ............................................   Passed   10.23 sec
+          Start  263: inline_test_expr_negative_noopt
+ 253/2340 Test  #256: inline_test1_opt ..............................................   Passed    9.90 sec
+          Start  264: inline_test_expr_negative_opt
+ 254/2340 Test  #257: inline_test2_noopt ............................................   Passed   10.14 sec
+          Start  265: inline_test_nested_call_expr_noopt
+ 255/2340 Test  #258: inline_test2_opt ..............................................   Passed   10.21 sec
+          Start  266: inline_test_nested_call_expr_opt
+ 256/2340 Test  #259: inline_test_call_noopt ........................................   Passed    9.93 sec
+          Start  267: inline_test_concat_expr_noopt
+ 257/2340 Test  #261: inline_test_expr_noopt ........................................   Passed    9.82 sec
+          Start  268: inline_test_concat_expr_opt
+ 258/2340 Test  #262: inline_test_expr_opt ..........................................   Passed    9.87 sec
+          Start  269: inline_test_say_expr_noopt
+ 259/2340 Test  #260: inline_test_call_opt ..........................................   Passed   10.44 sec
+          Start  270: inline_test_say_expr_opt
+ 260/2340 Test  #263: inline_test_expr_negative_noopt ...............................   Passed    9.65 sec
+          Start  271: inline_test_say_expr_negative_noopt
+ 261/2340 Test  #264: inline_test_expr_negative_opt .................................   Passed    9.64 sec
+          Start  272: inline_test_say_expr_negative_opt
+ 262/2340 Test  #265: inline_test_nested_call_expr_noopt ............................   Passed    9.47 sec
+          Start  273: inline_test_return_expr_noopt
+ 263/2340 Test  #266: inline_test_nested_call_expr_opt ..............................   Passed    9.61 sec
+          Start  274: inline_test_return_expr_opt
+ 264/2340 Test  #267: inline_test_concat_expr_noopt .................................   Passed    9.58 sec
+          Start  275: inline_test_unary_expr_noopt
+ 265/2340 Test  #268: inline_test_concat_expr_opt ...................................   Passed    8.78 sec
+ 266/2340 Test  #269: inline_test_say_expr_noopt ....................................   Passed    8.70 sec
+          Start  276: inline_test_unary_expr_opt
+          Start  277: inline_test_compare_expr_noopt
+ 267/2340 Test  #270: inline_test_say_expr_opt ......................................   Passed    8.58 sec
+          Start  278: inline_test_compare_expr_opt
+ 268/2340 Test  #271: inline_test_say_expr_negative_noopt ...........................   Passed    8.21 sec
+          Start  279: inline_test_call_arg_expr_noopt
+ 269/2340 Test  #272: inline_test_say_expr_negative_opt .............................   Passed    7.81 sec
+          Start  280: inline_test_call_arg_expr_opt
+ 270/2340 Test  #273: inline_test_return_expr_noopt .................................   Passed    7.72 sec
+          Start  281: inline_test_call_like_arg_expr_noopt
+ 271/2340 Test  #274: inline_test_return_expr_opt ...................................   Passed    7.74 sec
+          Start  282: inline_test_call_like_arg_expr_opt
+ 272/2340 Test  #275: inline_test_unary_expr_noopt ..................................   Passed    7.60 sec
+          Start  283: inline_test_short_circuit_expr_noopt
+ 273/2340 Test  #276: inline_test_unary_expr_opt ....................................   Passed    8.23 sec
+          Start  284: inline_test_short_circuit_expr_opt
+ 274/2340 Test  #277: inline_test_compare_expr_noopt ................................   Passed    8.24 sec
+          Start  285: inline_test_composed_expr_contexts_noopt
+ 275/2340 Test  #278: inline_test_compare_expr_opt ..................................   Passed    8.10 sec
+          Start  286: inline_test_composed_expr_contexts_opt
+ 276/2340 Test  #279: inline_test_call_arg_expr_noopt ...............................   Passed    8.66 sec
+          Start  287: inline_test_byvalue_arg_reuse_noopt
+ 277/2340 Test  #280: inline_test_call_arg_expr_opt .................................   Passed    8.99 sec
+          Start  288: inline_test_byvalue_arg_reuse_opt
+ 278/2340 Test  #281: inline_test_call_like_arg_expr_noopt ..........................   Passed    9.10 sec
+          Start  289: inline_test_stateful_assembler_noopt
+ 279/2340 Test  #282: inline_test_call_like_arg_expr_opt ............................   Passed    9.19 sec
+          Start  290: inline_test_stateful_assembler_opt
+ 280/2340 Test  #283: inline_test_short_circuit_expr_noopt ..........................   Passed    9.03 sec
+          Start  291: inline_test_condition_contexts_noopt
+ 281/2340 Test  #286: inline_test_composed_expr_contexts_opt ........................   Passed    8.74 sec
+          Start  292: inline_test_condition_contexts_opt
+ 282/2340 Test  #284: inline_test_short_circuit_expr_opt ............................   Passed    8.88 sec
+          Start  293: inline_test_loop_bound_expr_noopt
+ 283/2340 Test  #285: inline_test_composed_expr_contexts_noopt ......................   Passed    9.05 sec
+          Start  294: inline_test_loop_bound_expr_opt
+ 284/2340 Test  #287: inline_test_byvalue_arg_reuse_noopt ...........................   Passed    9.38 sec
+          Start  295: inline_test_member_receiver_expr_noopt
+ 285/2340 Test  #289: inline_test_stateful_assembler_noopt ..........................   Passed    8.66 sec
+          Start  296: inline_test_member_receiver_expr_opt
+ 286/2340 Test  #288: inline_test_byvalue_arg_reuse_opt .............................   Passed    8.96 sec
+          Start  297: inline_test_named_factory_selector_noopt
+ 287/2340 Test  #290: inline_test_stateful_assembler_opt ............................   Passed    8.50 sec
+          Start  298: inline_test_named_factory_selector_opt
+ 288/2340 Test  #291: inline_test_condition_contexts_noopt ..........................   Passed    8.53 sec
+          Start  299: inline_test_ref_opt_noopt
+ 289/2340 Test  #293: inline_test_loop_bound_expr_noopt .............................   Passed    7.82 sec
+          Start  300: inline_test_ref_opt_opt
+ 290/2340 Test  #294: inline_test_loop_bound_expr_opt ...............................   Passed    7.68 sec
+          Start  301: inline_test_ref_indexed_noopt
+ 291/2340 Test  #292: inline_test_condition_contexts_opt ............................   Passed    8.12 sec
+          Start  302: inline_test_ref_indexed_opt
+ 292/2340 Test  #295: inline_test_member_receiver_expr_noopt ........................   Passed    7.26 sec
+          Start  303: inline_test_ref_stem_noopt
+ 293/2340 Test  #296: inline_test_member_receiver_expr_opt ..........................   Passed    7.27 sec
+          Start  304: inline_test_ref_stem_opt
+ 294/2340 Test  #297: inline_test_named_factory_selector_noopt ......................   Passed    7.22 sec
+          Start  305: inline_test_ref_computed_noopt
+ 295/2340 Test  #298: inline_test_named_factory_selector_opt ........................   Passed    7.35 sec
+          Start  306: inline_test_ref_computed_opt
+ 296/2340 Test  #299: inline_test_ref_opt_noopt .....................................   Passed    7.63 sec
+          Start  307: inline_test_ref_vararg_noopt
+ 297/2340 Test  #301: inline_test_ref_indexed_noopt .................................   Passed    7.47 sec
+          Start  308: inline_test_ref_vararg_opt
+ 298/2340 Test  #300: inline_test_ref_opt_opt .......................................   Passed    7.67 sec
+          Start  309: inline_test_ref_vararg_runtime_noopt
+ 299/2340 Test  #302: inline_test_ref_indexed_opt ...................................   Passed    7.58 sec
+          Start  310: inline_test_ref_vararg_runtime_opt
+ 300/2340 Test  #303: inline_test_ref_stem_noopt ....................................   Passed    7.33 sec
+          Start  311: inline_test_ref_negative_noopt
+ 301/2340 Test  #305: inline_test_ref_computed_noopt ................................   Passed    7.01 sec
+          Start  312: inline_test_ref_negative_opt
+ 302/2340 Test  #304: inline_test_ref_stem_opt ......................................   Passed    7.03 sec
+          Start  313: inline_test_bool_expr_negative_noopt
+ 303/2340 Test  #306: inline_test_ref_computed_opt ..................................   Passed    6.86 sec
+          Start  314: inline_test_bool_expr_negative_opt
+ 304/2340 Test  #307: inline_test_ref_vararg_noopt ..................................   Passed    6.59 sec
+          Start  315: inline_test_vararg_noopt
+ 305/2340 Test  #308: inline_test_ref_vararg_opt ....................................   Passed    6.15 sec
+          Start  316: inline_test_vararg_opt
+ 306/2340 Test  #309: inline_test_ref_vararg_runtime_noopt ..........................   Passed    6.16 sec
+          Start  317: inline_test_vararg_dynamic_noopt
+ 307/2340 Test  #310: inline_test_ref_vararg_runtime_opt ............................   Passed    6.29 sec
+          Start  318: inline_test_vararg_dynamic_opt
+ 308/2340 Test  #311: inline_test_ref_negative_noopt ................................   Passed    6.00 sec
+          Start  319: inline_test_vararg_dynamic_loop_noopt
+ 309/2340 Test  #312: inline_test_ref_negative_opt ..................................   Passed    6.13 sec
+          Start  320: inline_test_vararg_dynamic_loop_opt
+ 310/2340 Test  #313: inline_test_bool_expr_negative_noopt ..........................   Passed    6.15 sec
+          Start  321: inline_test_vararg_negative_noopt
+ 311/2340 Test  #314: inline_test_bool_expr_negative_opt ............................   Passed    6.23 sec
+          Start  322: inline_test_vararg_negative_opt
+ 312/2340 Test  #315: inline_test_vararg_noopt ......................................   Passed    6.17 sec
+          Start  323: inline_test_exposed_nested_call_noopt
+ 313/2340 Test  #316: inline_test_vararg_opt ........................................   Passed    6.64 sec
+          Start  324: inline_test_exposed_nested_call_opt
+ 314/2340 Test  #317: inline_test_vararg_dynamic_noopt ..............................   Passed    6.68 sec
+          Start  325: inline_test_self_recursive_negative_noopt
+ 315/2340 Test  #318: inline_test_vararg_dynamic_opt ................................   Passed    6.94 sec
+          Start  326: inline_test_self_recursive_negative_opt
+ 316/2340 Test  #319: inline_test_vararg_dynamic_loop_noopt .........................   Passed    7.00 sec
+          Start  327: inline_test_mutual_recursive_negative_noopt
+ 317/2340 Test  #320: inline_test_vararg_dynamic_loop_opt ...........................   Passed    6.96 sec
+          Start  328: inline_test_mutual_recursive_negative_opt
+ 318/2340 Test  #321: inline_test_vararg_negative_noopt .............................   Passed    7.09 sec
+          Start  329: inline_test_nested_scope_do_noopt
+ 319/2340 Test  #323: inline_test_exposed_nested_call_noopt .........................   Passed    7.07 sec
+          Start  330: inline_test_nested_scope_do_opt
+ 320/2340 Test  #322: inline_test_vararg_negative_opt ...............................   Passed    7.15 sec
+          Start  331: inline_test_nested_scope_if_do_noopt
+ 321/2340 Test  #325: inline_test_self_recursive_negative_noopt .....................   Passed    8.06 sec
+          Start  332: inline_test_nested_scope_if_do_opt
+ 322/2340 Test  #324: inline_test_exposed_nested_call_opt ...........................   Passed    8.71 sec
+          Start  333: inline_test_nested_scope_exposed_call_noopt
+ 323/2340 Test  #326: inline_test_self_recursive_negative_opt .......................   Passed    8.55 sec
+          Start  334: inline_test_nested_scope_exposed_call_opt
+ 324/2340 Test  #327: inline_test_mutual_recursive_negative_noopt ...................   Passed    8.92 sec
+          Start  335: inline_test_multi_return_assign_noopt
+ 325/2340 Test  #328: inline_test_mutual_recursive_negative_opt .....................   Passed    9.45 sec
+          Start  336: inline_test_multi_return_assign_opt
+ 326/2340 Test  #329: inline_test_nested_scope_do_noopt .............................   Passed    9.29 sec
+          Start  337: inline_test_multi_return_expr_noopt
+ 327/2340 Test  #330: inline_test_nested_scope_do_opt ...............................   Passed    9.80 sec
+          Start  338: inline_test_multi_return_expr_opt
+ 328/2340 Test  #331: inline_test_nested_scope_if_do_noopt ..........................   Passed    9.77 sec
+          Start  339: inline_test_multi_return_call_noopt
+ 329/2340 Test  #332: inline_test_nested_scope_if_do_opt ............................   Passed   12.27 sec
+          Start  340: inline_test_multi_return_call_opt
+ 330/2340 Test  #333: inline_test_nested_scope_exposed_call_noopt ...................   Passed   12.21 sec
+          Start  341: inline_test_void_fallthrough_call_noopt
+ 331/2340 Test  #334: inline_test_nested_scope_exposed_call_opt .....................   Passed   12.89 sec
+          Start  342: inline_test_void_fallthrough_call_opt
+ 332/2340 Test  #335: inline_test_multi_return_assign_noopt .........................   Passed   13.11 sec
+          Start  343: inline_test_array_return_assign_noopt
+ 333/2340 Test  #337: inline_test_multi_return_expr_noopt ...........................   Passed   12.90 sec
+          Start  344: inline_test_array_return_assign_opt
+ 334/2340 Test  #336: inline_test_multi_return_assign_opt ...........................   Passed   13.08 sec
+          Start  345: inline_test_array_return_expr_noopt
+ 335/2340 Test  #339: inline_test_multi_return_call_noopt ...........................   Passed   12.73 sec
+          Start  346: inline_test_array_return_expr_opt
+ 336/2340 Test  #338: inline_test_multi_return_expr_opt .............................   Passed   13.04 sec
+          Start  347: inline_test_array_multi_return_expr_noopt
+ 337/2340 Test  #341: inline_test_void_fallthrough_call_noopt .......................   Passed   12.01 sec
+          Start  348: inline_test_array_multi_return_expr_opt
+ 338/2340 Test  #340: inline_test_multi_return_call_opt .............................   Passed   12.79 sec
+          Start  349: inline_test_array_multi_return_assign_noopt
+ 339/2340 Test  #342: inline_test_void_fallthrough_call_opt .........................   Passed   12.15 sec
+          Start  350: inline_test_array_multi_return_assign_opt
+ 340/2340 Test  #343: inline_test_array_return_assign_noopt .........................   Passed   11.37 sec
+          Start  351: inline_test_object_return_assign_noopt
+ 341/2340 Test  #344: inline_test_array_return_assign_opt ...........................   Passed   11.16 sec
+          Start  352: inline_test_object_return_assign_opt
+ 342/2340 Test  #345: inline_test_array_return_expr_noopt ...........................   Passed   11.26 sec
+          Start  353: inline_test_object_return_expr_noopt
+ 343/2340 Test  #347: inline_test_array_multi_return_expr_noopt .....................   Passed   10.49 sec
+          Start  354: inline_test_object_return_expr_opt
+ 344/2340 Test  #346: inline_test_array_return_expr_opt .............................   Passed   10.83 sec
+          Start  355: inline_test_object_const_arg_mutation_noopt
+ 345/2340 Test  #349: inline_test_array_multi_return_assign_noopt ...................   Passed    7.91 sec
+          Start  356: inline_test_object_const_arg_mutation_opt
+ 346/2340 Test  #348: inline_test_array_multi_return_expr_opt .......................   Passed    8.68 sec
+          Start  357: inline_test_object_writable_arg_noopt
+ 347/2340 Test  #350: inline_test_array_multi_return_assign_opt .....................   Passed    8.52 sec
+          Start  358: inline_test_object_writable_arg_opt
+ 348/2340 Test  #351: inline_test_object_return_assign_noopt ........................   Passed    8.11 sec
+          Start  359: inline_test_array_expr_arg_noopt
+ 349/2340 Test  #352: inline_test_object_return_assign_opt ..........................   Passed    8.05 sec
+          Start  360: inline_test_array_expr_arg_opt
+ 350/2340 Test  #353: inline_test_object_return_expr_noopt ..........................   Passed    8.11 sec
+          Start  361: inline_test_object_expr_arg_noopt
+ 351/2340 Test  #355: inline_test_object_const_arg_mutation_noopt ...................   Passed    7.85 sec
+          Start  362: inline_test_object_expr_arg_opt
+ 352/2340 Test  #354: inline_test_object_return_expr_opt ............................   Passed    7.91 sec
+          Start  363: inline_test_array_return_temp_noopt
+ 353/2340 Test  #357: inline_test_object_writable_arg_noopt .........................   Passed    8.51 sec
+          Start  364: inline_test_array_return_temp_opt
+ 354/2340 Test  #356: inline_test_object_const_arg_mutation_opt .....................   Passed    8.95 sec
+          Start  365: inline_test_complex_lhs_assign_noopt
+ 355/2340 Test  #358: inline_test_object_writable_arg_opt ...........................   Passed    8.50 sec
+          Start  366: inline_test_complex_lhs_assign_opt
+ 356/2340 Test  #359: inline_test_array_expr_arg_noopt ..............................   Passed    8.83 sec
+          Start  367: inline_test_binary_arg_return_noopt
+ 357/2340 Test  #360: inline_test_array_expr_arg_opt ................................   Passed    9.24 sec
+          Start  368: inline_test_binary_arg_return_opt
+ 358/2340 Test  #361: inline_test_object_expr_arg_noopt .............................   Passed    9.23 sec
+          Start  369: inline_test_block_expr_live_sibling_noopt
+ 359/2340 Test  #363: inline_test_array_return_temp_noopt ...........................   Passed   10.37 sec
+          Start  370: inline_test_block_expr_live_sibling_opt
+ 360/2340 Test  #362: inline_test_object_expr_arg_opt ...............................   Passed   10.39 sec
+          Start  371: inline_test_class_methods_noopt
+ 361/2340 Test  #365: inline_test_complex_lhs_assign_noopt ..........................   Passed   10.82 sec
+          Start  372: inline_test_class_methods_opt
+ 362/2340 Test  #364: inline_test_array_return_temp_opt .............................   Passed   10.97 sec
+          Start  374: nr21_fixed_call_contract
+ 363/2340 Test  #366: inline_test_complex_lhs_assign_opt ............................   Passed   10.58 sec
+          Start  375: nr14_frozen_parse_contract
+ 364/2340 Test  #367: inline_test_binary_arg_return_noopt ...........................   Passed   10.14 sec
+          Start  376: nr15_native_stem_contract
+ 365/2340 Test  #368: inline_test_binary_arg_return_opt .............................   Passed    9.61 sec
+          Start  377: gate_f_channel_contract
+ 366/2340 Test  #376: nr15_native_stem_contract .....................................   Passed    1.18 sec
+          Start  387: reference_source_explicit_rxvm_noopt
+ 367/2340 Test  #369: inline_test_block_expr_live_sibling_noopt .....................   Passed   10.06 sec
+          Start  388: reference_source_explicit_rxvm_opt
+ 368/2340 Test  #377: gate_f_channel_contract .......................................   Passed    1.24 sec
+          Start  389: reference_source_contract_rxvm_noopt
+ 369/2340 Test  #370: inline_test_block_expr_live_sibling_opt .......................   Passed    9.06 sec
+          Start  390: reference_source_contract_rxvm_opt
+ 370/2340 Test  #371: inline_test_class_methods_noopt ...............................   Passed    9.23 sec
+          Start  391: reference_source_iterator_rxvm_noopt
+ 371/2340 Test  #372: inline_test_class_methods_opt .................................   Passed    7.42 sec
+          Start  392: reference_source_iterator_rxvm_opt
+ 372/2340 Test  #387: reference_source_explicit_rxvm_noopt ..........................   Passed    7.94 sec
+          Start  393: reference_source_dereference_live_rxvm_noopt
+ 373/2340 Test  #388: reference_source_explicit_rxvm_opt ............................   Passed    8.28 sec
+          Start  394: reference_source_dereference_live_rxvm_opt
+ 374/2340 Test  #389: reference_source_contract_rxvm_noopt ..........................   Passed    8.18 sec
+          Start  395: reference_source_inline_lifetime_rxvm_noopt
+ 375/2340 Test  #391: reference_source_iterator_rxvm_noopt ..........................   Passed    8.11 sec
+          Start  396: reference_source_inline_lifetime_rxvm_opt
+ 376/2340 Test  #390: reference_source_contract_rxvm_opt ............................   Passed    8.52 sec
+          Start  397: reference_source_block_lifetime_rxvm_noopt
+ 377/2340 Test  #374: nr21_fixed_call_contract ......................................   Passed   16.02 sec
+          Start  398: reference_source_block_lifetime_rxvm_opt
+ 378/2340 Test  #392: reference_source_iterator_rxvm_opt ............................   Passed    8.95 sec
+          Start  399: repro_dotted_index_run_noopt
+ 379/2340 Test  #393: reference_source_dereference_live_rxvm_noopt ..................   Passed    7.32 sec
+          Start  400: repro_dotted_index_run_opt
+ 380/2340 Test  #394: reference_source_dereference_live_rxvm_opt ....................   Passed    7.35 sec
+          Start  401: int64_contract_run_noopt
+ 381/2340 Test  #395: reference_source_inline_lifetime_rxvm_noopt ...................   Passed    7.16 sec
+          Start  402: int64_contract_run_opt
+ 382/2340 Test  #396: reference_source_inline_lifetime_rxvm_opt .....................   Passed    7.12 sec
+          Start  403: repro_expand_until_run_noopt
+ 383/2340 Test  #397: reference_source_block_lifetime_rxvm_noopt ....................   Passed    7.11 sec
+          Start  404: repro_expand_until_run_opt
+ 384/2340 Test  #398: reference_source_block_lifetime_rxvm_opt ......................   Passed    6.44 sec
+          Start  405: repro_array_arg_run_noopt
+ 385/2340 Test  #399: repro_dotted_index_run_noopt ..................................   Passed    6.46 sec
+          Start  406: repro_array_arg_run_opt
+ 386/2340 Test  #400: repro_dotted_index_run_opt ....................................   Passed    6.70 sec
+          Start  407: repro_array_trailing_concat_run_noopt
+ 387/2340 Test  #401: int64_contract_run_noopt ......................................   Passed    7.29 sec
+          Start  408: repro_array_trailing_concat_run_opt
+ 388/2340 Test  #402: int64_contract_run_opt ........................................   Passed    7.16 sec
+          Start  409: stem_index_concat_run_noopt
+ 389/2340 Test  #403: repro_expand_until_run_noopt ..................................   Passed    7.48 sec
+          Start  410: stem_index_concat_run_opt
+ 390/2340 Test  #404: repro_expand_until_run_opt ....................................   Passed    7.38 sec
+          Start  411: repro_opt_args_run_noopt
+ 391/2340 Test  #405: repro_array_arg_run_noopt .....................................   Passed    7.34 sec
+          Start  412: repro_opt_args_run_opt
+ 392/2340 Test  #406: repro_array_arg_run_opt .......................................   Passed    7.28 sec
+          Start  413: arg_semantics_scalar_run_noopt
+ 393/2340 Test  #375: nr14_frozen_parse_contract ....................................   Passed   30.02 sec
+          Start  414: arg_semantics_scalar_run_opt
+ 394/2340 Test  #407: repro_array_trailing_concat_run_noopt .........................   Passed    6.95 sec
+          Start  415: arg_semantics_array_run_noopt
+ 395/2340 Test  #408: repro_array_trailing_concat_run_opt ...........................   Passed    6.59 sec
+          Start  416: arg_semantics_array_run_opt
+ 396/2340 Test  #409: stem_index_concat_run_noopt ...................................   Passed    6.70 sec
+          Start  417: multiple_exposed_arrays_run_noopt
+ 397/2340 Test  #410: stem_index_concat_run_opt .....................................   Passed    6.48 sec
+          Start  418: multiple_exposed_arrays_run_opt
+ 398/2340 Test  #411: repro_opt_args_run_noopt ......................................   Passed    6.58 sec
+          Start  419: arg_semantics_object_run_noopt
+ 399/2340 Test  #412: repro_opt_args_run_opt ........................................   Passed    6.98 sec
+          Start  420: arg_semantics_object_run_opt
+ 400/2340 Test  #413: arg_semantics_scalar_run_noopt ................................   Passed    7.23 sec
+          Start  421: object_reference_regression_run_noopt
+ 401/2340 Test  #414: arg_semantics_scalar_run_opt ..................................   Passed    7.28 sec
+          Start  422: object_reference_regression_run_opt
+ 402/2340 Test  #415: arg_semantics_array_run_noopt .................................   Passed    7.52 sec
+          Start  423: basic_loops_run_noopt
+ 403/2340 Test  #416: arg_semantics_array_run_opt ...................................   Passed    7.42 sec
+          Start  424: basic_loops_run_opt
+ 404/2340 Test  #417: multiple_exposed_arrays_run_noopt .............................   Passed    7.38 sec
+          Start  425: basic_strings_run_noopt
+ 405/2340 Test  #418: multiple_exposed_arrays_run_opt ...............................   Passed    7.23 sec
+          Start  426: basic_strings_run_opt
+ 406/2340 Test  #419: arg_semantics_object_run_noopt ................................   Passed    7.30 sec
+          Start  427: basic_arrays_run_noopt
+ 407/2340 Test  #420: arg_semantics_object_run_opt ..................................   Passed    6.84 sec
+          Start  428: basic_arrays_run_opt
+ 408/2340 Test  #421: object_reference_regression_run_noopt .........................   Passed    6.88 sec
+          Start  429: array_mutation_statements_run_noopt
+ 409/2340 Test  #422: object_reference_regression_run_opt ...........................   Passed    6.48 sec
+          Start  430: array_mutation_statements_run_opt
+ 410/2340 Test  #423: basic_loops_run_noopt .........................................   Passed    6.53 sec
+          Start  431: block_expr_basic_run_noopt
+ 411/2340 Test  #424: basic_loops_run_opt ...........................................   Passed    6.49 sec
+          Start  432: block_expr_basic_run_opt
+ 412/2340 Test  #425: basic_strings_run_noopt .......................................   Passed    6.53 sec
+          Start  433: block_expr_short_circuit_run_noopt
+ 413/2340 Test  #426: basic_strings_run_opt .........................................   Passed    6.51 sec
+          Start  434: block_expr_short_circuit_run_opt
+ 414/2340 Test  #427: basic_arrays_run_noopt ........................................   Passed    6.57 sec
+          Start  435: repro_args_parse_run_noopt
+ 415/2340 Test  #428: basic_arrays_run_opt ..........................................   Passed    6.71 sec
+          Start  436: repro_args_parse_run_opt
+ 416/2340 Test  #429: array_mutation_statements_run_noopt ...........................   Passed    6.86 sec
+          Start  437: repro_args_alias_run_noopt
+ 417/2340 Test  #430: array_mutation_statements_run_opt .............................   Passed    6.80 sec
+          Start  438: repro_args_alias_run_opt
+ 418/2340 Test  #431: block_expr_basic_run_noopt ....................................   Passed    6.89 sec
+          Start  439: repro_sconcat_run_noopt
+ 419/2340 Test  #432: block_expr_basic_run_opt ......................................   Passed    6.94 sec
+          Start  440: repro_sconcat_run_opt
+ 420/2340 Test  #434: block_expr_short_circuit_run_opt ..............................   Passed    6.69 sec
+          Start  441: repro_strict_compare_run_noopt
+ 421/2340 Test  #433: block_expr_short_circuit_run_noopt ............................   Passed    7.21 sec
+          Start  442: repro_strict_compare_run_opt
+ 422/2340 Test  #435: repro_args_parse_run_noopt ....................................   Passed    6.93 sec
+          Start  443: 08_select_run_noopt
+ 423/2340 Test  #436: repro_args_parse_run_opt ......................................   Passed    6.81 sec
+          Start  444: 08_select_run_opt
+ 424/2340 Test  #437: repro_args_alias_run_noopt ....................................   Passed    6.90 sec
+          Start  445: select_dispatch_integer_run_noopt
+ 425/2340 Test  #438: repro_args_alias_run_opt ......................................   Passed    6.91 sec
+          Start  446: select_dispatch_integer_run_opt
+ 426/2340 Test  #439: repro_sconcat_run_noopt .......................................   Passed    6.91 sec
+          Start  447: select_dispatch_fallback_run_noopt
+ 427/2340 Test  #440: repro_sconcat_run_opt .........................................   Passed    6.82 sec
+          Start  448: select_dispatch_fallback_run_opt
+ 428/2340 Test  #442: repro_strict_compare_run_opt ..................................   Passed    7.29 sec
+          Start  449: select_dispatch_mixed_run_noopt
+ 429/2340 Test  #443: 08_select_run_noopt ...........................................   Passed    7.21 sec
+          Start  450: select_dispatch_mixed_run_opt
+ 430/2340 Test  #441: repro_strict_compare_run_noopt ................................   Passed    8.04 sec
+          Start  451: select_dispatch_general_run_noopt
+ 431/2340 Test  #444: 08_select_run_opt .............................................   Passed    7.05 sec
+          Start  452: select_dispatch_general_run_opt
+ 432/2340 Test  #445: select_dispatch_integer_run_noopt .............................   Passed    7.10 sec
+          Start  453: select_dispatch_strings_run_noopt
+ 433/2340 Test  #446: select_dispatch_integer_run_opt ...............................   Passed    7.05 sec
+          Start  454: select_dispatch_strings_run_opt
+ 434/2340 Test  #447: select_dispatch_fallback_run_noopt ............................   Passed    6.95 sec
+          Start  455: repro_duplicate_call_argument_run_noopt
+ 435/2340 Test  #448: select_dispatch_fallback_run_opt ..............................   Passed    6.95 sec
+          Start  456: repro_duplicate_call_argument_run_opt
+ 436/2340 Test  #449: select_dispatch_mixed_run_noopt ...............................   Passed    6.62 sec
+          Start  457: nr06_call_window_scalar_run_noopt
+ 437/2340 Test  #450: select_dispatch_mixed_run_opt .................................   Passed    6.51 sec
+          Start  458: nr06_call_window_scalar_run_opt
+ 438/2340 Test  #451: select_dispatch_general_run_noopt .............................   Passed    6.60 sec
+          Start  459: 13_stems_run_noopt
+ 439/2340 Test  #452: select_dispatch_general_run_opt ...............................   Passed    6.51 sec
+          Start  460: 13_stems_run_opt
+ 440/2340 Test  #453: select_dispatch_strings_run_noopt .............................   Passed    7.02 sec
+          Start  461: repro_multi_tail_stems_run_noopt
+ 441/2340 Test  #454: select_dispatch_strings_run_opt ...............................   Passed    6.94 sec
+          Start  462: repro_multi_tail_stems_run_opt
+ 442/2340 Test  #455: repro_duplicate_call_argument_run_noopt .......................   Passed    6.94 sec
+          Start  463: repro_rexx_compare_method_run_noopt
+ 443/2340 Test  #456: repro_duplicate_call_argument_run_opt .........................   Passed    7.02 sec
+          Start  464: repro_rexx_compare_method_run_opt
+ 444/2340 Test  #457: nr06_call_window_scalar_run_noopt .............................   Passed    7.25 sec
+          Start  465: repro_rexx_format_sign_gap_run_noopt
+ 445/2340 Test  #458: nr06_call_window_scalar_run_opt ...............................   Passed    7.11 sec
+          Start  466: repro_rexx_format_sign_gap_run_opt
+ 446/2340 Test  #459: 13_stems_run_noopt ............................................   Passed    7.56 sec
+          Start  467: numeric_mixed_compare_run_noopt
+ 447/2340 Test  #460: 13_stems_run_opt ..............................................   Passed    8.32 sec
+          Start  468: numeric_mixed_compare_run_opt
+ 448/2340 Test  #461: repro_multi_tail_stems_run_noopt ..............................   Passed    8.26 sec
+          Start  469: repro_implicit_address_abuttal_run_noopt
+ 449/2340 Test  #462: repro_multi_tail_stems_run_opt ................................   Passed    8.12 sec
+          Start  470: repro_implicit_address_abuttal_run_opt
+ 450/2340 Test  #463: repro_rexx_compare_method_run_noopt ...........................   Passed    9.70 sec
+          Start  471: implicit_address_indexed_stem_run_noopt
+ 451/2340 Test  #464: repro_rexx_compare_method_run_opt .............................   Passed    9.37 sec
+          Start  472: implicit_address_indexed_stem_run_opt
+ 452/2340 Test  #467: numeric_mixed_compare_run_noopt ...............................   Passed    8.04 sec
+          Start  473: test_explicit_address_run_noopt
+ 453/2340 Test  #466: repro_rexx_format_sign_gap_run_opt ............................   Passed    9.10 sec
+          Start  474: test_explicit_address_run_opt
+ 454/2340 Test  #465: repro_rexx_format_sign_gap_run_noopt ..........................   Passed    9.48 sec
+          Start  475: test_address_redirect_run_noopt
+ 455/2340 Test  #468: numeric_mixed_compare_run_opt .................................   Passed    7.07 sec
+          Start  476: test_address_redirect_run_opt
+ 456/2340 Test  #469: repro_implicit_address_abuttal_run_noopt ......................   Passed    6.86 sec
+          Start  477: address_crexx_flush_visible_run_noopt
+ 457/2340 Test  #470: repro_implicit_address_abuttal_run_opt ........................   Passed    7.19 sec
+          Start  478: address_crexx_flush_visible_run_opt
+ 458/2340 Test  #471: implicit_address_indexed_stem_run_noopt .......................   Passed    6.66 sec
+          Start  479: lineout_flush_visible_run_noopt
+ 459/2340 Test  #472: implicit_address_indexed_stem_run_opt .........................   Passed    7.09 sec
+          Start  480: lineout_flush_visible_run_opt
+ 460/2340 Test  #475: test_address_redirect_run_noopt ...............................   Passed    6.91 sec
+          Start  481: optional_arg_presence_copy_run_noopt
+ 461/2340 Test  #473: test_explicit_address_run_noopt ...............................   Passed    7.79 sec
+          Start  482: optional_arg_presence_copy_run_opt
+ 462/2340 Test  #474: test_explicit_address_run_opt .................................   Passed    8.14 sec
+          Start  483: test_implicit_address_run_noopt
+ 463/2340 Test  #476: test_address_redirect_run_opt .................................   Passed    7.30 sec
+          Start  484: test_implicit_address_run_opt
+ 464/2340 Test  #477: address_crexx_flush_visible_run_noopt .........................   Passed    9.14 sec
+          Start  485: test_parse_statement_run_noopt
+ 465/2340 Test  #478: address_crexx_flush_visible_run_opt ...........................   Passed    9.35 sec
+          Start  486: test_parse_statement_run_opt
+ 466/2340 Test  #479: lineout_flush_visible_run_noopt ...............................   Passed    8.14 sec
+          Start  487: qualified_namespace_same_module_run_noopt
+ 467/2340 Test  #481: optional_arg_presence_copy_run_noopt ..........................   Passed    6.91 sec
+          Start  488: qualified_namespace_same_module_run_opt
+ 468/2340 Test  #482: optional_arg_presence_copy_run_opt ............................   Passed    6.99 sec
+          Start  489: class_attr_string_promotion_run_noopt
+ 469/2340 Test  #480: lineout_flush_visible_run_opt .................................   Passed    8.47 sec
+          Start  490: class_attr_string_promotion_run_opt
+ 470/2340 Test  #483: test_implicit_address_run_noopt ...............................   Passed    7.28 sec
+          Start  491: class_attr_register_views_run_noopt
+ 471/2340 Test  #484: test_implicit_address_run_opt .................................   Passed    7.55 sec
+          Start  492: class_attr_register_views_run_opt
+ 472/2340 Test  #487: qualified_namespace_same_module_run_noopt .....................   Passed    7.13 sec
+          Start  493: constants_levelb_payloads_run_noopt
+ 473/2340 Test  #488: qualified_namespace_same_module_run_opt .......................   Passed    7.40 sec
+          Start  494: constants_levelb_payloads_run_opt
+ 474/2340 Test  #485: test_parse_statement_run_noopt ................................   Passed    9.41 sec
+          Start  495: binary_memory_source_run_noopt
+ 475/2340 Test  #486: test_parse_statement_run_opt ..................................   Passed    8.94 sec
+          Start  496: binary_memory_source_run_opt
+ 476/2340 Test  #489: class_attr_string_promotion_run_noopt .........................   Passed    7.73 sec
+          Start  497: binary_memory_span_oob_run_noopt
+ 477/2340 Test  #490: class_attr_string_promotion_run_opt ...........................   Passed    7.68 sec
+          Start  498: binary_memory_span_oob_run_opt
+ 478/2340 Test  #491: class_attr_register_views_run_noopt ...........................   Passed    8.01 sec
+          Start  499: binary_memory_packed_lookup_run_noopt
+ 479/2340 Test  #492: class_attr_register_views_run_opt .............................   Passed    7.80 sec
+          Start  500: binary_memory_packed_lookup_run_opt
+ 480/2340 Test  #493: constants_levelb_payloads_run_noopt ...........................   Passed    6.98 sec
+          Start  501: packed_numeric_source_run_noopt
+ 481/2340 Test  #494: constants_levelb_payloads_run_opt .............................   Passed    7.00 sec
+          Start  502: packed_numeric_source_run_opt
+ 482/2340 Test  #495: binary_memory_source_run_noopt ................................   Passed    7.23 sec
+          Start  503: class_binary_attribute_store_run_noopt
+ 483/2340 Test  #497: binary_memory_span_oob_run_noopt ..............................   Passed    7.15 sec
+          Start  504: class_binary_attribute_store_run_opt
+ 484/2340 Test  #498: binary_memory_span_oob_run_opt ................................   Passed    7.03 sec
+          Start  505: literal_continuation_run_noopt
+ 485/2340 Test  #496: binary_memory_source_run_opt ..................................   Passed    8.40 sec
+          Start  506: literal_continuation_run_opt
+ 486/2340 Test  #499: binary_memory_packed_lookup_run_noopt .........................   Passed    7.47 sec
+          Start  507: qualified_bif_direct_namespace_run_noopt
+ 487/2340 Test  #500: binary_memory_packed_lookup_run_opt ...........................   Passed    8.02 sec
+          Start  508: qualified_bif_direct_namespace_run_opt
+ 488/2340 Test  #501: packed_numeric_source_run_noopt ...............................   Passed    8.18 sec
+          Start  509: qualified_namespace_import_source_run_noopt
+ 489/2340 Test  #502: packed_numeric_source_run_opt .................................   Passed    7.92 sec
+          Start  510: qualified_namespace_import_source_run_opt
+ 490/2340 Test  #503: class_binary_attribute_store_run_noopt ........................   Passed    8.15 sec
+          Start  511: qualified_namespace_import_binary_run_noopt
+ 491/2340 Test  #504: class_binary_attribute_store_run_opt ..........................   Passed    8.15 sec
+          Start  512: qualified_namespace_import_binary_run_opt
+ 492/2340 Test  #505: literal_continuation_run_noopt ................................   Passed    7.98 sec
+          Start  513: optional_binary_import_source_run_noopt
+ 493/2340 Test  #506: literal_continuation_run_opt ..................................   Passed    7.70 sec
+          Start  514: optional_binary_import_source_run_opt
+ 494/2340 Test  #507: qualified_bif_direct_namespace_run_noopt ......................   Passed    7.72 sec
+          Start  515: optional_binary_import_binary_run_noopt
+ 495/2340 Test  #508: qualified_bif_direct_namespace_run_opt ........................   Passed    6.88 sec
+          Start  516: optional_binary_import_binary_run_opt
+ 496/2340 Test  #513: optional_binary_import_source_run_noopt .......................   Passed   14.76 sec
+          Start  517: interface_tracer_run_noopt
+ 497/2340 Test  #514: optional_binary_import_source_run_opt .........................   Passed   14.61 sec
+          Start  518: interface_tracer_run_opt
+ 498/2340 Test  #515: optional_binary_import_binary_run_noopt .......................   Passed   14.48 sec
+          Start  519: interface_runtime_dispatch_multi_run_noopt
+ 499/2340 Test  #516: optional_binary_import_binary_run_opt .........................   Passed   14.28 sec
+          Start  520: interface_runtime_dispatch_multi_run_opt
+ 500/2340 Test  #510: qualified_namespace_import_source_run_opt .....................   Passed   21.80 sec
+          Start  521: interface_method_arg_same_module_run_noopt
+ 501/2340 Test  #509: qualified_namespace_import_source_run_noopt ...................   Passed   22.09 sec
+          Start  522: interface_method_arg_same_module_run_opt
+ 502/2340 Test  #511: qualified_namespace_import_binary_run_noopt ...................   Passed   21.15 sec
+          Start  523: interface_method_object_arg_same_module_run_noopt
+ 503/2340 Test  #512: qualified_namespace_import_binary_run_opt .....................   Passed   21.52 sec
+          Start  524: interface_method_object_arg_same_module_run_opt
+ 504/2340 Test  #517: interface_tracer_run_noopt ....................................   Passed    7.49 sec
+          Start  525: interface_signature_static_positive_run_noopt
+ 505/2340 Test  #518: interface_tracer_run_opt ......................................   Passed    7.37 sec
+          Start  526: interface_signature_static_positive_run_opt
+ 506/2340 Test  #519: interface_runtime_dispatch_multi_run_noopt ....................   Passed    7.44 sec
+          Start  527: interface_factory_tiebreak_run_noopt
+ 507/2340 Test  #520: interface_runtime_dispatch_multi_run_opt ......................   Passed    7.36 sec
+          Start  528: interface_factory_tiebreak_run_opt
+ 508/2340 Test  #522: interface_method_arg_same_module_run_opt ......................   Passed    6.65 sec
+          Start  529: interface_no_impl_run_noopt
+ 509/2340 Test  #521: interface_method_arg_same_module_run_noopt ....................   Passed    6.84 sec
+          Start  530: interface_no_impl_run_opt
+ 510/2340 Test  #523: interface_method_object_arg_same_module_run_noopt .............   Passed    6.86 sec
+          Start  531: interface_default_codegen_noopt
+ 511/2340 Test  #524: interface_method_object_arg_same_module_run_opt ...............   Passed    7.62 sec
+          Start  532: interface_default_codegen_opt
+ 512/2340 Test  #525: interface_signature_static_positive_run_noopt .................   Passed    7.25 sec
+          Start  533: interface_default_same_module_run_noopt
+ 513/2340 Test  #527: interface_factory_tiebreak_run_noopt ..........................   Passed    7.13 sec
+          Start  534: interface_default_same_module_run_opt
+ 514/2340 Test  #526: interface_signature_static_positive_run_opt ...................   Passed    7.72 sec
+          Start  535: interface_multi_interface_same_module_run_noopt
+ 515/2340 Test  #528: interface_factory_tiebreak_run_opt ............................   Passed    7.02 sec
+          Start  536: interface_multi_interface_same_module_run_opt
+ 516/2340 Test  #531: interface_default_codegen_noopt ...............................   Passed    6.71 sec
+          Start  537: interface_showcase_same_module_run_noopt
+ 517/2340 Test  #530: interface_no_impl_run_opt .....................................   Passed    7.27 sec
+          Start  538: interface_showcase_same_module_run_opt
+ 518/2340 Test  #529: interface_no_impl_run_noopt ...................................   Passed    7.48 sec
+          Start  539: type_ops_showcase_run_noopt
+ 519/2340 Test  #532: interface_default_codegen_opt .................................   Passed    6.69 sec
+          Start  540: type_ops_showcase_run_opt
+ 520/2340 Test  #533: interface_default_same_module_run_noopt .......................   Passed    6.95 sec
+          Start  541: interface_match_same_module_run_noopt
+ 521/2340 Test  #534: interface_default_same_module_run_opt .........................   Passed    6.96 sec
+          Start  542: interface_match_same_module_run_opt
+ 522/2340 Test  #535: interface_multi_interface_same_module_run_noopt ...............   Passed    7.07 sec
+          Start  543: interface_match_reject_single_run_noopt
+ 523/2340 Test  #536: interface_multi_interface_same_module_run_opt .................   Passed    7.12 sec
+          Start  544: interface_match_reject_single_run_opt
+ 524/2340 Test  #537: interface_showcase_same_module_run_noopt ......................   Passed    7.73 sec
+          Start  545: type_ops_fail_run_noopt
+ 525/2340 Test  #538: interface_showcase_same_module_run_opt ........................   Passed    7.54 sec
+          Start  546: type_ops_fail_run_opt
+ 526/2340 Test  #539: type_ops_showcase_run_noopt ...................................   Passed    7.61 sec
+          Start  547: gate_f_levelb_contract
+ 527/2340 Test  #540: type_ops_showcase_run_opt .....................................   Passed    7.42 sec
+          Start  548: gate_f_levelg_rxbvm_noopt
+ 528/2340 Test  #541: interface_match_same_module_run_noopt .........................   Passed    7.55 sec
+          Start  560: gate_f_bad_scope
+ 529/2340 Test  #542: interface_match_same_module_run_opt ...........................   Passed    7.44 sec
+          Start  561: gate_f_pending_mutation
+ 530/2340 Test  #543: interface_match_reject_single_run_noopt .......................   Passed    7.52 sec
+          Start  562: gate_f_pending_return
+ 531/2340 Test  #544: interface_match_reject_single_run_opt .........................   Passed    7.60 sec
+          Start  563: gate_f_pending_reference
+ 532/2340 Test  #545: type_ops_fail_run_noopt .......................................   Passed    7.42 sec
+          Start  564: gate_f_nested_task_wait
+ 533/2340 Test  #546: type_ops_fail_run_opt .........................................   Passed    7.20 sec
+          Start  565: gate_f_task_exposed_arg
+ 534/2340 Test  #547: gate_f_levelb_contract ........................................   Passed    7.21 sec
+          Start  566: gate_f_task_reference_arg
+ 535/2340 Test  #565: gate_f_task_exposed_arg .......................................   Passed    0.84 sec
+          Start  567: gate_f_task_receiver
+ 536/2340 Test  #566: gate_f_task_reference_arg .....................................   Passed    0.86 sec
+          Start  568: gate_f_dynamic_task_target
+ 537/2340 Test  #560: gate_f_bad_scope ..............................................   Passed    6.99 sec
+          Start  569: gate_f_scope_reused
+ 538/2340 Test  #567: gate_f_task_receiver ..........................................   Passed    1.16 sec
+          Start  570: gate_f_task_levelb
+ 539/2340 Test  #561: gate_f_pending_mutation .......................................   Passed    7.22 sec
+          Start  571: gate_f_parallel_levelb
+ 540/2340 Test  #562: gate_f_pending_return .........................................   Passed    7.22 sec
+          Start  572: gate_f_parallel_expr_levelb
+ 541/2340 Test  #563: gate_f_pending_reference ......................................   Passed    6.81 sec
+          Start  573: gate_f_task_target_levelb
+ 542/2340 Test  #570: gate_f_task_levelb ............................................   Passed    1.01 sec
+          Start  574: gate_f_task_factory_target_levelb
+ 543/2340 Test  #571: gate_f_parallel_levelb ........................................   Passed    0.98 sec
+          Start  575: gate_f_taskwork_required
+ 544/2340 Test  #572: gate_f_parallel_expr_levelb ...................................   Passed    0.90 sec
+          Start  576: gate_f_taskwork_factory_arg
+ 545/2340 Test  #573: gate_f_task_target_levelb .....................................   Passed    0.93 sec
+          Start  577: gate_f_task_object_result_required
+ 546/2340 Test  #574: gate_f_task_factory_target_levelb .............................   Passed    1.02 sec
+          Start  578: gate_f_task_interface_result
+ 547/2340 Test  #564: gate_f_nested_task_wait .......................................   Passed    7.05 sec
+          Start  579: gate_f_contextual_levelb
+ 548/2340 Test  #568: gate_f_dynamic_task_target ....................................   Passed    7.48 sec
+          Start  580: signal_control_unwind_rxbvm_noopt
+ 549/2340 Test  #569: gate_f_scope_reused ...........................................   Passed    7.85 sec
+          Start  581: signal_control_unwind_rxbvm_opt
+ 550/2340 Test  #575: gate_f_taskwork_required ......................................   Passed    8.24 sec
+          Start  582: signal_control_unwind_rxtvm_noopt
+ 551/2340 Test  #576: gate_f_taskwork_factory_arg ...................................   Passed    8.16 sec
+          Start  583: signal_control_unwind_rxtvm_opt
+ 552/2340 Test  #577: gate_f_task_object_result_required ............................   Passed    8.26 sec
+          Start  584: interface_named_factory_same_module_run_noopt
+ 553/2340 Test  #578: gate_f_task_interface_result ..................................   Passed    8.21 sec
+          Start  585: interface_named_factory_same_module_run_opt
+ 554/2340 Test  #579: gate_f_contextual_levelb ......................................   Passed    9.23 sec
+          Start  586: interface_named_factory_tiebreak_run_noopt
+ 555/2340 Test  #580: signal_control_unwind_rxbvm_noopt .............................   Passed    8.49 sec
+          Start  587: interface_named_factory_tiebreak_run_opt
+ 556/2340 Test  #581: signal_control_unwind_rxbvm_opt ...............................   Passed    8.37 sec
+          Start  588: interface_named_factory_no_impl_run_noopt
+ 557/2340 Test  #583: signal_control_unwind_rxtvm_opt ...............................   Passed    7.82 sec
+          Start  589: interface_named_factory_no_impl_run_opt
+ 558/2340 Test  #582: signal_control_unwind_rxtvm_noopt .............................   Passed    8.08 sec
+          Start  590: interface_default_source_import_run_noopt
+ 559/2340 Test  #584: interface_named_factory_same_module_run_noopt .................   Passed    8.04 sec
+          Start  591: interface_default_source_import_run_opt
+ 560/2340 Test  #585: interface_named_factory_same_module_run_opt ...................   Passed    8.10 sec
+          Start  592: interface_default_binary_import_run_noopt
+ 561/2340 Test  #548: gate_f_levelg_rxbvm_noopt .....................................   Passed   28.32 sec
+          Start  549: gate_f_levelg_rxbvm_opt
+ 562/2340 Test  #586: interface_named_factory_tiebreak_run_noopt ....................   Passed    8.20 sec
+          Start  593: interface_default_binary_import_run_opt
+ 563/2340 Test  #587: interface_named_factory_tiebreak_run_opt ......................   Passed    8.25 sec
+          Start  594: interface_source_import_run_noopt
+ 564/2340 Test  #588: interface_named_factory_no_impl_run_noopt .....................   Passed    8.46 sec
+          Start  595: interface_source_import_run_opt
+ 565/2340 Test  #589: interface_named_factory_no_impl_run_opt .......................   Passed    8.38 sec
+          Start  596: interface_binary_import_run_noopt
+ 566/2340 Test  #590: interface_default_source_import_run_noopt .....................   Passed   18.27 sec
+          Start  597: interface_binary_import_run_opt
+ 567/2340 Test  #591: interface_default_source_import_run_opt .......................   Passed   18.09 sec
+          Start  598: interface_match_source_import_run_noopt
+ 568/2340 Test  #592: interface_default_binary_import_run_noopt .....................   Passed   18.26 sec
+          Start  599: interface_match_source_import_run_opt
+ 569/2340 Test  #593: interface_default_binary_import_run_opt .......................   Passed   18.53 sec
+          Start  600: interface_match_binary_import_run_noopt
+ 570/2340 Test  #594: interface_source_import_run_noopt .............................   Passed   18.82 sec
+          Start  601: interface_match_binary_import_run_opt
+ 571/2340 Test  #595: interface_source_import_run_opt ...............................   Passed   19.09 sec
+          Start  602: interface_named_factory_source_import_run_noopt
+ 572/2340 Test  #596: interface_binary_import_run_noopt .............................   Passed   19.19 sec
+          Start  603: interface_named_factory_source_import_run_opt
+ 573/2340 Test  #597: interface_binary_import_run_opt ...............................   Passed   17.99 sec
+          Start  604: interface_named_factory_binary_import_run_noopt
+ 574/2340 Test  #598: interface_match_source_import_run_noopt .......................   Passed   18.29 sec
+          Start  605: interface_named_factory_binary_import_run_opt
+ 575/2340 Test  #599: interface_match_source_import_run_opt .........................   Passed   18.36 sec
+          Start  606: interface_import_provider_source_run_noopt
+ 576/2340 Test  #600: interface_match_binary_import_run_noopt .......................   Passed   18.25 sec
+          Start  607: interface_import_provider_source_run_opt
+ 577/2340 Test  #549: gate_f_levelg_rxbvm_opt .......................................   Passed   39.53 sec
+          Start  550: gate_f_levelg_rxtvm_noopt
+ 578/2340 Test  #601: interface_match_binary_import_run_opt .........................   Passed   17.65 sec
+          Start  608: interface_import_provider_binary_run_noopt
+ 579/2340 Test  #602: interface_named_factory_source_import_run_noopt ...............   Passed   17.52 sec
+          Start  609: interface_import_provider_binary_run_opt
+ 580/2340 Test  #603: interface_named_factory_source_import_run_opt .................   Passed   17.28 sec
+          Start  610: interface_split_same_namespace_source_run_noopt
+ 581/2340 Test  #604: interface_named_factory_binary_import_run_noopt ...............   Passed   19.28 sec
+          Start  611: interface_split_same_namespace_source_run_opt
+ 582/2340 Test  #605: interface_named_factory_binary_import_run_opt .................   Passed   19.12 sec
+          Start  612: interface_split_same_namespace_binary_run_noopt
+ 583/2340 Test  #606: interface_import_provider_source_run_noopt ....................   Passed   30.24 sec
+          Start  613: interface_split_same_namespace_binary_run_opt
+ 584/2340 Test  #607: interface_import_provider_source_run_opt ......................   Passed   30.86 sec
+          Start  614: interface_binary_covariant_run_noopt
+ 585/2340 Test  #608: interface_import_provider_binary_run_noopt ....................   Passed   30.59 sec
+          Start  615: interface_binary_covariant_run_opt
+ 586/2340 Test  #609: interface_import_provider_binary_run_opt ......................   Passed   30.48 sec
+          Start  616: qualified_interface_import_run_noopt
+ 587/2340 Test  #610: interface_split_same_namespace_source_run_noopt ...............   Passed   32.32 sec
+          Start  617: qualified_interface_import_run_opt
+ 588/2340 Test  #550: gate_f_levelg_rxtvm_noopt .....................................   Passed   36.87 sec
+          Start  551: gate_f_levelg_rxtvm_opt
+ 589/2340 Test  #612: interface_split_same_namespace_binary_run_noopt ...............   Passed   30.13 sec
+          Start  618: qualified_interface_binary_import_run_noopt
+ 590/2340 Test  #611: interface_split_same_namespace_source_run_opt .................   Passed   31.16 sec
+          Start  619: qualified_interface_binary_import_run_opt
+ 591/2340 Test  #613: interface_split_same_namespace_binary_run_opt .................   Passed   27.62 sec
+          Start  620: imported_record_return_contract
+ 592/2340 Test  #615: interface_binary_covariant_run_opt ............................   Passed   27.42 sec
+          Start  621: do_forever_return_contract
+ 593/2340 Test  #614: interface_binary_covariant_run_noopt ..........................   Passed   27.99 sec
+          Start  622: parse_levelg_contract
+ 594/2340 Test  #616: qualified_interface_import_run_noopt ..........................   Passed   28.76 sec
+          Start  623: inline_cross_file_binary_opt
+ 595/2340 Test  #617: qualified_interface_import_run_opt ............................   Passed   29.82 sec
+          Start  624: inline_summary_version_fallback_binary_opt
+ 596/2340 Test  #618: qualified_interface_binary_import_run_noopt ...................   Passed   29.73 sec
+          Start  625: inline_summary_shape_fallback_binary_opt
+ 597/2340 Test  #619: qualified_interface_binary_import_run_opt .....................   Passed   29.24 sec
+          Start  626: inline_summary_formal_fallback_binary_opt
+ 598/2340 Test  #551: gate_f_levelg_rxtvm_opt .......................................   Passed   44.44 sec
+          Start  552: gate_f_task_method_import_rxbvm_noopt
+ 599/2340 Test  #623: inline_cross_file_binary_opt ..................................   Passed   23.07 sec
+          Start  627: inline_receiver_summary_fallback_binary_opt
+ 600/2340 Test  #624: inline_summary_version_fallback_binary_opt ....................   Passed   22.74 sec
+          Start  628: inline_ref_array_count_binary_opt
+ 601/2340 Test  #625: inline_summary_shape_fallback_binary_opt ......................   Passed   22.05 sec
+          Start  629: inline_rhs_block_expr_concat_binary_opt
+ 602/2340 Test  #626: inline_summary_formal_fallback_binary_opt .....................   Passed   22.45 sec
+          Start  630: inline_nested_binary_block_owner_shape_opt
+ 603/2340 Test  #627: inline_receiver_summary_fallback_binary_opt ...................   Passed   19.54 sec
+          Start  631: inline_cross_file_source_opt
+ 604/2340 Test  #629: inline_rhs_block_expr_concat_binary_opt .......................   Passed    9.44 sec
+          Start  632: source_import_dotted_floats_decimal_opt
+ 605/2340 Test  #630: inline_nested_binary_block_owner_shape_opt ....................   Passed    9.73 sec
+          Start  633: source_import_contract_stub_implements
+ 606/2340 Test  #628: inline_ref_array_count_binary_opt .............................   Passed   19.69 sec
+          Start  634: source_import_optional_factory_arg
+ 607/2340 Test  #632: source_import_dotted_floats_decimal_opt .......................   Passed    8.56 sec
+          Start  635: source_import_srcmap_factory
+ 608/2340 Test  #635: source_import_srcmap_factory ..................................   Passed    0.38 sec
+          Start  636: source_import_contract_stub_covariant_cycle
+ 609/2340 Test  #622: parse_levelg_contract .........................................   Passed   56.23 sec
+          Start  637: mixed_aggregate_source_contract_stub_covariant
+ 610/2340 Test  #633: source_import_contract_stub_implements ........................   Passed    9.11 sec
+          Start  638: source_extension_direct_defaults
+ 611/2340 Test  #634: source_import_optional_factory_arg ............................   Passed    9.13 sec
+          Start  639: source_extension_standard_imports
+ 612/2340 Test  #631: inline_cross_file_source_opt ..................................   Passed   20.68 sec
+          Start  640: source_extension_rexx_import_default
+ 613/2340 Test  #636: source_import_contract_stub_covariant_cycle ...................   Passed   11.30 sec
+          Start  641: source_extension_arbitrary_imports

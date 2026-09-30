@@ -12,7 +12,7 @@ The result contains exactly four space-separated fields:
 platform bits crexx-version build-date
 ```
 
-- `platform` is `linux`, `windows`, `macOS`, `cms`, or `unknown`.
+- `platform` is `linux`, `windows`, `macOS`, `cms`, `tso`, or `unknown`.
 - `bits` is the VM pointer width, `32` or `64`.
 - `crexx-version` starts with `crexx-` and may include prerelease, build-channel,
   commit, or dirty-worktree metadata.

@@ -1,0 +1,31 @@
+/* Ordinary regression: native string task results may have nonzero int fields. */
+options levelg
+namespace rxpa_objects_text_worker
+import concurrency
+import rxpa_objects
+
+text_worker: task = .string
+  return callback_text(.reader())
+
+integer_worker: task = .int
+  return 7
+
+main: procedure = .int
+  if native_text() <> "native text" then return 1
+  if callback_text(.reader()) <> "native text" then return 3
+  pool = .taskpool.local(2, 4)
+  scope = .taskscope.collectall(pool, 60000)
+  do parallel using scope
+    text = text_worker()
+    integer = integer_worker()
+  end
+  call pool.close()
+  if text <> "native text" | integer <> 7 then return 2
+  say "PASS: C native string and integer task results"
+  return 0
+
+reader: class implements .text_source
+  *: factory
+    return
+  text: method = .string
+    return native_text()

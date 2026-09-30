@@ -1,0 +1,141 @@
+Start testing: Sep 15 19:09 UTC
+----------------------------------------------------------
+6/2530 Testing: crexx_contract_installed_consumer
+6/2530 Test: crexx_contract_installed_consumer
+Command: "/usr/local/bin/cmake" "-DCREXX_BUILD=/Users/runner/work/_temp/qualification" "-DCREXX_SOURCE=/Users/runner/work/CREXX/CREXX" "-DCONTRACT_TOOL_FILE_NAME=crexx-contract" "-DEXTERNAL_SOURCE=/Users/runner/work/CREXX/CREXX/contract/tests/external" "-DEXTERNAL_GOLDEN=/Users/runner/work/CREXX/CREXX/contract/tests/external/external_operation.rxcontract.json" "-DWORK=/Users/runner/work/_temp/qualification/contract/tests/installed-consumer" "-P" "/Users/runner/work/CREXX/CREXX/contract/tests/installed_consumer.cmake"
+Directory: /Users/runner/work/_temp/qualification/contract/tests
+"crexx_contract_installed_consumer" start time: Sep 15 19:09 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   3.26 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_contract_installed_consumer" end time: Sep 15 19:09 UTC
+"crexx_contract_installed_consumer" time elapsed: 00:00:03
+----------------------------------------------------------
+
+1738/2530 Testing: rxllama_release_package_smoke
+1738/2530 Test: rxllama_release_package_smoke
+Command: "/Users/runner/hostedtoolcache/Python/3.12.10/x64/bin/python3.12" "/Users/runner/work/CREXX/CREXX/tests/native-inference/release_smoke.py" "--build" "/Users/runner/work/_temp/qualification" "--source" "/Users/runner/work/CREXX/CREXX" "--helper" "/Users/runner/work/_temp/qualification/lib/plugins/llama/tests/rxllama_release_engine_smoke" "--output-root" "/Users/runner/work/_temp/qualification/lib/plugins/llama/tests/release-smoke"
+Directory: /Users/runner/work/_temp/qualification/lib/plugins/llama
+"rxllama_release_package_smoke" start time: Sep 15 19:09 UTC
+Output:
+----------------------------------------------------------
+SMOKE_RECORD=/Users/runner/work/_temp/qualification/lib/plugins/llama/tests/release-smoke/release-smoke-ccvhuu6o
+PASS: stage-guides
+PASS: engine
+PASS: altered-backend-rejected
+PASS: missing-manifest-rejected
+PASS: opt-compile
+PASS: opt-assemble
+PASS: opt-link
+PASS: opt-rxvm
+PASS: opt-rxtvm
+PASS: noopt-compile
+PASS: noopt-assemble
+PASS: noopt-link
+PASS: noopt-rxvm
+PASS: noopt-rxtvm
+PASS: native-build
+Traceback (most recent call last):
+  File "/Users/runner/work/CREXX/CREXX/tests/native-inference/release_smoke.py", line 218, in <module>
+    main()
+  File "/Users/runner/work/CREXX/CREXX/tests/native-inference/release_smoke.py", line 205, in main
+    run('relocated-native', [relocated / executable.name, fixture, fixture_info['sha256']], marker, cwd=relocated, consumer=True)
+  File "/Users/runner/work/CREXX/CREXX/tests/native-inference/release_smoke.py", line 87, in run
+    result = subprocess.run(argv, cwd=cwd, env=child_env, stdout=log,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 2141, in _communicate
+    self.wait(timeout=self._remaining_time(endtime))
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 1264, in wait
+    return self._wait(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 2045, in _wait
+    raise TimeoutExpired(self.args, timeout)
+subprocess.TimeoutExpired: Command '['/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/relocated/smoke', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/fixture.gguf', 'bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de']' timed out after 1799.9999627469992 seconds
+<end of output>
+Test time = 1908.21 sec
+----------------------------------------------------------
+Test Failed.
+"rxllama_release_package_smoke" end time: Sep 15 19:41 UTC
+"rxllama_release_package_smoke" time elapsed: 00:31:48
+----------------------------------------------------------
+
+2401/2530 Testing: rxpa_external_sdk_consumer
+2401/2530 Test: rxpa_external_sdk_consumer
+Command: "/usr/local/bin/cmake" "-DCREXX_BUILD_DIR=/Users/runner/work/_temp/qualification" "-DCREXX_VERSION=1.0.0-beta.3+nightly.gcabc668cf242" "-DCREXX_VERSION_CORE=1.0.0" "-DCREXX_VERSION_DISPLAY=crexx-1.0.0-beta.3+nightly.gcabc668cf242" "-DCREXX_SOURCE_DIR=/Users/runner/work/CREXX/CREXX" "-DCMAKE_GENERATOR_NAME=Ninja" "-DEXE_SUFFIX=" "-DSTATIC_SUFFIX=.a" "-DPACKAGE_RELATIVE_DIR=lib/cmake/CREXX" "-DCONSUMER_SOURCE_DIR=/Users/runner/work/CREXX/CREXX/tests/rxpa/external_sdk" "-DWORK_ROOT=/Users/runner/work/_temp/qualification/tests/rxpa/rxpa_external_sdk_consumer_ws" "-P" "/Users/runner/work/CREXX/CREXX/tests/rxpa/rxpa_external_sdk_consumer.cmake"
+Directory: /Users/runner/work/_temp/qualification/tests/rxpa
+"rxpa_external_sdk_consumer" start time: Sep 15 19:41 UTC
+Output:
+----------------------------------------------------------
+-- CRI-07 scratch SDK manifest: /Users/runner/work/_temp/qualification/tests/rxpa/rxpa_external_sdk_consumer_ws/artifact-manifest.txt
+<end of output>
+Test time =  28.90 sec
+----------------------------------------------------------
+Test Passed.
+"rxpa_external_sdk_consumer" end time: Sep 15 19:41 UTC
+"rxpa_external_sdk_consumer" time elapsed: 00:00:28
+----------------------------------------------------------
+
+2410/2530 Testing: rcc_provider_package_names
+2410/2530 Test: rcc_provider_package_names
+Command: "/usr/local/bin/cmake" "-DPROVIDER_DIR=/Users/runner/work/_temp/qualification/tests/rxpa/providers" "-DPROVIDER_ID=rx_rcc_provider" "-DSTATIC_SUFFIX=.a" "-P" "/Users/runner/work/CREXX/CREXX/tests/rxpa/check_provider_package_names.cmake"
+Directory: /Users/runner/work/_temp/qualification/tests/rxpa
+"rcc_provider_package_names" start time: Sep 15 19:41 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rcc_provider_package_names" end time: Sep 15 19:41 UTC
+"rcc_provider_package_names" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 15 19:41 UTC
+
+contract =   3.26 sec*proc
+
+crexx-rag =  28.90 sec*proc
+
+external-consumer =  32.16 sec*proc
+
+hash =  28.90 sec*proc
+
+install =  32.16 sec*proc
+
+library = 1908.21 sec*proc
+
+llama = 1908.21 sec*proc
+
+native =  28.90 sec*proc
+
+package =  28.92 sec*proc
+
+packed =  28.90 sec*proc
+
+provider =   0.02 sec*proc
+
+qualification = 1940.39 sec*proc
+
+rcc-5d =  28.90 sec*proc
+
+rcc-5e =  28.90 sec*proc
+
+rcc-5f =  28.90 sec*proc
+
+rxpa = 1937.13 sec*proc
+
+sqlite =  28.90 sec*proc
+
+stats =  28.90 sec*proc
+
+vector =  28.90 sec*proc
+

@@ -1,0 +1,24 @@
+.............anchor apple generic: No such file or directory
+invalid requirement specification
+E
+======================================================================
+ERROR: test_apple_signature_passes_and_adhoc_signature_is_rejected (test_llama_installer.SignatureTests.test_apple_signature_passes_and_adhoc_signature_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/scripts/tests/test_llama_installer.py", line 28, in test_apple_signature_passes_and_adhoc_signature_is_rejected
+    installer.verify_signatures(core, plugin, False)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX/scripts/package-llama-installer.py", line 104, in verify_signatures
+    subprocess.run(['codesign', '--verify', '--strict', '-R',
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    'anchor apple generic', str(file)], check=True)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['codesign', '--verify', '--strict', '-R', 'anchor apple generic', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llama signature ujpbg0hr/core/signed-tool']' returned non-zero exit status 1.
+
+----------------------------------------------------------------------
+Ran 14 tests in 2.346s
+
+FAILED (errors=1)

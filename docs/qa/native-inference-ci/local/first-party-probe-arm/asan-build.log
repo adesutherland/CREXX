@@ -1,0 +1,15 @@
+argv=['/Users/adrian/CLionProjects/CREXX/tools/asan-run.sh', '--build-dir', '/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/asan', '--no-live-tail', '--phase', 'build', '--build-target', 'rxllama_bridge_lifecycle', '--build-jobs', '2', '--build-leaks', 'off']
+ASan run directory: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/asan/asan-logs/20260915-224335-build
+==> build
+    log: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/asan/asan-logs/20260915-224335-build/build.log
+==> build passed
+Command: cmake --build /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/asan --target rxllama_bridge_lifecycle --parallel 2
+ASAN_OPTIONS=detect_leaks=0
+
+[1/6] Building C object CMakeFiles/crexx_llama_bridge.dir/Users/adrian/CLionProjects/CREXX/binutils/rxsha256.c.o
+[2/6] Building CXX object CMakeFiles/rxllama_bridge_lifecycle.dir/Users/adrian/CLionProjects/CREXX/tests/native-inference/bridge_lifecycle.cpp.o
+[3/6] Building CXX object CMakeFiles/crexx_llama_bridge.dir/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp.o
+[4/6] Linking CXX shared library providers/libcrexx-llama.1.dylib
+[5/6] Creating library symlink providers/libcrexx-llama.dylib
+[6/6] Linking CXX executable rxllama_bridge_lifecycle
+ASan run complete: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/asan/asan-logs/20260915-224335-build

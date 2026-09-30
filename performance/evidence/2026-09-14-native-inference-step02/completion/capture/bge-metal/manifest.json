@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g32efa89a2daa.dirty 20260904",
+  "workload": "native-inference-bge-persistent",
+  "runtime": "llama-metal-m5",
+  "variant": "step02-completion",
+  "lifecycle": "complete-control-process",
+  "warmups": 2,
+  "recorded_runs": 10,
+  "sampling": "serial",
+  "correctness_expectation": "PASS native inference direct control",
+  "metric_prefix": null,
+  "command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control","/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf","/Users/adrian/CLionProjects/CREXX/cmake-build-llama-controls/bin","metal","bge","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/completion/release/bge-metal.json","100","20","4","2","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/completion/release/bge-cpu.json"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-09-14T11:52:11+0000",
+  "completed_utc": "2026-09-14T11:52:27+0000",
+  "result": "pass"
+}

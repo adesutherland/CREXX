@@ -1,6 +1,9 @@
 # cREXX diagnostic message catalog, English (US)
 # This file contains spelling overrides. Missing entries fall back to en_GB.
 
+RXPP_STREAM_HEADER = Invalid ##STREAM header: {directive}.
+RXPP_STREAM_MISSING_END = No matching ##END found for ##STREAM at line {line}.
+
 OVERFLOW_UNDERFLOW = Arithmetic overflow or underflow during optimization.
 DIVISION_BY_ZERO = Integer division or modulo by zero during optimization.
 UNUSED_IMPORT = Import is recognized but not used.

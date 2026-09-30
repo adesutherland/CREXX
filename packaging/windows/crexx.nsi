@@ -19,14 +19,17 @@ SetCompressor /SOLID lzma
 ManifestDPIAware true
 RequestExecutionLevel admin
 
+!ifdef CREXX_SIGN_HELPER
+  ; Sign private copies of the embedded NSIS helper DLLs as well as the
+  ; CREXX payload. Never modify the machine's installed NSIS plugin files.
+  !system '"${CREXX_SIGN_HELPER}" --nsis-plugins "${NSISDIR}/Plugins/x86-unicode" "${CREXX_SIGNED_PLUGIN_DIR}"' = 0
+  !addplugindir /x86-unicode "${CREXX_SIGNED_PLUGIN_DIR}"
+!endif
+
 !include "LogicLib.nsh"
 !include "MUI2.nsh"
-!include "StrFunc.nsh"
 !include "WinMessages.nsh"
 !include "x64.nsh"
-
-${Using:StrFunc} StrStr
-${Using:StrFunc} UnStrRep
 
 !define CREXX_PRODUCT_NAME "CREXX"
 !define CREXX_PUBLISHER "CREXX"
@@ -104,62 +107,41 @@ Function un.BroadcastEnvironmentChange
   SendMessage ${HWND_BROADCAST} ${WM_SETTINGCHANGE} 0 "STR:Environment" /TIMEOUT=5000
 FunctionEnd
 
-Function AddInstallBinToPath
-  ReadRegStr $0 HKLM "${CREXX_ENV_KEY}" "Path"
-  StrCpy $1 "$INSTDIR\bin"
-  StrCpy $2 ";$0;"
-  StrCpy $3 ";$1;"
-  ${StrStr} $4 "$2" "$3"
+; Never bring machine PATH into an NSIS string: ReadRegStr returns empty for
+; values exceeding NSIS_MAX_STRLEN. Windows PowerShell's registry API preserves
+; the full, unexpanded value and its registry type. The installation directory
+; is passed as process environment data, never interpolated as PowerShell code.
+!define CREXX_PATH_SCRIPT `$$ErrorActionPreference='Stop';try{$$k=[Microsoft.Win32.Registry]::LocalMachine.OpenSubKey('SYSTEM\CurrentControlSet\Control\Session Manager\Environment',$$true);$$t=$$k.GetValueKind('Path');$$p=[string]$$k.GetValue('Path','',1);$$b=$$env:CREXX_INSTALL_BIN;if($$env:CREXX_PATH_ACTION-eq'add'){if(-not($$p.Split(';')-contains$$b)){if($$p){$$p+=';'+$$b}else{$$p=$$b}}}else{$$p=(';'+$$p+';').Replace(';'+$$b+';',';').Substring(1);if($$p.EndsWith(';')){$$p=$$p.Substring(0,$$p.Length-1)}};$$k.SetValue('Path',$$p,$$t);$$k.Close()}catch{Write-Output $$_;exit 1}`
 
-  ${If} $4 == ""
-    ${If} $0 == ""
-      WriteRegExpandStr HKLM "${CREXX_ENV_KEY}" "Path" "$1"
-    ${Else}
-      WriteRegExpandStr HKLM "${CREXX_ENV_KEY}" "Path" "$0;$1"
-    ${EndIf}
+!macro UpdateInstallPath ACTION
+  System::Call 'kernel32::SetEnvironmentVariable(t "CREXX_INSTALL_BIN", t "$INSTDIR\bin")'
+  System::Call 'kernel32::SetEnvironmentVariable(t "CREXX_PATH_ACTION", t "${ACTION}")'
+  nsExec::ExecToStack `"$WINDIR\Sysnative\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -Command "${CREXX_PATH_SCRIPT}"`
+  Pop $0
+  Pop $1
+  System::Call 'kernel32::SetEnvironmentVariable(t "CREXX_INSTALL_BIN", p 0)'
+  System::Call 'kernel32::SetEnvironmentVariable(t "CREXX_PATH_ACTION", p 0)'
+  ${If} $0 != 0
+    DetailPrint "Unable to ${ACTION} CREXX's PATH entry (exit $0): $1"
+    MessageBox MB_ICONSTOP|MB_OK "Unable to update the machine PATH. Check that Windows PowerShell is available." /SD IDOK
+    SetErrorLevel 1
+    Abort
   ${EndIf}
+!macroend
+
+Function AddInstallBinToPath
+  !insertmacro UpdateInstallPath add
 FunctionEnd
 
 Function un.RemoveInstallBinFromPath
-  ReadRegStr $0 HKLM "${CREXX_ENV_KEY}" "Path"
-  StrCpy $1 "$INSTDIR\bin"
-  StrCpy $2 ";$0;"
-  StrCpy $3 ";$1;"
-  ${UnStrRep} $2 "$2" "$3" ";"
-
-  ${Do}
-    StrCpy $3 "$2" 1
-    ${If} $3 == ";"
-      StrCpy $2 "$2" "" 1
-    ${Else}
-      ${ExitDo}
-    ${EndIf}
-  ${Loop}
-
-  ${Do}
-    StrLen $3 "$2"
-    ${If} $3 <= 0
-      ${ExitDo}
-    ${EndIf}
-    IntOp $3 $3 - 1
-    StrCpy $4 "$2" 1 $3
-    ${If} $4 == ";"
-      StrCpy $2 "$2" $3
-    ${Else}
-      ${ExitDo}
-    ${EndIf}
-  ${Loop}
-
-  ${If} $2 != $0
-    WriteRegExpandStr HKLM "${CREXX_ENV_KEY}" "Path" "$2"
-  ${EndIf}
+  !insertmacro UpdateInstallPath remove
 FunctionEnd
 
 Section "CREXX" SecCREXX
   SetRegView 64
   SetOverwrite on
   SetOutPath "$INSTDIR"
-  File /r "${CREXX_PAYLOAD_DIR}/*"
+  File /r "${CREXX_PAYLOAD_DIR}\*"
 
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
@@ -186,6 +168,16 @@ SectionEnd
 
 Section "Uninstall"
   SetRegView 64
+
+  ; Optional backend installers have independent entries, scoped to this core.
+  ; The core removal owns the entire installation tree, including their stores.
+  IfFileExists "$INSTDIR\.llama-installer\registration-id" 0 no_llama_registration
+    FileOpen $0 "$INSTDIR\.llama-installer\registration-id" r
+    FileRead $0 $1
+    FileClose $0
+    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\CREXX.llama.$1.vulkan"
+    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\CREXX.llama.$1.cuda"
+  no_llama_registration:
 
   Call un.RemoveInstallBinFromPath
 

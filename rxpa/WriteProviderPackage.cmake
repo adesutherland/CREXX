@@ -1,0 +1,92 @@
+# cREXX License (MIT). Build-time hash/metadata generation; never executable hooks.
+include("${INPUT}")
+include("${CMAKE_CURRENT_LIST_DIR}/RuntimePackagePaths.cmake" NO_POLICY_SCOPE)
+function(json_string out value)
+    string(REPLACE "\\" "\\\\" value "${value}")
+    string(REPLACE "\"" "\\\"" value "${value}")
+    set(${out} "\"${value}\"" PARENT_SCOPE)
+endfunction()
+function(file_entry out path)
+    get_filename_component(name "${path}" NAME)
+    file(SHA256 "${path}" hash)
+    json_string(quoted "${name}")
+    set(${out} "{\"path\":${quoted},\"sha256\":\"${hash}\"}" PARENT_SCOPE)
+endfunction()
+# Dependent targets can originate outside the provider output directory.
+# Publish their declared files before generating relative package metadata.
+set(publish_files ${runtime_files} ${link_files})
+list(REMOVE_DUPLICATES publish_files)
+foreach(path IN LISTS publish_files)
+    get_filename_component(name "${path}" NAME)
+    if(NOT "${path}" STREQUAL "${output}/${name}")
+        file(COPY_FILE "${path}" "${output}/${name}" ONLY_IF_DIFFERENT)
+    endif()
+endforeach()
+# Retain redistributable SDK/runtime dependencies. OS libraries and installed
+# GPU drivers are platform prerequisites, not copied system installations.
+set(scan_files "")
+foreach(path IN LISTS runtime_files)
+    get_filename_component(name "${path}" NAME)
+    list(APPEND scan_files "${output}/${name}")
+endforeach()
+list(FILTER scan_files INCLUDE REGEX "\\.(dylib|so([.][0-9]+)*|dll)$")
+list(REMOVE_DUPLICATES scan_files)
+set(system_dependencies "^/System/Library/" "${crexx_windows_system_dll_regex}"
+    ".*/(libc|libm|libdl|libpthread|librt|ld-linux[^/]*)\\.so.*")
+if(platform STREQUAL "Darwin")
+    list(APPEND system_dependencies "^/usr/lib/")
+endif()
+file(GET_RUNTIME_DEPENDENCIES LIBRARIES ${scan_files}
+    DIRECTORIES "${output}" ${runtime_search_directories}
+    RESOLVED_DEPENDENCIES_VAR dependencies
+    UNRESOLVED_DEPENDENCIES_VAR missing
+    PRE_EXCLUDE_REGEXES
+        "libclang_rt\\..*" "libasan\\.so.*" "libubsan\\.so.*" "libtsan\\.so.*"
+        "api-ms-.*" "ext-ms-.*" "[Nn][Vv][Cc][Uu][Dd][Aa]\\.dll" "[Vv][Uu][Ll][Kk][Aa][Nn]-1\\.dll"
+        "libcuda\\.so.*" "libvulkan\\.so.*"
+    POST_EXCLUDE_REGEXES ${system_dependencies})
+if(missing)
+    message(FATAL_ERROR "Unresolved inference package dependencies: ${missing}")
+endif()
+foreach(path IN LISTS dependencies)
+    get_filename_component(name "${path}" NAME)
+    if(NOT "${path}" STREQUAL "${output}/${name}")
+        file(COPY_FILE "${path}" "${output}/${name}" ONLY_IF_DIFFERENT)
+    endif()
+    list(APPEND runtime_files "${output}/${name}")
+endforeach()
+set(runtime_entries "")
+set(link_entries "")
+set(backend_entries "")
+list(REMOVE_DUPLICATES runtime_files)
+foreach(path IN LISTS runtime_files)
+    file_entry(entry "${path}")
+    list(APPEND runtime_entries "${entry}")
+endforeach()
+# Declared SDK files and scanned copies can have different source paths but
+# identical published names/hashes. Emit one entry for that published identity;
+# differing hashes remain distinct and cannot silently bless a collision.
+list(REMOVE_DUPLICATES runtime_entries)
+foreach(path IN LISTS link_files)
+    file_entry(entry "${path}")
+    list(APPEND link_entries "${entry}")
+endforeach()
+foreach(pair IN LISTS backend_files)
+    string(REPLACE "|" ";" parts "${pair}")
+    list(GET parts 0 name)
+    list(GET parts 1 path)
+    file_entry(entry "${path}")
+    string(JSON entry SET "${entry}" backend "\"${name}\"")
+    list(APPEND backend_entries "${entry}")
+endforeach()
+string(JOIN "," backend_json ${backend_entries})
+set(common "\"version\":1,\"provider\":\"${provider}\",\"platform\":\"${platform}\",\"arch\":\"${arch}\",\"engine\":\"${engine}\"")
+if(backend_files)
+    set(runtime_manifest "${output}/${provider}.runtime.json")
+    file(WRITE "${runtime_manifest}" "{${common},\"backends\":[${backend_json}]}\n")
+    file_entry(entry "${runtime_manifest}")
+    list(APPEND runtime_entries "${entry}")
+endif()
+string(JOIN "," runtime_json ${runtime_entries})
+string(JOIN "," link_json ${link_entries})
+file(WRITE "${output}/${provider}.native.json" "{${common},\"link_libraries\":[${link_json}],\"runtime_files\":[${runtime_json}]}\n")

@@ -1,0 +1,8 @@
+options levelg
+namespace implementation expose concrete
+import contract
+concrete: class implements .providercontract
+  *: factory
+    return
+  value: method = .int
+    return 1

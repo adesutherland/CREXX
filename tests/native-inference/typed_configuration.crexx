@@ -1,0 +1,39 @@
+/* F-AC-02: ordinary failures/snapshots before the typed provider exists. */
+options levelg floats_binary
+import rxfnsb
+import _rxsysb
+import rxfnsg
+import rxunicode
+import llama
+
+require: procedure = .void
+  arg okay = .boolean, message = .string
+  if okay then return
+  call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
+  return
+
+main: procedure = .int
+  config = .llama..configuration()
+  call require config.status() = 0, "configuration construction"
+  call require config.set_float("temperature", 0.0) = 0, "float option"
+  call require config.set_int("threads", 1) = 0, "integer option"
+  nul = .rxunicode..decode("00"x as .binary, "UTF-8")
+  call require config.set_text("hardware_mode", "cpu" || nul || "suffix") <> 0, "complete string validation"
+  saved = config.diagnostic()
+  code = saved.code()
+  operation = saved.operation()
+  message = saved.message()
+  call require code <> 0 & operation <> "" & message <> "", "failure diagnostic"
+  call require config.status() = code, "status inspection preserves failure"
+  call require config.set_text("hardware_mode", "cpu") = 0, "recovery"
+  call require saved.code() = code & saved.operation() = operation & saved.message() = message, "durable diagnostic snapshot"
+  call require config.diagnostic().code() = 0, "new success diagnostic"
+  alias = config
+  call require alias.close() = 0, "alias close"
+  call require config.set_int("threads", 2) <> 0, "copied owner shares closed resource"
+  failed = .llama..runtime(config)
+  call require failed.status() <> 0 & failed.diagnostic().code() = failed.status(), "initialized failed constructor"
+  call require failed.close() = 0 & failed.close() = 0, "safe repeated failed owner close"
+  call require config.close() = 0, "idempotent close"
+  say "PASS: typed llama configuration"
+  return 0

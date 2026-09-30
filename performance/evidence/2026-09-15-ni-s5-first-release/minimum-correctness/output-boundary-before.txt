@@ -1,0 +1,24 @@
+[0/2] Re-checking globbed directories...
+[1/3] Building C object interpreter/CMakeFiles/test_rxpa_host_services.dir/tests/test_rxpa_host_services.c.o
+[2/3] Linking C executable interpreter/test_rxpa_host_services
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1158: rxpa_host_text_services
+1/1 Test #1158: rxpa_host_text_services ..........***Failed    0.26 sec
+FAIL: RXPA output truncated embedded U+0000: 1 of 5 bytes
+FAIL: negotiated text services or old manifest compatibility
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+comprehensive    =   0.26 sec*proc (1 test)
+interpreter      =   0.26 sec*proc (1 test)
+plugins          =   0.26 sec*proc (1 test)
+regression       =   0.26 sec*proc (1 test)
+rxpa             =   0.26 sec*proc (1 test)
+
+Total Test time (real) =   0.30 sec
+
+The following tests FAILED:
+	1158 - rxpa_host_text_services (Failed)                  comprehensive interpreter plugins regression rxpa
+Errors while running CTest

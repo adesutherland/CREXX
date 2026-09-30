@@ -1,0 +1,31 @@
+[0/2] Re-checking globbed directories...
+[1/31] Building C object lib/plugins/CMakeFiles/_rxpa_session_failure.dir/__/__/interpreter/tests/rxpa_session_failure_plugin.c.o
+[2/31] Building C object lib/plugins/stack/CMakeFiles/_stack.dir/stack.c.o
+[3/31] Building C object lib/plugins/vector/CMakeFiles/vector.dir/rxvector.c.o
+[4/31] Building C object lib/plugins/vector/CMakeFiles/vector_static.dir/rxvector.c.o
+[5/31] Building C object lib/plugins/stats/CMakeFiles/stats_static.dir/rxstats.c.o
+[6/31] Building C object lib/plugins/stats/CMakeFiles/stats.dir/rxstats.c.o
+[7/31] Building C object lib/plugins/cipher/CMakeFiles/_cipher.dir/cipher.c.o
+[8/31] Building C object lib/plugins/stack/CMakeFiles/_stack_static.dir/stack.c.o
+[9/31] Building C object lib/plugins/cipher/CMakeFiles/_cipher_static.dir/cipher.c.o
+[10/31] Building C object lib/plugins/getpi/CMakeFiles/_getpi.dir/getpi.c.o
+[11/31] Building C object lib/plugins/strings/CMakeFiles/_strings.dir/strings.c.o
+[12/31] Building C object lib/plugins/id/CMakeFiles/id_static.dir/id.c.o
+[13/31] Linking C shared module bin/rx_rxpa_session_failure.rxplugin
+[14/31] Linking C shared module bin/rxstats.rxplugin
+[15/31] Linking C shared module bin/rxvector.rxplugin
+[16/31] Building C object interpreter/CMakeFiles/test_rxpa_concurrency.dir/tests/test_rxpa_concurrency.c.o
+[17/31] Linking C static library bin/rxvector_static.a
+[18/31] Linking C static library bin/rxstats_static.a
+[19/31] Linking C shared module bin/rx_stack.rxplugin
+[20/31] Linking C shared module bin/rx_cipher.rxplugin
+[21/31] Linking C static library bin/rx_stack_static.a
+[22/31] Linking C shared module bin/rx_strings.rxplugin
+[23/31] Linking C shared module bin/rx_getpi.rxplugin
+[24/31] Linking C static library bin/rx_cipher_static.a
+[25/31] Linking C static library bin/rxid_static.a
+[26/31] Linking C executable interpreter/test_rxpa_concurrency
+[27/31] Generating rxfs_rxtvm_noopt.rxbin
+[28/31] Generating rxfs_rxbvm_noopt.rxbin
+[29/31] Generating rxfs_rxbvm_opt.rxbin
+[30/31] Generating rxfs_rxtvm_opt.rxbin

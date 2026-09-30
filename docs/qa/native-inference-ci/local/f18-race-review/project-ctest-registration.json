@@ -1,0 +1,56 @@
+{
+  "backtrace": 7984,
+  "command": [
+    "/opt/homebrew/bin/cmake",
+    "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+    "-DRXVME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvme",
+    "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/crexx_project_build_ws",
+    "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX/bin/tests/rexx_src",
+    "-P",
+    "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_project_build.cmake"
+  ],
+  "name": "crexx_project_build_contract",
+  "properties": [
+    {
+      "name": "ENVIRONMENT",
+      "value": [
+        "CREXX_DIAGNOSTICS=raw",
+        "CREXX_HOME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug"
+      ]
+    },
+    {
+      "name": "LABELS",
+      "value": [
+        "autoload",
+        "build",
+        "driver",
+        "incremental",
+        "parallel",
+        "regression",
+        "smoke"
+      ]
+    },
+    {
+      "name": "RESOURCE_LOCK",
+      "value": [
+        "crexx_bin_workspace"
+      ]
+    },
+    {
+      "name": "RUN_SERIAL",
+      "value": true
+    },
+    {
+      "name": "TIMEOUT",
+      "value": 900.0
+    },
+    {
+      "name": "WORKING_DIRECTORY",
+      "value": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests"
+    },
+    {
+      "name": "CREXX_PREP_TARGETS",
+      "value": "crexx;rxvme;crexx;rxdas;rxpp"
+    }
+  ]
+}

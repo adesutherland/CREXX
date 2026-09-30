@@ -1,0 +1,5 @@
+options levelg
+namespace _rxsysb expose extension
+import implementation
+extension: procedure = .void
+  return

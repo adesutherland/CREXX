@@ -49,6 +49,7 @@
 
 /* Compiler Context Object */
 struct Context {
+    struct pending_import_contracts *pending_import_contracts; /* Active binary metadata forward declarations. */
     struct Context *master_context; /* This points to the context of the file being compiled (rather than imported files* */
     int debug_mode;
     int stop_after_parse;
@@ -64,6 +65,7 @@ struct Context {
     char executable_import_included;
     size_t executable_import_root_index;
     importable_file **importable_file_list;
+    int import_discovery_error; /* errno of incomplete enumeration, never a usable list */
     FILE *file_pointer;
     FILE *traceFile;
     char *buff_start;
@@ -216,6 +218,7 @@ struct importable_file {
     file_type type;
     char *location;
     char imported;
+    char shadowed;
     char source_root;
     RexxLevel source_default_level;
     time_t mtime;
@@ -312,6 +315,9 @@ Symbol *ensure_class_imported(Context *context, const char *class_name, size_t c
  * Unlike ordinary source lookup, this does not require the consumer source to
  * import the producer's dependency namespace independently. */
 imported_func *rxcp_find_imported_function_exact(Context *context, const char *fqname);
+/* Borrowed native factory records; caller owns the returned pointer array. */
+dpa *rxcp_native_interface_factories(Context *context, const char *interface_name,
+                                    const char *factory_suffix);
 Symbol *ensure_function_imported_exact(Context *context,
                                        const char *fqname,
                                        size_t fqname_length);
@@ -386,6 +392,10 @@ void freimpfc(imported_func *func);
 
 /* Get the list of importable files as a null terminated malloced array */
 importable_file **rxfl_lst(Context *context);
+const char *rxcp_importable_source_namespace(Context *context, importable_file *file);
+
+/* Internal project-driver dependency snapshot: zero means written/current. */
+int rxcp_project_dependencies(Context *context, const char *path, int check);
 
 /* free the list of importable files */
 void rxfl_fre(importable_file **file_list);

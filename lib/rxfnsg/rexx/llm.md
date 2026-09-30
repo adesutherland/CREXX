@@ -1,96 +1,33 @@
-# cREXX Level G LLM Library
+# cREXX Level G LLM library
 
-`llm.rexx` is the Level G LLM integration layer. Level G is an overlay on the
-Level B foundation here: this module is `options levelg`, lives in the
-`rxfnsg` namespace, and builds as `rxfnsg.rxbin`. It uses the public Level G
-`.httpclient` and the private `_rxhttpcore` framing/parser shared with it.
+Import `rxfnsg` and use `.llm.open(.llmconfig(driver,model))` to select Ollama,
+OpenAI, Anthropic, Gemini or optional native llama. Processing code uses the same
+`.llm` contract for `generate`, status/error, owned results and capability checks.
+The [common-driver guide](../../plugins/llama/common.md) is the API walkthrough,
+including request lifecycle, separate embeddings and application-level exceptions
+when the optional plugin is unavailable. Runnable examples live beside that guide.
 
-The first provider targets local Ollama. Hosted OpenAI, Anthropic/Claude, and
-Gemini providers are also implemented in Rexx code and use the reusable Level G
-HTTP owner pool for HTTP framing and TLS transport, plus `rxjson` for JSON.
+`llm.crexx` is `options levelg`, lives in namespace `rxfnsg`, and builds into
+`rxfnsg.rxbin`. HTTP drivers use `.httpclient`, the shared `_rxhttpcore` framing
+and TLS transport, and `rxjson`. The native C RXPA adapter uses the existing
+llama owners and has no HTTP dependency of its own. Core imports do not require
+the optional inference engine.
 
-## Import
+## Existing callers
 
-```rexx
-options levelg
-import rxfnsg
-```
+`.llm(model="gemma4:latest",host="127.0.0.1",port=11434,timeout=120000)`
+always selects Ollama. Direct `.ollama`, `.openai`, `.anthropic` and `.gemini`
+constructors remain available. Hosted constructors retain their existing three
+arguments and append an optional origin URL for endpoint configuration.
+Use `.llm.open(config)` when assigning any selected driver to an `.llm` variable.
 
-At runtime, load both the Level B foundation `library.rxbin` and the Level G
-overlay `rxfnsg.rxbin`.
+HTTP diagnostics retain `generateJson`, `buildBody`, `buildRequest`, `extractBody`,
+`extractText`, `lastJson` and `lastHttp`. Native calls to those methods return
+unsupported-operation status `-4`; `generateJson` is not constrained generation.
 
-## API
-
-The namespace exposes:
-
-- `llm`: provider-selecting interface
-- `ollama`: concrete local Ollama implementation
-- `openai`: concrete OpenAI Responses API implementation
-- `anthropic`: concrete Anthropic Messages API implementation
-- `gemini`: concrete Gemini `generateContent` implementation
-
-The `.llm(...)` interface factory currently selects the local Ollama provider.
-Its factory arguments are:
-
-- `model = "gemma4:latest"`
-- `host = "127.0.0.1"`
-- `port = 11434`
-- `timeout = 120000`
-
-The hosted providers are constructed directly:
-
-- `.openai(model = "gpt-4.1", apiKey = "", timeout = 120000)`
-- `.anthropic(model = "claude-sonnet-4-5", apiKey = "", timeout = 120000)`
-- `.gemini(model = "gemini-2.5-flash", apiKey = "", timeout = 120000)`
-
-When `apiKey` is empty, the providers read environment variables:
-
-- OpenAI: `OPENAI_API_KEY`
-- Anthropic: `ANTHROPIC_API_KEY`
-- Gemini: `GOOGLE_API_KEY`, then `GEMINI_API_KEY`
-
-Primary methods:
-
-- `generate(prompt) = .string`: returns the generated text
-- `generateJson(prompt) = .string`: returns the provider JSON body
-- `status() = .int`: `0` on success, HTTP status for HTTP failures, negative
-  values for local socket/protocol errors
-- `error() = .string`: last diagnostic message
-- `lastJson() = .string`: last decoded provider JSON body
-- `lastHttp() = .string`: reconstructed response head and decoded body for diagnostics
-- `close()`: closes the provider's bounded HTTP connection-owner pool
-
-Helper methods, public for tests and diagnostics:
-
-- `buildBody(prompt) = .string`
-- `buildRequest(prompt) = .string`
-- `extractBody(response) = .string`
-- `extractText(responseJson) = .string`
-
-`demos/llm/llm_address_environment.crexx` wraps these helpers in a Rexx
-ADDRESS provider. It lets scripts write `ADDRESS LLM_GPT_4_1`, `ADDRESS
-CLAUDE_SONNET_4_5`, `ADDRESS GEMINI_2_5_FLASH`, or `ADDRESS GEMMA4_LATEST`
-and use `BODY`, `REQUEST`, `EXTRACT`, and live `GENERATE` commands against the
-selected driver. Driver selection uses `_rxsysb.addressdriverregistry`, so each
-provider contributes exact aliases and prefixes while keeping the lookup policy
-in the ADDRESS/Rexx layer.
-
-## Example
-
-```rexx
-options levelg
-import rxfnsg
-
-client = .llm("gemma4:latest")
-answer = client.generate("Reply with one short sentence.")
-if client.status() <> 0 then do
-  say client.error()
-  call client.close()
-  exit 1
-end
-say answer
-call client.close()
-```
+The [ADDRESS demo](../../../demos/llm/README.md) uses the common client for
+`GENERATE`, preserves existing aliases and HTTP helpers, and adds `LLM_NATIVE`
+with explicit local model configuration. `CLOSE` releases its persistent client.
 
 ## Ollama Contract
 

@@ -1,0 +1,10 @@
+ASan run directory: /tmp/crexx-ni-s6.zq0rk0ug/package-resume/build/asan-logs/20260915-143825-build
+==> build
+    log: /tmp/crexx-ni-s6.zq0rk0ug/package-resume/build/asan-logs/20260915-143825-build/build.log
+==> build passed
+Command: cmake --build /tmp/crexx-ni-s6.zq0rk0ug/package-resume/build --target continuation --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+PASS: generation package continuation from opt-shared_generation
+Built target continuation
+ASan run complete: /tmp/crexx-ni-s6.zq0rk0ug/package-resume/build/asan-logs/20260915-143825-build

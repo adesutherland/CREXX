@@ -1,0 +1,4 @@
+options levelb
+namespace _rxsysb expose unused_extension
+unused_extension: procedure = .int
+  return missing_function_must_be_validated()

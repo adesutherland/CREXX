@@ -1,0 +1,19 @@
+argv=['cmake', '-S', '/home/runner/work/CREXX/CREXX/tests/native-inference/first-party-probe', '-B', '/home/runner/work/_temp/first-party-probe/asan', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Debug', '-DCREXX_SOURCE=/home/runner/work/CREXX/CREXX', '-DLLAMA_SOURCE=/home/runner/work/_temp/llama-headers', '-DPROVIDER_DIRECTORY=/home/runner/work/_temp/first-party-probe/asan/providers', '-DPROBE_ASAN=ON']
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/runner/work/_temp/first-party-probe/asan

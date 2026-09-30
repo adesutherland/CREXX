@@ -1,0 +1,3 @@
+argv=[PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-urg8mwnn/installed Ω/bin/rxc'), '--no-exe-import', '-i', PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-urg8mwnn/installed Ω/bin'), '-o', PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-urg8mwnn/checks/provider_worker_acceptance'), PosixPath('/Users/adrian/CLionProjects/CREXX/tests/native-inference/provider_worker_acceptance.crexx')]
+cwd=/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-urg8mwnn/checks
+rc=0

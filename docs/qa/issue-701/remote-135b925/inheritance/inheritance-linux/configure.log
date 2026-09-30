@@ -1,0 +1,79 @@
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- CMake Version: 3.31.6
+-- CREXX Version: crexx-1.0.0-beta.3+local.g135b9254fffd
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260916T110319Z
+-- CREXX Build Commit: 135b9254fffd
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=portable, vm-compile=2, native-link=2, backend=Ninja pools
+-- Fetching DSL-Syntax-Highlighter develop from https://github.com/adesutherland/DSL-Syntax-Highlighter.git
+-- Performing Test cxxflag__W
+-- Performing Test cxxflag__W - Success
+-- Performing Test cxxflag__Wall
+-- Performing Test cxxflag__Wall - Success
+-- Performing Test cxxflag__Wextra
+-- Performing Test cxxflag__Wextra - Success
+-- Performing Test cxxflag__Weffc__
+-- Performing Test cxxflag__Weffc__ - Success
+-- Performing Test cxxflag__pedantic
+-- Performing Test cxxflag__pedantic - Success
+-- Performing Test cxxflag__Wformat_2
+-- Performing Test cxxflag__Wformat_2 - Success
+-- Performing Test cxxflag__Wredundant_decls
+-- Performing Test cxxflag__Wredundant_decls - Success
+-- Performing Test cxxflag__Wsuggest_attribute_format
+-- Performing Test cxxflag__Wsuggest_attribute_format - Success
+-- Performing Test cxxflag__Wconversion
+-- Performing Test cxxflag__Wconversion - Success
+-- Performing Test cxxflag__Wsign_conversion
+-- Performing Test cxxflag__Wsign_conversion - Success
+-- Performing Test cxxflag__Werror_return_type
+-- Performing Test cxxflag__Werror_return_type - Success
+-- Performing Test cxxflag__Weverything
+-- Performing Test cxxflag__Weverything - Failed
+-- Performing Test cxxflag__fdiagnostics_color_always
+-- Performing Test cxxflag__fdiagnostics_color_always - Success
+-- C compiler flags: 
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wsuggest-attribute=format -Wconversion -Wsign-conversion -Werror=return-type -fdiagnostics-color=always 
+-- Linker flags for executables: 
+-- Linker flags for shared libs: 
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for sys/stat.h
+-- Looking for sys/stat.h - found
+-- Looking for fcntl.h
+-- Looking for fcntl.h - found
+-- Looking for unistd.h
+-- Looking for unistd.h - found
+-- Looking for io.h
+-- Looking for io.h - not found
+-- Writing config.h
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- cREXX VM handler panel: profile-20
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")
+-- cREXX VM core socket TLS backend: OPENSSL
+-- cREXX product VM: rxvm -> rxtvm (GNU)
+-- Found Python3: /usr/bin/python3.12 (found version "3.12.3") found components: Interpreter
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (5.3s)
+-- Generating done (1.0s)
+-- Build files have been written to: /home/runner/work/CREXX/CREXX/build-701

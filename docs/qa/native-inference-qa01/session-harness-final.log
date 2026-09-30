@@ -1,0 +1,76 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 1173: rxpa_static_session_lifecycle
+      Start 1175: rxpa_session_manifest_fail_closed
+      Start 1691: rxpa_bundled_getpi_concurrency
+      Start 1159: rxpa_worker_startup_attached
+      Start 1158: rxpa_host_text_services
+      Start 1160: rxpa_worker_startup_callback
+      Start 1183: rxpa_worker_startup_transition
+      Start 1689: rxpa_bundled_stack_concurrency
+      Start 1687: rxpa_bundled_cipher_concurrency
+      Start 1694: rxpa_bundled_stats_concurrency
+      Start 1688: rxpa_bundled_hash_concurrency
+      Start 1690: rxpa_bundled_strings_concurrency
+      Start 1693: rxpa_bundled_float_concurrency
+      Start 1696: rxpa_bundled_fs_concurrency
+      Start 2416: rxpa_invalid_manifest_is_legacy
+      Start 1697: rxpa_bundled_platform_concurrency
+      Start 1695: rxpa_bundled_vector_concurrency
+      Start 1692: rxpa_bundled_id_concurrency
+      Start 2415: rxpa_process_reentrant_manifest
+      Start 1698: rxpa_dynamic_session_factory_failure_rollback
+      Start 1176: rxpa_float_static_alias_binding
+      Start 2417: rxpa_dynamic_context_ownership
+      Start 1182: rxpa_legacy_transition_quiescence
+      Start 1181: rxpa_bound_legacy_serialization
+      Start 1174: rxpa_session_factory_failure_rollback
+      Start 1180: rxpa_branch_free_load_binding
+      Start 1179: rxpa_legacy_recursive_reentry
+      Start 1172: rxpa_static_catalogue_replay
+      Start 1177: rxpa_legacy_call_serialization
+      Start 1178: rxpa_process_reentrant_overlap
+ 1/30 Test #2415: rxpa_process_reentrant_manifest .................   Passed    0.32 sec
+ 2/30 Test #1698: rxpa_dynamic_session_factory_failure_rollback ...   Passed    0.32 sec
+ 3/30 Test #1174: rxpa_session_factory_failure_rollback ...........   Passed    0.32 sec
+ 4/30 Test #1180: rxpa_branch_free_load_binding ...................   Passed    0.32 sec
+ 5/30 Test #1175: rxpa_session_manifest_fail_closed ...............   Passed    0.33 sec
+ 6/30 Test #1179: rxpa_legacy_recursive_reentry ...................   Passed    0.32 sec
+ 7/30 Test #1694: rxpa_bundled_stats_concurrency ..................   Passed    0.33 sec
+ 8/30 Test #1692: rxpa_bundled_id_concurrency .....................   Passed    0.32 sec
+ 9/30 Test #1176: rxpa_float_static_alias_binding .................   Passed    0.32 sec
+10/30 Test #2417: rxpa_dynamic_context_ownership ..................   Passed    0.32 sec
+11/30 Test #1172: rxpa_static_catalogue_replay ....................   Passed    0.32 sec
+12/30 Test #1697: rxpa_bundled_platform_concurrency ...............   Passed    0.33 sec
+13/30 Test #1173: rxpa_static_session_lifecycle ...................   Passed    0.33 sec
+14/30 Test #2416: rxpa_invalid_manifest_is_legacy .................   Passed    0.33 sec
+15/30 Test #1182: rxpa_legacy_transition_quiescence ...............   Passed    0.33 sec
+16/30 Test #1181: rxpa_bound_legacy_serialization .................   Passed    0.33 sec
+17/30 Test #1183: rxpa_worker_startup_transition ..................   Passed    0.33 sec
+18/30 Test #1690: rxpa_bundled_strings_concurrency ................   Passed    0.33 sec
+19/30 Test #1177: rxpa_legacy_call_serialization ..................   Passed    0.33 sec
+20/30 Test #1178: rxpa_process_reentrant_overlap ..................   Passed    0.33 sec
+21/30 Test #1687: rxpa_bundled_cipher_concurrency .................   Passed    0.33 sec
+22/30 Test #1688: rxpa_bundled_hash_concurrency ...................   Passed    0.33 sec
+23/30 Test #1693: rxpa_bundled_float_concurrency ..................   Passed    0.33 sec
+24/30 Test #1696: rxpa_bundled_fs_concurrency .....................   Passed    0.33 sec
+25/30 Test #1695: rxpa_bundled_vector_concurrency .................   Passed    0.33 sec
+26/30 Test #1689: rxpa_bundled_stack_concurrency ..................   Passed    0.33 sec
+27/30 Test #1691: rxpa_bundled_getpi_concurrency ..................   Passed    0.36 sec
+28/30 Test #1159: rxpa_worker_startup_attached ....................   Passed    0.54 sec
+29/30 Test #1160: rxpa_worker_startup_callback ....................   Passed    0.54 sec
+30/30 Test #1158: rxpa_host_text_services .........................   Passed    0.76 sec
+
+100% tests passed, 0 tests failed out of 30
+
+Label Time Summary:
+bundled             =   3.96 sec*proc (12 tests)
+comprehensive       =  10.68 sec*proc (30 tests)
+concurrency         =   4.55 sec*proc (14 tests)
+concurrency-sp01    =   4.55 sec*proc (14 tests)
+interpreter         =  10.68 sec*proc (30 tests)
+plugins             =  10.68 sec*proc (30 tests)
+regression          =   2.18 sec*proc (4 tests)
+rxpa                =  10.68 sec*proc (30 tests)
+worker              =   9.92 sec*proc (29 tests)
+
+Total Test time (real) =   0.81 sec

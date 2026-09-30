@@ -173,7 +173,9 @@ httpservice: interface
       built = http_response_wire_value(transport_status, response_status, response_headers, response_body, response_error, response_attempts, response_redirects, response_ambiguous)
       response_wire = built.bytes()
       reply = .byteendpoint.from_encoded_reference(request.reply_reference())
-      write_completion = reply.start_write(response_wire, 5000).wait(5000)
+      write_request = reply.start_write(response_wire, 5000)
+      write_completion = write_request.wait(5000)
+      if write_completion.available() then call write_request.release()
       published = write_completion.available() & write_completion.succeeded()
       if published then published = write_completion.value().as_integer() = binlength(response_wire)
       if published = 0 then call reply.cancel(.channelvalue.string_value("HTTP service response publication failed"))
@@ -344,6 +346,11 @@ httpserver: class
     reply_endpoint = _reply_endpoints[slot]
     reply_read = reply_endpoint.start_read(reply_capacity, 0)
     completion = reply_read.wait(5)
+    if completion.available() = 0 then do
+      call reply_read.cancel(.channelvalue.string_value("HTTP reply poll completed"))
+      settled = reply_read.wait(-1)
+    end
+    call reply_read.release()
     available = completion.available()
     if available & completion.succeeded() = 0 then do
       poll_status = completion.error_code()

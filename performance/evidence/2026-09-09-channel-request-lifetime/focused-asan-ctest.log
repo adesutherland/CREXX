@@ -1,0 +1,65 @@
+Command: ctest --test-dir /tmp/crexx-channel-release.1v4pFt/asan --output-on-failure -R \^\(rxvmchannel_request_lifetime\|rxvmchannel_provider_registry\|rxvmchannel_byte_provider\|rxvmchannel_process_crash_replacement\|testChannelRequestRelease_.\*\|testTaskContextEndpoint_.\*\)\$ --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /tmp/crexx-channel-release.1v4pFt/asan
+      Start 1159: rxvmchannel_provider_registry
+      Start 1161: rxvmchannel_byte_provider
+      Start 1162: rxvmchannel_request_lifetime
+      Start 1247: rxvmchannel_process_crash_replacement
+ 1/12 Test #1159: rxvmchannel_provider_registry ...........   Passed    0.48 sec
+      Start 1833: testTaskContextEndpoint_rxbvm_noopt
+ 2/12 Test #1161: rxvmchannel_byte_provider ...............   Passed    1.11 sec
+      Start 1834: testTaskContextEndpoint_rxbvm_opt
+ 3/12 Test #1162: rxvmchannel_request_lifetime ............   Passed    1.68 sec
+      Start 1835: testTaskContextEndpoint_rxtvm_noopt
+ 4/12 Test #1833: testTaskContextEndpoint_rxbvm_noopt .....   Passed    1.31 sec
+      Start 1836: testTaskContextEndpoint_rxtvm_opt
+ 5/12 Test #1834: testTaskContextEndpoint_rxbvm_opt .......   Passed    1.02 sec
+      Start 1837: testChannelRequestRelease_rxbvm_noopt
+ 6/12 Test #1247: rxvmchannel_process_crash_replacement ...   Passed    2.42 sec
+      Start 1838: testChannelRequestRelease_rxbvm_opt
+ 7/12 Test #1837: testChannelRequestRelease_rxbvm_noopt ...   Passed    0.82 sec
+      Start 1841: testChannelRequestRelease_rxtvm_noopt
+ 8/12 Test #1836: testTaskContextEndpoint_rxtvm_opt .......   Passed    1.25 sec
+      Start 1842: testChannelRequestRelease_rxtvm_opt
+ 9/12 Test #1835: testTaskContextEndpoint_rxtvm_noopt .....   Passed    1.36 sec
+10/12 Test #1838: testChannelRequestRelease_rxbvm_opt .....   Passed    0.82 sec
+11/12 Test #1841: testChannelRequestRelease_rxtvm_noopt ...   Passed    0.79 sec
+12/12 Test #1842: testChannelRequestRelease_rxtvm_opt .....   Passed    0.77 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Label Time Summary:
+byte-endpoint         =   2.80 sec*proc (2 tests)
+channel               =   3.21 sec*proc (4 tests)
+channels              =   5.70 sec*proc (4 tests)
+classlib              =   8.15 sec*proc (8 tests)
+comprehensive         =  13.85 sec*proc (12 tests)
+concurrency           =  12.17 sec*proc (11 tests)
+concurrency-sp02      =   0.48 sec*proc (1 test)
+concurrency-sp03      =   1.60 sec*proc (2 tests)
+concurrency-sp04      =   8.96 sec*proc (7 tests)
+concurrency-sp05      =   4.94 sec*proc (4 tests)
+concurrency-sp08      =   2.42 sec*proc (1 test)
+crash                 =   2.42 sec*proc (1 test)
+endpoint              =   8.15 sec*proc (8 tests)
+f1c                   =   0.48 sec*proc (1 test)
+f1d                   =   1.11 sec*proc (1 test)
+f1e                   =   2.42 sec*proc (1 test)
+gate-f                =   4.02 sec*proc (3 tests)
+interpreter           =   5.70 sec*proc (4 tests)
+levelb                =   3.21 sec*proc (4 tests)
+levelg                =   4.94 sec*proc (4 tests)
+lifecycle             =   7.31 sec*proc (6 tests)
+linked                =   8.15 sec*proc (8 tests)
+linked_opt            =   3.86 sec*proc (4 tests)
+optimizer-parity      =   8.15 sec*proc (8 tests)
+perf3                 =   4.02 sec*proc (3 tests)
+process               =   2.42 sec*proc (1 test)
+provider-reference    =   1.11 sec*proc (1 test)
+provider-registry     =   0.48 sec*proc (1 test)
+rxbvm                 =   3.98 sec*proc (4 tests)
+rxtvm                 =   4.18 sec*proc (4 tests)
+taskcontext           =   4.94 sec*proc (4 tests)
+
+Total Test time (real) =   3.87 sec

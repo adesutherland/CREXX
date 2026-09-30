@@ -993,7 +993,7 @@ static int executor_run_external(rxvm_context *context,
     context->ext_args = arguments;
     context->ext_ret = return_value;
     dummy_argv[0] = (char *)"rxvm_executor";
-    run_status = run(context, 0, dummy_argv);
+    run_status = rxvm_run_external_status(context, 0, dummy_argv);
     context->ext_proc = saved_proc;
     context->ext_argc = saved_argc;
     context->ext_args = saved_args;
@@ -1610,16 +1610,9 @@ static rxvm_executor_request_state executor_worker_call(
     run_status = executor_run_external(context, procedure, request->argc,
                                        arguments, return_value);
 
-    /* run() historically returns an integer procedure result as its process
-     * status for an external entry.  An unhandled signal also returns a
-     * non-zero status, but leaves the fresh external return cell unchanged.
-     * Preserve ordinary non-zero task results and classify only a status that
-     * was not published through the external integer return cell as an
-     * execution failure.  Non-integer external returns normally finish with
-     * status zero. */
-    if (run_status != 0 &&
-        (expected_result != RXVM_EXECUTOR_REGISTER_INTEGER ||
-         return_value->int_value != (rxinteger)run_status)) {
+    /* Status is independent of every returned value's physical integer field,
+     * including strings from native methods and full-width integer results. */
+    if (run_status != 0) {
         goto execution_failed;
     }
 
@@ -1994,6 +1987,16 @@ rxvm_executor *rxvm_executor_create(
         size_t worker_count,
         size_t queue_capacity,
         rxvm_executor_result *result_out) {
+    return rxvm_executor_create_with_provider_path(
+            rxbin_path, 0, worker_count, queue_capacity, result_out);
+}
+
+rxvm_executor *rxvm_executor_create_with_provider_path(
+        const char *rxbin_path,
+        const char *provider_location,
+        size_t worker_count,
+        size_t queue_capacity,
+        rxvm_executor_result *result_out) {
     rxvm_executor *executor = 0;
     rxvm_context *source = 0;
     rxvm_executor_result result = RXVM_EXECUTOR_INVALID;
@@ -2008,6 +2011,11 @@ rxvm_executor *rxvm_executor_create(
     }
     executor = (rxvm_executor *)calloc(1u, sizeof(*executor));
     if (!executor) {
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+    executor->provider_location = executor_copy_string(provider_location);
+    if (!executor->provider_location) {
         result = RXVM_EXECUTOR_OUT_OF_MEMORY;
         goto fail;
     }
@@ -2074,7 +2082,8 @@ rxvm_executor *rxvm_executor_create(
         result = RXVM_EXECUTOR_OUT_OF_MEMORY;
         goto fail;
     }
-    if (!rxvm_load_file(source, (char *)rxbin_path) ||
+    if (rxvm_set_provider_path(source, provider_location) != 0 ||
+        !rxvm_load_file(source, (char *)rxbin_path) ||
         rxvm_program_generation_seal(source, &executor->generation) !=
                 RXVM_PROGRAM_OK ||
         rxldmodp(source) < 0 ||
@@ -2140,6 +2149,14 @@ rxvm_executor *rxvm_executor_create_attached(
     if (!runtime || !generation || !worker_count || !queue_capacity ||
         worker_count > SIZE_MAX / sizeof(*executor->workers) ||
         queue_capacity > SIZE_MAX / sizeof(*executor->workers[0].queue)) {
+        return 0;
+    }
+    /* The child can trigger legacy invoker rebinding while this thread waits
+     * for startup. Park all nested VM executions, but never a live legacy C
+     * callback or protected provider callback. Keep the boundary through join
+     * on failure so a partially started child can finish its cold transition. */
+    if (!rxpa_compatibility_suspend_thread()) {
+        if (result_out) *result_out = RXVM_EXECUTOR_WORKER_START_FAILED;
         return 0;
     }
     executor = (rxvm_executor *)calloc(1u, sizeof(*executor));
@@ -2233,6 +2250,7 @@ rxvm_executor *rxvm_executor_create_attached(
         if (result != RXVM_EXECUTOR_OK) goto fail;
     }
 
+    rxpa_compatibility_resume_thread();
     if (result_out) *result_out = RXVM_EXECUTOR_OK;
     return executor;
 
@@ -2244,6 +2262,7 @@ fail:
     }
     if (executor) executor->runtime = 0;
     executor_storage_destroy(executor);
+    rxpa_compatibility_resume_thread();
     if (result_out) *result_out = result;
     return 0;
 }

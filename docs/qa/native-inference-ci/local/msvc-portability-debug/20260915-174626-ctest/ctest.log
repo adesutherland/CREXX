@@ -1,0 +1,35 @@
+Command: ctest --test-dir cmake-build-debug --output-on-failure -R \^\(rxfs\|rxplatform\)_rx\[bt\]vm_\(opt\|noopt\)\$ --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1761: rxfs_rxbvm_noopt
+    Start 1763: rxfs_rxtvm_noopt
+    Start 1771: rxplatform_rxtvm_noopt
+    Start 1769: rxplatform_rxbvm_noopt
+1/8 Test #1771: rxplatform_rxtvm_noopt ...........   Passed    0.63 sec
+2/8 Test #1769: rxplatform_rxbvm_noopt ...........   Passed    0.63 sec
+    Start 1764: rxfs_rxtvm_opt
+    Start 1762: rxfs_rxbvm_opt
+3/8 Test #1762: rxfs_rxbvm_opt ...................   Passed    0.05 sec
+    Start 1772: rxplatform_rxtvm_opt
+4/8 Test #1764: rxfs_rxtvm_opt ...................   Passed    0.05 sec
+    Start 1770: rxplatform_rxbvm_opt
+5/8 Test #1761: rxfs_rxbvm_noopt .................   Passed    0.72 sec
+6/8 Test #1763: rxfs_rxtvm_noopt .................   Passed    0.72 sec
+7/8 Test #1770: rxplatform_rxbvm_opt .............   Passed    0.05 sec
+8/8 Test #1772: rxplatform_rxtvm_opt .............   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+comprehensive       =   2.91 sec*proc (8 tests)
+filesystem          =   1.55 sec*proc (4 tests)
+library             =   2.91 sec*proc (8 tests)
+linked_opt          =   0.21 sec*proc (4 tests)
+optimizer-parity    =   2.91 sec*proc (8 tests)
+optional            =   1.36 sec*proc (4 tests)
+platform            =   1.36 sec*proc (4 tests)
+plugins             =   2.91 sec*proc (8 tests)
+rxpa                =   2.91 sec*proc (8 tests)
+
+Total Test time (real) =   0.79 sec

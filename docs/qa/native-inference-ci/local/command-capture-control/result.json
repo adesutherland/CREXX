@@ -1,0 +1,23 @@
+{
+  "outcome": "passed",
+  "expected_child_outcome": "diagnostic failure",
+  "command": [
+    "python3",
+    "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py",
+    "--build",
+    "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+    "--source",
+    "/Users/adrian/CLionProjects/CREXX",
+    "--helper",
+    "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_release_engine_smoke",
+    "--payload",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-command-capture-control-ipmeky6i/payload",
+    "--output-root",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-command-capture-control-ipmeky6i/logs",
+    "--capture-command-after",
+    "5"
+  ],
+  "exit_code": 1,
+  "sample_bytes": 7992,
+  "test": "non-engine opt-compile intentionally sleeps; stack captured and process stopped"
+}

@@ -9,6 +9,10 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#ifdef _MSC_VER
+#define popen _popen
+#define pclose _pclose
+#endif
 #else
 #include <pwd.h>
 #include <sys/types.h>

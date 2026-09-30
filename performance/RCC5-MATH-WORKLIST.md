@@ -10,6 +10,14 @@ supported Linux ASan/LSan proof for SAN-001 and SAN-002 to RCC-8 release QA;
 that complete 2,363-test gate now passes on `e3de72939`, and GitHub supplies
 final-head cross-platform Release and sanitizer coverage.
 
+Later maintenance, 2026-09-15: the [RXPA factory-shim cleanup](../docs/planning/native-inference-step-04.md)
+moves `linearfit` construction/accessors from Rexx into the C provider and
+establishes concrete native-result identity. Scalar calculations/accessors
+remain process-reentrant; factory/regression publication uses the owning VM's
+checked host service. The statistical kernels and retained RCC-5F measurements
+are unchanged. Those historical timings do not measure the later C factory
+binding, and this cleanup adds no new performance verdict.
+
 Approved by Adrian: 2026-08-20.
 
 RCC-5D and RCC-5E approved by Adrian: 2026-08-21.
@@ -249,7 +257,7 @@ compatible but no longer bootstrap-self-contained.
 | `rxfloat` | process-reentrant native libm provider `rxfloat` | Level G standard |
 | `rxint` | Level B algorithms | Level G standard |
 | `rxdecimal` | Level B algorithms over `mc_decimal` | Level G standard |
-| `rxstats` | process-reentrant native bulk provider over borrowed `.packedfloat` payloads | Level G standard; boxed surface removed pre-release |
+| `rxstats` | native bulk provider over borrowed `.packedfloat`; scalar calculations/accessors process-reentrant, C object publication session-affine | Level G standard; boxed surface removed pre-release |
 
 ## Production design selection
 

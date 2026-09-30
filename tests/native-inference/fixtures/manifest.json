@@ -1,0 +1,22 @@
+{
+  "filename": "llama-dense.gguf",
+  "bytes": 4763872,
+  "sha256": "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de",
+  "upstream": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+  "generator": "tests/test-llama-archs.cpp",
+  "launcher": "tests/native-inference/fixture_loader.cpp",
+  "arguments": [
+    "--arch",
+    "llama",
+    "--seed",
+    "1234",
+    "--out",
+    "generated-fixtures"
+  ],
+  "generated": "2026-09-14",
+  "compiler": "AppleClang 21.0.0 (clang-2100.1.1.101)",
+  "platform": "macOS arm64, macOS 26.5 SDK",
+  "kind": "upstream-generated random weights; no trained model downloaded",
+  "portable_identity": "Use the recorded byte hash. std::hash and normal_distribution do not promise identical output across toolchains.",
+  "retained_origin": "performance/evidence/2026-09-14-native-inference-step02/completion/frozen-identities.json"
+}

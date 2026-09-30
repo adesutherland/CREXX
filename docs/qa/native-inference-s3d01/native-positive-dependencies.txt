@@ -1,0 +1,5 @@
+/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-s3d01-native-ppup88nd/positive:
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)
+	/System/Library/Frameworks/Network.framework/Versions/A/Network (compatibility version 1.0.0, current version 5812.121.1)
+	/System/Library/Frameworks/Security.framework/Versions/A/Security (compatibility version 1.0.0, current version 61901.120.67)
+	/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 5026.5.4)

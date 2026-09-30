@@ -1,0 +1,16 @@
+argv=[PosixPath('/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-generation_overhead relocated Å/persistent'), 'cpu', PosixPath('/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf'), '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201', '4', '1']
+cwd=/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-generation_overhead relocated Å
+rc=0
+PREPARE_US=10732200
+FIRST_US=330569
+WARM_US=461363 us
+TOKENS=24
+TEXT1=4F6E6520616E696D616C2069732061206361742E
+FINISH1=eos
+TEXT2=4F6E6520616E696D616C2069732061206361742E
+FINISH2=eos
+TEXT3=4F6E6520616E696D616C2069732061206361742E
+FINISH3=eos
+TEXT4=4F6E6520616E696D616C2069732061206361742E
+FINISH4=eos
+PASS: NI-S5 fixed generation work 4 1 load_count=1

@@ -1,0 +1,11 @@
+{
+  "outcome": "passed",
+  "artifact_id": 10415053371,
+  "commit": "76df02be3c4d89118bd8d4e4e68308c47f76366e",
+  "archive": "CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-macos-x86_64.zip",
+  "bytes": 29848450,
+  "sha256": "91a4fb9f8347d582789fc1ee986cc0d646236d145de0c6ffe2ffaa30e49f187c",
+  "rxvm": "relative symlink to rxbvm",
+  "provider_files_checked": 29,
+  "fixture_or_helper_shipped": false
+}

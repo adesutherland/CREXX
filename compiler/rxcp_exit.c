@@ -2457,6 +2457,7 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
 
     if (len > 0) {
         combined_loc = malloc(len + 1);
+        if (!combined_loc) RX_PANIC_OOM("allocate compiler exit search path", len + 1, 0);
         combined_loc[0] = 0;
         if (root->location) {
             strcat(combined_loc, root->location);
@@ -2473,14 +2474,21 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     rxvml_context* vctx = rxvml_create(combined_loc, 0);
     if (combined_loc) free(combined_loc);
 
-    if (!vctx) return NULL;
+    if (!vctx) {
+        fprintf(stderr, "EXIT_MODULE_LOAD_ERROR: Cannot create the required compiler exit VM\n");
+        exit(-1);
+    }
 
     /* Set say exit to print to stderr */
     rxvml_set_context_say_exit(vctx, rxcp_say_exit);
 
     if (rxvml_load_module_file(vctx, "library") <= 0) {
+        const char *detail = NULL;
+        rxvml_last_error(vctx, &detail);
+        fprintf(stderr, "EXIT_MODULE_LOAD_ERROR: Failed to load required 'library': %s\n",
+                detail ? detail : "no VM load detail");
         rxvml_destroy(vctx);
-        return NULL;
+        exit(-1);
     }
 
     {

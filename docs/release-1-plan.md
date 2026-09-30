@@ -1,34 +1,85 @@
 # CREXX Release 1 Plan
 
-Status: draft plan for maintainer review and GitHub discussion, updated for the
-beta 3 foundation work completed through 2026-08-23.
-Date: 2026-08-23.
-Target release: end of August 2026.
+Status: live Release 1 schedule and scope plan, rebaselined 2026-09-04;
+beta 3 publication documentation finalized 2026-09-30.
+Beta 3 target: 2026-09-30.
+Release 1 cut target: 2027-05-01, for the planned May 2027 London Rexx
+Symposium.
 
 This plan describes the intended path from the tagged `v1.0.0-beta.2` release
-baseline through the beta 3 foundation milestone to Release 1. It is not itself
-a release contract. After the GitHub discussion is approved, create the issue
-candidates below as GitHub issues with owners, labels, acceptance criteria, and
-fallback decisions.
+baseline through feature-bearing beta 3 to beta 6 milestones and Release 1. It
+is a planning target, not a release contract. The current product documentation
+covers `1.0.0-beta.3` in its final publication form. Versioned tags and their
+assets identify completed releases; documentation preparation does not itself
+complete the release gates.
 
-Beta 3 issue candidates and working team guidance are captured in
-[`planning/beta-3/issue-candidates.md`](planning/beta-3/issue-candidates.md)
-before they are turned into GitHub issues.
+Beta 3 moved from the original July foundation target to 2026-09-30 because the
+performance programme took longer than planned and produced substantial
+product work requiring a trustworthy publication boundary. Release 1 is now
+targeted for 2027-05-01 for the planned May 2027 London Rexx
+Symposium. The exact 2027 symposium dates are not yet public on the
+[`RexxLA symposium listing`](https://rexx.oorexx.org/events/symposium.rsp) and
+must be updated when announced.
 
-The release date is fixed. Scope is managed by tiering.
+The original beta 3 issue candidates and working team guidance remain in
+[`planning/beta-3/issue-candidates.md`](planning/beta-3/issue-candidates.md).
+Many candidates have since become GitHub issues; product ordering and deferral
+decisions belong in `docs/ROADMAP.md`, while this file owns the release cadence
+and gates.
+
+The 2027-05-01 cut target is fixed for planning and scope is managed by tiering.
+
+## Rebaselined Release Train
+
+The betas between September and March are intentionally feature-bearing. Each
+must publish a usable vertical increment and its honest limitations; they are
+not merely internal snapshots.
+
+| Milestone | Target | Gate |
+| --- | --- | --- |
+| Beta 3 | 2026-09-30 | Accumulated foundation/performance work published; current release defects and package/demo/policy status reconciled; KeyAccess decisions recorded; named hosted gates green on the exact candidate. |
+| Beta 4 | 2026-11-30 | First user-meaningful compiled Level C program contract and a stabilized small RexxScript product with diagnostics and standalone/embedded examples. |
+| Beta 5 | 2027-01-31 | Beta feedback incorporated; selected Level C/RexxScript expansion complete; Level G ownership/nested-container contract decided and its smallest useful slice landed if approved. |
+| Beta 6 | 2027-03-31 | Selected Release 1 feature set complete; synchronous Pipes reference executor included if its contribution contract passes; user-facing feature freeze begins. |
+| Release 1 RC1 | 2027-04-15 | Exact candidate passes focused and broad correctness, maintained sanitizers, performance qualification, package/install proof, examples, documentation, and known-limit review. |
+| Release 1 | 2027-05-01 | Tag, checksums, signed/notarized assets where configured, release notes, and hosted evidence published for the planned May London symposium. |
+
+Feature scope may move to a later beta when a quality gate is missed. Moving a
+feature out of Release 1 or moving the 2027-05-01 cut date requires an explicit
+maintainer decision; neither happens silently.
+
+## Expanded Release 1 Product Target
+
+The longer runway expands Release 1 beyond the old beta 3 foundation boundary:
+
+- a coherent, stable Level B toolchain and library contract;
+- the initial Level G task/provider surface plus the smallest approved
+  ownership/nested-container increment;
+- a documented, user-meaningful compiled Level C subset with reference
+  equivalence and fail-closed unsupported forms;
+- a supported small RexxScript standalone/embedded product with an explicit
+  sandbox, diagnostics, and examples;
+- the synchronous cREXX Pipes reference executor as a clearly labelled
+  contribution surface if its contract and tests pass by beta 6; and
+- release-quality packages, tutorials, examples, known limits, and performance
+  evidence for the exact candidate.
+
+This is a product target, not approval of undecided language syntax,
+ownership, ABI, ISA, or architecture. Those decisions retain their normal
+design gates and may be deferred without weakening the features that do ship.
 
 ## Release Principle
 
 Release 1 should ship a coherent, stable Level B toolchain with a credible
-first Level G layer, a visible Level C compatibility milestone, and a clear path
-for language-engineering work. It should not try to make every future level
-stable.
+first Level G layer, a useful Level C compatibility milestone, a supported
+small RexxScript product, and a clear path for language-engineering work. It
+should not try to make every future level stable.
 
-The final two-week sprint is for QA, documentation, usability, examples,
-packaging, and performance validation. User-facing feature work should be
-complete by 2026-08-14 unless it is fixing a must-ship release defect.
+The Release 1 final two-week sprint from RC1 is reserved for QA,
+documentation, usability, examples, packaging, and performance validation.
+User-facing feature work closes at beta 6 on 2027-03-31.
 
-## Gates
+## Original Gates
 
 | Date | Gate | Exit condition |
 | --- | --- | --- |
@@ -45,9 +96,10 @@ Must-ship items are part of the Release 1 contract or release process.
 1. Beta 3 branch baseline
 
    Keep `v1.0.0-beta.2` release notes as the historical beta 2 baseline, point
-   current `develop` documentation at `v1.0.0-beta.3` WIP, and keep the beta 3
-   planning note aligned with this timetable. Do not call beta 3 released until
-   the `v1.0.0-beta.3` tag and assets exist.
+   current product documentation at `v1.0.0-beta.3`, and keep the beta 3
+   planning note aligned with this timetable. README, install/security guidance
+   and release notes are final publication copy; release execution status belongs
+   in the candidate handoff until the tag and assets exist.
 
 2. Release 1 governance
 
@@ -93,7 +145,7 @@ Must-ship items are part of the Release 1 contract or release process.
 
 7. Runtime lookup and late loading
 
-   The beta 3 WIP baseline now has explicit-file late-load/relink coverage and
+   The beta 3 baseline has explicit-file late-load/relink coverage and
    sorted interface method/factory registries. Exact method dispatch uses a
    binary search; factory selection binary-searches the interface/member bucket
    and scans only matching providers. Runtime loading rebuilds both indexes.
@@ -114,9 +166,10 @@ Must-ship items are part of the Release 1 contract or release process.
 
 9. Performance baseline and targeted improvements
 
-   Establish performance baselines before changes. Ship only measured or
-   strongly justified RXAS/rxc optimizer improvements. Use the existing inlining
-   gate inventory to choose small, valuable optimizer slices.
+   Retain the completed governed baseline and close the exact beta 3 candidate
+   gates. Ship only already accepted or defect-required changes in beta 3; no
+   new broad optimization programme is authorized. Refresh the frozen portfolio
+   against RC1 after the 2027-03-31 feature freeze.
 
 10. Demos, tutorials, and docs
 
@@ -126,7 +179,7 @@ Must-ship items are part of the Release 1 contract or release process.
 11. Packaging status discipline
 
     For beta 3, package only formats whose build, signing, upload, and smoke
-    checks are reliable by the beta 3 foundation target. Keep portable ZIPs as
+    checks are reliable by the 2026-09-30 beta 3 cut. Keep portable ZIPs as
     the fallback for every platform and document any installer gaps clearly.
 
 ## Should Ship
@@ -138,7 +191,7 @@ Should-ship items are important but have explicit fallback paths.
    The RXAS packed-table surface, linear/open-hash/ACPH algorithms, measured
    `auto` policy, VM execution, disassembly round trip, corruption handling,
    and conservative `rxc` integer/string/binary lowering are implemented on
-   `develop` for beta 3 WIP. Remaining Release 1 work is cross-platform QA
+   the beta 3 baseline. Remaining Release 1 work is cross-platform QA
    and documentation/release review; arbitrary RXAS branch-ladder recognition
    is explicitly post-Release 1 CFG/dataflow work.
 
@@ -151,14 +204,15 @@ Should-ship items are important but have explicit fallback paths.
    planned. Fallback: keep concurrency explicitly initial and ship only
    the Level G pieces with sufficient platform and package evidence.
 
-3. Initial Level C canonical-AST lowering proof
+3. Useful Level C canonical-AST vertical slice
 
-   Try for a small compiled Classic Rexx lowering slice by transforming the
-   Level C parse/AST shape into the canonical compiler AST shape. Candidate
-   source forms include variables, `SAY`, `IF`, simple `DO`, `ARG`, and
-   string-literal `ADDRESS`, but the approved beta 3 slice should be smaller if
-   needed. Fallback: ship DSLSH/highlighter as the Release 1 Level C milestone
-   and publish the lowering plan as the next phase.
+   Six fail-closed execution-lowering slices now cover scalar values,
+   expressions, selected BIFs, internal procedures/arguments/calls, and stems.
+   Beta 4 should turn that foundation into one user-meaningful compiled Classic
+   program contract; later betas may add selected control flow and compatibility
+   only after their semantic gates. Fallback: retain the last qualified subset
+   and publish unsupported forms explicitly rather than reverting to a
+   parser/highlighter-only Release 1 milestone.
 
 4. Level L lexer/parser demo
 
@@ -232,10 +286,14 @@ Rene:
 - help stabilize library APIs and examples;
 - drive final sprint release-readiness reporting.
 
-## Issue Candidates
+## Original Issue Candidate Inventory
 
-Create these after the GitHub discussion is approved. Suggested labels assume a
-common `rel1` label plus the tier and area labels shown here.
+This numbered inventory is retained from the original beta 3 planning pass.
+Many candidates have since landed, closed, changed scope, or become GitHub
+issues. The numbers below are local candidate numbers, not current GitHub issue
+numbers. Use `docs/ROADMAP.md` and the live issue list for current selection;
+do not recreate this table mechanically. Suggested labels assumed a common
+`rel1` label plus the tier and area labels shown here.
 
 ### Must-Ship Candidates
 
@@ -345,15 +403,16 @@ Documentation dependencies:
 
 - Beta 2 release notes carry the historical beta 1 to beta 2 delta; keep them
   aligned with the actual beta 2 tag assets.
-- Beta 3 release notes carry the current WIP scope and timetable; keep README,
+- Beta 3 release notes carry the final beta's scope and limitations; keep README,
   `docs/releases`, security policy, examples, install docs, and language
-  reference aligned on beta 3 WIP versus completed beta 2 status.
+  reference aligned on `1.0.0-beta.3`. Retain prior beta notes as history and
+  keep pending release operations in the candidate handoff.
 - `docs/ai-context/CREXX_LIBS.md` should describe `rxfnsc` as the Level
   C/RexxScript runtime foundation now that the library directory exists.
 
-## Final-Sprint Focus
+## Historical Final-Sprint Focus
 
-The final sprint is reserved for:
+The original final sprint was reserved for:
 
 - full automated test pass and CI triage;
 - manual testing of release packages and all curated examples;
@@ -362,5 +421,6 @@ The final sprint is reserved for:
 - package/signing/notarization checks;
 - release notes and GitHub release materials.
 
-Feature work that misses the 2026-08-14 gate should move to post-Release 1
-unless it fixes a must-ship defect.
+The underlying scope rule remains useful: feature work outside the selected
+release boundary should move to the later roadmap unless it fixes a must-ship
+defect.

@@ -1,0 +1,6 @@
+Device: MTL0 backend: metal
+Row 1: One animal is a cat.
+Row 2: Two plus two equals four.
+Row 3: Bonjour, je m'appelle François.
+Row 4: One planet is Earth.
+PASS: persistent typed generation example, one load and twenty batches

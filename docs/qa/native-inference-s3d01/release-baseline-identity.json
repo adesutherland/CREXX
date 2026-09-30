@@ -1,0 +1,12 @@
+{
+  "head": "c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8",
+  "files": {
+    "interpreter/rxpacompat.c": "8476faf55916025349a2e4d0f41d1a28c9c73f62aa81ed908567a6d750992409",
+    "interpreter/rxpacompat.h": "7ecde7dd92eabe0b2da3ef1837a21463730beb4b8af0cd62cdb05a5284c7a971",
+    "interpreter/rxpafuncs.c": "9a45c4842f3562e1613996d929a855710546e4655773c3384f2d358fc4b5f1fd",
+    "interpreter/rxvmload.c": "536f1d016f378a646d132d59742b97678c6849bd3da8caa18973ceadeb7ad210",
+    "interpreter/rxvmexecutor.c": "3f8b5153c9ab1b21cf840b4bb1e958ec42e8402a0229187b133e59721187a48c",
+    "interpreter/rxvmintp.h": "7382474f89b0aacaebdabf07ca32b03f2ad8dea60016fd659a3e1bcec8242eab",
+    "cmake-build-release/bin/rxvm": "ed01834e9fbf6664529bc35135373dd9e05505d67834022528e55be063a345e6"
+  }
+}

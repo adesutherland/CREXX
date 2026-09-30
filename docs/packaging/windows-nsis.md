@@ -1,79 +1,105 @@
-# Windows NSIS Installer Trial
+# Windows NSIS Installers For CREXX Beta 3
 
-Status: beta 3 packaging spike. The current versioned release remains
-`v1.0.0-beta.2`; beta 3 installer assets must not be described as released
-until the beta 3 tag and assets exist.
+This guide describes Windows NSIS packaging for `1.0.0-beta.3` and the moving
+development snapshot. Versioned-release installer publication is a maintainer
+operation; the release asset list records which signed downloads are available.
 
-CREXX's Windows installer trial uses NSIS rather than MSI/WiX. This is a local
-post-build release helper, not a GitHub Actions build step. The installer is
-built from the Windows x64 ZIP asset that the release flow already publishes:
-the helper downloads the selected ZIP, unpacks its contents, validates the
-expected `bin/*.exe` tools, and uses that packaged tree as the installer
-baseline. It does not rebuild Windows artifacts on macOS.
+The moving dev snapshot automatically publishes unsigned NSIS installers and
+portable Windows ZIPs for the core and optional Vulkan llama plugin. Windows CI checks silent
+installation, reinstall, file hashes, tool versions, the installed hello example,
+and uninstallation before publishing. The llama setup also passes installed
+provider checks and preserves the core, user models and environment on removal.
+Install the core first, then the matching llama setup. Versioned-release installer publication
+remains a maintainer operation.
 
-For release-candidate work, sign/repack the Windows ZIP first with
-`scripts/sign-latest-windows-release.sh` or
-`scripts/sign-windows-dev-snapshot.sh`, then run the installer helper against
-that signed ZIP. That keeps the binaries inside the installer Authenticode
-signed before NSIS wraps them.
+Snapshot asset names are explicit:
 
-The packaging entrypoints share `scripts/package-windows-installer-common.sh`:
+- `CREXX-dev-snapshot-windows-x64-unsigned-setup.exe`: automatic tester installer.
+- `CREXX-dev-snapshot-windows-x64.zip`: automatic portable payload.
+- `CREXX-dev-snapshot-windows-x64-signed-setup.exe`: optional signed installer.
+- `CREXX-dev-snapshot-windows-x64-signed.zip`: optional signed portable payload.
+- `llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe`: automatic plugin installer.
+- `llama.rexx-dev-snapshot-windows-x64-vulkan.zip`: automatic portable plugin.
+- `llama.rexx-dev-snapshot-windows-x64-vulkan-signed-setup.exe`: optional signed plugin installer.
+- `llama.rexx-dev-snapshot-windows-x64-vulkan-signed.zip`: optional signed portable plugin.
 
-- `scripts/package-latest-windows-installer.sh` defaults to the latest
-  versioned release, downloads the selected Windows ZIP, and signs the embedded
-  uninstaller and final `setup.exe`.
-- `scripts/package-windows-dev-snapshot-installer.sh` defaults to the moving
-  `dev-snapshot` release, downloads the selected Windows ZIP, and signs the
-  embedded uninstaller and final `setup.exe`.
-- `scripts/package-windows-nsis.sh` is the local/generic entrypoint and remains
-  unsigned by default unless `--sign` is passed.
+A new snapshot replaces the unsigned assets and removes previous signed assets
+and the legacy ambiguous `CREXX-dev-snapshot-windows-x64-setup.exe`. Signed and
+unsigned downloads coexist until the next snapshot. Release notes include the
+source commit and checksums for the automatic assets; installed BUILDINFO and
+VERSION identify the payload commit.
 
-## Build Locally On macOS
+## Sign And Publish The Current Snapshot On macOS
 
-Install NSIS with Homebrew if `makensis` is not already available:
-
-```sh
-brew install makensis
-```
-
-Build and sign from the latest versioned release or an explicit release tag:
+Install `makensis`, `jsign`, `osslsigncode`, GitHub CLI and Python 3. Use the
+existing Certum SimplySign login and `scripts/provider.macos.cfg` configuration.
+Then run this one command from the repository:
 
 ```sh
-scripts/package-latest-windows-installer.sh \
-  --tag v1.0.0-beta.2 \
-  --asset CREXX-v1.0.0-beta.2-windows-x64-signed.zip \
-  --output dist/CREXX-v1.0.0-beta.2-windows-x64-setup.exe
+scripts/sign-windows-dev-snapshot.sh
 ```
 
-Build and sign from the interim dev snapshot:
+This downloads the unsigned core and plugin ZIPs by immutable GitHub asset IDs,
+verifies their SHA-256 hashes and source identities against the tag, and retrieves
+the matching native installer manager from a successful Build on the same commit.
+The manager's immutable Actions artifact ID, digest and package/bootstrap hashes
+are checked too. Actions currently retains that manager for 14 days; an expired
+or missing matching artifact is an error, never a reason to use another revision.
 
-```sh
-scripts/package-windows-dev-snapshot-installer.sh \
-  --output-dir dist
-```
+The existing paired signer signs/verifies executable payloads and refreshes their
+manifests, then builds both NSIS installers, signs the helper DLLs and embedded
+uninstallers, and signs/verifies the final setups. All four signed outputs are
+uploaded together through staged temporary assets. Unsigned ZIPs and installers
+remain available; `--delete-unsigned` is refused.
 
-Build without signing from a local ZIP:
+No separate installer command or `--upload` is needed for this snapshot signing
+entrypoint. `--dry-run` reports its selected source/options without signing or
+uploading; `--keep-work` retains local output. `--asset` can restrict selection to
+one unsigned plugin ZIP, always including its matching core. No second invocation
+is needed for the ordinary Vulkan snapshot. PROVIDER, CERTUM_ALIAS and TSA_URL
+still select the existing signing configuration.
+
+Publication verifies the tag commit and every source ZIP identity again before and
+after promotion. If a new snapshot arrives while signing, the helper refuses
+publication and removes only its own temporary/published asset IDs. Rerun on
+the current snapshot. GitHub publication is a sequence of API operations, not
+an atomic multi-asset transaction; failed runs can temporarily leave signed
+assets absent, while the unsigned downloads remain available.
+
+## Other Packaging Entrypoints
+
+The packagers share `scripts/package-windows-installer-common.sh`:
+
+- `scripts/package-latest-windows-installer.sh` selects a versioned release and
+  signs by default.
+- `scripts/package-windows-dev-snapshot-installer.sh` selects the snapshot and
+  signs by default. Use this when only a local installer is wanted.
+- `scripts/package-windows-nsis.sh` is unsigned by default.
+
+All accept `--sign` or `--unsigned`. Signing includes the payload even when the
+input ZIP is unsigned. Default output names end in `-signed-setup.exe` or
+`-unsigned-setup.exe`; an explicit `--output` still controls the filename.
+Packagers upload only with `--upload` and validate the selected release source.
+
+For a local unsigned installer:
 
 ```sh
 scripts/package-windows-nsis.sh \
-  --zip /path/to/CREXX-v1.0.0-beta.2-windows-x64-signed.zip \
-  --output dist/CREXX-v1.0.0-beta.2-windows-x64-setup.exe
+  --zip /path/to/CREXX-dev-snapshot-windows-x64.zip \
+  --unsigned --output-dir dist
 ```
 
-The script unpacks the ZIP, detects the single top-level payload directory, and
-passes that directory to `packaging/windows/crexx.nsi`. The installer copies the
-payload contents directly under `%ProgramFiles%\CREXX`, so the installed tools
-land in `%ProgramFiles%\CREXX\bin`.
+For the beta 3 versioned-release installer, after the tag workflow has
+published its core ZIP:
 
-When signing is enabled, the common script creates a temporary signing helper and
-passes it to NSIS through `!uninstfinalize`. That signs the embedded
-`Uninstall.exe` before it is written into the installer. After NSIS finishes,
-the same helper signs the outer `setup.exe` and verifies it with
-`osslsigncode`.
+```sh
+scripts/package-latest-windows-installer.sh \
+  --tag v1.0.0-beta.3 --output-dir dist --upload
+```
 
-Use `--upload` to upload the generated installer to the selected GitHub release
-with `gh release upload --clobber`. The upload target is the same release/tag
-from which the ZIP was downloaded.
+The ZIP-only `scripts/sign-latest-windows-release.sh` retains its versioned
+release behaviour; the snapshot entrypoint is the combined sign-and-publish
+command. Neither path rebuilds Windows binaries on macOS.
 
 ## SmartScreen Reputation
 
@@ -97,7 +123,10 @@ installer reputation is still maturing.
 - Shows `packaging/windows/assets/crexx-wizard.bmp` on the welcome and finish
   pages. NSIS Modern UI expects this bitmap at `164x314`.
 - Sets machine-level `CREXX_HOME` and `REXX_HOME` to the install directory.
-- Adds the install `bin` directory to the machine `Path`.
+- Adds the install `bin` directory to the machine `Path`, preserving existing
+  entries and unexpanded registry values even when PATH exceeds NSIS string
+  limits. This uses the built-in Windows PowerShell registry API; an unavailable
+  PowerShell reports an install/uninstall error instead of replacing PATH.
 - Broadcasts the Windows environment-change message after install and
   uninstall.
 - Registers an uninstaller in Windows Apps & Features.
@@ -117,11 +146,15 @@ After copying the generated `setup.exe` to a Windows x64 machine:
 
 ```powershell
 crexx --version
-rxc --version
-rxas --version
-rxlink --version
-rxvm --version
+rxc -v
+rxas -v
+rxlink -h
+rxvm -v
 ```
+
+`rxlink` has no version option; use its help command to check startup and
+`BUILDINFO` for the installed payload identity. CI also compares every installed
+file to the staged payload by SHA-256.
 
 Then uninstall through Apps & Features or run:
 

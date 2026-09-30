@@ -1,0 +1,7 @@
+argv=['D:/a/_temp/release-payload/CREXX-windows-x64/bin/crexx.exe', '--program', 'D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/native/smoke', 'D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/smoke.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member smoke
+BUILT: project member smoke
+BARRIER: link program
+PUBLISHED: program D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/native/smoke.rxbin
+PUBLISHED: native program D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/native/smoke.exe

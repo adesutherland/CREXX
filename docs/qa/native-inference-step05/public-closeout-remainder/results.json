@@ -1,0 +1,73 @@
+{
+  "new_runs": [
+    {
+      "label": "opt-shared_generation-required-gpu-rxbvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/01-opt-shared_generation-required-gpu-rxbvm.log"
+    },
+    {
+      "label": "opt-shared_generation-required-gpu-rxtvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/02-opt-shared_generation-required-gpu-rxtvm.log"
+    },
+    {
+      "label": "noopt-provider_acceptance-cpu-rxbvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/06-noopt-provider_acceptance-cpu-rxbvm.log"
+    },
+    {
+      "label": "noopt-provider_acceptance-cpu-rxtvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/07-noopt-provider_acceptance-cpu-rxtvm.log"
+    },
+    {
+      "label": "noopt-provider_acceptance-required-gpu-rxbvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/08-noopt-provider_acceptance-required-gpu-rxbvm.log"
+    },
+    {
+      "label": "noopt-provider_acceptance-required-gpu-rxtvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/09-noopt-provider_acceptance-required-gpu-rxtvm.log"
+    },
+    {
+      "label": "noopt-persistent_generation-cpu-rxbvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/13-noopt-persistent_generation-cpu-rxbvm.log"
+    },
+    {
+      "label": "noopt-persistent_generation-cpu-rxtvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/14-noopt-persistent_generation-cpu-rxtvm.log"
+    },
+    {
+      "label": "noopt-persistent_generation-required-gpu-rxbvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/15-noopt-persistent_generation-required-gpu-rxbvm.log"
+    },
+    {
+      "label": "noopt-persistent_generation-required-gpu-rxtvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/16-noopt-persistent_generation-required-gpu-rxtvm.log"
+    },
+    {
+      "label": "noopt-shared_generation-cpu-rxbvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/20-noopt-shared_generation-cpu-rxbvm.log"
+    },
+    {
+      "label": "noopt-shared_generation-cpu-rxtvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/21-noopt-shared_generation-cpu-rxtvm.log"
+    },
+    {
+      "label": "noopt-shared_generation-required-gpu-rxbvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/22-noopt-shared_generation-required-gpu-rxbvm.log"
+    },
+    {
+      "label": "noopt-shared_generation-required-gpu-rxtvm",
+      "log": "/tmp/ni-s5/public-closeout-remainder/23-noopt-shared_generation-required-gpu-rxtvm.log"
+    }
+  ],
+  "retained_pass_logs": [
+    "/tmp/ni-s5/public-closeout-debug-final/04-opt-provider_acceptance-cpu-rxbvm.log",
+    "/tmp/ni-s5/public-closeout-debug-final/05-opt-provider_acceptance-cpu-rxtvm.log",
+    "/tmp/ni-s5/public-closeout-debug-final/06-opt-provider_acceptance-required-gpu-rxbvm.log",
+    "/tmp/ni-s5/public-closeout-debug-final/07-opt-provider_acceptance-required-gpu-rxtvm.log",
+    "/tmp/ni-s5/public-closeout-debug-final/11-opt-persistent_generation-cpu-rxbvm.log",
+    "/tmp/ni-s5/public-closeout-debug-final/12-opt-persistent_generation-cpu-rxtvm.log",
+    "/tmp/ni-s5/public-closeout-debug-final/13-opt-persistent_generation-required-gpu-rxbvm.log",
+    "/tmp/ni-s5/public-closeout-debug-final/14-opt-persistent_generation-required-gpu-rxtvm.log",
+    "/tmp/ni-s5/public-closeout-debug-final/18-opt-shared_generation-cpu-rxbvm.log"
+  ],
+  "isolated_replay": "/tmp/ni-s5/shared-cpu-rxtvm-isolated.log",
+  "total_distinct": 24
+}

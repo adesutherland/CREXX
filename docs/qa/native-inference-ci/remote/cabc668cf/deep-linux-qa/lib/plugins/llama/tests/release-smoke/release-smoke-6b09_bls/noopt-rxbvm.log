@@ -1,0 +1,2 @@
+argv=['/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxbvm', '/tmp/crexx-release-smoke-cmyg_28t/noopt-linked', '-a', '/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf', 'bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de']
+PASS: public llama release provider discovery, profile rejection and cleanup

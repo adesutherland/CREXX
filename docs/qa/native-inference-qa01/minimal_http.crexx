@@ -1,0 +1,10 @@
+options levelg
+import rxfnsb
+import concurrency
+import rxfnsg
+
+main: procedure = .int
+  encoded = .channelvalue.null_value()
+  client = .httpclient.from_channel(encoded)
+  response = client.get("/failure", .httpheaders.empty())
+  return response.status()

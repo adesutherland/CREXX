@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/Users/adrian/.local/bin/rxc",
+    "-s",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/config;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/config/profiles;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/surfaces;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/tests;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/providers;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/providers/tests",
+    "-i",
+    "/Users/adrian/.local/bin/providers;/Users/adrian/.local/bin",
+    "--import-resolution-report",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/current-closefile-ragcommand/imports.json",
+    "-o",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/current-closefile-ragcommand/ragcommand",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/ragcommand.crexx"
+  ],
+  "rc": 255,
+  "elapsed": 6.569722125073895
+}

@@ -1,0 +1,10 @@
+argv=['/tmp/crexx-release-smoke-x0zsaldb/engine/rxllama_release_engine_smoke', '/tmp/crexx-release-smoke-x0zsaldb/fixture.gguf']
+SMOKE_STAGE: runtime discovery
+SMOKE_STAGE: runtime ready
+SMOKE_STAGE: CPU model load
+SMOKE_STAGE: CPU private contexts
+SMOKE_STAGE: CPU generation repeat 0
+SMOKE_STAGE: CPU generation repeat 1
+SMOKE_STAGE: CPU embeddings
+PASS: packaged engine CPU repeated two-row generation and finite embeddings
+PASS: release engine smoke; actual_gpu_devices=0

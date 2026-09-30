@@ -901,7 +901,10 @@ int rx_graph_builder_add_declaration(RxGraphBuilder *builder,
     record->origin_module = origin_module;
     record->ordinal = ordinal;
     graph->members[member].flags |= flags;
+    /* Concrete factories are directly callable declarations. Only interface
+     * contracts (including forward opaque references) own selection buckets. */
     if ((flags & RX_GRAPH_MEMBER_FACTORY) &&
+        graph->types[owner].kind != RX_GRAPH_TYPE_CLASS &&
         !rx_graph_builder_ensure_factory(builder, owner, member, flags)) return 0;
     return 1;
 }
@@ -3640,7 +3643,8 @@ static uint32_t rx_graph_crexx_member_flags(const char *kind) {
     uint32_t flags;
 
     flags = 0u;
-    if (kind && strncmp(kind, "method", 6u) == 0) {
+    if (kind && (strncmp(kind, "method", 6u) == 0 ||
+                 strcmp(kind, "final method") == 0)) {
         flags |= RX_GRAPH_MEMBER_METHOD;
         if (strstr(kind, "final")) flags |= RX_GRAPH_MEMBER_FINAL;
     } else if (kind && strcmp(kind, "factory") == 0) {

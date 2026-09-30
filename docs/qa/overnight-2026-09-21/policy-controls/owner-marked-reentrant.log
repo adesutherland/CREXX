@@ -1,0 +1,11 @@
+RXPA vector procedure is not session-affine: rxvector.vectorindex.§factory
+RXPA vector procedure is not session-affine: rxvector.openindex
+RXPA vector procedure is not session-affine: rxvector.decodeindex
+RXPA vector procedure is not session-affine: rxvector.vectorindex.encode
+RXPA vector procedure is not session-affine: rxvector.vectorindex.rows
+RXPA vector procedure is not session-affine: rxvector.vectorindex.dimensions
+RXPA vector procedure is not session-affine: rxvector.vectorindex.metadata
+RXPA vector procedure is not session-affine: rxvector.vectorindex.label
+RXPA vector procedure is not session-affine: rxvector.vectorindex.search
+RXPA vector procedure is not session-affine: rxvector.vectorindex.close
+RXPA vector manifest qualification failed: rc=0

@@ -314,6 +314,78 @@ static int mutation_u64_is_rejected(const char *buffer,
     return 1;
 }
 
+/* Rewriting a loaded import must always emit u64 all-ones, including when
+ * this test executable uses 32-bit size_t. */
+static int imported_start_writer_is_canonical(module_file *module) {
+    FILE *file = tmpfile();
+    char *bytes = 0, *expanded = 0;
+    long length;
+    size_t expanded_size = 0, section, payload;
+    uint32_t id;
+    int ok = 0;
+    if (!file) return 0;
+    if (write_module(module, file) || fflush(file) || fseek(file, 0, SEEK_END)) goto done;
+    length = ftell(file);
+    if (length <= 0 || fseek(file, 0, SEEK_SET)) goto done;
+    bytes = (char *)malloc((size_t)length);
+    if (!bytes || fread(bytes, 1, (size_t)length, file) != (size_t)length ||
+        !expand_sections(bytes, (size_t)length, &expanded, &expanded_size)) goto done;
+    section = (size_t)read_u64le((unsigned char *)expanded + RXBIN007_HEADER_SIZE +
+                                2u * RXBIN007_DIRECTORY_ENTRY_SIZE + 16u);
+    if (!find_record((unsigned char *)expanded + section, expanded_size - section,
+                     PROC_CONST, &id, &payload)) goto done;
+    ok = read_u32le((unsigned char *)expanded + section + payload + 4u) == UINT32_MAX &&
+         read_u64le((unsigned char *)expanded + section + payload + 8u) == UINT64_MAX;
+done:
+    free(bytes); free(expanded); fclose(file);
+    if (!ok) fprintf(stderr, "Imported procedure writer sentinel is not canonical\n");
+    return ok;
+}
+
+/* Exercise LP64 and historical ILP32 import sentinels independently of the
+ * writer's host size. The same test runs in a 32-bit reader build. */
+static int imported_start_is_normalized(const char *image, size_t size,
+                                        size_t payload, uint64_t start) {
+    char *copy;
+    char *cursor;
+    rxbin_reader reader;
+    module_file *module = 0;
+    size_t offset;
+    unsigned imports = 0u;
+    int ok = 1;
+
+    if (payload > size || size - payload < 16u) return 0;
+    copy = (char *)malloc(size);
+    if (!copy) return 0;
+    memcpy(copy, image, size);
+    write_u32le((unsigned char *)copy + payload + 4u, UINT32_MAX);
+    write_u64le((unsigned char *)copy + payload + 8u, start);
+    cursor = copy;
+    rxbin_reader_init_mem(&reader, &cursor, copy + size);
+    if (rxbin_reader_next_module(&reader, &module) != 0 || !module) ok = 0;
+    if (ok) {
+        for (offset = 0u; offset < module->header.constant_size;) {
+            chameleon_constant *constant =
+                (chameleon_constant *)(module->constant + offset);
+            if (!constant->size_in_pool) { ok = 0; break; }
+            if (constant->type == PROC_CONST) {
+                proc_constant *procedure = (proc_constant *)constant;
+                if (procedure->locals == -1) {
+                    imports++;
+                    if (procedure->start != SIZE_MAX) ok = 0;
+                }
+            }
+            offset += constant->size_in_pool;
+        }
+        if (imports != 1u || !imported_start_writer_is_canonical(module)) ok = 0;
+    }
+    free_module(module);
+    rxbin_reader_close(&reader);
+    free(copy);
+    if (!ok) fprintf(stderr, "Imported procedure start was not normalized\n");
+    return ok;
+}
+
 int main(void) {
     FILE *fp = 0;
     unsigned char raw_header[RXBIN007_HEADER_SIZE];
@@ -562,6 +634,17 @@ int main(void) {
                                       32u,
                                       "undersized-declared-file") ||
             !found_wrong_kind_fixture ||
+            (sizeof(size_t) < 8u && !mutation_u64_is_rejected(expanded_buffer, expanded_buffer_size,
+                                      constants_offset + ignored_payload + 8u,
+                                      UINT64_MAX - 1u, "overflowing-real-procedure-address")) ||
+            !imported_start_is_normalized(expanded_buffer,
+                                           expanded_buffer_size,
+                                           constants_offset + ignored_payload,
+                                           UINT64_MAX) ||
+            !imported_start_is_normalized(expanded_buffer,
+                                           expanded_buffer_size,
+                                           constants_offset + ignored_payload,
+                                           UINT32_MAX) ||
             !mutation_u32_is_rejected(expanded_buffer,
                                       expanded_buffer_size,
                                       metadata_offset + function_payload + 16u,

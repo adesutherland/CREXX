@@ -30,6 +30,8 @@ typedef struct fake_module {
     size_t opens;
     size_t starts;
     size_t closes;
+    int fail_destroy;
+    size_t destroys;
     const unsigned char *result_node;
     size_t result_node_length;
 } fake_module;
@@ -214,7 +216,9 @@ static rxvm_channel_status fake_close(void *channel_state, int64_t mode) {
 static rxvm_channel_status fake_request_destroy(
         void *channel_state,
         void *request_state) {
-    (void)channel_state;
+    fake_channel *channel = (fake_channel *)channel_state;
+    if (channel->module->fail_destroy) return RXVM_CHANNEL_INTERNAL_ERROR;
+    channel->module->destroys++;
     free(request_state);
     return RXVM_CHANNEL_OK;
 }
@@ -322,6 +326,17 @@ int main(void) {
               RXVM_CHANNEL_ALREADY_TERMINAL,
           "fake provider preserves one terminal completion");
 
+    module.fail_destroy = 1;
+    CHECK(rxvm_channel_release(context, channel, ticket) == RXVM_CHANNEL_INTERNAL_ERROR &&
+              rxvm_channel_context_live_tickets(context) == 1u && module.destroys == 0u,
+          "failed release retains provider state and ticket authority");
+    CHECK(rxvm_channel_cancel(context, channel, ticket, null_document, sizeof(null_document)) ==
+              RXVM_CHANNEL_ALREADY_TERMINAL, "failed release leaves terminal ticket valid");
+    module.fail_destroy = 0;
+    CHECK(rxvm_channel_release(context, channel, ticket) == RXVM_CHANNEL_OK &&
+              rxvm_channel_context_live_tickets(context) == 0u && module.destroys == 1u,
+          "successful retry releases provider state exactly once");
+
     maximum_depth_node = nested_array_node(62u, &maximum_depth_length);
     excess_depth_node = nested_array_node(63u, &excess_depth_length);
     CHECK(maximum_depth_node && excess_depth_node,
@@ -346,8 +361,18 @@ int main(void) {
     CHECK(rxvm_channel_wait(context, channel, 0, &completion) ==
               RXVM_CHANNEL_PROVIDER_FAILURE && completion.data == 0,
           "reject a provider result that would create a noncanonical completion");
+    CHECK(rxvm_channel_release(context, channel, ticket) == RXVM_CHANNEL_WOULD_BLOCK,
+          "failed encoding cannot make a completion releasable");
     module.result_node = 0;
     module.result_node_length = 0u;
+    CHECK(rxvm_channel_wait(context, channel, 0, &completion) == RXVM_CHANNEL_OK,
+          "failed encoding retains completion for a successful retry");
+    rxvm_channel_binary_free(&completion);
+    module.fail_destroy = 1;
+    CHECK(rxvm_channel_close(context, channel, 1) == RXVM_CHANNEL_INTERNAL_ERROR &&
+              rxvm_channel_context_live_tickets(context) == 2u,
+          "close failure retains still-owned requests for retry");
+    module.fail_destroy = 0;
 
     CHECK(rxvm_channel_close(context, channel, 1) == RXVM_CHANNEL_OK,
           "fake provider drains and closes");

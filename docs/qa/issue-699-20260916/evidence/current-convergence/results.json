@@ -1,0 +1,104 @@
+{
+  "compiler": "/Users/adrian/.local/bin/rxc",
+  "compiler_sha256": "f9a7806fc95aab5295dc33864e6cee9c37d39d9d5da928e5e0825bf2c5406073",
+  "source_sha256": {
+    "cleanup.crexx": "b5c8b3132643b91336e6a9652a1703ecb3e47e2325ff8db16bf330d48dfc5015",
+    "extension.crexx": "23afea0ecab5fcdc54f5679d24c1991fab98745e9bdc1be400b224d952830165",
+    "model.crexx": "5cbbf97041300ee221b444c66f5dea78cea151d34a669e5db0553e656d15228f"
+  },
+  "results": [
+    {
+      "case": "closefile-opt",
+      "command": [
+        "/Users/adrian/.local/bin/rxc",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/closefile-opt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/closefile-opt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/closefile-opt/model.crexx"
+      ],
+      "rc": 255,
+      "expected_defective_baseline_rc": 255,
+      "matches_defective_baseline": true,
+      "seconds": 0.23357512499205768
+    },
+    {
+      "case": "closefile-noopt",
+      "command": [
+        "/Users/adrian/.local/bin/rxc",
+        "-n",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/closefile-noopt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/closefile-noopt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/closefile-noopt/model.crexx"
+      ],
+      "rc": 255,
+      "expected_defective_baseline_rc": 255,
+      "matches_defective_baseline": true,
+      "seconds": 0.2393984580412507
+    },
+    {
+      "case": "lineout-opt",
+      "command": [
+        "/Users/adrian/.local/bin/rxc",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/lineout-opt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/lineout-opt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/lineout-opt/model.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.24219424999319017
+    },
+    {
+      "case": "lineout-noopt",
+      "command": [
+        "/Users/adrian/.local/bin/rxc",
+        "-n",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/lineout-noopt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/lineout-noopt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/lineout-noopt/model.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.24058016599155962
+    },
+    {
+      "case": "no-extension-opt",
+      "command": [
+        "/Users/adrian/.local/bin/rxc",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/no-extension-opt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/no-extension-opt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/no-extension-opt/model.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.24118612497113645
+    },
+    {
+      "case": "no-extension-noopt",
+      "command": [
+        "/Users/adrian/.local/bin/rxc",
+        "-n",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/no-extension-noopt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/no-extension-noopt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-7gf9gngi/no-extension-noopt/model.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.23759520798921585
+    }
+  ]
+}

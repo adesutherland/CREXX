@@ -141,11 +141,30 @@ call _backup handle, backup_file
 /* Compact database */
 say ""
 say "Compacting database..."
-call _compact handle
+rc = _compact(handle)
+if rc <> 0 then do
+    say "ERROR: compaction returned" rc
+    call _closekey handle
+    exit 1
+end
+if _listkey(handle) <> 49 | _readkey(handle, "Tokyo") <> "Japan" | _readkey(handle, "Berlin") <> "NOT_FOUND" then do
+    say "ERROR: compaction changed live or deleted records"
+    exit 1
+end
 
 /* closekey database */
 say ""
 say "Closing database..."
-call _closekey handle
+if _closekey(handle) <> 0 then exit 1
+
+/* Reopening bypasses cached values and verifies the replacement files. */
+handle = _openkey(database_file, "r+")
+if handle < 0 then exit 1
+if _listkey(handle) <> 49 | _readkey(handle, "Tokyo") <> "Japan" | _readkey(handle, "Berlin") <> "NOT_FOUND" then do
+    say "ERROR: compacted records changed after reopening"
+    exit 1
+end
+if _validate(handle) <> 0 then exit 1
+if _closekey(handle) <> 0 then exit 1
 
 exit 0

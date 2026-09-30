@@ -1,0 +1,45 @@
+Command: cmake --build cmake-build-debug --target rxllama_package_utf8_cxx17 rxllama_package_utf8_cxx20 llama_provider_runtime_package crexx-provider-package --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[0/2] Re-checking globbed directories...
+[1/16] Building C object lib/plugins/llama/CMakeFiles/crexx_llama_bridge.dir/__/__/__/binutils/rxsha256.c.o
+[2/16] Building C object lib/plugins/llama/CMakeFiles/llama_provider.dir/rxllama.c.o
+[3/16] Building C object lib/plugins/llama/CMakeFiles/llama_provider_static.dir/rxllama.c.o
+[4/16] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_package_utf8_cxx17.dir/__/__/__/tests/native-inference/package_utf8.cpp.o
+[5/16] Linking CXX executable lib/plugins/llama/tests/rxllama_package_utf8_cxx17
+[6/16] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_package_utf8_cxx20.dir/__/__/__/tests/native-inference/package_utf8.cpp.o
+In file included from /Users/adrian/CLionProjects/CREXX/tests/native-inference/package_utf8.cpp:2:
+/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/package.hpp:37:18: warning: 'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations]
+   37 |     auto p = fs::u8path(name);
+      |                  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: note: 'u8path<std::string, 0>' has been explicitly marked deprecated here
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path(const _Source& __s) {
+      |                       ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: note: expanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED
+      |                                             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: note: expanded from macro '_LIBCPP_DEPRECATED'
+  554 | #      define _LIBCPP_DEPRECATED __attribute__((__deprecated__))
+      |                                                 ^
+/Users/adrian/CLionProjects/CREXX/tests/native-inference/package_utf8.cpp:11:44: warning: 'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations]
+   11 |         const auto path = std::filesystem::u8path(expected);
+      |                                            ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: note: 'u8path<std::string, 0>' has been explicitly marked deprecated here
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path(const _Source& __s) {
+      |                       ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: note: expanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED
+      |                                             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: note: expanded from macro '_LIBCPP_DEPRECATED'
+  554 | #      define _LIBCPP_DEPRECATED __attribute__((__deprecated__))
+      |                                                 ^
+2 warnings generated.
+[7/16] Linking CXX executable lib/plugins/llama/tests/rxllama_package_utf8_cxx20
+[8/16] Building CXX object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/provider_package.cpp.o
+[9/16] Linking CXX executable bin/crexx-provider-package
+[10/16] Building CXX object lib/plugins/llama/CMakeFiles/crexx_llama_bridge.dir/bridge.cpp.o
+[11/16] Linking CXX shared library bin/providers/libcrexx-llama.1.dylib
+[12/16] Creating library symlink bin/providers/libcrexx-llama.dylib
+[13/16] Linking C shared module bin/rxllama.rxplugin
+[14/16] Linking C static library bin/rxllama_static.a
+[15/16] cd /Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama && /opt/homebrew/bin/cmake -DINPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/rxllama-package-Debug.cmake -P /Users/adrian/CLionProjects/CREXX/rxpa/WriteProviderPackage.cmake

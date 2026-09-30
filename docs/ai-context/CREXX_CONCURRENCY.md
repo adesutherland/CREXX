@@ -33,7 +33,7 @@ Level B: taskpool -> taskscope -> task/completion
         |
         | Level B ASSEMBLER only
         v
-RXAS: chanopen / chanstart / chanwait / chancancel / chanclose
+RXAS: chanopen / chanstart / chanwait / chancancel / chanrelease / chanclose
         |
         | execution-local capabilities; canonical binary envelopes
         v
@@ -64,7 +64,7 @@ Every compiler, library or VM change must preserve these together:
 5. Admission queues and byte buffers are bounded. Convenience APIs must not
    hide unbounded growth.
 6. Level G lowers through the public Level B classes. Those classes reach the
-   VM only through the five channel instructions. There is no RXPA task API or
+   VM only through the channel instructions. There is no RXPA task API or
    hidden native-handle task path.
 7. All providers implement one transport-neutral VM contract. A new transport
    or plugin must not introduce provider-specific task opcodes.
@@ -165,6 +165,14 @@ execution-local default pool.
 Ordinary clauses in the block still run sequentially on the controller. Only a
 task call or explicit Level B submission creates child work.
 
+Compiler lowering installs a generated block guard for signals that require
+structured-scope abort and join. That guard deliberately does not intercept
+`POSIX_CHLD`: child-exit notification retains the caller's existing handler or
+the VM's default ignore policy. Otherwise an interrupt immediately after
+`chanwait` can unwind before the Level B channel class caches the completion
+that the native provider has already marked observed. Authored `ON SIGNAL`
+blocks, including the empty-name catch-all form, keep their ordinary semantics.
+
 ### Recursion and nesting
 
 A direct call from a task body to the same task callable is an ordinary
@@ -255,7 +263,7 @@ The public declarations and implementations live in
 | `.taskarguments` | Mutable controller-side compiler lowering helper. It is not the ordinary typed user surface. |
 | `.taskwork` | Advanced receiver contract `run(request, context)`. |
 | `.taskcontext` | Receiver view of remaining timeout, cooperative cancellation and trace identity. `endpoint(reference)` reconstructs a worker-local byte endpoint from a transferable type-4 provider reference. |
-| `.channel` | Provider-neutral lifecycle owner over the five RXAS operations. |
+| `.channel` | Provider-neutral lifecycle owner over the RXAS channel operations. |
 | `.channelrequest` | Non-authority wrapper around one local ticket. |
 | `.channelvalue` | Canonical immutable transfer value. |
 | `.channelcodec` | Exact manual encode/decode contract; no general registry is advertised. |
@@ -279,7 +287,7 @@ not a terminal child and never appears in `join()`.
 
 ## RXAS and RXBIN contract
 
-Concurrency is a core RXVM capability exposed to Level B through exactly five
+Concurrency is a core RXVM capability exposed to Level B through six
 RXAS instructions:
 
 | Opcode | RXAS shape |
@@ -289,6 +297,7 @@ RXAS instructions:
 | `652` | `chanwait status,completion,channel,waitMicroseconds` |
 | `653` | `chancancel status,channel,ticket,reason` |
 | `654` | `chanclose status,channel,mode` |
+| `659` | `chanrelease status,channel,ticket` |
 
 The exact operand rules, effects, failures and examples are in
 [`09-io-sockets-processes-and-time.md`](../reference/rxas/instructions/09-io-sockets-processes-and-time.md).
@@ -302,6 +311,12 @@ channel opcode is present. Readers reject channel opcodes without the feature,
 unknown feature bits and every reserved opcode. Old pre-release process and
 redirect slots `466..471` are reserved; their source mnemonics are retired and
 images using them must be rebuilt.
+
+`chanrelease` additionally requires `RXBIN007_FEATURE_CHANNEL_RELEASE`
+(`1 << 7`), so its complete feature requirement is `0x88`. Older readers reject
+the new feature instead of executing an unknown operation. Rebuild and deploy
+the updated runtime and class library together; recompile consumers using the
+new method. Existing channel images remain readable by the updated runtime.
 
 The linker carries the validated union of input feature requirements. It also
 preserves sealed task bindings as runtime contract metadata even when source
@@ -356,6 +371,8 @@ owner, kind, slot and generation fields. Every operation validates the owner,
 kind, generation, channel relationship and lifecycle before provider access.
 The integer is not a pointer, OS handle, worker number or transferable identity.
 Closing a channel invalidates every copied integer for it.
+Releasing a successfully observed request invalidates every copy of that
+request ticket without invalidating the channel or other requests.
 
 A logical provider reference is different. It carries provider type, reference
 version, rights, scope and opaque provider identity/integrity bytes. It contains
@@ -395,6 +412,54 @@ task-binding validation.
 The channel lifecycle is open, closing and closed. Close mode `1` drains;
 close mode `2` cancels. A failed open leaves no live channel. Each accepted
 start creates one ticket and exactly one terminal completion.
+
+Completion observation and request ownership are separate. `chanwait` delivers
+each terminal completion once; encoding/allocation failure leaves it available
+for retry. Freeing the receiver-owned encoded binary, or dropping a Rexx request
+variable, does not reclaim the request. `chancancel` does not reclaim it either.
+Use `chanrelease` / `.channelrequest.release()` after successful terminal
+observation, or close the whole channel when its lifetime ends.
+
+Release returns `WOULD_BLOCK` (`10`) for pending or unobserved requests, without
+cancelling or consuming them. Success destroys provider request state and joins
+private request threads or establishes worker detachment before recycling the
+ticket. Any terminal outcome may be released. A destruction failure leaves the
+request owned and retryable. Successful release makes later raw ticket use stale
+(`13`). The typed request's identity remains readable; its wait, completion,
+terminal, cancel and release methods then raise `CHANNEL_ERROR`. Saved immutable
+completion values remain usable after request release and channel close.
+
+Before release, typed request waits can repeatedly return cached completion
+values, including completions collected through the owning channel's wait.
+Terminal cancellation retains its existing behavior. `.task` has no release or
+detach operation: scopes still account for every child and retain join results,
+including result access through task copies after scope close.
+
+Each execution has at most 65,535 live **unreleased** tickets shared across all
+channels, including observed completions. This is not an active-operation or
+application-call allowance. Released slots are reused with a new generation;
+16-bit generation wrap permanently retires a slot, preserving stale authority
+checks and a finite total issuance budget. Provider admission bounds and host
+allocation/thread limits are separate; status `8` alone does not identify which
+resource was exhausted.
+
+Core free-slot and per-channel live/unobserved lists avoid scanning retained
+history during sequential use. Providers unlink requests directly. The typed
+owner indexes full tickets and reuses entries in `_tickets`, `_identities`,
+`_terminals` and `_completions`, clearing their logical values on release and all
+tracking on close. Ordinary VM values retain reusable string/binary/attribute
+capacity while the containing wrapper storage lives; release does not promise
+immediate RSS shrinkage. Tracking storage reflects the peak tracked set and
+reused-value capacity, not total completed operations. Provider request payloads
+and private thread resources are physically destroyed on successful release.
+Unreleased backlog still owns payloads and joinable thread state;
+the application must select a bounded retention policy.
+
+Close remains the fallback for abandoned and unobserved requests and does not
+allocate a new ticket. If request destruction fails, the closing channel retains
+its still-owned requests for a close retry. Applications should reach close even
+if an earlier cleanup operation fails: a byte half-close itself starts a request
+and can fail when ticket capacity is exhausted.
 
 Operation status codes distinguish invalid arguments/types/providers,
 unsupported capability/configuration/version, resource exhaustion,
@@ -436,6 +501,13 @@ The process provider uses the same schemas and completion model as the local
 provider. It snapshots the current bytecode-only linked generation and loads
 that exact semantic graph in bounded warm worker processes. Native modules are
 not process-eligible.
+
+The local provider is different: an attached VM inherits the controller's
+trusted provider search location and resolves every declarative native
+provider dependency into its own mutable overlay and RXPA V2 session. The
+immutable generation still contains bytecode only. Native handles are not
+transferred; each task creates and owns its own provider resources. Missing
+providers fail pool construction explicitly.
 
 Each request receives a fresh executor and VM context even when its process is
 reused. Globals, registers, frames, references, cancellation state and mutable

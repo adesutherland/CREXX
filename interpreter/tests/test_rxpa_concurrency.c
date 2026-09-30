@@ -300,12 +300,26 @@ static int call_bound_session(rxvm_context *context) {
     return failed;
 }
 
+/* Bundled providers may also own sessions. Inspect the probe by identity,
+ * never by its position in the shared per-context session list. */
+static rxpa_session_instance *find_test_session(rxvm_context *context,
+                                               const char *plugin_id) {
+    rxpa_session_instance *instance;
+    for (instance = context->rxpa_sessions; instance; instance = instance->next) {
+        if (strcmp(instance->plugin_id, plugin_id) == 0) return instance;
+    }
+    return NULL;
+}
+
 static void run_static_session_context(int index) {
     rxvm_context context;
+    rxpa_session_instance *instance;
     int failed = 0;
     memset(&context, 0, sizeof(context));
     rxinimod(&context);
-    if (rxldmodp(&context) <= 0 || !context.rxpa_sessions ||
+    if (rxldmodp(&context) <= 0 ||
+        !(instance = find_test_session(&context, "e3-session-probe")) ||
+        !instance->session ||
         context_procedure_invoker(&context, "e3.session_probe") !=
                 rxvm_callfunc_session ||
         context_procedure_invoker(&context, "e3.session_reentrant") !=
@@ -314,8 +328,7 @@ static void run_static_session_context(int index) {
         context_procedure_capabilities(&context, "e3.session_legacy") != 0u) {
         failed = 1;
     } else {
-        session_ids[index] =
-                ((test_plugin_session *)context.rxpa_sessions->session)->id;
+        session_ids[index] = ((test_plugin_session *)instance->session)->id;
     }
 
     gate_lock(&session_gate);
@@ -478,7 +491,9 @@ static int test_malformed_session_manifest(void) {
     if (rxldmodp(&context) <= 0 || malformed_factory_called != 0 ||
         context_procedure_capabilities(&context,
                                        "e3.session_malformed") != 0u ||
-        context.rxpa_sessions) failed = 1;
+        context_procedure_invoker(&context, "e3.session_malformed") !=
+                rxvm_callfunc_legacy_direct ||
+        find_test_session(&context, "e3-session-malformed")) failed = 1;
     rxfremod(&context);
     if (failed) {
         fprintf(stderr, "Malformed RXPA V2 manifest did not fail closed\n");
@@ -804,7 +819,7 @@ static int test_branch_free_binding(void) {
     rxinimod(&first);
     if (rxldmodp(&first) <= 0) failed = 1;
     first_legacy = context_find_procedure(&first, "e3b.binding_legacy");
-    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_direct ||
+    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_legacy_direct ||
         context_procedure_invoker(&first, "e3b.binding_reentrant") !=
                 rxvm_callfunc_direct) {
         failed = 1;
@@ -1003,7 +1018,7 @@ static void *transition_thread_entry(void *unused) {
 }
 #endif
 
-static int test_legacy_transition_quiescence(void) {
+static int test_legacy_transition_quiescence(int suspend_for_startup) {
     rxvm_context first;
     proc_runtime *first_legacy;
     rxvm_memory_worker *previous_worker;
@@ -1021,7 +1036,7 @@ static int test_legacy_transition_quiescence(void) {
     rxinimod(&first);
     if (rxldmodp(&first) <= 0) binding_failures++;
     first_legacy = context_find_procedure(&first, "e3b.binding_legacy");
-    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_direct) {
+    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_legacy_direct) {
         binding_failures++;
     }
 
@@ -1052,6 +1067,18 @@ static int test_legacy_transition_quiescence(void) {
     gate_lock(&binding_gate);
     if (binding_gate.maximum_active) binding_failures++;
     gate_unlock(&binding_gate);
+
+    if (suspend_for_startup && execution_started) {
+        if (!rxpa_compatibility_suspend_thread()) abort();
+        gate_lock(&binding_gate);
+        while (!binding_gate.maximum_active) gate_wait(&binding_gate);
+        gate_unlock(&binding_gate);
+        rxpa_compatibility_resume_thread();
+        if (first.rxpa_compatibility.execution_depth != 1u ||
+            !first_legacy || first_legacy->native_invoker != rxvm_callfunc) {
+            binding_failures++;
+        }
+    }
 
     if (execution_started) {
         rxpa_compatibility_execution_leave(&first.rxpa_compatibility);
@@ -1165,9 +1192,9 @@ static int test_manifest(const char *directory, const char *file_name,
         plugin.capabilities != expected_capabilities ||
         rxpa_live_plugin_handle_count() != before + 1u) {
         fprintf(stderr,
-                "RXPA manifest query failed: rc=%d capabilities=%u handles=%zu/%zu\n",
+                "RXPA manifest query failed: rc=%d capabilities=%u expected=%u handles=%zu before=%zu\n",
                 rc, rc == 0 ? plugin.capabilities : 0u,
-                rxpa_live_plugin_handle_count(), before);
+                expected_capabilities, rxpa_live_plugin_handle_count(), before);
         if (rc == 0) rxpa_close_plugin(&plugin);
         return 1;
     }
@@ -1202,6 +1229,146 @@ static int test_procedure_manifest(const char *directory,
         return 1;
     }
     return 0;
+}
+
+static int test_stats_manifest(const char *directory, const char *file_name) {
+    static const char *reentrant[] = {
+        "rxstats.mean", "rxstats.stddev", "rxstats.covariance",
+        "rxstats.correlation", "rxstats.linearfit.slope",
+        "rxstats.linearfit.intercept"
+    };
+    static const char *publication[] = {
+        "rxstats.regression", "rxstats.linearfit.\xc2\xa7" "factory"
+    };
+    rxpa_loaded_plugin plugin;
+    size_t before = rxpa_live_plugin_handle_count();
+    size_t i;
+    int rc = rxpa_open_plugin((char *)directory, (char *)file_name, &plugin);
+    int failed = rc != 0;
+    if (!failed) {
+        if (!plugin.has_manifest_v2 || plugin.capabilities != 0u ||
+            !plugin.manifest_v2.session_create_with_host ||
+            !plugin.manifest_v2.session_enter || !plugin.manifest_v2.session_leave) {
+            failed = 1;
+        }
+        for (i = 0; i < sizeof(reentrant) / sizeof(reentrant[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, reentrant[i]) !=
+                RXPA_PROCEDURE_CAP_PROCESS_REENTRANT) failed = 1;
+        }
+        for (i = 0; i < sizeof(publication) / sizeof(publication[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, publication[i]) !=
+                RXPA_PROCEDURE_CAP_SESSION_AFFINE) failed = 1;
+        }
+        if (rxpa_live_plugin_handle_count() != before + 1u) failed = 1;
+        rxpa_close_plugin(&plugin);
+    }
+    if (rxpa_live_plugin_handle_count() != before) failed = 1;
+    if (failed) fprintf(stderr, "RXPA statistics publication/reentrant policy failed\n");
+    return failed;
+}
+
+static int test_fs_manifest(const char *directory, const char *file_name) {
+    static const char *reentrant[] = {
+        "rxfs.pathkind", "rxfs.abspath", "rxfs.copy", "rxfs.hardlink",
+        "rxfs.move", "rxfs.cwd", "rxfs.loadpath", "rxfs.chdir", "rxfs.isdir",
+        "rxfs.mkdir", "rxfs.rmdir", "rxfs.delete", "rxfs.rename", "rxfs.isfile",
+        "rxfs.listdir", "rxfs.append"
+    };
+    static const char *session_affine[] = {
+        "rxfs.fileguard.\xc2\xa7" "factory", "rxfs.fileguard.held",
+        "rxfs.fileguard.status", "rxfs.fileguard.close"
+    };
+    rxpa_loaded_plugin plugin;
+    size_t before = rxpa_live_plugin_handle_count();
+    size_t i;
+    int rc = rxpa_open_plugin((char *)directory, (char *)file_name, &plugin);
+    int failed = rc != 0;
+    if (!failed) {
+        /* Fileguards own VM-local resources; only stateless procedures may
+         * bypass the session lane. Require the complete lifecycle contract. */
+        if (!plugin.has_manifest_v2 || plugin.capabilities != 0u ||
+            !plugin.manifest_v2.session_create ||
+            !plugin.manifest_v2.session_create_with_host ||
+            !plugin.manifest_v2.session_destroy ||
+            !plugin.manifest_v2.session_enter || !plugin.manifest_v2.session_leave) {
+            fprintf(stderr, "RXPA filesystem mixed/session manifest is incomplete\n");
+            failed = 1;
+        }
+        for (i = 0; i < sizeof(reentrant) / sizeof(reentrant[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, reentrant[i]) !=
+                RXPA_PROCEDURE_CAP_PROCESS_REENTRANT) {
+                fprintf(stderr, "RXPA filesystem procedure is not reentrant: %s\n",
+                        reentrant[i]);
+                failed = 1;
+            }
+        }
+        for (i = 0; i < sizeof(session_affine) / sizeof(session_affine[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, session_affine[i]) !=
+                RXPA_PROCEDURE_CAP_SESSION_AFFINE) {
+                fprintf(stderr, "RXPA filesystem procedure is not session-affine: %s\n",
+                        session_affine[i]);
+                failed = 1;
+            }
+        }
+        if (rxpa_live_plugin_handle_count() != before + 1u) failed = 1;
+        rxpa_close_plugin(&plugin);
+    }
+    if (rxpa_live_plugin_handle_count() != before) failed = 1;
+    if (failed) fprintf(stderr, "RXPA filesystem manifest qualification failed: rc=%d\n", rc);
+    return failed;
+}
+
+static int test_vector_manifest(const char *directory, const char *file_name) {
+    static const char *reentrant[] = {
+        "rxvector.decodef32le", "rxvector.encodef32le",
+        "rxvector.cosine", "rxvector.topkcosine"
+    };
+    static const char *session_affine[] = {
+        "rxvector.vectorindex.\xc2\xa7" "factory",
+        "rxvector.openindex", "rxvector.decodeindex",
+        "rxvector.vectorindex.encode", "rxvector.vectorindex.rows",
+        "rxvector.vectorindex.dimensions", "rxvector.vectorindex.metadata",
+        "rxvector.vectorindex.label", "rxvector.vectorindex.search",
+        "rxvector.vectorindex.close"
+    };
+    rxpa_loaded_plugin plugin;
+    size_t before = rxpa_live_plugin_handle_count();
+    size_t i;
+    int rc = rxpa_open_plugin((char *)directory, (char *)file_name, &plugin);
+    int failed = rc != 0;
+    if (!failed) {
+        /* Immutable owners still require the owning VM's host services.
+         * Only the original stateless packed procedures bypass its session. */
+        if (!plugin.has_manifest_v2 || plugin.capabilities != 0u ||
+            !plugin.manifest_v2.session_create ||
+            !plugin.manifest_v2.session_create_with_host ||
+            !plugin.manifest_v2.session_destroy ||
+            !plugin.manifest_v2.session_enter || !plugin.manifest_v2.session_leave) {
+            fprintf(stderr, "RXPA vector mixed/session manifest is incomplete\n");
+            failed = 1;
+        }
+        for (i = 0; i < sizeof(reentrant) / sizeof(reentrant[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, reentrant[i]) !=
+                RXPA_PROCEDURE_CAP_PROCESS_REENTRANT) {
+                fprintf(stderr, "RXPA vector procedure is not reentrant: %s\n",
+                        reentrant[i]);
+                failed = 1;
+            }
+        }
+        for (i = 0; i < sizeof(session_affine) / sizeof(session_affine[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, session_affine[i]) !=
+                RXPA_PROCEDURE_CAP_SESSION_AFFINE) {
+                fprintf(stderr, "RXPA vector procedure is not session-affine: %s\n",
+                        session_affine[i]);
+                failed = 1;
+            }
+        }
+        if (rxpa_live_plugin_handle_count() != before + 1u) failed = 1;
+        rxpa_close_plugin(&plugin);
+    }
+    if (rxpa_live_plugin_handle_count() != before) failed = 1;
+    if (failed) fprintf(stderr, "RXPA vector manifest qualification failed: rc=%d\n", rc);
+    return failed;
 }
 
 static char *copy_plugin_base(const char *file_name) {
@@ -1545,8 +1712,18 @@ static int test_dynamic_session_factory_failure(const char *directory,
 int main(int argc, char **argv) {
     if (argc != 2) {
         if (argc == 5 && strcmp(argv[1], "bundled") == 0) {
-            if (test_manifest(argv[2], argv[3],
-                              RXPA_PLUGIN_CAP_PROCESS_REENTRANT) != 0) {
+            int manifest_failed;
+            if (strcmp(argv[4], "stats") == 0) {
+                manifest_failed = test_stats_manifest(argv[2], argv[3]);
+            } else if (strcmp(argv[4], "fs") == 0) {
+                manifest_failed = test_fs_manifest(argv[2], argv[3]);
+            } else if (strcmp(argv[4], "vector") == 0) {
+                manifest_failed = test_vector_manifest(argv[2], argv[3]);
+            } else {
+                manifest_failed = test_manifest(argv[2], argv[3],
+                                                RXPA_PLUGIN_CAP_PROCESS_REENTRANT);
+            }
+            if (manifest_failed) {
                 return 1;
             }
             return test_dynamic_context_ownership(
@@ -1594,7 +1771,10 @@ int main(int argc, char **argv) {
         return test_bound_legacy_serialization();
     }
     if (strcmp(argv[1], "transition") == 0) {
-        return test_legacy_transition_quiescence();
+        return test_legacy_transition_quiescence(0);
+    }
+    if (strcmp(argv[1], "startup-transition") == 0) {
+        return test_legacy_transition_quiescence(1);
     }
     if (strcmp(argv[1], "legacy") == 0) return test_call_policy(0u, 1);
     if (strcmp(argv[1], "recursive") == 0) return test_recursive_legacy_call();

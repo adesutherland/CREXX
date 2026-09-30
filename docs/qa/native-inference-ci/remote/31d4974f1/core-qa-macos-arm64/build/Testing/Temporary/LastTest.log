@@ -1,0 +1,3306 @@
+Start testing: Sep 16 08:01 UTC
+----------------------------------------------------------
+3/2526 Testing: rxsha256_unit
+3/2526 Test: rxsha256_unit
+Command: "/Users/runner/work/_temp/build/bin/test_rxsha256"
+Directory: /Users/runner/work/_temp/build/binutils
+"rxsha256_unit" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: rxsha256 incremental state and streaming file engine
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"rxsha256_unit" end time: Sep 16 08:01 UTC
+"rxsha256_unit" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/2526 Testing: test_rxas_03_token_types
+9/2526 Test: test_rxas_03_token_types
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/assembler/parsingtests/test_rxas_03_token_types.cmake"
+Directory: /Users/runner/work/_temp/build/assembler/parsingtests
+"test_rxas_03_token_types" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"test_rxas_03_token_types" end time: Sep 16 08:01 UTC
+"test_rxas_03_token_types" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/2526 Testing: rxas_reject_non_source_mnemonics
+11/2526 Test: rxas_reject_non_source_mnemonics
+Command: "/opt/homebrew/bin/cmake" "-DRXAS=/Users/runner/work/_temp/build/bin/rxas" "-DWORKING_DIRECTORY=/Users/runner/work/_temp/build/assembler/parsingtests" "-P" "/Users/runner/work/CREXX/CREXX/assembler/parsingtests/reject_non_source_mnemonics.cmake"
+Directory: /Users/runner/work/_temp/build/assembler/parsingtests
+"rxas_reject_non_source_mnemonics" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"rxas_reject_non_source_mnemonics" end time: Sep 16 08:01 UTC
+"rxas_reject_non_source_mnemonics" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/2526 Testing: rxas_constant_aliases
+12/2526 Test: rxas_constant_aliases
+Command: "/opt/homebrew/bin/cmake" "-DRXAS=/Users/runner/work/_temp/build/bin/rxas" "-DWORKING_DIRECTORY=/Users/runner/work/_temp/build/assembler/parsingtests" "-P" "/Users/runner/work/CREXX/CREXX/assembler/parsingtests/constant_aliases.cmake"
+Directory: /Users/runner/work/_temp/build/assembler/parsingtests
+"rxas_constant_aliases" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rxas_constant_aliases" end time: Sep 16 08:01 UTC
+"rxas_constant_aliases" time elapsed: 00:00:00
+----------------------------------------------------------
+
+26/2526 Testing: rxas_invalid_diagnostic
+26/2526 Test: rxas_invalid_diagnostic
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/rxas_invalid_diagnostic.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"rxas_invalid_diagnostic" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"rxas_invalid_diagnostic" end time: Sep 16 08:01 UTC
+"rxas_invalid_diagnostic" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/2526 Testing: rxc_help_syntaxhighlight
+14/2526 Test: rxc_help_syntaxhighlight
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/rxc_help_syntaxhighlight.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"rxc_help_syntaxhighlight" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rxc_help_syntaxhighlight" end time: Sep 16 08:01 UTC
+"rxc_help_syntaxhighlight" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/2526 Testing: test_rxas_01_init
+7/2526 Test: test_rxas_01_init
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/assembler/parsingtests/test_rxas_01_init.cmake"
+Directory: /Users/runner/work/_temp/build/assembler/parsingtests
+"test_rxas_01_init" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"test_rxas_01_init" end time: Sep 16 08:01 UTC
+"test_rxas_01_init" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/2526 Testing: test_rxas_04_errors
+10/2526 Test: test_rxas_04_errors
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/assembler/parsingtests/test_rxas_04_errors.cmake"
+Directory: /Users/runner/work/_temp/build/assembler/parsingtests
+"test_rxas_04_errors" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.26 sec
+----------------------------------------------------------
+Test Passed.
+"test_rxas_04_errors" end time: Sep 16 08:01 UTC
+"test_rxas_04_errors" time elapsed: 00:00:00
+----------------------------------------------------------
+
+33/2526 Testing: rxc_function_lookup_diagnostic
+33/2526 Test: rxc_function_lookup_diagnostic
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/rxc_function_lookup_diagnostic.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"rxc_function_lookup_diagnostic" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.52 sec
+----------------------------------------------------------
+Test Passed.
+"rxc_function_lookup_diagnostic" end time: Sep 16 08:01 UTC
+"rxc_function_lookup_diagnostic" time elapsed: 00:00:00
+----------------------------------------------------------
+
+51/2526 Testing: 01_assign_noopt
+51/2526 Test: 01_assign_noopt
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/noopt/01_assign.rxas" "/Users/runner/work/_temp/build/compiler/tests/01_assign_noopt.rxas" "/Users/runner/work/_temp/build/bin/rxc" "-i" "/Users/runner/work/_temp/build/bin" "-n" "-o" "/Users/runner/work/_temp/build/compiler/tests/01_assign_noopt" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/01_assign.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"01_assign_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/noopt/01_assign.rxas
+<end of output>
+Test time =   0.75 sec
+----------------------------------------------------------
+Test Passed.
+"01_assign_noopt" end time: Sep 16 08:01 UTC
+"01_assign_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+56/2526 Testing: 03_calc_opt
+56/2526 Test: 03_calc_opt
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/opt/03_calc.rxas" "/Users/runner/work/_temp/build/compiler/tests/03_calc_opt.rxas" "/Users/runner/work/_temp/build/bin/rxc" "-i" "/Users/runner/work/_temp/build/bin" "-o" "/Users/runner/work/_temp/build/compiler/tests/03_calc_opt" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/03_calc.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"03_calc_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/opt/03_calc.rxas
+<end of output>
+Test time =   0.85 sec
+----------------------------------------------------------
+Test Passed.
+"03_calc_opt" end time: Sep 16 08:01 UTC
+"03_calc_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+79/2526 Testing: 07_loops_noopt
+79/2526 Test: 07_loops_noopt
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/noopt/07_loops.rxas" "/Users/runner/work/_temp/build/compiler/tests/07_loops_noopt.rxas" "/Users/runner/work/_temp/build/bin/rxc" "-i" "/Users/runner/work/_temp/build/bin" "-n" "-o" "/Users/runner/work/_temp/build/compiler/tests/07_loops_noopt" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/07_loops.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"07_loops_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/noopt/07_loops.rxas
+<end of output>
+Test time =   0.67 sec
+----------------------------------------------------------
+Test Passed.
+"07_loops_noopt" end time: Sep 16 08:01 UTC
+"07_loops_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/2526 Testing: crexx_contract_generation
+5/2526 Test: crexx_contract_generation
+Command: "/opt/homebrew/bin/cmake" "-DRXC=/Users/runner/work/_temp/build/bin/rxc" "-DRXAS=/Users/runner/work/_temp/build/bin/rxas" "-DCONTRACT_TOOL=/Users/runner/work/_temp/build/bin/crexx-contract" "-DSOURCE=/Users/runner/work/CREXX/CREXX/contract/tests/operation_contract.crexx" "-DINVALID_SOURCE=/Users/runner/work/CREXX/CREXX/contract/tests/operation_contract_invalid.crexx" "-DAMBIGUOUS_RXAS=/Users/runner/work/CREXX/CREXX/contract/tests/ambiguous_contract.rxas" "-DGOLDEN=/Users/runner/work/CREXX/CREXX/contract/tests/operation_contract.rxcontract.json" "-DWORK=/Users/runner/work/_temp/build/contract/tests/generation" "-P" "/Users/runner/work/CREXX/CREXX/contract/tests/contract_generation.cmake"
+Directory: /Users/runner/work/_temp/build/contract/tests
+"crexx_contract_generation" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.55 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_contract_generation" end time: Sep 16 08:01 UTC
+"crexx_contract_generation" time elapsed: 00:00:01
+----------------------------------------------------------
+
+40/2526 Testing: rxc_constants_levelb
+40/2526 Test: rxc_constants_levelb
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/rxc_constants_levelb.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"rxc_constants_levelb" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.46 sec
+----------------------------------------------------------
+Test Passed.
+"rxc_constants_levelb" end time: Sep 16 08:01 UTC
+"rxc_constants_levelb" time elapsed: 00:00:01
+----------------------------------------------------------
+
+82/2526 Testing: 08_select_opt
+82/2526 Test: 08_select_opt
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/opt/08_select.rxas" "/Users/runner/work/_temp/build/compiler/tests/08_select_opt.rxas" "/Users/runner/work/_temp/build/bin/rxc" "-i" "/Users/runner/work/_temp/build/bin" "-o" "/Users/runner/work/_temp/build/compiler/tests/08_select_opt" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/08_select.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"08_select_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/opt/08_select.rxas
+<end of output>
+Test time =   0.67 sec
+----------------------------------------------------------
+Test Passed.
+"08_select_opt" end time: Sep 16 08:01 UTC
+"08_select_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+133/2526 Testing: err_02_syntax_fail
+133/2526 Test: err_02_syntax_fail
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "--expect-fail" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/errors/err_02_syntax.txt" "/Users/runner/work/_temp/build/compiler/tests/err_02_syntax_fail.txt" "/Users/runner/work/_temp/build/bin/rxc" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/err_02_syntax.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"err_02_syntax_fail" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/errors/err_02_syntax.txt
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"err_02_syntax_fail" end time: Sep 16 08:01 UTC
+"err_02_syntax_fail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+101/2526 Testing: 10_procs_noopt
+101/2526 Test: 10_procs_noopt
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/noopt/10_procs.rxas" "/Users/runner/work/_temp/build/compiler/tests/10_procs_noopt.rxas" "/Users/runner/work/_temp/build/bin/rxc" "-i" "/Users/runner/work/_temp/build/bin" "-n" "-o" "/Users/runner/work/_temp/build/compiler/tests/10_procs_noopt" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/10_procs.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"10_procs_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/noopt/10_procs.rxas
+<end of output>
+Test time =   0.68 sec
+----------------------------------------------------------
+Test Passed.
+"10_procs_noopt" end time: Sep 16 08:01 UTC
+"10_procs_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+128/2526 Testing: 15_imports_opt
+128/2526 Test: 15_imports_opt
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "--copy" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/mymath.crexx" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/opt/15_imports.rxas" "/Users/runner/work/_temp/build/compiler/tests/15_imports_opt.rxas" "/Users/runner/work/_temp/build/bin/rxc" "-o" "/Users/runner/work/_temp/build/compiler/tests/15_imports_opt" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/15_imports.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"15_imports_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/opt/15_imports.rxas
+<end of output>
+Test time =   0.68 sec
+----------------------------------------------------------
+Test Passed.
+"15_imports_opt" end time: Sep 16 08:01 UTC
+"15_imports_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+132/2526 Testing: err_01_type_fail
+132/2526 Test: err_01_type_fail
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "--expect-fail" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/errors/err_01_type.txt" "/Users/runner/work/_temp/build/compiler/tests/err_01_type_fail.txt" "/Users/runner/work/_temp/build/bin/rxc" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/err_01_type.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"err_01_type_fail" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/errors/err_01_type.txt
+<end of output>
+Test time =   0.63 sec
+----------------------------------------------------------
+Test Passed.
+"err_01_type_fail" end time: Sep 16 08:01 UTC
+"err_01_type_fail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+136/2526 Testing: err_06_missing_method_fail
+136/2526 Test: err_06_missing_method_fail
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "--expect-fail" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/errors/err_06_missing_method.txt" "/Users/runner/work/_temp/build/compiler/tests/err_06_missing_method_fail.txt" "/Users/runner/work/_temp/build/bin/rxc" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/err_06_missing_method.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"err_06_missing_method_fail" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/errors/err_06_missing_method.txt
+<end of output>
+Test time =   0.59 sec
+----------------------------------------------------------
+Test Passed.
+"err_06_missing_method_fail" end time: Sep 16 08:01 UTC
+"err_06_missing_method_fail" time elapsed: 00:00:00
+----------------------------------------------------------
+
+225/2526 Testing: unused_import_warn
+225/2526 Test: unused_import_warn
+Command: "/Users/runner/work/_temp/build/compiler/tests/crexx_test_driver" "--warnings" "/Users/runner/work/CREXX/CREXX/compiler/tests/golden/warnings/unused_import.txt" "/Users/runner/work/_temp/build/compiler/tests/unused_import_warn.txt" "/Users/runner/work/_temp/build/bin/rxc" "/Users/runner/work/CREXX/CREXX/compiler/tests/rexx_src/unused_import_warning.crexx"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"unused_import_warn" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test passed: matches /Users/runner/work/CREXX/CREXX/compiler/tests/golden/warnings/unused_import.txt
+<end of output>
+Test time =   0.63 sec
+----------------------------------------------------------
+Test Passed.
+"unused_import_warn" end time: Sep 16 08:01 UTC
+"unused_import_warn" time elapsed: 00:00:00
+----------------------------------------------------------
+
+411/2526 Testing: repro_opt_args_run_noopt
+411/2526 Test: repro_opt_args_run_noopt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/run_repro_opt_args_noopt.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"repro_opt_args_run_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.69 sec
+----------------------------------------------------------
+Test Passed.
+"repro_opt_args_run_noopt" end time: Sep 16 08:01 UTC
+"repro_opt_args_run_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+427/2526 Testing: basic_arrays_run_noopt
+427/2526 Test: basic_arrays_run_noopt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/run_basic_arrays_noopt.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"basic_arrays_run_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.64 sec
+----------------------------------------------------------
+Test Passed.
+"basic_arrays_run_noopt" end time: Sep 16 08:01 UTC
+"basic_arrays_run_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+459/2526 Testing: 13_stems_run_noopt
+459/2526 Test: 13_stems_run_noopt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/run_13_stems_noopt.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"13_stems_run_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.62 sec
+----------------------------------------------------------
+Test Passed.
+"13_stems_run_noopt" end time: Sep 16 08:01 UTC
+"13_stems_run_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+481/2526 Testing: optional_arg_presence_copy_run_noopt
+481/2526 Test: optional_arg_presence_copy_run_noopt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/run_optional_arg_presence_copy_noopt.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"optional_arg_presence_copy_run_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.66 sec
+----------------------------------------------------------
+Test Passed.
+"optional_arg_presence_copy_run_noopt" end time: Sep 16 08:01 UTC
+"optional_arg_presence_copy_run_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+519/2526 Testing: interface_runtime_dispatch_multi_run_noopt
+519/2526 Test: interface_runtime_dispatch_multi_run_noopt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/run_interface_runtime_dispatch_multi_isolated_noopt.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"interface_runtime_dispatch_multi_run_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.59 sec
+----------------------------------------------------------
+Test Passed.
+"interface_runtime_dispatch_multi_run_noopt" end time: Sep 16 08:01 UTC
+"interface_runtime_dispatch_multi_run_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+633/2526 Testing: source_import_contract_stub_implements
+633/2526 Test: source_import_contract_stub_implements
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/run_source_import_contract_stub_implements.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"source_import_contract_stub_implements" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.71 sec
+----------------------------------------------------------
+Test Passed.
+"source_import_contract_stub_implements" end time: Sep 16 08:01 UTC
+"source_import_contract_stub_implements" time elapsed: 00:00:00
+----------------------------------------------------------
+
+634/2526 Testing: source_import_optional_factory_arg
+634/2526 Test: source_import_optional_factory_arg
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/run_source_import_optional_factory_arg.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"source_import_optional_factory_arg" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.63 sec
+----------------------------------------------------------
+Test Passed.
+"source_import_optional_factory_arg" end time: Sep 16 08:01 UTC
+"source_import_optional_factory_arg" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1019/2526 Testing: address_callback_host
+1019/2526 Test: address_callback_host
+Command: "/Users/runner/work/_temp/build/compiler/tests/test_address_callback_host"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"address_callback_host" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"address_callback_host" end time: Sep 16 08:01 UTC
+"address_callback_host" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1021/2526 Testing: dynamic_load
+1021/2526 Test: dynamic_load
+Command: "/Users/runner/work/_temp/build/compiler/tests/test_dynamic_load"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"dynamic_load" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"dynamic_load" end time: Sep 16 08:01 UTC
+"dynamic_load" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1024/2526 Testing: crexxsaa_variables
+1024/2526 Test: crexxsaa_variables
+Command: "/Users/runner/work/_temp/build/compiler/tests/test_crexxsaa_variables"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"crexxsaa_variables" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"crexxsaa_variables" end time: Sep 16 08:01 UTC
+"crexxsaa_variables" time elapsed: 00:00:00
+----------------------------------------------------------
+
+594/2526 Testing: interface_source_import_run_noopt
+594/2526 Test: interface_source_import_run_noopt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/run_interface_source_import_source_noopt.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"interface_source_import_run_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.13 sec
+----------------------------------------------------------
+Test Passed.
+"interface_source_import_run_noopt" end time: Sep 16 08:01 UTC
+"interface_source_import_run_noopt" time elapsed: 00:00:01
+----------------------------------------------------------
+
+1026/2526 Testing: source_provenance
+1026/2526 Test: source_provenance
+Command: "/Users/runner/work/_temp/build/compiler/tests/test_source_provenance"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"source_provenance" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"source_provenance" end time: Sep 16 08:01 UTC
+"source_provenance" time elapsed: 00:00:00
+----------------------------------------------------------
+
+991/2526 Testing: levelc_slice1_pool_say
+991/2526 Test: levelc_slice1_pool_say
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/levelc_slice1_pool_say.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"levelc_slice1_pool_say" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.81 sec
+----------------------------------------------------------
+Test Passed.
+"levelc_slice1_pool_say" end time: Sep 16 08:01 UTC
+"levelc_slice1_pool_say" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1014/2526 Testing: address_bridge
+1014/2526 Test: address_bridge
+Command: "/Users/runner/work/_temp/build/compiler/tests/test_address_bridge"
+Directory: /Users/runner/work/_temp/build/bin
+"address_bridge" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+CMSUSER
+<end of output>
+Test time =   0.36 sec
+----------------------------------------------------------
+Test Passed.
+"address_bridge" end time: Sep 16 08:01 UTC
+"address_bridge" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1031/2526 Testing: source_semantics
+1031/2526 Test: source_semantics
+Command: "/Users/runner/work/_temp/build/compiler/tests/test_source_semantics"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"source_semantics" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"source_semantics" end time: Sep 16 08:01 UTC
+"source_semantics" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1005/2526 Testing: levelc_slice6_expressions
+1005/2526 Test: levelc_slice6_expressions
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/levelc_slice6_expressions.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"levelc_slice6_expressions" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.19 sec
+----------------------------------------------------------
+Test Passed.
+"levelc_slice6_expressions" end time: Sep 16 08:01 UTC
+"levelc_slice6_expressions" time elapsed: 00:00:01
+----------------------------------------------------------
+
+1124/2526 Testing: rxlink_success_run
+1124/2526 Test: rxlink_success_run
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "tests_linked_success"
+Directory: /Users/runner/work/_temp/build/linker
+"rxlink_success_run" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: Provider A
+PASS: Root Returned
+10
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: Provider A[^
+]*?
+PASS: Root Returned[^
+]*?
+10]
+"rxlink_success_run" end time: Sep 16 08:01 UTC
+"rxlink_success_run" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1125/2526 Testing: rxlink_control_run
+1125/2526 Test: rxlink_control_run
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "tests_linked_omit"
+Directory: /Users/runner/work/_temp/build/linker
+"rxlink_control_run" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: Provider A
+PASS: Root Returned
+10
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: Provider A[^
+]*?
+PASS: Root Returned[^
+]*?
+10]
+"rxlink_control_run" end time: Sep 16 08:01 UTC
+"rxlink_control_run" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1127/2526 Testing: rxlink_interface_run
+1127/2526 Test: rxlink_interface_run
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "tests_linked_interface"
+Directory: /Users/runner/work/_temp/build/linker
+"rxlink_interface_run" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: Interface Linked
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: Interface Linked]
+"rxlink_interface_run" end time: Sep 16 08:01 UTC
+"rxlink_interface_run" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1130/2526 Testing: rxlink_format_check
+1130/2526 Test: rxlink_format_check
+Command: "/Users/runner/work/_temp/build/linker/test_linked_format"
+Directory: /Users/runner/work/_temp/build/linker
+"rxlink_format_check" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"rxlink_format_check" end time: Sep 16 08:01 UTC
+"rxlink_format_check" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1134/2526 Testing: rxlink_signature_mismatch_error
+1134/2526 Test: rxlink_signature_mismatch_error
+Command: "/opt/homebrew/bin/cmake" "-DRXLINK=/Users/runner/work/_temp/build/bin/rxlink" "-DWORKING_DIRECTORY=/Users/runner/work/_temp/build/linker" "-DOUTPUT_BASENAME=tests_linked_signature_mismatch" "-DINPUTS=tests_link_signature_bad_impl.rxbin" "-DEXPECT_TEXT=ERROR: class link_sig.box does not satisfy interface member link_sig.shape.describe signature" "-P" "/Users/runner/work/CREXX/CREXX/linker/tests/check_expected_failure.cmake"
+Directory: /Users/runner/work/_temp/build/linker
+"rxlink_signature_mismatch_error" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"rxlink_signature_mismatch_error" end time: Sep 16 08:01 UTC
+"rxlink_signature_mismatch_error" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1136/2526 Testing: rxlink_rxdas_inline_preserve_smoke
+1136/2526 Test: rxlink_rxdas_inline_preserve_smoke
+Command: "/opt/homebrew/bin/cmake" "-DRXDAS=/Users/runner/work/_temp/build/bin/rxdas" "-DWORKING_DIRECTORY=/Users/runner/work/_temp/build/linker" "-DINPUT_RXBIN=/Users/runner/work/_temp/build/linker/tests_linked_inline.rxbin" "-DOUTPUT_RXAS=/Users/runner/work/_temp/build/linker/tests_linked_inline.rxas" "-DEXPECT_TEXT_1=tests_link_provider_a.rxas" "-DEXPECT_TEXT_2=.meta "linktest.helper"=".inline" "I4;a;b"" "-P" "/Users/runner/work/CREXX/CREXX/linker/tests/check_rxdas_contains.cmake"
+Directory: /Users/runner/work/_temp/build/linker
+"rxlink_rxdas_inline_preserve_smoke" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"rxlink_rxdas_inline_preserve_smoke" end time: Sep 16 08:01 UTC
+"rxlink_rxdas_inline_preserve_smoke" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1138/2526 Testing: rxdas_roundtrip_basic
+1138/2526 Test: rxdas_roundtrip_basic
+Command: "/opt/homebrew/bin/cmake" "-DRXDAS=/Users/runner/work/_temp/build/bin/rxdas" "-DRXAS=/Users/runner/work/_temp/build/bin/rxas" "-DRXVM=/Users/runner/work/_temp/build/bin/rxvm" "-DRXBVM=/Users/runner/work/_temp/build/bin/rxbvm" "-DINPUT_RXBIN=/Users/runner/work/_temp/build/disassembler/tests_basic.rxbin" "-DWORKING_DIRECTORY=/Users/runner/work/_temp/build/disassembler" "-DTEST_BASENAME=rxdas_roundtrip_basic" "-DREQUIRE_NO_UNKNOWN=ON" "-DEXPECT_DISASSEMBLY_TEXT_1=" "-DEXPECT_DISASSEMBLY_TEXT_2=" "-DEXPECT_DISASSEMBLY_TEXT_3=" "-DEXPECT_DISASSEMBLY_TEXT_4=" "-DEXPECT_DISASSEMBLY_TEXT_5=" "-DEXPECT_DISASSEMBLY_TEXT_6=" "-DEXPECT_DISASSEMBLY_TEXT_7=" "-DEXPECT_DISASSEMBLY_TEXT_8=" "-P" "/Users/runner/work/CREXX/CREXX/disassembler/tests/check_roundtrip.cmake"
+Directory: /Users/runner/work/_temp/build/disassembler
+"rxdas_roundtrip_basic" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"rxdas_roundtrip_basic" end time: Sep 16 08:01 UTC
+"rxdas_roundtrip_basic" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1143/2526 Testing: rxdas_graph_error
+1143/2526 Test: rxdas_graph_error
+Command: "/opt/homebrew/bin/cmake" "-DRXDAS=/Users/runner/work/_temp/build/bin/rxdas" "-DINPUT_RXBIN=/Users/runner/work/_temp/build/disassembler/tests_compact_format_corrupt_graph.rxbin" "-P" "/Users/runner/work/CREXX/CREXX/disassembler/tests/check_graph_error.cmake"
+Directory: /Users/runner/work/_temp/build/disassembler
+"rxdas_graph_error" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"rxdas_graph_error" end time: Sep 16 08:01 UTC
+"rxdas_graph_error" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1144/2526 Testing: rxdas_roundtrip_interfaces
+1144/2526 Test: rxdas_roundtrip_interfaces
+Command: "/opt/homebrew/bin/cmake" "-DRXDAS=/Users/runner/work/_temp/build/bin/rxdas" "-DRXAS=/Users/runner/work/_temp/build/bin/rxas" "-DRXVM=/Users/runner/work/_temp/build/bin/rxvm" "-DRXBVM=/Users/runner/work/_temp/build/bin/rxbvm" "-DINPUT_RXBIN=/Users/runner/work/_temp/build/disassembler/tests_interfaces.rxbin" "-DWORKING_DIRECTORY=/Users/runner/work/_temp/build/disassembler" "-DTEST_BASENAME=rxdas_roundtrip_interfaces" "-DREQUIRE_NO_UNKNOWN=ON" "-DEXPECT_DISASSEMBLY_TEXT_1=" "-DEXPECT_DISASSEMBLY_TEXT_2=" "-DEXPECT_DISASSEMBLY_TEXT_3=" "-DEXPECT_DISASSEMBLY_TEXT_4=" "-DEXPECT_DISASSEMBLY_TEXT_5=" "-DEXPECT_DISASSEMBLY_TEXT_6=" "-DEXPECT_DISASSEMBLY_TEXT_7=" "-DEXPECT_DISASSEMBLY_TEXT_8=" "-P" "/Users/runner/work/CREXX/CREXX/disassembler/tests/check_roundtrip.cmake"
+Directory: /Users/runner/work/_temp/build/disassembler
+"rxdas_roundtrip_interfaces" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"rxdas_roundtrip_interfaces" end time: Sep 16 08:01 UTC
+"rxdas_roundtrip_interfaces" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1148/2526 Testing: rxdas_roundtrip_large_binary_alias
+1148/2526 Test: rxdas_roundtrip_large_binary_alias
+Command: "/opt/homebrew/bin/cmake" "-DRXDAS=/Users/runner/work/_temp/build/bin/rxdas" "-DRXAS=/Users/runner/work/_temp/build/bin/rxas" "-DRXVM=/Users/runner/work/_temp/build/bin/rxvm" "-DRXBVM=/Users/runner/work/_temp/build/bin/rxbvm" "-DINPUT_RXBIN=/Users/runner/work/_temp/build/disassembler/tests_rxdas_large_binary.rxbin" "-DWORKING_DIRECTORY=/Users/runner/work/_temp/build/disassembler" "-DTEST_BASENAME=rxdas_roundtrip_large_binary_alias" "-DREQUIRE_NO_UNKNOWN=ON" "-DEXPECT_DISASSEMBLY_TEXT_1=.const §rxdas.const." "-DEXPECT_DISASSEMBLY_TEXT_2=load r0,§rxdas.const." "-DEXPECT_DISASSEMBLY_TEXT_3=" "-DEXPECT_DISASSEMBLY_TEXT_4=" "-DEXPECT_DISASSEMBLY_TEXT_5=" "-DEXPECT_DISASSEMBLY_TEXT_6=" "-DEXPECT_DISASSEMBLY_TEXT_7=" "-DEXPECT_DISASSEMBLY_TEXT_8=" "-P" "/Users/runner/work/CREXX/CREXX/disassembler/tests/check_roundtrip.cmake"
+Directory: /Users/runner/work/_temp/build/disassembler
+"rxdas_roundtrip_large_binary_alias" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.15 sec
+----------------------------------------------------------
+Test Passed.
+"rxdas_roundtrip_large_binary_alias" end time: Sep 16 08:01 UTC
+"rxdas_roundtrip_large_binary_alias" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1152/2526 Testing: rxdas_dump_support
+1152/2526 Test: rxdas_dump_support
+Command: "/Users/runner/work/_temp/build/disassembler/test_disassembler_dump"
+Directory: /Users/runner/work/_temp/build/disassembler
+"rxdas_dump_support" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"rxdas_dump_support" end time: Sep 16 08:01 UTC
+"rxdas_dump_support" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1184/2526 Testing: crexxsaa_cache_tool_location
+1184/2526 Test: crexxsaa_cache_tool_location
+Command: "/Users/runner/work/_temp/build/bin/crexxsaa" "--cache-dir" "/Users/runner/work/_temp/build/interpreter/crexxsaa-cache-tool-test" "--location"
+Directory: /Users/runner/work/_temp/build/interpreter
+"crexxsaa_cache_tool_location" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+/Users/runner/work/_temp/build/interpreter/crexxsaa-cache-tool-test
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[crexxsaa-cache-tool-test]
+"crexxsaa_cache_tool_location" end time: Sep 16 08:01 UTC
+"crexxsaa_cache_tool_location" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1186/2526 Testing: rxpa_utf_validation
+1186/2526 Test: rxpa_utf_validation
+Command: "/Users/runner/work/_temp/build/interpreter/test_rxpa_utf_validation"
+Directory: /Users/runner/work/_temp/build/interpreter
+"rxpa_utf_validation" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"rxpa_utf_validation" end time: Sep 16 08:01 UTC
+"rxpa_utf_validation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1187/2526 Testing: ts_regvalue_tester
+1187/2526 Test: ts_regvalue_tester
+Command: "/Users/runner/work/_temp/build/interpreter/ts_regvalue_tester"
+Directory: /Users/runner/work/_temp/build/interpreter
+"ts_regvalue_tester" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+--- Testing String: "Hello © world with α, β, γ and 𐍈." ---
+Testing forward iteration...
+Testing backward iteration...
+Testing random jumps...
+Testing string modifications...
+--- Test Passed ---
+
+--- Running Boundary Condition Tests ---
+Testing with string: "abc€" (length: 6, chars: 4)
+  Testing seek to end position (pos 4)...
+  Testing seek one-past-end (pos 5)...
+  Cache after one-past-end seek: byte=6, char=4
+  Testing seek many-past-end (pos 9)...
+  Cache after many-past-end seek: byte=6, char=4
+--- Boundary Tests Finished ---
+
+--- Running Flawed Optimization Trigger Tests ---
+Testing with string of length 39
+  Positioned at char 36. Seeking to invalid pos 40...
+  Cache after high-to-invalid seek: byte=39, char=39
+--- Flawed Optimization Tests Finished ---
+
+--- Running UTF Status Flag Tests ---
+--- UTF Status Flag Tests Finished ---
+
+--- Running Normalization Certificate Tests ---
+--- Normalization Certificate Tests Finished ---
+
+--- Running Binary Buffer Tests ---
+--- Binary Buffer Tests Finished ---
+
+--- Running Reference Cell Tests ---
+--- Reference Cell Tests Finished ---
+
+--- Running Reference Identity Helper Tests ---
+--- Reference Identity Helper Tests Finished ---
+
+--- Running Reference Context Allocator Tests ---
+--- Reference Context Allocator Tests Finished ---
+
+--- Running Reference Payload Copy/Clear Tests ---
+--- Reference Payload Copy/Clear Tests Finished ---
+
+--- Running Reference Copy Destination Identity Tests ---
+--- Reference Copy Destination Identity Tests Finished ---
+
+--- Running Reference Move Identity/Payload Tests ---
+--- Reference Move Identity/Payload Tests Finished ---
+
+--- Running Reference Attribute Storage Lifecycle Tests ---
+--- Reference Attribute Storage Lifecycle Tests Finished ---
+
+--- Running Reference Attribute Trim Policy Tests ---
+--- Reference Attribute Trim Policy Tests Finished ---
+
+--- Running Reference Lifetime Release Helper Tests ---
+--- Reference Lifetime Release Helper Tests Finished ---
+
+--- Running Oversized Reuse Policy Tests ---
+--- Oversized Reuse Policy Tests Finished ---
+
+--- Running Value Layout and String Sidecar Tests ---
+--- Value Layout and String Sidecar Tests Finished ---
+
+--- Running Integer Zero String Storage Test ---
+--- Integer Zero String Storage Test Finished ---
+
+All tests completed.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"ts_regvalue_tester" end time: Sep 16 08:01 UTC
+"ts_regvalue_tester" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1190/2526 Testing: rxassignalstests
+1190/2526 Test: rxassignalstests
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/interpreter/rxassignalstests_expected_failure.cmake"
+Directory: /Users/runner/work/_temp/build/interpreter
+"rxassignalstests" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+1. Should not signal
+2. Should call branch signal handler ...
+ ... Signal Branch Handler called
+3. Should call function signal handler (with message) ...
+ ... Signal Function Handler
+ ... Called with signal: OTHER, and message: Test 3 Message to handler
+ ... returned from function signal handler with message
+4. Should call function signal handler (with payload) ...
+ ... Signal Function Handler
+ ... Called with signal: OTHER, and message: Test 4 Payload Message
+ ... returned from function signal handler with payload
+5. Test the return on signal mode ...
+ ... in child function. About to signal
+ ... returned from test
+6. Test the call and branch on signal mode ...
+ ... Signal Function Handler
+ ... Called with signal: OTHER, and message: Test 6 Message to handler
+ ... And then branch
+7. Should signal with a PANIC
+PANIC: Test 7 message (SIGNAL OTHER)
+-- EXPECTED FAILURE: uncaught SIGNAL OTHER from tests_signals, exit code 30; test passed
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"rxassignalstests" end time: Sep 16 08:01 UTC
+"rxassignalstests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1199/2526 Testing: rxasregisterflagtests
+1199/2526 Test: rxasregisterflagtests
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "tests_register_flags"
+Directory: /Users/runner/work/_temp/build/interpreter
+"rxasregisterflagtests" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: Register Flag Partition
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: Register Flag Partition]
+"rxasregisterflagtests" end time: Sep 16 08:01 UTC
+"rxasregisterflagtests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1200/2526 Testing: rxasutfflagtests
+1200/2526 Test: rxasutfflagtests
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "tests_utf_flags"
+Directory: /Users/runner/work/_temp/build/interpreter
+"rxasutfflagtests" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: UTF Flag Cache
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: UTF Flag Cache]
+"rxasutfflagtests" end time: Sep 16 08:01 UTC
+"rxasutfflagtests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1204/2526 Testing: rxasreferencetests
+1204/2526 Test: rxasreferencetests
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "tests_references"
+Directory: /Users/runner/work/_temp/build/interpreter
+"rxasreferencetests" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test Suite: Reference RXAS Operations
+caught-reference-invalid-deref
+caught-reference-invalid-linkref
+caught-reference-invalid-setref
+caught-reference-invalid-nonref
+PASS: Reference RXAS Ops
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: Reference RXAS Ops]
+"rxasreferencetests" end time: Sep 16 08:01 UTC
+"rxasreferencetests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1236/2526 Testing: rxasbasictests
+1236/2526 Test: rxasbasictests
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "tests_basic"
+Directory: /Users/runner/work/_temp/build/interpreter
+"rxasbasictests" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test Suite: Basic Data Movement
+PASS: LOAD_REG_INT
+PASS: LOAD_REG_STRING
+PASS: LOAD_REG_REG
+PASS: NULL_REG
+PASS: COPY_REG_REG
+PASS: SCOPY_REG_REG
+PASS: ICOPY_REG_REG
+PASS: SAY_REG_STRING
+PASS: SAY_REG_INT (next line should be 999)
+999
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"rxasbasictests" end time: Sep 16 08:01 UTC
+"rxasbasictests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1247/2526 Testing: compact_format_check
+1247/2526 Test: compact_format_check
+Command: "/Users/runner/work/_temp/build/interpreter/test_compact_format"
+Directory: /Users/runner/work/_temp/build/interpreter
+"compact_format_check" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"compact_format_check" end time: Sep 16 08:01 UTC
+"compact_format_check" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1248/2526 Testing: rxasstringtests
+1248/2526 Test: rxasstringtests
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "tests_string"
+Directory: /Users/runner/work/_temp/build/interpreter
+"rxasstringtests" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test Suite: Strings
+PASS: CONCAT
+PASS: SCONCAT
+PASS: APPEND
+PASS: SAPPEND
+PASS: APPENDCHAR
+PASS: STRLEN
+PASS: SUBSTRING
+PASS: SCOPY logical value
+PASS: UTF substring metadata
+PASS: TRIML
+PASS: TRIMR
+PASS: STRLOWER
+PASS: STRUPPER
+PASS: STRPOS
+PASS: UTF STRPOS
+PASS: FNDBLNK
+PASS: explicit string positions
+PASS: Trim whitespace-only
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"rxasstringtests" end time: Sep 16 08:01 UTC
+"rxasstringtests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1308/2526 Testing: rxasdecimaltests-mc
+1308/2526 Test: rxasdecimaltests-mc
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "-p" "rxvm_mc_decimal" "tests_decimal"
+Directory: /Users/runner/work/_temp/build/interpreter
+"rxasdecimaltests-mc" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Decimal Plugin Sanity Tests for Assembler Instructions
+
+Test 0 (DECPLNM_REG_REG_REG) Name=mcdecimal Description=Decimal Plugin using Mike Cowlishaw's decNumber library Version=Plugin:0.1 Library:3.64
+Test 1 (load)
+Test 2 (stod and dtos)
+Test 2.1 (stod - conversion syntax)
+Test 3 (itod)
+Test 4 (ftod)
+Test 5 (dtoi)
+Test 5.1 (dtoi - conversion error)
+Test 6 (dtof)
+Test 7 (dadd - reg,reg,reg)
+Test 8 (dadd - reg,reg,decimal)
+Test 9 (dsub - reg,reg,reg)
+Test 10 (dsub - reg,reg,decimal)
+Test 11 (dsub - reg,decimal,reg)
+Test 12 (dmult - reg,reg,reg)
+Test 13 (dmult - reg,reg,decimal)
+Test 14 (ddiv - reg,reg,reg)
+Test 15 (ddiv - reg,reg,decimal)
+Test 16 (ddiv - reg,decimal,reg)
+Test 16.1 (ddiv - reg,decimal,reg - division by zero)
+Test 17 (DEQ_REG_REG_REG)
+Test 18 (DNE_REG_REG_REG)
+Test 19 (DGT_REG_REG_REG)
+Test 20 (DGTE_REG_REG_REG) - test equals
+Test 21 (DGTE_REG_REG_REG) - test greater
+Test 22 (DLT_REG_REG_REG)
+Test 23 (DLTE_REG_REG_REG) - test equals
+Test 24 (DLTE_REG_REG_REG) - test less
+Test 25 (DEQ_REG_REG_DECIMAL)
+Test 26 (DLTBR_ID_REG_REG) - test true
+Test 27 (DLTBR_ID_REG_REG) - test false
+Test 28 (DGTBR_ID_REG_REG) - test true
+Test 29 (DGTBR_ID_REG_REG) - test false
+Test 30 (DEQBR_ID_REG_REG) - test true
+Test 31 (DEQBR_ID_REG_REG) - test false
+Test 32 (DNE_REG_REG_DECIMAL) - test true
+Test 33 (DNE_REG_REG_DECIMAL) - test false
+Test 34 (DGT_REG_REG_DECIMAL) - test true
+Test 35 (DGT_REG_REG_DECIMAL) - test false
+Test 36 (DGT_REG_DECIMAL_REG) - test true
+Test 37 (DGT_REG_DECIMAL_REG) - test false
+Test 38 (DGTE_REG_REG_DECIMAL) - test true
+Test 39 (DGTE_REG_REG_DECIMAL) - test false
+Test 40 (DGTE_REG_DECIMAL_REG) - test true
+Test 41 (DGTE_REG_DECIMAL_REG) - test false
+Test 42 (DLT_REG_REG_DECIMAL) - test true
+Test 43 (DLT_REG_REG_DECIMAL) - test false
+Test 44 (DLT_REG_DECIMAL_REG) - test true
+Test 45 (DLT_REG_DECIMAL_REG) - test false
+Test 46 (DLTE_REG_REG_DECIMAL) - test true
+Test 47 (DLTE_REG_REG_DECIMAL) - test false
+Test 48 (DLTE_REG_DECIMAL_REG) - test true
+Test 49 (DLTE_REG_DECIMAL_REG) - test false
+Test 50 (DCOPY_REG_REG)
+Test 51 (DSEX_REG)
+Test 52 (DPOW_REG_REG_REG)
+Test 53 (DPOW_REG_REG_DECIMAL)
+Test 54 (DPOW_REG_DECIMAL_REG)
+Test 55 (DEXTR_REG_REG_REG)
+Test 56 (SETDGTS_REG & GETDGTS_REG)
+Test 57 (SETDGTS_INT & GETDGTS_REG)
+Test 58 (decimal literal source/result alias)
+Test 59 (immediate numeric-context setters/getters)
+Test 60 (register numeric-context setters/getters)
+Test 61 (NUMSCI state and decimal effect)
+Test 62 (NUMENG state and decimal effect)
+Test 63 (combined/expanded numeric-context equivalence)
+Test 64 (NUMSCI invalid digits preserve context)
+Test 65 (NUMENG invalid case preserve context)
+Test 66 (NUMSCI invalid standard preserve context)
+Test 67 (FUZZ decimal comparison semantics)
+Test 68 (FORM/CASE decimal formatting semantics)
+Test 69 (STANDARD decimal rounding semantics)
+Tests Run: 73
+Error Count: 0
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"rxasdecimaltests-mc" end time: Sep 16 08:01 UTC
+"rxasdecimaltests-mc" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1313/2526 Testing: rxasinterfacetests
+1313/2526 Test: rxasinterfacetests
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "tests_interfaces"
+Directory: /Users/runner/work/_temp/build/interpreter
+"rxasinterfacetests" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Test Suite: Interface Factory Dispatch
+PASS: Interface Dispatch Suite
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: Interface Dispatch Suite]
+"rxasinterfacetests" end time: Sep 16 08:01 UTC
+"rxasinterfacetests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1320/2526 Testing: reentrancy_check
+1320/2526 Test: reentrancy_check
+Command: "/Users/runner/work/_temp/build/interpreter/test_reentrancy"
+Directory: /Users/runner/work/_temp/build/interpreter
+"reentrancy_check" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Iteration 0: 0 + 0 = 0 (OK)
+Iteration 1: 1 + 2 = 3 (OK)
+Iteration 2: 2 + 4 = 6 (OK)
+Iteration 3: 3 + 6 = 9 (OK)
+Iteration 4: 4 + 8 = 12 (OK)
+Iteration 5: 5 + 10 = 15 (OK)
+Iteration 6: 6 + 12 = 18 (OK)
+Iteration 7: 7 + 14 = 21 (OK)
+Iteration 8: 8 + 16 = 24 (OK)
+Iteration 9: 9 + 18 = 27 (OK)
+Re-entrancy test passed successfully
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"reentrancy_check" end time: Sep 16 08:01 UTC
+"reentrancy_check" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1372/2526 Testing: db_decimal_archive_link
+1372/2526 Test: db_decimal_archive_link
+Command: "/Users/runner/work/_temp/build/interpreter/test_db_decimal_archive_link"
+Directory: /Users/runner/work/_temp/build/interpreter
+"db_decimal_archive_link" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"db_decimal_archive_link" end time: Sep 16 08:01 UTC
+"db_decimal_archive_link" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1025/2526 Testing: crexxsaa_status
+1025/2526 Test: crexxsaa_status
+Command: "/Users/runner/work/_temp/build/compiler/tests/test_crexxsaa_status"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"crexxsaa_status" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+EXIT7
+<end of output>
+Test time =   1.49 sec
+----------------------------------------------------------
+Test Passed.
+"crexxsaa_status" end time: Sep 16 08:01 UTC
+"crexxsaa_status" time elapsed: 00:00:01
+----------------------------------------------------------
+
+1029/2526 Testing: trace_stem_sugar
+1029/2526 Test: trace_stem_sugar
+Command: "/opt/homebrew/bin/cmake" "-DRXC=/Users/runner/work/_temp/build/bin/rxc" "-DRXAS=/Users/runner/work/_temp/build/bin/rxas" "-DRXVM=/Users/runner/work/_temp/build/bin/rxvm" "-DBIN_DIR=/Users/runner/work/_temp/build/bin" "-DLIBRARY=/Users/runner/work/_temp/build/bin/library" "-DWORK=/Users/runner/work/_temp/build/compiler/tests/trace_stem_sugar" "-DRXVM_TIMEOUT=60" "-P" "/Users/runner/work/CREXX/CREXX/compiler/tests/run_trace_stem_sugar.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"trace_stem_sugar" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.85 sec
+----------------------------------------------------------
+Test Passed.
+"trace_stem_sugar" end time: Sep 16 08:01 UTC
+"trace_stem_sugar" time elapsed: 00:00:01
+----------------------------------------------------------
+
+1383/2526 Testing: rxpp_relative_include
+1383/2526 Test: rxpp_relative_include
+Command: "/opt/homebrew/bin/cmake" "-DRXPP_BIN=/Users/runner/work/_temp/build/bin/rxpp" "-DSOURCE_ROOT=/Users/runner/work/CREXX/CREXX" "-DWORK=/Users/runner/work/_temp/build/preprocessor/tests/rxpp_relative_include" "-P" "/Users/runner/work/CREXX/CREXX/preprocessor/tests/run_rxpp_relative_include.cmake"
+Directory: /Users/runner/work/_temp/build/preprocessor/tests
+"rxpp_relative_include" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"rxpp_relative_include" end time: Sep 16 08:01 UTC
+"rxpp_relative_include" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1384/2526 Testing: rxpp_script_macro_exact_match
+1384/2526 Test: rxpp_script_macro_exact_match
+Command: "/opt/homebrew/bin/cmake" "-DRXPP_BIN=/Users/runner/work/_temp/build/bin/rxpp" "-DSOURCE_ROOT=/Users/runner/work/CREXX/CREXX" "-DWORK=/Users/runner/work/_temp/build/preprocessor/tests/rxpp_script_macro_exact_match" "-P" "/Users/runner/work/CREXX/CREXX/preprocessor/tests/run_rxpp_script_macro_exact_match.cmake"
+Directory: /Users/runner/work/_temp/build/preprocessor/tests
+"rxpp_script_macro_exact_match" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"rxpp_script_macro_exact_match" end time: Sep 16 08:01 UTC
+"rxpp_script_macro_exact_match" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1385/2526 Testing: rxpp_loadmacro
+1385/2526 Test: rxpp_loadmacro
+Command: "/opt/homebrew/bin/cmake" "-DRXPP_BIN=/Users/runner/work/_temp/build/bin/rxpp" "-DSOURCE_ROOT=/Users/runner/work/CREXX/CREXX" "-DWORK=/Users/runner/work/_temp/build/preprocessor/tests/rxpp_loadmacro" "-P" "/Users/runner/work/CREXX/CREXX/preprocessor/tests/run_rxpp_loadmacro.cmake"
+Directory: /Users/runner/work/_temp/build/preprocessor/tests
+"rxpp_loadmacro" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"rxpp_loadmacro" end time: Sep 16 08:01 UTC
+"rxpp_loadmacro" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1027/2526 Testing: rxc_srcmap
+1027/2526 Test: rxc_srcmap
+Command: "/opt/homebrew/bin/cmake" "-DRXC=/Users/runner/work/_temp/build/bin/rxc" "-DWORK=/Users/runner/work/_temp/build/compiler/tests/rxc_srcmap" "-P" "/Users/runner/work/CREXX/CREXX/compiler/tests/run_rxc_srcmap.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"rxc_srcmap" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   2.30 sec
+----------------------------------------------------------
+Test Passed.
+"rxc_srcmap" end time: Sep 16 08:01 UTC
+"rxc_srcmap" time elapsed: 00:00:02
+----------------------------------------------------------
+
+1538/2526 Testing: ts_parse_noopt
+1538/2526 Test: ts_parse_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "ts_parse_noopt" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsb/tests_functional
+"ts_parse_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: legacy parse helpers
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: legacy parse helpers]
+"ts_parse_noopt" end time: Sep 16 08:01 UTC
+"ts_parse_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1638/2526 Testing: ts_stem_noopt
+1638/2526 Test: ts_stem_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "ts_stem_noopt" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsb/tests_functional
+"ts_stem_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: stem
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"ts_stem_noopt" end time: Sep 16 08:01 UTC
+"ts_stem_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1640/2526 Testing: ts_rxjson_noopt
+1640/2526 Test: ts_rxjson_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "ts_rxjson_noopt" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsb/tests_functional
+"ts_rxjson_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: rxjson helpers
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: rxjson helpers]
+"ts_rxjson_noopt" end time: Sep 16 08:01 UTC
+"ts_rxjson_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1648/2526 Testing: ts_rxsocket_noopt
+1648/2526 Test: ts_rxsocket_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "ts_rxsocket_noopt" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsb/tests_functional
+"ts_rxsocket_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: rxsocket loopback
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: rxsocket loopback]
+"ts_rxsocket_noopt" end time: Sep 16 08:01 UTC
+"ts_rxsocket_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1381/2526 Testing: rxpp_smoke
+1381/2526 Test: rxpp_smoke
+Command: "/opt/homebrew/bin/cmake" "-DRXPP_BIN=/Users/runner/work/_temp/build/bin/rxpp" "-DRXC_BIN=/Users/runner/work/_temp/build/bin/rxc" "-DINPUT_FILE=/Users/runner/work/CREXX/CREXX/preprocessor/tests/rxpp_smoke.rxpp" "-DOUTPUT_FILE=/Users/runner/work/_temp/build/preprocessor/tests/rxpp_smoke.out.crexx" "-DMACLIB_FILE=/Users/runner/work/CREXX/CREXX/preprocessor/maclib.rexx" "-P" "/Users/runner/work/CREXX/CREXX/preprocessor/tests/run_rxpp_smoke.cmake"
+Directory: /Users/runner/work/_temp/build/preprocessor/tests
+"rxpp_smoke" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.56 sec
+----------------------------------------------------------
+Test Passed.
+"rxpp_smoke" end time: Sep 16 08:01 UTC
+"rxpp_smoke" time elapsed: 00:00:01
+----------------------------------------------------------
+
+1685/2526 Testing: ts_tinyexpr_noopt
+1685/2526 Test: ts_tinyexpr_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "ts_tinyexpr_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/rxfnsl"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsl/tests_functional
+"ts_tinyexpr_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: rxfnsl tinyexpr generated-shape demo
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: rxfnsl tinyexpr generated-shape demo]
+"ts_tinyexpr_noopt" end time: Sep 16 08:01 UTC
+"ts_tinyexpr_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1703/2526 Testing: rxfloat_contract_surface_coverage
+1703/2526 Test: rxfloat_contract_surface_coverage
+Command: "/opt/homebrew/bin/cmake" "-DPROVIDER_SOURCE=/Users/runner/work/CREXX/CREXX/lib/plugins/float/rxfloat.c" "-DCONTRACT_SOURCE=/Users/runner/work/CREXX/CREXX/lib/plugins/float/rxfloat_test.crexx" "-P" "/Users/runner/work/CREXX/CREXX/lib/plugins/float/check_contract_surface.cmake"
+Directory: /Users/runner/work/_temp/build/lib/plugins/float
+"rxfloat_contract_surface_coverage" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+-- rxfloat contract suite covers 37 canonical and compatibility procedures
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"rxfloat_contract_surface_coverage" end time: Sep 16 08:01 UTC
+"rxfloat_contract_surface_coverage" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1717/2526 Testing: stack_test_noopt
+1717/2526 Test: stack_test_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "stack_test_noopt" "rx_stack" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/lib/plugins/stack
+"stack_test_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Create  0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+0000001   Record 1
+0000002   Record 2
+0000003   Record 3
+0000004   Record 4
+0000005   Record 5
+0000006   Record 6
+0000007   Record 7
+0000008   Record 8
+0000009   Record 9
+0000010   Record 10
+insert 
+2
+1
+11
+after insert 13
+0000001   Record 0a
+0000002   Record 1
+0000003   Record 1a
+0000004   Record 2
+0000005   Record 3
+0000006   Record 4
+0000007   Record 5
+0000008   Record 6
+0000009   Record 7
+0000010   Record 8
+0000011   Record 8a
+0000012   Record 9
+0000013   Record 10
+remove
+1
+0000001   Record 1
+0000002   Record 1a
+0000003   Record 2
+0000004   Record 3
+0000005   Record 4
+0000006   Record 5
+0000007   Record 6
+0000008   Record 7
+0000009   Record 8
+0000010   Record 8a
+0000011   Record 9
+0000012   Record 10
+move
+move 7 99 12
+0000001   Record 1
+0000002   Record 1a
+0000003   Record 2
+0000004   Record 3
+0000005   Record 4
+0000006   Record 5
+0000007   Record 7
+0000008   Record 8
+0000009   Record 8a
+0000010   Record 9
+0000011   Record 10
+0000012   Record 6
+move 9 0 0
+0000001   Record 8
+0000002   Record 1
+0000003   Record 1a
+0000004   Record 2
+0000005   Record 3
+0000006   Record 4
+0000007   Record 5
+0000008   Record 7
+0000009   Record 8a
+0000010   Record 9
+0000011   Record 10
+0000012   Record 6
+find item
+11
+0
+11
+0000001   Record 8
+0000002   Record 1
+0000003   Record 1a
+0000004   Record 2
+0000005   Record 3
+0000006   Record 4
+0000007   Record 5
+0000008   Record 7
+0000009   Record 8a
+0000010   Record 9
+0000011   Record 10
+0000012   Record 6
+SWAP  0
+0000001   Record 8
+0000002   Record 1
+0000003   Record 8a
+0000004   Record 2
+0000005   Record 3
+0000006   Record 4
+0000007   Record 5
+0000008   Record 7
+0000009   Record 1a
+0000010   Record 9
+0000011   Record 10
+0000012   Record 6
+XPULL 1 Record 6
+XPULL 2 Record 10
+XPULL 3 Record 9
+XPULL 4 Record 1a
+XPULL 5 Record 7
+XPULL 6 Record 5
+XPULL 7 Record 4
+XPULL 8 Record 3
+XPULL 9 Record 2
+XPULL 10 
+XPULL 11 Record 1
+XPULL 12 Record 8
+Queue 1 10
+Queue 2 10
+Queue 3 10
+Queue 4 10
+Queue 5 10
+Queue 6 10
+Queue 7 10
+Queue 8 10
+Queue 9 10
+Queue 10 10
+Queue 11 10
+Queue 12 10
+Queue 13 10
+Queue 14 10
+Queue 15 10
+0000001   Line 15
+0000002   Line 14
+0000003   Line 13
+0000004   Line 12
+0000005   Line 11
+0000006   Line 10
+0000007   Line 9
+0000008   Line 8
+0000009   Line 7
+0000010   Line 6
+0000011   Line 5
+0000012   Line 4
+0000013   Line 3
+0000014   Line 2
+0000015   Line 1
+XPULLQ 1 Line 15
+XPULLQ 2 Line 14
+XPULLQ 3 Line 13
+XPULLQ 4 Line 12
+XPULLQ 5 Line 11
+XPULLQ 6 Line 10
+XPULLQ 7 Line 9
+XPULLQ 8 Line 8
+XPULLQ 9 Line 7
+XPULLQ 10 Line 6
+XPULLQ 11 Line 5
+XPULLQ 12 Line 4
+XPULLQ 13 Line 3
+XPULLQ 14 Line 2
+XPULLQ 15 Line 1
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"stack_test_noopt" end time: Sep 16 08:01 UTC
+"stack_test_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1738/2526 Testing: strings_test_noopt
+1738/2526 Test: strings_test_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "strings_test_noopt" "rx_strings" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/lib/plugins/strings
+"strings_test_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"strings_test_noopt" end time: Sep 16 08:01 UTC
+"strings_test_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1742/2526 Testing: keyaccess_test_noopt
+1742/2526 Test: keyaccess_test_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "keyaccess_test_noopt" "rx_keyaccess" "/Users/runner/work/_temp/build/bin/library" "-a" "keyaccess_test_noopt"
+Directory: /Users/runner/work/_temp/build/lib/plugins/keyaccess
+"keyaccess_test_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+openkeying database...
+
+listkeying all keys:
+50 keys found
+Native traversal with readkey:
+first key: Tokyo
+value: Japan
+next key after readkey: New York City
+invalid firstkey handle: ERROR
+invalid nextkey handle: ERROR
+
+readkey values:
+City: Peru
+City: Colombia
+
+Deleting Berlin...
+
+Keys after deletion:
+49 keys found
+
+Database statistics:
+Statistics:
+Uptime: 0 seconds
+Reads: 0
+Writes: 50
+Deletes: 1
+Transactions: 2
+Total bytes written: 386
+Total bytes read: 0
+Cache hits: 3
+Cache misses: 0
+Cache hit ratio: 100.00%
+
+
+Validating database...
+No errors found
+
+Creating backup...
+
+Compacting database...
+
+Closing database...
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"keyaccess_test_noopt" end time: Sep 16 08:01 UTC
+"keyaccess_test_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1744/2526 Testing: keyaccess_compact_failure
+1744/2526 Test: keyaccess_compact_failure
+Command: "/Users/runner/work/_temp/build/lib/plugins/keyaccess/keyaccess_compact_failure_test"
+Directory: /Users/runner/work/_temp/build/lib/plugins/keyaccess
+"keyaccess_compact_failure" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"keyaccess_compact_failure" end time: Sep 16 08:01 UTC
+"keyaccess_compact_failure" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1767/2526 Testing: map_test_noopt
+1767/2526 Test: map_test_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "map_test_noopt" "rx_map" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/lib/plugins/map
+"map_test_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+map smoke
+map smoke ok
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[map smoke ok]
+"map_test_noopt" end time: Sep 16 08:01 UTC
+"map_test_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1782/2526 Testing: testStringArrayList_noopt
+1782/2526 Test: testStringArrayList_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testStringArrayList_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib"
+Directory: /Users/runner/work/_temp/build/lib/classlib/tests_functional
+"testStringArrayList_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: StringArrayList
+<end of output>
+Test time =   0.15 sec
+----------------------------------------------------------
+Test Passed.
+"testStringArrayList_noopt" end time: Sep 16 08:01 UTC
+"testStringArrayList_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1784/2526 Testing: testStringHashMap_noopt
+1784/2526 Test: testStringHashMap_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testStringHashMap_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib"
+Directory: /Users/runner/work/_temp/build/lib/classlib/tests_functional
+"testStringHashMap_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: StringHashMap
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"testStringHashMap_noopt" end time: Sep 16 08:01 UTC
+"testStringHashMap_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1389/2526 Testing: rxpp_diagnostics
+1389/2526 Test: rxpp_diagnostics
+Command: "/opt/homebrew/bin/cmake" "-DRXPP_BIN=/Users/runner/work/_temp/build/bin/rxpp" "-DWORK=/Users/runner/work/_temp/build/preprocessor/tests/rxpp_diagnostics" "-DMACLIB_FILE=/Users/runner/work/CREXX/CREXX/preprocessor/maclib.rexx" "-DMESSAGE_PATH=/Users/runner/work/CREXX/CREXX/messages" "-P" "/Users/runner/work/CREXX/CREXX/preprocessor/tests/run_rxpp_diagnostics.cmake"
+Directory: /Users/runner/work/_temp/build/preprocessor/tests
+"rxpp_diagnostics" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.72 sec
+----------------------------------------------------------
+Test Passed.
+"rxpp_diagnostics" end time: Sep 16 08:01 UTC
+"rxpp_diagnostics" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1824/2526 Testing: testOS_noopt
+1824/2526 Test: testOS_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testOS_noopt" "rx_keyaccess" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib_native"
+Directory: /Users/runner/work/_temp/build/lib/classlib/tests_functional
+"testOS_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+testOS ok
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"testOS_noopt" end time: Sep 16 08:01 UTC
+"testOS_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1814/2526 Testing: testJSON_noopt
+1814/2526 Test: testJSON_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testJSON_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib"
+Directory: /Users/runner/work/_temp/build/lib/classlib/tests_functional
+"testJSON_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+JSON Test 1
+===========
+Input: {"id":1001,"user":{"name":"Peter","roles":["admin","developer"],"enabled":true},"metrics":{"score":-42,"ratio":0.875,"growth":-1.25E-3},"items":[{"sku":"A-100","qty":2},{"sku":"B-200","qty":0}],"tags":[],"note":null}
+
+JSON definition to Tokenize: {"id":1001,"user":{"name":"Peter","roles":["admin","developer"],"enabled":true},"metrics":{"score":-42,"ratio":0.875,"growth":-1.25E-3},"items":[{"sku":"A-100","qty":2},{"sku":"B-200","qty":0}],"tags":[],"note":null}
+------------------------------------------------------------------------------------------
+No    Type                  Pos    Text
+------------------------------------------------------------------------------------------
+1     object_start            1    {
+2     string_literal          2    "id"
+3     colon                   6    :
+4     int_literal             7    1001
+5     comma                  11    ,
+6     string_literal         12    "user"
+7     colon                  18    :
+8     object_start           19    {
+9     string_literal         20    "name"
+10    colon                  26    :
+11    string_literal         27    "Peter"
+12    comma                  34    ,
+13    string_literal         35    "roles"
+14    colon                  42    :
+15    array_start            43    [
+16    string_literal         44    "admin"
+17    comma                  51    ,
+18    string_literal         52    "developer"
+19    array_end              63    ]
+20    comma                  64    ,
+21    string_literal         65    "enabled"
+22    colon                  74    :
+23    boolean_literal        75    true
+24    object_end             79    }
+25    comma                  80    ,
+26    string_literal         81    "metrics"
+27    colon                  90    :
+28    object_start           91    {
+29    string_literal         92    "score"
+30    colon                  99    :
+31    int_literal           100    -42
+32    comma                 103    ,
+33    string_literal        104    "ratio"
+34    colon                 111    :
+35    decimal_literal       112    0.875
+36    comma                 117    ,
+37    string_literal        118    "growth"
+38    colon                 126    :
+39    decimal_literal       127    -1.25E-3
+40    object_end            135    }
+41    comma                 136    ,
+42    string_literal        137    "items"
+43    colon                 144    :
+44    array_start           145    [
+45    object_start          146    {
+46    string_literal        147    "sku"
+47    colon                 152    :
+48    string_literal        153    "A-100"
+49    comma                 160    ,
+50    string_literal        161    "qty"
+51    colon                 166    :
+52    int_literal           167    2
+53    object_end            168    }
+54    comma                 169    ,
+55    object_start          170    {
+56    string_literal        171    "sku"
+57    colon                 176    :
+58    string_literal        177    "B-200"
+59    comma                 184    ,
+60    string_literal        185    "qty"
+61    colon                 190    :
+62    int_literal           191    0
+63    object_end            192    }
+64    array_end             193    ]
+65    comma                 194    ,
+66    string_literal        195    "tags"
+67    colon                 201    :
+68    array_start           202    [
+69    array_end             203    ]
+70    comma                 204    ,
+71    string_literal        205    "note"
+72    colon                 211    :
+73    null_literal          212    null
+74    object_end            216    }
+------------------------------------------------------------------------------------------
+Total tokens: 74
+------------------------------------------------------------------------------------------
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"testJSON_noopt" end time: Sep 16 08:01 UTC
+"testJSON_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1859/2526 Testing: rxunicode_contract_surface
+1859/2526 Test: rxunicode_contract_surface
+Command: "/opt/homebrew/bin/cmake" "-DSOURCE=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/rexx/unicode.crexx" "-DDOC=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/rexx/unicode.md" "-DUSER_DOC=/Users/runner/work/CREXX/CREXX/docs/books/crexx_library_reference/unicode.md" "-DNORMALIZATION_TEST=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_normalization.crexx" "-DCASE_MAPPING_TEST=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_case_mapping.crexx" "-DCASEFOLD_TEST=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_casefold.crexx" "-DGRAPHEME_TEST=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_grapheme.crexx" "-DCODEC_TEST=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_codec.crexx" "-P" "/Users/runner/work/CREXX/CREXX/lib/rxfnsg/rexx/../unicode/check_casefold_contract.cmake"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/rexx
+"rxunicode_contract_surface" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"rxunicode_contract_surface" end time: Sep 16 08:01 UTC
+"rxunicode_contract_surface" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1796/2526 Testing: testObjectCollections_noopt
+1796/2526 Test: testObjectCollections_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testObjectCollections_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib"
+Directory: /Users/runner/work/_temp/build/lib/classlib/tests_functional
+"testObjectCollections_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: ObjectCollections
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"testObjectCollections_noopt" end time: Sep 16 08:01 UTC
+"testObjectCollections_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1865/2526 Testing: rcc5c_math_contract_surface_coverage
+1865/2526 Test: rcc5c_math_contract_surface_coverage
+Command: "/opt/homebrew/bin/cmake" "-DINTEGER_SOURCE=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/tests_functional/../rexx/integer.crexx" "-DINTEGER_CONTRACT=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/tests_functional/ts_math_integer_contract.crexx" "-DDECIMAL_SOURCE=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/tests_functional/../rexx/decimal.crexx" "-DDECIMAL_CONTRACT=/Users/runner/work/CREXX/CREXX/lib/rxfnsg/tests_functional/ts_math_decimal_contract.crexx" "-P" "/Users/runner/work/CREXX/CREXX/lib/rxfnsg/tests_functional/check_math_contract_surface.cmake"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"rcc5c_math_contract_surface_coverage" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+-- rxint contract covers 5 exposed procedures
+-- rxdecimal contract covers 7 exposed procedures
+-- RCC-5C decimal contract covers all required caller contexts
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rcc5c_math_contract_surface_coverage" end time: Sep 16 08:01 UTC
+"rcc5c_math_contract_surface_coverage" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1382/2526 Testing: rxpp_srcmap
+1382/2526 Test: rxpp_srcmap
+Command: "/opt/homebrew/bin/cmake" "-DRXPP_BIN=/Users/runner/work/_temp/build/bin/rxpp" "-DRXC_BIN=/Users/runner/work/_temp/build/bin/rxc" "-DINPUT_FILE=/Users/runner/work/CREXX/CREXX/preprocessor/tests/rxpp_srcmap.rxpp" "-DOUTPUT_FILE=/Users/runner/work/_temp/build/preprocessor/tests/rxpp_srcmap.out.crexx" "-DMACLIB_FILE=/Users/runner/work/CREXX/CREXX/preprocessor/maclib.rexx" "-P" "/Users/runner/work/CREXX/CREXX/preprocessor/tests/run_rxpp_srcmap.cmake"
+Directory: /Users/runner/work/_temp/build/preprocessor/tests
+"rxpp_srcmap" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.53 sec
+----------------------------------------------------------
+Test Passed.
+"rxpp_srcmap" end time: Sep 16 08:01 UTC
+"rxpp_srcmap" time elapsed: 00:00:01
+----------------------------------------------------------
+
+1868/2526 Testing: ts_math_integer_contract_rxtvm_noopt
+1868/2526 Test: ts_math_integer_contract_rxtvm_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxtvm" "ts_math_integer_contract_rxtvm_noopt" "/Users/runner/work/_temp/build/lib/rxfnsg/tests_functional/numeric_test_support" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsg"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"ts_math_integer_contract_rxtvm_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: RCC-5C exact integer contract
+<end of output>
+Test time =   0.26 sec
+----------------------------------------------------------
+Test Passed.
+"ts_math_integer_contract_rxtvm_noopt" end time: Sep 16 08:01 UTC
+"ts_math_integer_contract_rxtvm_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1866/2526 Testing: ts_math_integer_contract_rxbvm_noopt
+1866/2526 Test: ts_math_integer_contract_rxbvm_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxbvm" "ts_math_integer_contract_rxbvm_noopt" "/Users/runner/work/_temp/build/lib/rxfnsg/tests_functional/numeric_test_support" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsg"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"ts_math_integer_contract_rxbvm_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: RCC-5C exact integer contract
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"ts_math_integer_contract_rxbvm_noopt" end time: Sep 16 08:01 UTC
+"ts_math_integer_contract_rxbvm_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1870/2526 Testing: ts_math_decimal_contract_rxbvm_noopt
+1870/2526 Test: ts_math_decimal_contract_rxbvm_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxbvm" "ts_math_decimal_contract_rxbvm_noopt" "/Users/runner/work/_temp/build/lib/rxfnsg/tests_functional/numeric_test_support" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsg"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"ts_math_decimal_contract_rxbvm_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: RCC-5C decimal mathematics contract
+<end of output>
+Test time =   0.19 sec
+----------------------------------------------------------
+Test Passed.
+"ts_math_decimal_contract_rxbvm_noopt" end time: Sep 16 08:01 UTC
+"ts_math_decimal_contract_rxbvm_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1872/2526 Testing: ts_math_decimal_contract_rxtvm_noopt
+1872/2526 Test: ts_math_decimal_contract_rxtvm_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxtvm" "ts_math_decimal_contract_rxtvm_noopt" "/Users/runner/work/_temp/build/lib/rxfnsg/tests_functional/numeric_test_support" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsg"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"ts_math_decimal_contract_rxtvm_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: RCC-5C decimal mathematics contract
+<end of output>
+Test time =   0.16 sec
+----------------------------------------------------------
+Test Passed.
+"ts_math_decimal_contract_rxtvm_noopt" end time: Sep 16 08:01 UTC
+"ts_math_decimal_contract_rxtvm_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1033/2526 Testing: rxc_diagnostic_catalogs
+1033/2526 Test: rxc_diagnostic_catalogs
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/rxc_diagnostic_catalogs.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"rxc_diagnostic_catalogs" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+-- Diagnostic catalogue check ok: 472 base messages, 275 emitted codes
+
+<end of output>
+Test time =   3.48 sec
+----------------------------------------------------------
+Test Passed.
+"rxc_diagnostic_catalogs" end time: Sep 16 08:01 UTC
+"rxc_diagnostic_catalogs" time elapsed: 00:00:03
+----------------------------------------------------------
+
+1902/2526 Testing: ts_llm_providers_noopt
+1902/2526 Test: ts_llm_providers_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "ts_llm_providers_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsg"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"ts_llm_providers_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: rxfnsg llm provider helpers
+<end of output>
+Test time =   0.55 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: rxfnsg llm provider helpers]
+"ts_llm_providers_noopt" end time: Sep 16 08:01 UTC
+"ts_llm_providers_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1937/2526 Testing: testRexxValue_noopt
+1937/2526 Test: testRexxValue_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testRexxValue_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsc"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsc/tests_functional
+"testRexxValue_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+ok
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"testRexxValue_noopt" end time: Sep 16 08:01 UTC
+"testRexxValue_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1939/2526 Testing: testRexxRuntimePools_noopt
+1939/2526 Test: testRexxRuntimePools_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testRexxRuntimePools_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsc"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsc/tests_functional
+"testRexxRuntimePools_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+ok
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"testRexxRuntimePools_noopt" end time: Sep 16 08:01 UTC
+"testRexxRuntimePools_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1941/2526 Testing: testRexxClassicBifs_noopt
+1941/2526 Test: testRexxClassicBifs_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testRexxClassicBifs_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsc"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsc/tests_functional
+"testRexxClassicBifs_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+ok
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"testRexxClassicBifs_noopt" end time: Sep 16 08:01 UTC
+"testRexxClassicBifs_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2058/2526 Testing: testRexxScriptRuntime_noopt
+2058/2526 Test: testRexxScriptRuntime_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testRexxScriptRuntime_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsc" "/Users/runner/work/_temp/build/bin/rexxscript"
+Directory: /Users/runner/work/_temp/build/rexxscript/tests_functional
+"testRexxScriptRuntime_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: RexxScript runtime
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: RexxScript runtime]
+"testRexxScriptRuntime_noopt" end time: Sep 16 08:01 UTC
+"testRexxScriptRuntime_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2060/2526 Testing: testRexxScriptCompat_noopt
+2060/2526 Test: testRexxScriptCompat_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "testRexxScriptCompat_noopt" "/Users/runner/work/_temp/build/bin/library" "/Users/runner/work/_temp/build/bin/classlib" "/Users/runner/work/_temp/build/bin/rxfnsc" "/Users/runner/work/_temp/build/bin/rexxscript"
+Directory: /Users/runner/work/_temp/build/rexxscript/tests_functional
+"testRexxScriptCompat_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: evaluate helpers
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[PASS: evaluate helpers]
+"testRexxScriptCompat_noopt" end time: Sep 16 08:01 UTC
+"testRexxScriptCompat_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2062/2526 Testing: rexxscript_cli_smoke
+2062/2526 Test: rexxscript_cli_smoke
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/rexxscript/tests_functional/run_rexxscript_cli_smoke.cmake"
+Directory: /Users/runner/work/_temp/build/rexxscript/tests_functional
+"rexxscript_cli_smoke" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"rexxscript_cli_smoke" end time: Sep 16 08:01 UTC
+"rexxscript_cli_smoke" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2083/2526 Testing: rxas_optimizer_copy_acopy_opt
+2083/2526 Test: rxas_optimizer_copy_acopy_opt
+Command: "/opt/homebrew/bin/cmake" "-DRXAS=/Users/runner/work/_temp/build/bin/rxas" "-DRXDAS=/Users/runner/work/_temp/build/bin/rxdas" "-DSOURCE=/Users/runner/work/CREXX/CREXX/tests/rxas_optimizer/copy_acopy.rxas" "-DWORKING_DIRECTORY=/Users/runner/work/_temp/build/tests/rxas_optimizer" "-DCASE=copy_acopy_opt" "-DRXAS_FLAGS=-d" "-P" "/Users/runner/work/CREXX/CREXX/tests/rxas_optimizer/check_optimizer.cmake"
+Directory: /Users/runner/work/_temp/build/tests
+"rxas_optimizer_copy_acopy_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rxas_optimizer_copy_acopy_opt" end time: Sep 16 08:01 UTC
+"rxas_optimizer_copy_acopy_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2195/2526 Testing: benchmark_awfy_sieve_opt
+2195/2526 Test: benchmark_awfy_sieve_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_sieve_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_sieve_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_sieve repetitions=1 result=669
+PASS: AWFY Sieve
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_sieve_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_sieve_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2197/2526 Testing: benchmark_awfy_permute_opt
+2197/2526 Test: benchmark_awfy_permute_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_permute_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_permute_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_permute repetitions=1 result=8660
+PASS: AWFY Permute
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_permute_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_permute_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2199/2526 Testing: benchmark_awfy_mandelbrot_opt
+2199/2526 Test: benchmark_awfy_mandelbrot_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_mandelbrot_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_mandelbrot_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_mandelbrot_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_mandelbrot_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2201/2526 Testing: benchmark_awfy_mandelbrot_hoisted_control_opt
+2201/2526 Test: benchmark_awfy_mandelbrot_hoisted_control_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_mandelbrot_hoisted_control_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_mandelbrot_hoisted_control_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_mandelbrot_hoisted_control size=1 result=128
+PASS: AWFY Mandelbrot hoisted control
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_mandelbrot_hoisted_control_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_mandelbrot_hoisted_control_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1867/2526 Testing: ts_math_integer_contract_rxbvm_opt
+1867/2526 Test: ts_math_integer_contract_rxbvm_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/lib/rxfnsg/tests_functional/ts_math_integer_contract_rxbvm_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"ts_math_integer_contract_rxbvm_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: RCC-5C exact integer contract
+<end of output>
+Test time =   1.97 sec
+----------------------------------------------------------
+Test Passed.
+"ts_math_integer_contract_rxbvm_opt" end time: Sep 16 08:01 UTC
+"ts_math_integer_contract_rxbvm_opt" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2205/2526 Testing: benchmark_awfy_bounce_opt
+2205/2526 Test: benchmark_awfy_bounce_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_bounce_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_bounce_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_bounce_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_bounce_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2203/2526 Testing: benchmark_awfy_towers_opt
+2203/2526 Test: benchmark_awfy_towers_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_towers_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_towers_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_towers_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_towers_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1869/2526 Testing: ts_math_integer_contract_rxtvm_opt
+1869/2526 Test: ts_math_integer_contract_rxtvm_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/lib/rxfnsg/tests_functional/ts_math_integer_contract_rxtvm_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"ts_math_integer_contract_rxtvm_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: RCC-5C exact integer contract
+<end of output>
+Test time =   1.94 sec
+----------------------------------------------------------
+Test Passed.
+"ts_math_integer_contract_rxtvm_opt" end time: Sep 16 08:01 UTC
+"ts_math_integer_contract_rxtvm_opt" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2209/2526 Testing: benchmark_awfy_list_opt
+2209/2526 Test: benchmark_awfy_list_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_list_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_list_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_list_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_list_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2211/2526 Testing: benchmark_awfy_richards_opt
+2211/2526 Test: benchmark_awfy_richards_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_richards_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_richards_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_richards_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_richards_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2213/2526 Testing: benchmark_awfy_queens_opt
+2213/2526 Test: benchmark_awfy_queens_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_queens_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_queens_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_queens repetitions=1 result=1
+PASS: AWFY Queens
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_queens_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_queens_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2215/2526 Testing: benchmark_awfy_deltablue_opt
+2215/2526 Test: benchmark_awfy_deltablue_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_deltablue_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_deltablue_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_deltablue size=10 adaptation=stable-indexed-constraint-graph
+PASS: AWFY DeltaBlue
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_deltablue_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_deltablue_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2217/2526 Testing: benchmark_awfy_cd_opt
+2217/2526 Test: benchmark_awfy_cd_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_cd_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_cd_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_cd aircraft=2 frames=200 collisions=42 adaptation=indexed-red-black-tree-native-math
+PASS: AWFY CD
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_cd_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_cd_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2221/2526 Testing: benchmark_awfy_json_opt
+2221/2526 Test: benchmark_awfy_json_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_json_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_json_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_json repetitions=1 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+PASS: Full AWFY Json
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_json_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_json_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2223/2526 Testing: benchmark_json_parser_opt
+2223/2526 Test: benchmark_json_parser_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_json_parser_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_json_parser_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=json_parser repetitions=1 operations=8
+PASS: JSON Parser
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_json_parser_opt" end time: Sep 16 08:01 UTC
+"benchmark_json_parser_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2225/2526 Testing: benchmark_json_parse_opt
+2225/2526 Test: benchmark_json_parse_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_json_parse_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_json_parse_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=json_parse repetitions=1 operations=8
+PASS: JSON Parse
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_json_parse_opt" end time: Sep 16 08:01 UTC
+"benchmark_json_parse_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2227/2526 Testing: benchmark_json_query_opt
+2227/2526 Test: benchmark_json_query_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_json_query_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_json_query_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=json_query repetitions=1 operations=8
+PASS: JSON Query
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_json_query_opt" end time: Sep 16 08:01 UTC
+"benchmark_json_query_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1871/2526 Testing: ts_math_decimal_contract_rxbvm_opt
+1871/2526 Test: ts_math_decimal_contract_rxbvm_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/lib/rxfnsg/tests_functional/ts_math_decimal_contract_rxbvm_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"ts_math_decimal_contract_rxbvm_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: RCC-5C decimal mathematics contract
+<end of output>
+Test time =   2.09 sec
+----------------------------------------------------------
+Test Passed.
+"ts_math_decimal_contract_rxbvm_opt" end time: Sep 16 08:01 UTC
+"ts_math_decimal_contract_rxbvm_opt" time elapsed: 00:00:02
+----------------------------------------------------------
+
+2229/2526 Testing: benchmark_base64_roundtrip_opt
+2229/2526 Test: benchmark_base64_roundtrip_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_base64_roundtrip_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_base64_roundtrip_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=base64_roundtrip repetitions=1 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_base64_roundtrip_opt" end time: Sep 16 08:01 UTC
+"benchmark_base64_roundtrip_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2207/2526 Testing: benchmark_awfy_storage_opt
+2207/2526 Test: benchmark_awfy_storage_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_storage_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_storage_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+<end of output>
+Test time =   0.38 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_storage_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_storage_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2231/2526 Testing: benchmark_base64_roundtrip_v2_opt
+2231/2526 Test: benchmark_base64_roundtrip_v2_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_base64_roundtrip_v2_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_base64_roundtrip_v2_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=base64_roundtrip_v2 repetitions=1 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip v2
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_base64_roundtrip_v2_opt" end time: Sep 16 08:01 UTC
+"benchmark_base64_roundtrip_v2_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2233/2526 Testing: benchmark_parse_frozen_opt
+2233/2526 Test: benchmark_parse_frozen_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_parse_frozen_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_parse_frozen_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=parse_frozen repetitions=1 checksum=83
+PASS: Frozen PARSE
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_parse_frozen_opt" end time: Sep 16 08:01 UTC
+"benchmark_parse_frozen_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2239/2526 Testing: benchmark_awfy_nbody_opt
+2239/2526 Test: benchmark_awfy_nbody_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_nbody_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_nbody_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_nbody steps=1 energy=-0.169074954025067
+PASS: AWFY NBody
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_nbody_opt" end time: Sep 16 08:01 UTC
+"benchmark_awfy_nbody_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2242/2526 Testing: benchmark_rexxcps_levelb_opaque_opt
+2242/2526 Test: benchmark_rexxcps_levelb_opaque_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_rexxcps_levelb_opaque_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_rexxcps_levelb_opaque_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+----- REXXCPS 2.2d-opaque -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g31d4974f1245 20260916
+       System is: macOS
+        Averaged: 1 x 1 iterations of 1000 clauses (over 0.0 s)
+
+     Performance: -3300330 cREXX clauses per second
+
+OBSERVED: A|1|69|1.22694
+PASS: RexxCPS 2.2d cREXX opaque/result-observation diagnostic
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_rexxcps_levelb_opaque_opt" end time: Sep 16 08:01 UTC
+"benchmark_rexxcps_levelb_opaque_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2445/2526 Testing: rxpa_dynlink_run_noopt
+2445/2526 Test: rxpa_dynlink_run_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "rxpa_dynlink_run_noopt" "rx_rxpa_dynlink" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/tests/rxpa
+"rxpa_dynlink_run_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+RXPA Dynamic Link Test
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rxpa_dynlink_run_noopt" end time: Sep 16 08:01 UTC
+"rxpa_dynlink_run_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2447/2526 Testing: rxpa_staticlink_run_noopt
+2447/2526 Test: rxpa_staticlink_run_noopt
+Command: "/Users/runner/work/_temp/build/tests/testvm" "rxpa_staticlink_run_noopt" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/tests/rxpa
+"rxpa_staticlink_run_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+RXPA Compiler Static Link Test
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rxpa_staticlink_run_noopt" end time: Sep 16 08:01 UTC
+"rxpa_staticlink_run_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1873/2526 Testing: ts_math_decimal_contract_rxtvm_opt
+1873/2526 Test: ts_math_decimal_contract_rxtvm_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/lib/rxfnsg/tests_functional/ts_math_decimal_contract_rxtvm_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsg/tests_functional
+"ts_math_decimal_contract_rxtvm_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: RCC-5C decimal mathematics contract
+<end of output>
+Test time =   2.14 sec
+----------------------------------------------------------
+Test Passed.
+"ts_math_decimal_contract_rxtvm_opt" end time: Sep 16 08:01 UTC
+"ts_math_decimal_contract_rxtvm_opt" time elapsed: 00:00:02
+----------------------------------------------------------
+
+2460/2526 Testing: rxpa_signal_funcs_dynamic_noopt
+2460/2526 Test: rxpa_signal_funcs_dynamic_noopt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/rxpa/rxpa_signal_funcs_dynamic_noopt_checked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/rxpa
+"rxpa_signal_funcs_dynamic_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+RXPA Signal Tests
+PANIC: This is a test signal (SIGNAL ERROR)
+-- EXPECTED FAILURE: native SIGNAL ERROR message, exit code 3; test passed
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"rxpa_signal_funcs_dynamic_noopt" end time: Sep 16 08:01 UTC
+"rxpa_signal_funcs_dynamic_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2480/2526 Testing: rxpa_native_payload_funcs_dynamic_noopt
+2480/2526 Test: rxpa_native_payload_funcs_dynamic_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "rxpa_native_payload_funcs_dynamic_noopt" "rx_testfuncs_dynamic" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/tests/rxpa
+"rxpa_native_payload_funcs_dynamic_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+RXPA Native Payload Tests
+OK
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[.*OK.*]
+"rxpa_native_payload_funcs_dynamic_noopt" end time: Sep 16 08:01 UTC
+"rxpa_native_payload_funcs_dynamic_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2484/2526 Testing: rxpa_native_unwind_funcs_dynamic_noopt
+2484/2526 Test: rxpa_native_unwind_funcs_dynamic_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "rxpa_native_unwind_funcs_dynamic_noopt" "rx_testfuncs_dynamic" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/tests/rxpa
+"rxpa_native_unwind_funcs_dynamic_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+PASS: Native Signal Call Mapping
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[.*PASS: Native Signal Call Mapping.*]
+"rxpa_native_unwind_funcs_dynamic_noopt" end time: Sep 16 08:01 UTC
+"rxpa_native_unwind_funcs_dynamic_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2488/2526 Testing: rxpa_mult_test_noopt
+2488/2526 Test: rxpa_mult_test_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "rxpa_mult_test_noopt" "rx_plugin1" "rx_plugin2" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/tests/rxpa/multplugins
+"rxpa_mult_test_noopt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+Multiple plugin test
+In plugin1.echo()
+Hello from plugin1
+In plugin2.echo()
+Hello from plugin2
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Pass Reason:
+Required regular expression found. Regex=[plugin1[^\1]*plugin2]
+"rxpa_mult_test_noopt" end time: Sep 16 08:01 UTC
+"rxpa_mult_test_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2490/2526 Testing: rxbin_autoload_contract
+2490/2526 Test: rxbin_autoload_contract
+Command: "/opt/homebrew/bin/cmake" "-DRXC=/Users/runner/work/_temp/build/bin/rxc" "-DRXAS=/Users/runner/work/_temp/build/bin/rxas" "-DRXDAS=/Users/runner/work/_temp/build/bin/rxdas" "-DRXLINK=/Users/runner/work/_temp/build/bin/rxlink" "-DRXVM=/Users/runner/work/_temp/build/bin/rxvm" "-DRXBVM=/Users/runner/work/_temp/build/bin/rxbvm" "-DPROVIDER_SOURCE=/Users/runner/work/CREXX/CREXX/tests/autoload/provider/provider.crexx" "-DCONSUMER_SOURCE=/Users/runner/work/CREXX/CREXX/tests/autoload/consumer/consumer.crexx" "-DWORK=/Users/runner/work/_temp/build/tests/autoload/work" "-P" "/Users/runner/work/CREXX/CREXX/tests/autoload/check_autoload.cmake"
+Directory: /Users/runner/work/_temp/build/tests/autoload
+"rxbin_autoload_contract" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"rxbin_autoload_contract" end time: Sep 16 08:01 UTC
+"rxbin_autoload_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2491/2526 Testing: crexx_help_smoke
+2491/2526 Test: crexx_help_smoke
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_help_smoke.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_help_smoke" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_help_smoke" end time: Sep 16 08:01 UTC
+"crexx_help_smoke" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2457/2526 Testing: rxpa_classdecl_static_compile_opt
+2457/2526 Test: rxpa_classdecl_static_compile_opt
+Command: "/Users/runner/work/_temp/build/tests/rxc_classdecl_static" "-i" "/Users/runner/work/_temp/build/bin;/Users/runner/work/_temp/build/tests/rxpa" "-o" "rxpa_classdecl_static_compile_opt" "/Users/runner/work/CREXX/CREXX/tests/rxpa/rxpa_classdecl.crexx"
+Directory: /Users/runner/work/_temp/build/tests/rxpa
+"rxpa_classdecl_static_compile_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.60 sec
+----------------------------------------------------------
+Test Passed.
+"rxpa_classdecl_static_compile_opt" end time: Sep 16 08:01 UTC
+"rxpa_classdecl_static_compile_opt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2237/2526 Testing: benchmark_rexxcps_levelb_opt
+2237/2526 Test: benchmark_rexxcps_levelb_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_rexxcps_levelb_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_rexxcps_levelb_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g31d4974f1245 20260916
+       System is: macOS
+REXXCPS-PROVENANCE contract=noncanonical-smoke argv_count=2 initial_count=10 averaging=100
+NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100
+        Averaged: 180 x 100 iterations of 1000 clauses (over 1.4 s)
+REXXCPS-EFFECTIVE contract=noncanonical-smoke initial_count=10 effective_count=180 averaging=100 calibrated=1
+
+     Performance: 12874459 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port
+<end of output>
+Test time =   1.54 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_rexxcps_levelb_opt" end time: Sep 16 08:01 UTC
+"benchmark_rexxcps_levelb_opt" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2492/2526 Testing: crexx_headerless_simple_smoke
+2492/2526 Test: crexx_headerless_simple_smoke
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_headerless_smoke.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_headerless_simple_smoke" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.44 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_headerless_simple_smoke" end time: Sep 16 08:01 UTC
+"crexx_headerless_simple_smoke" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2244/2526 Testing: benchmark_runner_opt
+2244/2526 Test: benchmark_runner_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_runner_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_runner_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version,vm_role,result_role
+rexxcps,rxvm,opt,1,1999127000,1999127000,1999127000,1999127000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g31d4974f1245 20260916,product,process-smoke
+<end of output>
+Test time =   2.08 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_runner_opt" end time: Sep 16 08:01 UTC
+"benchmark_runner_opt" time elapsed: 00:00:02
+----------------------------------------------------------
+
+2496/2526 Testing: crexx_args_smoke
+2496/2526 Test: crexx_args_smoke
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_args_smoke.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_args_smoke" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.71 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_args_smoke" end time: Sep 16 08:01 UTC
+"crexx_args_smoke" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2497/2526 Testing: crexx_rexxscript_smoke
+2497/2526 Test: crexx_rexxscript_smoke
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_rexxscript_smoke.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_rexxscript_smoke" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.66 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_rexxscript_smoke" end time: Sep 16 08:01 UTC
+"crexx_rexxscript_smoke" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2498/2526 Testing: crexx_levelc_classic_runtime_smoke
+2498/2526 Test: crexx_levelc_classic_runtime_smoke
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_levelc_classic_runtime_smoke.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_levelc_classic_runtime_smoke" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.38 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_levelc_classic_runtime_smoke" end time: Sep 16 08:01 UTC
+"crexx_levelc_classic_runtime_smoke" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2499/2526 Testing: crexx_status_diagnostics
+2499/2526 Test: crexx_status_diagnostics
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_status_diagnostics.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_status_diagnostics" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.46 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_status_diagnostics" end time: Sep 16 08:01 UTC
+"crexx_status_diagnostics" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2507/2526 Testing: crexx_rxpp_builddir
+2507/2526 Test: crexx_rxpp_builddir
+Command: "/opt/homebrew/bin/cmake" "-DCREXX=/Users/runner/work/_temp/build/bin/crexx" "-DWORK_ROOT=/Users/runner/work/_temp/build/crexx_driver/tests/crexx_rxpp_builddir_ws" "-P" "/Users/runner/work/CREXX/CREXX/bin/tests/crexx_rxpp_builddir.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_rxpp_builddir" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.72 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_rxpp_builddir" end time: Sep 16 08:01 UTC
+"crexx_rxpp_builddir" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2508/2526 Testing: crexx_rxpp_metadata_link
+2508/2526 Test: crexx_rxpp_metadata_link
+Command: "/opt/homebrew/bin/cmake" "-DCREXX=/Users/runner/work/_temp/build/bin/crexx" "-DRXVME=/Users/runner/work/_temp/build/bin/rxvme" "-DRXPP=/Users/runner/work/_temp/build/bin/rxpp" "-DMACLIB=/Users/runner/work/_temp/build/bin/maclib.rexx" "-DWORK_ROOT=/Users/runner/work/_temp/build/crexx_driver/tests/rxpp_metadata_link" "-DCASE=link" "-P" "/Users/runner/work/CREXX/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_rxpp_metadata_link" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   3.02 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_rxpp_metadata_link" end time: Sep 16 08:01 UTC
+"crexx_rxpp_metadata_link" time elapsed: 00:00:03
+----------------------------------------------------------
+
+2509/2526 Testing: crexx_rxpp_metadata_link_invalid_source
+2509/2526 Test: crexx_rxpp_metadata_link_invalid_source
+Command: "/opt/homebrew/bin/cmake" "-DCREXX=/Users/runner/work/_temp/build/bin/crexx" "-DRXVME=/Users/runner/work/_temp/build/bin/rxvme" "-DRXPP=/Users/runner/work/_temp/build/bin/rxpp" "-DMACLIB=/Users/runner/work/_temp/build/bin/maclib.rexx" "-DWORK_ROOT=/Users/runner/work/_temp/build/crexx_driver/tests/rxpp_metadata_link_invalid_source" "-DCASE=link_invalid_source" "-P" "/Users/runner/work/CREXX/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_rxpp_metadata_link_invalid_source" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.75 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_rxpp_metadata_link_invalid_source" end time: Sep 16 08:01 UTC
+"crexx_rxpp_metadata_link_invalid_source" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2510/2526 Testing: crexx_rxpp_metadata_external_bare
+2510/2526 Test: crexx_rxpp_metadata_external_bare
+Command: "/opt/homebrew/bin/cmake" "-DCREXX=/Users/runner/work/_temp/build/bin/crexx" "-DRXVME=/Users/runner/work/_temp/build/bin/rxvme" "-DRXPP=/Users/runner/work/_temp/build/bin/rxpp" "-DMACLIB=/Users/runner/work/_temp/build/bin/maclib.rexx" "-DWORK_ROOT=/Users/runner/work/_temp/build/crexx_driver/tests/rxpp_metadata_external_bare" "-DCASE=external_bare" "-P" "/Users/runner/work/CREXX/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_rxpp_metadata_external_bare" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.38 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_rxpp_metadata_external_bare" end time: Sep 16 08:01 UTC
+"crexx_rxpp_metadata_external_bare" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2511/2526 Testing: crexx_rxpp_metadata_external_spaces
+2511/2526 Test: crexx_rxpp_metadata_external_spaces
+Command: "/opt/homebrew/bin/cmake" "-DCREXX=/Users/runner/work/_temp/build/bin/crexx" "-DRXVME=/Users/runner/work/_temp/build/bin/rxvme" "-DRXPP=/Users/runner/work/_temp/build/bin/rxpp" "-DMACLIB=/Users/runner/work/_temp/build/bin/maclib.rexx" "-DWORK_ROOT=/Users/runner/work/_temp/build/crexx_driver/tests/rxpp_metadata_external_spaces" "-DCASE=external_spaces" "-P" "/Users/runner/work/CREXX/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_rxpp_metadata_external_spaces" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.50 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_rxpp_metadata_external_spaces" end time: Sep 16 08:01 UTC
+"crexx_rxpp_metadata_external_spaces" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2512/2526 Testing: crexx_rxpp_metadata_external_names
+2512/2526 Test: crexx_rxpp_metadata_external_names
+Command: "/opt/homebrew/bin/cmake" "-DCREXX=/Users/runner/work/_temp/build/bin/crexx" "-DRXVME=/Users/runner/work/_temp/build/bin/rxvme" "-DRXPP=/Users/runner/work/_temp/build/bin/rxpp" "-DMACLIB=/Users/runner/work/_temp/build/bin/maclib.rexx" "-DWORK_ROOT=/Users/runner/work/_temp/build/crexx_driver/tests/rxpp_metadata_external_names" "-DCASE=external_names" "-P" "/Users/runner/work/CREXX/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_rxpp_metadata_external_names" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.52 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_rxpp_metadata_external_names" end time: Sep 16 08:01 UTC
+"crexx_rxpp_metadata_external_names" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2513/2526 Testing: crexx_rxpp_metadata_external_missing
+2513/2526 Test: crexx_rxpp_metadata_external_missing
+Command: "/opt/homebrew/bin/cmake" "-DCREXX=/Users/runner/work/_temp/build/bin/crexx" "-DRXVME=/Users/runner/work/_temp/build/bin/rxvme" "-DRXPP=/Users/runner/work/_temp/build/bin/rxpp" "-DMACLIB=/Users/runner/work/_temp/build/bin/maclib.rexx" "-DWORK_ROOT=/Users/runner/work/_temp/build/crexx_driver/tests/rxpp_metadata_external_missing" "-DCASE=external_missing" "-P" "/Users/runner/work/CREXX/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_rxpp_metadata_external_missing" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.64 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_rxpp_metadata_external_missing" end time: Sep 16 08:01 UTC
+"crexx_rxpp_metadata_external_missing" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2514/2526 Testing: crexx_rxpp_metadata_norun
+2514/2526 Test: crexx_rxpp_metadata_norun
+Command: "/opt/homebrew/bin/cmake" "-DCREXX=/Users/runner/work/_temp/build/bin/crexx" "-DRXVME=/Users/runner/work/_temp/build/bin/rxvme" "-DRXPP=/Users/runner/work/_temp/build/bin/rxpp" "-DMACLIB=/Users/runner/work/_temp/build/bin/maclib.rexx" "-DWORK_ROOT=/Users/runner/work/_temp/build/crexx_driver/tests/rxpp_metadata_norun" "-DCASE=norun" "-P" "/Users/runner/work/CREXX/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_rxpp_metadata_norun" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   2.85 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_rxpp_metadata_norun" end time: Sep 16 08:01 UTC
+"crexx_rxpp_metadata_norun" time elapsed: 00:00:02
+----------------------------------------------------------
+
+2515/2526 Testing: crexx_source_root_compile_only
+2515/2526 Test: crexx_source_root_compile_only
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_source_root_compile_only.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_source_root_compile_only" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.55 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_source_root_compile_only" end time: Sep 16 08:01 UTC
+"crexx_source_root_compile_only" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2519/2526 Testing: crexx_native_explicit_header_smoke
+2519/2526 Test: crexx_native_explicit_header_smoke
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_native_explicit_header_smoke.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_native_explicit_header_smoke" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.92 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_native_explicit_header_smoke" end time: Sep 16 08:01 UTC
+"crexx_native_explicit_header_smoke" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2521/2526 Testing: crexx_native_rx_hash_provider
+2521/2526 Test: crexx_native_rx_hash_provider
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_native_rx_hash_provider.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_native_rx_hash_provider" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.00 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_native_rx_hash_provider" end time: Sep 16 08:02 UTC
+"crexx_native_rx_hash_provider" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2522/2526 Testing: crexx_native_default_link_strip
+2522/2526 Test: crexx_native_default_link_strip
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/crexx_driver/tests/run_crexx_native_default_link_strip.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_native_default_link_strip" start time: Sep 16 08:02 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.77 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_native_default_link_strip" end time: Sep 16 08:02 UTC
+"crexx_native_default_link_strip" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2219/2526 Testing: benchmark_awfy_havlak_opt
+2219/2526 Test: benchmark_awfy_havlak_opt
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/tests/benchmarks/benchmark_awfy_havlak_opt_linked_runtime.cmake"
+Directory: /Users/runner/work/_temp/build/tests/benchmarks
+"benchmark_awfy_havlak_opt" start time: Sep 16 08:01 UTC
+Output:
+----------------------------------------------------------
+benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+PASS: AWFY Havlak
+<end of output>
+Test time =  22.05 sec
+----------------------------------------------------------
+Test Passed.
+"benchmark_awfy_havlak_opt" end time: Sep 16 08:02 UTC
+"benchmark_awfy_havlak_opt" time elapsed: 00:00:22
+----------------------------------------------------------
+
+920/2526 Testing: syntaxhighlight_trace_keywords
+920/2526 Test: syntaxhighlight_trace_keywords
+Command: "/opt/homebrew/bin/cmake" "-P" "/Users/runner/work/_temp/build/compiler/tests/syntaxhighlight_trace_keywords.cmake"
+Directory: /Users/runner/work/_temp/build/compiler/tests
+"syntaxhighlight_trace_keywords" start time: Sep 16 08:02 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.54 sec
+----------------------------------------------------------
+Test Passed.
+"syntaxhighlight_trace_keywords" end time: Sep 16 08:02 UTC
+"syntaxhighlight_trace_keywords" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1388/2526 Testing: rxpp_sh_tokens
+1388/2526 Test: rxpp_sh_tokens
+Command: "/opt/homebrew/bin/cmake" "-DRXPP_BIN=/Users/runner/work/_temp/build/bin/rxpp" "-DRXPP_SH_BIN=/Users/runner/work/_temp/build/bin/rxpp-sh" "-DPARSER_TESTER_BIN=/Users/runner/work/_temp/build/dslsyntax-tools/parser_tester" "-DMACLIB_FILE=/Users/runner/work/CREXX/CREXX/preprocessor/maclib.rexx" "-DDUMP_AST_FILE=/Users/runner/work/CREXX/CREXX/compiler/tests/highlighting/dump_ast.txt" "-DWORK=/Users/runner/work/_temp/build/preprocessor/tests/rxpp_sh_tokens" "-P" "/Users/runner/work/CREXX/CREXX/preprocessor/tests/run_rxpp_sh_tokens.cmake"
+Directory: /Users/runner/work/_temp/build/preprocessor/tests
+"rxpp_sh_tokens" start time: Sep 16 08:02 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.40 sec
+----------------------------------------------------------
+Test Passed.
+"rxpp_sh_tokens" end time: Sep 16 08:02 UTC
+"rxpp_sh_tokens" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1404/2526 Testing: ts_address_noopt
+1404/2526 Test: ts_address_noopt
+Command: "/Users/runner/work/_temp/build/bin/rxvm" "ts_address_noopt" "/Users/runner/work/_temp/build/bin/library"
+Directory: /Users/runner/work/_temp/build/lib/rxfnsb/tests_functional
+"ts_address_noopt" start time: Sep 16 08:02 UTC
+Output:
+----------------------------------------------------------
+COMMAND_AFTER_COMMAND
+<end of output>
+Test time =   0.41 sec
+----------------------------------------------------------
+Test Passed.
+"ts_address_noopt" end time: Sep 16 08:02 UTC
+"ts_address_noopt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2189/2526 Testing: QUIT
+2189/2526 Test: QUIT
+Command: "/Users/runner/work/_temp/build/tools/signal_tester" "QUIT" "QUIT Signal" "5" "/Users/runner/work/_temp/build/bin/rxvm" "intr_test"
+Directory: /Users/runner/work/_temp/build/tests/native_signals
+"QUIT" start time: Sep 16 08:02 UTC
+Output:
+----------------------------------------------------------
+Signal Tester
+ - Target Executable: /Users/runner/work/_temp/build/bin/rxvm
+ - Target Arguments: "intr_test"
+ - Signal: QUIT
+ - Expected Substring (pre-signal) : 'waiting'
+ - Expected Substring (post-signal): 'QUIT Signal'
+ - Timeout: 5s
+ - Process started (PID: 17210)
+ - Found startup output 'waiting'
+ - Sending signal 3 (QUIT) to PID 17210
+ - Found expected output 'QUIT Signal'
+ - Child exit code: 1
+ - Signal Tester Finished
+<end of output>
+Test time =   0.20 sec
+----------------------------------------------------------
+Test Passed.
+"QUIT" end time: Sep 16 08:02 UTC
+"QUIT" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2191/2526 Testing: INT
+2191/2526 Test: INT
+Command: "/Users/runner/work/_temp/build/tools/signal_tester" "INT" "POSIX_INT Signal" "5" "/Users/runner/work/_temp/build/bin/rxvm" "intr_test"
+Directory: /Users/runner/work/_temp/build/tests/native_signals
+"INT" start time: Sep 16 08:02 UTC
+Output:
+----------------------------------------------------------
+Signal Tester
+ - Target Executable: /Users/runner/work/_temp/build/bin/rxvm
+ - Target Arguments: "intr_test"
+ - Signal: INT
+ - Expected Substring (pre-signal) : 'waiting'
+ - Expected Substring (post-signal): 'POSIX_INT Signal'
+ - Timeout: 5s
+ - Process started (PID: 17212)
+ - Found startup output 'waiting'
+ - Sending signal 2 (INT) to PID 17212
+ - Found expected output 'POSIX_INT Signal'
+ - Child exit code: 3
+ - Signal Tester Finished
+<end of output>
+Test time =   0.38 sec
+----------------------------------------------------------
+Test Passed.
+"INT" end time: Sep 16 08:02 UTC
+"INT" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2506/2526 Testing: crexx_project_build_contract
+2506/2526 Test: crexx_project_build_contract
+Command: "/opt/homebrew/bin/cmake" "-DCREXX=/Users/runner/work/_temp/build/bin/crexx" "-DRXVME=/Users/runner/work/_temp/build/bin/rxvme" "-DWORK_ROOT=/Users/runner/work/_temp/build/crexx_driver/tests/crexx_project_build_ws" "-DSOURCE_ROOT=/Users/runner/work/CREXX/CREXX/bin/tests/rexx_src" "-P" "/Users/runner/work/CREXX/CREXX/bin/tests/crexx_project_build.cmake"
+Directory: /Users/runner/work/_temp/build/crexx_driver/tests
+"crexx_project_build_contract" start time: Sep 16 08:02 UTC
+Output:
+----------------------------------------------------------
+-- project contract: clean optimized library build
+-- project contract: immediate project no-op
+-- project contract: changed declared source closure
+-- project contract: malformed dependency snapshot
+-- project contract: changed compiler option --nooptimize
+-- project contract: changed compiler option --optimize
+-- project contract: changed compiler option --import-rxas
+-- project contract: changed compiler option --no-localisation
+-- project contract: forced project rebuild
+-- project contract: changed compiler environment RXCP_DISABLE_EXIT=
+-- project contract: unchanged compiler environment RXCP_DISABLE_EXIT=
+-- project contract: changed compiler environment RXCP_DISABLE_EXIT=1
+-- project contract: unchanged compiler environment RXCP_DISABLE_EXIT=1
+-- project contract: changed compiler environment CREXX_DIAGNOSTIC_LOCALE=de_DE
+-- project contract: unchanged compiler environment CREXX_DIAGNOSTIC_LOCALE=de_DE
+-- project contract: restored compiler environment
+-- project contract: isolated toolchain build
+-- project contract: changed compiler content
+-- project contract: toolchain no-op
+-- project contract: extra provider compile
+-- project contract: extra provider assemble
+-- project contract: new implicit installed import
+-- project contract: explicit non-optimized library build
+-- project contract: optimized class-method library build
+-- project contract: execute optimized class-method library
+-- project contract: optimized class-method library no-op
+-- project contract: noopt class-method library build
+-- project contract: execute noopt class-method library
+-- project contract: noopt class-method library no-op
+-- project contract: optimized class-method program build
+-- project contract: execute optimized class-method program
+-- project contract: optimized class-method program no-op
+-- project contract: noopt class-method program build
+-- project contract: execute noopt class-method program
+-- project contract: noopt class-method program no-op
+-- project contract: initial source dependency program
+-- project contract: imported implementation edit
+-- project contract: exported contract edit
+-- project contract: restored imported implementation executes
+-- project contract: new source candidate
+-- project contract: excluded source changes namespace
+-- project contract: removed source candidate
+-- project contract: packaged provider library
+-- project contract: autoload consumer program
+-- project contract: execute autoload consumer
+-- project contract: native autoload consumer program
+-- project contract: native program immediate no-op
+-- project contract: execute native autoload consumer
+-- crexx project build clean/no-op/change/rebuild/noopt/class-method/autoload/failure-publication checks passed
+<end of output>
+Test time =  39.45 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_project_build_contract" end time: Sep 16 08:02 UTC
+"crexx_project_build_contract" time elapsed: 00:00:39
+----------------------------------------------------------
+
+End testing: Sep 16 08:02 UTC
+
+assembler =   0.17 sec*proc
+
+autoload =  39.62 sec*proc
+
+benchmark =  26.97 sec*proc
+
+binutils =   1.55 sec*proc
+
+build =  50.82 sec*proc
+
+canonical-contract =   2.08 sec*proc
+
+classlib =   0.04 sec*proc
+
+compiler =  15.75 sec*proc
+
+concurrency =   0.56 sec*proc
+
+concurrency-sp03 =   0.00 sec*proc
+
+concurrency-sp07 =   0.55 sec*proc
+
+contract =  10.66 sec*proc
+
+decimal =   4.59 sec*proc
+
+diagnostics =   7.02 sec*proc
+
+driver =  50.82 sec*proc
+
+essential =   1.62 sec*proc
+
+file =   0.03 sec*proc
+
+float =   0.03 sec*proc
+
+hash =   0.03 sec*proc
+
+imports =   1.35 sec*proc
+
+includes =   0.07 sec*proc
+
+incremental =  39.45 sec*proc
+
+indexed-red-black-tree-adaptation =   0.06 sec*proc
+
+integer =   4.49 sec*proc
+
+interpreter =   0.18 sec*proc
+
+language =  24.89 sec*proc
+
+levelc =   2.00 sec*proc
+
+levelg =   9.08 sec*proc
+
+library =   9.13 sec*proc
+
+linked_opt =  35.11 sec*proc
+
+linker =   0.17 sec*proc
+
+macros =   0.11 sec*proc
+
+math =   9.09 sec*proc
+
+native-adapter =   0.04 sec*proc
+
+native-math-control =   0.10 sec*proc
+
+native_signal =   0.58 sec*proc
+
+noncanonical =   1.54 sec*proc
+
+optimizer =   0.02 sec*proc
+
+optimizer-parity =  38.41 sec*proc
+
+optimizer-resistance =   0.05 sec*proc
+
+parallel =  39.45 sec*proc
+
+plugins =   0.03 sec*proc
+
+preprocessor =  12.67 sec*proc
+
+regression =  51.17 sec*proc
+
+rexxcps-smoke =   1.54 sec*proc
+
+runner =   2.08 sec*proc
+
+rxas =   0.02 sec*proc
+
+rxbvm =   4.55 sec*proc
+
+rxpa =   0.03 sec*proc
+
+rxtvm =   4.50 sec*proc
+
+sha256 =   0.03 sec*proc
+
+smoke = 131.14 sec*proc
+
+srcmap =   2.30 sec*proc
+
+stable-indexed-cfg-adaptation =  22.05 sec*proc
+
+stable-indexed-graph-adaptation =   0.04 sec*proc
+
+stage0 =   0.54 sec*proc
+
+stage2 =   0.01 sec*proc
+
+stage3 =   1.94 sec*proc
+
+stage4 =   1.85 sec*proc
+
+stage5 =   0.01 sec*proc
+
+standard-library-adaptation =   0.06 sec*proc
+
+syntax_highlighting =   0.96 sec*proc
+
+unicode =   0.01 sec*proc
+
+unit =   0.03 sec*proc
+
+utf =   0.00 sec*proc
+

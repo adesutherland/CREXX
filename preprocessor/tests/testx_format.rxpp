@@ -1,0 +1,163 @@
+options levelb
+import rxfnsb
+##cflags format 4buf nosrcmap
+
+/*
+   Larger deliberately unformatted REXX test program.
+   It is intended for the RXPP formatter, not as a style example.
+*/
+
+call main
+exit
+
+main: procedure expose names departments assignments
+names=.string[]
+departments=.string[]
+assignments=.string[]
+call initialiseData names,departments,assignments
+call printHeader
+call printPeople names,departments,assignments
+call printDepartmentReport names,departments,assignments
+call printProjectReport assignments
+call demonstrateControlFlow
+return
+
+initialiseData: procedure
+  arg names=.string[],departments=.string[],assignments=.string[]
+names[1]='alice'
+names[2]='bob'
+names[3]='carol'
+names[4]='dave'
+names[5]='erin'
+names[6]='frank'
+names[7]='grace'
+names[8]='heidi'
+departments[1]='sales'
+departments[2]='it'
+departments[3]='hr'
+assignments[1]='alice sales zeus'
+assignments[2]='bob sales zeus'
+assignments[3]='carol it apollo'
+assignments[4]='dave it apollo'
+assignments[5]='erin it apollo'
+assignments[6]='frank hr hera'
+assignments[7]='grace hr hera'
+assignments[8]='heidi sales apollo'
+return
+
+printHeader: procedure
+say
+say '============================================='
+say '        cREXX formatter demonstration'
+say '============================================='
+say 'The words DO, END and SELECT in this string'
+say 'must not influence indentation.'
+return
+
+printPeople: procedure
+  arg names=.string[],departments=.string[],assignments=.string[]
+i=1
+do while i<=names[0]
+    person=names[i]
+    say 'person:' person
+  if i=1 then do
+say '  first person'
+      end
+    else do
+  say '  subsequent person'
+end
+    i=i+1
+end
+return
+
+printDepartmentReport: procedure
+arg names=.string[],departments=.string[],assignments=.string[]
+say
+say 'Department report'
+do d=1 to departments[0]
+ department=departments[d]
+ say 'Department:' department
+ found=0
+ do n=1 to names[0]
+   person=names[n]
+   do a=1 to assignments[0]
+      entry=assignments[a]
+      if word(entry,1)=person & word(entry,2)=department then do
+         say '  ' person 'works here'
+         found=found+1
+      end
+   end
+ end
+ if found=0 then say '  no people found'
+end
+return
+
+printProjectReport: procedure
+arg assignments=.string[]
+say
+say 'Project report'
+projects=.string[]
+projects[1]='apollo'
+projects[2]='zeus'
+projects[3]='hera'
+do p=1 to projects[0]
+ project=projects[p]
+ say 'Project:' project
+ do i=1 to assignments[0]
+  entry=assignments[i]
+  if word(entry,3)=project then do
+   say '   'word(entry,1) 'from' word(entry,2)
+  end
+ end
+end
+return
+
+demonstrateControlFlow: procedure
+say
+say 'Control-flow demonstration'
+value=2
+select
+when value=1 then do
+say 'value one'
+end
+when value=2 then do
+say 'value two'
+if value=2 then do
+say 'nested value test'
+end
+end
+otherwise do
+say 'other value'
+end
+end
+
+counter=0
+do forever
+ counter=counter+1
+ if counter>3 then leave
+ if counter=2 then iterate
+ say 'counter:' counter
+end
+
+call labelledExample
+return
+
+labelledExample: procedure
+say 'labelled example'
+start: do i=1 to 3
+if i=2 then do
+say 'middle'
+end
+else say 'not middle'
+end
+return
+
+/* outer comment starts
+   this text contains DO and END
+   /* nested comment contains SELECT and WHEN */
+   the formatter must leave the comment text intact
+outer comment ends */
+
+helper: procedure
+  say 'helper called'
+  return

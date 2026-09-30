@@ -1,0 +1,18 @@
+In file included from /Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp:661:
+/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/generation.h:39:14: error: cannot combine with previous 'char' declaration specifier
+   39 |         char small[256];
+      |              ^
+<command line>:10:15: note: expanded from macro 'small'
+   10 | #define small char
+      |               ^
+In file included from /Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp:661:
+/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/generation.h:39:19: error: expected unqualified-id
+   39 |         char small[256];
+      |                   ^
+/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/generation.h:40:62: error: expected '(' for function-style cast or type construction
+   40 |         int length = llama_token_to_piece(vocab, token, small, sizeof(small), 0, false);
+      |                                                         ~~~~~^
+/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/generation.h:42:50: error: expected '(' for function-style cast or type construction
+   42 |         if (length >= 0) row.partial.append(small, size_t(length));
+      |                                             ~~~~~^
+4 errors generated.

@@ -1,0 +1,41 @@
+[0/2] Re-checking globbed directories...
+[1/3] Building C object interpreter/CMakeFiles/test_rxpa_host_services.dir/tests/test_rxpa_host_services.c.o
+/Users/adrian/CLionProjects/CREXX/interpreter/tests/test_rxpa_host_services.c:76:54: warning: incompatible pointer types passing 'rxpa_attribute_value[1]' (aka 'void *[1]') to parameter of type 'value **' (aka 'struct value **') [-Wincompatible-pointer-types]
+   76 |             rxvm_call_native_procedure(procedure, 1, argv, &ret, &sig);
+      |                                                      ^~~~
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmintp.h:722:51: note: passing argument to parameter 'argv' here
+  722 |                                           value **argv, value *ret,
+      |                                                   ^
+1 warning generated.
+[2/3] Linking C executable interpreter/test_rxpa_host_services
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1158: rxpa_host_text_services
+1/8 Test #1158: rxpa_host_text_services .................   Passed    0.88 sec
+    Start 1172: rxpa_static_catalogue_replay
+2/8 Test #1172: rxpa_static_catalogue_replay ............   Passed    0.01 sec
+    Start 1173: rxpa_static_session_lifecycle
+3/8 Test #1173: rxpa_static_session_lifecycle ...........   Passed    0.01 sec
+    Start 1174: rxpa_session_factory_failure_rollback
+4/8 Test #1174: rxpa_session_factory_failure_rollback ...   Passed    0.01 sec
+    Start 1175: rxpa_session_manifest_fail_closed
+5/8 Test #1175: rxpa_session_manifest_fail_closed .......   Passed    0.00 sec
+    Start 1177: rxpa_legacy_call_serialization
+6/8 Test #1177: rxpa_legacy_call_serialization ..........   Passed    0.00 sec
+    Start 1178: rxpa_process_reentrant_overlap
+7/8 Test #1178: rxpa_process_reentrant_overlap ..........   Passed    0.00 sec
+    Start 1183: rxpa_worker_startup_transition
+8/8 Test #1183: rxpa_worker_startup_transition ..........   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+comprehensive       =   0.92 sec*proc (8 tests)
+concurrency         =   0.04 sec*proc (6 tests)
+concurrency-sp01    =   0.04 sec*proc (6 tests)
+interpreter         =   0.92 sec*proc (8 tests)
+plugins             =   0.92 sec*proc (8 tests)
+regression          =   0.89 sec*proc (2 tests)
+rxpa                =   0.92 sec*proc (8 tests)
+worker              =   0.04 sec*proc (7 tests)
+
+Total Test time (real) =   0.98 sec

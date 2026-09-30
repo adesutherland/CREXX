@@ -1,0 +1,42 @@
+options levelg comments_dash
+namespace concurrency_process_outcomes
+import id_Id
+
+identifier: task = .string
+  generator = .Id()
+  return generator.uuid()
+
+broken: task = .int
+  arg text = .string
+  value = .int
+  value = text
+  return value
+
+main: procedure = .int
+  pool = .taskpool.process(1, 4)
+  scope = .taskscope.collectall(pool, 60000)
+  first = do parallel using scope
+    leave with identifier()
+  end
+  if length(first) <> 36 then return 1
+
+  caught = 0
+  failed_scope = .taskscope.collectall(pool, 60000)
+  do
+    ignored = do parallel using failed_scope
+      leave with broken("invalid integer")
+    end
+  on signal task_failure
+    caught = 1
+  end
+  if caught <> 1 then return 2
+
+  -- A reused process creates a fresh context and resolves its providers again.
+  next_scope = .taskscope.collectall(pool, 60000)
+  second = do parallel using next_scope
+    leave with identifier()
+  end
+  call pool.close()
+  if length(second) <> 36 | second = first then return 3
+  say "PASS: process providers and failure cleanup"
+  return 0

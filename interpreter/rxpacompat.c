@@ -17,9 +17,43 @@ typedef struct rxpa_compatibility_coordinator {
     unsigned char locked_mode;
 } rxpa_compatibility_coordinator;
 
+#ifdef CREXX_VM_SINGLE_THREADED
+/* Always use the nesting-aware callback path; no cross-thread transition. */
+static rxpa_compatibility_coordinator rxpa_coordinator = {0, 0, 0, 0, 1};
+#else
 static rxpa_compatibility_coordinator rxpa_coordinator;
+#endif
 
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXPA_COMPAT_THREAD_LOCAL
+#elif defined(_MSC_VER)
+#define RXPA_COMPAT_THREAD_LOCAL __declspec(thread)
+#else
+#define RXPA_COMPAT_THREAD_LOCAL __thread
+#endif
+static RXPA_COMPAT_THREAD_LOCAL rxpa_compatibility_context *rxpa_thread_contexts;
+static RXPA_COMPAT_THREAD_LOCAL size_t rxpa_callback_depth;
+static RXPA_COMPAT_THREAD_LOCAL unsigned char rxpa_thread_suspended;
+
+void rxpa_compatibility_callback_enter(void) {
+    if (rxpa_callback_depth == SIZE_MAX || rxpa_thread_suspended) abort();
+    rxpa_callback_depth++;
+}
+
+void rxpa_compatibility_callback_leave(void) {
+    if (!rxpa_callback_depth) abort();
+    rxpa_callback_depth--;
+}
+
+#if defined(CREXX_VM_SINGLE_THREADED)
+void rxpa_compatibility_enter(void) { rxpa_compatibility_callback_enter(); }
+void rxpa_compatibility_leave(void) { rxpa_compatibility_callback_leave(); }
+static void rxpa_coordinator_enter(void) {}
+static void rxpa_coordinator_leave(void) {}
+/* Waiting would require another execution thread and is a programming error. */
+static void rxpa_coordinator_wait(void) { abort(); }
+static void rxpa_coordinator_broadcast(void) {}
+#elif defined(_WIN32)
 #include <windows.h>
 
 static INIT_ONCE rxpa_compatibility_once = INIT_ONCE_STATIC_INIT;
@@ -42,9 +76,11 @@ void rxpa_compatibility_enter(void) {
     InitOnceExecuteOnce(&rxpa_compatibility_once,
                         rxpa_init_compatibility_lock, NULL, NULL);
     EnterCriticalSection(&rxpa_compatibility_lock);
+    rxpa_compatibility_callback_enter();
 }
 
 void rxpa_compatibility_leave(void) {
+    rxpa_compatibility_callback_leave();
     LeaveCriticalSection(&rxpa_compatibility_lock);
 }
 
@@ -90,9 +126,11 @@ void rxpa_compatibility_enter(void) {
         pthread_mutex_lock(&rxpa_compatibility_lock) != 0) {
         abort();
     }
+    rxpa_compatibility_callback_enter();
 }
 
 void rxpa_compatibility_leave(void) {
+    rxpa_compatibility_callback_leave();
     if (pthread_mutex_unlock(&rxpa_compatibility_lock) != 0) abort();
 }
 
@@ -130,6 +168,8 @@ void rxpa_compatibility_context_init(rxpa_compatibility_context *context,
     context->legacy_invoker_count = 0u;
     context->legacy_invoker_capacity = 0u;
     context->execution_depth = 0u;
+    context->execution_thread_next = NULL;
+    context->execution_parked = 0u;
     context->coordinator_next = NULL;
     context->direct_invoker = NULL;
     context->locked_invoker = NULL;
@@ -191,7 +231,8 @@ int rxpa_compatibility_bind_legacy(
 
     rxpa_coordinator_enter();
     while (rxpa_coordinator.transitioning &&
-           !(context->legacy_registered && context->execution_depth != 0u)) {
+           !(context->legacy_registered && context->execution_depth != 0u &&
+             !context->execution_parked)) {
         rxpa_coordinator_wait();
     }
     for (index = 0u; index < context->legacy_invoker_count; index++) {
@@ -240,7 +281,8 @@ int rxpa_compatibility_bind_legacy(
         rxpa_coordinator.legacy_contexts = context;
         rxpa_coordinator.legacy_context_count++;
         context->legacy_registered = 1u;
-        if (!rxpa_coordinator.locked_mode && context->execution_depth != 0u) {
+        if (!rxpa_coordinator.locked_mode && context->execution_depth != 0u &&
+            !context->execution_parked) {
             rxpa_coordinator.active_legacy_executions++;
         }
     }
@@ -261,7 +303,7 @@ int rxpa_compatibility_bind_legacy(
 
 void rxpa_compatibility_execution_enter(
         rxpa_compatibility_context *context) {
-    if (!context || !context->memory_worker) abort();
+    if (!context || !context->memory_worker || rxpa_thread_suspended) abort();
     rxpa_coordinator_enter();
     while (rxpa_coordinator.transitioning && context->legacy_registered &&
            context->execution_depth == 0u) {
@@ -271,22 +313,32 @@ void rxpa_compatibility_execution_enter(
         rxpa_coordinator_leave();
         abort();
     }
-    if (context->execution_depth++ == 0u && context->legacy_registered &&
-        !rxpa_coordinator.locked_mode) {
-        rxpa_coordinator.active_legacy_executions++;
+    if (context->execution_depth++ == 0u) {
+        context->execution_thread_next = rxpa_thread_contexts;
+        rxpa_thread_contexts = context;
+        if (context->legacy_registered && !rxpa_coordinator.locked_mode) {
+            rxpa_coordinator.active_legacy_executions++;
+        }
     }
     rxpa_coordinator_leave();
 }
 
 void rxpa_compatibility_execution_leave(
         rxpa_compatibility_context *context) {
-    if (!context || !context->memory_worker) abort();
+    if (!context || !context->memory_worker || rxpa_thread_suspended) abort();
     rxpa_coordinator_enter();
     if (context->execution_depth == 0u) {
         rxpa_coordinator_leave();
         abort();
     }
     context->execution_depth--;
+    if (context->execution_depth == 0u) {
+        rxpa_compatibility_context **link = &rxpa_thread_contexts;
+        while (*link && *link != context) link = &(*link)->execution_thread_next;
+        if (*link != context) abort();
+        *link = context->execution_thread_next;
+        context->execution_thread_next = NULL;
+    }
     if (context->execution_depth == 0u && context->legacy_registered &&
         !rxpa_coordinator.locked_mode) {
         if (rxpa_coordinator.active_legacy_executions == 0u) {
@@ -296,6 +348,42 @@ void rxpa_compatibility_execution_leave(
         rxpa_coordinator.active_legacy_executions--;
         rxpa_coordinator_broadcast();
     }
+    rxpa_coordinator_leave();
+}
+
+int rxpa_compatibility_suspend_thread(void) {
+    rxpa_compatibility_context *context;
+    if (rxpa_callback_depth || rxpa_thread_suspended) return 0;
+    rxpa_coordinator_enter();
+    for (context = rxpa_thread_contexts; context;
+         context = context->execution_thread_next) {
+        if (!context->execution_depth || context->execution_parked) abort();
+        if (context->legacy_registered && !rxpa_coordinator.locked_mode) {
+            if (!rxpa_coordinator.active_legacy_executions) abort();
+            rxpa_coordinator.active_legacy_executions--;
+        }
+        context->execution_parked = 1u;
+    }
+    rxpa_thread_suspended = 1u;
+    rxpa_coordinator_broadcast();
+    rxpa_coordinator_leave();
+    return 1;
+}
+
+void rxpa_compatibility_resume_thread(void) {
+    rxpa_compatibility_context *context;
+    if (!rxpa_thread_suspended) abort();
+    rxpa_coordinator_enter();
+    while (rxpa_coordinator.transitioning) rxpa_coordinator_wait();
+    for (context = rxpa_thread_contexts; context;
+         context = context->execution_thread_next) {
+        if (!context->execution_depth || !context->execution_parked) abort();
+        context->execution_parked = 0u;
+        if (context->legacy_registered && !rxpa_coordinator.locked_mode) {
+            rxpa_coordinator.active_legacy_executions++;
+        }
+    }
+    rxpa_thread_suspended = 0u;
     rxpa_coordinator_leave();
 }
 
@@ -328,6 +416,8 @@ void rxpa_compatibility_context_destroy(rxpa_compatibility_context *context) {
     context->legacy_invoker_count = 0u;
     context->legacy_invoker_capacity = 0u;
     context->execution_depth = 0u;
+    context->execution_thread_next = NULL;
+    context->execution_parked = 0u;
     context->coordinator_next = NULL;
     context->direct_invoker = NULL;
     context->locked_invoker = NULL;

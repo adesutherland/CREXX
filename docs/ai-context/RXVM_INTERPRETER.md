@@ -2,6 +2,31 @@
 
 The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design supports portable switch dispatch and, on GNU/Clang-family compilers, direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `007`, a coordinated compatibility break with no 006 reader. Its linker-sealed, text-backed/numeric-ID semantic graph, rule-neutral query surface, numeric type/member/factory operands, and follow-on cache/overlay design are specified in [RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
 
+The CLI `-E encoding` selects the page for subsequently opened VM application
+text files. It does not transcode RXBIN or explicit `.binary` streams. Native
+platform builds use the shared seven-page selector; ordinary desktop selection
+remains UTF-8.
+
+The opt-in [single-threaded application port](../../ports/single-threaded/README.md)
+uses the same switch VM, 64-bit Rexx integers and RXBIN 007. `NTHREADED` alone
+only selects dispatch and leaves ordinary OS workers enabled. The port's
+explicit single-thread configuration removes executors/OS workers and keeps
+per-context execution-owner bookkeeping, nested active-context restoration and
+allocator ownership. It must not be called by multiple OS threads or
+asynchronous callbacks. Unavailable channel/socket/clock operations raise
+`NOT_IMPLEMENTED` (12); static-only loading and process-worker entry fail
+explicitly. The port guide owns its supported option bundle and tests.
+
+On native CMS/TSO builds, UTF READLINE/FREADLINE/FREADCDPT decode IBM1047
+stdin through `platform_text_getc`. File text streams already retain their
+selected codec. SAY and UTF text stdout/stderr writes use
+`platform_console_text_write`, independently of `-E`; BYTE reads and byte/binary
+instructions remain raw. Native diagnostics, including allocation-free panic
+output, use the same external console page. Default SAY/SAYX and UTF console
+FWRITE/FWRITECDPT raise `UNICODE_ERROR` for conversion failure and `NOTREADY`
+for output/flush failure. Custom SAY callbacks retain their output policy and
+void ABI. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md) for sequential stream and SDK limits.
+
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
@@ -104,6 +129,20 @@ required provider-resolution failure stops `rxvm_run()`
 before `main`. An optional record permits provider discovery to miss, but does
 not suppress the ordinary unresolved-procedure checks if the callable is
 actually required by the program.
+
+Native interface factories retain concrete callable/provider dependencies even
+when the consumer has no direct call to an implementing class. Runtime factory
+selection still chooses among loaded candidates; discovery uses the same
+checked provider metadata and trusted roots as other native imports.
+
+The internal `rxvm_run_external_status()` boundary is used by typed worker
+execution and Rexx callbacks from `CALLMETHOD`. Its callers provide a fresh
+external return cell. It captures unhandled signals separately and reports zero
+for successful returns, including nonzero/wide integers and strings or objects
+whose independent physical integer field is nonzero. Startup and nonzero EXIT
+failures remain failures. The historical `run()` process-status contract is
+unchanged. Permanent controls include `tests/rxpa/rxpa_objects_text_worker.crexx`
+and the existing real signal/unwind and worker executor tests.
 
 ## 2. Core Internal Structs
 
@@ -586,15 +625,29 @@ code.
 Every native `proc_runtime` carries an internal capability word in the 64-bit
 alignment slot after `locals` and a load-selected invoker. A procedure from a
 plugin with a valid version-1 `PROCESS_REENTRANT` manifest binds permanently to
-the direct adapter. An unmarked procedure also binds direct while exactly one
-legacy-capable VM is live. Registering a second legacy-capable VM quiesces
+the direct adapter. An unmarked procedure binds a direct legacy adapter while
+exactly one legacy-capable VM is live. That adapter records callback entry/exit
+in thread-local state. Registering a second legacy-capable VM quiesces
 direct legacy execution, rebinds all live legacy invoker slots to the recursive
 locked adapter and makes that mode sticky for the process lifetime. A
 reentrant-only VM is not registered with this legacy coordinator and cannot
 cause the transition.
 
 `run()` announces and leaves the VM execution boundary to the cold coordinator;
-load and teardown register or remove owned invoker slots. Ordinary native calls
+each thread retains an allocation-free list of its active contexts, including
+nested A -> B -> A execution. Synchronous attached-worker startup parks every
+context on that thread without changing its execution depth, allowing a child
+to complete a cold legacy transition. Every success/failure path resumes the
+parent after any transition, including cleanup/join of partially started workers.
+Startup inside a live legacy callback or while holding the recursive
+compatibility lock returns `RXVM_EXECUTOR_WORKER_START_FAILED`, mapped to channel
+provider failure. Such callbacks can still hold shared plugin state and cannot
+be declared quiescent. This covers protected initialization and native-payload
+callbacks as well as procedure callbacks; ordinary recursive legacy calls remain
+supported. Process-reentrant and session-affine procedure adapters retain their
+separate call paths.
+
+Load and teardown register or remove owned invoker slots. Ordinary native calls
 load the already-selected invoker and contain no capability branch, catalogue
 lock or coordinator lock. Plugin initialization remains serialized because
 legacy dynamic plugins copy the helper table into the DSO-static
@@ -764,10 +817,12 @@ policy adds no public worker/channel API, plugin ABI or scheduling contract.
 
 The public RXAS channel boundary is implemented without exposing a
 public RXPA threading ABI. Opcodes `650..654` implement `chanopen`,
-`chanstart`, `chanwait`, `chancancel` and `chanclose` in the shared VM core, so
+`chanstart`, `chanwait`, `chancancel` and `chanclose`; opcode `659` adds
+`chanrelease` in the shared VM core, so
 `rxbvm` and `rxtvm` execute the same logical behavior. They require RXBIN 007
 feature bit `1 << 3`, return operation statuses rather than VM signals, remain
 opaque optimizer barriers and are outlined/cold under profile-20.
+Request release additionally requires RXBIN feature bit `1 << 7`.
 
 Each `rxvm_context` owns a generation-checked table of channel and ticket
 capabilities. Handles encode their execution owner, kind, slot and generation;
@@ -776,17 +831,32 @@ not transferable `ChannelValue`. Context teardown cancel-closes every live
 channel, joins its workers and releases all tickets/requests before the runtime
 provider state and sealed generation are destroyed.
 
+Successful observation retains ticket ownership until explicit `chanrelease`
+or channel close. Release requires observation, destroys the provider request
+with physical thread/worker detachment, and only then recycles its slot.
+Destruction failure preserves ownership for retry. Slots retire on generation
+wrap. A free list plus per-channel live/unobserved lists bounds lookup work by
+the current request set; provider lists support direct unlink. A failed request
+destructor during close leaves the closing channel retryable instead of
+discarding still-owned request state.
+
 The runtime-owned provider registry validates complete private descriptors,
 rejects duplicate names/codes atomically, pins provider/module lifetime and is
 seeded with the core type `1` local-thread descriptor. An internal fake
 extension fixture proves register/open/operate/close/unload sequencing without
 publishing a plugin ABI. `chanopen` validates its canonical RXCV pool
-configuration, required capabilities and the controller's sealed bytecode-only
-program generation, then creates an attached executor over that same
-generation. A program containing native/plugin modules may still execute
-normally, but local `chanopen` reports provider unavailability when the image
-cannot be sealed for attached workers. This avoids making ordinary native
-program startup depend on channel eligibility.
+configuration, required capabilities and the controller's sealed bytecode
+generation, then creates an attached executor over that same generation.
+
+Native modules remain outside the immutable generation. Each attached worker
+inherits the controller's trusted provider location, resolves the generation's
+declarative `META_PROVIDER` requirements into a fresh native overlay, and then
+links, prepares and initializes its own VM. RXPA V2 therefore creates a normal
+context-local provider session for every worker. A missing or invalid declared
+provider fails pool construction as provider unavailable; a live provider
+handle or diagnostic state is never copied from the controller. The generic
+CRI-17 session fixture and the real `rxsqlite` attached-task tests cover both
+VM modes and optimized/non-optimized images.
 
 The core type `1` provider advertises bounded admission, cancellation,
 provider-owned deadlines and completion-order observation. Task envelopes name
@@ -805,7 +875,8 @@ canonical limits/order/flags/NaN.
 `lib/classlib/Concurrency.crexx` supplies the executable Level B pool, scope,
 task, target, context, completion, channel, value/codec, endpoint,
 service-reference and transfer-buffer surface. Inspection proves its runtime
-bridge is only the five channel instructions.
+bridge is only the six channel instructions. Its full-ticket index reuses and
+clears released entries; saved completions have independent value ownership.
 
 Core provider type `4` implements bounded C-owned byte endpoints and
 type `5` as structured child-process execution. Endpoint storage owns copied
@@ -827,6 +898,31 @@ that stops unexpectedly is terminated with a diagnostic instead of leaving a
 wait loop stalled. Controller-mode CREXX execution remains synchronous where
 it must preserve command-environment state.
 
+On POSIX, redirect shutdown can let a controlled child exit between a
+nonblocking wait and the group termination signal. Darwin may report `EPERM`
+while the child is exiting, before a nonblocking `waitid` can report its
+terminal state. The termination path retries the signal against the still-owned
+direct child; a successful direct signal confirms delivery or an already exited
+child. If that signal is also denied, only
+`waitid(WEXITED | WNOHANG | WNOWAIT)` confirmation of the owned child's exit
+can accept the result. A denied direct signal without that confirmation remains
+an error. The PID remains reserved until ordinary `waitpid` reaps it, then the
+existing group-only descendant cleanup runs. There is no direct-PID fallback
+after reaping.
+
+Concurrent launches inherit only their selected standard streams. POSIX redirect
+and launch-status pipe creation protects both ends with close-on-exec under the
+same short launch mutex used by fork; pipe descriptors stay above 0..2. The
+child duplicates its own endpoints onto stdio before exec. Windows creates
+private pipes and uses spawn-owned inheritable standard-handle duplicates with
+an explicit HANDLE_LIST for every redirection combination, including inherited
+standard streams; no valid streams means inheritance is disabled. Parent stream
+flags are never changed. Startup cleanup releases duplicates on every path.
+Legacy string/array and byte-endpoint redirects share pipe creation and cleanup.
+FOPEN creates private files atomically (Windows N, Linux e, Darwin O_CLOEXEC),
+so no sibling can capture a temporary file in an open-to-clear interval.
+See `docs/planning/issue-701-resource-inheritance.md` for ownership and evidence.
+
 The certified ADDRESS exit and `_address.crexx` now adapt classic string/array
 redirects onto these two providers and apply captured output only on the
 controlling execution. The retired source mnemonics `spawn`, `redir2str`,
@@ -841,6 +937,16 @@ graph remains its own concatenated 007 container, with modules from that graph
 written together, so numeric callable/member identities are preserved. Native
 modules make the generation ineligible rather than being exposed through a
 new process ABI.
+
+The snapshot retains declarative `META_PROVIDER` requirements, including those
+in the embedded core libraries. The process pool also snapshots the controller's
+existing trusted provider search path and passes it through the private worker
+launch. Each request's fresh executor uses that path for its source context and
+worker contexts, resolving fresh native provider sessions as the local provider
+does. No native handles or sessions cross the process boundary, and no additional
+ambient search directories are introduced. The older file-backed executor entry
+point retains its empty provider-path default; internal callers that need declared
+providers use `rxvm_executor_create_with_provider_path` explicitly.
 
 The provider owns a bounded set of warm child VMs and a bounded admitted
 request count. Its private version-1 protocol uses
@@ -969,14 +1075,23 @@ type tests and interface dispatch. Graph-backed descriptors are materialized by
 name/length plus graph/ID identity and reach precomputed assignability and
 dispatch views. VM-only synthetic types use immutable static descriptors.
 Class factories stamp object values with `setobjtype`, and later VM lookups use
-that concrete descriptor when resolving interface member calls. Copy, move and
-zero operations therefore transfer or clear one pointer rather than duplicating
+that concrete descriptor when resolving interface member calls. C providers
+publish the same identity through the sized RXPA `object_set_type` host service.
+It resolves a loaded class before modifying the destination; native module
+metadata is materialized into a checked graph lazily and retained by that VM's
+module. Unknown/interface targets fail without changing the value; publication
+preserves the provider's representation and clears the uninitialized marker.
+Copy, move and zero operations therefore transfer or clear one pointer rather than duplicating
 name, length, graph and ID fields on every value.
 Bare object class defaults are represented as ordinary object type metadata plus
 the VM-private `RXFLAG_VM_OBJECT_UNINITIALIZED` flag. `setobjuninit` creates
 that state, while `setobjtype` clears it when a factory has produced an
 initialized object. The VM-private flag partition keeps this lifecycle marker
 out of public register flag writes such as `settp`.
+RXPA post-call UTF-8 validation refreshes text certificates without clearing
+this initialization marker, including on receivers/children untouched by a
+failing native method. String-writer helpers that reset value state must not
+be used for that validation-only operation.
 In UTF builds, `string_length` is the byte length while `string_chars` is the
 codepoint count. Any instruction that synthesizes or truncates a string must
 keep both in sync and reset the VM-private UTF lookup cache to the start of the
@@ -1263,9 +1378,18 @@ RXPA exposes the same nested runtime capability as `CALLMETHOD` (and the
 explicit-signal `CALLMETHODX`) in `crexxpa.h`. The VM derives the concrete class
 from the receiver's runtime type, resolves and signature-checks the canonical
 method descriptor through the ordinary runtime method registry, prepends the
-receiver to the argument vector, and enters `run()` recursively. The helper is
-synchronous and requires the current same-thread `rxvm_active_context`; it does
+receiver to the argument vector, and invokes the resolved body. Bytecode methods
+enter the owning worker recursively; native methods and factory match functions
+use the procedure's loaded RXPA session/legacy policy without creating a bytecode
+frame. The helper is synchronous and requires the current same-thread `rxvm_active_context`; it does
 not create a background VM or permit plugins to retain VM value handles.
+The callback entry saves/restores a separate signal outcome in active state.
+A signal escaping a nested Rexx method is returned to the native caller before
+terminal reporting, so an outer Rexx handler can catch it without a false panic.
+Native method signals likewise remain separate from integer results, even if
+the two numbers coincide. Callback integer results retain their full `rxinteger`
+width despite the legacy `run()` process status being an `int`. Outermost
+uncaught signals retain normal panic/location reporting.
 
 The ADDRESS sandbox/stem helpers use direct VM-layout mutation for the standard
 `.standardaddresssandbox` and `.standardaddressstem` classes, with nested method
@@ -1400,11 +1524,12 @@ usage errors. Use repeated `ADDRESS` statements or `ADDRESS CREXX "batch"` with
 input lines. `batch` skips blank lines and `--` comments and stops at the first
 non-zero return code.
 
-`demos/native/sqlite/` shows the database-oriented form of the native provider
-model. The provider routes by the ADDRESS environment name carried in the
-request (`SQLITE` initially), looks up a driver table, and then treats SQL
-named parameters such as `:name` as handler-specific uses of ADDRESS
-host-variable bindings. This is the intended shape for later database drivers.
+`demos/native/sqlite/` is now an ordinary consumer of the installed
+`rxsqlite_address` Level G environment. The façade claims `SQLITE` and
+`SQLITE3`, treats SQL named parameters such as `:name` as handler-specific uses
+of ADDRESS host-variable bindings, and delegates every database operation to
+the generic typed `rxsqlite` RXPA provider. There is no ADDRESS-specific native
+SQLite implementation.
 
 `demos/llm/llm_address_environment.crexx` shows the same idea for Rexx-hosted
 providers. One Rexx environment class claims a family of model-shaped

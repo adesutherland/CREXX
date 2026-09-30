@@ -1,0 +1,12 @@
+Command: cmake --build cmake-build-debugasan --target rxllama_release_engine_smoke --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[  8%] Built target ggml-base
+[ 25%] Built target ggml-metal
+[ 33%] Built target ggml-cpu
+[ 33%] Built target ggml
+[100%] Built target llama
+[100%] Built target crexx_llama_bridge
+[100%] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_release_engine_smoke.dir/__/__/__/tests/native-inference/release_engine_smoke.cpp.o
+[100%] Linking CXX executable tests/rxllama_release_engine_smoke
+[100%] Built target rxllama_release_engine_smoke

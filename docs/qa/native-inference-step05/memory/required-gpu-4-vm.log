@@ -1,0 +1,22 @@
+argv=['/usr/bin/time', '-l', '/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm', '/tmp/ni-s5/generation-memory-linked.rxbin', '-a', 'required-gpu', '/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf', '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201', '4']
+rc=0
+TOKENS=24
+PASS: generation VM memory control 4
+        2.65 real         2.44 user         0.16 sys
+          1178435584  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+               72833  page reclaims
+                   3  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   0  voluntary context switches
+                2191  involuntary context switches
+         47853904536  instructions retired
+          9425488783  cycles elapsed
+           783271568  peak memory footprint

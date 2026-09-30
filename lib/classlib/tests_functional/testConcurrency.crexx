@@ -208,12 +208,16 @@ failures = failures + check_int("request failed target code", failed.error_code(
 failures = failures + check_int("request terminal cache", request.terminal(), 1)
 failures = failures + check_int("request repeated completion", request.completion().state(), 2)
 call request.cancel(.channelvalue.string_value("already terminal"))
+call request.release()
+failures = failures + check_int("saved local completion after release", failed.state(), 2)
 
 unrelated = work_channel.start(invoke, 0)
 selected = work_channel.start(invoke, 0)
 selected_completion = selected.wait(1000)
 failures = failures + check_int("request-specific wait survives unrelated completion", selected_completion.request_identity(), selected.identity())
 failures = failures + check_int("unrelated completion cached", unrelated.completion().request_identity(), unrelated.identity())
+call selected.release()
+call unrelated.release()
 caught = 0
 do
   call work_channel.close(3)

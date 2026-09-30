@@ -1,0 +1,139 @@
+/* File-backed qualification for modes, transactions, WAL, backup and checks. */
+options levelb
+
+import rxsqlite
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: rxsqlite file " || label
+    return 1
+  end
+  return 0
+
+read_int: procedure = .int
+  arg database = .binary, sql = .string, expose value = .int
+  statement = .binary
+  if sqliteprepare(database, sql, statement) <> 0 then return 1
+  if sqlitestep(statement) <> 100 then do
+    call sqlitefinalize statement
+    return 1
+  end
+  if sqlitecolumnint(statement, 0, value) <> 0 then do
+    call sqlitefinalize statement
+    return 1
+  end
+  if sqlitefinalize(statement) <> 0 then return 1
+  return 0
+
+main: procedure = .int
+arg args = .string[]
+if args.0 < 1 then return 2
+
+test_name = args[1]
+database_path = test_name || ".db"
+missing_path = test_name || ".missing.db"
+backup_path = test_name || ".backup.db"
+errors = 0
+database = .binary
+second = .binary
+destination = .binary
+
+/* READWRITE and READONLY must not create a missing database. */
+errors = errors + check(sqliteopenmode(missing_path, "readwrite", database) = -6, "readwrite missing rejected")
+errors = errors + check(sqliteopenmode(missing_path, "readonly", database) = -6, "readonly missing rejected")
+errors = errors + check(sqliteopenmode(missing_path, "invalid", database) = -1, "invalid mode rejected")
+
+errors = errors + check(sqliteopenmode(database_path, "create", database) = 0, "create mode")
+errors = errors + check(sqliteexec(database, "PRAGMA foreign_keys=ON; DROP TABLE IF EXISTS child; DROP TABLE IF EXISTS parent; DROP TABLE IF EXISTS tx_values; DROP TABLE IF EXISTS values_table; CREATE TABLE tx_values(v INTEGER); CREATE TABLE parent(id INTEGER PRIMARY KEY); CREATE TABLE child(parent_id INTEGER REFERENCES parent(id)); CREATE TABLE values_table(id INTEGER PRIMARY KEY, value TEXT); PRAGMA user_version=7") = 0, "initialize database")
+errors = errors + check(sqliteclose(database) = 0, "close created database")
+
+database = .binary
+errors = errors + check(sqliteopenmode(database_path, "readonly", database) = 0, "readonly mode")
+version = 0
+errors = errors + check(read_int(database, "PRAGMA user_version", version) = 0 & version = 7, "readonly query")
+errors = errors + check(sqliteexec(database, "CREATE TABLE forbidden(v)") = -6, "readonly write rejected")
+boundary_code = 0
+sqlite_code = 0
+extended_code = 0
+operation = ""
+message = ""
+errors = errors + check(sqliteerrorextended(boundary_code, sqlite_code, extended_code, operation, message) = -6 & sqlite_code = 8 & extended_code = 8, "readonly diagnostic")
+errors = errors + check(sqliteclose(database) = 0, "close readonly database")
+
+database = .binary
+errors = errors + check(sqliteopenmode(database_path, "readwrite", database) = 0, "readwrite mode")
+errors = errors + check(sqliteexec(database, "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL") = 0, "enable WAL")
+errors = errors + check(sqlitebusytimeout(database, 25) = 0, "busy timeout first connection")
+
+/* The caller owns transaction and savepoint boundaries. */
+errors = errors + check(sqliteexec(database, "DELETE FROM tx_values; BEGIN; INSERT INTO tx_values VALUES(1); SAVEPOINT nested; INSERT INTO tx_values VALUES(2); ROLLBACK TO nested; RELEASE nested; COMMIT") = 0, "savepoint transaction")
+count = 0
+errors = errors + check(read_int(database, "SELECT count(*) FROM tx_values", count) = 0 & count = 1, "savepoint result")
+errors = errors + check(sqliteexec(database, "BEGIN; INSERT INTO tx_values VALUES(3); ROLLBACK") = 0, "rollback transaction")
+errors = errors + check(read_int(database, "SELECT count(*) FROM tx_values", count) = 0 & count = 1, "rollback result")
+
+/* Extended constraint diagnostics are distinct from the primary code. */
+errors = errors + check(sqliteexec(database, "DELETE FROM child; DELETE FROM parent; INSERT INTO parent VALUES(1)") = 0, "foreign key parent")
+errors = errors + check(sqliteexec(database, "INSERT INTO child VALUES(99)") = -6, "foreign key rejection")
+errors = errors + check(sqliteerrorextended(boundary_code, sqlite_code, extended_code, operation, message) = -6 & sqlite_code = 19 & extended_code = 787, "foreign key extended diagnostic")
+
+second = .binary
+errors = errors + check(sqliteopenmode(database_path, "readwrite", second) = 0, "second WAL connection")
+errors = errors + check(sqlitebusytimeout(second, 25) = 0, "busy timeout second connection")
+errors = errors + check(sqliteexec(database, "BEGIN IMMEDIATE") = 0, "writer lock")
+errors = errors + check(sqliteexec(second, "INSERT INTO tx_values VALUES(99)") = -6, "busy result")
+errors = errors + check(sqliteerrorextended(boundary_code, sqlite_code, extended_code, operation, message) = -6 & sqlite_code = 5, "busy diagnostic")
+errors = errors + check(sqliteexec(database, "ROLLBACK") = 0, "release writer lock")
+errors = errors + check(sqliteclose(second) = 0, "close second connection")
+
+log_frames = -2
+checkpointed_frames = -2
+errors = errors + check(sqlitecheckpoint(database, "truncate", log_frames, checkpointed_frames) = 0, "WAL checkpoint")
+errors = errors + check(log_frames >= -1 & checkpointed_frames >= -1, "checkpoint counters")
+errors = errors + check(sqlitecheckpoint(database, "invalid", log_frames, checkpointed_frames) = -1, "checkpoint mode validation")
+
+errors = errors + check(sqliteexec(database, "DELETE FROM values_table; WITH RECURSIVE n(v) AS (VALUES(1) UNION ALL SELECT v+1 FROM n WHERE v<200) INSERT INTO values_table SELECT v, printf('value-%06d',v) FROM n") = 0, "seed backup source")
+destination = .binary
+errors = errors + check(sqliteopenmode(backup_path, "create", destination) = 0, "open backup destination")
+remaining = -1
+page_count = -1
+errors = errors + check(sqlitebackup(database, destination, 7, 3, 1, remaining, page_count) = 0, "online backup")
+errors = errors + check(remaining = 0 & page_count > 0, "backup counters")
+backup_page_count = page_count
+
+source_ok = 0
+source_details = ""
+backup_ok = 0
+backup_details = ""
+errors = errors + check(sqliteintegrity(database, "quick", 10, source_ok, source_details) = 0 & source_ok = 1 & source_details = "ok", "source quick check")
+errors = errors + check(sqliteintegrity(destination, "full", 10, backup_ok, backup_details) = 0 & backup_ok = 1 & backup_details = "ok", "backup full check")
+source_rows = 0
+backup_rows = 0
+errors = errors + check(read_int(database, "SELECT count(*) FROM values_table", source_rows) = 0 & source_rows = 200, "source backup count")
+errors = errors + check(read_int(destination, "SELECT count(*) FROM values_table", backup_rows) = 0 & backup_rows = 200, "destination backup count")
+errors = errors + check(sqliteexec(database, "INSERT INTO values_table VALUES(201,'after-snapshot')") = 0, "mutate source after backup")
+errors = errors + check(read_int(database, "SELECT count(*) FROM values_table", source_rows) = 0 & source_rows = 201, "source post-backup count")
+errors = errors + check(read_int(destination, "SELECT count(*) FROM values_table", backup_rows) = 0 & backup_rows = 200, "backup snapshot stable")
+
+errors = errors + check(sqlitebackup(database, database, 1, 0, 0, remaining, page_count) = -1, "same-handle backup rejected")
+errors = errors + check(sqlitebackup(database, destination, 0, 0, 0, remaining, page_count) = -1, "backup page bound")
+errors = errors + check(sqliteintegrity(database, "unknown", 1, source_ok, source_details) = -1, "integrity mode validation")
+errors = errors + check(sqliteintegrity(database, "quick", 0, source_ok, source_details) = -1, "integrity error bound")
+
+abandoned = .binary
+errors = errors + check(sqliteprepare(database, "SELECT value FROM values_table", abandoned) = 0, "abandoned statement")
+closed = sqlitecleanup()
+errors = errors + check(closed = 3, "forced file cleanup")
+errors = errors + check(sqlitestep(abandoned) = -3, "cleaned statement closed")
+errors = errors + check(sqliteexec(database, "SELECT 1") = -3, "cleaned source closed")
+errors = errors + check(sqliteexec(destination, "SELECT 1") = -3, "cleaned destination closed")
+errors = errors + check(sqlitecleanup() = 0, "cleanup idempotent")
+
+if errors <> 0 then do
+  say "FAIL: rxsqlite file errors=" || errors
+  return 1
+end
+
+say "PASS: rxsqlite file provider modes=create,readwrite,readonly wal=1 busy=5 checkpoint=" || checkpointed_frames || " backup_pages=" || backup_page_count || " snapshot_rows=" || backup_rows || " integrity=ok"
+return 0

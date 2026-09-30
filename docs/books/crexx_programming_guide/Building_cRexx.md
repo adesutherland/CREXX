@@ -241,9 +241,11 @@ sibling `DSL-Syntax-Highlighter` checkout when it exists; otherwise parser
 mode defaults off. To permit CMake to fetch the pinned parser dependency,
 configure with `-DCREXX_ALLOW_NETWORK_DOWNLOADS=ON`. An explicit
 `-DENABLE_PARSER_MODE=ON` without either a local checkout or that network
-permission is a configuration error. The native SQLite ADDRESS demo is also
-off by default and requires both `-DCREXX_BUILD_SQLITE_ADDRESS_DEMO=ON` and
-`-DCREXX_ALLOW_NETWORK_DOWNLOADS=ON`.
+permission is a configuration error.
+
+`rxsqlite` is a normal offline core component with a source-controlled SQLite
+amalgamation. Its ADDRESS demo is an ordinary Level G consumer of the installed
+façade; neither needs a SQLite build option or network access.
 
 Standalone examples and demonstrations are not members of the default product
 build. Request the documented auxiliary groups explicitly:
@@ -309,6 +311,22 @@ Hosted pull-request and `develop` builds use the optimized Release product
 path, run `qa-smoke`, then upload one archive per supported platform. The
 archive name and its `BUILDINFO` contain the exact PR-head or `develop` SHA.
 It is a user-test candidate, not a qualified or signed release.
+
+A successful core product build and appropriate functional regressions are
+sufficient for ordinary integration into `develop`. Full overnight assurance
+is intentionally allowed to find issues for remedial work the next day; it is
+not an every-publish gate. Manual deep or full sanitizer qualification before
+integration is an exception with a documented risk and agreed scope, such as
+novel native-inference work, release qualification, or closure of a known
+sanitizer finding. A request to qualify an ordinary fix does not by itself
+require every assurance lane. Reuse unchanged valid test evidence and check the
+normal automatic publication workflows without dispatching extra overnight jobs.
+
+Elapsed time is part of the QA decision: an unnecessary test run delays
+integration and user feedback and consumes runner capacity. Additional long
+checks must address a specific unresolved risk whose expected benefit justifies
+that delay. Prefer the smallest decisive check and retained valid evidence;
+more green runs are not a goal in themselves.
 
 The other hosted lanes remain independent of artifact availability. Linux
 Debug optimizer parity runs for PRs and `develop`. After `develop` changes, the

@@ -1,0 +1,3 @@
+argv=['/tmp/crexx-ni-s7.oheu5td2/install/bin/rxlink', '-o', 'embeddings_linked', 'embeddings_vm', '/tmp/crexx-ni-s7.oheu5td2/install/bin/library', '/tmp/crexx-ni-s7.oheu5td2/install/bin/classlib', '/tmp/crexx-ni-s7.oheu5td2/install/bin/rxfnsg']
+cwd=/tmp/crexx-ni-s7.oheu5td2/llama-example-work
+rc=0

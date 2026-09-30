@@ -214,8 +214,24 @@ endforeach()
 # completions.
 add_custom_target(testChannelRequestWait)
 add_dependencies(testclasses testChannelRequestWait)
+add_custom_target(testChannelRequestRelease)
+add_dependencies(testclasses testChannelRequestRelease)
 
 foreach(_runner IN LISTS _concurrency_doc_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "testChannelRequestRelease_${_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/testChannelRequestRelease.crexx"
+    TARGET_GROUP testChannelRequestRelease
+    RUNNER "${_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib "${CMAKE_CURRENT_SOURCE_DIR}/testChannelRequestRelease.crexx"
+    RUNTIME_ARGS ${CLASSLIB_RUNTIMES}
+    TEST_LABELS classlib concurrency levelb channel endpoint lifecycle linked "${_runner}"
+    REQUIRED_OUTPUT_REGEX "PASS: channel release preserves outcomes and reclaims requests"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:"
+  )
   crexx_add_rexx_opt_matrix(
     LINKED_ALL_MODES
     NAME "testChannelRequestWait_${_runner}"

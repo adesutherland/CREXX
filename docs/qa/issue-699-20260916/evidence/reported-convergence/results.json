@@ -1,0 +1,104 @@
+{
+  "compiler": "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+  "compiler_sha256": "4f0a15d5204d8cbecc9be5283b1fd8a679b657e2cb24f5f428123816a26e128f",
+  "source_sha256": {
+    "cleanup.crexx": "b5c8b3132643b91336e6a9652a1703ecb3e47e2325ff8db16bf330d48dfc5015",
+    "extension.crexx": "23afea0ecab5fcdc54f5679d24c1991fab98745e9bdc1be400b224d952830165",
+    "model.crexx": "5cbbf97041300ee221b444c66f5dea78cea151d34a669e5db0553e656d15228f"
+  },
+  "results": [
+    {
+      "case": "closefile-opt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/closefile-opt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/closefile-opt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/closefile-opt/model.crexx"
+      ],
+      "rc": 255,
+      "expected_defective_baseline_rc": 255,
+      "matches_defective_baseline": true,
+      "seconds": 0.18571562506258488
+    },
+    {
+      "case": "closefile-noopt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-n",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/closefile-noopt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/closefile-noopt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/closefile-noopt/model.crexx"
+      ],
+      "rc": 255,
+      "expected_defective_baseline_rc": 255,
+      "matches_defective_baseline": true,
+      "seconds": 0.18383875000290573
+    },
+    {
+      "case": "lineout-opt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/lineout-opt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/lineout-opt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/lineout-opt/model.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.1840639589354396
+    },
+    {
+      "case": "lineout-noopt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-n",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/lineout-noopt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/lineout-noopt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/lineout-noopt/model.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.18089041719213128
+    },
+    {
+      "case": "no-extension-opt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/no-extension-opt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/no-extension-opt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/no-extension-opt/model.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.18259095796383917
+    },
+    {
+      "case": "no-extension-noopt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-n",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/no-extension-noopt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/no-extension-noopt/model",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-a777jda2/no-extension-noopt/model.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.18724920810200274
+    }
+  ]
+}

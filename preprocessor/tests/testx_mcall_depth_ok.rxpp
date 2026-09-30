@@ -1,0 +1,11 @@
+options levelb
+import rxfnsb
+##cflags nosrcmap
+
+/* Exactly 16 nested .mcall expansions are allowed. */
+##MACRO LOOP depth
+    if depth < 16 then .mcall LOOP &depth + 1
+##MEND
+
+##LOOP 1
+say "completed at the nesting limit"

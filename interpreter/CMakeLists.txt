@@ -104,6 +104,7 @@ set(RXVM_CORE_OBJECT_SOURCES
         ../binutils/include/rxbin.h
         ../binutils/include/rxsignature.h
         rxspawn.c
+        rxenv.c
         rxcrexxcmd.c
         rxcrexxcmd.h
         exitfunc.c
@@ -529,6 +530,33 @@ foreach(_rxvm_core_target IN LISTS _crexx_vm_core_targets)
     endif()
 endforeach()
 if(BUILD_TESTING)
+    add_executable(test_rxspawn_inheritance tests/test_rxspawn_inheritance.c)
+    target_include_directories(test_rxspawn_inheritance PRIVATE
+            . ./rxvmplugin ../assembler ../binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+    target_link_libraries(test_rxspawn_inheritance PRIVATE rxvml Threads::Threads)
+    add_test(NAME rxspawn_resource_inheritance COMMAND test_rxspawn_inheritance)
+    set_tests_properties(rxspawn_resource_inheritance PROPERTIES
+            LABELS "interpreter;spawn;sanitizer;concurrency;smoke"
+            CREXX_PREP_TARGETS test_rxspawn_inheritance TIMEOUT 180)
+    add_executable(test_rxvmfile tests/test_rxvmfile.c)
+    target_include_directories(test_rxvmfile PRIVATE . ../platform)
+    add_test(NAME rxvmfile_private_open COMMAND test_rxvmfile)
+    set_tests_properties(rxvmfile_private_open PROPERTIES
+            LABELS "interpreter;spawn;sanitizer;concurrency;smoke"
+            CREXX_PREP_TARGETS test_rxvmfile TIMEOUT 60)
+    if(RXSPAWN_BASELINE_SOURCE)
+        add_executable(test_rxspawn_inheritance_baseline EXCLUDE_FROM_ALL
+                tests/test_rxspawn_inheritance.c)
+        target_include_directories(test_rxspawn_inheritance_baseline PRIVATE
+                . ./rxvmplugin ../assembler ../binutils/include
+                ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+        target_compile_definitions(test_rxspawn_inheritance_baseline PRIVATE
+                RXSPAWN_TEST_SOURCE="${RXSPAWN_BASELINE_SOURCE}"
+                RXSPAWN_TEST_BASELINE=1)
+        target_link_libraries(test_rxspawn_inheritance_baseline PRIVATE rxvml Threads::Threads)
+    endif()
+
     add_executable(test_rxcrexxcmd_flush tests/test_rxcrexxcmd_flush.c)
     target_include_directories(test_rxcrexxcmd_flush PRIVATE
             . ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
@@ -539,6 +567,15 @@ if(BUILD_TESTING)
             LABELS "interpreter;address;runtime")
 
     if(NOT WIN32)
+        add_executable(test_rxspawn_posix_termination
+                tests/test_rxspawn_posix_termination.c)
+        target_include_directories(test_rxspawn_posix_termination PRIVATE .)
+        add_test(NAME rxspawn_posix_termination
+                COMMAND test_rxspawn_posix_termination)
+        set_tests_properties(rxspawn_posix_termination PROPERTIES
+                LABELS "interpreter;spawn;posix;sanitizer;concurrency"
+                CREXX_PREP_TARGETS test_rxspawn_posix_termination
+                TIMEOUT 10)
         add_executable(test_rxspawn_diagnostics
                 tests/test_rxspawn_diagnostics.c)
         target_include_directories(test_rxspawn_diagnostics PRIVATE
@@ -620,6 +657,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
+add_executable(test_value_factory_allocation tests/test_value_factory_allocation.c)
+target_include_directories(test_value_factory_allocation PRIVATE . ../utf8 ../platform ../binutils/include)
+target_link_libraries(test_value_factory_allocation PRIVATE rxvmref platform ${CREXX_MATH_LIBRARY})
+add_test(NAME value_factory_allocation_failure COMMAND test_value_factory_allocation)
+set_tests_properties(value_factory_allocation_failure PROPERTIES
+        LABELS "unit;interpreter;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_value_factory_allocation)
+
 # Value test executable
 add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)
 target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
@@ -675,6 +719,13 @@ target_include_directories(test_rxvmchannel_byte PRIVATE
         ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
 target_link_libraries(test_rxvmchannel_byte PRIVATE rxvml Threads::Threads)
 
+add_executable(test_rxvmchannel_lifetime tests/test_rxvmchannel_lifetime.c)
+target_include_directories(test_rxvmchannel_lifetime PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmchannel_lifetime PRIVATE rxvml Threads::Threads)
+
 add_executable(test_rxvmactive tests/test_rxvmactive.c)
 target_include_directories(test_rxvmactive PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -697,6 +748,46 @@ target_include_directories(test_rxpa_concurrency PRIVATE
         ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
         ../platform ../avl_tree ../utf8 ../inc)
 target_link_libraries(test_rxpa_concurrency rxvml Threads::Threads)
+
+# Direct S4-D01 ABI/text tests: no nested builds or model inference.
+add_executable(test_rxpa_host_services tests/test_rxpa_host_services.c)
+target_include_directories(test_rxpa_host_services PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR} ./rxvmplugin ../assembler ../binutils/include
+        ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxpa_host_services rxvml Threads::Threads)
+foreach(kind IN ITEMS modern old)
+    add_library(rxpa_host_fixture_${kind} MODULE tests/rxpa_host_service_fixture.c)
+    target_link_libraries(rxpa_host_fixture_${kind} PRIVATE CREXX::RXPA)
+    target_compile_definitions(rxpa_host_fixture_${kind} PRIVATE
+        BUILD_DLL PLUGIN_ID=host_fixture_${kind})
+    if(kind STREQUAL "old")
+        target_compile_definitions(rxpa_host_fixture_${kind} PRIVATE OLD_MANIFEST)
+    endif()
+    set_target_properties(rxpa_host_fixture_${kind} PROPERTIES
+        PREFIX "" SUFFIX ".rxplugin")
+    add_dependencies(test_rxpa_host_services rxpa_host_fixture_${kind})
+endforeach()
+add_test(NAME rxpa_host_text_services COMMAND test_rxpa_host_services
+        $<TARGET_FILE:rxpa_host_fixture_old> $<TARGET_FILE:rxpa_host_fixture_modern>)
+set_tests_properties(rxpa_host_text_services PROPERTIES TIMEOUT 30
+        LABELS "interpreter;plugins;rxpa;regression")
+crexx_register_test_prep_targets(TESTS rxpa_host_text_services TARGETS test_rxpa_host_services)
+
+add_executable(test_rxpa_worker_startup tests/test_rxpa_worker_startup.c)
+target_include_directories(test_rxpa_worker_startup PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxpa_worker_startup rxvml Threads::Threads)
+foreach(mode IN ITEMS attached callback)
+    add_test(NAME rxpa_worker_startup_${mode}
+        COMMAND test_rxpa_worker_startup ${mode}
+                ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_control.rxbin)
+    set_tests_properties(rxpa_worker_startup_${mode} PROPERTIES
+        TIMEOUT 30 LABELS "interpreter;worker;plugins;rxpa;regression")
+    crexx_register_test_prep_targets(TESTS rxpa_worker_startup_${mode}
+        TARGETS test_rxpa_worker_startup test_program_generation_control_bins)
+endforeach()
 
 add_executable(test_rxpa_odbc tests/test_rxpa_odbc.c)
 target_include_directories(test_rxpa_odbc PRIVATE
@@ -772,6 +863,10 @@ add_test(NAME rxvmbyteendpoint_substrate COMMAND test_rxvmbyteendpoint)
 set_tests_properties(rxvmbyteendpoint_substrate PROPERTIES
         LABELS "interpreter;perf3;gate-f;f1d;channels;byte-endpoint;lifecycle")
 add_test(NAME rxvmchannel_byte_provider COMMAND test_rxvmchannel_byte)
+add_test(NAME rxvmchannel_request_lifetime COMMAND test_rxvmchannel_lifetime)
+set_tests_properties(rxvmchannel_request_lifetime PROPERTIES
+        TIMEOUT 90 LABELS "interpreter;channels;byte-endpoint;lifecycle"
+        CREXX_PREP_TARGETS test_rxvmchannel_lifetime)
 set_tests_properties(rxvmchannel_byte_provider PROPERTIES
         LABELS "interpreter;perf3;gate-f;f1d;channels;byte-endpoint;provider-reference")
 add_test(NAME rxvmactive_isolation COMMAND test_rxvmactive)
@@ -802,6 +897,12 @@ add_test(NAME rxpa_bound_legacy_serialization
         COMMAND test_rxpa_concurrency bound-legacy)
 add_test(NAME rxpa_legacy_transition_quiescence
         COMMAND test_rxpa_concurrency transition)
+add_test(NAME rxpa_worker_startup_transition
+        COMMAND test_rxpa_concurrency startup-transition)
+set_tests_properties(rxpa_worker_startup_transition PROPERTIES
+        TIMEOUT 30 LABELS "interpreter;worker;plugins;rxpa;regression")
+crexx_register_test_prep_targets(TESTS rxpa_worker_startup_transition
+        TARGETS test_rxpa_concurrency)
 set_tests_properties(rxvmmemory_allocator PROPERTIES
         LABELS "interpreter;memory")
 set_tests_properties(rxvmworker_lifecycle PROPERTIES

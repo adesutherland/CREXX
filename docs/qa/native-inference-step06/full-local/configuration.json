@@ -1,0 +1,40 @@
+{
+  "cmake-build-debug": {
+    "cache_sha256": "50c053f7fc6e135e1052c23ffb6cc8fd47a858eb07dd19c8277a988d35140937",
+    "selected_entries": {
+      "CMAKE_BUILD_TYPE:STRING": "Debug",
+      "CMAKE_CXX_COMPILER:STRING": "/usr/bin/c++",
+      "CMAKE_CXX_FLAGS:STRING": "",
+      "CMAKE_C_COMPILER:STRING": "/usr/bin/cc",
+      "CMAKE_C_FLAGS:STRING": "",
+      "CREXX_LLAMA_ARCHIVE:FILEPATH": "/Users/adrian/Library/Caches/crexx/native-inference/llama.cpp-5266f24da75dc449bd56cbed7addb9c8e4a6a73e.tar.gz",
+      "CREXX_LLAMA_CUDA:BOOL": "OFF",
+      "CREXX_LLAMA_METAL:BOOL": "ON",
+      "CREXX_LLAMA_QUALIFICATION_MODES:STRING": "cpu,required-gpu",
+      "CREXX_LLAMA_TEST_MODELS:PATH": "/Users/adrian/Library/Caches/crexx/native-inference",
+      "CREXX_LLAMA_VULKAN:BOOL": "OFF",
+      "ENABLE_LLAMA:BOOL": "ON",
+      "ENABLE_ODBC:BOOL": "OFF",
+      "CMAKE_GENERATOR:INTERNAL": "Ninja"
+    }
+  },
+  "cmake-build-debugasan": {
+    "cache_sha256": "81a5511f134774224687361c0a3c7490fe1b19cb504583a7771da325634e8640",
+    "selected_entries": {
+      "CMAKE_BUILD_TYPE:STRING": "Debug",
+      "CMAKE_CXX_COMPILER:FILEPATH": "/usr/bin/c++",
+      "CMAKE_CXX_FLAGS:STRING": "-fsanitize=address -fno-omit-frame-pointer",
+      "CMAKE_C_COMPILER:FILEPATH": "/usr/bin/cc",
+      "CMAKE_C_FLAGS:STRING": "-fsanitize=address -fno-omit-frame-pointer",
+      "CREXX_LLAMA_ARCHIVE:FILEPATH": "/Users/adrian/Library/Caches/crexx/native-inference/llama.cpp-5266f24da75dc449bd56cbed7addb9c8e4a6a73e.tar.gz",
+      "CREXX_LLAMA_CUDA:BOOL": "OFF",
+      "CREXX_LLAMA_METAL:BOOL": "ON",
+      "CREXX_LLAMA_QUALIFICATION_MODES:STRING": "cpu,required-gpu",
+      "CREXX_LLAMA_TEST_MODELS:PATH": "/Users/adrian/Library/Caches/crexx/native-inference",
+      "CREXX_LLAMA_VULKAN:BOOL": "OFF",
+      "ENABLE_LLAMA:BOOL": "ON",
+      "ENABLE_ODBC:BOOL": "ON",
+      "CMAKE_GENERATOR:INTERNAL": "Unix Makefiles"
+    }
+  }
+}

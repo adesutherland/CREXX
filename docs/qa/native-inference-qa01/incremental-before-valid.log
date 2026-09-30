@@ -1,0 +1,44 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 2404: rxpa_external_sdk_consumer
+1/1 Test #2404: rxpa_external_sdk_consumer .......***Failed    1.67 sec
+CMake Error at /Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_external_sdk_consumer.cmake:43 (message):
+  updated static archive value:
+  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/incremental_decl_consumer
+  failed (1).
+
+  STDOUT:
+
+
+
+  STDERR:
+
+Call Stack (most recent call first):
+  /Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_external_sdk_consumer.cmake:165 (run_checked)
+
+
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+crexx-rag            =   1.67 sec*proc (1 test)
+external-consumer    =   1.67 sec*proc (1 test)
+hash                 =   1.67 sec*proc (1 test)
+install              =   1.67 sec*proc (1 test)
+native               =   1.67 sec*proc (1 test)
+package              =   1.67 sec*proc (1 test)
+packed               =   1.67 sec*proc (1 test)
+qualification        =   1.67 sec*proc (1 test)
+rcc-5d               =   1.67 sec*proc (1 test)
+rcc-5e               =   1.67 sec*proc (1 test)
+rcc-5f               =   1.67 sec*proc (1 test)
+rxpa                 =   1.67 sec*proc (1 test)
+sqlite               =   1.67 sec*proc (1 test)
+stats                =   1.67 sec*proc (1 test)
+vector               =   1.67 sec*proc (1 test)
+
+Total Test time (real) =   1.70 sec
+
+The following tests FAILED:
+	2404 - rxpa_external_sdk_consumer (Failed)               crexx-rag external-consumer hash install native package packed qualification rcc-5d rcc-5e rcc-5f rxpa sqlite stats vector
+Errors while running CTest

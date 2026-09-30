@@ -255,7 +255,8 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
         if (operand_index >= 1) return RXOP_COMPONENT_INTEGER;
         return RXOP_COMPONENT_ALL;
     }
-    if (opcode == OP_CHANCLOSE_REG_REG_REG) {
+    if (opcode == OP_CHANCLOSE_REG_REG_REG ||
+        opcode == OP_CHANRELEASE_REG_REG_REG) {
         if (operand_index >= 1) return RXOP_COMPONENT_INTEGER;
         return RXOP_COMPONENT_ALL;
     }
@@ -525,7 +526,8 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
         return RXOP_COMPONENT_NONE;
     }
     if (opcode == OP_CHANCANCEL_REG_REG_REG_REG ||
-        opcode == OP_CHANCLOSE_REG_REG_REG)
+        opcode == OP_CHANCLOSE_REG_REG_REG ||
+        opcode == OP_CHANRELEASE_REG_REG_REG)
         return operand_index == 0 ? RXOP_COMPONENT_INTEGER
                                   : RXOP_COMPONENT_NONE;
     if (opcode == OP_PGETI_REG_REG_REG)
@@ -628,7 +630,8 @@ unsigned int rxop_component_clears(int opcode, size_t operand_index) {
         opcode == OP_CHANSTART_REG_REG_REG_REG_REG ||
         opcode == OP_CHANWAIT_REG_REG_REG_REG ||
         opcode == OP_CHANCANCEL_REG_REG_REG_REG ||
-        opcode == OP_CHANCLOSE_REG_REG_REG) {
+        opcode == OP_CHANCLOSE_REG_REG_REG ||
+        opcode == OP_CHANRELEASE_REG_REG_REG) {
         if (rxop_component_writes(opcode, operand_index) != RXOP_COMPONENT_NONE)
             return RXOP_COMPONENT_REFERENCE |
                    RXOP_COMPONENT_NATIVE_PAYLOAD;

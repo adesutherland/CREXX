@@ -2875,12 +2875,27 @@ RXVM_HANDLER(BRTPANDT_ID_REG_INT, VM_ADVANCE(3);
 
 )
 
+/* Preprocessor conditionals must stay outside RXVM_HANDLER arguments. */
+#ifdef CREXX_VM_NO_CLOCK
+#define RXVM_INITIAL_RANDOM_SEED()                                             \
+    do {                                                                       \
+        SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED,                               \
+                       "Automatic random seeding needs a clock service");      \
+        DISPATCH;                                                              \
+    } while (0)
+#else
+#define RXVM_INITIAL_RANDOM_SEED()                                             \
+    do {                                                                       \
+        initSeed = (time((time_t *) 0) % (3600 * 24));                           \
+    } while (0)
+#endif
+
 RXVM_HANDLER(IRAND_REG_REG, VM_ADVANCE(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
 
             if (op2R->int_value<0) {                 // no seed set
                 if (!hasSeed)  {       // seed still initial, set time based seed
-                   initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
+                   RXVM_INITIAL_RANDOM_SEED();
                    srand((unsigned) initSeed);
                    hasSeed = 1;
                 }
@@ -2903,7 +2918,7 @@ RXVM_HANDLER(IRAND_REG_INT, VM_ADVANCE(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)op2I);
              if (op2I<0) {                                // no seed set
                 if (!hasSeed)  {            // seed still initial, set time based seed
-                    initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
+                    RXVM_INITIAL_RANDOM_SEED();
                     srand(initSeed);
                     hasSeed = 1;
                 }
@@ -2924,6 +2939,8 @@ RXVM_HANDLER(IRAND_REG_INT, VM_ADVANCE(2);
 
 
 )
+#undef RXVM_INITIAL_RANDOM_SEED
+
 #define FDATE (char const[]){ __DATE__[7], __DATE__[8], ..., ' ', ... , '\0' }
 
 
@@ -2992,7 +3009,6 @@ RXVM_HANDLER(RXHASH_REG_REG_REG, VM_ADVANCE(3);
 RXVM_HANDLER(FOPEN_REG_REG_REG, VM_ADVANCE(3);
         DEBUG("TRACE - FOPEN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
         {
-            int fd;
             char* filename = reg2nullstring(op2R);
             char* mode = reg2nullstring(op3R);
 
@@ -3004,25 +3020,7 @@ RXVM_HANDLER(FOPEN_REG_REG_REG, VM_ADVANCE(3);
             } else if (strcmp(filename, "stdin") == 0) {
                 op1R->int_value = (rxinteger)stdin;
             } else {
-                /* Otherwise we open the file normally */
-                op1R->int_value = (rxinteger)fopen(filename, mode);
-
-                /* If the open succeeds, add the FD_CLOEXEC so that the file is not available to an ADDRESSed command! */
-                if (op1R->int_value) {
-                    RXVM_WINDOWS_ONLY(
-                    // On Windows, get the underlying OS HANDLE from the C-runtime file descriptor.
-                    intptr_t handle = _get_osfhandle(_fileno((FILE*)op1R->int_value));
-                    if (handle != -1) {
-                        // Set the handle to be non-inheritable. This is the equivalent
-                        // of POSIX's FD_CLOEXEC flag.
-                        SetHandleInformation((HANDLE)handle, HANDLE_FLAG_INHERIT, 0);
-                    }
-                    )
-                    RXVM_NONWINDOWS_ONLY(
-                    fd = fileno((FILE*)op1R->int_value);
-                    fcntl(fd, F_SETFD, FD_CLOEXEC);
-                    )
-                }
+                op1R->int_value = (rxinteger)rxvm_private_fopen(filename, mode);
             }
             free(filename);
             free(mode);
@@ -3090,7 +3088,8 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
 
         else {
             /* Read until EOF or newline */
-            while ((ch = fgetc(stream)) != EOF) {
+            while ((ch = RXVM_UTF8_ONLY(platform_text_getc(stream))
+                         RXVM_BYTE_ONLY(fgetc(stream))) != EOF) {
 
                 /* End of line detection (LF) */
                 if (ch == '\n') {

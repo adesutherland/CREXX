@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin/rxc",
+    "--no-exe-import",
+    "-s",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/config;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/config/profiles;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/surfaces;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/tests;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/providers;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/providers/tests",
+    "-i",
+    "/Users/adrian/.local/bin/providers;/Users/adrian/.local/bin",
+    "-o",
+    "/Users/adrian/CLionProjects/CREXX-hotfix/docs/qa/issue-699-20260916/repair-evidence/original-modules/ragcommand-opt/ragcommand",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/ragcommand.crexx"
+  ],
+  "rc": 0,
+  "seconds": 1.571191000053659
+}

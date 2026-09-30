@@ -117,6 +117,13 @@ manifest, package manager, remote cache or dynamic linker-autoload mode.
 
 ## 5. QA and CI lanes
 
+**Current publication policy (16 September 2026):** the canonical `AGENTS.md`
+and programming build guide supersede the historical trigger descriptions below.
+Ordinary `develop` integration follows core build and functional success;
+comprehensive/deep and full sanitizer assurance normally run overnight. Extra
+pre-publication runs require a documented exception and justification for their
+delay cost. This historical plan is not authority to run every lane per publish.
+
 The lanes have different purposes and must remain visible:
 
 | Lane | Trigger and purpose | Contents |
