@@ -11,6 +11,10 @@ precedes lexical analysis; sequential input is supported and input read/close
 failures are errors. RXBIN output always uses binary I/O and never passes
 through that adapter.
 
+Native mainframe tool diagnostics use the platform console writer independently
+of the selected file encoding. Raw SDK text files are converted by cREXX once;
+text update modes are unavailable and rejected before opening.
+
 ## 1. Assembler Pipeline
 
 The assembler processes source files through a pipelined, pseudo-two-pass architecture:

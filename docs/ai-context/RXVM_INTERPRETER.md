@@ -17,6 +17,16 @@ asynchronous callbacks. Unavailable channel/socket/clock operations raise
 `NOT_IMPLEMENTED` (12); static-only loading and process-worker entry fail
 explicitly. The port guide owns its supported option bundle and tests.
 
+On native CMS/TSO builds, UTF READLINE/FREADLINE/FREADCDPT decode IBM1047
+stdin through `platform_text_getc`. File text streams already retain their
+selected codec. SAY and UTF text stdout/stderr writes use
+`platform_console_text_write`, independently of `-E`; BYTE reads and byte/binary
+instructions remain raw. Native diagnostics, including allocation-free panic
+output, use the same external console page. Default SAY/SAYX and UTF console
+FWRITE/FWRITECDPT raise `UNICODE_ERROR` for conversion failure and `NOTREADY`
+for output/flush failure. Custom SAY callbacks retain their output policy and
+void ABI. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md) for sequential stream and SDK limits.
+
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):

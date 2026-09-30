@@ -23,6 +23,11 @@ route uses the shared seven-page codec in the platform layer; `rxlink`, `rxdas`
 and the VM accept the same `-E` selector for supported text files. RXBIN and
 explicit binary paths stay raw. Read/write/close failures must prevent success.
 
+Native CMS/TSO SDK entry points explicitly disable runtime character conversion.
+The platform layer wraps raw native text files with the shared codec and converts
+first-party stdout/stderr diagnostics. Binary opens remain raw; sequential text
+update modes are rejected before opening. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md).
+
 ## The Compilation Pipeline
 
 The pipeline of transforming Rexx source code into executable bytecode is structured as follows:

@@ -30,8 +30,11 @@ unchanged. In a UTF VM, READLINE and text reads from special `stdin` decode
 native IBM1047 into UTF-8. SAY, text writes to `stdout`/`stderr`, first-party
 tool diagnostics and bounded exhaustion diagnostics encode native IBM1047.
 This console encoding is independent of `-E`. Unrepresentable ordinary console
-text reports an error through its output helper; exhaustion reporting retains
-its emergency replacement policy. Classic BYTE line/codepoint reads and byte
+text returns an error from its output helper. Default SAY/SAYX and UTF console
+FWRITE/FWRITECDPT propagate conversion failure as `UNICODE_ERROR`; output/flush
+failure raises `NOTREADY`. Custom SAY callbacks keep their void ABI and own
+their output policy. Exhaustion reporting retains its emergency replacement
+policy. Classic BYTE line/codepoint reads and byte
 or binary instructions retain raw bytes.
 
 The existing native libc text wrapper supports sequential `r`, `w` and `a`
@@ -77,6 +80,10 @@ and malformed/unrepresentable stream errors. `mainframe_handlers_utf8` and
 `mainframe_handlers_byte` compile the real READLINE/FREADLINE/FREADCDPT bodies
 against a small value fixture and check native stdin in both modes. They test
 handler wiring without simulating the entire VM or its signal transport.
+`mainframe_console_signals` executes the real switch VM with the host native
+console adapter, proving terminal and caught conversion signals, native accent
+bytes, custom SAY policy and write/flush errors. It reuses the desktop core
+and is not a native mainframe VM build.
 `oom_mainframe` checks native exhaustion diagnostics with short writes and
 interruption while preserving the caller's errno. These are host component
 proofs; none establishes guest qualification.

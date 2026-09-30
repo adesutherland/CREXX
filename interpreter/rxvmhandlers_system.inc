@@ -114,8 +114,14 @@ RXVM_HANDLER(FWRITE_REG_REG, VM_ADVANCE(2);
         {
             FILE *stream = (FILE*)op1R->int_value;
             RXVM_UTF8_ONLY(
-            if (stream == stdout || stream == stderr)
-                (void)platform_console_text_write(stream, op2R->string_value, op2R->string_length);
+            if (stream == stdout || stream == stderr) {
+                errno = 0;
+                if (platform_console_text_write(stream, op2R->string_value, op2R->string_length)) {
+                    unsigned char output_signal = errno == EILSEQ ? RXSIGNAL_UNICODE_ERROR : RXSIGNAL_NOTREADY;
+                    SET_SIGNAL_MSG(output_signal,
+                                   "Unable to write console text");
+                }
+            }
             else
                 fwrite(op2R->string_value, op2R->string_length, 1, stream);
             )
@@ -165,8 +171,14 @@ RXVM_HANDLER(FWRITECDPT_REG_REG, VM_ADVANCE(2);
             {
                 FILE *stream = (FILE*)op1R->int_value;
                 RXVM_UTF8_ONLY(
-                if (stream == stdout || stream == stderr)
-                    (void)platform_console_text_write(stream, codepoint, length_of_codepoint);
+                if (stream == stdout || stream == stderr) {
+                    errno = 0;
+                    if (platform_console_text_write(stream, codepoint, length_of_codepoint)) {
+                        unsigned char output_signal = errno == EILSEQ ? RXSIGNAL_UNICODE_ERROR : RXSIGNAL_NOTREADY;
+                        SET_SIGNAL_MSG(output_signal,
+                                       "Unable to write console codepoint");
+                    }
+                }
                 else
                     fwrite(codepoint, length_of_codepoint, 1, stream);
                 )

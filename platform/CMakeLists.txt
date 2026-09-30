@@ -50,6 +50,32 @@ if(WIN32)
     target_link_libraries(platform PUBLIC psapi)
 endif()
 
+if(APPLE AND BUILD_TESTING)
+    # Reuse the ordinary VM core; replace only entry/SAY/platform console code
+    # with its native-page build to test real execution and signal transport.
+    add_executable(rxvm_mainframe_console_harness EXCLUDE_FROM_ALL
+            ../interpreter/rxvmmain.c ../interpreter/exitfunc.c
+            ${platform_sources} rxinteger.c tests/mainframe_console_mock.c)
+    target_include_directories(rxvm_mainframe_console_harness PRIVATE . tests
+            ../interpreter ../interpreter/rxvmplugin ../assembler
+            ../binutils/include ../avl_tree ../rxpa ../utf8 ../inc)
+    target_compile_definitions(rxvm_mainframe_console_harness PRIVATE
+            CREXX_CMS_ELF=1 NTHREADED=1)
+    set_property(TARGET rxvm_mainframe_console_harness PROPERTY C_STANDARD 99)
+    target_link_libraries(rxvm_mainframe_console_harness PRIVATE rxbvml)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME mainframe_console_signals
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/console_signals.py
+            --assembler $<TARGET_FILE:rxas> --vm $<TARGET_FILE:rxvm_mainframe_console_harness>
+            --codec $<TARGET_FILE:text_fixture_codec>
+            --work ${CMAKE_CURRENT_BINARY_DIR}/console-signals)
+    # Debug 0.37 s; Apple ASan 4.09 s (2026-09-30).
+    # Serialize the tool/VM matrix; timeout is a generous hang backstop.
+    set_tests_properties(mainframe_console_signals PROPERTIES
+            LABELS "platform;text;cms;vm" RUN_SERIAL TRUE TIMEOUT 300
+            CREXX_PREP_TARGETS "rxas;rxvm_mainframe_console_harness;text_fixture_codec")
+endif()
+
 if(UNIX AND BUILD_TESTING)
     # Deliberately retain Linux aliases to test profile precedence on both hosts.
     add_executable(platform_cms_harness platform_cms_harness.c ${platform_sources})
@@ -168,7 +194,7 @@ if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
             DEPENDS rxc rxas rxlink rxbvm rxc_cms_text_harness rxas_cms_text_harness text_fixture_codec
             VERBATIM)
     add_test(NAME platform_cms_text COMMAND ${cms_text_command})
-    # Native Debug: 1.82 s; maintained Apple ASan: 5.21 s (2026-09-21).
+    # Updated raw-codec matrix: Debug 0.95 s; Apple ASan 19.06 s (2026-09-30).
     # Serialize nested tool invocations; the deadline is hang protection.
     set_tests_properties(platform_cms_text PROPERTIES LABELS "platform;cms;text"
             RUN_SERIAL TRUE TIMEOUT 300)
