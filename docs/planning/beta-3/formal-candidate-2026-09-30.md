@@ -70,6 +70,30 @@ the earlier `e15392da7` publication receipt does not qualify later changes.
 The preceding temporary candidate branch and PR #713 are cancelled/closed;
 their incomplete runs do not qualify this `develop` candidate.
 
+### Release QA repair work — 30 September 2026
+
+Candidate `108257c3d5ecfed961471fc79fa4c955dfd4eb7c` failed two required
+hosted jobs. [Build CREXX 36770484031](https://github.com/adesutherland/CREXX/actions/runs/36770484031)
+failed MinGW `keyaccess_test_noopt` after compacted database reopen;
+[Deep Build QA 36770503107](https://github.com/adesutherland/CREXX/actions/runs/36770503107)
+failed Linux `platform_cms_text` because an injected output write failure
+returned success. These are separate release blockers; AC-02 and STEP-03 remain
+open. The `hotfix` checkout, fast-forwarded to the candidate, owns repairs while
+the local `develop` checkout is in other hands.
+
+1. **B3-REL-STEP-03A — in progress** (AC-02): reproduce and repair MinGW binary
+   reopen. The current KeyAccess `r+` route retains C text mode even though its
+   data and index records are binary. Make the regression deterministic with a
+   record containing a `0x1a` length byte; verify normal focused behavior and
+   the affected hosted MinGW lane before promotion.
+2. **B3-REL-STEP-03B — in progress** (AC-02): trace the Linux CMS host fixture's
+   injected write error through the raw and codec `FILE *` layers. Repair any
+   lost error without changing the approved text/raw ownership boundary; verify
+   the focused Debug test and maintained sanitizer shape before promotion.
+3. **B3-REL-STEP-03C — open** (AC-02): review all other terminal QA outcomes,
+   promote reviewed fixes from `hotfix` to remote `develop`, and requalify the
+   changed exact candidate. Do not tag a revision with either failure open.
+
 ## Remaining formal release work
 
 These are existing release/platform requirements, not additional gates for
