@@ -65,12 +65,30 @@ path for each invocation; its parent directory must exist. Paths with spaces
 are passed as single native command arguments. The Windows native paths have
 not been executed in this review.
 
+The outer driver accepts an optional sixth argument, `VERSION`, after the font
+profile: `check|prepare|build REPO OUTPUT [BOOK|all] [initial|original] [VERSION]`.
+Pass the exact `display_version` supplied to the matching binary workflow,
+such as `crexx-1.0.0-beta.3` or
+`crexx-1.0.0-beta.3+dev-snapshot.g0123456789ab`. It must be 1–96 ASCII
+characters, start with a letter or digit, and otherwise contain only letters,
+digits, `.`, `+`, `-` and `_`. Invalid values fail before staging; underscores
+are TeX-escaped and long values receive invisible line-break opportunities.
+The supplied version appears on every selected book's detached cover and
+publication-data page. Omit it to retain the original cover and the authored
+`rxc -v` publication-data splice. The checked-in title, preamble and
+publication-data templates are never rewritten by this option.
+
 ```sh
 "$product/rxvm" "$port/generate-books-linked.rxbin" -a \
   check "$PWD" "$port/pdf-books" all
 log=$(mktemp /tmp/crexx-book-build.XXXXXX)
 "$product/rxvm" "$port/generate-books-linked.rxbin" -a \
   build "$PWD" "$port/pdf-books" all initial >"$log" 2>&1
+# To stamp PDFs with the exact matching binary-workflow version:
+versioned_log=$(mktemp /tmp/crexx-book-versioned.XXXXXX)
+"$product/rxvm" "$port/generate-books-linked.rxbin" -a \
+  build "$PWD" "$port/versioned-pdf-books" all initial \
+  crexx-1.0.0-beta.3+dev-snapshot.g0123456789ab >"$versioned_log" 2>&1
 ```
 
 To rebuild a single **already staged** publication with the smaller driver,
@@ -211,7 +229,9 @@ python3 docs/texttools/tests/run.py --bin "$product" --pandoc /absolute/path/to/
 The harness compiles, assembles, links and executes the module/drivers. It checks
 transformations, filenames, fences, byte-preserving assets, symlink staging,
 four-book tool argv/CWD, explicit options, preflight, freshness and failed/missing
-outputs. Fake typesetters test orchestration and never qualify real PDF output.
+outputs. It also checks all four detached cover stamps, publication-data stamping,
+the legacy invocation and invalid version rejection. Fake typesetters test
+orchestration and never qualify real PDF output.
 The optional Pandoc run prepares the actual books and checks every extracted
 listing's path in the generated TeX.
 

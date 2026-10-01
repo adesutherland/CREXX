@@ -20,6 +20,14 @@ BOOKS = ("crexx_language_reference", "crexx_programming_guide",
          "crexx_vm_spec", "crexx_library_reference")
 
 
+def staged_version(preamble):
+    line = next(line for line in preamble.splitlines()
+                if line.startswith("\\newcommand{\\BookBuildVersion}"))
+    encoded = line.removeprefix(
+        "\\newcommand{\\BookBuildVersion}{\\texttt{").removesuffix("}}")
+    return encoded.replace("\\allowbreak{}", "").replace("\\_", "_")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bin", type=Path, required=True)
@@ -103,11 +111,13 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
     boilerplate = source / "docs/books/boilerplate"
     boilerplate.mkdir(parents=True)
     (boilerplate / "preamble.tex").write_text(
-        "\\usepackage{fontspec}\n\\usepackage{fancyvrb}\n"
+        "\\usepackage{hyperref}\n\\usepackage{fontspec}\n\\usepackage{fancyvrb}\n"
         "\\usepackage{bashful}\n\\usepackage{listings}\n"
         "\\setmainfont[Mapping=tex-text]{Minion Pro}\n"
         "\\newfontfamily\\headingfont{Avenir Next}\n"
         "\\newfontfamily\\codefont{IBM Plex Mono}\n")
+    (boilerplate / "bookmeta.tex").write_text(
+        "Content is up to date with version \\emph{\\splice{rxc -v}}\n")
     for book in BOOKS:
         folder = source / "docs/books" / book
         folder.mkdir(parents=True)
@@ -117,7 +127,8 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
             (folder / "instruction_chapter.tex").write_text(
                 r"\IfFileExists{example.rxas}{\obeylines \begin{terminaloutput} \splice{rxvme example} \end{terminaloutput}}{}" + "\n" + r"\includesvg{../../svg/cnop.gv}" + "\n")
         (folder / (book + ".tex")).write_text(
-            "\\title{\\fontspec{Bodoni URW\n    Light}Title}\n")
+            "\\title{\\fontspec{Bodoni URW\n    Light}Title}\n"
+            "\\date{\\null\\hfill \\today}\n")
         old = folder / "tex/book"
         old.mkdir(parents=True)
         (old / (book + ".pdf")).write_bytes(b"old PDF must not be copied")
@@ -156,6 +167,41 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
     assert "Minion Pro" not in preamble
     assert "texgyrepagella-regular.otf" in (
         staged / BOOKS[0] / (BOOKS[0] + ".tex")).read_text()
+    assert "\\BookBuildVersion" not in preamble, "Legacy invocation changed its preamble"
+    assert "\\splice{rxc -v}" in (staged / "boilerplate/bookmeta.tex").read_text()
+    for book in BOOKS:
+        assert "\\date{\\null\\hfill \\today}" in (staged / book / (book + ".tex")).read_text()
+    development_version = "crexx-1.0.0-beta.3+dev-snapshot.g0123456789ab"
+    run("versioned-all-prepare", wrapper + ["prepare", source,
+        work / "versioned all", "all", "initial", development_version], env=env)
+    versioned = work / "versioned all/docs/books"
+    versioned_preamble = (versioned / "boilerplate/preamble.tex").read_text()
+    assert "\\newcommand{\\BookBuildVersion}" in versioned_preamble
+    assert staged_version(versioned_preamble) == development_version
+    versioned_meta = (versioned / "boilerplate/bookmeta.tex").read_text()
+    assert "\\emph{\\BookBuildVersion}" in versioned_meta
+    assert "\\splice{rxc -v}" not in versioned_meta
+    for book in BOOKS:
+        title = (versioned / book / (book + ".tex")).read_text()
+        assert "Build version: \\BookBuildVersion" in title, book
+        assert "\\date{\\null\\hfill \\today" in title, book
+    run("versioned-tag-prepare", wrapper + ["prepare", source,
+        work / "versioned tag", BOOKS[0], "initial", "crexx-1.0.0-beta.3"], env=env)
+    assert staged_version((
+        work / "versioned tag/docs/books/boilerplate/preamble.tex").read_text()
+        ) == "crexx-1.0.0-beta.3"
+    run("versioned-underscore-prepare", wrapper + ["prepare", source,
+        work / "versioned underscore", BOOKS[0], "initial", "crexx-1.0.0+dev_snapshot.g0123456789ab"], env=env)
+    underscore_preamble = (
+        work / "versioned underscore/docs/books/boilerplate/preamble.tex").read_text()
+    assert "dev\\_\\allowbreak{}snapshot" in underscore_preamble
+    assert staged_version(underscore_preamble) == "crexx-1.0.0+dev_snapshot.g0123456789ab"
+    for index, invalid in enumerate(("", "bad version", "bad%version", "bad&version",
+                                     "bad#version", "bad\\version", "-bad", "a" * 97)):
+        bad_output = work / f"invalid-version-{index}"
+        run(f"invalid-version-{index}", wrapper + ["prepare", source,
+            bad_output, BOOKS[0], "initial", invalid], expected=2, env=env)
+        assert not bad_output.exists(), invalid
     calls = [json.loads(line) for line in commands.read_text().splitlines()]
     for book in BOOKS:
         built = work / "four books/docs/books" / book / "tex/book"
@@ -188,6 +234,15 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
         original_staged / "boilerplate/preamble.tex").read_text()
     assert "\\input{../../../boilerplate/glyph-fallback}" not in (
         original_staged / "boilerplate/preamble.tex").read_text()
+    run("original-fonts-versioned", wrapper + ["prepare", source,
+        work / "original-fonts-versioned", BOOKS[0], "original",
+        "crexx-1.0.0-beta.3"], env=env)
+    original_versioned = work / "original-fonts-versioned/docs/books"
+    assert "Minion Pro" in (original_versioned / "boilerplate/preamble.tex").read_text()
+    assert "\\newcommand{\\BookBuildVersion}" in (
+        original_versioned / "boilerplate/preamble.tex").read_text()
+    assert "Build version: \\BookBuildVersion" in (
+        original_versioned / BOOKS[0] / (BOOKS[0] + ".tex")).read_text()
     run("existing-output", wrapper + ["build", source, work / "four books", BOOKS[0]], expected=2, env=env)
     run("inside-source", wrapper + ["build", source, source / "bad-output", BOOKS[0]], expected=2, env=env)
     alias = work / "source-alias"

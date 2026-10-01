@@ -36,8 +36,9 @@ TextTools, RexxDoc or the instruction generator.
 
 Checked on 1 October 2026: GitHub reports the site built successfully from
 `ae1607b8e145174422cee7f3e73fbcc37a65226c`. Local changes on `develop`
-are not published web content. The ordinary workflows do not contain a book
-PDF generation job or a CMake target for these four publications.
+are not published web content. The ordinary Build CREXX workflow now invokes the Linux book job described
+below; this does not change the master-only web publication route. There is no
+CMake target for these four publications.
 
 ## Printed books through cREXX
 
@@ -61,7 +62,7 @@ assemble and link the port outside the source tree. Arguments to the resulting
 program are:
 
 ```text
-generate-books check|prepare|build REPO OUTPUT [BOOK|all] [initial|original]
+generate-books check|prepare|build REPO OUTPUT [BOOK|all] [initial|original] [VERSION]
 ```
 
 Use absolute paths and a fresh output directory whose parent already exists.
@@ -436,3 +437,65 @@ that file into the GitHub Release body without rebasing relative links.
 Use tag-pinned absolute links in the published body and verify the resulting
 links. The workflow currently does not rebase relative source links. Release
 publication is separate from the book-generation route in issue #712.
+
+## Linux CI, cover versions and release assets
+
+[Build CREXX](../.github/workflows/build.yml) invokes the reusable
+[Linux book job](../.github/workflows/build-docs.yml) on normal develop/master
+pushes, pull requests and future versioned tags. It checks out the exact source
+SHA selected by version metadata and builds the actual embedded `rxvme` plus the
+required compiler, assembler, linker, VM and helper tools. Generation and lexical
+highlighting remain the repository's cREXX scripts; shell/Python helpers install
+CI dependencies, launch the route and validate the complete PDF asset set.
+
+Ubuntu 24.04 supplies XeLaTeX and the selected TeX Live packages, Biber,
+makeindex, xdvipdfmx, Inkscape, Ghostscript and Poppler. Pandoc 3.11, JuliaMono
+0.63.2 and GNU Unifont 18.0.01 downloads have pinned SHA-256 checksums in
+[install-doc-tools-linux.sh](../scripts/install-doc-tools-linux.sh); downloaded
+archives are cached. Package/tool versions are retained with each build. This
+Linux distribution TeX installation differs from the qualified macOS TeX Live
+2026 installation; its first real four-book result needs independent review.
+Windows generation and original typography remain unqualified.
+
+An optional sixth driver argument supplies the exact version token:
+
+```sh
+"$product/rxvm" "$port/generate-books-linked.rxbin" -a \
+  build "$PWD" "$port/pdf-books" all initial \
+  'crexx-1.0.0-beta.3+dev-snapshot.g0123456789ab'
+```
+
+The stamp is applied to staged cover and publication-data pages only. It is the
+workflow's explicit `display_version`, not an older compiler's cached Git
+suffix. Existing calls without the sixth argument preserve the authored date
+and version-splice behavior. The CLI guide documents accepted version tokens.
+
+The job validates all four PDFs, cover/publication-data stamps, final typesetting
+logs, all extracted listing snapshots against authored Markdown, and unchanged
+source hashes. Only a complete successful set is uploaded as
+`documentation-release-asset`. The PDFs are `CREXX-TAG-language-reference.pdf`,
+`CREXX-TAG-programming-guide.pdf`, `CREXX-TAG-vm-specification.pdf` and
+`CREXX-TAG-library-reference.pdf`. `TAG` is `dev-snapshot` or the actual versioned
+tag (including its `v`). `CREXX-TAG-docs.json` records source commit/version,
+font profile, tool versions, page counts and PDF SHA-256 hashes. PRs retain the
+assets in Actions without publishing a release. Logs, prepared TeX and literal
+listing snapshots are retained as `linux-documentation-evidence` for 14 days.
+No generated PDFs or historical CI runs enter HEAD.
+
+As approved by Adrian, ordinary binary publication proceeds if document
+generation fails. The workflow summary and release body report that no matching
+PDFs are available. A refreshed development snapshot removes old PDF/manifest
+assets rather than presenting documents from another commit. The existing
+binary checks and latest-develop publication guard remain required.
+[Deep Build QA](../.github/workflows/deep-build.yml) invokes the identical Linux
+route with document failures fatal; it cannot record a qualified develop marker
+unless the four books pass. GitHub runs scheduled workflows from its default
+branch, currently `master`: the new scheduled gate becomes live when the
+workflow is promoted there. A Deep dispatch explicitly selecting `develop` uses
+its new required gate immediately. Until promotion, do not claim the scheduled
+master gate includes documents. This is an overnight assurance requirement, not a
+reason to dispatch the entire Deep matrix for ordinary documentation edits.
+
+Current status: CI wiring and focused failure/asset checks pass independent review;
+real hosted Linux PDFs and their first asset publication remain open in
+[the authoritative plan](planning/document-generation.md#linux-ci-and-versioned-publication-follow-up--1-october-2026).

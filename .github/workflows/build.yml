@@ -123,6 +123,21 @@ jobs:
       - name: Check split package and shared runtime guards
         run: python3 -B -m unittest discover -s scripts/tests -p 'test_split_release.py' -v
 
+      - name: Check document publication policy and asset identity
+        run: python3 -B -m unittest discover -s scripts/tests -p 'test_doc_publication.py' -v
+
+  documents:
+    name: Build Linux books
+    needs: version
+    if: github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v'))
+    uses: ./.github/workflows/build-docs.yml
+    with:
+      commit: ${{ needs.version.outputs.commit }}
+      version: ${{ needs.version.outputs.display_version }}
+      channel: ${{ needs.version.outputs.channel }}
+      asset_tag: ${{ github.event_name == 'create' && github.ref_name || (github.ref == 'refs/heads/develop' && 'dev-snapshot' || 'ci') }}
+      required: false
+
   build:
     name: ${{ matrix.name }}
     needs: version
@@ -1512,7 +1527,13 @@ jobs:
       - mingw-core
       - comprehensive
       - version
-    if: github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')
+      - documents
+    if: >-
+      always() && !cancelled() &&
+      needs.version.result == 'success' && needs.build.result == 'success' &&
+      needs.llama.result == 'success' && needs.mingw-core.result == 'success' &&
+      needs.comprehensive.result == 'success' &&
+      github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')
     timeout-minutes: 15
     permissions:
       contents: write
@@ -1526,10 +1547,19 @@ jobs:
       - name: Download release assets
         uses: actions/download-artifact@v8
         with:
-          pattern: '*-release-asset'
+          pattern: '{CREXX,llama.rexx}-*-release-asset'
           path: ${{ runner.temp }}/downloaded-release-assets
 
+      - name: Download optional document assets
+        if: needs.documents.outputs.docs_ready == 'true'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: documentation-release-asset
+          path: ${{ runner.temp }}/downloaded-release-assets/documents
+
       - name: Collect release assets
+        id: asset_collection
         shell: bash
         run: |
           set -euo pipefail
@@ -1539,7 +1569,7 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'CREXX-*.zip' -o -name 'llama.rexx-*.zip' -o -name 'CREXX-*.pkg' -o -name 'llama.rexx-*.pkg' \) \
+            \( -name 'CREXX-*.zip' -o -name 'llama.rexx-*.zip' -o -name 'CREXX-*.pkg' -o -name 'llama.rexx-*.pkg' -o -name 'CREXX-*.pdf' -o -name 'CREXX-*-docs.json' \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           zip_count="$(find "$asset_dir" -name '*.zip' -type f | wc -l | tr -d ' ')"
@@ -1573,6 +1603,16 @@ jobs:
             exit 1
           fi
 
+          docs_ready=false
+          if [ "${{ needs.documents.outputs.docs_ready }}" = true ] && \
+             python3 scripts/check-doc-assets.py verify "$asset_dir" "$GITHUB_REF_NAME" \
+               "${{ needs.version.outputs.commit }}" "${{ needs.version.outputs.display_version }}"; then
+            docs_ready=true
+          else
+            rm -f "$asset_dir/"*.pdf "$asset_dir/"*-docs.json
+            echo "::warning::Document assets unavailable; publishing qualified binaries without PDFs."
+          fi
+          echo "docs_ready=$docs_ready" >> "$GITHUB_OUTPUT"
           ls -lh "$asset_dir"
 
       - name: Determine release metadata
@@ -1613,6 +1653,12 @@ jobs:
             } > "$release_notes"
           fi
 
+          if [ "${{ steps.asset_collection.outputs.docs_ready }}" = true ]; then
+            # shellcheck disable=SC2016 # Markdown backticks are literal.
+            printf '\nFour versioned book PDFs and their `CREXX-%s-docs.json` provenance manifest are attached.\n' "$tag" >> "$release_notes"
+          else
+            printf '\nNo complete matching document asset set is available for this revision; no book PDFs are attached. See the workflow document evidence.\n' >> "$release_notes"
+          fi
           echo "RELEASE_NOTES_PATH=$release_notes" >> "$GITHUB_ENV"
 
       - name: Publish GitHub Release
@@ -1636,7 +1682,13 @@ jobs:
       - mingw-core
       - optimizer-parity
       - version
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+      - documents
+    if: >-
+      always() && !cancelled() &&
+      needs.version.result == 'success' && needs.build.result == 'success' &&
+      needs.llama.result == 'success' && needs.mingw-core.result == 'success' &&
+      needs.optimizer-parity.result == 'success' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/develop'
     timeout-minutes: 15
     permissions:
       contents: write
@@ -1670,10 +1722,19 @@ jobs:
         if: steps.publish_target.outputs.should_publish == 'true'
         uses: actions/download-artifact@v8
         with:
-          pattern: '*-release-asset'
+          pattern: '{CREXX,llama.rexx}-*-release-asset'
           path: ${{ runner.temp }}/downloaded-dev-snapshot-assets
 
+      - name: Download optional document assets
+        if: steps.publish_target.outputs.should_publish == 'true' && needs.documents.outputs.docs_ready == 'true'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: documentation-release-asset
+          path: ${{ runner.temp }}/downloaded-dev-snapshot-assets/documents
+
       - name: Collect dev snapshot assets
+        id: asset_collection
         if: steps.publish_target.outputs.should_publish == 'true'
         shell: bash
         run: |
@@ -1684,7 +1745,7 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'llama.rexx-dev-snapshot-*.pkg' -o -name 'llama.rexx-dev-snapshot-*-unsigned-setup.exe' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' -o -name "CREXX-sdk-${GITHUB_SHA}-*.zip" \) \
+            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'llama.rexx-dev-snapshot-*.pkg' -o -name 'llama.rexx-dev-snapshot-*-unsigned-setup.exe' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' -o -name 'CREXX-dev-snapshot-*.pdf' -o -name 'CREXX-dev-snapshot-docs.json' -o -name "CREXX-sdk-${GITHUB_SHA}-*.zip" \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
@@ -1703,6 +1764,23 @@ jobs:
             "CREXX-sdk-${GITHUB_SHA}-macos-arm64.zip"
             "CREXX-sdk-${GITHUB_SHA}-macos-x86_64.zip"
           )
+
+          docs_ready=false
+          if [ "${{ needs.documents.outputs.docs_ready }}" = true ] && \
+             python3 scripts/check-doc-assets.py verify "$asset_dir" dev-snapshot \
+               "$GITHUB_SHA" "${{ needs.version.outputs.display_version }}"; then
+            docs_ready=true
+            expected_assets+=(
+              CREXX-dev-snapshot-language-reference.pdf
+              CREXX-dev-snapshot-programming-guide.pdf
+              CREXX-dev-snapshot-vm-specification.pdf
+              CREXX-dev-snapshot-library-reference.pdf
+              CREXX-dev-snapshot-docs.json
+            )
+          else
+            rm -f "$asset_dir/"*.pdf "$asset_dir/"*-docs.json
+            echo "::warning::Document assets unavailable; publishing qualified binaries without PDFs."
+          fi
 
           pkg_count="$(find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-macos-*.pkg' -type f | wc -l | tr -d ' ')"
           if [ "$pkg_count" = "2" ]; then
@@ -1733,6 +1811,7 @@ jobs:
             exit 1
           fi
 
+          echo "docs_ready=$docs_ready" >> "$GITHUB_OUTPUT"
           ls -lh "$asset_dir"
 
       - name: Prepare dev snapshot notes
@@ -1764,6 +1843,12 @@ jobs:
             echo "Add local inference with \`llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe\` after installing the matching core. Its install, provider, reinstall and removal checks pass before publication."
             echo
             echo "Optional signed core and llama Vulkan ZIPs and setup executables are added together when the maintainer runs \`scripts/sign-windows-dev-snapshot.sh\`. Payloads, embedded uninstallers and setups are signed. Unsigned downloads remain available. Previous signed assets and legacy installers are removed whenever the snapshot is refreshed."
+            echo
+            if [ "${{ steps.asset_collection.outputs.docs_ready }}" = true ]; then
+              echo "Four book PDFs built on Linux have the version above on their covers. See \`CREXX-dev-snapshot-docs.json\` for source identity, tools, page counts and PDF hashes."
+            else
+              echo "Document PDFs are unavailable for this commit. No matching book PDFs are attached; see the workflow's linux-documentation-evidence artifact. Previous snapshot PDFs have been removed."
+            fi
             echo
             echo '### Automatic asset SHA-256 checksums'
             echo
@@ -1828,7 +1913,7 @@ jobs:
               gh release view "$SNAPSHOT_TAG" \
                 -R "$GITHUB_REPOSITORY" \
                 --json assets \
-                --jq '.assets[] | select(.name | (startswith("CREXX-dev-snapshot-") or startswith("CREXX-sdk-") or startswith("llama.rexx-dev-snapshot-")) and (endswith(".tmp.zip") or endswith(".tmp.deb") or endswith(".tmp.pkg") or endswith(".tmp.exe") or endswith(".tmp.json"))) | .apiUrl' |
+                --jq '.assets[] | select(.name | (startswith("CREXX-dev-snapshot-") or startswith("CREXX-sdk-") or startswith("llama.rexx-dev-snapshot-")) and (endswith(".tmp.zip") or endswith(".tmp.deb") or endswith(".tmp.pkg") or endswith(".tmp.exe") or endswith(".tmp.json") or endswith(".tmp.pdf"))) | .apiUrl' |
                 sed 's#^https://api.github.com/##'
             )
           }
@@ -1847,6 +1932,12 @@ jobs:
                 ;;
               *.exe)
                 echo "${asset%.exe}-${GITHUB_RUN_ID}.tmp.exe"
+                ;;
+              *.pdf)
+                echo "${asset%.pdf}-${GITHUB_RUN_ID}.tmp.pdf"
+                ;;
+              *.json)
+                echo "${asset%.json}-${GITHUB_RUN_ID}.tmp.json"
                 ;;
               *)
                 echo "${asset}-${GITHUB_RUN_ID}.tmp"
@@ -1914,6 +2005,11 @@ jobs:
           done
 
           for stale_optional_asset in \
+            CREXX-dev-snapshot-language-reference.pdf \
+            CREXX-dev-snapshot-programming-guide.pdf \
+            CREXX-dev-snapshot-vm-specification.pdf \
+            CREXX-dev-snapshot-library-reference.pdf \
+            CREXX-dev-snapshot-docs.json \
             CREXX-dev-snapshot-linux-x64-cuda.zip \
             CREXX-dev-snapshot-windows-x64-cuda.zip \
             llama.rexx-dev-snapshot-linux-x64-cuda.zip \

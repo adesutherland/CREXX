@@ -1,7 +1,7 @@
 /*
  * Detached book generation through the repository's cREXX TextTools port.
  * René's original buildbooks.rexx and buildbooks.crexx remain as authored.
- * Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all] [initial|original]
+ * Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all] [initial|original] [VERSION]
  * Build with the texttools module. See BUILDING-DOCS.md for the commands.
  */
 options levelb
@@ -13,8 +13,8 @@ i = .int
 book = .string
 path = .string
 tool = .string
-if args[0] < 3 | args[0] > 5 then do
-  say 'Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all] [initial|original]'
+if args[0] < 3 | args[0] > 6 then do
+  say 'Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all] [initial|original] [VERSION]'
   return 2
 end
 mode = args[1]
@@ -32,10 +32,18 @@ if args[0] >= 4 then do
     books = args[4]
   end
 end
-if args[0] = 5 then profile = args[5]
+if args[0] >= 5 then profile = args[5]
 if profile <> 'initial' & profile <> 'original' then do
   say 'Unknown font profile:' profile
   return 2
+end
+version = ''
+if args[0] = 6 then do
+  version = args[6]
+  if valid_version(version) = 0 then do
+    say 'Invalid VERSION: use 1-96 ASCII letters, digits, dot, plus, hyphen or underscore; begin with a letter or digit.'
+    return 2
+  end
 end
 if absolute_path(repo) = 0 | absolute_path(output) = 0 then do
   say 'Use non-root absolute paths without dot components for REPO and OUTPUT.'
@@ -87,6 +95,7 @@ end
 say 'Books:' books
 say 'Output:' output
 say 'Font profile:' profile
+if version <> '' then say 'Publication version:' version
 if missing > 0 then return 1
 if mode = 'check' then do
   say 'Executables and book inputs found. Fonts/packages still need qualification.'
@@ -105,6 +114,9 @@ if profile = 'initial' then do
     book = word(books, i)
     if texttools..applyfontprofile(output || '/docs/books/' || book, profile) <> 0 then return 1
   end
+end
+if version <> '' then do
+  if stamp_version(output, books, version) <> 0 then return 1
 end
 do i = 1 to words(books)
   book = word(books, i)
@@ -136,3 +148,82 @@ canonical_directory: procedure = .string
   address crexx 'pwd' output result
   if rc <> 0 then return ''
   return strip(translate(result[1], '/', '\'), 't', '/')
+
+valid_version: procedure = .boolean
+  arg version = .string
+  allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.+-_'
+  leading = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  i = .int
+  if length(version) < 1 | length(version) > 96 then return 0
+  if pos(left(version, 1), leading) = 0 then return 0
+  do i = 1 to length(version)
+    if pos(substr(version, i, 1), allowed) = 0 then return 0
+  end
+  return 1
+
+/* Printable TeX only receives validated ASCII; underscore is escaped and
+ * discretionary breaks keep long development versions inside the cover. */
+printable_version: procedure = .string
+  arg version = .string
+  result = ''
+  unbroken = 0
+  i = .int
+  do i = 1 to length(version)
+    ch = substr(version, i, 1)
+    if ch = '_' then result = result || '\_'
+    else result = result || ch
+    if pos(ch, '.+-_') > 0 then do
+      result = result || '\allowbreak{}'
+      unbroken = 0
+    end
+    else do
+      unbroken = unbroken + 1
+      if unbroken = 20 then do
+        result = result || '\allowbreak{}'
+        unbroken = 0
+      end
+    end
+  end
+  return result
+
+/* Stamp only detached inputs. The shared macro makes cover and publication
+ * data print exactly the same explicit binary-workflow version. */
+stamp_version: procedure = .int
+  arg output = .string, books = .string, version = .string
+  i = .int
+  bytes = .binary
+  path = output || '/docs/books/boilerplate/preamble.tex'
+  original = readbinary(path) as .string
+  if countstr('\usepackage{hyperref}', original) <> 1 then do
+    say 'Version stamp cannot locate staged preamble:' path
+    return 1
+  end
+  updated = original || '0a'x ||,
+    '\newcommand{\BookBuildVersion}{\texttt{' || printable_version(version) || '}}' || '0a'x
+  bytes = updated as .binary
+  if writebinary(path, bytes) <> binlength(bytes) then return 1
+  path = output || '/docs/books/boilerplate/bookmeta.tex'
+  original = readbinary(path) as .string
+  if countstr('\splice{rxc -v}', original) <> 1 then do
+    say 'Version stamp cannot locate staged publication data:' path
+    return 1
+  end
+  updated = changestr('\splice{rxc -v}', original, '\BookBuildVersion')
+  bytes = updated as .binary
+  if writebinary(path, bytes) <> binlength(bytes) then return 1
+  do i = 1 to words(books)
+    book = word(books, i)
+    path = output || '/docs/books/' || book || '/' || book || '.tex'
+    original = readbinary(path) as .string
+    anchor = '\date{\null\hfill \today}'
+    if countstr(anchor, original) <> 1 then do
+      say 'Version stamp cannot locate staged title date:' path
+      return 1
+    end
+    updated = changestr(anchor, original,,
+      '\date{\null\hfill \today\\[1ex]' ||,
+      '\parbox[t]{0.9\textwidth}{\raggedright\small Build version: \BookBuildVersion}}')
+    bytes = updated as .binary
+    if writebinary(path, bytes) <> binlength(bytes) then return 1
+  end
+  return 0

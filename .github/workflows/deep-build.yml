@@ -92,6 +92,16 @@ jobs:
             echo "Running deep QA: develop ${{ steps.target.outputs.target_sha }} has not passed a scheduled deep workflow." >> "$GITHUB_STEP_SUMMARY"
           fi
 
+  documents:
+    name: Required Linux books
+    needs: assurance-gate
+    if: needs.assurance-gate.outputs.should_run == 'true'
+    uses: ./.github/workflows/build-docs.yml
+    with:
+      commit: ${{ needs.assurance-gate.outputs.target_sha }}
+      asset_tag: deep
+      required: true
+
   comprehensive:
     name: Comprehensive ${{ matrix.name }}
     needs: assurance-gate
@@ -374,6 +384,7 @@ jobs:
       - parallel-product
       - compare-products
       - stress
+      - documents
     if: >-
       always() &&
       github.event_name == 'schedule' &&
@@ -381,7 +392,9 @@ jobs:
       needs.comprehensive.result == 'success' &&
       needs.parallel-product.result == 'success' &&
       needs.compare-products.result == 'success' &&
-      needs.stress.result == 'success'
+      needs.stress.result == 'success' &&
+      needs.documents.result == 'success' &&
+      needs.documents.outputs.docs_ready == 'true'
     runs-on: ubuntu-24.04
 
     steps:

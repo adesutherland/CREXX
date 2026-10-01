@@ -214,8 +214,13 @@ class MatrixTests(unittest.TestCase):
                 source.mkdir()
                 for name in names:
                     (source / name).touch()
-                command = ['bash', '-c', script.replace('${{ runner.temp }}', temp)]
-                env = dict(os.environ, GITHUB_REF_NAME=version, GITHUB_SHA=source_sha)
+                expanded = script.replace('${{ runner.temp }}', temp).replace(
+                    '${{ needs.documents.outputs.docs_ready }}', 'false').replace(
+                    '${{ needs.version.outputs.commit }}', source_sha).replace(
+                    '${{ needs.version.outputs.display_version }}', 'crexx-1.0.0-beta.3')
+                command = ['bash', '-c', expanded]
+                env = dict(os.environ, GITHUB_REF_NAME=version, GITHUB_SHA=source_sha,
+                           GITHUB_OUTPUT=str(root / 'outputs'))
                 result = subprocess.run(command, env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 # Empty prior collector output so a missing input cannot pass

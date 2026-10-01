@@ -1,0 +1,140 @@
+name: Linux book generation
+
+on:
+  workflow_call:
+    inputs:
+      commit:
+        type: string
+        required: true
+      version:
+        type: string
+        default: ''
+      asset_tag:
+        type: string
+        default: ci
+      channel:
+        type: string
+        default: nightly
+      required:
+        description: Fail the caller when documentation fails (Deep Build QA).
+        type: boolean
+        default: false
+    outputs:
+      docs_ready:
+        description: All four versioned PDFs were validated and uploaded.
+        value: ${{ jobs.books.outputs.docs_ready }}
+
+permissions:
+  contents: read
+
+jobs:
+  books:
+    name: Linux four-book PDFs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    outputs:
+      docs_ready: ${{ steps.assets.outcome == 'success' && steps.build.outcome == 'success' }}
+    steps:
+      - name: Checkout exact document source
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.commit }}
+          submodules: recursive
+
+      - name: Python for PDF validation
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Cache pinned converter and font downloads
+        uses: actions/cache@v5
+        with:
+          path: ${{ runner.temp }}/doc-tools/downloads
+          key: linux-book-downloads-${{ hashFiles('scripts/install-doc-tools-linux.sh') }}
+
+      - name: Build and validate versioned books
+        id: build
+        continue-on-error: ${{ !inputs.required }}
+        shell: bash
+        env:
+          DOCUMENT_VERSION: ${{ inputs.version }}
+          DOCUMENT_COMMIT: ${{ inputs.commit }}
+          DOCUMENT_ASSET_TAG: ${{ inputs.asset_tag }}
+          DOCUMENT_CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/doc-bootstrap-logs"
+          bootstrap_log="${RUNNER_TEMP}/doc-bootstrap-logs/dependencies.log"
+          echo "Dependency installation log: $bootstrap_log"
+          if ! bash scripts/install-doc-tools-linux.sh "${RUNNER_TEMP}/doc-tools" > "$bootstrap_log" 2>&1; then
+            tail -n 80 "$bootstrap_log"
+            exit 1
+          fi
+          export PATH="${RUNNER_TEMP}/doc-tools/bin:$PATH"
+          export TEXMFHOME="${RUNNER_TEMP}/doc-tools/texmf"
+          python -m pip install pypdf==6.1.1 > "${RUNNER_TEMP}/doc-bootstrap-logs/python.log" 2>&1
+          if [ -z "$DOCUMENT_VERSION" ]; then
+            source_version="$(tr -d '[:space:]' < VERSION)"
+            separator=+
+            if [[ "$source_version" == *+* ]]; then separator=.; fi
+            DOCUMENT_VERSION="crexx-${source_version}${separator}${DOCUMENT_CHANNEL}.g${DOCUMENT_COMMIT:0:12}"
+          fi
+          driver_log="${RUNNER_TEMP}/doc-bootstrap-logs/driver.log"
+          echo "Document build log: $driver_log"
+          if ! bash scripts/build-docs.sh "$GITHUB_WORKSPACE" "${RUNNER_TEMP}/docs" \
+              "$DOCUMENT_VERSION" "$DOCUMENT_ASSET_TAG" "$DOCUMENT_COMMIT" "$DOCUMENT_CHANNEL" > "$driver_log" 2>&1; then
+            tail -n 80 "$driver_log"
+            for log in "${RUNNER_TEMP}/docs/logs/"*.log; do
+              [ -f "$log" ] || continue
+              echo "Last lines of $log"
+              tail -n 30 "$log"
+            done
+            exit 1
+          fi
+
+      - name: Upload complete document release assets
+        id: assets
+        if: steps.build.outcome == 'success'
+        continue-on-error: ${{ !inputs.required }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: documentation-release-asset
+          path: ${{ runner.temp }}/docs/release-assets/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Retain document evidence and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-documentation-evidence
+          path: |
+            ${{ runner.temp }}/doc-bootstrap-logs
+            ${{ runner.temp }}/docs/logs
+            ${{ runner.temp }}/docs/source-before.json
+            ${{ runner.temp }}/docs/books/docs/books/*/tex/book/*.log
+            ${{ runner.temp }}/docs/books/docs/books/*/tex/book/*.blg
+            ${{ runner.temp }}/docs/books/docs/books/*/tex/book/*.ilg
+            ${{ runner.temp }}/docs/books/docs/books/*/tex/book/*-code-*.txt
+            ${{ runner.temp }}/docs/books/docs/books/*/tex/book/*.tex
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Report document result
+        if: always()
+        shell: bash
+        env:
+          DOCS_READY: ${{ steps.assets.outcome == 'success' && steps.build.outcome == 'success' }}
+          REQUIRED: ${{ inputs.required }}
+        run: |
+          if [ "$DOCS_READY" = true ]; then
+            echo "Four versioned book PDFs passed; matching release assets are available." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Document generation failed; no current book PDFs are available. See linux-documentation-evidence."
+            echo "Document generation failed. No current PDFs will be published; retained logs identify the failure." >> "$GITHUB_STEP_SUMMARY"
+            if [ "$REQUIRED" = true ]; then
+              echo "Deep Build QA requires successful documents." >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+            echo "Ordinary binary publication may proceed, as approved by the maintainer." >> "$GITHUB_STEP_SUMMARY"
+          fi

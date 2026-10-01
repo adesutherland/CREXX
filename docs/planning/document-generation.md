@@ -34,7 +34,9 @@ Approved initial qualification target: macOS end-to-end. Preserve the existing
 native POSIX/Windows file/process route. Linux/Windows PDF generation remains
 explicitly unqualified until executed there; do not describe the initial macOS
 result as cross-platform qualification. The subsequent authorised `develop`
-publication does not upload the books or cut a release. No new branch/worktree,
+publication initially did not upload the books or cut a release. The Linux CI
+follow-up below now covers book assets for matching snapshots and future tags.
+No new branch/worktree,
 language change or compiler/runtime redesign is in this plan.
 
 ## Checkpoint and retained evidence
@@ -298,3 +300,123 @@ finding remains unresolved.
 - Publication follows Adrian's authorisation above. The two cleanup checkpoints
   remain in the ancestry; detailed commit/QA/publication receipts stay outside
   the source tree. No release tag, book upload or branch/worktree is needed.
+
+## Linux CI and versioned publication follow-up — 1 October 2026
+
+Adrian requested a Linux runner to generate the books on each commit and keep
+PDFs as release assets, with the version string on every cover. He chose to
+publish binaries even when document generation fails, then specified that
+**Deep Build QA must fail on a documentation failure**. This extends the initial
+macOS scope; it does not cut a new product release or restore original fonts.
+The two authorised commits are now on develop at
+`b4d089ce9391ee7a7d0ea32dac0ea8c7e72a3da5`; their normal publication checks
+remain separate from the first Linux book qualification.
+
+### Vision and intended outcomes
+
+Use one maintained Linux book job from ordinary Build CREXX and Deep Build QA.
+Ordinary pushes/PRs generate all four books from the exact selected source SHA;
+PRs retain CI artifacts, develop snapshots and future versioned tags attach the
+four successful PDFs through the existing asset publisher. Each cover and its
+publication data identify the same explicit workflow version as the binaries,
+including the short source SHA for development builds. Authored title templates,
+notices, chapters and examples remain preserved; stamps apply to staged output.
+
+The ordinary book job reports failure prominently and retains logs but does not
+prevent binary publication. A failed/incomplete generation uploads no book asset
+set; a refreshed snapshot must not keep PDFs from an older commit. Deep Build QA
+uses the same route with failures fatal and records no successful assurance
+marker unless the books pass. The first actual Linux build qualifies Linux;
+Windows PDF execution and original typography stay unqualified. Reuse valid
+macOS and product evidence instead of dispatching broad overnight suites.
+
+### Additional numbered acceptance criteria
+
+8. **DG-AC-08 — passed locally; Linux cover review remains AC-09: explicit version on covers.** All four staged cover pages
+   and publication-data pages contain the supplied workflow version. Verify a
+   tagged version and a long development version in real rendered pages; CLI
+   regression checks cover version validation/TeX escaping and unchanged legacy
+   invocation. Compare authored-input hashes before/after generation.
+9. **DG-AC-09 — open: real Linux four-book generation.** A hosted Ubuntu Linux
+   job builds the required actual cREXX tools and fresh PDFs through the current
+   generator, free font profile and real Pandoc/XeLaTeX/index/Biber tools. Retain
+   dependency versions, exact source/PDF hashes, logs, page counts and literal
+   listing fidelity. Independently inspect covers and representative Linux
+   pages; no mock build qualifies Linux execution.
+10. **DG-AC-10 — local policy passed; hosted publication open: publication policy and asset freshness.** Inspect/test
+   successful, failed and partial document outcomes. A complete successful set
+   contributes four clearly named PDFs and provenance to matching snapshot/tag
+   assets. Failed generation permits ordinary binaries, explicitly reports no
+   current PDFs and removes obsolete snapshot PDFs. Existing binary asset checks
+   and latest-develop guard remain intact. Verify the first published PDF names,
+   version/source provenance and hashes against its hosted build.
+11. **DG-AC-11 — wiring/handover passed; scheduled master activation pending: Deep failure and maintained handover.** The scheduled or
+   explicitly selected Deep job invokes the identical Linux route with failure
+   required, and the assurance marker depends on success. Focused workflow/policy
+   checks establish failure propagation without dispatching the full overnight
+   matrix. The guides document CI triggers, dependencies, stamps, artifacts,
+   failure policy and tested platform boundaries.
+
+### Additional numbered implementation steps and ownership
+
+6. **DG-STEP-06 — complete locally; hosted covers pending (AC-08/09).** The existing generation agent adds an
+   optional explicit version to the driver and staged metadata, focused tests
+   and CLI guide. Preserve existing invocations and authored templates. Root
+   owns this plan and all CI files; serialize shared file/build access.
+7. **DG-STEP-07 — implemented locally; hosted proof open (AC-09/11).** Root supplies a reusable Linux CI route,
+   dependency/bootstrap instructions and automated PDF/provenance checks. Run
+   focused local checks; publish only this bounded follow-up once reviewable.
+   Actual Linux execution is an open qualification gate until the hosted build
+   succeeds. Any compiler/runtime defect returns to a separate approved plan.
+8. **DG-STEP-08 — implemented locally; publication proof open; depends on STEP-07 (AC-10/11).** Root integrates the
+   reusable job into Build CREXX and Deep Build QA, with the approved differing
+   failure policies and existing publishers. Verify optional/complete asset-set
+   handling, stale-PDF removal, checksum/provenance and unchanged binary gates.
+9. **DG-STEP-09 — local review passed; hosted review open; depends on STEP-06–08 (AC-08–11).** The existing
+   independent QA agent reviews the diff, failure policy, source preservation
+   and real hosted Linux outputs. Root verifies the exact matching publication
+   and updates this plan's statuses with retained evidence. No broad overnight
+   dispatch is needed to prove the new workflow's failure wiring.
+
+### Follow-up review and deployment disposition
+
+- AC-08 local preparation and real tagged/90-character development cover and
+  publication-page rendering pass independent QA. Six authored title/shared
+  templates remain byte-identical. The focused driver harness passes legacy,
+  initial/original and rejected unsafe version cases. Receipts:
+  `initial-generation/linux-ci/version-stamps/version-stamp-results.json` and
+  `linux-ci/qa/version-stamp-independent-review.json`.
+- Ordinary publication also treats a failed document artifact download or a
+  partial/hash-mismatched received set as unavailable documents: it removes
+  that set, reports the effective status and continues the existing binary
+  gates. The approved policy is not limited to a typesetter failure.
+- GitHub's live default branch is `master`. Scheduled Deep workflow files and
+  relative reusable calls come from that branch. The new required-document
+  gate on `develop` is available for an explicitly selected Deep dispatch;
+  **scheduled activation remains pending promotion to master**. Under the
+  repository release-line rule root will not update master merely to activate
+  this ordinary develop follow-up. Owner: coordinator/maintainer at the next
+  approved release promotion. This is a named deployment boundary, not evidence
+  that the current scheduled master workflow already qualifies documentation.
+
+- Root's ten focused document-publication checks and the fourteen existing
+  provider/publication guards pass. These execute actual collector/failure/
+  stale-asset loops against fixtures; successful, failed, partial and corrupted
+  document sets preserve binary gating and the approved best-effort policy.
+  Workflow syntax and shell checks pass. Exact stamp-field comparison rejects
+  shorter version prefixes; source snapshots include symlink targets as well
+  as referent hashes. This is local integration proof, not Linux PDF proof.
+
+- Independent local review passes all fourteen tagged/snapshot collector
+  cases, exact real stamp-field validation, symlink-retarget detection and a
+  case-sensitive audit of 566 active references (including eleven tracked
+  documentation symlinks). No local functional blocker remains to the first
+  hosted Linux qualification. Rechecks are retained in
+  `linux-ci/qa/independent-repair-recheck.json` and
+  `linux-ci/qa/path-case-audit.json`. Full actionlint is now clean, including its
+  ShellCheck integration; standalone shell syntax/ShellCheck/diff checks pass.
+- The original two-commit publication is complete at
+  `b4d089ce9391ee7a7d0ea32dac0ea8c7e72a3da5`: normal Build CREXX and CodeQL
+  succeeded, and the live dev-snapshot tag/body identify that exact SHA. The
+  Linux CI follow-up is a separate reviewable commit and its new hosted output
+  remains required before Linux generation/publication is claimed complete.
