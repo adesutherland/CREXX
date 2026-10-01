@@ -1,8 +1,8 @@
-# Windows NSIS Installer Trial
+# Windows NSIS Installers For CREXX Beta 3
 
-Status: beta 3 packaging spike. The current versioned release remains
-`v1.0.0-beta.2`; beta 3 installer assets must not be described as released
-until the beta 3 tag and assets exist.
+This guide describes Windows NSIS packaging for `1.0.0-beta.3` and the moving
+development snapshot. Versioned-release installer publication is a maintainer
+operation; the release asset list records which signed downloads are available.
 
 The moving dev snapshot automatically publishes unsigned NSIS installers and
 portable Windows ZIPs for the core and optional Vulkan llama plugin. Windows CI checks silent
@@ -89,11 +89,12 @@ scripts/package-windows-nsis.sh \
   --unsigned --output-dir dist
 ```
 
-For a versioned-release installer (use the intended explicit release tag):
+For the beta 3 versioned-release installer, after the tag workflow has
+published its core ZIP:
 
 ```sh
 scripts/package-latest-windows-installer.sh \
-  --tag v1.0.0-beta.2 --output-dir dist --upload
+  --tag v1.0.0-beta.3 --output-dir dist --upload
 ```
 
 The ZIP-only `scripts/sign-latest-windows-release.sh` retains its versioned

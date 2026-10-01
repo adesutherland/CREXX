@@ -4,6 +4,12 @@ Date: 28 September 2026. Status: **work stopped at Adrian's request after PR #71
 Approval: Adrian replied “Approved” after the metadata-only SOURCELINE revision.
 AD-01–08, the conditional deferral and the explicit sanitizer closeout are accepted.
 
+A new 30 September request resumes only the supplied mainframe repair review,
+develop integration and beta 3 preparation under the
+[mainframe integration record](mainframe-integration-2026-09-30.md). Historical
+receipts and cancelled scope below remain intact; they do not qualify the new
+console-signal follow-up or final beta packages.
+
 ## Vision and intended outcome
 
 Establish one coherent cREXX core baseline before closing the beta 3 product

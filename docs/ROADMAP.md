@@ -1,8 +1,8 @@
 # CREXX Roadmap
 
-Status: consolidated project direction, refreshed 2026-09-04; library discovery
-and dependency status reconciled 2026-09-13. This document is not a release
-contract.
+Status: consolidated project direction; core/functional/performance milestones
+and the parallel application track revised by Adrian on 2026-09-18; beta 3
+documentation baseline finalized 2026-09-30. This is not a release contract.
 
 This is the single portfolio-ordering view for CREXX. It ranks product outcomes
 rather than every issue, experiment, or completed programme stage. Detailed
@@ -31,9 +31,10 @@ Use this authority split:
   RAG platform/endurance and Linux leak-specific assurance remain separate.
   [Bounded acceptance and evidence](planning/rxvector-binary-owner-20260919.md).
 
-- `v1.0.0-beta.2` remains the latest versioned beta tag. Beta 3 material on
-  `develop` is work in progress until a `v1.0.0-beta.3` tag and release assets
-  exist. The release train has been rebaselined after the extended performance
+- The current product and documentation baseline is `1.0.0-beta.3`; the
+  [beta 3 notes](releases/v1.0.0-beta.3.md) describe its scope and limitations.
+  Release publication is identified by versioned tags and their assets. The
+  release train has been rebaselined after the extended performance
   programme: beta 3 targets 2026-09-30 and Release 1 targets 2027-05-01, ready
   for the planned May 2027 London Rexx Symposium. The symposium's exact public
   dates remain TBC.
@@ -49,9 +50,18 @@ Use this authority split:
   It is sandboxed and string-first, shares Classic BIF foundations where
   appropriate, and remains separate from the compiled Level C path.
 - PERF3 and `POSTPERF-01` through `POSTPERF-05` are complete. The retained
-  scorecard is strong overall; remaining performance work is release closeout or
-  separately selected product evidence, not an automatically continuing
-  optimization programme.
+  scorecard is strong overall. Beta 6 is now explicitly selected as a new
+  performance phase against the functionally complete platform; historical
+  programme closure does not automatically select its individual mechanisms.
+- The [18 September optimization-boundary audit](planning/release-1/optimization-boundary-audit-2026-09-18.md)
+  found **OPT-BOUNDARY-01**, an RXAS incoming-argument alias defect, now repaired
+  with permanent regressions and 102 passing affected tests. Repair `f7a8b08c1`
+  is published to develop; normal combined-head hosted gates are tracked in
+  [the defect-batch execution record](release-1-plan.md#selected-defect-batch-execution--18-september).
+  Adrian accepted the RXC-owned imported-inline and public
+  RXAS status-bit boundaries. The follow-up maintainability/fusion-ownership
+  mechanisms remain unselected individually; the Beta 6 phase below records
+  the later scheduling decision without approving a particular architecture.
 - Level B Unicode issue
   [#583](https://github.com/adesutherland/CREXX/issues/583) is closed. Keep the
   resulting code, tests, and documentation as release evidence rather than an
@@ -59,147 +69,305 @@ Use this authority split:
 
 ## Release Train To Release 1
 
-The longer runway deliberately allows feature-bearing betas rather than
-treating beta 3 as the last place new Release 1 capability can land. Dates are
-fixed planning targets; scope moves between betas when a vertical slice misses
-its quality gate.
+The longer runway supports core completion in November, platform functional
+completion in January, and a dedicated Performance Beta in March. Applications,
+working tools and showcases proceed in parallel through RC1. Dates are planning
+targets; a missed gate needs an explicit disposition, not automatic movement
+of feature work into the performance phase.
 
 | Milestone | Target | Intended product outcome |
 | --- | --- | --- |
-| Beta 3 | 2026-09-30 | Publish the accumulated foundation and performance work; close release defects, package/demo/policy reconciliation, KeyAccess decisions, and the named hosted gates. Do not add a new broad architecture programme to this cut. |
-| Beta 4 | 2026-11-30 | First user-meaningful compiled Level C vertical slice; stabilized RexxScript product contract, diagnostics, and standalone/embedded examples. |
-| Beta 5 | 2027-01-31 | Extend the selected Level C/RexxScript surfaces from beta feedback; decide the Level G ownership/nested-container contract and, if approved, land its smallest useful implementation slice. |
-| Beta 6 | 2027-03-31 | Complete the selected Release 1 feature set, including the synchronous cREXX Pipes reference executor if its contract is ready; publish migration/compatibility boundaries and freeze user-facing features. |
-| Release 1 RC1 | 2027-04-15 | Exact-candidate correctness, sanitizer, performance, package, install, documentation, and example qualification only. Feature work is closed. |
+| Beta 3 | 2026-09-30 | Publish the accumulated foundation and performance work; close release defects, package/demo/policy reconciliation, and the named hosted gates. KeyAccess verdicts were accepted and closed on 2026-09-18. Do not add a new broad architecture programme to this cut. |
+| Beta 4 — core complete | 2026-11-30 | Complete the core, including Level C and polymorphism. Level C means complete compatibility coverage except individually approved "won't implement" exceptions. Preserve RexxScript stabilization, documentation and conformance evidence. |
+| Beta 5 — platform functionally complete | 2027-01-31 | Deliver baseline Levels G and L and complete Release 1 platform functionality, integration and representative examples. Freeze language/runtime/baseline-library features and contracts. |
+| Beta 6 — Performance Beta | 2027-03-31 | Improve and qualify the functionally complete product through selected performance candidates, with current baselines and explicit verdicts. Freeze optimization implementation for RC1. |
+| Release 1 RC1 | 2027-04-15 | Exact-candidate correctness, sanitizer, performance, package, install and documentation qualification. Parallel application/tool/showcase assets reach their release cut; platform feature work remains closed. |
 | Release 1 | 2027-05-01 | Tag and publish the stable Release 1 assets for launch and presentation at the planned May London symposium. Update the event reference when RexxLA publishes the exact 2027 dates. |
 
-Release 1 therefore includes more than the old beta 3 foundation plan: a
-useful Level C subset, a supported small RexxScript product, the selected Level
-G ownership/container increment if its design gate passes, and a demonstrable
-Pipes contribution surface. A feature that misses its beta gate does not move
-the Release 1 date automatically; it needs an explicit scope decision.
+Release 1 therefore includes completed core Level C/polymorphism, baseline
+Levels G/L, the supported small RexxScript product and a parallel collection
+of useful applications and demonstrations. The selected Pipes contribution
+remains a candidate within those tracks, not permission for new platform
+features after January. The precise G/L baselines and polymorphism completion
+matrix remain open design work. Level C exceptions must be deliberate,
+individually recorded decisions; "unfinished" is not "won't implement".
+The [release plan](release-1-plan.md#completion-contracts-and-acceptance) owns
+the numbered acceptance criteria and delivery steps.
 
-## Proposed Priority Order
+The [18–25 September working queue](release-1-plan.md#historical-working-window--1825-september-2026)
+records the earlier Beta 3 defect and Beta 4 scope decisions. Current release
+qualification is tracked in the formal beta 3 candidate handoff.
 
-This is the working top five for maintainer review. A language syntax,
-ownership, ABI, ISA, or architecture decision still requires Adrian's explicit
-selection before implementation.
+## Delivery Priorities And Parallel Tracks
 
-### 1. Cut beta 3 and operate the feature-bearing Release 1 train
+The milestone sequence is selected by Adrian. Detailed language, ownership,
+ABI, ISA and architecture decisions still require explicit design selection.
+The tracks below have dependencies, but independent library and application
+work should proceed now rather than waiting for the preceding beta to ship.
 
-**Why now:** beta 3 slipped to the end of September because the performance
-programme ran longer than the original calendar. The extra work should now be
-published behind a trustworthy boundary, while the longer Release 1 horizon is
-used deliberately for richer betas rather than an indefinitely moving
-development snapshot.
+### 1. Cut beta 3 and maintain the Release 1 cadence
 
-**Scope:** freeze the beta 3 candidate for 2026-09-30; close or explicitly defer
-the remaining package, demo, policy, and release-defect work; reconcile release
-notes and known limits; and run the named hosted build, sanitizer, package,
-concurrency, and performance gates on the appropriate exact SHA. Then maintain
-the beta 4, beta 5, beta 6, RC1, and Release 1 cadence above with explicit
-feature and fallback decisions. Current beta 3 inputs include plugin policy/inventory
-[#617](https://github.com/adesutherland/CREXX/issues/617) and
+**Scope:** publish the accumulated foundation and accepted performance work by
+2026-09-30; reconcile release defects, packages, demos, policy and named hosted
+gates. Keep beta 3 bounded. The later train is core completion, platform
+functional completion, performance, then RC1/release qualification.
+
+At the 18 September checkpoint, the Beta 3 milestone's seven open issues were
+preprocessor definition [#610](https://github.com/adesutherland/CREXX/issues/610),
+RexxScript [#612](https://github.com/adesutherland/CREXX/issues/612), class-library
+principles [#616](https://github.com/adesutherland/CREXX/issues/616), plugin policy
+[#617](https://github.com/adesutherland/CREXX/issues/617), plugin inventory
 [#622](https://github.com/adesutherland/CREXX/issues/622), package validation
-[#624](https://github.com/adesutherland/CREXX/issues/624), demos/tutorials
-[#625](https://github.com/adesutherland/CREXX/issues/625), and release defects
-such as [#680](https://github.com/adesutherland/CREXX/issues/680).
+[#624](https://github.com/adesutherland/CREXX/issues/624), and demos/tutorials
+[#625](https://github.com/adesutherland/CREXX/issues/625). Shared BIF issue
+[#615](https://github.com/adesutherland/CREXX/issues/615) is already closed and
+is not another release-policy task. The formerly active
+[#680](https://github.com/adesutherland/CREXX/issues/680) closed on 7 September
+and remains completed evidence.
 
-**Exit:** beta 3 has a tag and matching assets, documentation, known
-limitations, package evidence, and exact-SHA hosted results by 2026-09-30. Each
-following beta publishes at least one user-visible vertical increment, and
-Release 1 is cut on 2027-05-01 unless Adrian explicitly changes the date.
+**Exit:** each beta has matching tags/assets, documented scope/limitations and
+qualified evidence. RC1 remains 2027-04-15 and Release 1 remains 2027-05-01
+unless Adrian explicitly changes the plan.
 
-### 2. Deliver a useful compiled Level C vertical slice
+### 2. Complete the core, including Level C and polymorphism, by Beta 4
 
-**Why now:** compiled Classic REXX is a central CREXX differentiator, and the
-risk has fallen materially because the canonical-AST lowerer, `RexxValue`,
-`RexxVariablePool`, stems, procedures, and a broad shared BIF foundation now
-exist.
+**Scope:** complete Level C against the Classic compatibility and BIF
+references, with individually approved "won't implement" exceptions. Map every
+feature to implemented evidence, open work or an explicit exception with its
+reason and user-visible behavior. Preserve source provenance, diagnostics,
+shared Classic value/variable-pool/BIF foundations, structured AST rewriting and
+fail-closed behavior for excluded forms. The existing six execution slices are
+a starting point, not the completion definition.
 
-**Scope:** turn the existing six execution slices into one user-meaningful
-Classic program contract. Select the next bounded control-flow slice, with
-`IF` and a simple `DO` form as candidates; add source provenance and diagnostics
-that point to the user's Classic source; verify observable behavior against a
-named reference interpreter; and keep every unsupported shape fail-closed.
-Source provenance and shared BIF work are prerequisites inside this workstream,
-not competing roadmap items.
+Make polymorphism an explicit core workstream: inventory the existing
+interface/class dispatch, factory and type-checking surface, select the
+remaining required behavior and qualify it across compiler, assembly, linking
+and runtime boundaries. Do not silently equate this target with either the
+current implementation or every possible inheritance/overload extension.
 
-**Exit:** a documented, tested Classic program compiles through `rxc`, `rxas`,
-`rxlink`, and both applicable VMs in optimized and no-opt modes, with reference
-equivalence and explicit unsupported boundaries.
+Retain the separate RexxScript product outcome: stable standalone/embedded
+contract, sandbox, status/error categories, source diagnostics and examples.
+It shares Classic foundations where appropriate but is not the compiled Level
+C path. Broader RexxScript CALL/stem/ADDRESS/INTERPRET/object features remain
+separate product decisions.
 
-### 3. Stabilize RexxScript as a small product
+**Exit:** the complete core matrix passes its reference, positive/negative,
+optimized/no-opt, toolchain and platform gates by 2026-11-30. Incomplete Level C
+features cannot be relabelled exceptions without Adrian's decision.
 
-**Why now:** RexxScript already has a real standalone/embedded runtime and a
-documented sandbox, but its integration strategy issue
-[#612](https://github.com/adesutherland/CREXX/issues/612) remains open and the
-implemented surface has outrun the old beta-planning description.
+### 3. Deliver baseline Levels G and L by Beta 5
 
-**Scope:** reconcile and close the positioning decision; freeze the supported
-subset and sandbox boundary; provide stable status/error categories and
-source-mapped diagnostics; curate one standalone and one embedded example; and
-make host integration explicit through the existing facade. General `CALL`,
-stems, `ADDRESS`, `INTERPRET`, and object-model breadth remain later decisions
-unless required by the selected product contract.
+**Scope:** select usable, supported baseline capability lists early, then
+complete their APIs, ownership/lifecycle behavior, integration, documentation,
+examples and packaging by 2027-01-31. G/L design and independent implementation
+can run alongside November's core work.
 
-**Exit:** the user and developer guides, tests, examples, issue state, and
-runtime behavior describe the same small product. It remains explicitly
-separate from Level C while sharing `rxfnsc` behavior where clean.
+For Level G, reconcile the existing provider, concurrency, HTTP, UI, LLM and
+Unicode/library surfaces into an explicit baseline. The ownership and nested
+container question remains substantive: compare explicit owner objects, owned
+heterogeneous/nested containers and generic-like directions; preserve weak
+reference lifetime rules and typed-array fast paths; define construction,
+transfer, mutation, iteration and destruction before syntax. Use Storage, List
+and a graph workload as equivalence/performance controls. Selection of a
+baseline does not automatically select every extension.
 
-### 4. Decide the Level G ownership and nested-container model
+For Level L, define the minimum useful language-engineering library/tooling
+product. The current TinyExpr generated-output proof informs its design; it is
+not itself a generator or automatically the complete baseline. Decide the
+reusable lexer/parser/generator capabilities explicitly and preserve the
+compiler's coherent AST-rewrite support.
 
-**Why now:** Storage, List, and graph-workload evidence repeatedly points to a
-product capability mismatch rather than a local VM micro-optimization. Current
-Level B forms require extra owner/wrapper objects because nested reference
-containers are not ordinary owned object values.
+Retain cREXX Pipes as a contribution candidate: Phase 1 synchronous stage
+interfaces/reference executor, immutable PipePlan and named ports, deterministic
+observable behavior and independently usable extension points. Any selected
+library/executor contract belongs before January's platform freeze; applications
+and demonstrations using it can continue afterwards. Asynchronous execution and
+broader stream APIs remain separately selected phases.
 
-**Scope:** compare explicit owner objects, owned heterogeneous/nested
-containers, and generic-like Level G collection directions; preserve weak
-reference lifetime rules and typed-array fast paths; specify construction,
-transfer, mutation, iteration, and destruction before syntax; and use Storage,
-List, plus one complex graph workload as equivalence and performance controls.
+**Exit:** the agreed platform baseline is functionally complete, documented and
+usable on 2027-01-31. No placeholder demo or implicit reduction substitutes for
+an agreed capability. Freeze platform features/contracts at this milestone.
 
-**Exit:** Adrian selects a documented ownership/lifetime contract and a minimal
-vertical implementation gate. No Level B syntax or benchmark-specific shortcut
-is implied by placing the decision here.
+### 4. Deliver applications, working tools and showcases in parallel through RC1
 
-### 5. Establish cREXX Pipes through a synchronous reference executor
+**Scope:** maintain a separate chain of useful assets: LLM consumers, practical
+working tools, end-to-end examples and demonstrations. They exercise emerging
+platform capabilities now and can add application functionality through
+2027-04-15 using stable core/G/L contracts. They need not wait for platform
+completion and need not all finish at January's platform freeze.
 
-**Why now:** this is a high-value Rexx ecosystem contribution that can reuse
-the implemented endpoint/process/concurrency substrate while remaining a
-separately maintainable project. It also offers a practical compatibility path
-for Rexx/CMS and CognitivePipelines-style use without making background-service
-claims prematurely.
+Each selected asset should state its owner, intended users, supported/optional/
+showcase status, dependencies, setup, reproducible useful scenario and applicable
+package/platform evidence. Distinguish bundled release assets from independent
+applications; a new application is not automatically a new core dependency.
 
-**Scope:** begin with the contribution proposal's Phase 1 synchronous stage
-interfaces and reference executor, then freeze an immutable `PipePlan` and named
-ports. Preserve deterministic command and observable-result behavior across the
-reference executor before selecting asynchronous task/channel execution.
+Feed missing capabilities back into the core/G/L plans early. An application
+requiring a new public platform contract after January needs an explicit scope
+exception; this parallel track does not bypass the platform freeze.
 
-**Exit:** the Phase 1 contract suite, examples, ownership boundaries, and
-maintainer-facing extension points are clear enough for independent
-contribution. Broader `rxio.*` streams and concurrent execution remain later
-phases, not part of the first claim.
+**Exit:** selected Release 1 assets are useful, reproducible and qualified by
+RC1. Demonstrations at successive betas make progress visible. Application
+integration and platform performance inform one another without becoming one
+serial delivery queue.
 
-## How The Five Relate
+### 5. Make Beta 6 the Performance Beta
 
-Priority 1 supplies the cadence and trustworthy product boundaries. Priorities
-2 and 3 share the Classic value, variable-pool, BIF, and provenance foundations
-but remain different products. Priority 4 converts repeated performance
-evidence into an explicit product-design decision. Priority 5 can progress at
-the contract and reference-executor level without reopening the concurrency
-model, and enters Release 1 only through a beta quality gate.
+**Scope:** use February/March to measure and improve the functionally complete
+Beta 5 product, including representative Level C/G/L and application workloads.
+Capture ideas now in the [performance roadmap](../performance/ROADMAP.md),
+prepare proof/framework prerequisites during normal core work, and rank actual
+implementation candidates using current residual cost and semantic evidence.
+
+Recorded candidates include adaptive procedure-result memoization, the R1/R2
+fusion ownership/benefit decision, other runtime specialization only where a
+measured client exists, compiler/inlining and RXAS improvements, and runtime
+value/copy/conversion costs. Consolidating the shared RXAS proof/application
+interfaces supports this work; it is not a reason to postpone known correctness
+repairs or duplicate proof machinery for a new optimization.
+
+Every production performance change retains its first ordinary Release verdict.
+Public annotations/effect assertions or metadata contracts needed by a proposal
+must be designed before January's platform freeze or explicitly excepted; the
+name "optimization" does not exempt a new language or handoff contract.
+Negative/inconclusive experiments may be rejected without jeopardizing the
+milestone. No particular quickener, cache or ISA change is selected merely by
+assigning a performance phase.
+
+**Exit:** Beta 6 on 2027-03-31 has measured accepted improvements, explicit
+regression dispositions and retained rejected/deferred ideas. Optimization
+implementation freezes for RC1; April qualifies and repairs the candidate.
+
+## Constrained C89 And CMS Portability — PORT-C89
+
+**Status:** roadmap work selected by Adrian on 2026-09-18; implementation and
+qualification remain open. Start alongside the existing delivery tracks, with
+release placement still to be agreed. Any selected Release 1 language/runtime
+contracts must meet the 2027-01-31 platform freeze. This is the scope and
+acceptance record for the work until a linked implementation worklist is needed.
+
+**Vision and intended outcomes:** maintain one upstream source tree with a
+strict C89, limited-capability configuration that ordinary development can test,
+and use it as the shared foundation for Ross's native VM/370 CMS port. Bring his
+portability changes into the common code and maintained platform adaptations.
+Ross can continue native work immediately; converge library/executable target by
+target against an agreed current development revision. His reported beta 1 base
+needs an early review against the current beta 3 development code, not a large
+migration deferred until the whole port is finished. The outcome includes a
+native CMS build and useful execution tests, not only a host-side syntax check.
+
+The initial profile uses switch dispatch, byte-character strings with explicit
+ASCII/EBCDIC handling, single-threaded execution and static library/plugin
+linkage where supported. Inventory GCCLIB, headers, compiler builtins, filenames,
+external symbols, generated-function size and memory/addressability limits;
+strict C89 flags alone do not enforce these constraints. In particular,
+`NTHREADED` selects switch dispatch; it does not remove OS-thread dependencies.
+The byte-string profile needs an explicit compatibility boundary with the normal
+UTF-8/codepoint string contract. Reuse of portable host interfaces for
+WebAssembly is a follow-on opportunity, with its own capability checks and no
+assumption that its limits match CMS.
+
+Two design questions remain open:
+
+- **Integer width:** compare a software 64-bit implementation with an explicitly
+  identified 32-bit `.int` profile. Adrian is open to 32-bit integers if needed;
+  this records permission to evaluate that alternative, not a selected language
+  change. S/360 and S/370 have 32-bit general registers but support selected
+  doubleword operations through register pairs; missing compiler support is
+  distinct from mathematical impossibility. Assess arithmetic cost and storage
+  alongside compiler constant folding, overflow/conversions, RXAS/RXLINK/RXBIN,
+  native interfaces and library/capability representations. A narrower language
+  integer does not automatically eliminate fixed-width serialization or internal
+  64-bit needs. Identify incompatible artifacts and reject unsupported values
+  explicitly; do not silently truncate or change the desktop `.int` contract.
+- **Green threads:** evaluate cooperative VM tasks after the single-threaded
+  baseline. A scheduler could run bounded bytecode slices without OS threads,
+  but suspension/resumption, nested native callbacks, execution-local ownership,
+  cancellation, deadlines and blocking CMS I/O need proof. Reuse the existing
+  task/channel abstraction if its contract can be met; expose unsupported
+  capabilities honestly. No parallel CPU execution or interruptible native I/O
+  is implied. A green-thread backend is an experiment, not a prerequisite for
+  the first usable CMS targets or an already approved architecture.
+
+**Companion candidate — GCC370-01, GCC/370 Toolchain:** Adrian proposed a
+separate compiler effort on 2026-09-18. Start with a reproducible native/cross
+GCCMVS baseline and retained failing C programs, then repair demonstrated backend
+defects in the existing compiler lineage. Mike reports strong evidence of a
+literal-pool addressability defect (`IFO209`) in GCCCMS 3.2.3; computed-goto
+failures need their own exact reproducer and generated-assembly check. Distinguish
+those from the assembler's ESD-entry capacity (`IFO264`), listing-generation
+failures and runtime/startup setup: Mike's tests currently use PDPCLIB because
+his GCCLIB load fails, whereas Ross reports a working GCCLIB environment. A
+repair verdict must include assembly, linking and execution on CMS, followed by
+the relevant real cREXX target. His grouped-handler tests are useful fallback
+evidence, including structural proxies, not qualification of the full runtime.
+Repository/source-lineage selection and implementation remain open. Restoring a
+working legacy compiler is the bounded starting point; a port to modern GCC is
+a separate scope decision. This work does not require Ross to pause or select
+the February/March interpreter-loop performance experiments.
+
+**Checkable acceptance criteria — all open:**
+
+- [ ] **C89-AC-01 — constrained profile:** document and enforce the C89 language,
+  library, encoding, resource and optional-capability matrix. A host CI build and
+  positive/negative tests detect accidental newer-C, builtin or host-API use;
+  record any explicitly permitted implementation extensions.
+- [ ] **C89-AC-02 — upstream convergence:** record the shared revision and each
+  target's status for `rxc`, `rxas`, `rxlink`, `rxvm` and the selected baseline
+  libraries. Portability fixes are maintained upstream, with target-specific
+  regressions and no untracked downstream source transformations. Partial target
+  completion is not whole-toolchain completion.
+- [ ] **C89-AC-03 — native CMS evidence:** integrate Ross's existing automation;
+  retain compiler/runtime/assembler identities, build logs and semantic smoke
+  results on CMS, including EBCDIC and static linkage. The reported baseline is
+  GCCMVS for CMS 3.2.3 MVS V8.5, GCCLIB and IFOX00; verify it when qualifying.
+- [ ] **C89-AC-04 — cross-compiler experiment:** retain a reproducible host-side
+  GCCMVS build or a concrete feasibility blocker, compare it with the native
+  compiler, and assemble/link/run representative output on CMS. Pin the target
+  backend, options, headers, runtime, encoding and assembler requirements.
+  Prefer the same compiler base/patch set; a different i370 GCC version is
+  additional coverage, not proof of compatibility with Ross's toolchain. Record
+  compile-time capacity limits that only native CMS builds can expose.
+- [ ] **C89-AC-05 — integer decision:** retain bounded 64-bit/32-bit feasibility
+  and cost evidence, then obtain Adrian's selection of the profile contract.
+  Qualify its limits, arithmetic, conversions, artifact identification and
+  interoperability/rejection rules across the affected tools and libraries.
+- [ ] **C89-AC-06 — execution capability:** prove the baseline builds and runs
+  without OS threads or C11 atomics and rejects unavailable task capabilities
+  clearly. Record a separate accept/reject/defer verdict for green threads;
+  acceptance requires fairness, blocking-call, lifecycle and ownership evidence
+  against the existing concurrency contract.
+
+**Implementation steps:**
+
+1. **C89-STEP-01 — open** (AC-01/02/03): review Ross's branch and issue list,
+   agree the current upstream revision and first target, and record the profile
+   matrix and division of work. Native porting proceeds in parallel.
+2. **C89-STEP-02 — planned** (AC-01/02/03): establish the strict host build and
+   bring forward small target-specific fixes with native CMS regression checks;
+   repeat in dependency order through the agreed baseline toolchain/libraries.
+3. **C89-STEP-03 — planned, parallel** (AC-04): run the bounded GCCMVS
+   cross-compiler compatibility experiment for upstream developers, Ross and
+   Mike. It complements native CMS development and does not gate his progress.
+4. **C89-STEP-04 — planned, early** (AC-05): prototype and compare the integer
+   alternatives before dependent runtime work; implement a changed contract
+   only after explicit selection. Other targets may progress meanwhile.
+5. **C89-STEP-05 — planned** (AC-06): qualify single-threaded operation, then
+   assess the optional cooperative-task backend. Document remaining capability
+   limits and integrate the maintained host/CMS checks before claiming support.
+
+Planning references: Ross's 18 September reply and
+[`f_buildcms`](https://github.com/RossPatterson/CREXX/tree/f_buildcms);
+[current integer contract](books/crexx_language_reference/data_types.md);
+[concurrency ownership/provider contract](ai-context/CREXX_CONCURRENCY.md);
+[IBM S/370 Principles of Operation, chapter 7](https://www.bitsavers.org/pdf/ibm/370/princOps/GA22-7000-6_IBM_System_370_Principles_of_Operation_7th_ed_198003.pdf);
+[GNU Pth's cooperative scheduling and blocking-I/O discussion](https://www.gnu.org/software/pth/pth-manual.html).
+These sources inform feasibility; no CMS compiler, integer or scheduler
+prototype has been qualified by this roadmap update.
 
 ## Important Work Below The Cut
 
 ### Required closeout that does not consume a strategic slot
 
-- Review and accept, revise, or reject the completed
-  [`KEYACCESS-01`](../performance/KEYACCESS-01-WORKLIST.md) and
-  [`KEYACCESS-02`](../performance/KEYACCESS-02-WORKLIST.md) first Release
-  verdicts. This is an immediate product decision, not a reason to start
-  another performance programme.
 - Resolve the formal Linux performance QA-C disposition and run the named
   final-candidate hosted gates. Preserve the distinction between the frozen
   Apple scorecard and a newer release candidate.
@@ -234,7 +402,7 @@ model, and enters Release 1 only through a beta quality gate.
   discovery, packaged-library autoload and incremental project builds are
   completed capabilities, recorded below.
 - **LLM-API-01 — Common LLM provider interface** (requested 2026-09-16;
-  approved implementation in progress; not assigned to a release): applications
+  common drivers implemented on `develop`; not assigned to a release): applications
   select hosted HTTP, local-server or in-process `llama.rexx` inference during
   setup and reuse the same processing surface for supported capabilities.
   `.llm.open(config)` supplies common HTTP/native drivers while retaining
@@ -254,7 +422,14 @@ model, and enters Release 1 only through a beta quality gate.
   and model/preprocessing identity so incompatible indexes are not silently
   reused; optional install and installed/native consumers pass their checks.
   API/architecture selection and the numbered implementation plan were approved
-  on 17 September. This item
+  on 17 September. The implementation and documentation are integrated through
+  `e457f5ec38806907ac94303dead240b92eac3381`; its normal
+  [Build](https://github.com/adesutherland/CREXX/actions/runs/35280981918) and
+  [CodeQL](https://github.com/adesutherland/CREXX/actions/runs/35280981774) checks
+  are terminal success. The separate 18 September path-only model-setup
+  follow-on remains local work in progress, with its own acceptance record in
+  the linked plan. These publication checks do not close the parent native
+  plan's trained-model/device or provenance criteria. This item
   does not expand or block the current native-inference release qualification.
   The [17 September approved implementation plan](planning/llm-provider-interface.md)
   records the former two-artifact native restriction and approved D-01–04,
@@ -265,11 +440,14 @@ model, and enters Release 1 only through a beta quality gate.
 
 ### Evidence-gated performance follow-ons
 
-- CD, DeltaBlue, Towers, and Havlak receive bounded mechanism reviews only.
-  NBody and Permute remain next-release product evidence.
+- CD, DeltaBlue, Towers and Havlak receive bounded mechanism reviews. NBody
+  and Permute remain evidence questions in the Beta 6 candidate queue, not
+  assumed optimizer defects or mandatory changes.
 - Later Level L inline slices, register finalisation, value caching,
   string-copy fast paths, signal specialization, VM/link hygiene, and RXAS
   instruction-family studies require fresh attribution and separate selection.
+  The Beta 6 queue owns candidate selection; broad host-opcode/ISA migration
+  retains its existing post-Release-1 disposition unless explicitly changed.
 - JIT/MIR/LLVM-style backend work remains research. It does not displace the
   interpreter/bytecode product sequence.
 
@@ -348,13 +526,23 @@ model, and enters Release 1 only through a beta quality gate.
 - Public provider-plugin ABI, durable services, pool telemetry, server
   lifecycle, HTTP/2, WebSockets, and GPU work beyond the native-inference
   plan remain post-Release-1 design candidates.
-- `.rpm`, MSI/WiX, `winget`, legacy 32-bit validation, VM/370, MVS/370, and a
-  full z/VM CMS port require dedicated platform ownership and evidence. The
-  current CMS direction is deterministic demos and compatible host/environment
-  contracts rather than a full platform promise.
+- `.rpm`, MSI/WiX, `winget`, broader legacy 32-bit validation, MVS/370 and a
+  full z/VM CMS port require dedicated platform ownership and evidence.
+  VM/370 CMS now has the selected
+  [PORT-C89 portability workstream](#constrained-c89-and-cms-portability--port-c89)
+  above; its target-by-target qualification determines the supported scope.
 
 ## Completed Or No Longer Active
 
+- [`KEYACCESS-01`](../performance/KEYACCESS-01-WORKLIST.md) and
+  [`KEYACCESS-02`](../performance/KEYACCESS-02-WORKLIST.md): Adrian accepted the
+  Windows Release verdicts, retained both implementations and closed the work
+  on 2026-09-18. [The decision](../performance/DECISIONS.md#keyaccess-decision-2026-09-18--accept-retain-and-close)
+  closes PERF-CLOSEOUT-02; normal exact-candidate release qualification remains
+  separate.
+- Compiler variadic-argument crash
+  [#680](https://github.com/adesutherland/CREXX/issues/680) closed on
+  2026-09-07; it is no longer an active beta 3 defect.
 - Level B Unicode [#583](https://github.com/adesutherland/CREXX/issues/583),
   tool output paths #584, RXAS float precision #585, and RXAS instruction
   coverage #586 are closed quality evidence.

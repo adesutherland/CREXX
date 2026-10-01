@@ -21,7 +21,8 @@ end
 call _txbegin handle
 
 /* _writekey some test data */
-call _writekey handle,"Tokyo", "Japan"
+/* Length 26 puts byte 0x1a in the binary index, exposing Windows text reopens. */
+call _writekey handle,"Tokyo", "Japan index marker 1234567"
 call _writekey handle,"New York City", "United States"
 call _writekey handle,"London", "United Kingdom"
 call _writekey handle,"Paris", "France"
@@ -147,7 +148,7 @@ if rc <> 0 then do
     call _closekey handle
     exit 1
 end
-if _listkey(handle) <> 49 | _readkey(handle, "Tokyo") <> "Japan" | _readkey(handle, "Berlin") <> "NOT_FOUND" then do
+if _listkey(handle) <> 49 | _readkey(handle, "Tokyo") <> "Japan index marker 1234567" | _readkey(handle, "Berlin") <> "NOT_FOUND" then do
     say "ERROR: compaction changed live or deleted records"
     exit 1
 end
@@ -160,7 +161,7 @@ if _closekey(handle) <> 0 then exit 1
 /* Reopening bypasses cached values and verifies the replacement files. */
 handle = _openkey(database_file, "r+")
 if handle < 0 then exit 1
-if _listkey(handle) <> 49 | _readkey(handle, "Tokyo") <> "Japan" | _readkey(handle, "Berlin") <> "NOT_FOUND" then do
+if _listkey(handle) <> 49 | _readkey(handle, "Tokyo") <> "Japan index marker 1234567" | _readkey(handle, "Berlin") <> "NOT_FOUND" then do
     say "ERROR: compacted records changed after reopening"
     exit 1
 end

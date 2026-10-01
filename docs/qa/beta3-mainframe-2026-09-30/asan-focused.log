@@ -1,0 +1,36 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(mainframe_handlers_\(utf8\|byte\)\|mainframe_stdio\|mainframe_console_signals\|oom_mainframe\|record_allocation_failure\|ast_allocation_failure\|platform_cms_text\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debugasan
+    Start  1: mainframe_handlers_utf8
+1/8 Test  #1: mainframe_handlers_utf8 ..........   Passed    0.46 sec
+    Start  2: mainframe_handlers_byte
+2/8 Test  #2: mainframe_handlers_byte ..........   Passed    0.41 sec
+    Start  3: mainframe_stdio
+3/8 Test  #3: mainframe_stdio ..................   Passed    0.12 sec
+    Start  4: mainframe_console_signals
+4/8 Test  #4: mainframe_console_signals ........   Passed    4.09 sec
+    Start 11: platform_cms_text
+5/8 Test #11: platform_cms_text ................   Passed   17.06 sec
+    Start 12: oom_mainframe
+6/8 Test #12: oom_mainframe ....................   Passed    0.10 sec
+    Start 17: record_allocation_failure
+7/8 Test #17: record_allocation_failure ........   Passed    0.11 sec
+    Start 24: ast_allocation_failure
+8/8 Test #24: ast_allocation_failure ...........   Passed    0.77 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+allocation       =   0.99 sec*proc (3 tests)
+binutils         =   0.11 sec*proc (1 test)
+cms              =  22.15 sec*proc (5 tests)
+compiler         =   0.77 sec*proc (1 test)
+comprehensive    =  22.26 sec*proc (6 tests)
+essential        =   0.88 sec*proc (2 tests)
+platform         =  22.26 sec*proc (6 tests)
+text             =  22.26 sec*proc (6 tests)
+unit             =   0.88 sec*proc (2 tests)
+vm               =   4.97 sec*proc (3 tests)
+
+Total Test time (real) =  23.26 sec

@@ -1,0 +1,85 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260930-174902-build
+==> build
+    log: cmake-build-debugasan/asan-logs/20260930-174902-build/build.log
+==> build passed
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Smoke test 'rxpp_sh_tokens' is not present in this configuration; skipping
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (1.7s)
+-- Generating done (1.3s)
+-- Build files have been written to: /Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/cmake-build-debugasan
+[0/4] Re-checking globbed directories...
+[1/23] Building C object platform/CMakeFiles/test_mainframe_handlers_byte.dir/tests/test_mainframe_handlers.c.o
+[2/23] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/__/interpreter/exitfunc.c.o
+[3/23] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[4/23] Building C object platform/CMakeFiles/test_mainframe_handlers_utf8.dir/tests/test_mainframe_handlers.c.o
+[5/23] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/__/interpreter/rxvmmain.c.o
+/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/interpreter/rxvmmain.c:387:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  387 |             sprintf(installed_provider_path, "%s/providers", exe_path);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/interpreter/rxvmmain.c:404:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  404 |         sprintf(combined_location, ".;%s;%s", context.location, exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/interpreter/rxvmmain.c:408:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  408 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+[6/23] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/platform_tso.c.o
+[7/23] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/platform_native.c.o
+[8/23] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/text_codec.c.o
+[9/23] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/platform.c.o
+[10/23] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/oom.c.o
+[11/23] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/rxinteger.c.o
+[12/23] Linking C executable bin/test_mainframe_handlers_utf8
+[13/23] Linking C executable bin/test_mainframe_handlers_byte
+[14/23] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/tests/mainframe_console_mock.c.o
+[15/23] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+In file included from /Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/interpreter/rxvmintp.c:96:
+/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/interpreter/rxvmvars.h:2899:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2899 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/interpreter/rxvmintp.c:96:
+/Users/adrian/.codex/worktrees/mainframe-beta3-review/CREXX/interpreter/rxvmvars.h:3034:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3034 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+[16/23] Linking C executable bin/rxbvm
+[17/23] Linking C static library bin/librxbvml.a
+[18/23] Linking C executable bin/rxvm_mainframe_console_harness
+[19/23] Linking C executable compiler/tests/test_ast_allocation
+[20/23] Linking C executable bin/rxc_cms_text_harness
+ASan run complete: cmake-build-debugasan/asan-logs/20260930-174902-build

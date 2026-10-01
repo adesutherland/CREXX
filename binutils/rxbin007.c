@@ -1508,7 +1508,11 @@ static int rxbin007_pool_read_grow(rxbin007_pool_read *pool, uint32_t needed) {
     if ((size_t)capacity > SIZE_MAX / sizeof(*records)) return 0;
     records = (rxbin007_record_view *)realloc(pool->records,
                                               (size_t)capacity * sizeof(*records));
-    if (!records) return 0;
+    if (!records) {
+        rxbin007_set_error("out of memory growing RXBIN 007 record table (%lu bytes)",
+                           (unsigned long)((size_t)capacity * sizeof(*records)));
+        return 0;
+    }
     memset(records + pool->record_capacity,
            0,
            (size_t)(capacity - pool->record_capacity) * sizeof(*records));
@@ -1560,7 +1564,10 @@ static int rxbin007_parse_record_section(const rxbin007_section_view *section,
         pool_count > maximum_pools || record_count > maximum_records) return 0;
     if (!*pools_ref) {
         pools = (rxbin007_pool_read *)calloc(pool_count, sizeof(*pools));
-        if (!pools) return 0;
+        if (!pools) {
+            rxbin007_set_error("out of memory allocating RXBIN 007 record pools");
+            return 0;
+        }
         *pools_ref = pools;
         *pool_count_ref = pool_count;
     } else if (*pool_count_ref != pool_count) {
@@ -2605,7 +2612,8 @@ static int rxbin007_parse_image(const unsigned char *image,
             (uint32_t)total_records,
             &pools,
             &pool_count)) {
-        rxbin007_set_error("RXBIN 007 constant or metadata record section is invalid");
+        if (!rxbin007_error[0])
+            rxbin007_set_error("RXBIN 007 constant or metadata record section is invalid");
         goto error;
     }
     if (rxbin007_pool_reads_have_type(pools, pool_count, META_PROVIDER) &&

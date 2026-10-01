@@ -8,12 +8,19 @@ Approved: 2026-08-18
 Starting candidate: `0fe5618eb` (`Merge remote-tracking branch
 'origin/develop' into develop`)
 
-Release scheduling note, 2026-09-04: beta 3 now targets 2026-09-30 after the
+Historical release scheduling note, 2026-09-04: beta 3 now targets 2026-09-30 after the
 extended performance programme. This plan's frozen August scorecard remains
 evidence for its exact candidate; beta 3 still needs its named exact-SHA gates,
 and the feature-bearing beta train requires a fresh bounded Release 1
 verification after the 2027-03-31 feature freeze. Neither requirement opens a
 new optimization programme.
+
+Current scheduling, 2026-09-18: platform functionality freezes at Beta 5 on
+2027-01-31; Beta 6 on 2027-03-31 is the separately selected Performance Beta
+and optimization freeze. The [release plan](../docs/release-1-plan.md) and
+[performance roadmap](ROADMAP.md) own that phase. This older closeout plan's
+frozen evidence and open Linux QA-C criterion are unchanged; April remains
+exact-candidate verification, not a continuation of this historical programme.
 
 ## 1. Purpose and authority
 

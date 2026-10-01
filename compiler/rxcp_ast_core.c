@@ -249,6 +249,7 @@ void free_tok(Context *context) {
 /* ASTNode Factory - With node type*/
 ASTNode *ast_ft(Context* context, NodeType type) {
     ASTNode *node = malloc(sizeof(ASTNode));
+    if (!node) RX_PANIC_OOM("malloc compiler AST node", sizeof(ASTNode), 0);
     node->context = context;
     node->file_name = context->file_name;
     node->parent = 0;

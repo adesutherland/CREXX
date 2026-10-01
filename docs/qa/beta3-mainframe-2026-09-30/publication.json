@@ -1,0 +1,410 @@
+{
+  "delivery_commit": "e15392da705c5e9e0e1e57b70586b53fc8cb64ed",
+  "qualified_product_commit": "6a09f7786b79c025981bda5d7a891982f8304dc0",
+  "integration_acceptance": "INT-AC-01 through INT-AC-05 PASS for review, source integration, publication and beta 3 preparation. Formal release is not complete.",
+  "runs": [
+    {
+      "conclusion": "success",
+      "headSha": "e15392da705c5e9e0e1e57b70586b53fc8cb64ed",
+      "jobs": [
+        {
+          "name": "Determine Version Metadata",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Linux Debug Optimizer Parity",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core macos-arm64",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core windows-x64",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core macos-x86_64",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core linux-x64",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows MinGW core quality gate (no binary delivery) / configurations",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Comprehensive ${{ matrix.name }}",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Windows MinGW core quality gate (no binary delivery) / Core windows-mingw (mingw)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Plugin macOS arm64 Metal",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Plugin macOS x86_64 CPU",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Plugin Linux x64 Vulkan",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Plugin Windows x64 Vulkan (MSVC)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish Dev Snapshot",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Create GitHub Release",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/36749864309"
+    },
+    {
+      "conclusion": "success",
+      "headSha": "e15392da705c5e9e0e1e57b70586b53fc8cb64ed",
+      "jobs": [
+        {
+          "name": "Analyze (cpp)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/36749863689"
+    }
+  ],
+  "core_packages": [
+    {
+      "archive": {
+        "name": "CREXX-user-test-e15392da705c5e9e0e1e57b70586b53fc8cb64ed-macos-arm64.zip",
+        "bytes": 23473134,
+        "sha256": "62bd9fca666d0042cf64e4751471945fe051b48ce0ffe50795dfb55bc8415597",
+        "schema": 1,
+        "component": "core",
+        "commit": "e15392da705c5e9e0e1e57b70586b53fc8cb64ed",
+        "platform": "macos-arm64",
+        "toolchain": "clang",
+        "preferred_vm": "rxbvm",
+        "llama_enabled": false
+      },
+      "smoke_summary": {
+        "outcome": "passed",
+        "elapsed_seconds": 3.369,
+        "commands": [
+          {
+            "label": "opt-compile",
+            "returncode": 0
+          },
+          {
+            "label": "opt-assemble",
+            "returncode": 0
+          },
+          {
+            "label": "opt-link",
+            "returncode": 0
+          },
+          {
+            "label": "opt-rxvm",
+            "returncode": 0
+          },
+          {
+            "label": "opt-rxtvm",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-compile",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-assemble",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-link",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-rxvm",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-rxtvm",
+            "returncode": 0
+          },
+          {
+            "label": "native-build",
+            "returncode": 0
+          },
+          {
+            "label": "relocated-native",
+            "returncode": 0
+          }
+        ],
+        "preferred_vm": "rxbvm",
+        "llama_enabled": false,
+        "work": "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-core-consumer-86farcm5"
+      }
+    },
+    {
+      "archive": {
+        "name": "CREXX-user-test-e15392da705c5e9e0e1e57b70586b53fc8cb64ed-linux-x64.zip",
+        "bytes": 28958534,
+        "sha256": "555ef00e5713c0e28d56a94b36acab50f42ec6f9b8d8687348f81fd412a247ac",
+        "schema": 1,
+        "component": "core",
+        "commit": "e15392da705c5e9e0e1e57b70586b53fc8cb64ed",
+        "platform": "linux-x64",
+        "toolchain": "gcc",
+        "preferred_vm": "rxtvm",
+        "llama_enabled": false
+      },
+      "smoke_summary": {
+        "outcome": "passed",
+        "elapsed_seconds": 2.11,
+        "commands": [
+          {
+            "label": "opt-compile",
+            "returncode": 0
+          },
+          {
+            "label": "opt-assemble",
+            "returncode": 0
+          },
+          {
+            "label": "opt-link",
+            "returncode": 0
+          },
+          {
+            "label": "opt-rxvm",
+            "returncode": 0
+          },
+          {
+            "label": "opt-rxbvm",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-compile",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-assemble",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-link",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-rxvm",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-rxbvm",
+            "returncode": 0
+          },
+          {
+            "label": "native-build",
+            "returncode": 0
+          },
+          {
+            "label": "relocated-native",
+            "returncode": 0
+          }
+        ],
+        "preferred_vm": "rxtvm",
+        "llama_enabled": false,
+        "work": "/tmp/crexx-core-consumer-k0tpqwxi"
+      }
+    },
+    {
+      "archive": {
+        "name": "CREXX-user-test-e15392da705c5e9e0e1e57b70586b53fc8cb64ed-windows-x64.zip",
+        "bytes": 27006350,
+        "sha256": "5565bd2b021fcfb77f1f6b9a51fee3fd33cc34df8b6f9ebd1d23e3ea3d58951b",
+        "schema": 1,
+        "component": "core",
+        "commit": "e15392da705c5e9e0e1e57b70586b53fc8cb64ed",
+        "platform": "windows-x64",
+        "toolchain": "msvc",
+        "preferred_vm": "rxbvm",
+        "llama_enabled": false
+      },
+      "smoke_summary": {
+        "outcome": "passed",
+        "elapsed_seconds": 3.297,
+        "commands": [
+          {
+            "label": "opt-compile",
+            "returncode": 0
+          },
+          {
+            "label": "opt-assemble",
+            "returncode": 0
+          },
+          {
+            "label": "opt-link",
+            "returncode": 0
+          },
+          {
+            "label": "opt-rxvm",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-compile",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-assemble",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-link",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-rxvm",
+            "returncode": 0
+          },
+          {
+            "label": "native-build",
+            "returncode": 0
+          },
+          {
+            "label": "relocated-native",
+            "returncode": 0
+          }
+        ],
+        "preferred_vm": "rxbvm",
+        "llama_enabled": false,
+        "work": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-core-consumer-skblydh4"
+      }
+    },
+    {
+      "archive": {
+        "name": "CREXX-user-test-e15392da705c5e9e0e1e57b70586b53fc8cb64ed-macos-x86_64.zip",
+        "bytes": 24295280,
+        "sha256": "1fe05232e26e55aa732087cb19ffcc3ddaf9d96f29f89b61697c5cdede49dd15",
+        "schema": 1,
+        "component": "core",
+        "commit": "e15392da705c5e9e0e1e57b70586b53fc8cb64ed",
+        "platform": "macos-x86_64",
+        "toolchain": "clang",
+        "preferred_vm": "rxbvm",
+        "llama_enabled": false
+      },
+      "smoke_summary": {
+        "outcome": "passed",
+        "elapsed_seconds": 3.661,
+        "commands": [
+          {
+            "label": "opt-compile",
+            "returncode": 0
+          },
+          {
+            "label": "opt-assemble",
+            "returncode": 0
+          },
+          {
+            "label": "opt-link",
+            "returncode": 0
+          },
+          {
+            "label": "opt-rxvm",
+            "returncode": 0
+          },
+          {
+            "label": "opt-rxtvm",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-compile",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-assemble",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-link",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-rxvm",
+            "returncode": 0
+          },
+          {
+            "label": "noopt-rxtvm",
+            "returncode": 0
+          },
+          {
+            "label": "native-build",
+            "returncode": 0
+          },
+          {
+            "label": "relocated-native",
+            "returncode": 0
+          }
+        ],
+        "preferred_vm": "rxbvm",
+        "llama_enabled": false,
+        "work": "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-core-consumer-vma0je5l"
+      }
+    }
+  ],
+  "latest_native_boundary": "Lab repair report and WIDE-06 now record the frozen HIGH package passing on repaired PDIO1: RXC/RXAS/RXVM RC0/0/0, exact 3108-record host/native assembly match, interactive and ordered binary checks. These packages predate the approved upstream console-signal follow-up. Exact formal native packages and modern z/OS HIGH remain open.",
+  "nonblocking_ci_warnings": [
+    "Existing MSYS2 MINGW64 runner environment deprecation warning.",
+    "Existing ilammy/msvc-dev-cmd@v1 Node.js 20 action deprecation warning; GitHub runs it with Node.js 24."
+  ],
+  "codeql": {
+    "analysis_id": 1868703980,
+    "open_alert_numbers": [
+      216,
+      217,
+      218,
+      222,
+      223,
+      224,
+      225,
+      226,
+      227
+    ],
+    "new_alert_numbers": [],
+    "error": "",
+    "warning": ""
+  },
+  "documentation_followup": "Documentation/evidence-only child records terminal CI and the later Lab report. Product/test/build inputs are unchanged; passing e15392da7 evidence is reused, and the duplicate development CI matrix is skipped for that child.",
+  "snapshot": {
+    "url": "https://github.com/adesutherland/CREXX/releases/tag/dev-snapshot",
+    "tag_commit": "e15392da705c5e9e0e1e57b70586b53fc8cb64ed",
+    "assets": 30,
+    "formal_beta_tag_created": false
+  }
+}

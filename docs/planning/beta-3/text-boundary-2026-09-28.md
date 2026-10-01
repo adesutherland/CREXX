@@ -100,3 +100,12 @@ not a separate release plan.
 Tentative local runtime-map-setter work is superseded by this clarification
 and is not published or accepted baseline evidence. The unrelated shared
 compiler/binutils/allocation repairs continue under the approved plan.
+
+On 29 September the Mainframe Lab integration branch connected the existing
+CMS/TSO `mainframe_set_text_conversion(0)` runtime switch to cREXX's shared
+codec at `platform_openfile` and the RXC/RXAS `-E` selectors. The code is
+guarded for mainframe builds; binary opens remain byte oriented. The local
+CMS31 check compiled a source member to readable native RXAS, assembled it,
+and ran its RXBIN on z/VM 4.4. A separate macOS rebuild and focused platform
+tests passed. These results do not qualify the other guest profiles or the
+formal beta 3 revision.

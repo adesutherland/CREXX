@@ -23,6 +23,11 @@ route uses the shared seven-page codec in the platform layer; `rxlink`, `rxdas`
 and the VM accept the same `-E` selector for supported text files. RXBIN and
 explicit binary paths stay raw. Read/write/close failures must prevent success.
 
+Native CMS/TSO SDK entry points explicitly disable runtime character conversion.
+The platform layer wraps raw native text files with the shared codec and converts
+first-party stdout/stderr diagnostics. Binary opens remain raw; sequential text
+update modes are rejected before opening. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md).
+
 ## The Compilation Pipeline
 
 The pipeline of transforming Rexx source code into executable bytecode is structured as follows:
@@ -113,7 +118,7 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      arguments, replacement writes, aliases, labels and dynamic `SIGNAL`
      retain `assertinitialized`.
    - Cross-file inlining uses compiler-owned `META_INLINE` payloads alongside
-     normal callable metadata. The current `I6` payload begins with a versioned
+     normal callable metadata. The current `I6`/`I7` payloads begin with a versioned
      callable summary containing formal read/write/escape and exact-shape
      facts, result/control/context facts, and structural cost. The reader
      reconstructs those facts from the body and checks the result shape against
@@ -129,6 +134,10 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      different generic registry procedure.
      Libraries preserve this metadata for downstream `rxc` optimisation; final
      linked images strip it by default.
+     This is an annotated compiler-IR transport, not an RXAS proof input.
+     Summary reconstruction uses the transported AST, including its symbol-use
+     annotations; it does not verify equivalence to the executable procedure.
+     A stale template can therefore disagree with a separately edited body.
    - Suitable `SELECT` and equality ladders are lowered through a dedicated
      dispatch AST to RXAS packed jump tables. Eligibility, semantic gates,
      profitability thresholds, and regression invariants are documented in
@@ -136,6 +145,11 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
 
 5. **Assembler (`rxas`)**
    - Parses the generated `rxas` Assembly instructions.
+   - Applies a bounded local peephole, then whole-procedure CFG, component
+     SSA, alias/storage, signal and observation proofs before emission.
+     These analyses consume the assembly and shared opcode-semantics tables;
+     they do not consume RXC's callable summaries or ASTs. Inlining in RXC
+     expands the caller body seen by this procedure-level analysis.
    - Translates human-readable IR assembly into packed binary format (`rxbin` bytecode).
    - Validates `.initializer` metadata against its local `.void`, zero-argument
      bytecode procedure and sets the RXBIN 007 initializer feature bit.
@@ -155,6 +169,16 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      `rxvm_initialize()` then advances each mutable module overlay through its
      once-only initializer state before `main` or a public call can enter it.
    - The execution loop happens inside the `rxvm_run` function (e.g., in `rxvmmain.c` / `rxvmintp.c`).
+
+The [2026-09-18 optimization-boundary audit](../planning/release-1/optimization-boundary-audit-2026-09-18.md)
+maps every optimization stage and the cross-tool trust surfaces. The RXAS
+entry-argument alias defect has a published shared-SSA repair in `f7a8b08c1`.
+Adrian accepted imported inline templates as an RXC-only concern and accepted
+the documented RXAS status-bit assertion semantics on 2026-09-18. Preserve the
+structured RXC AST-rewrite support, including its Level C role. The architecture
+above describes ownership, not a general optimizer soundness claim. The
+[maintainability/fusion proposal](../planning/release-1/optimization-maintainability-and-fusion-ownership.md)
+records the remaining unapproved structural and instruction-ownership changes.
 
 ## Text, UTF-8, and Binary Data
 

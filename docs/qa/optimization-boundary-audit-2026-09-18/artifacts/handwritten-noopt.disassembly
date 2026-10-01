@@ -1,0 +1,69 @@
+*******************************************************************************
+* MODULE - input
+* DESCRIPTION - input
+
+* CONSTANT POOL - Size 0x1a0.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0x88
+
+.globals=0
+
+main()          .locals=10
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                load r0,41                                   * 0x000004:0001 Load op1 with op2
+                itos r0                                      * 0x000007:00e5 Set register string value from its int value
+                itos r0                                      * 0x000009:00e5 Set register string value from its int value
+                seq r9,r0,"41"                               * 0x00000b:0075 String Equals op1=(op2==op3)
+                brf lb_80,r9                                 * 0x00000f:0026 Branch to op1 if op2 false
+                load r1,41                                   * 0x000012:0001 Load op1 with op2
+                itos r1                                      * 0x000015:00e5 Set register string value from its int value
+                link r2,r1                                   * 0x000017:00d4 Link op2 to op1
+                itos r2                                      * 0x00001a:00e5 Set register string value from its int value
+                seq r9,r2,"41"                               * 0x00001c:0075 String Equals op1=(op2==op3)
+                unlink r2                                    * 0x000020:00d5 Unlink op1
+                brf lb_80,r9                                 * 0x000022:0026 Branch to op1 if op2 false
+                load r3,41                                   * 0x000025:0001 Load op1 with op2
+                itos r3                                      * 0x000028:00e5 Set register string value from its int value
+                swap r3,r4                                   * 0x00002a:01fe Swap op1 and op2
+                itos r4                                      * 0x00002d:00e5 Set register string value from its int value
+                seq r9,r4,"41"                               * 0x00002f:0075 String Equals op1=(op2==op3)
+                brf lb_80,r9                                 * 0x000033:0026 Branch to op1 if op2 false
+                load r5,41                                   * 0x000036:0001 Load op1 with op2
+                itos r5                                      * 0x000039:00e5 Set register string value from its int value
+                inc r5                                       * 0x00003b:001c Increment Int (op1++)
+                itos r5                                      * 0x00003d:00e5 Set register string value from its int value
+                seq r9,r5,"42"                               * 0x00003f:0075 String Equals op1=(op2==op3)
+                brf lb_80,r9                                 * 0x000043:0026 Branch to op1 if op2 false
+                load r6,41                                   * 0x000046:0001 Load op1 with op2
+                itos r6                                      * 0x000049:00e5 Set register string value from its int value
+                load r6,"changed"                            * 0x00004b:0003 Load op1 with op2
+                itos r6                                      * 0x00004e:00e5 Set register string value from its int value
+                seq r9,r6,"41"                               * 0x000050:0075 String Equals op1=(op2==op3)
+                brf lb_80,r9                                 * 0x000054:0026 Branch to op1 if op2 false
+                load r7,41                                   * 0x000057:0001 Load op1 with op2
+                itos r7                                      * 0x00005a:00e5 Set register string value from its int value
+                call untouched()                             * 0x00005c:002c Call procedure (op1())
+                itos r7                                      * 0x00005e:00e5 Set register string value from its int value
+                seq r9,r7,"41"                               * 0x000060:0075 String Equals op1=(op2==op3)
+                brf lb_80,r9                                 * 0x000064:0026 Branch to op1 if op2 false
+                load r7,41                                   * 0x000067:0001 Load op1 with op2
+                itos r7                                      * 0x00006a:00e5 Set register string value from its int value
+                load r6,1                                    * 0x00006c:0001 Load op1 with op2
+                call r8,bump(),r6                            * 0x00006f:002e Call procedure (op1=op2(op3...) )
+                itos r7                                      * 0x000073:00e5 Set register string value from its int value
+                seq r9,r7,"42"                               * 0x000075:0075 String Equals op1=(op2==op3)
+                brf lb_80,r9                                 * 0x000079:0026 Branch to op1 if op2 false
+                say "PASS: PERF3-10 redundant ITOS runtime"  * 0x00007c:01c7 Say op1
+                ret 0                                        * 0x00007e:0032 Return op1
+lb_80:          say "FAIL: PERF3-10 redundant ITOS runtime"  * 0x000080:01c7 Say op1
+                ret 1                                        * 0x000082:0032 Return op1
+
+untouched()     .locals=0
+                ret                                          * 0x000084:0030 Return VOID
+
+bump()          .locals=0
+                inc a1 /* aka r1 */                          * 0x000085:001c Increment Int (op1++)
+                ret                                          * 0x000087:0030 Return VOID
+*******************************************************************************
+

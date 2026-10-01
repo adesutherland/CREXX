@@ -117,7 +117,7 @@ static void inline_debug_log(Context *context,
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
-    fputc('\n', stderr);
+    platform_text_putc('\n', stderr);
 }
 
 static void inline_debug_fail_closed(Context *context,
@@ -144,7 +144,7 @@ static void inline_debug_fail_closed(Context *context,
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
-    fputc('\n', stderr);
+    platform_text_putc('\n', stderr);
 }
 
 void inline_remap_debug_result(Context *context,
@@ -238,7 +238,7 @@ static void inline_export_debug_reject(Context *context,
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
-    fputc('\n', stderr);
+    platform_text_putc('\n', stderr);
 }
 
 static int inline_scope_is_within(Scope *scope, Scope *root) {

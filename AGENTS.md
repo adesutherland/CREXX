@@ -11,6 +11,22 @@
 3. `rxlink`: linker for combining one or more `rxbin` modules into a shared-pool linked image
 4. `rxvm`: interpreter for register-based `rxbin` bytecode
 
+## Checkout And Branch Discipline
+
+Use the existing `develop` checkout for normal development, documentation,
+release preparation and QA. Use the existing `hotfix` checkout only for an
+urgent fix that is then promoted to `develop`. Keep the selected checkout
+synchronized with its remote branch before editing, and reconcile local changes
+against the current branch rather than leaving an older dirty checkout behind.
+
+Do not create temporary topic, release-candidate or QA branches or additional
+worktrees for ordinary repository work. Run pre-release qualification on the
+exact `develop` commit that will be promoted. `master` is the release line:
+update it from the qualified `develop` commit only when cutting a release, then
+tag the resulting `master` commit. Preserve unrelated local work when syncing;
+ask before discarding work unless the maintainer has explicitly directed its
+disposition.
+
 ## Release Branch Status
 
 Do not infer released status from `develop` alone. During the Release 1 beta

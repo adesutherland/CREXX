@@ -214,6 +214,9 @@ static const char* binary_file_mode(const char* mode) {
     if (strcmp(mode, "w") == 0) {
         return "wb";
     }
+    if (strcmp(mode, "r+") == 0) {
+        return "r+b";
+    }
     /*
      * "w+" is handled specially by openfile()
      * because CREXX semantics preserve an existing database.

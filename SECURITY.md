@@ -1,16 +1,16 @@
 # Security Policy
 
-CREXX is no longer treated as a proof of concept, but Release 1 is still in
-beta. Security reports are welcome and will be triaged, with fixes prioritized
+This policy accompanies CREXX `1.0.0-beta.3`. Release 1 is still in beta.
+Security reports are welcome and will be triaged, with fixes prioritized
 according to impact and release risk.
 
 ## Supported Versions
 
 | Version | Security status |
 | --- | --- |
-| `develop` / `1.0.0-beta.3` WIP | Active beta development and first destination for security fixes |
-| `1.0.0-beta.2` | Latest completed beta baseline; supported for beta security triage and fixes |
-| `1.0.0-beta.1` | Superseded by beta 2; use beta 2 unless reproducing a beta 1-only issue |
+| `develop` | Active development and first destination for security fixes |
+| `1.0.0-beta.3` | Current Release 1 beta baseline; supported for beta security triage and fixes |
+| `1.0.0-beta.2` and `1.0.0-beta.1` | Earlier betas; use beta 3 unless reproducing an issue specific to an older beta |
 | Test tags and older development snapshots | Not supported |
 
 Until the first stable Release 1, security fixes may be delivered on `develop`
@@ -35,10 +35,9 @@ Important beta security assumptions:
 - macOS beta release packages use Developer ID signing and notarization when
   the release workflow has the required Apple secrets. The stapled `.pkg`
   installer is the preferred macOS user package when present.
-- Windows beta packages should use the signed ZIP after the maintainer signing
-  flow has run. Unsigned Windows ZIPs may exist as intermediate CI assets before
-  signing is completed. Beta 3 targets a signed click-through installer if the
-  signing and upload flow is reliable before the beta 3 tag.
+- For Windows beta 3, prefer the signed ZIP or signed NSIS installer when
+  present. The release asset list identifies signing status. Unsigned ZIPs
+  and installers may be available before the maintainer signing flow completes.
 
 The project welcomes hardening work, especially around malformed source,
 malformed bytecode, plugin loading, native API boundaries, file handling, and

@@ -26,8 +26,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
+#include <errno.h>
 #include "rxpa.h"
 #include "rxvmintp.h"
+#include "platform.h"
 
 // Function Prototypes
 void say_exit_default(char* message); // Default say exit function
@@ -52,9 +55,13 @@ static say_exit_func rxvm_current_say_exit(void) {
 /* Default Say Exit Function - prints to stdout */
 void say_exit_default(char* message) {
     /* Print the message to stdout without a newline or any formatting */
-    printf("%s", message);
+    errno = 0;
+    if (platform_console_text_write(stdout, message, strlen(message))) {
+        raise_signal(errno == EILSEQ ? RXSIGNAL_UNICODE_ERROR : RXSIGNAL_NOTREADY);
+        return;
+    }
     // Flush
-    fflush(stdout);
+    if (fflush(stdout)) raise_signal(RXSIGNAL_NOTREADY);
 }
 
 /* Set the say exit function */

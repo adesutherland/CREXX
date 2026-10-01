@@ -336,7 +336,7 @@ static void rxvm_memory_report_if_requested(rxvm_memory_context *context) {
                 class_id ? "," : "", class_names[class_id],
                 stats.class_peak_live_allocations[class_id]);
     }
-    fputc('\n', stderr);
+    platform_text_putc('\n', stderr);
 #ifdef CREXX_VM_MEMORY_CENSUS
     {
         int first_histogram_entry = 1;
@@ -369,7 +369,7 @@ static void rxvm_memory_report_if_requested(rxvm_memory_context *context) {
                     first_histogram_entry ? "" : ",", upper, count);
             first_histogram_entry = 0;
         }
-        fputc('\n', stderr);
+        platform_text_putc('\n', stderr);
     }
 #endif
 }

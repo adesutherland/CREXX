@@ -36,7 +36,7 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
             prep_string_buffer(op1R, 4);
 
             /* Read the first byte - determines length */
-            first_byte = fgetc((FILE *)op2R->int_value);
+            first_byte = platform_text_getc((FILE *)op2R->int_value);
             if (first_byte == EOF) {
                 op1R->int_value = -1;
                 rxvm_value_set_string_length_known(op1R, 0u);
@@ -58,17 +58,17 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
                 }
 
                 if (op1R->string_length > 1) {
-                    next_byte = fgetc((FILE *)op2R->int_value);
+                    next_byte = platform_text_getc((FILE *)op2R->int_value);
                     if (next_byte == EOF) invalid = 1;
                     else op1R->string_value[1] = (char)next_byte;
                 }
                 if (op1R->string_length > 2) {
-                    next_byte = fgetc((FILE *)op2R->int_value);
+                    next_byte = platform_text_getc((FILE *)op2R->int_value);
                     if (next_byte == EOF) invalid = 1;
                     else op1R->string_value[2] = (char)next_byte;
                 }
                 if (op1R->string_length > 3) {
-                    next_byte = fgetc((FILE *)op2R->int_value);
+                    next_byte = platform_text_getc((FILE *)op2R->int_value);
                     if (next_byte == EOF) invalid = 1;
                     else op1R->string_value[3] = (char)next_byte;
                 }
@@ -111,7 +111,24 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
 
 RXVM_HANDLER(FWRITE_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FWRITE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        fwrite(op2R->string_value, op2R->string_length, 1, (FILE*)op1R->int_value);
+        {
+            FILE *stream = (FILE*)op1R->int_value;
+            RXVM_UTF8_ONLY(
+            if (stream == stdout || stream == stderr) {
+                errno = 0;
+                if (platform_console_text_write(stream, op2R->string_value, op2R->string_length)) {
+                    unsigned char output_signal = errno == EILSEQ ? RXSIGNAL_UNICODE_ERROR : RXSIGNAL_NOTREADY;
+                    SET_SIGNAL_MSG(output_signal,
+                                   "Unable to write console text");
+                }
+            }
+            else
+                fwrite(op2R->string_value, op2R->string_length, 1, stream);
+            )
+            RXVM_BYTE_ONLY(
+            fwrite(op2R->string_value, op2R->string_length, 1, stream);
+            )
+        }
         DISPATCH;
 
     /* fwriteb - fwrite to op1 file*(int) from op2(binary) */
@@ -151,7 +168,24 @@ RXVM_HANDLER(FWRITECDPT_REG_REG, VM_ADVANCE(2);
             length_of_codepoint = 1;
             codepoint[0] = op2R->int_value;
             )
-            fwrite(codepoint, length_of_codepoint, 1, (FILE*)op1R->int_value);
+            {
+                FILE *stream = (FILE*)op1R->int_value;
+                RXVM_UTF8_ONLY(
+                if (stream == stdout || stream == stderr) {
+                    errno = 0;
+                    if (platform_console_text_write(stream, codepoint, length_of_codepoint)) {
+                        unsigned char output_signal = errno == EILSEQ ? RXSIGNAL_UNICODE_ERROR : RXSIGNAL_NOTREADY;
+                        SET_SIGNAL_MSG(output_signal,
+                                       "Unable to write console codepoint");
+                    }
+                }
+                else
+                    fwrite(codepoint, length_of_codepoint, 1, stream);
+                )
+                RXVM_BYTE_ONLY(
+                fwrite(codepoint, length_of_codepoint, 1, stream);
+                )
+            }
         }
         DISPATCH;
 

@@ -29,6 +29,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "platform.h"
+#if defined(CREXX_MAINFRAME_ELF)
+#include <mainframe_text.h>
+#endif
 #include "rxas.h"
 #include "rxasassm.h"
 #include "../binutils/include/rxdefs.h"
@@ -74,17 +77,17 @@ static void prt_ops_new() {
             if (!num_ops) {
                 printf("no operand");
             } else {
-                putchar('{');
+                platform_text_putc('{', stdout);
                 for (operand_index = 0; operand_index < num_ops; operand_index++) {
                     const char *name = operand_name_str(
                             rxop_format_operand_type(op_table[i].format, operand_index));
-                    if (operand_index) putchar(',');
+                    if (operand_index) platform_text_putc(',', stdout);
                     fputs(name, stdout);
                     format_width += strlen(name);
                 }
-                putchar('}');
+                platform_text_putc('}', stdout);
             }
-            while (format_width++ < 20) putchar(' ');
+            while (format_width++ < 20) platform_text_putc(' ', stdout);
             printf(" %s\n", op_table[i].description);
         }
     }
@@ -130,6 +133,9 @@ int rxas_parser_mode_main(int stdio_mode, int port, const char *file_name, int d
 #endif
 
 int main(int argc, char *argv[]) {
+#if defined(CREXX_MAINFRAME_ELF)
+    mainframe_set_text_conversion(0);
+#endif
     Assembler_Context scanner;
     char *combined_location = 0;
     char *exe_path = 0;
