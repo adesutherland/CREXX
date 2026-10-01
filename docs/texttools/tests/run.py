@@ -33,6 +33,8 @@ def main():
     parser.add_argument("--bin", type=Path, required=True)
     parser.add_argument("--work", type=Path)
     parser.add_argument("--pandoc", type=Path)
+    parser.add_argument("--footnote-pdf", action="store_true",
+                        help="Prepare one real book and verify a XeLaTeX footnote PDF destination")
     args = parser.parse_args()
     product = args.bin.resolve()
     work = (args.work.resolve() if args.work else
@@ -42,10 +44,10 @@ def main():
     imports.mkdir()
     receipts = []
 
-    def run(label, command, expected=0, env=None):
+    def run(label, command, expected=0, env=None, cwd=None):
         log = work / (label + ".log")
         with log.open("w") as stream:
-            result = subprocess.run([str(x) for x in command], cwd=work,
+            result = subprocess.run([str(x) for x in command], cwd=cwd or work,
                                     env=env, stdout=stream,
                                     stderr=subprocess.STDOUT, timeout=300)
         receipts.append({"label": label, "rc": result.returncode, "log": str(log)})
@@ -111,7 +113,8 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
     boilerplate = source / "docs/books/boilerplate"
     boilerplate.mkdir(parents=True)
     (boilerplate / "preamble.tex").write_text(
-        "\\usepackage{hyperref}\n\\usepackage{fontspec}\n\\usepackage{fancyvrb}\n"
+        "\\usepackage{hyperref}\n\\usepackage{setspace}\n"
+        "\\usepackage{fontspec}\n\\usepackage{fancyvrb}\n"
         "\\usepackage{bashful}\n\\usepackage{listings}\n"
         "\\setmainfont[Mapping=tex-text]{Minion Pro}\n"
         "\\newfontfamily\\headingfont{Avenir Next}\n"
@@ -145,6 +148,7 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
     run("four-books", wrapper + ["build", source, work / "four books", "all"], env=env)
     staged = work / "four books/docs/books"
     preamble = (staged / "boilerplate/preamble.tex").read_text()
+    assert preamble.index("\\usepackage{setspace}") < preamble.index("\\usepackage{hyperref}")
     assert "\\usepackage{fvextra}" in preamble
     assert "\\tracinglostchars=3" in preamble
     assert "\\lstset{indexstyle=\\BookIndex}" in preamble
@@ -232,6 +236,9 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
         original_staged / BOOKS[0] / (BOOKS[0] + ".tex")).read_text()
     assert "\\usepackage{fvextra}" in (
         original_staged / "boilerplate/preamble.tex").read_text()
+    original_preamble = (original_staged / "boilerplate/preamble.tex").read_text()
+    assert original_preamble.index("\\usepackage{setspace}") < original_preamble.index(
+        "\\usepackage{hyperref}")
     assert "\\input{../../../boilerplate/glyph-fallback}" not in (
         original_staged / "boilerplate/preamble.tex").read_text()
     run("original-fonts-versioned", wrapper + ["prepare", source,
@@ -312,6 +319,33 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
                 assert r"\%splice\%" not in tex
             receipts.append({"book": book, "real_pandoc_chapters": len(chapters)})
             receipts.append({"book": book, "extracted_listings": extracted})
+    if args.footnote_pdf:
+        real_env = dict(os.environ, PATH=str(product) + os.pathsep + os.environ.get("PATH", ""))
+        source_preamble = REPO / "docs/books/boilerplate/preamble.tex"
+        source_bytes = source_preamble.read_bytes()
+        actual = work / "actual footnote book"
+        run("footnote-book-prepare", wrapper + [
+            "prepare", REPO, actual, BOOKS[1], "initial"], env=real_env)
+        assert source_preamble.read_bytes() == source_bytes
+        staged_preamble = (actual / "docs/books/boilerplate/preamble.tex").read_text()
+        assert staged_preamble.index("\\usepackage{setspace}") < staged_preamble.index(
+            "\\usepackage{hyperref}")
+        fixture = actual / "docs/books" / BOOKS[1] / "tex/book"
+        (fixture / "footnote-fixture.tex").write_text(
+            "\\input{../../../boilerplate/preamble}\n"
+            "\\begin{document}\n"
+            "Body marker\\footnote{Retained readable footnote text.}\n"
+            "\\end{document}\n")
+        run("footnote-xelatex", ["xelatex", "-no-pdf", "-halt-on-error",
+                                  "-interaction=nonstopmode", "footnote-fixture.tex"],
+            env=real_env, cwd=fixture)
+        run("footnote-xdvipdfmx", ["xdvipdfmx", "-o", "footnote-fixture.pdf",
+                                    "footnote-fixture.xdv"], env=real_env, cwd=fixture)
+        dests = run("footnote-destinations", ["pdfinfo", "-dests",
+                    "footnote-fixture.pdf"], env=real_env, cwd=fixture).read_text()
+        assert '"Hfootnote.1"' in dests, "Footnote mark has no PDF destination"
+        receipts.append({"real_footnote_pdf": str(fixture / "footnote-fixture.pdf"),
+                         "named_destination": "Hfootnote.1"})
     (work / "results.json").write_text(json.dumps(receipts, indent=2) + "\n")
     print(f"TextTools checks passed. Receipts: {work / 'results.json'}")
     print("Mock typesetter checks do not qualify PDF output.")

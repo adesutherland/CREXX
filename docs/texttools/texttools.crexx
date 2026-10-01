@@ -647,12 +647,22 @@ preparetypesetting: procedure = .int
   end
   else if profile <> 'original' then return 1
   original = readbinary(preamble) as .string
+  /* setspace replaces the footnote text macro. Load it before hyperref so
+     hyperref's destination anchor remains in the detached PDF. */
+  hyperref = '5c'x || 'usepackage{hyperref}'
+  setspace = '5c'x || 'usepackage{setspace}'
+  if countstr(hyperref, original) <> 1 | countstr(setspace, original) <> 1 then do
+    say 'Expected one hyperref and one setspace package declaration in:' preamble
+    return 1
+  end
+  updated = changestr(setspace, original, '')
+  updated = changestr(hyperref, updated, setspace || '0a'x || hyperref)
   anchor = '5c'x || 'usepackage{fancyvrb}'
-  if countstr(anchor, original) <> 1 then do
+  if countstr(anchor, updated) <> 1 then do
     say 'Expected one fancyvrb package declaration in:' preamble
     return 1
   end
-  updated = changestr(anchor, original, anchor || '0a'x || '5c'x || 'usepackage{fvextra}')
+  updated = changestr(anchor, updated, anchor || '0a'x || '5c'x || 'usepackage{fvextra}')
   /* listings inserts a display-only \lst@nolig token into indexed keywords.
      Empty it only while writing index entries, so makeindex sees plain text. */
   anchor = '5c'x || 'usepackage{listings}'
