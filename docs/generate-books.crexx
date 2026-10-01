@@ -1,7 +1,7 @@
 /*
  * Detached book generation through the repository's cREXX TextTools port.
  * René's original buildbooks.rexx and buildbooks.crexx remain as authored.
- * Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all]
+ * Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all] [initial|original]
  * Build with the texttools module. See BUILDING-DOCS.md for the commands.
  */
 options levelb
@@ -13,8 +13,8 @@ i = .int
 book = .string
 path = .string
 tool = .string
-if args[0] < 3 | args[0] > 4 then do
-  say 'Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all]'
+if args[0] < 3 | args[0] > 5 then do
+  say 'Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all] [initial|original]'
   return 2
 end
 mode = args[1]
@@ -22,7 +22,8 @@ if mode <> 'check' & mode <> 'prepare' & mode <> 'build' then return 2
 repo = strip(translate(args[2], '/', '\'), 't', '/')
 output = strip(translate(args[3], '/', '\'), 't', '/')
 books = 'crexx_language_reference crexx_programming_guide crexx_vm_spec crexx_library_reference'
-if args[0] = 4 then do
+profile = 'initial'
+if args[0] >= 4 then do
   if args[4] <> 'all' then do
     if wordpos(args[4], books) = 0 then do
       say 'Unknown book:' args[4]
@@ -30,6 +31,11 @@ if args[0] = 4 then do
     end
     books = args[4]
   end
+end
+if args[0] = 5 then profile = args[5]
+if profile <> 'initial' & profile <> 'original' then do
+  say 'Unknown font profile:' profile
+  return 2
 end
 if absolute_path(repo) = 0 | absolute_path(output) = 0 then do
   say 'Use non-root absolute paths without dot components for REPO and OUTPUT.'
@@ -68,7 +74,7 @@ do i = 1 to words(books)
   end
 end
 tools = 'pandoc'
-if mode <> 'prepare' then tools = tools || ' xelatex makeindex biber xdvipdfmx bash crexx rxc rxas rxvme stdbuf inkscape'
+if mode <> 'prepare' then tools = tools || ' xelatex makeindex biber xdvipdfmx bash crexx rxc rxas rxlink rxdas rxdb rxcpack rxvme stdbuf inkscape sed'
 do i = 1 to words(tools)
   tool = word(tools, i)
   call arraydrop errors
@@ -80,6 +86,7 @@ do i = 1 to words(tools)
 end
 say 'Books:' books
 say 'Output:' output
+say 'Font profile:' profile
 if missing > 0 then return 1
 if mode = 'check' then do
   say 'Executables and book inputs found. Fonts/packages still need qualification.'
@@ -88,12 +95,23 @@ end
 /* Native copy dereferences guide symlinks and omits only old tex/book outputs. */
 if texttools..copytree(repo || '/docs/books', output || '/docs/books', 1) <> 0 then return 1
 if texttools..copytree(repo || '/docs/instructions', output || '/docs/instructions') <> 0 then return 1
+if texttools..prepareinstructionchapter(output || '/docs/books/crexx_vm_spec/instruction_chapter.tex') <> 0 then return 1
+if texttools..preparetypesetting(output || '/docs/books/boilerplate/preamble.tex',,
+  repo || '/docs/texttools/splice-guard.tex',,
+  repo || '/docs/texttools/glyph-fallback.tex', profile) <> 0 then return 1
+if profile = 'initial' then do
+  if texttools..applyfontprofile(output || '/docs/books/boilerplate', profile) <> 0 then return 1
+  do i = 1 to words(books)
+    book = word(books, i)
+    if texttools..applyfontprofile(output || '/docs/books/' || book, profile) <> 0 then return 1
+  end
+end
 do i = 1 to words(books)
   book = word(books, i)
   source = output || '/docs/books/' || book
   work = source || '/tex/book'
   say 'Publication:' book
-  if texttools..build(source, work, book, mode) <> 0 then do
+  if texttools..build(source, work, book, mode, profile) <> 0 then do
     say 'Build failed for' book 'Inspect the captured command log.'
     return 1
   end

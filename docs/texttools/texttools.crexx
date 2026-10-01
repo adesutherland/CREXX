@@ -7,12 +7,13 @@ options levelb
 namespace texttools expose build builddocument copyassets erasefiles getMarkdownFilenames,
   includeasm includelisting joinLinesMD newer preprocessMD preprocessTEX,
   replaceHyperlink replaceSplice replacecites replaceindices replacemultiindices,
-  writeSourceFile copytree
+  writeSourceFile copytree applyfontprofile preparetypesetting prepareinstructionchapter
 import rxfnsb
+import bookhighlight
 
 /* Absolute paths keep BIF file IO independent of ADDRESS's logical directory. */
 build: procedure = .int
-  arg source = .string, work = .string, title = .string, mode = 'build'
+  arg source = .string, work = .string, title = .string, mode = 'build', profile = 'original'
   i = .int
   chapter = .string
   original = .string
@@ -43,11 +44,17 @@ build: procedure = .int
     argv[6] = '--top-level-division=chapter'
     /* Marker helpers consume complete lines; do not split long listing tags. */
     argv[7] = '--wrap=none'
-    argv[8] = generated
-    argv[9] = '-o'
-    argv[10] = texin
+    /* Rare indented blocks are already literal examples; no Pandoc template
+       defines Highlighting macros, and fenced blocks use our own routes. */
+    argv[8] = '--syntax-highlighting=none'
+    argv[9] = generated
+    argv[10] = '-o'
+    argv[11] = texin
     if run_tool(argv) <> 0 then return 1
-    if preprocessTEX(texin, work || '/' || chapter || '.tex') <> 0 then return 1
+    linkmap = ''
+    if title = 'crexx_language_reference' & chapter = 'rxpp' then linkmap = source || '/rxpp-book-links.tsv'
+    if preprocessTEX(texin, work || '/' || chapter || '.tex', linkmap) <> 0 then return 1
+    if applyfontprofile(work || '/' || chapter || '.tex', profile) <> 0 then return 1
   end
   if copyassets(source, work) <> 0 then return 1
   if mode = 'prepare' then return 0
@@ -152,6 +159,12 @@ preprocessMD: procedure = .int
       if filename <> listing then do
         if writeSourceFile(input, i+1, fence_end-1, work || '/' || listing) <> 0 then return 1
       end
+      /* Colour printed fragments from their exact render snapshots. The
+       * executable name is used only by an explicit authored splice. */
+      if lower(language) = 'rexx' | lower(language) = 'crexx' then do
+        if write_text(work || '/' || listing || '.highlight.tex',,
+          bookhighlight..render(readbinary(work || '/' || listing) as .string)) <> 0 then return 1
+      end
       line = '%includesource=' || filename || ':' || language || ':' || listing || '%'
       i = fence_end
       /* Keep a listing in its own Pandoc paragraph, preserving surrounding prose. */
@@ -202,13 +215,73 @@ joinLinesMD: procedure = .int
   return write_text(output, result)
 
 preprocessTEX: procedure = .int
-  arg source = .string, output = .string
+  arg source = .string, output = .string, linkmap = ''
   input = readlines(source)
   i = .int
+  j = .int
   line = .string
+  mapping = .string[]
+  oldlabel = .string
+  newlabel = .string
+  targetlabel = .string
+  labelstart = .int
+  labelend = .int
+  scanfrom = .int
+  raw_tex = .string
+  if linkmap <> '' then do
+    if file_kind(linkmap) <> 'file' then do
+      say 'Missing book link map:' linkmap
+      return 1
+    end
+    mapping = readlines(linkmap)
+    raw_tex = readbinary(source) as .string
+    if pos('rxpp-book-links.tsv', linkmap) > 0 then do
+      if countstr('\section{RXPP + CREXX Build System Documentation}\label{rxpp-crexx-build-system-documentation}', raw_tex) <> 1 |,
+        countstr('\chapter{Table of Contents}\label{table-of-contents}', raw_tex) <> 1 then do
+        say 'RXPP generated chapter/contents headings changed; inspect:' source
+        return 1
+      end
+    end
+    do j = 1 to mapping[0]
+      if left(mapping[j], 1) = '#' then iterate
+      oldlabel = word(mapping[j], 1)
+      newlabel = word(mapping[j], 2)
+      if oldlabel = '' | newlabel = '' |,
+        pos('\hyperref[' || oldlabel || ']', raw_tex) = 0 |,
+        pos('\label{' || newlabel || '}', raw_tex) = 0 then do
+        say 'Book link map/source labels disagree:' mapping[j]
+        return 1
+      end
+    end
+  end
   result = '%preprocessed texin' || '0a'x
   do i = 1 to input[0]
     line = changestr('\{\#tbl:id\}', input[i], '')
+    /* Keep GitHub Markdown headings intact. The book input sits among full
+       chapters, so lift RXPP's first heading and subordinate its local TOC. */
+    if pos('rxpp-book-links.tsv', linkmap) > 0 then do
+      line = changestr('\section{RXPP + CREXX Build System Documentation}\label{rxpp-crexx-build-system-documentation}', line,,
+        '\chapter{RXPP + CREXX Build System Documentation}\label{rxpp-crexx-build-system-documentation}')
+      line = changestr('\chapter{Table of Contents}\label{table-of-contents}', line,,
+        '\section{Table of Contents}\label{table-of-contents}')
+    end
+    /* Scope Pandoc's RXPP labels before generated listing labels are added.
+       Other chapters use generic headings such as "example" too. */
+    if linkmap <> '' then do
+      scanfrom = 1
+      do while pos('\label{', line, scanfrom) > 0
+        labelstart = pos('\label{', line, scanfrom) + 7
+        labelend = pos('}', line, labelstart)
+        if labelend = 0 then do
+          say 'Malformed RXPP label:' line
+          return 1
+        end
+        targetlabel = substr(line, labelstart, labelend - labelstart)
+        line = changestr('\label{' || targetlabel || '}', line,,
+          '\label{rxpp-book-' || targetlabel || '}')
+        scanfrom = labelend + 10
+      end
+    end
     if pos('\%index\%', line) > 0 then line = replaceindices(line)
     if pos('\%indexm\%', line) > 0 then line = replacemultiindices(line)
     if pos('\%cite\%', line) > 0 then line = replacecites(line)
@@ -216,6 +289,112 @@ preprocessTEX: procedure = .int
     if pos('\%includesource=', line) > 0 then line = includelisting(line)
     if pos('\%listasm\%', line) > 0 then line = includeasm(line)
     if pos('\%splice\%', line) > 0 then line = replaceSplice(line)
+    if pos('\hyperref[', line) > 0 & linkmap <> '' then do
+      do j = 1 to mapping[0]
+        if left(mapping[j], 1) = '#' then iterate
+        oldlabel = word(mapping[j], 1)
+        newlabel = word(mapping[j], 2)
+        if oldlabel = '' | newlabel = '' then do
+          say 'Invalid book link map entry:' mapping[j]
+          return 1
+        end
+        line = changestr('\hyperref[' || oldlabel || ']', line,,
+          '\hyperref[' || newlabel || ']')
+      end
+      scanfrom = 1
+      do while pos('\hyperref[', line, scanfrom) > 0
+        labelstart = pos('\hyperref[', line, scanfrom) + 10
+        labelend = pos(']', line, labelstart)
+        if labelend = 0 then do
+          say 'Malformed RXPP local reference:' line
+          return 1
+        end
+        targetlabel = substr(line, labelstart, labelend - labelstart)
+        if pos('\label{' || targetlabel || '}', raw_tex) = 0 then do
+          say 'Unresolved RXPP local reference:' targetlabel
+          return 1
+        end
+        line = changestr('\hyperref[' || targetlabel || ']', line,,
+          '\hyperref[rxpp-book-' || targetlabel || ']')
+        scanfrom = labelend + 13
+      end
+    end
+    /* Permit long authored table signatures to wrap without changing ink. */
+    if pos('SETSTRINGLENGTH(host,value,data,byte\_length) &', line) > 0 then
+      line = changestr('SETSTRINGLENGTH(host,value,data,byte\_length)', line,,
+        'SETSTRING\allowbreak{}LENGTH\allowbreak{}(host,\allowbreak{}value,\allowbreak{}data,\allowbreak{}byte\_length)')
+    if pos(' & \texttt{chan', line) > 0 then do
+      parse var line tableleft ' & ' tableform ' & ' tableright
+      tableform = changestr(',', tableform, ',\allowbreak{}')
+      line = tableleft || ' & ' || tableform || ' & ' || tableright
+    end
+    /* Two long Appendix A terms need legal breaks at their visible separators. */
+    if pos('reserve/set/append/concat/slice', line) > 0 then
+      line = changestr('reserve/set/append/concat/slice', line,,
+        'reserve/\allowbreak{}set/\allowbreak{}append/\allowbreak{}concat/\allowbreak{}slice')
+    if pos('BSLICE\ destination,source,start,length', line) > 0 then
+      line = changestr('BSLICE\ destination,source,start,length', line,,
+        'BSLICE\ destination,\allowbreak{}source,\allowbreak{}start,\allowbreak{}length')
+    if pos('BINBYTE/BINSUBSTR/BINOVERLAY', line) > 0 then
+      line = changestr('BINBYTE/BINSUBSTR/BINOVERLAY', line,,
+        'BINBYTE/\allowbreak{}BINSUBSTR/\allowbreak{}BINOVERLAY')
+    if pos('\texttt{BINBYTE}/\texttt{BINSUBSTR}/\texttt{BINOVERLAY}', line) > 0 then
+      line = changestr('\texttt{BINBYTE}/\texttt{BINSUBSTR}/\texttt{BINOVERLAY}', line,,
+        '\texttt{BINBYTE}/\allowbreak{}\texttt{BINSUBSTR}/\allowbreak{}\texttt{BINOVERLAY}')
+    /* This linked path is longer than the library text column. \nolinkurl
+       preserves its visible characters while permitting path breaks. */
+    if pos('\texttt{docs/planning/beta-3/notes/binary-fastpath-research.md}', line) > 0 then
+      line = changestr('\texttt{docs/planning/beta-3/notes/binary-fastpath-research.md}', line,,
+        '\nolinkurl{docs/planning/beta-3/notes/binary-fastpath-research.md}')
+    if pos('.rxunicode..graphemes(text)', line) > 0 then
+      line = changestr('.rxunicode..graphemes(text)', line,,
+        '.rxunicode..\allowbreak{}graphemes(text)')
+    if pos('name,type,size,decimals,nullable', line) > 0 then
+      line = changestr('name,type,size,decimals,nullable', line,,
+        'name,\allowbreak{}type,\allowbreak{}size,\allowbreak{}decimals,\allowbreak{}nullable')
+    if pos('socketnodelay(sock,\ enabled)', line) > 0 then
+      line = changestr('socketnodelay(sock,\ enabled)', line,,
+        'socket\allowbreak{}nodelay(sock,\allowbreak{}\ enabled)')
+    if pos('configuration/runtime/model/session/request', line) > 0 then
+      line = changestr('configuration/runtime/model/session/request', line,,
+        'configuration/\allowbreak{}runtime/\allowbreak{}model/\allowbreak{}session/\allowbreak{}request')
+    if pos('\includegraphics[scale=0.8]{charts/buildflow.pdf}', line) > 0 then
+      line = changestr('\includegraphics[scale=0.8]{charts/buildflow.pdf}', line,,
+        '\includegraphics[scale=0.65]{charts/buildflow.pdf}')
+    /* Keep long programming-guide identifiers and paths within the page. */
+    if pos('rxsig1\textbar{}pkg.main\textbar{}.int\textbar{}path=.string', line) > 0 then
+      line = changestr('rxsig1\textbar{}pkg.main\textbar{}.int\textbar{}path=.string', line,,
+        'rxsig1\textbar{}\allowbreak{}pkg.main\textbar{}\allowbreak{}.int\textbar{}\allowbreak{}path=.string')
+    if pos('\%USERPROFILE\%\textbackslash{}AppData\textbackslash{}Local', line) > 0 then
+      line = changestr('\%USERPROFILE\%\textbackslash{}AppData\textbackslash{}Local', line,,
+        '\%USERPROFILE\%\textbackslash{}\allowbreak{}AppData\textbackslash{}\allowbreak{}Local')
+    if pos('\textless{}stem\textgreater{}.crexx-driver.lock', line) > 0 then
+      line = changestr('\textless{}stem\textgreater{}.crexx-driver.lock', line,,
+        '\textless{}stem\textgreater{}\allowbreak{}.crexx-\allowbreak{}driver.lock')
+    if pos('binutils/include/rxopeffects.h', line) > 0 then
+      line = changestr('binutils/include/rxopeffects.h', line,,
+        'binutils/\allowbreak{}include/\allowbreak{}rxopeffects.h')
+    if pos('binutils/include/rxops.h', line) > 0 then
+      line = changestr('binutils/include/rxops.h', line,,
+        'binutils/\allowbreak{}include/\allowbreak{}rxops.h')
+    if pos('binutils/include/rxopsignals.h', line) > 0 then
+      line = changestr('binutils/include/rxopsignals.h', line,,
+        'binutils/\allowbreak{}include/\allowbreak{}rxopsignals.h')
+    if pos('docs/reference/rxas/instructions/12-large-instructions.md', line) > 0 then
+      line = changestr('docs/reference/rxas/instructions/12-large-instructions.md', line,,
+        'docs/\allowbreak{}reference/\allowbreak{}rxas/\allowbreak{}instructions/\allowbreak{}12-large-\allowbreak{}instructions.md')
+    if pos('\texttt{ctest\ -\/-test-dir\ ', line) > 0 then
+      line = changestr('\texttt{ctest\ -\/-test-dir\ ', line,,
+        '\texttt{ctest\ -\/-test-dir\ \allowbreak{}')
+    if pos('\ -L\ linked\_opt\ -\/-label-exclude\ ', line) > 0 then
+      line = changestr('\ -L\ linked\_opt\ -\/-label-exclude\ ', line,,
+        '\ \allowbreak{}-L\ linked\_opt\ \allowbreak{}-\/-label-exclude\ \allowbreak{}')
+    if pos('\ -\/-output-on-failure}', line) > 0 then
+      line = changestr('\ -\/-output-on-failure}', line,,
+        '\ \allowbreak{}-\/-output-on-failure}')
+    if pos('\^{}performance-measurement\$', line) > 0 then
+      line = changestr('\^{}performance-measurement\$', line,,
+        '\^{}performance-\allowbreak{}measurement\$')
     if pos('\%ntsplice\%', line) > 0 then do
       say 'Unsupported ntsplice tag: upstream helper is absent. File:' source
       return 1
@@ -300,7 +479,7 @@ replaceSplice: procedure = .string
   arg line = .string
   program = .string
   parse var line . '\%splice\%' program
-  return '\begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \obeylines \obeyspaces \parskip=0pt \parindent=0pt \splice{stdbuf -o0 ' || program || '} \end{terminaloutput}'
+  return '\begin{bookterminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \parskip=0pt \parindent=0pt \spliceliteral{stdbuf -o0 ' || program || '} \end{bookterminaloutput}'
 
 includelisting: procedure = .string
   arg line = .string
@@ -312,13 +491,23 @@ includelisting: procedure = .string
   parse var payload filename ':' language ':' listing
   /* Accept the original two-field marker as well as the render snapshot. */
   if listing = '' then listing = filename
-  return '\lstinputlisting[language=' || language || ',label=' || filename || ',caption=' || filename || ']{' || decode_filename(listing) || '}'
+  if lower(language) = 'rexx' | lower(language) = 'crexx' then do
+    return '\begingroup\captionof{lstlisting}{' || filename || '}\label{' || decode_filename(filename) || '}\endgroup' || '0a'x ||,
+      '\input{' || decode_filename(listing) || '.highlight.tex}'
+  end
+  if lower(language) = 'text' then do
+    return '\begingroup\captionof{lstlisting}{' || filename || '}\label{' || decode_filename(filename) || '}\endgroup' || '0a'x ||,
+      '\VerbatimInput[breaklines=true,breakanywhere=true,breaksymbolleft={},breaksymbolright={},breakanywheresymbolpre={},breakanywheresymbolpost={},tabsize=8]{\detokenize{' || decode_filename(listing) || '}}'
+  end
+  /* listings calls the supported Windows batch dialect command.com. */
+  if lower(language) = 'bat' then language = '{[WinXP]command.com}'
+  return '\lstinputlisting[language=' || language || ',label=' || decode_filename(filename) || ',caption=' || filename || ']{\detokenize{' || decode_filename(listing) || '}}'
 
 includeasm: procedure = .string
   arg line = .string
   filename = .string
   parse var line . '\%listasm\%' filename
-  return '\lstinputlisting[language=rxas,label=' || filename || ',caption=' || filename || ']{' || decode_filename(filename) || '}'
+  return '\lstinputlisting[language=rxas,label=' || filename || ',caption=' || filename || ']{\detokenize{' || decode_filename(filename) || '}}'
 
 /* Pandoc escapes punctuation as TeX text; listing paths require literal bytes. */
 decode_filename: procedure = .string
@@ -392,6 +581,247 @@ copytree: procedure = .int
   end
   return 0
 
+/* The lexical listing renderer uses fvextra in both font profiles. Only the
+ * staged preamble is edited; René's source preamble remains byte-for-byte. */
+/* Generated VM instruction examples print executable stdout literally. Keep
+   compiler/assembler splices and the authored source chapter unchanged. */
+prepareinstructionchapter: procedure = .int
+  arg path = .string
+  lines = .string[]
+  i = .int
+  if file_kind(path) <> 'file' then do
+    say 'Missing staged VM instruction chapter:' path
+    return 1
+  end
+  lines = readlines(path)
+  do i = 1 to lines[0]
+    if pos('\splice{rxvme', lines[i]) > 0 &,
+      (pos('\begin{terminaloutput}', lines[i]) = 0 | pos('\obeylines', lines[i]) = 0) then do
+      say 'Unexpected VM terminal splice context:' path 'line' i
+      return 1
+    end
+  end
+  original = readbinary(path) as .string
+  if countstr('\splice{rxvme', original) = 0 then do
+    say 'No VM terminal splices found in:' path
+    return 1
+  end
+  updated = changestr('\splice{rxvme', original, '\spliceliteral{rxvme')
+  if countstr('\begin{terminaloutput}', updated) <> countstr('\spliceliteral{rxvme', updated) |,
+    countstr('\end{terminaloutput}', updated) <> countstr('\spliceliteral{rxvme', updated) then do
+    say 'VM terminal containers differ from runtime splices:' path
+    return 1
+  end
+  updated = changestr('\begin{terminaloutput}', updated, '\begin{bookterminaloutput}')
+  updated = changestr('\end{terminaloutput}', updated, '\end{bookterminaloutput}')
+  /* The CNOP diagram is wider than the printed description column. */
+  if countstr('\includesvg{../../svg/cnop.gv}', updated) <> 1 then do
+    say 'Expected one CNOP diagram in:' path
+    return 1
+  end
+  updated = changestr('\includesvg{../../svg/cnop.gv}', updated,,
+    '\includesvg[width=\linewidth]{../../svg/cnop.gv}')
+  return write_text(path, updated)
+
+preparetypesetting: procedure = .int
+  arg preamble = .string, guard_source = .string, fallback_source = .string, profile = .string
+  guard_target = left(preamble, lastpos('/', preamble)) || 'splice-guard.tex'
+  fallback_target = left(preamble, lastpos('/', preamble)) || 'glyph-fallback.tex'
+  if file_kind(preamble) <> 'file' then do
+    say 'Missing staged preamble:' preamble
+    return 1
+  end
+  if file_kind(guard_source) <> 'file' then do
+    say 'Missing splice guard:' guard_source
+    return 1
+  end
+  address crexx 'copy :guard_source :guard_target'
+  if rc <> 0 then return rc
+  if profile = 'initial' then do
+    if file_kind(fallback_source) <> 'file' then do
+      say 'Missing font fallback:' fallback_source
+      return 1
+    end
+    address crexx 'copy :fallback_source :fallback_target'
+    if rc <> 0 then return rc
+  end
+  else if profile <> 'original' then return 1
+  original = readbinary(preamble) as .string
+  anchor = '5c'x || 'usepackage{fancyvrb}'
+  if countstr(anchor, original) <> 1 then do
+    say 'Expected one fancyvrb package declaration in:' preamble
+    return 1
+  end
+  updated = changestr(anchor, original, anchor || '0a'x || '5c'x || 'usepackage{fvextra}')
+  /* listings inserts a display-only \lst@nolig token into indexed keywords.
+     Empty it only while writing index entries, so makeindex sees plain text. */
+  anchor = '5c'x || 'usepackage{listings}'
+  if countstr(anchor, updated) <> 1 then do
+    say 'Expected one listings package declaration in:' preamble
+    return 1
+  end
+  updated = changestr(anchor, updated, anchor || '0a'x ||,
+    '5c'x || 'makeatletter' || '0a'x ||,
+    '5c'x || 'newcommand' || '5c'x || 'BookIndex[1]{' ||,
+      '5c'x || 'begingroup' || '5c'x || 'let' || '5c'x || 'lst@nolig' || '5c'x || '@empty' ||,
+      '5c'x || 'index{{' || '5c'x || 'ttfamily#1}}' || '5c'x || 'endgroup}' || '0a'x ||,
+    '5c'x || 'makeatother' || '0a'x ||,
+    '5c'x || 'lstset{indexstyle=' || '5c'x || 'BookIndex}')
+  if profile = 'initial' then do
+    anchor = '5c'x || 'usepackage{fontspec}'
+    if countstr(anchor, updated) <> 1 then do
+      say 'Expected one fontspec package declaration in:' preamble
+      return 1
+    end
+    updated = changestr(anchor, updated,,
+      anchor || '0a'x || '5c'x || 'input{../../../boilerplate/glyph-fallback}')
+  end
+  else do
+    updated = updated || '0a'x || '5c'x || 'newcommand' || '5c'x ||,
+      'BookHighlightGlyph[1]{#1}' || '0a'x || '5c'x || 'newcommand' || '5c'x ||,
+      'BookHighlightGlyphUpper[1]{#1}' || '0a'x || '5c'x || 'newcommand' || '5c'x ||,
+      'BookHighlightInvisible[1]{}' || '0a'x
+  end
+  anchor = '5c'x || 'usepackage{bashful}'
+  if countstr(anchor, updated) <> 1 then do
+    say 'Expected one bashful package declaration in:' preamble
+    return 1
+  end
+  updated = changestr(anchor, updated,,
+    anchor || '0a'x || '5c'x || 'input{../../../boilerplate/splice-guard}')
+  /* A missing glyph is a failed publication, not a silent PDF omission. */
+  updated = updated || '0a'x || '5c'x || 'tracinglostchars=3' || '0a'x
+  return write_text(preamble, updated)
+
+/* Apply the initial free-font profile only to staged TeX inputs. The original
+ * book sources and their authored font choices stay untouched. */
+applyfontprofile: procedure = .int
+  arg path = .string, profile = .string
+  names = .string[]
+  i = .int
+  child = .string
+  kind = .string
+  contents = .string
+  updated = .string
+  api_layout = .string
+  slash = '5c'x
+  serif = 'texgyrepagella-regular.otf'
+  sans = 'texgyreheros-regular.otf'
+  mono = 'JuliaMono-Regular.ttf'
+  serifopts = 'BoldFont=texgyrepagella-bold.otf,ItalicFont=texgyrepagella-italic.otf,BoldItalicFont=texgyrepagella-bolditalic.otf'
+  sansopts = 'BoldFont=texgyreheros-bold.otf,ItalicFont=texgyreheros-italic.otf,BoldItalicFont=texgyreheros-bolditalic.otf'
+  monoopts = 'RawFeature=-calt,BoldFont=JuliaMono-Bold.ttf,ItalicFont=JuliaMono-RegularItalic.ttf,BoldItalicFont=JuliaMono-BoldItalic.ttf'
+  if profile = 'original' then return 0
+  if profile <> 'initial' then do
+    say 'Unknown font profile:' profile
+    return 1
+  end
+  kind = file_kind(path)
+  if kind = 'directory' then do
+    address crexx 'ls :path' output names
+    if rc <> 0 then return rc
+    do i = 1 to names[0]
+      child = path || '/' || names[i]
+      if applyfontprofile(child, profile) <> 0 then return 1
+    end
+    return 0
+  end
+  if kind <> 'file' then do
+    say 'Missing font-profile input:' path
+    return 1
+  end
+  if right(path, 4) <> '.tex' & right(path, 4) <> '.sty' then return 0
+  contents = readbinary(path) as .string
+  updated = contents
+  updated = changestr('Bodoni URW' || '0a'x || '    Light', updated, 'Bodoni URW Light')
+  updated = changestr('TeX Gyre' || '0a'x || '    Pagella', updated, 'TeX Gyre Pagella')
+  /* listings uses keyval commas: group its whole font style before inserting
+   * fontspec's comma-separated face options. */
+  updated = changestr('basicstyle=' || slash || 'fontsize{9}{9}' || slash || 'fontspec{JuliaMono}', updated,,
+    'basicstyle={' || slash || 'fontsize{9}{9}' || slash || 'fontspec{JuliaMono}}')
+  updated = changestr('basicstyle=' || slash || 'fontsize{9}{10}' || slash || 'fontspec{IBM Plex Mono}', updated,,
+    'basicstyle={' || slash || 'fontsize{9}{10}' || slash || 'fontspec{IBM Plex Mono}}')
+  updated = changestr('basicstyle=' || slash || 'fontspec{IBM Plex Mono}[Scale=0.85]', updated,,
+    'basicstyle={' || slash || 'fontspec{IBM Plex Mono}[Scale=0.85]}')
+  updated = changestr(slash || 'setmainfont[Mapping=tex-text]{Minion Pro}', updated,,
+    slash || 'setmainfont[Mapping=tex-text,' || serifopts || ']{' || serif || '}')
+  updated = changestr(slash || 'setmonofont[' || '0a'x || '  Scale=0.75,' || '0a'x ||,
+    '  Ligatures=NoCommon' || '0a'x || ']{IBM Plex Mono}', updated,,
+    slash || 'setmonofont[Scale=0.75,Ligatures=NoCommon,' || monoopts || ']{' || mono || '}')
+  updated = changestr(slash || 'setmonofont[Scale=0.8]{IBM Plex Mono}', updated,,
+    slash || 'setmonofont[Scale=0.8,' || monoopts || ']{' || mono || '}')
+  updated = changestr(slash || 'newfontfamily' || slash || 'codefont{IBM Plex Mono}', updated,,
+    slash || 'newfontfamily' || slash || 'codefont[' || monoopts || ']{' || mono || '}')
+  updated = changestr(slash || 'newfontfamily' || slash || 'headingfont{Avenir Next}', updated,,
+    slash || 'newfontfamily' || slash || 'headingfont[' || sansopts || ']{' || sans || '}')
+  updated = changestr(slash || 'newfontfamily' || slash || 'bignumberfont{Avenir Next}', updated,,
+    slash || 'newfontfamily' || slash || 'bignumberfont[' || sansopts || ']{' || sans || '}')
+  updated = changestr(slash || 'fontspec{IBM Plex Mono}[Scale=0.7]', updated,,
+    slash || 'fontspec[Scale=0.7,' || monoopts || ']{' || mono || '}')
+  updated = changestr(slash || 'fontspec{IBM Plex Mono}[Scale=0.85]', updated,,
+    slash || 'fontspec[Scale=0.85,' || monoopts || ']{' || mono || '}')
+  updated = fontmap(updated, 'IBM Plex Sans Condensed', sans, sansopts)
+  updated = fontmap(updated, 'IBM Plex Sans', sans, sansopts)
+  updated = fontmap(updated, 'Avenir Next', sans, sansopts)
+  updated = fontmap(updated, 'IBM Plex Mono', mono, monoopts)
+  updated = fontmap(updated, 'JuliaMono', mono, monoopts)
+  updated = fontmap(updated, 'Minion Pro', serif, serifopts)
+  updated = fontmap(updated, 'Bodoni URW Light', serif, serifopts)
+  updated = fontmap(updated, 'TeX Gyre Pagella', serif, serifopts)
+  if right(path, 13) = '/preamble.tex' then do
+    main_declaration = slash || 'setmainfont[Mapping=tex-text,' || serifopts || ']{' || serif || '}'
+    if countstr(main_declaration, updated) <> 1 then do
+      say 'Initial font profile cannot locate staged main font:' path
+      return 1
+    end
+    updated = changestr(main_declaration, updated,,
+      main_declaration || '0a'x || slash || 'setsansfont[' || sansopts || ']{' || sans || '}')
+  end
+  if right(path, 14) = '/structure.tex' & pos('/crexx_library_reference/', path) > 0 then do
+    if countstr(slash || 'input{classlib-api}', updated) > 1 then do
+      say 'Initial API layout has ambiguous class table:' path
+      return 1
+    end
+    /* Long API names wrap after their visible underscores within the fixed
+       name column. A vtop keeps the first baseline beside its arguments. */
+    api_layout = slash || 'makeatletter' || '0a'x ||,
+      slash || 'renewcommand{' || slash || 'API@NameBox}[1]{%' || '0a'x ||,
+      '  ' || slash || 'hbox to ' || slash || 'APINameWidth{%' || '0a'x ||,
+      '    ' || slash || 'vtop{' || slash || 'hsize=' || slash || 'APINameWidth' || '0a'x ||,
+      '      ' || slash || 'parindent=0pt ' || slash || 'raggedright ' || slash || 'bfseries' || '0a'x ||,
+      '      ' || slash || 'def' || slash || '_{' || slash || 'char95' || slash || 'allowbreak{}}#1' || slash || 'par}%' || '0a'x ||,
+      '    ' || slash || 'hfil}%' || '0a'x ||,
+      '}' || '0a'x || slash || 'makeatother' || '0a'x
+    if countstr(slash || 'input{classlib-api}', updated) = 1 then
+      updated = changestr(slash || 'input{classlib-api}', updated, api_layout || slash || 'input{classlib-api}')
+  end
+  if right(path, 17) = '/classlib-api.tex' then do
+    /* Constructors without underscores still need natural name breaks in
+       the staged API table. Each exact braced token occurs once. */
+    updated = changestr('{httpconnectionowner}', updated, '{http' || slash || 'allowbreak{}connection' || slash || 'allowbreak{}owner}')
+    updated = changestr('{StringArrayListIterator}', updated, '{String' || slash || 'allowbreak{}Array' || slash || 'allowbreak{}List' || slash || 'allowbreak{}Iterator}')
+    updated = changestr('{StringHashMapIterator}', updated, '{String' || slash || 'allowbreak{}HashMap' || slash || 'allowbreak{}Iterator}')
+    updated = changestr('{StringHashSetIterator}', updated, '{String' || slash || 'allowbreak{}HashSet' || slash || 'allowbreak{}Iterator}')
+    updated = changestr('{StringObjectHashMap}', updated, '{String' || slash || 'allowbreak{}Object' || slash || 'allowbreak{}HashMap}')
+    updated = changestr('{StringObjectHashMapIterator}', updated, '{String' || slash || 'allowbreak{}Object' || slash || 'allowbreak{}HashMap' || slash || 'allowbreak{}Iterator}')
+    updated = changestr('{StringObjectTreeMap}', updated, '{String' || slash || 'allowbreak{}Object' || slash || 'allowbreak{}TreeMap}')
+    updated = changestr('{StringObjectTreeMapIterator}', updated, '{String' || slash || 'allowbreak{}Object' || slash || 'allowbreak{}TreeMap' || slash || 'allowbreak{}Iterator}')
+    updated = changestr('{StringTreeMapIterator}', updated, '{String' || slash || 'allowbreak{}TreeMap' || slash || 'allowbreak{}Iterator}')
+    updated = changestr('{StringTreeSetIterator}', updated, '{String' || slash || 'allowbreak{}TreeSet' || slash || 'allowbreak{}Iterator}')
+  end
+  if contents <> updated then return write_text(path, updated)
+  return 0
+
+fontmap: procedure = .string
+  arg contents = .string, original = .string, filename = .string, fontopts = .string
+  slash = '5c'x
+  contents = changestr(slash || 'fontspec{' || original || '}', contents,,
+    slash || 'fontspec[' || fontopts || ']{' || filename || '}')
+  /* JuliaMono is also the replacement filename stem. A global string replace
+     would double that stem inside the just-inserted filename/options. */
+  if original = 'JuliaMono' then return contents
+  return changestr(original, contents, filename)
+
 builddocument: procedure = .int
   arg work = .string, title = .string
   i = .int
@@ -416,8 +846,41 @@ builddocument: procedure = .int
     argv[1] = 'makeindex'
     argv[2] = title
     if run_tool(argv) <> 0 then return 1
+    indexlog = work || '/' || title || '.ilg'
+    if file_kind(indexlog) <> 'file' then do
+      say 'Missing makeindex log:' indexlog
+      return 1
+    end
+    if pos(', 0 rejected).', readbinary(indexlog) as .string) = 0 then do
+      say 'makeindex rejected an index entry; inspect:' indexlog
+      return 1
+    end
     argv[1] = 'biber'
     if run_tool(argv) <> 0 then return 1
+  end
+  /* The final index/bibliography outputs and outline writes require at least
+     one more TeX pass. Stop only when cross-references and outlines settle. */
+  do i = 1 to 3
+    call arraydrop argv
+    argv[1] = 'xelatex'
+    argv[2] = '--no-pdf'
+    argv[3] = '-shell-escape'
+    argv[4] = '-interaction=nonstopmode'
+    argv[5] = '-halt-on-error'
+    argv[6] = title || '.tex'
+    if run_tool(argv) <> 0 then return 1
+    texlog = work || '/' || title || '.log'
+    if file_kind(texlog) <> 'file' then do
+      say 'Missing XeLaTeX log:' texlog
+      return 1
+    end
+    logtext = readbinary(texlog) as .string
+    if pos('Rerun to get cross-references right', logtext) = 0 &,
+      pos('Rerun to get outlines right', logtext) = 0 then leave
+    if i = 3 then do
+      say 'XeLaTeX cross-references or outlines did not converge:' texlog
+      return 1
+    end
   end
   call arraydrop argv
   argv[1] = 'xdvipdfmx'
@@ -429,7 +892,7 @@ builddocument: procedure = .int
     say 'No PDF produced:' pdf
     return 1
   end
-  if left(readbinary(pdf) as .string, 5) <> '%PDF-' then do
+  if bincompare(binsubstr(readbinary(pdf), 1, 5), '%PDF-' as .binary) <> 0 then do
     say 'Invalid PDF header:' pdf
     return 1
   end

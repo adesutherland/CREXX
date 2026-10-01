@@ -263,9 +263,8 @@ xtime,
   },
 sensitive=false,
 extendedchars=true,
-morecomment=[s]={/*}{*/},
+morecomment=[n]{/*}{*/},
 morecomment=[l]{*},
-morecomment=[s]{/**}{*/},
 morestring=[b]",
 morestring=[d]",
 morestring=[b]',
@@ -284,9 +283,7 @@ morestring=[d]'}
   showstringspaces=false,
   index=[1][keywords],
   columns=fixed,
-  literate=
-  {/*}{{{\codefont /\char"002A}}}2
-  {*/}{{{\codefont \char"002A/}}}2
-  {*}{{{\codefont\char"002A}}}1,
+  % Keep comment delimiters visible to listings; literate substitutions here
+  % prevent both inline and block comments from entering comment mode.
   basicstyle=\fontsize{9}{10}\fontspec{IBM Plex Mono},emph={label}
 }

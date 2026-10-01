@@ -451,10 +451,10 @@ the parsing process, so for example:
 ```rexx <!--parse28.crexx-->
 input="L/look for/1 10"
 parse input  verb 2 delim +1 string (delim) rest
-say "verb to "'"verb"'"
-say "delim to "'"delim"'"
-say "string to "'"string"'"
-say "rest to "'"rest"'"
+say "verb to '" || verb || "'"
+say "delim to '" || delim || "'"
+say "string to '" || string || "'"
+say "rest to '" || rest || "'"
 ```
 
 will set:

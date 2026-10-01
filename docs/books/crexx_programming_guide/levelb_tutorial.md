@@ -195,8 +195,8 @@ people["grace.hopper"] = "compiler"
 tail = "ada"
 
 say title || ":" || count
-say typeof(price)
-say typeof(ready)
+say <typeof>(price)
+say <typeof>(ready)
 say binlength(payload)
 say words[0] || ":" || words.1 || "," || words[2] || "," || words.3
 say people.tail
@@ -297,7 +297,7 @@ Use these idioms:
   compatible.
 - Use `expr as .type` when you need a checked conversion or object cast.
 - Use `expr is .type` for object/interface tests.
-- Use `typeof(expr)` for diagnostics and runtime type introspection.
+- Use `<typeof>(expr)` for diagnostics and runtime type introspection.
 - Use `=` for Rexx-style equality and `==` when you mean exact string
   comparison after string promotion.
 
@@ -532,7 +532,7 @@ main: procedure
   generic = .object
   generic = selected as .object
   restored = generic as .asset
-  say typeof(restored)
+  say <typeof>(restored)
   return
 
 asset: interface
@@ -603,7 +603,7 @@ checked casts:
 - `value.method()` invokes a method.
 - `value is .asset` tests whether the concrete object implements an interface.
 - `value as .asset` casts after a runtime check.
-- `typeof(value)` reports the concrete runtime type.
+- `<typeof>(value)` reports the concrete runtime type.
 
 Level B does not implicitly call a `toString()` method for arbitrary objects.
 If you want text, expose a method such as `format`, `describe`, or `name`, then

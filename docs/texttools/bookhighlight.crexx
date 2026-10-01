@@ -1,0 +1,350 @@
+/*
+ * Lexical colouring for printed Rexx/cREXX fragments.
+ *
+ * Peter Jacob's lib/classlib/Scanlex.crexx supplied the token-object and
+ * character-scanner starting point. This book-specific scanner keeps every
+ * character, tolerates incomplete source, and leaves Scanlex's public Rexx
+ * and JSON APIs unchanged. Rules are checked against rxcpbscn.re and
+ * rxcpcscn.re; this is deliberately not a parser or symbol resolver.
+ */
+options levelb
+namespace bookhighlight expose bookhighlight_span scan render
+import rxfnsb
+
+/** A contiguous source span, with a 1-based Unicode codepoint position. */
+bookhighlight_span: class
+  _kind = .string
+  _start = .int
+  _text = .string
+
+  *: factory
+    arg kind = .string, start = .int, text = .string
+    _kind = kind
+    _start = start
+    _text = text
+
+  get_kind: method = .string
+    return _kind
+
+  get_start: method = .int
+    return _start
+
+  get_text: method = .string
+    return _text
+
+/**
+ * Split a fragment into full-coverage lexical spans. The default enables
+ * the compiler's default hash comments and reads an authored OPTIONS line;
+ * pass "hash dash slash" to force both optional line-comment forms. No import,
+ * compilation, command, or example execution occurs here.
+ *
+ * @param source Original UTF-8 text; positions count Unicode codepoints.
+ * @param comment_flags Space-delimited enabled line-comment forms.
+ * @return Consecutive spans whose texts concatenate to source exactly.
+ */
+scan: procedure = .bookhighlight_span[]
+  arg source = .string, comment_flags = 'auto'
+  spans = .bookhighlight_span[]
+  out = 0
+  n = length(source)
+  i = 1
+  j = .int
+  depth = .int
+  start = .int
+  ch = .string
+  pair = .string
+  quote = .string
+  word = .string
+  kind = .string
+  if comment_flags = 'auto' then comment_flags = option_flags(source)
+  flags = ' ' || lower(comment_flags) || ' '
+  dash = pos(' dash ', flags) > 0
+  slash = pos(' slash ', flags) > 0
+  hash = pos(' hash ', flags) > 0
+
+  do while i <= n
+    start = i
+    ch = substr(source, i, 1)
+    pair = substr(source, i, 2)
+
+    if is_space(ch) then do
+      i = i + 1
+      do while i <= n
+        if \is_space(substr(source, i, 1)) then leave
+        i = i + 1
+      end
+      call emit spans, out, 'space', source, start, i
+      iterate
+    end
+
+    if pair = '/*' then do
+      depth = 1
+      i = i + 2
+      do while i <= n
+        pair = substr(source, i, 2)
+        if pair = '/*' then do
+          depth = depth + 1
+          i = i + 2
+        end
+        else if pair = '*/' then do
+          depth = depth - 1
+          i = i + 2
+          if depth = 0 then leave
+        end
+        else i = i + 1
+      end
+      if depth = 0 then kind = 'comment'
+      else kind = 'comment_incomplete'
+      call emit spans, out, kind, source, start, i
+      iterate
+    end
+
+    if (ch = '#' & hash) | (pair = '--' & dash) | (pair = '//' & slash) then do
+      i = i + 1
+      do while i <= n
+        ch = substr(source, i, 1)
+        if ch = '0a'x | ch = '0d'x then leave
+        i = i + 1
+      end
+      call emit spans, out, 'comment', source, start, i
+      iterate
+    end
+
+    if ch = "'" | ch = '"' then do
+      quote = ch
+      i = i + 1
+      kind = 'string_incomplete'
+      do while i <= n
+        ch = substr(source, i, 1)
+        if ch = '0a'x | ch = '0d'x then leave
+        if ch = quote then do
+          if substr(source, i + 1, 1) = quote then i = i + 2
+          else do
+            i = i + 1
+            kind = 'string'
+            leave
+          end
+        end
+        else i = i + 1
+      end
+      if kind = 'string' & i <= n then do
+        ch = substr(source, i, 1)
+        if pos(ch, 'bBxX') > 0 then do
+          if i = n | \is_word_part(substr(source, i + 1, 1)) then i = i + 1
+        end
+      end
+      call emit spans, out, kind, source, start, i
+      iterate
+    end
+
+    if is_word_start(ch) then do
+      i = i + 1
+      do while i <= n
+        if \is_word_part(substr(source, i, 1)) then leave
+        i = i + 1
+      end
+      word = substr(source, start, i - start)
+      kind = 'word'
+      /* Parser context is deliberately unknown. Colour only exact scanner
+       * keyword spellings; a dotted member, namespace member or label is a
+       * neutral word even when its spelling matches a keyword. */
+      if is_keyword(word) then do
+        if start = 1 then kind = 'keyword'
+        else if substr(source, start - 1, 1) <> '.' & substr(source, start - 1, 1) <> ':' then kind = 'keyword'
+        if substr(source, i, 1) = ':' then kind = 'word'
+      end
+      call emit spans, out, kind, source, start, i
+      iterate
+    end
+
+    if pos(ch, '0123456789') > 0 | (ch = '.' & pos(substr(source, i + 1, 1), '0123456789') > 0) then do
+      if ch = '0' & (substr(source, i + 1, 1) = 'x' | substr(source, i + 1, 1) = 'X') &,
+          pos(substr(source, i + 2, 1), '0123456789abcdefABCDEF') > 0 then do
+        i = i + 2
+        do while i <= n
+          if pos(substr(source, i, 1), '0123456789abcdefABCDEF') = 0 then leave
+          i = i + 1
+        end
+      end
+      else do
+        if ch = '.' then i = i + 1
+        do while i <= n
+          if pos(substr(source, i, 1), '0123456789') = 0 then leave
+          i = i + 1
+        end
+        if ch <> '.' & substr(source, i, 1) = '.' & substr(source, i + 1, 1) <> '.' then do
+          i = i + 1
+          do while i <= n
+            if pos(substr(source, i, 1), '0123456789') = 0 then leave
+            i = i + 1
+          end
+        end
+        if substr(source, i, 1) = 'e' | substr(source, i, 1) = 'E' then do
+          j = i + 1
+          if substr(source, j, 1) = '+' | substr(source, j, 1) = '-' then j = j + 1
+          if pos(substr(source, j, 1), '0123456789') > 0 then do
+            i = j + 1
+            do while i <= n
+              if pos(substr(source, i, 1), '0123456789') = 0 then leave
+              i = i + 1
+            end
+          end
+        end
+        if substr(source, i, 1) = 'd' & (i = n | \is_word_part(substr(source, i + 1, 1))) then i = i + 1
+      end
+      call emit spans, out, 'number', source, start, i
+      iterate
+    end
+
+    if pos(ch, '+-*/%=<>!&|\\^~?:.,;()[]{}') > 0 then do
+      i = i + 1
+      pair = substr(source, start, 2)
+      if pos(' ' || pair || ' ', ' == <> <= >= << >> || ** // -- :: .. && \\= ' ) > 0 & i <= n then do
+        i = i + 1
+        if pos(substr(source, start, 2), '<< >> ==') > 0 & substr(source, i, 1) = '=' then i = i + 1
+      end
+      call emit spans, out, 'operator', source, start, i
+      iterate
+    end
+
+    /* UTF-8 codepoints outside the simple word/operator sets stay neutral. */
+    i = i + 1
+    call emit spans, out, 'other', source, start, i
+  end
+  return spans
+
+emit: procedure = .void
+  arg expose spans = .bookhighlight_span[], expose out = .int, kind = .string, source = .string, start = .int, stop = .int
+  out = out + 1
+  spans[out] = .bookhighlight_span(kind, start, substr(source, start, stop - start))
+  return
+
+/* OPTIONS is a lexical header, not a semantic import or parse. Inspect the
+ * default-mode spans so text inside strings or nested comments cannot enable
+ * a line-comment form. Most fragments never mention OPTIONS and return fast. */
+option_flags: procedure = .string
+  arg source = .string
+  flags = 'hash'
+  if pos('options', lower(source)) = 0 then return flags
+  base = scan(source, 'hash')
+  i = .int
+  line_start = 1
+  in_options = 0
+  kind = .string
+  option = .string
+  do i = 1 to base[0]
+    kind = base[i].get_kind()
+    option = lower(base[i].get_text())
+    if kind = 'space' then do
+      if pos('0a'x, option) > 0 | pos('0d'x, option) > 0 then do
+        line_start = 1
+        in_options = 0
+      end
+      iterate
+    end
+    if line_start & option = 'options' & (kind = 'word' | kind = 'keyword') then in_options = 1
+    else if in_options & (kind = 'word' | kind = 'keyword') then do
+      if option = 'comments_dash' & pos('dash', flags) = 0 then flags = flags || ' dash'
+      else if option = 'comments_slash' & pos('slash', flags) = 0 then flags = flags || ' slash'
+      else if option = 'comments_hash' & pos('hash', flags) = 0 then flags = flags || ' hash'
+      else if option = 'comments_nohash' then flags = changestr('hash', flags, '')
+      else if option = 'comments_nodash' then flags = changestr('dash', flags, '')
+      else if option = 'comments_noslash' then flags = changestr('slash', flags, '')
+    end
+    else if in_options then in_options = 0
+    line_start = 0
+  end
+  return strip(space(flags))
+
+is_space: procedure = .boolean
+  arg ch = .string
+  if ch == '' then return 0
+  if pos(ch, ' ' || '09'x || '0a'x || '0d'x || '0b'x || '0c'x) > 0 then return 1
+  /* Unicode space separators plus line/paragraph separators. The hex source
+   * literal is valid UTF-8 text; POS compares complete codepoints. */
+  unicode_spaces = 'c2a0e1a880e28080e28081e28082e28083e28084e28085e28086e28087e28088e28089e2808ae280a8e280a9e280afe2819fe38080'x
+  return pos(ch, unicode_spaces) > 0
+
+is_word_start: procedure = .boolean
+  arg ch = .string
+  if ch == '' then return 0
+  if is_space(ch) then return 0
+  if pos(ch, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_') > 0 then return 1
+  /* Conservative Unicode continuity: non-ASCII is neutral in colour even
+   * when included in a word. The compiler's Unicode L class is richer. */
+  if binlength(ch as .binary) > 1 then return 1
+  return 0
+
+is_word_part: procedure = .boolean
+  arg ch = .string
+  if is_word_start(ch) then return 1
+  return pos(ch, '0123456789') > 0 & ch <> ''
+
+is_keyword: procedure = .boolean
+  arg word = .string
+  key = ' ' || upper(word) || ' '
+  return pos(key, ' ARG AS ASSEMBLER BY CALL CLASS CONSTANT DEREFERENCE DO ELSE END EXIT EXPOSE FACTORY FOR FOREVER IF IMPLEMENTS IMPORT INITIALISER INTERFACE IS ITERATE LEAVE LOOP MATCH METHOD NAME NAMESPACE NOP NUMERIC OF ON OPTIONS OTHERWISE PARALLEL PROCEDURE REFERENCE REGISTER RETURN SAY SELECT SELF SIGNAL SNAPSHOT TASK THEN TO TYPEOF UNTIL UPPER USING VAR WHEN WHILE WITH ') > 0
+
+/**
+ * Return a self-contained, breakable TeX code block. The book preamble must
+ * load xcolor, fvextra, and the detached book glyph fallback macros. Source
+ * is never passed to TeX as executable markup:
+ * the three Verbatim command characters are escaped before insertion. The
+ * authored snapshot remains separate from this generated presentation text.
+ *
+ * @param source Rexx/cREXX fragment, whether complete or incomplete.
+ * @param comment_flags Enabled line-comment forms, as for scan().
+ * @return TeX Verbatim block with lexical colour commands.
+ */
+render: procedure = .string
+  arg source = .string, comment_flags = 'auto'
+  spans = scan(source, comment_flags)
+  result = '\begin{Verbatim}[commandchars=\\\{\},breaklines=true,breakanywhere=true,breaksymbolleft={},breaksymbolright={},breakanywheresymbolpre={},breakanywheresymbolpost={},tabsize=8]' || '0a'x
+  i = .int
+  j = .int
+  text = .string
+  ch = .string
+  color = .string
+  /* Exact TeX Gyre Cursor omissions in the active 1,422 book fences,
+   * documented by the independent font-coverage inventory. ZWJ is an
+   * invisible control; its literal remains a macro argument but prints no
+   * marker. Visible omissions use the matching Unifont BMP/Upper macro. */
+  fallback_bmp = '─│┌┐└┘├┴►▼☕✅❌' || 'e38080'x || '日'
+  fallback_upper = '👦👧👩🔥🙂'
+  do i = 1 to spans[0]
+    color = colour(spans[i].get_kind())
+    if color <> '' then result = result || '\color{' || color || '}'
+    text = spans[i].get_text()
+    do j = 1 to length(text)
+      ch = substr(text, j, 1)
+      /* TeX uses one physical line ending. Keep the original CR/LF bytes in
+       * scan() spans, but print CRLF as one line rather than inserting colour
+       * commands between the two source codepoints. */
+      if ch = '0d'x then do
+        if substr(text, j + 1, 1) = '0a'x then iterate
+        ch = '0a'x
+      end
+      if ch = '0a'x then do
+        if color <> '' then result = result || '\color{black}'
+        result = result || ch
+        if color <> '' then result = result || '\color{' || color || '}'
+      end
+      else if ch = 'e2808d'x then result = result || '\BookHighlightInvisible{' || ch || '}'
+      else if pos(ch, fallback_bmp) > 0 then result = result || '\BookHighlightGlyph{' || ch || '}'
+      else if pos(ch, fallback_upper) > 0 then result = result || '\BookHighlightGlyphUpper{' || ch || '}'
+      else if ch = '\' then result = result || '\textbackslash{}'
+      else if ch = '{' then result = result || '\{'
+      else if ch = '}' then result = result || '\}'
+      else result = result || ch
+    end
+    if color <> '' then result = result || '\color{black}'
+  end
+  return result || '0a'x || '\end{Verbatim}' || '0a'x
+
+colour: procedure = .string
+  arg kind = .string
+  if kind = 'keyword' then return 'nrblue'
+  if kind = 'string' | kind = 'string_incomplete' then return 'nrgreen'
+  if kind = 'number' then return 'nrorange'
+  if kind = 'comment' | kind = 'comment_incomplete' then return 'nrgrey'
+  return ''

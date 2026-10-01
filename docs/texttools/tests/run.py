@@ -46,18 +46,20 @@ def main():
             raise AssertionError(f"{label}: rc {result.returncode}; {log}\n{log.read_text()[-3000:]}")
         return log
 
-    sources = {"texttools": REPO / "docs/texttools/texttools.crexx",
+    sources = {"bookhighlight": REPO / "docs/texttools/bookhighlight.crexx",
+               "texttools": REPO / "docs/texttools/texttools.crexx",
                "build": REPO / "docs/texttools/build.crexx",
                "regression": REPO / "docs/texttools/tests/regression.crexx",
                "generate-books": REPO / "docs/generate-books.crexx"}
     for name, source in sources.items():
-        stem = imports / name if name == "texttools" else work / name
+        stem = imports / name if name in ("bookhighlight", "texttools") else work / name
         run(name + "-compile", [product / "rxc", "-i", f"{imports};{product}",
                                 "-o", stem, source])
         run(name + "-assemble", [product / "rxas", "-o", stem, stem])
-        if name != "texttools":
+        if name not in ("bookhighlight", "texttools"):
             run(name + "-link", [product / "rxlink", "-o", work / (name + "-linked"),
                                     stem.with_suffix(".rxbin"), imports / "texttools.rxbin",
+                                    imports / "bookhighlight.rxbin",
                                     product / "library.rxbin"])
     run("regression", [product / "rxvm", work / "regression-linked.rxbin", "-a", work / "unit"])
 
@@ -75,6 +77,11 @@ if name == 'pandoc':
         '\\%includesource=Example.crexx:rexx\\%\n')
 if name == 'xelatex':
     pathlib.Path(sys.argv[-1]).with_suffix('.xdv').write_bytes(b'fixture xdv')
+    pathlib.Path(sys.argv[-1]).with_suffix('.log').write_text('fixture converged\n')
+if name == 'makeindex':
+    rejected = 1 if os.environ.get('TT_INDEX_REJECT') else 0
+    pathlib.Path(sys.argv[-1]).with_suffix('.ilg').write_text(
+        f'done (1 entries accepted, {rejected} rejected).\n')
 if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
     pathlib.Path(sys.argv[-1]).with_suffix('.pdf').write_bytes(b'%PDF-1.4\nFIXTURE ONLY\n')
 ''')
@@ -87,12 +94,30 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
     commands = work / "commands.jsonl"
     env["TT_COMMANDS"] = str(commands)
     source = work / "source with spaces"
+    guard_dir = source / "docs/texttools"
+    guard_dir.mkdir(parents=True)
+    (guard_dir / "splice-guard.tex").write_bytes(
+        (REPO / "docs/texttools/splice-guard.tex").read_bytes())
+    (guard_dir / "glyph-fallback.tex").write_bytes(
+        (REPO / "docs/texttools/glyph-fallback.tex").read_bytes())
+    boilerplate = source / "docs/books/boilerplate"
+    boilerplate.mkdir(parents=True)
+    (boilerplate / "preamble.tex").write_text(
+        "\\usepackage{fontspec}\n\\usepackage{fancyvrb}\n"
+        "\\usepackage{bashful}\n\\usepackage{listings}\n"
+        "\\setmainfont[Mapping=tex-text]{Minion Pro}\n"
+        "\\newfontfamily\\headingfont{Avenir Next}\n"
+        "\\newfontfamily\\codefont{IBM Plex Mono}\n")
     for book in BOOKS:
         folder = source / "docs/books" / book
         folder.mkdir(parents=True)
         (folder / "MixedCase.md").write_text("# Example\n```rexx <!--Example.crexx-->\nsay 'ok'\n```\n")
         (folder / "structure.tex").write_text(r"\input{MixedCase}" + "\n")
-        (folder / (book + ".tex")).write_text("fixture main file\n")
+        if book == "crexx_vm_spec":
+            (folder / "instruction_chapter.tex").write_text(
+                r"\IfFileExists{example.rxas}{\obeylines \begin{terminaloutput} \splice{rxvme example} \end{terminaloutput}}{}" + "\n" + r"\includesvg{../../svg/cnop.gv}" + "\n")
+        (folder / (book + ".tex")).write_text(
+            "\\title{\\fontspec{Bodoni URW\n    Light}Title}\n")
         old = folder / "tex/book"
         old.mkdir(parents=True)
         (old / (book + ".pdf")).write_bytes(b"old PDF must not be copied")
@@ -107,13 +132,39 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
     run("check", wrapper + ["check", source, work / "check output", "all"], env=env)
     assert not (work / "check output").exists()
     run("four-books", wrapper + ["build", source, work / "four books", "all"], env=env)
+    staged = work / "four books/docs/books"
+    preamble = (staged / "boilerplate/preamble.tex").read_text()
+    assert "\\usepackage{fvextra}" in preamble
+    assert "\\tracinglostchars=3" in preamble
+    assert "\\lstset{indexstyle=\\BookIndex}" in preamble
+    assert "\\input{../../../boilerplate/splice-guard}" in preamble
+    assert "\\input{../../../boilerplate/glyph-fallback}" in preamble
+    assert (staged / "boilerplate/splice-guard.tex").read_bytes() == (
+        guard_dir / "splice-guard.tex").read_bytes()
+    assert (staged / "boilerplate/glyph-fallback.tex").read_bytes() == (
+        guard_dir / "glyph-fallback.tex").read_bytes()
+    assert "texgyrepagella-regular.otf" in preamble
+    assert "texgyreheros-regular.otf" in preamble
+    assert "\\setsansfont[" in preamble
+    assert "\\spliceliteral{rxvme example}" in (
+        staged / "crexx_vm_spec/instruction_chapter.tex").read_text()
+    assert "\\begin{bookterminaloutput}" in (
+        staged / "crexx_vm_spec/instruction_chapter.tex").read_text()
+    assert "\\includesvg[width=\\linewidth]{../../svg/cnop.gv}" in (
+        staged / "crexx_vm_spec/instruction_chapter.tex").read_text()
+    assert "JuliaMono-Regular.ttf" in preamble and "RawFeature=-calt" in preamble
+    assert "Minion Pro" not in preamble
+    assert "texgyrepagella-regular.otf" in (
+        staged / BOOKS[0] / (BOOKS[0] + ".tex")).read_text()
     calls = [json.loads(line) for line in commands.read_text().splitlines()]
     for book in BOOKS:
         built = work / "four books/docs/books" / book / "tex/book"
         received = [c["tool"] for c in calls if Path(c["cwd"]).resolve() == built.resolve()]
         assert received == ["pandoc", "pandoc", "xelatex", "makeindex", "biber",
-                            "xelatex", "makeindex", "biber", "xdvipdfmx"], received
+                            "xelatex", "makeindex", "biber", "xelatex", "xdvipdfmx"], received
         assert (built / "Example.crexx").read_text() == "say 'ok'\n"
+        assert (built / "MixedCase-code-1.txt").read_text() == "say 'ok'\n"
+        assert "\\begin{Verbatim}" in (built / "MixedCase-code-1.txt.highlight.tex").read_text()
         assert not (built.parent.parent / "LinkedGuide.md").is_symlink()
     assert not any(c["tool"] in ("scp", "open") for c in calls)
     for tool in ("pandoc", "xelatex", "makeindex", "biber", "xdvipdfmx"):
@@ -125,12 +176,27 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
         assert failed_calls[-1]["tool"] == tool, "Pipeline continued after failure"
     run("missing-pdf", wrapper + ["build", source, work / "missing-pdf", BOOKS[0]],
         expected=None, env=dict(env, TT_NO_PDF="1"))
+    run("rejected-index", wrapper + ["build", source, work / "rejected-index", BOOKS[0]],
+        expected=None, env=dict(env, TT_INDEX_REJECT="1"))
+    run("original-fonts", wrapper + ["prepare", source, work / "original-fonts",
+                                      BOOKS[0], "original"], env=env)
+    original_staged = work / "original-fonts/docs/books"
+    assert "Minion Pro" in (original_staged / "boilerplate/preamble.tex").read_text()
+    assert "Bodoni URW\n    Light" in (
+        original_staged / BOOKS[0] / (BOOKS[0] + ".tex")).read_text()
+    assert "\\usepackage{fvextra}" in (
+        original_staged / "boilerplate/preamble.tex").read_text()
+    assert "\\input{../../../boilerplate/glyph-fallback}" not in (
+        original_staged / "boilerplate/preamble.tex").read_text()
     run("existing-output", wrapper + ["build", source, work / "four books", BOOKS[0]], expected=2, env=env)
     run("inside-source", wrapper + ["build", source, source / "bad-output", BOOKS[0]], expected=2, env=env)
     alias = work / "source-alias"
     alias.symlink_to(source, target_is_directory=True)
     run("inside-source-alias", wrapper + ["build", source, alias / "bad-output", BOOKS[0]], expected=2, env=env)
     run("unknown-book", wrapper + ["build", source, work / "unknown", "unknown"], expected=2, env=env)
+    run("unknown-font-profile", wrapper + ["prepare", source,
+                                          work / "unknown-font-profile",
+                                          BOOKS[0], "unknown"], expected=2, env=env)
     empty_env = dict(env, PATH=str(product))
     run("missing-tools", wrapper + ["check", source, work / "missing-tools", "all"], expected=1, env=empty_env)
     assert not (work / "missing-tools").exists()
@@ -172,10 +238,20 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
                 generated = folder / "tex/book"
                 tags = re.findall(r"%includesource=(.*?):(.*?):(.*?)%", (generated / (chapter + ".md")).read_text())
                 tex = (generated / (chapter + ".tex")).read_text()
-                paths = re.findall(r"\\lstinputlisting[^\n]*?\]\{([^}]+)\}", tex)
-                for _name, _language, filename in tags:
+                for _name, language, filename in tags:
                     assert (generated / filename).is_file(), filename
-                    assert filename in paths, f"Pandoc listing path changed: {filename}"
+                    if language.lower() in ("rexx", "crexx"):
+                        assert (generated / (filename + ".highlight.tex")).is_file()
+                        assert "\\input{" + filename + ".highlight.tex}" in tex, (
+                            f"Pandoc lexical listing path changed: {filename}")
+                    elif language.lower() == "text":
+                        assert "\\VerbatimInput[" in tex and (
+                            "{\\detokenize{" + filename + "}}" in tex), (
+                            f"Pandoc literal text path changed: {filename}")
+                    else:
+                        assert "\\lstinputlisting[" in tex and (
+                            "{\\detokenize{" + filename + "}}" in tex), (
+                            f"Pandoc listing path changed: {filename}")
                     extracted += 1
                 assert r"\%includesource" not in tex
                 assert r"\%splice\%" not in tex

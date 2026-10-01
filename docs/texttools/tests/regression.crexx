@@ -18,10 +18,13 @@ errors = errors + equal(replaceindices('\%index\%one \%index\%two'), 'one\index{
 errors = errors + equal(replacemultiindices('a \%indexm\%one!two--\textgreater{} b'), 'a \index{one!two} {} b', 'multi index')
 errors = errors + equal(replacecites('a \%cite\%{[}RexxBook{]} b.'), 'a \cite{RexxBook}  b', 'citation')
 errors = errors + equal(replaceHyperlink('a \hyperlink{MixedCase}{title} b'), 'a \hyperlink{MixedCase}{title} on page \pageref{MixedCase} b', 'hyperlink case')
-errors = errors + equal(includelisting('\%includesource=Example.crexx:rexx\%'), '\lstinputlisting[language=rexx,label=Example.crexx,caption=Example.crexx]{Example.crexx}', 'source listing')
-errors = errors + equal(includeasm('\%listasm\%Example.rxas'), '\lstinputlisting[language=rxas,label=Example.rxas,caption=Example.rxas]{Example.rxas}', 'assembly listing')
-errors = errors + check(pos(']{with_underscore.crexx}', includelisting('\%includesource=with\_underscore.crexx:rexx\%')) > 0, 'Pandoc filename escape decoded')
-errors = errors + check(pos(']{snapshot.txt}', includelisting('\%includesource=Example.crexx:rexx:snapshot.txt\%')) > 0, 'named listing uses render snapshot')
+errors = errors + equal(includelisting('\%includesource=Example.crexx:rexx\%'), '\begingroup\captionof{lstlisting}{Example.crexx}\label{Example.crexx}\endgroup' || nl || '\input{Example.crexx.highlight.tex}', 'lexical Rexx listing')
+errors = errors + check(pos('\VerbatimInput[', includelisting('\%includesource=Diagram.txt:text\%')) > 0, 'text listing literal route')
+errors = errors + check(pos('language=bash', includelisting('\%includesource=other.txt:bash\%')) > 0, 'other bash listing retains handler')
+errors = errors + equal(includelisting('\%includesource=Example.c:c\%'), '\lstinputlisting[language=c,label=Example.c,caption=Example.c]{\detokenize{Example.c}}', 'other language listing')
+errors = errors + equal(includeasm('\%listasm\%Example.rxas'), '\lstinputlisting[language=rxas,label=Example.rxas,caption=Example.rxas]{\detokenize{Example.rxas}}', 'assembly listing')
+errors = errors + check(pos('{with_underscore.crexx.highlight.tex}', includelisting('\%includesource=with\_underscore.crexx:rexx\%')) > 0, 'Pandoc filename escape decoded')
+errors = errors + check(pos('{snapshot.txt.highlight.tex}', includelisting('\%includesource=Example.crexx:rexx:snapshot.txt\%')) > 0, 'named listing uses render snapshot')
 errors = errors + check(pos('crexx MixedCase.crexx', replaceSplice('\%splice\%crexx MixedCase.crexx')) > 0, 'splice retains case')
 
 md = '# Unicode café' || nl || '<!--index-->Rexx <!--cite-->[RexxBook]' || nl ||,
@@ -40,6 +43,7 @@ errors = errors + check(preprocessMD(source || '/MixedCase chapter.md', output |
 listing = readbinary(output || '/Example.crexx') as .string
 errors = errors + equal(listing, 'say "MixedCase"' || nl, 'exact named listing without injected header')
 errors = errors + equal(readbinary(output || '/chapter-code-1.txt') as .string, listing, 'named listing snapshot')
+errors = errors + check(pos('\begin{Verbatim}', readbinary(output || '/chapter-code-1.txt.highlight.tex') as .string) > 0, 'Rexx lexical TeX')
 listing = readbinary(output || '/chapter-code-2.txt') as .string
 errors = errors + equal(listing, '```' || nl || 'literal fence' || nl, 'four-backtick fence')
 prepared = readbinary(output || '/chapter.md')
@@ -53,6 +57,8 @@ call writebinary source || '/reused.md', reused as .binary
 errors = errors + check(preprocessMD(source || '/reused.md', output || '/reused.md', output, 'reused') = 0, 'reused executable filename')
 errors = errors + equal(readbinary(output || '/reused-code-1.txt') as .string, 'say "first"' || nl, 'first reused snippet preserved')
 errors = errors + equal(readbinary(output || '/reused-code-2.txt') as .string, 'say "second"' || nl, 'second reused snippet preserved')
+errors = errors + check(binlength(readbinary(output || '/reused-code-1.txt.highlight.tex')) > 0, 'first lexical snapshot exists')
+errors = errors + check(binlength(readbinary(output || '/reused-code-2.txt.highlight.tex')) > 0, 'second lexical snapshot exists')
 errors = errors + equal(readbinary(output || '/same.crexx') as .string, 'say "second"' || nl, 'requested executable retains last-definition behavior')
 errors = errors + check(newer(source || '/second.part.md', output || '/absent.md'), 'missing generated file is stale')
 errors = errors + check(newer(source || '/second.part.md', source || '/second.part.md') = 0, 'equal timestamps current')
@@ -70,6 +76,65 @@ errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/ch
 result = readbinary(output || '/chapter.tex') as .string
 errors = errors + check(pos('\index{parent!child}', result) > 0, 'multi-index receives line argument')
 errors = errors + check(pos('\crexx{}', result) > 0 & pos('\rexx{}', result) > 0, 'product word macros')
+call writebinary output || '/rxpp-map.tsv', ('# scoped map' || nl || 'github-anchor pandoc-label' || nl) as .binary
+call writebinary output || '/chapter.texin', ('\hyperref[github-anchor]{Heading}' || nl ||,
+  '\hyperref[identity]{Other}' || nl || '\label{pandoc-label}' || nl ||,
+  '\label{identity}' || nl || '\%includesource=Example.crexx:rexx\%') as .binary
+errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex', output || '/rxpp-map.tsv') = 0, 'book link remap')
+result = readbinary(output || '/chapter.tex') as .string
+errors = errors + check(pos('\hyperref[rxpp-book-pandoc-label]', result) > 0 &,
+  pos('\label{rxpp-book-pandoc-label}', result) > 0, 'generated TeX scopes remapped label')
+errors = errors + check(pos('\hyperref[rxpp-book-identity]', result) > 0 &,
+  pos('\label{rxpp-book-identity}', result) > 0, 'generated TeX scopes identity label')
+errors = errors + check(pos('\label{Example.crexx}', result) > 0, 'listing label stays authored')
+call writebinary output || '/rxpp-book-links.tsv', ('# chapter map' || nl || 'github-anchor pandoc-label' || nl) as .binary
+tex = '\section{RXPP + CREXX Build System Documentation}\label{rxpp-crexx-build-system-documentation}' || nl ||,
+  '\chapter{Table of Contents}\label{table-of-contents}' || nl ||,
+  '\hyperref[github-anchor]{Heading}\label{pandoc-label}' || nl
+call writebinary output || '/chapter.texin', tex as .binary
+errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex', output || '/rxpp-book-links.tsv') = 0, 'RXPP book hierarchy')
+result = readbinary(output || '/chapter.tex') as .string
+errors = errors + check(pos('\chapter{RXPP + CREXX Build System Documentation}', result) > 0 &,
+  pos('\section{Table of Contents}', result) > 0, 'RXPP book heading levels')
+call writebinary output || '/chapter.texin', '\hyperref[github-anchor]{Heading}' as .binary
+errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex', output || '/rxpp-map.tsv') <> 0, 'book map rejects missing target')
+tex = 'SETSTRINGLENGTH(host,value,data,byte\_length) & purpose' || nl ||,
+  '\texttt{650} & \texttt{chanopen\ rStatus,rChannel,rProviderType} & outputs & inputs' || nl
+call writebinary output || '/chapter.texin', tex as .binary
+errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex') = 0, 'table wrapping hints')
+result = readbinary(output || '/chapter.tex') as .string
+errors = errors + check(pos('SETSTRING\allowbreak{}LENGTH\allowbreak{}(host,', result) > 0, 'macro signature may wrap')
+errors = errors + check(pos('rStatus,\allowbreak{}rChannel', result) > 0, 'RXAS signature may wrap')
+tex = 'reserve/set/append/concat/slice and \texttt{BSLICE\ destination,source,start,length}' || nl
+call writebinary output || '/chapter.texin', tex as .binary
+errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex') = 0, 'VM appendix terms')
+result = readbinary(output || '/chapter.tex') as .string
+errors = errors + check(pos('reserve/\allowbreak{}set/', result) > 0 &,
+  pos('destination,\allowbreak{}source,', result) > 0, 'VM appendix terms may wrap')
+tex = 'BINBYTE/BINSUBSTR/BINOVERLAY' || nl
+call writebinary output || '/chapter.texin', tex as .binary
+errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex') = 0, 'binary BIF names')
+errors = errors + check(pos('BINBYTE/\allowbreak{}BINSUBSTR/',,
+  readbinary(output || '/chapter.tex') as .string) > 0, 'binary BIF names may wrap')
+tex = '\texttt{BINBYTE}/\texttt{BINSUBSTR}/\texttt{BINOVERLAY}' || nl
+call writebinary output || '/chapter.texin', tex as .binary
+errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex') = 0, 'separate binary BIF code names')
+errors = errors + check(pos('\texttt{BINBYTE}/\allowbreak{}\texttt{BINSUBSTR}/\allowbreak{}\texttt{BINOVERLAY}',,
+  readbinary(output || '/chapter.tex') as .string) > 0, 'separate binary BIF names may wrap')
+tex = '\href{https://example.invalid}{\texttt{docs/planning/beta-3/notes/binary-fastpath-research.md}}' || nl
+call writebinary output || '/chapter.texin', tex as .binary
+errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex') = 0, 'long linked path')
+errors = errors + check(pos('\nolinkurl{docs/planning/beta-3/notes/binary-fastpath-research.md}',,
+  readbinary(output || '/chapter.tex') as .string) > 0, 'long linked path may wrap')
+tex = '.rxunicode..graphemes(text) name,type,size,decimals,nullable' || nl ||,
+  'socketnodelay(sock,\ enabled) configuration/runtime/model/session/request' || nl
+call writebinary output || '/chapter.texin', tex as .binary
+errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex') = 0, 'library long tokens')
+result = readbinary(output || '/chapter.tex') as .string
+errors = errors + check(pos('.rxunicode..\allowbreak{}graphemes(text)', result) > 0 &,
+  pos('name,\allowbreak{}type,', result) > 0 &,
+  pos('socket\allowbreak{}nodelay', result) > 0 &,
+  pos('configuration/\allowbreak{}runtime/', result) > 0, 'library long tokens may wrap')
 call writebinary output || '/chapter.texin', '\%ntsplice\%unsupported' as .binary
 errors = errors + check(preprocessTEX(output || '/chapter.texin', output || '/chapter.tex') <> 0, 'missing upstream helper is explicit error')
 

@@ -176,7 +176,7 @@ variables are assigned, as integers, to the registers `r1` and
 
 This is an example, with the remark that in this case, the microcode
 for `ipow` is always executed, the example in `crexx` on
-page \pageref{fpowexample} shows that the cRexx optimizer of the
+page \pageref{fpow_example} shows that the cRexx optimizer of the
 compiler can eliminate this code entirely.
 
 The use of assembler directives[^directives] is not allowed in inline assembly, so
@@ -196,7 +196,7 @@ a number of different strategies can be followed.
 
 It is easy to add `say` statements to your program. Unlike
 Rexx, there is no trace statement for assembler programs. However, it
-is easy to disassemble (see [rxdas](rxdas---the-crexx-disassembler) on page \pageref{rxdas---the-crexx-disassembler}) an `.rxbin` module, and reassemble it
+is easy to disassemble (see [rxdas](rxdas---the-disassembler) on page \pageref{rxdas---the-disassembler}) an `.rxbin` module, and reassemble it
 with added statements.
 
 ### Using the debugger

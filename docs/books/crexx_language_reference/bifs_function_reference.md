@@ -764,7 +764,7 @@ C2D('α')  == 945
 C2D('🔥') == 128293
 C2D('00'x) == 0
 ```
- The  **c2x** function %% (see page refc2x)
+ The **c2x** function (see [C2X(s)](#c2xs) on page \pageref{c2xs})
  can be used to
 convert the encoding of a character to a hexadecimal representation.
 
@@ -794,7 +794,7 @@ C2X('72s')   == '373273' -- ASCII/Unicode build
 C2X('0123'x) == '0123'
 C2X('')      == ''
 ```
- The  **c2d** function %% (see page refc2d)
+ The **c2d** function (see [C2D(s)](#c2ds) on page \pageref{c2ds})
  can be used to
 convert the encoding of a character to a decimal number.
 
@@ -956,7 +956,7 @@ X2D('F081', 2) == -127
 X2D('F081', 1) == 1
 X2D('0031', 0) == 0
 ```
- The  **c2d** function %% (see page refc2d)
+ The **c2d** function (see [C2D(s)](#c2ds) on page \pageref{c2ds})
  can be used to convert
 a character to a decimal representation of its encoding.
 

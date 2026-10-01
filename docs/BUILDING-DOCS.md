@@ -50,7 +50,8 @@ checkout is required. The original wrappers and René's publication notices
 remain unchanged.
 
 The port preprocesses Markdown, extracts executable listings, runs Pandoc,
-prepares TeX/assets, then invokes two XeLaTeX/index/Biber passes and xdvipdfmx.
+prepares TeX/assets, then invokes two XeLaTeX/index/Biber passes, bounded
+XeLaTeX outline/cross-reference convergence, and xdvipdfmx.
 `prepare` performs the conversion without typesetting; `check` checks the PDF
 executables without creating output; `build` attempts the complete PDF route.
 Shared boilerplate keeps the relative directory relationships used by the books.
@@ -60,11 +61,15 @@ assemble and link the port outside the source tree. Arguments to the resulting
 program are:
 
 ```text
-generate-books check|prepare|build REPO OUTPUT [BOOK|all]
+generate-books check|prepare|build REPO OUTPUT [BOOK|all] [initial|original]
 ```
 
 Use absolute paths and a fresh output directory whose parent already exists.
-Native commands pass paths with spaces as single arguments. Capture stdout and
+The default `initial` profile selects free TeX Gyre and JuliaMono fonts in the detached
+build copy. Pass `original` as the fifth argument to retain René's authored
+font choices. Both profiles add `fvextra` to the detached preamble for lexical
+listings; neither edits the source preamble. Native commands pass paths with
+spaces as single arguments. Capture stdout and
 stderr to a temporary log. Each publication/chapter/tool is identified there,
 and a failed external tool stops the pipeline. The build requires a newly
 produced PDF header; inspect the PDF and complete log before publication.
@@ -83,10 +88,11 @@ not been diagnosed or repaired in the compiler/runtime.
 The new route uses explicit native ADDRESS commands for working directories,
 file discovery and child argv. The cREXX port extends that working outer-script
 route through the inner TextTools conversion pipeline. Focused tool fixtures
-verify per-book child directories, both typesetter passes and failure handling;
+verify per-book child directories, typesetter passes and failure handling;
 real Pandoc prepares all 244 current Markdown inputs and 1,422 extracted source
-listings. These are conversion and orchestration results, not a real PDF or a
-reason to close #712 before the remaining publication gaps are qualified.
+listings. Those fixture results qualify conversion and orchestration. The
+real initial-profile PDF and page results below qualify the printed route;
+the original wrapper's working-directory defect remains separate.
 
 ### Portable directory discovery through ADDRESS CREXX
 
@@ -130,7 +136,7 @@ A possible convenience extension is `ls --directories`, returning only
 directory names in the same output format. That flag is **not implemented**;
 the existing `ls`/`stat` combination already supports directory discovery.
 
-### Dependencies and remaining PDF gaps
+### Dependencies and qualification
 
 The port is based on TextTools commit
 [`0767adac303f80ade9af46b509f7ca33353c6065`](https://github.com/RexxLA/TextTools/tree/0767adac303f80ade9af46b509f7ca33353c6065).
@@ -141,84 +147,204 @@ records the source mapping and repairs, including filename case, multi-index
 arguments, fenced-source handling, Pandoc escapes and child return codes.
 
 `prepare` requires Pandoc. Full PDF generation requires XeLaTeX, `makeindex`,
-Biber, `xdvipdfmx`, Bash, `stdbuf`, Inkscape, and CREXX tools on `PATH` for
-chapter splices. The TeX preamble/title pages also request Minion Pro, IBM Plex
+Biber, `xdvipdfmx`, Bash, `stdbuf`, Inkscape, `sed`, and CREXX tools on `PATH`
+for chapter splices (`crexx`, `rxc`, `rxas`, `rxlink`, `rxdas`, `rxdb`,
+`rxcpack`, `rxvme`). The original TeX preamble/title pages also request Minion Pro, IBM Plex
 Mono, Avenir Next, JuliaMono, TeX Gyre Pagella and Bodoni URW Light, plus TeX
 packages such as `bashful`, `svg` and PSTricks. Executable discovery does not
 establish font/package availability. cREXX has replaced the ooRexx requirement;
 it does not replace Pandoc or TeX.
 
-Full PDF generation remains **unverified**:
+On 1 October 2026 the `initial` profile built all four real PDFs on macOS
+ARM64 with Pandoc 3.11, TeX Live 2026 and the current checkout's product
+tools. Independent review checked every page for text outside its physical
+boundary, representative rendered pages, logs, font embedding, indices,
+references, and all 1,422 literal fenced snapshots (997 Rexx/cREXX colour
+blocks and 425 retained other handlers). No source file changed during
+generation. The qualified PDFs are:
 
-- macOS conversion with a temporary Pandoc 3.12 binary succeeds for all four
-  books. XeLaTeX and related PDF tools are absent here. Mock typesetters verify
-  command sequencing, directories and failure handling only.
-- All 1,422 extracted fenced-source files exist, and their literal filenames
-  appear in generated listing paths. The manual VM chapter
-  [binary_memory_instructions.md](books/crexx_vm_spec/binary_memory_instructions.md)
-  contains unresolved listing/splice names, but corresponding example sources
-  are present in HEAD under `examples/`: `bcopy.rxas` corresponds to
-  `binary_bcopy.rxas`, `fixedwidth.rxas` to `binary_fixed_width.rxas`,
-  `textfields.rxas` to `binary_text_fields.rxas`, `move.rxas` to
-  `binary_move.rxas`, and `compare.rxas` to `binary_compare.rxas`. These are
-  filename/path wiring gaps, not evidence of deleted example source. The
-  current VM `structure.tex` does not include this manual chapter; these
-  references alone therefore do not establish a failure in the current PDF
-  route. The generated instruction chapter's assets and live commands still
-  need actual typesetting validation. Preserve authored material while
-  resolving references.
-- The native directory/file/process implementation has POSIX and Windows
-  paths; the port has only been executed on macOS. Case-sensitive Linux and
-  Windows execution, fonts, TeX packages and live chapter splices remain open.
-- The VM's live splice spells `byOpcode`, matching
-  [byOpcode.crexx](books/crexx_vm_spec/byOpcode.crexx). The checked-in VM chapter
-  still contains `rxvme` splices; ensure that alias is available.
+| Book | Pages | SHA-256 |
+| --- | ---: | --- |
+| Language reference | 430 | `16eb8e82741a57f1a216d0d7963a3db27ef97720fe01d46d0c9e46c1af2cbd62` |
+| Programming guide | 260 | `abb47d40caf8c2ae500480fc877f528b2bca79aa1f33eec48c9166a4417f2a0a` |
+| VM specification | 361 | `307bc76594e27fa95d9ab9ee9236e13e48748784f13dc8cf1ee3d8cf166a51af` |
+| Library reference | 546 | `1b1bde77e4159f918b78aadf0cf735b5552a7904867e2d74739888b70108ff1d` |
 
-The original font choices, styles, publisher data and authored chapters have
-not been redesigned to avoid these dependencies.
+The current VM structure includes its checked-in generated instruction
+chapter, whose live splices and 92 present guarded inputs were typeset.
+That chapter is a partial historical view of today's opcode set. The separate
+manual [binary_memory_instructions.md](books/crexx_vm_spec/binary_memory_instructions.md)
+chapter remains excluded from the VM structure; its five stale example paths
+were repaired to existing `examples/binary_*.rxas` files, but it was not
+printed. The active VM splice uses the current product `rxvme` with embedded
+core bytecode, and `byOpcode` matches
+[byOpcode.crexx](books/crexx_vm_spec/byOpcode.crexx).
 
-TeX can be obtained on macOS through
-[MacTeX without GUI applications](https://formulae.brew.sh/cask/mactex-no-gui),
-which supplies the full TeX Live distribution. The compact
-[BasicTeX alternative](https://formulae.brew.sh/cask/basictex) requires additional
-packages for these books. Neither is installed here. A macOS CoreText font
-registry check finds Avenir Next, but not the other requested families listed
-above; that check does not inspect TeX's own font tree. Exact layout validation
-still requires the original fonts. The selected fonts for initial generation
+The native directory/file/process code has POSIX and Windows paths, but this
+generation was executed only on macOS. Case-sensitive Linux and Windows book
+builds and PDF layout under the selectable `original` font profile remain
+unqualified. A matching original font installation would also be needed to
+compare René's intended typography.
+
+The original font choices, styles, publisher data and authored chapters remain
+in source. The generator applies these substitutions only to detached TeX
+inputs under `OUTPUT`, including the copied instruction chapter and generated
+splices:
+
+| Original active request | Initial profile |
+| --- | --- |
+| Minion Pro, Bodoni URW Light | TeX Gyre Pagella |
+| Avenir Next, IBM Plex Sans, IBM Plex Sans Condensed | TeX Gyre Heros |
+| IBM Plex Mono, JuliaMono | JuliaMono 0.63.2 |
+
+The implementation uses TeX Gyre OTF and JuliaMono TTF filenames through TeX
+Live's kpathsea lookup because this user-local XeTeX does not resolve the family
+names through macOS font discovery. The fontspec declarations give explicit
+bold and italic files where those faces are requested. Every JuliaMono request
+sets `RawFeature=-calt` so source operators stay literal. GNU Unifont BMP/Upper
+18.0.01 supplies a scoped monochrome fallback only for codepoints absent from
+the selected face; JuliaMono's box drawing remains native. Authored characters
+stay unchanged. Emoji sequences print
+as monochrome component glyphs, without colour emoji ligatures. U+200D and
+U+FE0F are default-ignorable joiner/presentation controls and have no visible
+glyph in this profile. To restore René's
+font choices, select `original` and install the original families on the
+typesetting host. To change the substitutions, edit `applyfontprofile` in
+`texttools/texttools.crexx` and the scoped `texttools/glyph-fallback.tex`; the authored TeX remains the reference. Original
+font availability and layout equivalence have not been qualified here.
+
+For this macOS qualification, TeX Live 2026 is installed in
+`$HOME/.local/share/crexx-doc-tools/texlive/2026`, with the executable directory
+`bin/universal-darwin`. Its selected collections include basic, latex,
+latexrecommended, latexextra, fontsrecommended, xetex, pstricks, bibtexextra,
+fontutils and langenglish. Pandoc 3.11, Inkscape 1.4.4 and Ghostscript 10.08.0
+come from Homebrew; this macOS host supplies `/usr/bin/stdbuf`. On a macOS host
+without these tools, install them with `brew install pandoc ghostscript` and
+`brew install --cask inkscape`; provide `stdbuf` from the host or coreutils.
+The TeX Live net installer can reproduce this user-local collection selection
+with a custom profile (use the matching TeX Live 2026 installer/archive if the
+current network installer has advanced to another release):
+
+```sh
+tex_install_work=$(mktemp -d /tmp/crexx-texlive.XXXXXX)
+tex_install_root="$HOME/.local/share/crexx-doc-tools/texlive"
+curl -fL https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz \
+  -o "$tex_install_work/install-tl-unx.tar.gz"
+tar -xzf "$tex_install_work/install-tl-unx.tar.gz" -C "$tex_install_work"
+cat > "$tex_install_work/texlive.profile" <<EOF
+selected_scheme scheme-custom
+binary_universal-darwin 1
+collection-basic 1
+collection-latex 1
+collection-latexrecommended 1
+collection-latexextra 1
+collection-fontsrecommended 1
+collection-xetex 1
+collection-pstricks 1
+collection-bibtexextra 1
+collection-fontutils 1
+collection-langenglish 1
+TEXDIR $tex_install_root/2026
+TEXMFLOCAL $tex_install_root/texmf-local
+TEXMFSYSCONFIG $tex_install_root/2026/texmf-config
+TEXMFSYSVAR $tex_install_root/2026/texmf-var
+TEXMFCONFIG $tex_install_root/2026/user-texmf-config
+TEXMFVAR $tex_install_root/2026/user-texmf-var
+TEXMFHOME $tex_install_root/2026/texmf-home
+instopt_adjustpath 0
+instopt_adjustrepo 0
+tlpdbopt_install_docfiles 0
+tlpdbopt_install_srcfiles 0
+tlpdbopt_create_formats 1
+EOF
+tex_installer=$(find "$tex_install_work" -maxdepth 2 -name install-tl -type f -print -quit)
+perl "$tex_installer" -profile "$tex_install_work/texlive.profile"
+```
+
+This is the collection/profile route used for this review; the retained
+installation log and profile are in the documentation-review evidence. Put the
+TeX binary directory and the current CREXX product
+binary directory before older installed commands on `PATH`; the active VM
+chapter uses `rxvme` with embedded core bytecode. Exact layout validation
+of the original font profile requires those original fonts. The selected fonts for initial generation
 are TeX Gyre Pagella for body/title serif text, TeX Gyre Heros for headings,
-and TeX Gyre Cursor for code/terminal output. The
+and JuliaMono 0.63.2 for code/terminal output. The
 [TeX Gyre collection](https://ctan.org/pkg/tex-gyre) uses the GUST Font License
-and is included in TeX Live. Apply this choice through an explicit font profile
-for initial generation or a detached build copy, preserving René's authored
-font defaults for handover. The substitutions are recorded here, but not yet applied by the
-generator or validated in a PDF. They enable functional typesetting checks;
-they would not establish the original layout. Handover must list every font
-substitution and explain how René can select or restore his original typography.
+and is included in TeX Live; JuliaMono uses SIL OFL 1.1. Functional typesetting with the substitutes
+does not establish equivalence to the original typography.
+
+Some preserved PDF figures contain embedded Arial/Trebuchet fonts or standard
+Helvetica/Courier resources. Those belong to the authored assets and add no
+host font request or substitution by the initial text profile.
+
+Install the [GNU Unifont 18.0.01 OTF files](https://unifoundry.com/unifont/)
+into this TeX Live tree before using `initial` on another host:
+
+```sh
+texmf_local=$(kpsewhich -var-value=TEXMFLOCAL)
+fallback_dir="$texmf_local/fonts/opentype/public/crexx-doc-fallback"
+mkdir -p "$fallback_dir"
+curl -fL https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont-18.0.01.otf -o "$fallback_dir/unifont-18.0.01.otf"
+curl -fL https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont_upper-18.0.01.otf -o "$fallback_dir/unifont_upper-18.0.01.otf"
+mktexlsr "$texmf_local"
+kpsewhich unifont-18.0.01.otf
+kpsewhich unifont_upper-18.0.01.otf
+shasum -a 256 "$fallback_dir"/unifont*.otf
+```
+
+For the qualified inputs, the expected SHA-256 values are
+`88d0a14d4aa9a96419720b39ba5da921a59560d76d4ec7d523acc06ed85cd3c2`
+for the BMP OTF and
+`472201e45a050bff4c7658208b8c73e34ebce3764b287a5a46c7774038ef9391`
+for the Upper OTF. The binaries are host dependencies, not repository files.
+
+Install the four selected [JuliaMono 0.63.2 TTF faces](https://github.com/cormullion/juliamono/releases/tag/v0.63.2)
+and retain their SIL OFL licence in the same TeX-local tree:
+
+```sh
+julia_stage=$(mktemp -d /tmp/crexx-juliamono.XXXXXX)
+julia_dir="$(kpsewhich -var-value=TEXMFLOCAL)/fonts/truetype/public/crexx-doc-juliamono"
+mkdir -p "$julia_dir"
+curl -fL https://github.com/cormullion/juliamono/releases/download/v0.63.2/JuliaMono-ttf.tar.gz \
+  -o "$julia_stage/JuliaMono-ttf.tar.gz"
+tar -xzf "$julia_stage/JuliaMono-ttf.tar.gz" -C "$julia_stage"
+install -m 644 "$julia_stage"/JuliaMono-{Regular,RegularItalic,Bold,BoldItalic}.ttf "$julia_dir"
+install -m 644 "$julia_stage/LICENSE" "$julia_dir/LICENSE"
+mktexlsr "$(kpsewhich -var-value=TEXMFLOCAL)"
+kpsewhich JuliaMono-Regular.ttf
+shasum -a 256 "$julia_dir"/JuliaMono-{Regular,RegularItalic,Bold,BoldItalic}.ttf
+```
+
+The selected archive SHA-256 is
+`be6517295198ec5c92bdbaad42f4f6f8d83f921d80512b79f54fe036add95c0c`;
+the four file hashes and source are retained in the generation review's font
+receipt. No font binaries are committed to this repository.
 
 ### Listings, execution and syntax highlighting
 
-Current highlighting is performed by LaTeX's `listings` package. The preamble
+Other-language highlighting is performed by LaTeX's `listings` package. The preamble
 loads [netrexxformat.tex](books/boilerplate/netrexxformat.tex),
 [assemblerformat.tex](books/boilerplate/assemblerformat.tex) and
 [rxasformat.tex](books/boilerplate/rxasformat.tex), with hand-maintained language,
-keyword, string and comment rules. The TextTools port emits `lstinputlisting`
-commands with a language selected by the Markdown fence. It does not obtain
-compiler/DSLSH token spans today.
+keyword, string and comment rules. For `rexx` and `crexx` fences, the port
+instead emits a separate `fvextra` Verbatim colour block from the exact render
+snapshot, with the original listing caption and label. The lexical pass does
+not invoke the compiler or obtain DSLSH token spans. Plain `text` fences use literal `VerbatimInput` so Unicode diagrams keep their
+line structure; `bat` selects the installed `command.com` listings dialect.
+Other programming-language fences retain `lstinputlisting`.
 
 Fenced examples are extracted and printed. Explicit `<!--splice--...-->` tags
 and authored TeX `splice` commands run during typesetting; not every listing is
 executed. Many listings are incomplete fragments or use other languages.
 
-A token-based cREXX highlighter is a candidate for book fragments: classify
-source text without requiring complete syntax, imports, semantic validation or
-execution, and format the resulting spans for TeX while preserving every source
-character and whitespace gap. Peter Jacob's
-[Scanlex.crexx](../lib/classlib/Scanlex.crexx) already provides token types, text
-and positions. It is a starting point rather than a complete cREXX lexer: its
-identifier, comment and literal rules need comparison with the compiler, and
-keyword classification and removal of diagnostic output remain necessary.
-Truncated strings/comments and incomplete statements should remain printable;
-other fence languages should retain their existing listing handlers.
+The book-specific [bookhighlight.crexx](texttools/bookhighlight.crexx) uses
+Peter Jacob's [Scanlex.crexx](../lib/classlib/Scanlex.crexx) as its token and
+character-scanning starting point, with rules checked against the compiler
+scanners. It classifies fragments without requiring complete syntax, imports,
+semantic validation or execution. The generated colour block preserves every
+source character and whitespace gap; incomplete strings/comments remain
+printable. `Scanlex` and its JSON API are unchanged. The dedicated lexical
+fixtures and real listing-set timing remain part of the generation review.
 
 Parser-based highlighting remains an alternative. CREXX already exposes
 `rxc --syntaxhighlight` over DSLSH; THE is an editor consumer rather than a
@@ -229,8 +355,7 @@ Parser mode can return source structure when syntax errors exist, skipping
 semantic validation for that request; incomplete fragments therefore do not
 rule out this route. A lexical pass would avoid parser and semantic-analysis
 work for simple listing styles. Actual latency and fragment coverage still
-need measurement. No new lexical renderer or DSLSH plugin is implemented by
-this port.
+need measurement. The book lexer does not change the DSLSH interface.
 
 ## Class API tables and RexxDoc
 

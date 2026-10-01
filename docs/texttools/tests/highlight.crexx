@@ -1,0 +1,151 @@
+/* Focused lexical and print-fragment regressions for bookhighlight. */
+options levelb
+import rxfnsb
+import bookhighlight
+
+arg args = .string[]
+errors = 0
+nl = '0a'x
+tab = '09'x
+cr = '0d'x
+
+spans = scan('')
+errors = errors + check(spans[0] = 0, 'empty input has no spans')
+errors = errors + check(pos('\begin{Verbatim}', render('')) > 0, 'empty TeX block exists')
+
+source = '  ' || tab || 'say' || tab || "'café'" || cr || nl ||,
+  '/* outer /* nested */ end */' || nl || '# hash' || nl ||,
+  'object.say saything say: say' || nl
+spans = scan(source)
+errors = errors + fidelity(source, spans, 'multiline whitespace Unicode nesting')
+errors = errors + check(spans[1].get_kind() = 'space', 'leading whitespace span')
+errors = errors + check(spans[2].get_kind() = 'keyword', 'statement word')
+errors = errors + check(has_span(spans, 'comment', '/* outer /* nested */ end */'), 'nested block comment')
+errors = errors + check(has_span(spans, 'comment', '# hash'), 'default hash comment')
+errors = errors + check(has_span(spans, 'word', 'saything'), 'keyword prefix stays word')
+errors = errors + check(has_span(spans, 'word', 'say'), 'dotted/label keyword spelling stays neutral')
+spans = scan('ns::say')
+errors = errors + fidelity('ns::say', spans, 'qualified member')
+errors = errors + check(spans[3].get_kind() = 'word', 'qualified member keyword spelling stays neutral')
+spans = scan('sayĀ')
+errors = errors + fidelity('sayĀ', spans, 'Unicode identifier continuation')
+errors = errors + check(spans[0] = 1 & spans[1].get_kind() = 'word', 'Unicode identifier does not split keyword prefix')
+
+source = "'That''s'" || ' ' || '"he""llo"' || ' ' || "'ff'x" || ' ' || '"0101"b' || nl ||,
+  'say "truncated' || nl || 'say 0x1a 1.25d .5 1e-3 123. 1e' || nl
+spans = scan(source)
+errors = errors + fidelity(source, spans, 'quotes numbers and truncated string')
+errors = errors + check(has_span(spans, 'string', "'That''s'"), 'doubled single quote')
+errors = errors + check(has_span(spans, 'string', '"he""llo"'), 'doubled double quote')
+errors = errors + check(has_span(spans, 'string', "'ff'x"), 'hex quoted suffix')
+errors = errors + check(has_span(spans, 'string', '"0101"b'), 'binary quoted suffix')
+errors = errors + check(has_span(spans, 'string_incomplete', '"truncated'), 'line-truncated quote')
+errors = errors + check(has_span(spans, 'number', '0x1a'), 'hex integer')
+errors = errors + check(has_span(spans, 'number', '1.25d'), 'decimal suffix')
+errors = errors + check(has_span(spans, 'number', '.5'), 'leading-dot number')
+errors = errors + check(has_span(spans, 'number', '1e-3'), 'exponent')
+errors = errors + check(has_span(spans, 'number', '123.'), 'trailing-dot float')
+
+source = '-- dash' || nl || '// slash' || nl || '/* unfinished /* nested'
+spans = scan(source)
+errors = errors + fidelity(source, spans, 'default optional comment modes')
+errors = errors + check(\has_span(spans, 'comment', '-- dash'), 'dash not default comment')
+errors = errors + check(\has_span(spans, 'comment', '// slash'), 'slash not default comment')
+errors = errors + check(has_span(spans, 'comment_incomplete', '/* unfinished /* nested'), 'unfinished nesting')
+spans = scan(source, 'hash dash slash')
+errors = errors + fidelity(source, spans, 'enabled optional comment modes')
+errors = errors + check(has_span(spans, 'comment', '-- dash'), 'enabled dash comment')
+errors = errors + check(has_span(spans, 'comment', '// slash'), 'enabled slash comment')
+source = 'options levelb comments_dash comments_slash' || nl || '-- dash' || nl || '// slash' || nl
+spans = scan(source)
+errors = errors + fidelity(source, spans, 'authored options comment modes')
+errors = errors + check(has_span(spans, 'comment', '-- dash'), 'authored dash option')
+errors = errors + check(has_span(spans, 'comment', '// slash'), 'authored slash option')
+source = '/*' || nl || 'options comments_dash' || nl || '*/' || nl || '-- still operator' || nl
+spans = scan(source)
+errors = errors + fidelity(source, spans, 'comment cannot enable option')
+errors = errors + check(\has_span(spans, 'comment', '-- still operator'), 'comment-contained option is ignored')
+source = 'options' || tab || 'comments_dash' || nl || '-- now comment' || nl
+spans = scan(source)
+errors = errors + fidelity(source, spans, 'tab-separated option')
+errors = errors + check(has_span(spans, 'comment', '-- now comment'), 'tab-separated option enables dash')
+source = 'options comments_nohash' || nl || '# ordinary text' || nl
+spans = scan(source)
+errors = errors + check(\has_span(spans, 'comment', '# ordinary text'), 'authored nohash option')
+source = 'options: comments_dash' || nl || '-- ordinary operator' || nl
+spans = scan(source)
+errors = errors + check(\has_span(spans, 'comment', '-- ordinary operator'), 'options label is not a header')
+source = 'x' || 'c2a0'x || 'y' || 'e28083'x || 'z'
+spans = scan(source)
+errors = errors + fidelity(source, spans, 'Unicode space separators')
+errors = errors + check(spans[2].get_kind() = 'space' & spans[4].get_kind() = 'space', 'Unicode spaces remain gaps')
+
+source = '\end{Verbatim}' || nl || '% # & $ _ ^ ~ { } \' || tab || 'café αβ 😀' || nl ||,
+  'a' || '09'x || '09'x || 'b' || nl
+spans = scan(source)
+errors = errors + fidelity(source, spans, 'TeX specials unknown Unicode tabs')
+tex = render(source, '')
+errors = errors + check(pos('\textbackslash{}', tex) > 0 & pos('\{Verbatim\}', tex) > 0, 'end-environment text escaped')
+errors = errors + check(pos('breakanywheresymbolpre={},breakanywheresymbolpost={},tabsize=8', tex) > 0, 'long-line wrapping without inserted symbols')
+errors = errors + check(pos('% # & $ _ ^ ~ \{ \}', tex) > 0, 'TeX specials remain verbatim text')
+errors = errors + check(pos('café αβ 😀', tex) > 0, 'Unicode print text intact')
+errors = errors + check(pos('\end{Verbatim}', tex) > 0, 'TeX block closes')
+invisible_joiner = 'e2808d'x
+fallback_bmp = '─│┌┐└┘├┴►▼☕✅❌' || 'e38080'x || '日'
+fallback_upper = '👦👧👩🔥🙂'
+source = invisible_joiner || fallback_bmp || fallback_upper
+spans = scan(source)
+errors = errors + fidelity(source, spans, 'all 21 Cursor omissions retained')
+errors = errors + check(length(source) = 21, 'font inventory count')
+tex = render(source, '')
+errors = errors + check(pos('\BookHighlightInvisible{' || invisible_joiner || '}', tex) > 0, 'ZWJ retained with no printed glyph')
+errors = errors + check(pos('\BookHighlightGlyph{' || invisible_joiner || '}', tex) = 0, 'ZWJ avoids visible Unifont marker')
+do glyph = 1 to length(fallback_bmp)
+  ch = substr(fallback_bmp, glyph, 1)
+  errors = errors + check(pos('\BookHighlightGlyph{' || ch || '}', tex) > 0, 'BMP fallback wrapper')
+end
+do glyph = 1 to length(fallback_upper)
+  ch = substr(fallback_upper, glyph, 1)
+  errors = errors + check(pos('\BookHighlightGlyphUpper{' || ch || '}', tex) > 0, 'Upper fallback wrapper')
+end
+errors = errors + check(pos('\BookHighlightGlyph{α}', render('α')) = 0, 'covered glyph keeps Cursor font')
+if args[0] = 1 then do
+  fixture = 'say "café αβ"' || nl || '/* outer /* inner */ end */' || nl ||,
+    '\end{Verbatim}' || nl || '% # & $ _ ^ ~ { } \' || tab || nl || source || nl ||,
+    'longword_longword_longword_longword_longword_longword_longword_longword_longword_longword' || nl
+  call writebinary args[1], render(fixture, '') as .binary
+end
+
+say 'Book highlighter failures:' errors
+return errors
+
+fidelity: procedure = .int
+  arg source = .string, spans = .bookhighlight_span[], label = .string
+  rebuilt = ''
+  next = 1
+  i = .int
+  do i = 1 to spans[0]
+    if spans[i].get_start() <> next then do
+      say 'FAIL span position:' label i
+      return 1
+    end
+    rebuilt = rebuilt || spans[i].get_text()
+    next = next + length(spans[i].get_text())
+  end
+  if rebuilt = source & next = length(source) + 1 then return 0
+  say 'FAIL reconstruction:' label
+  return 1
+
+has_span: procedure = .boolean
+  arg spans = .bookhighlight_span[], kind = .string, value = .string
+  i = .int
+  do i = 1 to spans[0]
+    if spans[i].get_kind() = kind & spans[i].get_text() = value then return 1
+  end
+  return 0
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say 'FAIL:' label
+  return 1

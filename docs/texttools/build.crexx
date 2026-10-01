@@ -8,7 +8,7 @@ i = .int
 option = .string
 argv = .string[]
 if args[0] < 4 then do
-  say 'Usage: build prepare|build SOURCE WORK TITLE [-copy] [-crexx] [-show]'
+  say 'Usage: build prepare|build SOURCE WORK TITLE [initial|original] [-copy] [-crexx] [-show]'
   return 2
 end
 mode = args[1]
@@ -20,7 +20,15 @@ if mode <> 'prepare' & mode <> 'build' then return 2
 if left(source, 1) <> '/' & substr(source, 2, 1) <> ':' then return 2
 if left(work, 1) <> '/' & substr(work, 2, 1) <> ':' then return 2
 if pos('/', title) > 0 | pos('\', title) > 0 | title = '' | title = '.' | title = '..' then return 2
-do i = 5 to args[0]
+profile = 'original'
+first_option = 5
+if args[0] >= 5 then do
+  if args[5] = 'initial' | args[5] = 'original' then do
+    profile = args[5]
+    first_option = 6
+  end
+end
+do i = first_option to args[0]
   option = args[i]
   if wordpos(option, '-copy -crexx -show') = 0 then do
     say 'Unknown option:' option
@@ -31,10 +39,10 @@ do i = 5 to args[0]
     return 2
   end
 end
-if texttools..build(source, work, title, mode) <> 0 then return 1
+if texttools..build(source, work, title, mode, profile) <> 0 then return 1
 if mode = 'prepare' then return 0
 pdf = work || '/' || title || '.pdf'
-do i = 5 to args[0]
+do i = first_option to args[0]
   option = args[i]
   select
     when option = '-copy' then do

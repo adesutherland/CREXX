@@ -398,7 +398,7 @@ list_add_item(list,x-offset,y-offset,bg_colour)
 - **Parameters**:
   - `list`: Index of the list to which the item will be added.
   - `text`: Text to display for the new item.
-  - `bg_colour`: Background colour for the item (refer to the [X11 colours](#appendix-x11-colours) for available colours or use RGB in hexadecimal notation, e.g., `#RRGGBB`).
+  - `bg_colour`: Background colour for the item (refer to the [X11 colours](#x11-colours) for available colours or use RGB in hexadecimal notation, e.g., `#RRGGBB`).
 - **Returns**: An integer indicating success (1).
 - **Example**:
 
@@ -449,7 +449,7 @@ list_set_header(list,header_text,text_colour,bg_colour)
   - `list`: Index of the list to set the header for.
   - `header_text`: Text to display as the header.
   - `text_colour`: Text colour for the header.
-  - `bg_colour`: Background colour of the header (refer to the [X11 colours](#appendix-x11-colours) for available colours or use RGB in hexadecimal notation).
+  - `bg_colour`: Background colour of the header (refer to the [X11 colours](#x11-colours) for available colours or use RGB in hexadecimal notation).
 - **Returns**: An integer indicating success (1).
 - **Example**:
 
