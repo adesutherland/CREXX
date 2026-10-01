@@ -188,7 +188,7 @@ clean single-thread Release guards. Adrian therefore waived an unchanged AC
 replay as unnecessary on 2026-08-18. It is not a remaining QA-B requirement
 and is reopened only by a relevant source change, concrete evidence
 inconsistency or new governed performance question. The diagnostic bundle is
-[`2026-08-16-initial-concurrency-mac-closeout`](../performance/evidence/2026-08-16-initial-concurrency-mac-closeout/).
+[`2026-08-16-initial-concurrency-mac-closeout`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-16-initial-concurrency-mac-closeout).
 
 ## QA-D Windows evidence
 

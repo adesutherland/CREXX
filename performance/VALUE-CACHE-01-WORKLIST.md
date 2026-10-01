@@ -211,7 +211,7 @@ A plausible isolated PoC is:
 - split the current compiler byte into the two active compiler-ABI bits and six
   protected language bits;
 - use four language bits for NFC/NFD/NFKC/NFKD;
-- use the remaining two bits as `none`, `int`, `float` or `decimal` string
+- use the remaining two bits as `none`, `int`, `float` or [`decimal`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/decimal) string
   provenance;
 - place a 32-bit conversion-context ID in the current 64-bit alignment gap
   after the 32-bit status word, subject to compile-time layout proof on every

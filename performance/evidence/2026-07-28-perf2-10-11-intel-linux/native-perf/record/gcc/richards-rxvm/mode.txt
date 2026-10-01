@@ -1,1 +1,0 @@
-record=dwarf,8192; report=no-unwind-flat; callgraph-render=deferred

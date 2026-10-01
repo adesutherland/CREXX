@@ -1,2 +1,0 @@
--stacks also implies -interleaved -noCoalesce
-

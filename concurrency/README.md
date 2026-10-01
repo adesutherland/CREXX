@@ -23,7 +23,7 @@ Use these sources in order:
 8. [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) for the current
    source-to-test truth matrix;
 9. [`DECISIONS.md`](DECISIONS.md) for accepted design boundaries; and
-10. [`history/`](history/) and `performance/evidence/` for dated provenance.
+10. [`history/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/history) and `performance/evidence/` for dated provenance.
 
 The historical records contain the former Gate E/F names. Those names identify
 the development sequence only; they are not user-facing feature names or

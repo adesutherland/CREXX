@@ -25,14 +25,14 @@ proof pass. The governed AC-power performance replay remains open.**
 
 The isolated install was packaged as a local portable ZIP. The archive is a
 reproducible build output and is not committed; its retained SHA-256 is in
-`install/package.sha256`. This proves the local payload shape, not signing,
+[`install/package.sha256`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/install/package.sha256). This proves the local payload shape, not signing,
 notarization or release publication.
 
 ## Performance boundary
 
 The paired task-launch and seven-workload single-thread campaign is retained
 separately under
-[`performance/evidence/2026-08-16-initial-concurrency-mac-closeout`](../../../performance/evidence/2026-08-16-initial-concurrency-mac-closeout/).
+[`performance/evidence/2026-08-16-initial-concurrency-mac-closeout`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-16-initial-concurrency-mac-closeout).
 It is diagnostic only: the power log proves that the machine was on battery
 during the campaign, contrary to the performance-governance AC requirement.
 It therefore does not replace the earlier accepted AC baselines and does not
@@ -40,14 +40,14 @@ complete the Mac performance part of QA-B.
 
 ## Evidence map
 
-- `qa/debug-build.log` and `qa/debug-ctest.log`: complete Debug product and
+- [`qa/debug-build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/qa/debug-build.log) and [`qa/debug-ctest.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/qa/debug-ctest.log): complete Debug product and
   2,204-test regression result;
-- `qa/asan-build.log` and `qa/asan-concurrency-matrix.log`: complete Apple ASan
+- [`qa/asan-build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/qa/asan-build.log) and [`qa/asan-concurrency-matrix.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/qa/asan-concurrency-matrix.log): complete Apple ASan
   build and labelled matrix;
-- `qa/debug-stress-repeat-20.log`: unchanged repeated-race/stress execution;
-- `qa/release-build.log` and `qa/release-concurrency-matrix.log`: ordinary
+- [`qa/debug-stress-repeat-20.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/qa/debug-stress-repeat-20.log): unchanged repeated-race/stress execution;
+- [`qa/release-build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/qa/release-build.log) and [`qa/release-concurrency-matrix.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/qa/release-concurrency-matrix.log): ordinary
   Release product and maintained concurrency matrix; and
-- `install/`: isolated install inventory, direct installed-toolchain smoke and
+- [`install/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/install): isolated install inventory, direct installed-toolchain smoke and
   portable-archive digest.
 
-Exact replay commands are in [`COMMANDS.md`](COMMANDS.md).
+Exact replay commands are in [`COMMANDS.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-16-mac-closeout/COMMANDS.md).

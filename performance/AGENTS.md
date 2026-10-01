@@ -10,8 +10,8 @@ always start with:
 
 1. `performance/ROADMAP.md` for current closeout, selection status and the
    compact candidate queue;
-2. `docs/planning/release-1/performance-programme-report-2026-07-15.md` for the
-   programme terms, evidence and design gates; and
+2. `performance/PERFORMANCE-GOVERNANCE.md` and `performance/DECISIONS.md` for
+   measurement rules and durable design decisions; and
 3. the relevant technical guide named in `performance/README.md`.
 
 For Level B benchmark or runner edits, the root instruction requiring
@@ -25,8 +25,9 @@ For Level B benchmark or runner edits, the root instruction requiring
   `tests/performance/`.
 - Keep user-facing profiler documentation in
   `docs/books/crexx_programming_guide/profiling.md`.
-- Treat dated reports under `docs/planning/` as snapshots. Add live status and
-  later observations to `performance/ROADMAP.md` or a new evidence bundle.
+- Keep current status in `performance/ROADMAP.md` and durable conclusions in
+  `performance/DECISIONS.md`. Recover completed reports and superseded runs
+  from Git rather than retaining snapshot copies in HEAD.
 
 Do not create a second copy of a benchmark merely to retain results. Evidence
 bundles point to the exact versioned workload and record the commit used.
@@ -37,9 +38,9 @@ bundles point to the exact versioned workload and record the commit used.
   ledger in `ROADMAP.md` before or as it is investigated, even if it is
   speculative.
 - Give an idea a stable ID. Record the hypothesis, affected surfaces, semantic
-  risks, evidence needed and disposition. Do not silently delete rejected or
-  negative ideas; move durable outcomes to `DECISIONS.md` or a dated historical
-  ledger and retain the reason.
+  risks, evidence needed and disposition. Consolidate rejected or negative
+  outcomes and their reasons in `DECISIONS.md`; completed worklists and
+  superseded raw runs belong in Git history.
 - Update an activity's status and dated notes in the same change that starts,
   completes, pauses or invalidates it.
 - `complete` means the activity's exit criterion in the programme report is
@@ -61,7 +62,10 @@ Correctness is a prerequisite for timing. A retained evidence bundle must say:
 - correctness result and raw samples, including negative or noisy results; and
 - the interpretation boundary: observation, inference, upper bound or claim.
 
-Keep raw samples. Summary statistics never replace them. Run benchmark samples
+Keep raw samples for the selected current baseline or unresolved verdict.
+Once a campaign is superseded, retain its durable decision in HEAD and recover
+its raw samples from Git history; do not retain every completed run directory.
+Summary statistics never replace the raw samples of a selected current result. Run benchmark samples
 serially unless an activity explicitly measures concurrency. Do not compare a
 process-startup-inclusive measurement with a steady-state kernel measurement,
 or retained metadata with stripped metadata, as if they were the same mode.

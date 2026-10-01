@@ -1,1 +1,0 @@
-PASS: compact cross-runtime timing matrix retained under /tmp/crexx-perf3-05.9DY131/hotcold/lifecycle/timing

@@ -1,2 +1,0 @@
-benchmark=json_parser repetitions=5000 operations=8
-PASS: JSON Parser

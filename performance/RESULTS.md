@@ -24,15 +24,11 @@ fourteen Python controls and CPython is faster on seven. The workloads where
 cREXX is weaker provide useful evidence about object handling, containers,
 ownership and some complex programs.
 
-These findings create two kinds of further work:
-
-- **Release activity:** complete the formal Linux check and review the most
-  material weak results—CD, DeltaBlue, Towers and Havlak—to decide whether a
-  safe, general and worthwhile improvement belongs in this release.
-- **Next-release work:** carry broader language and runtime opportunities,
-  including Storage/List ownership, NBody and Permute, into the roadmap after
-  Release 1. Any release-review item that does not justify a bounded change
-  also moves to this next-release queue.
+The formal Linux disposition for the frozen scorecard remains open. Current
+product and performance scheduling belongs in [ROADMAP.md](ROADMAP.md):
+Level G ownership/container contracts serve Beta 5, and bounded mechanism
+reviews serve the selected Beta 6 Performance Beta. Old scorecard findings do
+not authorize implementation or a new beta 3 optimization programme.
 
 The scorecard does not itself authorize another optimization programme, and
 none of these performance findings is currently a correctness defect or an
@@ -147,36 +143,26 @@ be misleading.
 
 | Workload | Plain-language finding | Intended horizon |
 | --- | --- | --- |
-| CD | Its indexed map and object work is much slower than the Python and Java controls. The exact balance of copying, calls, allocation and mathematics still needs measuring. | Review during release; fix only if a safe, general and material change is identified. |
-| DeltaBlue | Current value behaviour requires numbered handles and separate planning arrays for a complex object graph. | Review during release; otherwise carry forward. |
-| Towers | Earlier evidence showed unusually high object copying, clearing and allocation. The current product needs confirming measurements. | Review during release; otherwise carry forward. |
-| Havlak | This complex graph workload remains slower than Python, and optimized code is unexpectedly slower than the unoptimized form. | Review during release; preserve the honest benchmark. |
-| Storage | The current language surface requires an extra owner object around each logical child array. This is known additional work. | Next release, with the broader ownership/container design. |
-| List | Weak references require an extra ownership arena to keep list nodes alive. | Next release, with the broader ownership/container design. |
-| NBody | cREXX is much faster than the ooRexx adaptation but behind CPython; floating-point, object and native-math costs have not yet been separated. | Next-release investigation. |
-| Permute | cREXX beats ooRexx and CPython but remains behind genuine NetRexx on this recursive workload. | Next-release call/value investigation. |
+| CD | Its indexed map and object work is much slower than the Python and Java controls. The exact balance of copying, calls, allocation and mathematics still needs measuring. | Beta 6 bounded review; select only a safe, general and material mechanism. |
+| DeltaBlue | Current value behaviour requires numbered handles and separate planning arrays for a complex object graph. | Beta 6 bounded review; otherwise defer. |
+| Towers | Earlier evidence showed unusually high object copying, clearing and allocation. The current product needs confirming measurements. | Beta 6 bounded review; otherwise defer. |
+| Havlak | This complex graph workload remains slower than Python, and optimized code is unexpectedly slower than the unoptimized form. | Beta 6 bounded review; preserve the honest benchmark. |
+| Storage | The current language surface requires an extra owner object around each logical child array. This is known additional work. | Beta 5 Level G ownership/container design input. |
+| List | Weak references require an extra ownership arena to keep list nodes alive. | Beta 5 Level G ownership/container design input. |
+| NBody | cREXX is much faster than the ooRexx adaptation but behind CPython; floating-point, object and native-math costs have not yet been separated. | Beta 6 evidence queue. |
+| Permute | cREXX beats ooRexx and CPython but remains behind genuine NetRexx on this recursive workload. | Beta 6 call/value evidence queue. |
 
-The first four are **release reviews**, not promises to change production code
-before release. The decision rule is deliberately conservative: make a
-pre-release change only when current evidence identifies a general problem and
-a bounded solution whose correctness and portfolio performance can be proved.
-Otherwise preserve the finding and address it after Release 1.
+The first four are bounded mechanism reviews, not promises to change
+production code. Use current residual-cost evidence, semantic proof and the
+first ordinary Release verdict before selecting an improvement.
 
 ## Release disposition
 
-Before the performance closeout can be called complete:
-
-1. run the formal exact-commit Linux verification against candidate
-   `81f15918676d92a7d3e88954d94779ed759e9db8`;
-2. perform the bounded release reviews above and decide whether each item is a
-   release change or a next-release roadmap item;
-3. finish the documentation and retained-evidence clean-down; and
-4. keep the scorecard frozen unless a correctness or comparison problem
-   requires a clearly versioned rerun.
-
-The source candidate is beta 3 work in progress. The latest completed release
-tag remains `v1.0.0-beta.2`; these results must not be described as a released
-beta 3 result until the corresponding tag and release assets exist.
+The [closeout plan](PERFORMANCE-CLOSEOUT-PLAN.md) keeps formal exact-commit
+Linux QA-C, compact-baseline verification and weak-row dispositions visibly
+open. This scorecard describes `81f15918676d92a7d3e88954d94779ed759e9db8` on the
+recorded Apple host. Current release status is determined by tags and the
+[release notes](../docs/releases/); it is not inferred from this measurement.
 
 ## Detailed sources
 

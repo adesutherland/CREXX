@@ -3,7 +3,7 @@
 Status: accepted design boundaries for the implemented initial surface.
 
 This file records durable decisions without the former internal gate names.
-The dated discussion and approval trail remains in [`history/`](history/).
+The dated discussion and approval trail remains in [`history/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/history).
 
 ## User model
 

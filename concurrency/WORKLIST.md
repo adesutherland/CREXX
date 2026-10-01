@@ -223,7 +223,7 @@ breach. Confirmation deltas were between -0.681% and +0.306% across Sieve and
 RexxCPS on both VMs, with only the -0.681% result statistically clear and
 favourable. All 48 recorded server scenarios passed. Exact commands, raw
 samples, artifact checks and limitations are retained in
-[`2026-08-16-conc-16-http-server-first-release-verdict`](../performance/evidence/2026-08-16-conc-16-http-server-first-release-verdict/).
+[`2026-08-16-conc-16-http-server-first-release-verdict`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-16-conc-16-http-server-first-release-verdict).
 
 Remaining HTTP work is not an unfinished part of CONC-16. Windows package
 qualification is complete; formal Linux qualification remains in CONC-11.
@@ -269,9 +269,9 @@ The complete local Linux repair-validation commands, logs, install/package
 inventories and digests are retained in
 [`2026-08-17-linux-harness-repair`](evidence/2026-08-17-linux-harness-repair/README.md).
 
-## Historical evidence
+## Evidence retention
 
-The former development plan and exact Mac closeout records are indexed in
-[`history/README.md`](history/README.md). Raw timing and QA artifacts remain
-under `performance/evidence/` because they were produced under performance
-governance and must retain their original paths.
+Current decisions and unresolved acceptance criteria remain in this worklist
+and [DECISIONS.md](DECISIONS.md). Completed development plans, raw timing and
+QA captures are available in Git history; qualification summaries retain their
+recorded source identities and boundaries.

@@ -1,6 +1,0 @@
-worker one
-worker two
-PASS: basic concurrency example
-worker one
-worker two
-PASS: basic concurrency example

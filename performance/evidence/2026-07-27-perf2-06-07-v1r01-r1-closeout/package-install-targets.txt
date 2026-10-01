@@ -1,3 +1,0 @@
-install: phony
-install/local: phony
-install/strip: phony

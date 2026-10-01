@@ -1,2 +1,0 @@
-benchmark=awfy_storage repetitions=10 result=5461
-PASS: AWFY Storage ooRexx object port

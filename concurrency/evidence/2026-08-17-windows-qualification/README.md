@@ -58,11 +58,11 @@ configure/build logs, the maintained concurrency matrix, live TLS proof,
 20-cycle stress proof, full CTest, all label inventories, install/package
 inventories, and installed/extracted smoke logs.
 
-- `msvc/`: Microsoft compiler evidence;
-- `clang/`: LLVM/MinGW evidence;
-- `gcc/`: GCC/MinGW evidence;
-- `SHA256SUMS`: digests for this curated repository evidence set; and
-- [`COMMANDS.md`](COMMANDS.md): exact environment and runner commands.
+- [`msvc/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-windows-qualification/msvc): Microsoft compiler evidence;
+- [`clang/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-windows-qualification/clang): LLVM/MinGW evidence;
+- [`gcc/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-windows-qualification/gcc): GCC/MinGW evidence;
+- [`SHA256SUMS`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-windows-qualification/SHA256SUMS): digests for this curated repository evidence set; and
+- [`COMMANDS.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-windows-qualification/COMMANDS.md): exact environment and runner commands.
 
 `SOURCE-SHA256SUMS` in each lane is the verified digest ledger for the complete
 external runner bundle, including installed binaries that are deliberately not

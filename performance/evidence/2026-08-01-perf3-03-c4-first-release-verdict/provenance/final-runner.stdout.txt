@@ -1,1 +1,0 @@
-PASS: compact cross-runtime timing summary refreshed under /tmp/crexx-perf3-03-first-verdict.xCMBN2/timing-final

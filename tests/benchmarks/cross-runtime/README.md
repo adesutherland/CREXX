@@ -2,7 +2,7 @@
 
 These sources support NR-02 qualification. Canonical sources stay unchanged;
 runtime-required adaptations use distinct files and are classified in
-`performance/NR-02-WORKLIST.md`.
+[`performance/NR-02-WORKLIST.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/NR-02-WORKLIST.md).
 
 ## RexxCPS
 

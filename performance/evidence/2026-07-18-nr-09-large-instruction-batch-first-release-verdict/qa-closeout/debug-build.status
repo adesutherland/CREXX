@@ -1,4 +1,0 @@
-started_utc=2026-07-19T19:19:09Z
-command=cmake --build cmake-build-debug --parallel 10
-ended_utc=2026-07-19T19:20:09Z
-exit_code=0

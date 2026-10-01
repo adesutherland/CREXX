@@ -1,2 +1,0 @@
-benchmark=base64_roundtrip repetitions=1 encoded_length=1368 checksum=130560
-PASS: Base64 Roundtrip
