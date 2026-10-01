@@ -5,12 +5,23 @@ tools=${1:?Usage: install-doc-tools-linux.sh TOOL_DIRECTORY}
 mkdir -p "$tools/downloads" "$tools/bin" "$tools/texmf/fonts/truetype/juliamono" \
   "$tools/texmf/fonts/opentype/unifont"
 
-sudo apt-get update
-sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+# The hosted Azure mirror took 84 minutes for the first 535 MB bootstrap.
+# Keep local developer mirror choices; use Canonical's HTTPS archive on CI.
+if [ "${GITHUB_ACTIONS:-}" = true ]; then
+  for mirrors in /etc/apt/apt-mirrors.txt /etc/apt/apt-security-mirrors.txt; do
+    if [ -f "$mirrors" ]; then
+      sudo sed -i 's|http://azure\.archive\.ubuntu\.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' "$mirrors"
+    fi
+  done
+fi
+apt_network=(-o Acquire::Retries=3 -o Acquire::http::Timeout=60 -o Acquire::https::Timeout=60)
+sudo apt-get "${apt_network[@]}" update
+sudo env DEBIAN_FRONTEND=noninteractive apt-get "${apt_network[@]}" install -y --no-install-recommends \
   build-essential cmake ninja-build libssl-dev pkg-config curl ca-certificates \
   texlive-xetex texlive-latex-extra texlive-fonts-recommended texlive-pstricks \
   texlive-bibtex-extra texlive-font-utils texlive-lang-english biber \
-  inkscape ghostscript poppler-utils
+  fonts-texgyre inkscape ghostscript poppler-utils
+sudo mktexlsr
 
 fetch() {
   local name=$1 url=$2 digest=$3
@@ -43,7 +54,9 @@ fetch unifont_upper-18.0.01.otf \
 cp "$tools/downloads/"*.otf "$tools/texmf/fonts/opentype/unifont/"
 mktexlsr "$tools/texmf"
 export TEXMFHOME="$tools/texmf"
-for font in JuliaMono-Regular.ttf unifont-18.0.01.otf unifont_upper-18.0.01.otf texgyrepagella-regular.otf texgyreheros-regular.otf; do
+for font in JuliaMono-Regular.ttf unifont-18.0.01.otf unifont_upper-18.0.01.otf \
+  texgyrepagella-regular.otf texgyrepagella-bold.otf texgyrepagella-italic.otf texgyrepagella-bolditalic.otf \
+  texgyreheros-regular.otf texgyreheros-bold.otf texgyreheros-italic.otf texgyreheros-bolditalic.otf; do
   kpsewhich "$font" || { echo "Missing book font: $font" >&2; exit 1; }
 done
 if [ -n "${GITHUB_PATH:-}" ]; then

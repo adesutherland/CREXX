@@ -459,7 +459,13 @@ Ubuntu 24.04 supplies XeLaTeX and the selected TeX Live packages, Biber,
 makeindex, xdvipdfmx, Inkscape, Ghostscript and Poppler. Pandoc 3.11, JuliaMono
 0.63.2 and GNU Unifont 18.0.01 downloads have pinned SHA-256 checksums in
 [install-doc-tools-linux.sh](../scripts/install-doc-tools-linux.sh); downloaded
-archives are cached. Package/tool versions are retained with each build. This
+archives are cached. Ubuntu additionally needs the explicit
+[`fonts-texgyre` package](https://packages.ubuntu.com/en/noble/fonts-texgyre) for
+the Pagella/Heros OpenType faces; `texlive-fonts-recommended` alone does not
+supply them. The installer checks all eight serif/sans faces through kpathsea.
+On GitHub runners it replaces the observed slow Azure HTTP archive mirror with
+Canonical's HTTPS archive; local developer mirror settings remain intact.
+Package/tool versions are retained with each build. This
 Linux distribution TeX installation differs from the qualified macOS TeX Live
 2026 installation; its first real four-book result needs independent review.
 Windows generation and original typography remain unqualified.

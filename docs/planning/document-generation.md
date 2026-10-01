@@ -341,7 +341,7 @@ macOS and product evidence instead of dispatching broad overnight suites.
    tagged version and a long development version in real rendered pages; CLI
    regression checks cover version validation/TeX escaping and unchanged legacy
    invocation. Compare authored-input hashes before/after generation.
-9. **DG-AC-09 — open: real Linux four-book generation.** A hosted Ubuntu Linux
+9. **DG-AC-09 — open; first hosted bootstrap failed, repair/retry required: real Linux four-book generation.** A hosted Ubuntu Linux
    job builds the required actual cREXX tools and fresh PDFs through the current
    generator, free font profile and real Pandoc/XeLaTeX/index/Biber tools. Retain
    dependency versions, exact source/PDF hashes, logs, page counts and literal
@@ -472,6 +472,21 @@ initial-font/historical-instruction-content handover limitations.
     and unchanged text/layout before publication. Root includes this bounded
     repair in the next develop publication; no language/architecture decision
     or broad overnight matrix is needed. Receipts: `beta3-release/qa/`.
+
+12. **DG-STEP-12 — in progress; Linux bootstrap repair (AC-09/10/11).** Hosted
+    run `36918100438` failed before typesetting because the selected Ubuntu
+    packages omit the Pagella/Heros OpenType files. Explicitly install
+    `fonts-texgyre`, refresh the TeX filename cache and check all eight required
+    serif/sans faces. The retained apt log also records 535 MB taking 1 hour
+    24 minutes from the runner's Azure HTTP mirror. On GitHub runners only,
+    replace that specific mirror with Canonical's HTTPS archive and use bounded
+    inactivity/retry settings; do not rewrite local developer mirror settings
+    or weaken package signature checks. Verify shell/workflow syntax and the
+    official Ubuntu package inventory, then publish this bounded installer fix
+    and inspect the new actual Linux outputs. Cancel the superseded run with
+    the known missing dependency so it cannot repeat the same long failed setup.
+    Reuse unchanged macOS book/product qualification; no manual Deep matrix.
+    Receipt: `linux-ci/hosted/36918100438/linux-documentation-evidence/`.
 
 ### Current beta 3 publication evidence
 
