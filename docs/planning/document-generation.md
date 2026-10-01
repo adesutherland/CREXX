@@ -486,7 +486,20 @@ initial-font/historical-instruction-content handover limitations.
     and inspect the new actual Linux outputs. Cancel the superseded run with
     the known missing dependency so it cannot repeat the same long failed setup.
     Reuse unchanged macOS book/product qualification; no manual Deep matrix.
-    Receipt: `linux-ci/hosted/36918100438/linux-documentation-evidence/`.
+    The repaired run `36929391128` fetched 543 MB in 16 seconds, found all eight
+    fonts and built the actual product/port, then stopped in XeLaTeX because
+    `siunitx.sty` is absent. Audit the packages loaded by the qualified four-book
+    route against Ubuntu's installed package closure, add the missing bundle
+    and check it before generation; retain the inventory and independent review
+    before another hosted retry. Receipts: `linux-ci/hosted/36918100438/` and
+    `linux-ci/hosted/36929391128/linux-documentation-evidence/`.
+    The independent inventory maps the direct and actual four-book runtime
+    dependencies to official Ubuntu Noble file inventories; the only omitted
+    package owner is `texlive-science`, which supplies `siunitx.sty` for
+    `pstricks-add` → `pst-math` → `pst-calculate`. Install that bundle and check
+    `siunitx.sty` before generation. MacOS 2026-only filenames have explicit
+    Ubuntu 2023 equivalent dispositions; no full TeX installation is needed.
+    Inventory receipt: `linux-ci/qa/tex-package-inventory.json`.
 
 ### Current beta 3 publication evidence
 

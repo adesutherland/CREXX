@@ -463,6 +463,9 @@ archives are cached. Ubuntu additionally needs the explicit
 [`fonts-texgyre` package](https://packages.ubuntu.com/en/noble/fonts-texgyre) for
 the Pagella/Heros OpenType faces; `texlive-fonts-recommended` alone does not
 supply them. The installer checks all eight serif/sans faces through kpathsea.
+Ubuntu's [`texlive-science` package](https://packages.ubuntu.com/noble/texlive-science)
+supplies `siunitx`, required by the included PSTricks calculation packages;
+the installer checks this file before building the tools or books.
 On GitHub runners it replaces the observed slow Azure HTTP archive mirror with
 Canonical's HTTPS archive; local developer mirror settings remain intact.
 Package/tool versions are retained with each build. This
