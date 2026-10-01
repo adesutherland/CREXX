@@ -228,6 +228,25 @@ preprocessTEX: procedure = .int
   labelend = .int
   scanfrom = .int
   raw_tex = .string
+  terminal_begin_count = .int
+  terminal_end_count = .int
+  rxcpack_help_count = .int
+  if right(source, length('/rxcpack.texin')) = '/rxcpack.texin' then do
+    terminal_begin_count = 0
+    terminal_end_count = 0
+    rxcpack_help_count = 0
+    do j = 1 to input[0]
+      if input[j] = '\begin{terminaloutput}' then terminal_begin_count = terminal_begin_count + 1
+      if input[j] = '\end{terminaloutput}' then terminal_end_count = terminal_end_count + 1
+      if input[j] = "\obeylines \splice{rxcpack -h | sed 's/\&/\\\&/g'}" then
+        rxcpack_help_count = rxcpack_help_count + 1
+    end
+    if terminal_begin_count <> 1 | terminal_end_count <> 1 |,
+      rxcpack_help_count <> 1 then do
+      say 'Unexpected rxcpack help splice context; inspect:' source
+      return 1
+    end
+  end
   if linkmap <> '' then do
     if file_kind(linkmap) <> 'file' then do
       say 'Missing book link map:' linkmap
@@ -289,6 +308,14 @@ preprocessTEX: procedure = .int
     if pos('\%includesource=', line) > 0 then line = includelisting(line)
     if pos('\%listasm\%', line) > 0 then line = includeasm(line)
     if pos('\%splice\%', line) > 0 then line = replaceSplice(line)
+    if right(source, length('/rxcpack.texin')) = '/rxcpack.texin' then do
+      /* Its sed escaped ampersands for TeX expansion. Literal Verbatim stdout
+         needs the original rxcpack help bytes, lines and wrap behavior. */
+      if line = '\begin{terminaloutput}' then line = '\begin{bookterminaloutput}'
+      if line = '\end{terminaloutput}' then line = '\end{bookterminaloutput}'
+      if line = "\obeylines \splice{rxcpack -h | sed 's/\&/\\\&/g'}" then
+        line = '\spliceliteral{rxcpack -h}'
+    end
     if pos('\hyperref[', line) > 0 & linkmap <> '' then do
       do j = 1 to mapping[0]
         if left(mapping[j], 1) = '#' then iterate
@@ -346,6 +373,9 @@ preprocessTEX: procedure = .int
     if pos('\texttt{docs/planning/beta-3/notes/binary-fastpath-research.md}', line) > 0 then
       line = changestr('\texttt{docs/planning/beta-3/notes/binary-fastpath-research.md}', line,,
         '\nolinkurl{docs/planning/beta-3/notes/binary-fastpath-research.md}')
+    if pos('\texttt{performance/UNICODE-CERT-01-WORKLIST.md}', line) > 0 then
+      line = changestr('\texttt{performance/UNICODE-CERT-01-WORKLIST.md}', line,,
+        '\nolinkurl{performance/UNICODE-CERT-01-WORKLIST.md}')
     if pos('.rxunicode..graphemes(text)', line) > 0 then
       line = changestr('.rxunicode..graphemes(text)', line,,
         '.rxunicode..\allowbreak{}graphemes(text)')

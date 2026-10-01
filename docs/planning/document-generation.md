@@ -341,7 +341,7 @@ macOS and product evidence instead of dispatching broad overnight suites.
    tagged version and a long development version in real rendered pages; CLI
    regression checks cover version validation/TeX escaping and unchanged legacy
    invocation. Compare authored-input hashes before/after generation.
-9. **DG-AC-09 — open; Ubuntu listing compatibility repair/retry required: real Linux four-book generation.** A hosted Ubuntu Linux
+9. **DG-AC-09 — open; four Linux books built, repaired layout awaiting hosted review: real Linux four-book generation.** A hosted Ubuntu Linux
    job builds the required actual cREXX tools and fresh PDFs through the current
    generator, free font profile and real Pandoc/XeLaTeX/index/Biber tools. Retain
    dependency versions, exact source/PDF hashes, logs, page counts and literal
@@ -508,7 +508,7 @@ initial-font/historical-instruction-content handover limitations.
     Ubuntu 2023 equivalent dispositions; no full TeX installation is needed.
     Inventory receipt: `linux-ci/qa/tex-package-inventory.json`.
 
-13. **DG-STEP-13 — complete locally; hosted qualification remains AC-09/10: Ubuntu listing compatibility (AC-04/06/09/10).**
+13. **DG-STEP-13 — complete; Linux CMake listings pass, layout qualification remains AC-09/10: Ubuntu listing compatibility (AC-04/06/09/10).**
     Run `36931215235` passed dependency installation and produced the language
     reference, then failed on the programming guide's authored CMake fence:
     Ubuntu's TeX Live 2023 `listings` 1.9 lacks the language handler supplied by
@@ -529,7 +529,9 @@ initial-font/historical-instruction-content handover limitations.
     Real fixtures use the official Noble 1.9 files and the current 1.11b files;
     verify older-package success, literal comments/quotes and native retention,
     plus compiled-port preparation through all four cREXX tools.
-    Actual Linux four-book qualification and matching assets remain open.
+    Hosted run `36935421320` successfully typesets all four books, including
+    their CMake listings. Independent listing fidelity passes. Physical layout
+    repairs below and matching qualified assets remain open.
     Receipt: `linux-ci/hosted/36931215235/linux-documentation-evidence/`.
     Final independent review passes: exact upstream definition/notices, native
     and registered handler preservation, all 1,422 listing payloads and identical
@@ -537,6 +539,40 @@ initial-font/historical-instruction-content handover limitations.
     all eleven native/local route variants without changing them; unrelated
     unknown languages still fail. Receipts: `linux-ci/listings-compat/step13-results.json`
     and `linux-ci/qa/listings-linux-compatibility-review.json`.
+
+14. **DG-STEP-14 — complete locally; hosted output review open: repair reproduced Linux clipping (AC-06/08/09/10).**
+    Hosted run `36935421320` produces all four PDFs with the exact development
+    version and preserved source/listing payloads. Independent actual-page
+    review finds two clipped lines: the programming guide's authored rxcpack
+    help splice collapses newlines and overflows with the long development
+    version, and the VM architecture appendix has an unbreakable inline path.
+    The generator agent repairs only detached output: render the existing help
+    command as literal terminal output with wrapping, and permit visible path
+    separators to wrap. Preserve the authored chapter, command and path text;
+    no new example execution or semantic content is introduced. Retain focused
+    real XeLaTeX old-package/development-version fixtures and compiled-port
+    preparation; independent QA verifies literal help, path characters and
+    physical page bounds. Reuse unchanged input/link/font/product evidence,
+    then review the actual next Linux output and matching snapshot publication.
+    Root owns this plan and publication; implementation owns generator/fixtures
+    and port-guide entries only. Receipts: `linux-ci/hosted/36935421320/qa/`.
+    Root withheld this unqualified set from snapshot publication by removing
+    only that run's generated release artifact; the downloaded PDFs, full
+    independent review and hosted evidence artifact remain retained. Binary
+    publication follows the approved optional-document failure policy.
+    The compiled-port and all-four-book real preparation pass. All 1,422
+    snapshots/196,037 bytes and authored chapters/templates are preserved.
+    A real two-page XeLaTeX fixture uses the verified Noble `listings` 1.9
+    catalogue, captured actual help with the hosted development stamp and the
+    VM paragraph's real list width. Literal help/path text and every physical
+    character bound pass; a malformed raw-splice context fails actionably.
+    Root independently reviewed both rendered pages and frozen source hashes.
+    Receipts: `linux-ci/layout-repair/step14-results.json` and
+    `linux-ci/layout-repair/coordinator-review.json`. Independent review passes
+    all unchanged inputs/symlinks, literal help lines, lexical outputs and both
+    rendered pages in `linux-ci/layout-repair/qa/independent-review.json`.
+    These are focused local
+    repair proofs; the next actual Linux output remains required for AC-09/10.
 
 ### Current beta 3 publication evidence
 

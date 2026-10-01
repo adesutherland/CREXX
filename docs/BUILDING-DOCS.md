@@ -474,6 +474,10 @@ Linux distribution TeX installation differs from the qualified macOS TeX Live
 Ubuntu's older `listings` catalogue lacks CMake. Detached output uses the
 upstream CMake definition bundled with the port only when no native handler
 exists; authored listings and newer installations' handlers remain intact.
+The rxcpack help splice is rendered as literal, wrapped terminal output rather
+than TeX-expanded text, preserving help lines and long development versions.
+The long Unicode worklist path in the VM architecture appendix also gains
+legal line breaks in detached TeX. Both repairs preserve the authored chapters.
 Windows generation and original typography remain unqualified.
 
 An optional sixth driver argument supplies the exact version token:
@@ -516,6 +520,10 @@ develop commit, including its generation scripts. This is an overnight
 assurance requirement, not a reason to dispatch the entire Deep matrix for
 ordinary documentation edits.
 
-Current status: CI wiring and focused failure/asset checks pass independent review;
-real hosted Linux PDFs and their first asset publication remain open in
+Current status: the actual Linux route produces all four books, including CMake
+listings, and independent source/listing/link checks pass. The two reproduced
+clips are repaired in detached output and pass focused real typesetting review;
+the next Linux output and matching snapshot assets still require verification.
+CI wiring and actual
+failed-document binary publication pass; the remaining checks are tracked in
 [the authoritative plan](planning/document-generation.md#linux-ci-and-versioned-publication-follow-up--1-october-2026).

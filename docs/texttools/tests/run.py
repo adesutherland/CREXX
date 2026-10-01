@@ -38,6 +38,10 @@ def main():
                         help="Prepare one real book and verify a XeLaTeX footnote PDF destination")
     parser.add_argument("--listings-legacy-catalog", type=Path,
                         help="Exercise the CMake fallback with a listings 1.9 catalog and native TeX")
+    parser.add_argument("--layout-pdf", action="store_true",
+                        help="Typeset the repaired literal help and VM path in one real PDF fixture")
+    parser.add_argument("--layout-legacy-catalog", type=Path,
+                        help="Select an older listings catalog for the real layout PDF fixture")
     args = parser.parse_args()
     product = args.bin.resolve()
     work = (args.work.resolve() if args.work else
@@ -300,6 +304,10 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
 
     # Optional real Markdown -> TeX check; no typesetter is involved here.
     if args.pandoc:
+        authored_layout = {
+            path: hashlib.sha256((REPO / path).read_bytes()).hexdigest()
+            for path in ("docs/books/crexx_programming_guide/rxcpack.md",
+                         "docs/ai-context/CREXX_ARCHITECTURE.md")}
         real_tools = work / "real-tools"
         real_tools.mkdir()
         (real_tools / "pandoc").symlink_to(args.pandoc.resolve())
@@ -333,6 +341,44 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
                 assert r"\%splice\%" not in tex
             receipts.append({"book": book, "real_pandoc_chapters": len(chapters)})
             receipts.append({"book": book, "extracted_listings": extracted})
+        program_tex = work / "actual books/docs/books/crexx_programming_guide/tex/book"
+        rxcpack = (program_tex / "rxcpack.tex").read_text()
+        assert rxcpack.count("\\begin{bookterminaloutput}") == 1
+        assert rxcpack.count("\\end{bookterminaloutput}") == 1
+        assert rxcpack.count("\\spliceliteral{rxcpack -h}") == 1
+        assert "\\obeylines" not in rxcpack and "sed 's/" not in rxcpack
+        architecture = (work / "actual books/docs/books/crexx_vm_spec/tex/book/"
+                        "CREXX_ARCHITECTURE.tex").read_text()
+        assert "\\nolinkurl{performance/UNICODE-CERT-01-WORKLIST.md}" in architecture
+        assert "\\texttt{performance/UNICODE-CERT-01-WORKLIST.md}" not in architecture
+        assert authored_layout == {
+            path: hashlib.sha256((REPO / path).read_bytes()).hexdigest()
+            for path in authored_layout}, "Authored layout source changed during preparation"
+        # The exact directive guard must fail if a future Pandoc/source edit
+        # leaves the old raw splice in a slightly different context.
+        probe_source = work / "layout-guard.crexx"
+        probe_source.write_text("options levelb\nimport texttools\n"
+                                "arg args = .string[]\n"
+                                "return texttools..preprocessTEX(args[1], args[2])\n")
+        run("layout-guard-compile", [product / "rxc", "-i", f"{imports};{product}",
+                                     "-o", work / "layout-guard", probe_source])
+        run("layout-guard-assemble", [product / "rxas", "-o", work / "layout-guard",
+                                      work / "layout-guard"])
+        run("layout-guard-link", [product / "rxlink", "-o", work / "layout-guard-linked",
+                                  work / "layout-guard.rxbin", imports / "texttools.rxbin",
+                                  imports / "bookhighlight.rxbin", product / "library.rxbin"])
+        malformed = work / "malformed-rxcpack/rxcpack.texin"
+        malformed.parent.mkdir()
+        valid_input = (program_tex / "rxcpack.texin").read_text()
+        old = "\\obeylines \\splice{rxcpack -h | sed "
+        assert old in valid_input
+        malformed.write_text(valid_input.replace(old, " " + old, 1))
+        bad_log = run("layout-guard-malformed", [
+            product / "rxvm", work / "layout-guard-linked.rxbin", "-a",
+            malformed, work / "malformed-rxcpack/output.tex"],
+            expected=None, env=real_env).read_text()
+        assert "Unexpected rxcpack help splice context" in bad_log
+        assert not (work / "malformed-rxcpack/output.tex").exists()
     if args.footnote_pdf:
         real_env = dict(os.environ, PATH=str(product) + os.pathsep + os.environ.get("PATH", ""))
         source_preamble = REPO / "docs/books/boilerplate/preamble.tex"
@@ -370,6 +416,95 @@ Four & Table four\footnote{Fourth retained table note.} \\
                 f"Footnote {index} has no PDF destination")
         receipts.append({"real_footnote_pdf": str(fixture / "footnote-fixture.pdf"),
                          "named_destinations": [f"Hfootnote.{i}" for i in range(1, 6)]})
+    if args.layout_pdf:
+        if not args.pandoc:
+            raise ValueError("--layout-pdf also requires --pandoc")
+        import pdfplumber
+        real_env = dict(os.environ, PATH=str(product) + os.pathsep +
+                        os.environ.get("PATH", ""))
+        staged = work / "actual books/docs/books"
+        tree = work / "layout-pdf"
+        boilerplate = tree / "docs/books/boilerplate"
+        shutil.copytree(staged / "boilerplate", boilerplate)
+        fixture = tree / "docs/books/crexx_programming_guide/tex/book"
+        fixture.mkdir(parents=True)
+        rxcpack = (staged / "crexx_programming_guide/tex/book/rxcpack.tex").read_text()
+        architecture = (staged / "crexx_vm_spec/tex/book/"
+                        "CREXX_ARCHITECTURE.tex").read_text()
+        vm_path_line = next(line for line in architecture.splitlines()
+                            if "\\nolinkurl{performance/UNICODE-CERT-01-WORKLIST.md}" in line)
+        (fixture / "rxcpack.tex").write_text(rxcpack)
+        version = "crexx-1.0.0-beta.3+dev-snapshot.gdf9bf84d7b65"
+        help_text = run("layout-actual-rxcpack-help", [product / "rxcpack", "-h"],
+                        env=real_env).read_text()
+        assert help_text.count("Version : ") == 1
+        help_text = re.sub(r"(?m)^Version : .*$", "Version : " + version, help_text)
+        (fixture / "rxcpack-help.txt").write_text(help_text)
+        tool_dir = fixture / "tools"
+        tool_dir.mkdir()
+        shim = tool_dir / "rxcpack"
+        shim.write_text("#!/bin/sh\n"
+                        "test \"$1\" = \"-h\" || exit 2\n"
+                        "cat ./rxcpack-help.txt\n")
+        shim.chmod(0o755)
+        (fixture / "layout-fixture.tex").write_text(
+            "\\input{../../../boilerplate/preamble}\n"
+            "\\begin{document}\n"
+            "\\input{rxcpack.tex}\n"
+            "\\section*{VM architecture path}\n"
+            "\\begin{itemize}\n\\tightlist\n\\item\n"
+            + vm_path_line + "\n"
+            "\\end{itemize}\n"
+            "\\end{document}\n")
+        tex_env = dict(real_env, PATH=str(tool_dir) + os.pathsep + real_env["PATH"])
+        if args.layout_legacy_catalog:
+            old_catalog = args.layout_legacy_catalog.resolve()
+            assert (old_catalog / "lstlang2.sty").is_file(), old_catalog
+            tex_env["TEXINPUTS"] = str(old_catalog) + os.pathsep + (
+                real_env.get("TEXINPUTS", ""))
+            resolved_catalog = run("layout-catalog-lookup",
+                ["kpsewhich", "lstlang2.sty"], env=tex_env, cwd=fixture
+                ).read_text().strip()
+            assert Path(resolved_catalog).resolve() == old_catalog / "lstlang2.sty"
+        log = run("layout-xelatex", ["xelatex", "-no-pdf", "-shell-escape", "-halt-on-error",
+                                     "-interaction=nonstopmode", "layout-fixture.tex"],
+                  env=tex_env, cwd=fixture).read_text()
+        assert not [line for line in log.splitlines()
+                    if "Overfull \\hbox" in line
+                    and "while \\output is active" not in line], "Content box overflow"
+        assert "Missing character:" not in log
+        run("layout-xdvipdfmx", ["xdvipdfmx", "-o", "layout-fixture.pdf",
+                                  "layout-fixture.xdv"], env=tex_env, cwd=fixture)
+        pdf = fixture / "layout-fixture.pdf"
+        with pdfplumber.open(pdf) as pages:
+            outside = [(i + 1, ch["text"], ch["x0"], ch["x1"], ch["top"], ch["bottom"])
+                       for i, page in enumerate(pages.pages) for ch in page.chars
+                       if ch["x0"] < -0.01 or ch["x1"] > page.width + 0.01
+                       or ch["top"] < -0.01 or ch["bottom"] > page.height + 0.01]
+            extracted = "\n".join(page.extract_text(layout=False) or ""
+                                  for page in pages.pages)
+            page_count = len(pages.pages)
+        assert not outside, outside[:10]
+        compact = re.sub(r"\s+", " ", extracted)
+        for line in help_text.splitlines():
+            assert re.sub(r"\s+", " ", line) in compact, line
+        assert ("performance/UNICODE-CERT-01-WORKLIST.md" in
+                re.sub(r"\s+", "", extracted)), "VM path text changed across wrap"
+        assert "\\&" not in compact and "Copyright & License Details" in compact
+        page_pattern = fixture / "layout-page-%d.png"
+        run("layout-raster", ["gs", "-q", "-dNOPAUSE", "-dBATCH",
+                              "-sDEVICE=png16m", "-r120", "-o", page_pattern, pdf],
+            env=tex_env, cwd=fixture)
+        pages = sorted(fixture.glob("layout-page-*.png"))
+        assert len(pages) == page_count, pages
+        receipts.append({"layout_pdf": str(pdf), "pages": page_count,
+                         "physical_outside_characters": len(outside),
+                         "version": version,
+                         "literal_help_sha256": hashlib.sha256(help_text.encode()).hexdigest(),
+                         "pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+                         "raster_pages": [str(page) for page in pages],
+                         "listings_catalog": str(args.layout_legacy_catalog.resolve())
+                             if args.layout_legacy_catalog else "installed default"})
     if args.listings_legacy_catalog:
         if not args.pandoc:
             raise ValueError("--listings-legacy-catalog also requires --pandoc")

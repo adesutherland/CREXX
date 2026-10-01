@@ -176,6 +176,15 @@ through their authored `listings` handlers. RXPP's pre-compilation flowchart
 declares a `text` fence so its box-drawing geometry prints literally. An explicit `splice` is
 still the only route that executes an example during typesetting.
 
+The programming guide's authored `rxcpack -h` splice now uses the same
+paginating literal terminal renderer in detached TeX. Its old `sed` filter
+escaped ampersands only for raw TeX expansion; literal Verbatim prints the
+unchanged help bytes, line breaks and punctuation without that filter. The
+authored command and chapter stay intact. The long
+`performance/UNICODE-CERT-01-WORKLIST.md` path in the VM appendix receives
+legal line breaks through `\nolinkurl` in detached TeX; its printed text is
+unchanged.
+
 The language book leaves RXPP's authored GitHub TOC links intact. Its
 [`rxpp-book-links.tsv`](../books/crexx_language_reference/rxpp-book-links.tsv)
 records the 48 links whose GitHub slugs differ from Pandoc labels, with the
@@ -233,6 +242,8 @@ python3 docs/texttools/tests/run.py --bin "$product"
 python3 docs/texttools/tests/run.py --bin "$product" --pandoc /absolute/path/to/pandoc
 python3 docs/texttools/tests/run.py --bin "$product" --pandoc /absolute/path/to/pandoc \
   --listings-legacy-catalog /absolute/path/to/texlive-2023/tex/latex/listings
+python3 docs/texttools/tests/run.py --bin "$product" --pandoc /absolute/path/to/pandoc \
+  --layout-pdf --layout-legacy-catalog /absolute/path/to/texlive-2023/tex/latex/listings
 ```
 
 The harness compiles, assembles, links and executes the module/drivers. It checks
@@ -249,6 +260,12 @@ listing and a comment/quote/punctuation probe with TeX Live 2023 `listings`
 literal PDF text, page-raster equality and preservation of an already
 registered CMake handler. Point the argument at a real older listings catalog,
 not a renamed current one.
+The optional layout fixture requires Python `pdfplumber`, XeLaTeX,
+Ghostscript and the current product `rxcpack`. It prepares the actual books,
+then prints the exact authored help command with a matching long development
+version and the VM path inside its original list width. It checks literal text,
+page bounds and a malformed-context failure. The catalog argument selects the
+older listings files through `TEXINPUTS` for that real typesetting run.
 
 Real PDF generation needs the TeX tools, packages, fonts and chapter-command
 dependencies described in [BUILDING-DOCS.md](../BUILDING-DOCS.md). macOS execution
