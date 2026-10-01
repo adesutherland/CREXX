@@ -769,7 +769,7 @@ unpolled. An uncooperative native/plugin call remains uninterruptible while it
 is executing. The original sparse experiment was functionally effective, but
 its source and exact opcode ledger were not retained. The current semantic
 classification and provenance are recorded in
-`performance/PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md` and must be kept aligned
+[`performance/PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md) and must be kept aligned
 with `rxops.h` and private execution-image rewrites.
 
 Windows 11 qualification covers this owner under MinGW GCC, MSVC and Clang
@@ -1145,7 +1145,7 @@ inlineable. The no-inline spelling must cover GCC/Clang and MSVC. Do not extend
 this optimization into a public opcode, serialized RXBIN form, JSON-specific
 path or value cache without a separate design and invalidation/lifecycle proof.
 The selected implementation and governed contract/performance evidence are in
-`performance/PERF3-03-WORKLIST.md`.
+[`performance/PERF3-03-WORKLIST.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/PERF3-03-WORKLIST.md).
 
 ### Decimal Plugin Runtime
 
@@ -1591,7 +1591,7 @@ Neither source form is assumed to be universally faster. Generated performance
 depends on compiler transformations, architecture, branch prediction, code
 layout, and the cost of locating the next handler. The current Release 1
 investigation is tracked in
-`docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md`.
+[`docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md).
 
 ### Active-frame and dispatch contracts
 
@@ -1728,7 +1728,7 @@ validating the new default.
 The complete sequence of accepted and rejected source shapes, the Clang/GCC
 code-generation differences, and the current rules for preserving maximum
 observed C optimisation are recorded in the
-[VM and C Compiler Optimisation Report](../planning/release-1/vm-c-compiler-optimisation-report-2026-08-09.md).
+[VM and C Compiler Optimisation Report](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/release-1/vm-c-compiler-optimisation-report-2026-08-09.md).
 
 ### Process-private fused execution handlers
 

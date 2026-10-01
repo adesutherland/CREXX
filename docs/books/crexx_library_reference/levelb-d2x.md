@@ -30,5 +30,5 @@ does not call `right`, divide per digit, or build and reverse an intermediate
 string.
 
 The separate Classic Level C BIF accepts caller-context Rexx whole numbers and
-is documented in [`lib/rxfnsc/d2x.md`](../../rxfnsc/d2x.md). The focused native
+is documented in [`lib/rxfnsc/d2x.md`](../../../lib/rxfnsc/d2x.md). The focused native
 harness is `lib/rxfnsb/tests_functional/ts_d2x.crexx`.

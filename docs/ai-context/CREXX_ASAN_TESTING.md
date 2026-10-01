@@ -286,7 +286,7 @@ The final Clang UBSan tree passed 1,925/1,925 with immediate abort enabled in
 leak-enabled full build and passed 1,925/1,925 in 1,301.74 seconds. Its first
 broad run had found a 10,000-byte successful-return leak in
 `rxtcp.tcpreceive`; the final run directory is retained under
-`performance/evidence/2026-07-28-perf2-10-11-intel-linux/logs/gcc-asan/`.
+[`performance/evidence/2026-07-28-perf2-10-11-intel-linux/logs/gcc-asan/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-07-28-perf2-10-11-intel-linux/logs/gcc-asan).
 
 ## Triage Rules
 
@@ -360,7 +360,7 @@ enabled, log directory
 `cmake-build-debugasan/asan-logs/20260711-164000-full`. The matching normal
 Debug suite passed 1580/1580. The complete machine, triage, and performance
 record is in
-`docs/planning/beta-3/reports/linux-vm-sanitizer-performance-review.md`.
+[`docs/planning/beta-3/reports/linux-vm-sanitizer-performance-review.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/beta-3/reports/linux-vm-sanitizer-performance-review.md).
 
 ## Current VM object targets
 

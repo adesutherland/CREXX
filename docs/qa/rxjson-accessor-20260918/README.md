@@ -27,7 +27,7 @@ ctest --test-dir cmake-build-release -R '^ts_linein_stdin_crexx_tty$' --output-o
 ```
 
 The union of all Level-B functional cases and core `essential`/`smoke` cases is
-451 unique tests, listed in `selected-cases.txt`. The 14 registered JSON cases
+451 unique tests, listed in [`selected-cases.txt`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/rxjson-accessor-20260918/selected-cases.txt). The 14 registered JSON cases
 passed first (0.10 seconds); the remaining selection explicitly excluded them.
 That run passed 436 tests and reported one **not run**, because
 `linein_tty_harness` was absent (54.25 seconds). Building its existing supported
@@ -38,8 +38,8 @@ preparation, so all 450 previous passes remain valid. Final accounting is
 passing product test. Original not-run evidence is retained.
 
 The JSON source and test are byte-identical to the accepted private candidate.
-`artifact-hashes.txt` retains their hashes and the current runtime/library
-hashes. `downstream-comparison.json` retains the combined JSON/RAG speed verdict,
+[`artifact-hashes.txt`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/rxjson-accessor-20260918/artifact-hashes.txt) retains their hashes and the current runtime/library
+hashes. [`downstream-comparison.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/rxjson-accessor-20260918/downstream-comparison.json) retains the combined JSON/RAG speed verdict,
 including the slower first trial and RAG's separate model-load timeout followed
 by a passing unchanged replay. It is not a JSON-only speed claim or a clean
 full RAG qualification. No corpus or normal installed runtime was changed.
@@ -64,7 +64,7 @@ then to develop. Both exact-repair workflows completed successfully:
   selected plugin build/package jobs passed.
 - [CodeQL](https://github.com/adesutherland/CREXX/actions/runs/35387480593): passed.
 
-`publication.json` retains every job conclusion, including intentionally skipped
+[`publication.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/rxjson-accessor-20260918/publication.json) retains every job conclusion, including intentionally skipped
 nonselected comprehensive/release jobs. The normal automatic workflow was used;
 no additional overnight assurance was dispatched. macOS plugin jobs reported
 a nonfatal configured installer-certificate-name mismatch and used the imported

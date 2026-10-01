@@ -1,7 +1,7 @@
 ## parse
 
-`parse` is the convenience wrapper around [`parsecompile`](parsecompile.md) and
-[`parsestring`](parsestring.md):
+`parse` is the convenience wrapper around [`parsecompile`](levelb-parsecompile.md) and
+[`parsestring`](levelb-parsestring.md):
 
 ```rexx
 parse(source = .string,

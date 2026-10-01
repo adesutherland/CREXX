@@ -1,0 +1,73 @@
+/* cREXX command entry point for René Jansen's TextTools pipeline. */
+options levelb
+import rxfnsb
+import texttools
+
+arg args = .string[]
+i = .int
+option = .string
+argv = .string[]
+if args[0] < 4 then do
+  say 'Usage: build prepare|build SOURCE WORK TITLE [-copy] [-crexx] [-show]'
+  return 2
+end
+mode = args[1]
+source = args[2]
+work = args[3]
+title = args[4]
+if mode <> 'prepare' & mode <> 'build' then return 2
+/* Absolute source/work paths are required because ADDRESS cd is worker-local. */
+if left(source, 1) <> '/' & substr(source, 2, 1) <> ':' then return 2
+if left(work, 1) <> '/' & substr(work, 2, 1) <> ':' then return 2
+if pos('/', title) > 0 | pos('\', title) > 0 | title = '' | title = '.' | title = '..' then return 2
+do i = 5 to args[0]
+  option = args[i]
+  if wordpos(option, '-copy -crexx -show') = 0 then do
+    say 'Unknown option:' option
+    return 2
+  end
+  if mode = 'prepare' then do
+    say 'Copy/upload/view options require build mode.'
+    return 2
+  end
+end
+if texttools..build(source, work, title, mode) <> 0 then return 1
+if mode = 'prepare' then return 0
+pdf = work || '/' || title || '.pdf'
+do i = 5 to args[0]
+  option = args[i]
+  select
+    when option = '-copy' then do
+      destination = getenv('CLOUDDRIVE')
+      if destination = '' then do
+        say 'Set CLOUDDRIVE to the destination directory for -copy.'
+        return 2
+      end
+      destination = destination || '/' || title || '.pdf'
+      address crexx 'copy :pdf :destination'
+      if rc <> 0 then return rc
+    end
+    when option = '-crexx' then do
+      call arraydrop argv
+      argv[1] = 'scp'
+      argv[2] = pdf
+      argv[3] = 'netrexx@rexxla.org:files/crexx/docs'
+      address crexx 'run :argv[]'
+      if rc <> 0 then return rc
+    end
+    when option = '-show' then do
+      platform = .string[]
+      address crexx 'platform' output platform
+      if rc <> 0 then return rc
+      if platform[1] = 'os=macos' then do
+        call arraydrop argv
+        argv[1] = 'open'
+        argv[2] = pdf
+        address crexx 'run :argv[]'
+        if rc <> 0 then return rc
+      end
+    end
+    otherwise nop
+  end
+end
+return 0

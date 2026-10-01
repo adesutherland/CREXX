@@ -260,4 +260,4 @@ xmlattrat   → Requires → xmlfind
 ```
 
 ## Error Handling
-See [Error Handling Documentation](error-handling.md) for complete details.
+See [language signal handling](../../../docs/books/crexx_language_reference/signal_handling.md) for the language error-handling mechanism.

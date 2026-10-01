@@ -1,8 +1,0 @@
-options levelg
-namespace issue699main
-import contract
-import implementation
-main: procedure
-  provider = .concrete()
-  call consume provider
-  return

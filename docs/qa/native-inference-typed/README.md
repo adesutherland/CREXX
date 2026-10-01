@@ -31,17 +31,17 @@ Source documentation was added; no existing public API documentation was removed
 
 ## Ordinary failures and repairs
 
-1. `typed_configuration.log` and `typed_embeddings.log` retain missing-class
+1. [`typed_configuration.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/typed_configuration.log) and [`typed_embeddings.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/typed_embeddings.log) retain missing-class
    failures before the typed adapter existed. The permanent consumers now check
    failure snapshots/recovery, full NUL-bearing embedding text, selector rejection,
    failed construction, parent/child and copied-owner close, partial convenience
    cancellation, preparation/state/admission, owned output and repeated batches.
-2. `interface-first-before.log` retains the independent C-only failure when
+2. [`interface-first-before.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/interface-first-before.log) retains the independent C-only failure when
    interface factories were the first/only provider references. The compiler
    now emits existing callable/provider metadata for known native implementation
    candidates. Default/named interface factories require no preceding concrete
    call. It introduces no discovery mechanism or bytecode ABI change.
-3. `text-worker-before.log` and `text-callback-before.log` retain model-free
+3. [`text-worker-before.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/text-worker-before.log) and [`text-callback-before.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/text-callback-before.log) retain model-free
    failures when a native string had a nonzero physical integer field. Work
    completed successfully but the field became a false worker failure or
    C-to-Rexx callback signal. The internal typed external-call boundary now
@@ -63,13 +63,13 @@ Host: Apple M5, Darwin arm64; CPU and required-GPU Metal. No sanitizer execution
 
 | Check | Result and retained evidence |
 | --- | --- |
-| Typed Debug four-tool consumers | 28 runs: configuration plus embedding acceptance and both public examples, optimized/unoptimized, both VMs, CPU/Metal where a model is used. `debug-typed/` contains exact commands and `results.json`. |
-| Typed installed Release/native consumers | 28 installed VM runs plus 14 relocated native runs; eight programs built from copied source, using installed imports and examples. `installed-typed/` contains commands and dependency hashes in `packages.json`. |
-| Generic native-object regressions | All 32 individual Debug CTests pass, covering four fixtures, optimized/unoptimized and dynamic/static providers on both VMs. `debug-native-objects.log`. |
-| Declaration-only compiler | Eight four-tool executions, four fixtures × two optimization modes, with the static compiler and static provider VM; the dynamic fixture import path is excluded. `debug-static-toolchain.log`. |
-| Focused compatibility | All 55 Debug tests pass: factory selection/imports, RXPA services/callbacks, executor values/signals/startup, HTTP/concurrency and related controls. Selection and build targets: `focused-tests.json`; output: `debug-focused-tests.log`. |
-| Existing low-level generation preparation | Four installed Release lifecycle runs, CPU/Metal on both VMs, confirm the original `rxllama` API still loads/shares Smol, prepares/reuses generation sessions and closes safely. `release-lowlevel-cpu.log` and `release-lowlevel-metal.log`. No generation request API or performance test is introduced. |
-| External installed SDK | C/C++ normal and DECL_ONLY compilation; four generic consumers run on both installed VMs and as four relocated native executables. `installed-sdk/` records the eight VM/four native runs and package hashes. |
+| Typed Debug four-tool consumers | 28 runs: configuration plus embedding acceptance and both public examples, optimized/unoptimized, both VMs, CPU/Metal where a model is used. [`debug-typed/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/debug-typed) contains exact commands and `results.json`. |
+| Typed installed Release/native consumers | 28 installed VM runs plus 14 relocated native runs; eight programs built from copied source, using installed imports and examples. [`installed-typed/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/installed-typed) contains commands and dependency hashes in `packages.json`. |
+| Generic native-object regressions | All 32 individual Debug CTests pass, covering four fixtures, optimized/unoptimized and dynamic/static providers on both VMs. [`debug-native-objects.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/debug-native-objects.log). |
+| Declaration-only compiler | Eight four-tool executions, four fixtures × two optimization modes, with the static compiler and static provider VM; the dynamic fixture import path is excluded. [`debug-static-toolchain.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/debug-static-toolchain.log). |
+| Focused compatibility | All 55 Debug tests pass: factory selection/imports, RXPA services/callbacks, executor values/signals/startup, HTTP/concurrency and related controls. Selection and build targets: [`focused-tests.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/focused-tests.json); output: [`debug-focused-tests.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/debug-focused-tests.log). |
+| Existing low-level generation preparation | Four installed Release lifecycle runs, CPU/Metal on both VMs, confirm the original `rxllama` API still loads/shares Smol, prepares/reuses generation sessions and closes safely. [`release-lowlevel-cpu.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/release-lowlevel-cpu.log) and [`release-lowlevel-metal.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/release-lowlevel-metal.log). No generation request API or performance test is introduced. |
+| External installed SDK | C/C++ normal and DECL_ONLY compilation; four generic consumers run on both installed VMs and as four relocated native executables. [`installed-sdk/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/installed-sdk) records the eight VM/four native runs and package hashes. |
 
 The typed acceptance verifies finite 384-dimensional results and existing
 rxvector f32le conversion/cosine consumption. Worker same-layout tripwires remain
@@ -82,7 +82,7 @@ generic repairs have fresh checks here. This is not a repeat of full STEP-03 QA.
 
 ## Reproduction and identity
 
-`identity.json` records baseline HEAD, working source hashes, Debug/Release
+[`identity.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/identity.json) records baseline HEAD, working source hashes, Debug/Release
 artifacts and unchanged underlying bridge/package inputs. Models remain separate
 read-only data. The pinned BGE F16 digest is
 `f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999`;
@@ -107,12 +107,12 @@ runtime is required by those executables. Python only orchestrates QA.
 
 The first Release install used a stale provider because the staged build command
 omitted `llama_provider_runtime_package`; `stage-optional` selects examples/demos,
-not optional providers. `release-installed.log` retains that missing-class failure.
+not optional providers. [`release-installed.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/release-installed.log) retains that missing-class failure.
 The provider target correctly depends on dynamic/static adapters and runtime
 dependencies. Building it and reinstalling resolved the failure without changing
-CMake wiring. `release-provider-build.log` and final install/consumer logs retain
+CMake wiring. [`release-provider-build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/release-provider-build.log) and final install/consumer logs retain
 the correction. The first static-compiler command also used an incorrect VM path;
-`debug-static-compiler.log` retains the command error, and the final command uses
+[`debug-static-compiler.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-typed/debug-static-compiler.log) retains the command error, and the final command uses
 `BUILD/tests/objects_rxbvm`. Neither is a product defect.
 
 ## Acceptance boundary and next gate

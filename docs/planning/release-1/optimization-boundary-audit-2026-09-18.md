@@ -3,7 +3,7 @@
 Status: audit complete; imported-inline and status-bit boundaries accepted by
 Adrian on 2026-09-18. Entry-alias repair is implemented, locally qualified and
 published to develop in `f7a8b08c1`; combined-head hosted checks are tracked in
-the [selected defect batch](../../release-1-plan.md#selected-defect-batch-execution--18-september).
+the [selected defect batch](../../qa/beta3-defect-batch-2026-09-18/README.md).
 Requested by Adrian on 2026-09-18. This records
 existing behavior and proposals for review; it does not approve new language,
 assembly, ABI, optimization or architecture contracts beyond the explicit
@@ -56,7 +56,7 @@ RXC framework and accepted metadata boundaries.
    finding status. This is correctness restoration, not a selected performance
    enhancement or new architecture; no broad performance programme is opened.
 
-Repair evidence: [local repair record](../../qa/optimization-boundary-audit-2026-09-18/repair/README.md).
+Repair evidence: [local repair record](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/repair/README.md).
 The original probe now prints `42` in both modes. All 102 affected Debug
 RXAS/flow/runtime tests pass, including eight permanent alias/control cases.
 The correction adds incoming-base may-alias invalidation to shared SSA value

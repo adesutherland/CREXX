@@ -1,0 +1,487 @@
+/*
+ * TextTools: cREXX port of René Jansen's RexxLA/TextTools scripts.
+ * Upstream: 0767adac303f80ade9af46b509f7ca33353c6065.
+ * Original author: René Jansen. See README.md for provenance and port changes.
+ */
+options levelb
+namespace texttools expose build builddocument copyassets erasefiles getMarkdownFilenames,
+  includeasm includelisting joinLinesMD newer preprocessMD preprocessTEX,
+  replaceHyperlink replaceSplice replacecites replaceindices replacemultiindices,
+  writeSourceFile copytree
+import rxfnsb
+
+/* Absolute paths keep BIF file IO independent of ADDRESS's logical directory. */
+build: procedure = .int
+  arg source = .string, work = .string, title = .string, mode = 'build'
+  i = .int
+  chapter = .string
+  original = .string
+  generated = .string
+  texin = .string
+  argv = .string[]
+  chapters = getMarkdownFilenames(source)
+  address crexx 'mkdir -p :work'
+  if rc <> 0 then return rc
+  address crexx 'cd :work'
+  if rc <> 0 then return rc
+  do i = 1 to chapters[0]
+    chapter = chapters[i]
+    original = source || '/' || chapter || '.md'
+    generated = work || '/' || chapter || '.md'
+    texin = work || '/' || chapter || '.texin'
+    say 'Chapter:' chapter
+    /* Always rebuild: source edits, tool versions and helper changes all matter. */
+    if erasefiles(work, chapter) <> 0 then return 1
+    if preprocessMD(original, generated, work, chapter) <> 0 then return 1
+    call arraydrop argv
+    argv[1] = 'pandoc'
+    argv[2] = '-f'
+    /* Book chapters use --- as prose separators, not YAML front matter. */
+    argv[3] = 'markdown+latex_macros-yaml_metadata_block'
+    argv[4] = '-t'
+    argv[5] = 'latex'
+    argv[6] = '--top-level-division=chapter'
+    /* Marker helpers consume complete lines; do not split long listing tags. */
+    argv[7] = '--wrap=none'
+    argv[8] = generated
+    argv[9] = '-o'
+    argv[10] = texin
+    if run_tool(argv) <> 0 then return 1
+    if preprocessTEX(texin, work || '/' || chapter || '.tex') <> 0 then return 1
+  end
+  if copyassets(source, work) <> 0 then return 1
+  if mode = 'prepare' then return 0
+  return builddocument(work, title)
+
+getMarkdownFilenames: procedure = .string[]
+  arg source = .string
+  names = .string[]
+  chapters = .string[]
+  i = .int
+  filename = .string
+  path = .string
+  address crexx 'ls :source' output names
+  if rc <> 0 then do
+    call raise 'NOTREADY', 'Cannot list Markdown source', source
+    return chapters
+  end
+  do i = 1 to names[0]
+    filename = names[i]
+    if right(filename, 3) <> '.md' then iterate
+    path = source || '/' || filename
+    if file_kind(path) = 'file' then call arrayappend chapters, left(filename, length(filename)-3)
+  end
+  call arraysort chapters
+  return chapters
+
+/* Retained for callers; the build deliberately regenerates every chapter. */
+newer: procedure = .boolean
+  arg original = .string, generated = .string
+  if file_kind(original) <> 'file' then do
+    call raise 'NOTREADY', 'Missing original file', original
+    return 0
+  end
+  if file_kind(generated) <> 'file' then return 1
+  return modified(original) > modified(generated)
+
+erasefiles: procedure = .int
+  arg work = .string, chapter = .string
+  i = .int
+  path = .string
+  do i = 1 to 3
+    path = work || '/' || chapter || word('.md .texin .tex', i)
+    if file_kind(path) = 'file' then do
+      address crexx 'rm :path'
+      if rc <> 0 then return rc
+    end
+  end
+  return 0
+
+preprocessMD: procedure = .int
+  arg source = .string, output = .string, work = .string, chapter = .string
+  input = readlines(source)
+  result = '<!--preprocessed md-->' || '0a'x
+  i = .int
+  fence_end = .int
+  serial = 0
+  line = .string
+  language = .string
+  filename = .string
+  listing = .string
+  program = .string
+  fence = .string
+  count = .int
+  do i = 1 to input[0]
+    line = input[i]
+    line = changestr('<!--index-->', line, '%index%')
+    line = changestr('<!--index:', line, '%indexm%')
+    line = changestr('<!--cite-->', line, '%cite%')
+    if left(line, 3) = '```' then do
+      count = 3
+      do while substr(line, count+1, 1) = '`'
+        count = count + 1
+      end
+      fence = left(line, count)
+      language = strip(substr(line, count+1))
+      filename = ''
+      if pos('<!--', language) > 0 then do
+        parse var language language '<!--' filename '-->' .
+        language = strip(language)
+        filename = strip(filename)
+      end
+      if language = '' then language = 'bash'
+      serial = serial + 1
+      listing = chapter || '-code-' || serial || '.txt'
+      if filename = '' then filename = listing
+      if filename = '.' | filename = '..' | pos('/', filename) > 0 | pos('\', filename) > 0 then do
+        say 'Invalid source-listing filename:' filename 'in' source
+        return 1
+      end
+      fence_end = i + 1
+      do while fence_end <= input[0]
+        if strip(input[fence_end]) = fence then leave
+        fence_end = fence_end + 1
+      end
+      if fence_end > input[0] then do
+        say 'Unclosed source fence at line' i 'in' source
+        return 1
+      end
+      if writeSourceFile(input, i+1, fence_end-1, work || '/' || filename) <> 0 then return 1
+      /* A requested executable name may be reused by another example. Keep a
+       * separate immutable render snapshot so every printed snippet survives. */
+      if filename <> listing then do
+        if writeSourceFile(input, i+1, fence_end-1, work || '/' || listing) <> 0 then return 1
+      end
+      line = '%includesource=' || filename || ':' || language || ':' || listing || '%'
+      i = fence_end
+      /* Keep a listing in its own Pandoc paragraph, preserving surrounding prose. */
+      result = result || '0a'x || line || '0a'x || '0a'x
+      iterate
+    end
+    if left(line, 10) = '<!--splice' then do
+      parse var line '<!--splice--' program '-->' .
+      /* Keep shell commands literal: Pandoc must not escape >, _, quotes, etc.
+       * Raw blocks also prevent adjacent commands merging into one paragraph. */
+      result = result || '0a'x || '```{=latex}' || '0a'x ||,
+        replaceSplice('\%splice\%' || strip(program)) || '0a'x || '```' || '0a'x || '0a'x
+      iterate
+    end
+    if left(line, 11) = '<!--listasm' then do
+      parse var line '<!--listasm--' program '-->' .
+      line = '%listasm%' || strip(program)
+    end
+    result = result || line || '0a'x
+  end
+  return write_text(output, result)
+
+writeSourceFile: procedure = .int
+  arg input = .string[], first = .int, last = .int, output = .string
+  i = .int
+  result = ''
+  do i = first to last
+    result = result || input[i] || '0a'x
+  end
+  return write_text(output, result)
+
+joinLinesMD: procedure = .int
+  arg source = .string, output = .string
+  input = readlines(source)
+  i = .int
+  result = '<!--joined lines md-->' || '0a'x
+  pending = ''
+  do i = 1 to input[0]
+    if strip(input[i]) = '' then do
+      if pending <> '' then result = result || pending || '0a'x
+      result = result || '0a'x
+      pending = ''
+    end
+    else if pending = '' then pending = input[i]
+    else pending = pending || ' ' || input[i]
+  end
+  if pending <> '' then result = result || pending || '0a'x
+  return write_text(output, result)
+
+preprocessTEX: procedure = .int
+  arg source = .string, output = .string
+  input = readlines(source)
+  i = .int
+  line = .string
+  result = '%preprocessed texin' || '0a'x
+  do i = 1 to input[0]
+    line = changestr('\{\#tbl:id\}', input[i], '')
+    if pos('\%index\%', line) > 0 then line = replaceindices(line)
+    if pos('\%indexm\%', line) > 0 then line = replacemultiindices(line)
+    if pos('\%cite\%', line) > 0 then line = replacecites(line)
+    if pos('\hyperlink{', line) > 0 then line = replaceHyperlink(line)
+    if pos('\%includesource=', line) > 0 then line = includelisting(line)
+    if pos('\%listasm\%', line) > 0 then line = includeasm(line)
+    if pos('\%splice\%', line) > 0 then line = replaceSplice(line)
+    if pos('\%ntsplice\%', line) > 0 then do
+      say 'Unsupported ntsplice tag: upstream helper is absent. File:' source
+      return 1
+    end
+    line = replace_word(line, 'Rexx', '\rexx{}')
+    line = replace_word(line, 'Rexx-', '\rexx{}-')
+    line = replace_word(line, 'cRexx', '\crexx{}')
+    line = replace_word(line, 'cRexx-', '\crexx{}-')
+    line = replace_word(line, 'cREXX', '\crexx{}')
+    line = replace_word(line, 'cREXX-', '\crexx{}-')
+    result = result || line || '0a'x
+  end
+  return write_text(output, result)
+
+replaceindices: procedure = .string
+  arg line = .string
+  outline = ''
+  start = .string
+  rest = .string
+  ixword = .string
+  do until line = ''
+    parse var line start '\%index\%' rest
+    ixword = word(rest, 1)
+    if ixword = '' then do
+      outline = outline || start
+      leave
+    end
+    outline = outline || start || ixword || '\index{' || ixword || '} '
+    line = subword(rest, 2)
+  end
+  return close_footnote(outline)
+
+replacemultiindices: procedure = .string
+  arg line = .string
+  outline = ''
+  start = .string
+  rest = .string
+  ixwords = .string
+  do until line = ''
+    parse var line start '\%indexm\%' rest
+    parse var rest ixwords '--\textgreater' rest
+    if ixwords = '' then do
+      outline = outline || start
+      leave
+    end
+    outline = outline || start || '\index{' || ixwords || '} '
+    line = rest
+  end
+  return outline
+
+replacecites: procedure = .string
+  arg line = .string
+  outline = ''
+  start = .string
+  rest = .string
+  ixword = .string
+  lpos = .int
+  do until line = ''
+    parse var line start '\%cite\%' rest '.'
+    parse var rest '{[}' ixword '{]}'
+    ixword = strip(translate(ixword, '', '[]{}'))
+    if ixword = '' then do
+      outline = outline || start
+      leave
+    end
+    outline = outline || start || '\cite{' || ixword || '} '
+    lpos = lastpos('}', rest)
+    line = substr(rest, lpos+1)
+  end
+  return close_footnote(outline)
+
+replaceHyperlink: procedure = .string
+  arg line = .string
+  start = .string
+  link = .string
+  text = .string
+  rest = .string
+  parse var line start '\hyperlink{' link '}{' text '}' rest
+  return start || '\hyperlink{' || link || '}{' || text || '} on page \pageref{' || link || '}' || rest
+
+replaceSplice: procedure = .string
+  arg line = .string
+  program = .string
+  parse var line . '\%splice\%' program
+  return '\begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \obeylines \obeyspaces \parskip=0pt \parindent=0pt \splice{stdbuf -o0 ' || program || '} \end{terminaloutput}'
+
+includelisting: procedure = .string
+  arg line = .string
+  filename = .string
+  language = .string
+  payload = .string
+  listing = .string
+  parse var line . 'includesource=' payload '\%' .
+  parse var payload filename ':' language ':' listing
+  /* Accept the original two-field marker as well as the render snapshot. */
+  if listing = '' then listing = filename
+  return '\lstinputlisting[language=' || language || ',label=' || filename || ',caption=' || filename || ']{' || decode_filename(listing) || '}'
+
+includeasm: procedure = .string
+  arg line = .string
+  filename = .string
+  parse var line . '\%listasm\%' filename
+  return '\lstinputlisting[language=rxas,label=' || filename || ',caption=' || filename || ']{' || decode_filename(filename) || '}'
+
+/* Pandoc escapes punctuation as TeX text; listing paths require literal bytes. */
+decode_filename: procedure = .string
+  arg filename = .string
+  filename = changestr('\_', filename, '_')
+  filename = changestr('\%', filename, '%')
+  filename = changestr('\#', filename, '#')
+  return filename
+
+copyassets: procedure = .int
+  arg source = .string, work = .string
+  names = .string[]
+  i = .int
+  filename = .string
+  original = .string
+  target = .string
+  base = .string
+  address crexx 'ls :source' output names
+  if rc <> 0 then return rc
+  do i = 1 to names[0]
+    filename = names[i]
+    original = source || '/' || filename
+    target = work || '/' || filename
+    if file_kind(original) <> 'file' | right(filename, 3) = '.md' then iterate
+    /* Do not overwrite transformed chapters with stale root-level .tex files. */
+    if right(filename, 4) = '.tex' then do
+      base = source || '/' || left(filename, length(filename)-4) || '.md'
+      if file_kind(base) = 'file' then iterate
+    end
+    address crexx 'copy :original :target'
+    if rc <> 0 then return rc
+  end
+  do i = 1 to 5
+    filename = word('charts images svg examples operation', i)
+    original = source || '/' || filename
+    if file_kind(original) = 'directory' then do
+      if copytree(original, work || '/' || filename) <> 0 then return 1
+    end
+  end
+  return 0
+
+/* Native enumeration/copy also dereferences the book's source-guide symlinks. */
+copytree: procedure = .int
+  arg source = .string, target = .string, exclude_work = 0
+  names = .string[]
+  i = .int
+  original = .string
+  destination = .string
+  kind = .string
+  address crexx 'mkdir -p :target'
+  if rc <> 0 then return rc
+  address crexx 'ls :source' output names
+  if rc <> 0 then return rc
+  do i = 1 to names[0]
+    /* tex/book is disposable, not an input; do not stage old PDFs or logs. */
+    if exclude_work & names[i] = 'book' & right(source, 4) = '/tex' then iterate
+    original = source || '/' || names[i]
+    destination = target || '/' || names[i]
+    kind = file_kind(original)
+    if kind = 'directory' then do
+      if copytree(original, destination, exclude_work) <> 0 then return 1
+    end
+    else if kind = 'file' then do
+      address crexx 'copy :original :destination'
+      if rc <> 0 then return rc
+    end
+    else do
+      say 'Unsupported or unreadable input:' original
+      return 1
+    end
+  end
+  return 0
+
+builddocument: procedure = .int
+  arg work = .string, title = .string
+  i = .int
+  argv = .string[]
+  pdf = work || '/' || title || '.pdf'
+  if file_kind(pdf) = 'file' then do
+    address crexx 'rm :pdf'
+    if rc <> 0 then return rc
+  end
+  address crexx 'cd :work'
+  if rc <> 0 then return rc
+  do i = 1 to 2
+    call arraydrop argv
+    argv[1] = 'xelatex'
+    argv[2] = '--no-pdf'
+    argv[3] = '-shell-escape'
+    argv[4] = '-interaction=nonstopmode'
+    argv[5] = '-halt-on-error'
+    argv[6] = title || '.tex'
+    if run_tool(argv) <> 0 then return 1
+    call arraydrop argv
+    argv[1] = 'makeindex'
+    argv[2] = title
+    if run_tool(argv) <> 0 then return 1
+    argv[1] = 'biber'
+    if run_tool(argv) <> 0 then return 1
+  end
+  call arraydrop argv
+  argv[1] = 'xdvipdfmx'
+  argv[2] = '-V'
+  argv[3] = '1.7'
+  argv[4] = title || '.xdv'
+  if run_tool(argv) <> 0 then return 1
+  if file_kind(pdf) <> 'file' then do
+    say 'No PDF produced:' pdf
+    return 1
+  end
+  if left(readbinary(pdf) as .string, 5) <> '%PDF-' then do
+    say 'Invalid PDF header:' pdf
+    return 1
+  end
+  return 0
+
+run_tool: procedure = .int
+  arg argv = .string[]
+  say 'Tool:' argv[1]
+  address crexx 'run :argv[]'
+  result = rc
+  if result <> 0 then say 'Tool failed:' argv[1] 'return code' result
+  return result
+
+write_text: procedure = .int
+  arg output = .string, text = .string
+  bytes = text as .binary
+  if writebinary(output, bytes) <> binlength(bytes) then return 1
+  return 0
+
+file_kind: procedure = .string
+  arg path = .string
+  info = .string[]
+  errors = .string[]
+  kind = .string
+  address crexx 'stat :path' output info error errors
+  if rc <> 0 then return ''
+  parse var info[1] . ' type=' kind ' size=' .
+  return kind
+
+modified: procedure = .int
+  arg path = .string
+  info = .string[]
+  stamp = .string
+  address crexx 'stat :path' output info
+  if rc <> 0 then return -1
+  parse var info[1] . ' mtime=' stamp
+  return stamp as .int
+
+close_footnote: procedure = .string
+  arg outline = .string
+  where = pos('footnote', outline)
+  if where > 0 then do
+    rest = substr(outline, where)
+    if countstr('}', rest) < 2 then outline = left(outline, where-1) || changestr('}', rest, '}}')
+  end
+  return outline
+
+replace_word: procedure = .string
+  arg line = .string, original = .string, replacement = .string
+  where = .int
+  do while wordpos(original, line) > 0
+    where = wordpos(original, line)
+    line = subword(line, 1, where-1) || ' ' || replacement || ' ' || subword(line, where+1)
+  end
+  return line

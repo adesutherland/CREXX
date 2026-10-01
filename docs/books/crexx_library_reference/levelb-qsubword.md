@@ -4,4 +4,4 @@
 source span beginning at the positive word number. Omitted `count` selects
 through the last word; explicit zero returns empty; a negative count signals
 `INVALID_ARGUMENTS`. Original separators between selected words are preserved.
-See [the shared quote-aware contract](quote-aware.md).
+See [the shared quote-aware contract](../../../lib/rxfnsb/rexx/quote-aware.md).

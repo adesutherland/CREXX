@@ -105,7 +105,7 @@ token/layout/boundary and cleanup controls also pass in ordinary Release.
 See [S4-D01 evidence](../qa/native-inference-s4d01/README.md).
 
 S4-04 presented the first decision gate. The
-[first Release panel](../../performance/evidence/2026-09-14-ni-s4-first-release/README.md)
+[first Release panel](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-first-release/README.md)
 finds CPU overhead within variation and **NI-S4-P01**, the Metal glue-overhead
 tripwire: mean paired +18.90% for one row and +21.53% for eight, with substantial
 variation. The eight-row interval is +4.41% to +38.65%; do not describe GPU
@@ -116,7 +116,7 @@ changed source/build/test hashes remained unchanged through capture.
 Adrian next authorized [phase probes](native-inference-glue-probes.md) and a
 read-only [representation review](native-inference-vector-representation-review.md),
 and conditionally accepted any required conversion cost. The
-[probe results](../../performance/evidence/2026-09-14-ni-s4-glue-probes/README.md)
+[probe results](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-glue-probes/README.md)
 show normalization/conversion plus packed copying below 0.2% of request time;
 about 99% is decode/synchronization. One packed copy and exact row byte volumes
 are checked. Conversion therefore does not explain the original GPU difference.
@@ -124,7 +124,7 @@ The optional counters are VM-local, test-enabled only and off by default; no
 public procedure/output format or upstream math changed.
 
 Adrian then requested a replay with the machine quieter. The
-[12-pair probes-disabled Release replay](../../performance/evidence/2026-09-14-ni-s4-quiet-release/README.md)
+[12-pair probes-disabled Release replay](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-quiet-release/README.md)
 completed at 17:55 UTC on 2026-09-14 without code/build input changes. CPU mean
 paired overhead is -0.52%/-0.87%; Metal remains +19.69%/+21.27% for one/eight rows,
 with paired medians +8.37%/+6.96% and substantial spikes. The Metal differences

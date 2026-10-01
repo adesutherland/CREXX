@@ -24,7 +24,8 @@ code before editing user-facing docs.
 | --- | --- | --- | --- | --- |
 | `README.md` | GitHub front door | New visitors, contributors | What CREXX is, current baseline, build/run, links | Short and welcoming |
 | `docs/index.md` | GitHub Pages landing page | Users and contributors | Release documentation index | Clear and navigable |
-| `docs/release-1-plan.md` | Live Release 1 plan | Maintainers, contributors | Rebaselined beta cadence and release gates plus original scope tiers, dependencies, owners, and issue candidates | Planning-oriented and explicit |
+| `docs/BUILDING-DOCS.md` | Documentation build guide | Maintainers and contributors | Source/generated classification, generation scripts, dependencies and verification limits | Procedural and explicit |
+| `docs/release-1-plan.md` | Live Release 1 plan | Maintainers, contributors | Rebaselined beta cadence and release gates with current scope tiers, dependencies, owners and acceptance criteria | Planning-oriented and explicit |
 | `docs/ROADMAP.md` | Consolidated project roadmap | Maintainers, contributors, interested users | Current portfolio order, below-cut queue, future direction, and explicit non-commitments | Directional and conservative |
 | `docs/releases` | Release notes | Users, packagers, contributors | Milestone summaries, release scope, signing status, known beta limitations | Concise and release-focused |
 | `docs/packaging` | Distribution operations | Maintainers, release engineers | Signing, notarization, packaging setup, GitHub secret setup | Procedural and security-conscious |
@@ -32,7 +33,7 @@ code before editing user-facing docs.
 | `docs/books/crexx_programming_guide` | Practical guide | Users and integrators | Build, run, tools, host integration, plugins | Practical and task-oriented |
 | `docs/books/crexx_vm_spec` | VM and bytecode reference | Implementers | VM model, instruction set, platform notes | Precise and technical |
 | `docs/reference/rxas` | Human RXAS reference source | RXAS authors, VM/toolchain implementers | Instruction prose skeletons and inventory intended to feed generated docs later | Reader-focused and structured |
-| `concurrency` | Concurrency control plane | Maintainers and contributors | Live task/channel/provider worklist, accepted decisions and dated development history | Status-oriented and explicit |
+| `concurrency` | Concurrency control plane | Maintainers and contributors | Live task/channel/provider worklist, accepted decisions and current qualification summaries | Status-oriented and explicit |
 | `rexxscript/doc` | RexxScript product docs | Users, integrators, RexxScript developers | User guide, developer guide, runtime/product source of truth | Product-owned and current |
 | `docs/ai-context` | Current implementation context | Agents and maintainers | Architecture facts, debugging, Level B authoring, library/runtime notes | Operational and explicit |
 | `compiler/docs` | Compiler implementation notebook | Compiler maintainers | Parser, validation, emitter, exits, inlining, retired working notes | Deep technical notes with status labels |
@@ -50,8 +51,8 @@ code before editing user-facing docs.
 - Release milestone summaries belong in `docs/releases` and may be copied into
   GitHub Releases.
 - Fixed-date release plans belong in `docs/release-1-plan.md`. When a plan is
-  rebaselined, preserve its original gates as history and add the new cadence
-  explicitly rather than silently rewriting dates. Product ordering belongs in
+  rebaselined, preserve unmet criteria explicitly in the current plan; use Git
+  for superseded schedules and completed execution records. Product ordering belongs in
   `docs/ROADMAP.md`; concrete work belongs in GitHub issues.
 - Future direction that should survive discussion cleanup belongs in
   `docs/ROADMAP.md`. A roadmap entry is not a release promise; create an issue
@@ -67,6 +68,13 @@ code before editing user-facing docs.
   build recipes, or API facts. Link to release docs instead.
 
 ## Current Cleanup Status
+
+HEAD retains consolidated plans, supported documentation, maintained inputs and
+essential current qualification summaries. Completed investigation logs,
+superseded runs are recovered from Git history. Book-local guide symlinks remain
+where the printed book structures consume them; canonical implementation
+guidance lives in `ai-context`. See [BUILDING-DOCS.md](BUILDING-DOCS.md) before
+removing apparently generated documentation.
 
 The first Release 1 beta documentation pass updated the public front doors and
 pruned the wiki to project vision/history. The second pass promotes selected

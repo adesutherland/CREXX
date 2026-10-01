@@ -15,7 +15,7 @@ are tracked in `docs/qa/native-inference-step07/README.md` and the live
 The delivery qualified on `temp/llama-release-combined` was integrated into
 `develop`; final promotion checks passed at `59fc02eb9`. It supplies prebuilt
 CPU/GPU delivery and a generated-fixture smoke test. Its numbered outcomes and criteria are tracked in
-`docs/planning/native-inference-ci.md`; the [current build-status table](../../../docs/qa/native-inference-ci/README.md#current-overall-status--16-september)
+`docs/planning/native-inference-ci.md`; the [current build-status table](../../../docs/qa/native-inference-ci/README.md#consolidated-delivery-result)
 distinguishes tested revisions and outstanding integration/release work.
 The later [17 September Windows snapshot installer change](../../../docs/qa/windows-snapshot-2026-09-17/README.md)
 has its own evidence and pending hosted/signing checks. A result on an earlier
@@ -152,7 +152,7 @@ The accepted unexplained embedding observation NI-S4-P01 remains unexplained;
 generation evidence does not repair it. These are indicative fixed-workload
 figures, not claims that cREXX accelerates the engine, model throughput rankings
 or a reason to tune upstream code. Raw evidence is in repository
-`performance/evidence/2026-09-15-ni-s5-first-release` and
+[`performance/evidence/2026-09-15-ni-s5-first-release`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-15-ni-s5-first-release) and
 `docs/qa/native-inference-step04`.
 
 With one/four private generation contexts, recorded cREXX process peak RSS was

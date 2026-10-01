@@ -181,7 +181,7 @@ design notes as the beta 3 issues are created.
 | Candidate | Status | Evidence and remaining work |
 | --- | --- | --- |
 | B3-F-09 | Implemented on `develop` | Late-loaded interface providers are exercised through both VM variants and through the `crexx` driver. The driver test names exact contract/provider files; cross-platform QA remains. |
-| B3-F-10 | Implemented on `develop` | Method and factory registries are sorted after link/relink. Method dispatch uses binary search; factory dispatch binary-searches a provider bucket and caches provider signatures. See `reports/runtime-interface-lookup.md`. |
+| B3-F-10 | Implemented on `develop` | Method and factory registries are sorted after link/relink. Method dispatch uses binary search; factory dispatch binary-searches a provider bucket and caches provider signatures. See [`reports/runtime-interface-lookup.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/beta-3/reports/runtime-interface-lookup.md). |
 | B3-F-11 | Release 1 minimum implemented | Binary constants, typed binary-memory access, zero-copy comparison, and packed jump tables cover the approved internal/demo needs. Dedicated typed arrays and records are deferred. |
 | B3-F-12 | Implemented on `develop` | RXAS/VM packed jump tables and conservative compiler lowering are complete; arbitrary RXAS ladder recognition is an unscheduled CFG/dataflow roadmap item. |
 | B3-F-13 | Open | The runtime lookup and jump-dispatch measurements are component evidence, not the central beta 3 benchmark baseline tracked by #623. |

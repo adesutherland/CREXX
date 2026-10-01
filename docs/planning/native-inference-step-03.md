@@ -70,7 +70,7 @@ overlap it as already approved.
 - S3-01 is complete. The baseline commit includes the accepted plan, repository
   continuity instructions and STEP-02 controls/evidence. The ordinary lifecycle
   test failed with 29 missing-function diagnostics before implementation; its
-  [original log](../qa/native-inference-step03/lifecycle-before-provider.log)
+  [original log](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step03/lifecycle-before-provider.log)
   is retained. The later embedding/generation request controls remain open.
 - Optional pinned CPU/GPU source integration, trusted manifest discovery,
   asynchronous model loads, VM-local handles, private preparation contexts,
@@ -86,8 +86,8 @@ overlap it as already approved.
   passed (9/9, 150.08 seconds). Both models exercised CPU and real Metal offload,
   load sharing, private preparation, cancellation, invalid handles/options,
   auto memory fallback, required-GPU rejection, co-resident admission and cleanup.
-  [Focused results](../qa/native-inference-step03/debug-focused-ctest.log) and
-  [detailed output](../qa/native-inference-step03/debug-focused-details.log)
+  [Focused results](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step03/debug-focused-ctest.log) and
+  [detailed output](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step03/debug-focused-details.log)
   retain the actual checks. Later CMake edits add package-harness prerequisites;
   the provider/driver/test logic from this run is unchanged.
 - A complete scratch install outside the checkout passed native relocation for

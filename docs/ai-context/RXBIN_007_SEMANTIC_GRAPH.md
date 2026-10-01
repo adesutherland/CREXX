@@ -21,10 +21,10 @@ method/factory instruction-site caches. RXBIN 007 now compresses each complete
 section when the measured stored form is smaller, while retaining the same
 re-linkable six-section graph and canonical data. The graph seed is still
 broader than the minimum runtime view. Measurements and repair options are in
-`performance/NR-04A-RXBIN-007-IMPLEMENTATION-REVIEW.md`; the first repaired
-evidence is in `performance/evidence/2026-07-16-nr-04a-c3-candidate/` and the
+[`performance/NR-04A-RXBIN-007-IMPLEMENTATION-REVIEW.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/NR-04A-RXBIN-007-IMPLEMENTATION-REVIEW.md); the first repaired
+evidence is in [`performance/evidence/2026-07-16-nr-04a-c3-candidate/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-07-16-nr-04a-c3-candidate) and the
 bound/cache gate is in
-`performance/evidence/2026-07-16-nr-04a-bound-cache/`.
+[`performance/evidence/2026-07-16-nr-04a-bound-cache/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-07-16-nr-04a-bound-cache).
 
 ## 1. Decision and scope
 

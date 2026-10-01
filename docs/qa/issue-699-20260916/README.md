@@ -16,7 +16,7 @@ sources are unchanged from the issue's compiler revision
 `037e7939bc29eb91b29ed41e9b1b8debdef6353d` (only compiler test registration differs).
 The exact installed current Release compiler and the retained previous installed
 compiler were both tested. Paths, versions and binary hashes are in
-`evidence/compiler-versions.json`.
+[`evidence/compiler-versions.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-699-20260916/evidence/compiler-versions.json).
 
 Downstream inputs were reconstructed from RAG commit
 `ab7943d42d459c7d8fc6e146f7709dfac7a2d827`, extracting its `crexx` tree to a
@@ -80,12 +80,12 @@ that `closefile` is invalid, or that the runtime close operation is broken.
 
 ## Independent reproductions
 
-`reproducer/` has three files (32 lines total): a record with an array-valued
+[`reproducer/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-699-20260916/reproducer) has three files (32 lines total): a record with an array-valued
 method, an exposed-global cleanup procedure calling `closefile`, and an `_rxsysb`
 extension referring back to the record. Compiling `model.crexx` fails with the
 same convergence diagnostic.
 
-`provider-reproducer/` has five files: the primary caller, a provider interface,
+[`provider-reproducer/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-699-20260916/provider-reproducer) has five files: the primary caller, a provider interface,
 its implementation, cleanup and an `_rxsysb` extension. Compiling `main.crexx`
 fails with the same `TYPE_MISMATCH` on `provider`.
 
@@ -136,7 +136,7 @@ uncommitted on hotfix.
 The diagnostic compiler was linked in scratch from the existing normal Debug
 archives with instrumented copies of three translation units placed before the
 archive on the link line. Product source and build outputs were not replaced.
-`evidence/diagnostic-instrumentation.patch.gz` retains those observational changes;
+[`evidence/diagnostic-instrumentation.patch.gz`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-699-20260916/evidence/diagnostic-instrumentation.patch.gz) retains those observational changes;
 `initial-diagnostic-build-command.json` records the initial link and flags (the
 later trace added `rxcpfunc.c.o` alongside the two listed overrides). This is
 debugging evidence, not a proposed repair patch.

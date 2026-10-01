@@ -1,2 +1,0 @@
-OUTPUT: Hello! How can
-PASS: local Gemma 4 model through common driver

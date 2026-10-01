@@ -89,10 +89,9 @@ SHA-256 function.
 
 The instruction-family dispositions under [transferred RXAS
 instruction-to-call review](#transferred-rxas-instruction-to-call-review) are
-retained as design evidence. Their active planning homes are now the broader
-[project roadmap](../../ROADMAP.md#runtime-backend-and-performance-roadmap) and
-post-Release-1 candidates 42 and 43 in the
-[Release 1 plan](../../release-1-plan.md#initial-experimental-or-post-release-candidates).
+retained as design evidence. Their current planning home is the
+[post-Release-1 instruction-family queue](../../ROADMAP.md#evidence-gated-performance-follow-ons).
+The transferred review below retains each family's selection and evidence gates.
 That transfer accepts the order and evidence gates, not removal of an
 instruction or reuse of an opcode number.
 
@@ -420,7 +419,7 @@ cycles, embedded re-entry, both VM dispatch modes and each task-provider
 lifetime need focused negative tests before publication.
 
 The accepted profiling-off Release call-path verdict is retained in
-[`2026-08-19 RCC-3 module initializers`](../../../performance/evidence/2026-08-19-rcc3-module-initializers-first-release-verdict/README.md).
+[`2026-08-19 RCC-3 module initializers`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-19-rcc3-module-initializers-first-release-verdict/README.md).
 Across 12 balanced call/argument pairs, `rxbvm` is -0.353% paired mean and
 `rxtvm` is +0.179%; both confidence intervals include zero and remain inside
 the 3% guard.

@@ -25,4 +25,4 @@ does not convert the complete bit string through an integer, so input length is
 not constrained by integer or decimal precision.
 
 Classic Level C callers use the RexxValue/error-context contract documented in
-[`lib/rxfnsc/b2x.md`](../../rxfnsc/b2x.md).
+[`lib/rxfnsc/b2x.md`](../../../lib/rxfnsc/b2x.md).

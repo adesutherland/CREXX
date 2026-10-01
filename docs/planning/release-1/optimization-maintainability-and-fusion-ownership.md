@@ -153,7 +153,7 @@ parallel optimization/registration surface that Adrian is questioning.
 
 ## The original quickening objective and what was actually delivered
 
-The original [PERF2-02 brief](../../../performance/PERF2-02-HANDOVER-PROMPT.md)
+The original [PERF2-02 brief](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/PERF2-02-HANDOVER-PROMPT.md)
 explicitly required a reusable private quickener to be evaluated as a real
 option. The question was whether persistent site knowledge beat the best
 compiler, assembler or direct-handler implementation, including lifecycle and
@@ -176,8 +176,8 @@ specialize a single instruction without fusing anything, and an eager fusion
 may never learn anything from execution. A guard on each execution is not by
 itself adaptive learning.
 
-The [original architecture record](../../../performance/PERF2-02-ARCHITECTURE.md)
-and [measurements](../../../performance/evidence/2026-07-23-perf2-02-quickening-poc/measurements.md)
+The [original architecture record](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/PERF2-02-ARCHITECTURE.md)
+and [measurements](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-07-23-perf2-02-quickening-poc/measurements.md)
 retain the actual comparison:
 
 - **Q3b direct handler:** rechecked exact live local/attribute ownership in
@@ -200,7 +200,7 @@ retain the actual comparison:
   small minority and did not justify Q7.
 
 The July work therefore delivered a useful production improvement rather than
-an adaptive framework: the [accepted worklist](../../../performance/PERF2-02-WORKLIST.md)
+an adaptive framework: the [accepted worklist](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/PERF2-02-WORKLIST.md)
 records approval of Q3b inside MKREF and its subsequent favorable Release
 verdict. That implementation remains visible at
 `interpreter/rxvmhandlers_control.inc:2882`: it examines an adjacent

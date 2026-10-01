@@ -80,7 +80,7 @@ redirect, launches B before A releases its child end, and asks the executed B
 whether that exact descriptor survived exec. B blocks on a pipe handshake.
 On the unmodified baseline, two assertions fail: A's writer lacks CLOEXEC and
 B owns that writer. After B is explicitly released, both children and the output
-reader are reaped without a hang. Retained `docs/qa/issue-701/posix-baseline.log`.
+reader are reaped without a hang. Retained [`docs/qa/issue-701/posix-baseline.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-701/posix-baseline.log).
 After repair A exits with status 7, its 13 output bytes drain, and WaitForProcess
 returns while B is provably still alive. No sleep/repetition is involved.
 
@@ -142,7 +142,7 @@ Initial hosted controls at `502fb28dc080342df7a2db0a1e8f272915e8517e`, run
 35086216671: Linux and macOS baseline-negative/current-positive pass. MSVC is
 blocked before compilation by an existing test-registration bug:
 `inline_receiver_signal_cleanup` unconditionally names nonexistent `rxtvm`.
-Retained MSVC configure log in `docs/qa/issue-701/remote-502fb28/msvc/`.
+Retained MSVC configure log in [`docs/qa/issue-701/remote-502fb28/msvc/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-701/remote-502fb28/msvc).
 A separate ordinary CMake repair supplies the threaded VM only where built,
 retaining the portable VM test on MSVC. It does not change compiler semantics.
 
@@ -159,7 +159,7 @@ to the same host's ordinary fopen, while still requiring private creation.
 
 At `bd19a94ddd597459eb1fa01cae1cf33294d063b5`, Child Inheritance QA
 35086663828 completes successfully on all four platforms: Linux, macOS,
-MSVC and MinGW. Raw artifacts are retained in `docs/qa/issue-701/remote-bd19a94/`.
+MSVC and MinGW. Raw artifacts are retained in [`docs/qa/issue-701/remote-bd19a94/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-701/remote-bd19a94).
 The separate MSVC configure repair is `b50e4f3d7`; it changes registration only.
 Additional missing/invalid Windows-standard-handle and handle-count cleanup
 controls are being added before freezing final qualification inputs.
@@ -197,7 +197,7 @@ still awaits the qualification gates, including the final expanded Windows tests
 
 Code candidate: `135b9254fffdd0c9a8e963d1092c68bb273bf66b`, pushed to hotfix.
 All 32,616 non-documentation tracked input hashes are frozen in
-`docs/qa/issue-701/local-final/frozen-inputs.json.gz` (uncompressed manifest
+[`docs/qa/issue-701/local-final/frozen-inputs.json.gz`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-701/local-final/frozen-inputs.json.gz) (uncompressed manifest
 SHA256 `aad62f034d47497a6f4f92973cc052a820bfd51a9133d5246cccc6174cfe5aa0`).
 Both final focused panels pass 7/7: Debug 4.96s at
 `cmake-build-debug/asan-logs/20260916-120345-ctest`; maintained Apple ASan 7.00s at
@@ -218,13 +218,13 @@ Child Inheritance QA **35088226165 succeeds on the final candidate**, all four
 platforms. This includes the additional 16 Windows cases for NULL/invalid
 standard handles and unchanged parent handle counts after both successful and
 failed CreateProcess paths. Final artifacts are under
-`docs/qa/issue-701/remote-135b925/inheritance/`. AC-01/02/03/04/06 are verified;
+[`docs/qa/issue-701/remote-135b925/inheritance/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-701/remote-135b925/inheritance). AC-01/02/03/04/06 are verified;
 AC-05/07/08 remain open pending broad qualification and promotion.
 
 
 Local broad normal Debug passes **2,306/2,306**, 902.27 seconds, no retries or
 failures. Runner: `cmake-build-debug/asan-logs/20260916-120546-ctest`. Retained
-`docs/qa/issue-701/local-final/broad-debug.log.gz`. Command:
+[`docs/qa/issue-701/local-final/broad-debug.log.gz`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-701/local-final/broad-debug.log.gz). Command:
 
 ```sh
 tools/asan-run.sh --build-dir cmake-build-debug --phase ctest --test-jobs 30 --exclude-label '^performance-measurement$' --keep-going --no-live-tail --tail-lines 25
@@ -273,7 +273,7 @@ passes 2,214. Each platform also passes all three install/package/external
 consumer checks. Isolated Debug stress passes 9/9. Release jobs 1/5/30,
 immediate no-op, missing-dependency and change-closure controls pass, with
 identical bytecode manifests. Logs, manifests and terminal job metadata are
-retained under `docs/qa/issue-701/remote-135b925/deep/` and `deep-status.json`.
+retained under [`docs/qa/issue-701/remote-135b925/deep/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-701/remote-135b925/deep) and `deep-status.json`.
 The scheduled-only assurance-marker job is skipped on this manual dispatch;
 that is expected and is not a missing product check. Full sanitizer results
 remain pending.
@@ -342,7 +342,7 @@ to hold this task for every automatic assurance result is superseded by that
 policy. Its result is recorded as pending, not success; no CodeQL workflow was
 cancelled. The local status poller was stopped so it does not become unattended
 background work. Terminal Build metadata, the pending CodeQL snapshot and the
-snapshot guard log are retained in `docs/qa/issue-701/post-promotion/`. AC-08 is
+snapshot guard log are retained in [`docs/qa/issue-701/post-promotion/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-701/post-promotion). AC-08 is
 verified for the required core/functional publication scope, with this remaining
 background result explicit.
 

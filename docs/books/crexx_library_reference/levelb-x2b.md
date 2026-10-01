@@ -25,5 +25,5 @@ uses direct character-range arithmetic and appends four table bits per digit;
 it does not perform whole-value numeric conversion or call another selector.
 
 The separate Classic Level C BIF is documented in
-[`lib/rxfnsc/x2b.md`](../../rxfnsc/x2b.md). The focused native harness is
+[`lib/rxfnsc/x2b.md`](../../../lib/rxfnsc/x2b.md). The focused native harness is
 `lib/rxfnsb/tests_functional/ts_x2b.crexx`.

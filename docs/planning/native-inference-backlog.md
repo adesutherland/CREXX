@@ -616,7 +616,7 @@ remaining parent model/device requirements.
    All 7,415 non-document input hashes are unchanged during that final gate;
    the prior 2,347-test ordinary Debug result remains valid. The two extra ASan
    selections are the available SQLite-ODBC VM tests. Evidence is retained in
-   `docs/qa/native-inference-step06/full-local/`; supported leak/platform proof
+   [`docs/qa/native-inference-step06/full-local/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/full-local); supported leak/platform proof
    remains open under S6-06 and SAN-009.
 5. [ ] **S6-05 — Complete delivery and failure scenarios:** prove documented
    model provisioning and enforced-offline inference, installed/dynamic/native
@@ -744,7 +744,7 @@ concurrent sharing are separate facts to verify.
   workload completed with probes disabled, using 12 balanced pairs per case.
   CPU mean overhead remains within variation (-0.52%/-0.87%); Metal means remain
   +19.69%/+21.27%, with paired medians +8.37%/+6.96% and substantial spikes.
-  The [retained replay](../../performance/evidence/2026-09-14-ni-s4-quiet-release/README.md)
+  The [retained replay](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-quiet-release/README.md)
   preserves all raw samples and identity checks. No conversion/copy bottleneck
   or upstream defect is established. STEP-04 remains at Adrian's disposition
   gate with all functional criteria intact; no sanitizer or broader work ran.

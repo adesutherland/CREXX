@@ -71,7 +71,7 @@ The Release 1 minimum consecutive case counts are:
 These thresholds choose between a source ladder and a table. The assembler's
 independent `auto` policy chooses the packed `linear`, `openhash`, or `acph`
 representation. Measurements and rationale are recorded in
-`docs/planning/beta-3/reports/jump-table-04-profitability.md` and
+[`docs/planning/beta-3/reports/jump-table-04-profitability.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/beta-3/reports/jump-table-04-profitability.md) and
 `jump-table-05-policy-and-docs.md` in the same directory.
 
 ## Regression Invariants

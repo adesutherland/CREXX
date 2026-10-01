@@ -4,4 +4,4 @@
 [,mode=.string]]) = .string` returns the first balanced top-level span. `X`/`E`
 returns its contents; `I`/`C` includes delimiters. No opening pair returns an
 empty string. Invalid mode or grammar signals `INVALID_ARGUMENTS`. See
-[the shared quote-aware contract](quote-aware.md).
+[the shared quote-aware contract](../../../lib/rxfnsb/rexx/quote-aware.md).

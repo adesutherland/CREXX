@@ -45,25 +45,25 @@ explicit until STEP-06 establishes sanitizer scheduling properties.
 ## Inputs and reproduction
 
 Baseline HEAD is `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8` on `develop`, with
-the existing uncommitted implementation. `identity.json` records source,
+the existing uncommitted implementation. [`identity.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04-closeout/identity.json) records source,
 production and test artifact identities, and the moved generated test images.
 The accepted Release production binaries remain unchanged. The model is the
 same pinned BGE small EN v1.5 F16 artifact and the engine is the same pinned
-llama.cpp revision recorded in the STEP-01 plan. `install-workspace.txt` names
-the retained disposable install and consumer directory; `packages.json` records
-relocated dependency hashes. Installed command logs are retained in `installed/`.
+llama.cpp revision recorded in the STEP-01 plan. [`install-workspace.txt`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04-closeout/install-workspace.txt) names
+the retained disposable install and consumer directory; [`packages.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04-closeout/packages.json) records
+relocated dependency hashes. Installed command logs are retained in [`installed/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04-closeout/installed).
 
 Build `rxllama_embedding_bridge` in normal Debug, then invoke it as
 `rxllama_embedding_bridge MODE MODEL SHA256`, where MODE is `cpu`,
-`required-gpu`, or `cross-device`. See `debug-build.log` and `debug-*.log`.
+`required-gpu`, or `cross-device`. See [`debug-build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04-closeout/debug-build.log) and `debug-*.log`.
 
 The explicit four-tool runner is `tests/native-inference/step04_toolchain.cmake`.
 Supply BUILD, SOURCE, fresh OUTPUT, MODE, MODEL and HASH; optional PROGRAM selects
 `embedding_acceptance` or `shared_worker_embeddings`, MARKER specifies the
 expected success marker, and NO_OPT=ON selects `rxc -n`. Each retained
 `toolchain.log` records exact compiler/assembler/linker/VM commands and results.
-The earlier successful CPU optimized worker cell is in `worker-cpu-opt/`; the
-other seven are indexed by `debug-four-tool-matrix.log`.
+The earlier successful CPU optimized worker cell is in [`worker-cpu-opt/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04-closeout/worker-cpu-opt); the
+other seven are indexed by [`debug-four-tool-matrix.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04-closeout/debug-four-tool-matrix.log).
 
 Run `tests/native-inference/step04_package_consumer.py INSTALL SOURCE MODELS
 FRESH_WORK cpu,required-gpu` against a scratch installation. The final argument

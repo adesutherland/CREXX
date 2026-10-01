@@ -44,7 +44,7 @@ limitation in the stats example; it is not evidence that the full llama object
 surface can be implemented by filling return payloads alone. No stats/RXPA fix
 or new compatibility promise is made here.
 
-`shape.crexx`, `opt.log`, `noopt.log` and `identity.json` retain the diagnostic.
+`shape.crexx`, [`opt.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-native-surface-review/opt.log), [`noopt.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-native-surface-review/noopt.log) and [`identity.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-native-surface-review/identity.json) retain the diagnostic.
 It prints observations rather than serving as a repaired regression gate. Build
 with the current Debug rxc (`-n` for the second run), rxas and rxlink, explicitly
 linking `library` and `rxfnsg`; run with rxbvm. Generated images remain in the

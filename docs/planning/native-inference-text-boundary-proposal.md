@@ -19,7 +19,7 @@ public API, plugin isolation and the existing legacy initializer layout.
 The permanent [ordinary cREXX reproducer](../../tests/native-inference/embedding_text_boundary.crexx)
 constructs a 21-codepoint string `cpu`, U+0000, `unexpected suffix` using the
 existing explicit UTF-8 codec. `rxllama.configtext` incorrectly accepts it as
-the exact option `cpu`. The [retained failure](../qa/native-inference-step04/text-boundary-red.log)
+the exact option `cpu`. The [retained failure](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/text-boundary-red.log)
 reports `FAIL: RXPA silently discarded text after embedded U+0000` with exit 1.
 The fixture checks its full length before invoking the plugin.
 
@@ -100,7 +100,7 @@ text/owned requests, strict selectors, direct tokenizer/vector controls, sized
 dynamic/static manifest negotiation and actual rxllama old-host rejection.
 The unversioned initializer declaration remains byte-identical. AC-05 focused
 Debug and ordinary Release correctness pass; S4-D01-04 rejoins STEP-04 at its
-[first Release decision](../../performance/evidence/2026-09-14-ni-s4-first-release/README.md).
+[first Release decision](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-first-release/README.md).
 CPU figures are within variation; Adrian accepted NI-S4-P01's indicative Metal
 overhead and variation after the later replay. Its cause remains unresolved. The
 [evidence bundle](../qa/native-inference-s4d01/README.md) and STEP-04 handoff retain

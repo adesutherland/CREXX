@@ -2,7 +2,7 @@
 
 Authorized by Adrian's follow-up on 14 September 2026: investigate the noisy
 first Release comparison with phase probes, including the suspected float
-conversion/output cost. The [first panel](../../performance/evidence/2026-09-14-ni-s4-first-release/README.md)
+conversion/output cost. The [first panel](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-first-release/README.md)
 remains retained unchanged. This direction replaces its proposed quiet replay
 with bounded attribution first; it does not authorize model/backend tuning.
 
@@ -48,7 +48,7 @@ with bounded attribution first; it does not authorize model/backend tuning.
 ## Current handoff — probes complete, disposition accepted
 
 P-01–03 and P-AC-01–04 are complete for this bounded local diagnostic. The
-[retained Release probes](../../performance/evidence/2026-09-14-ni-s4-glue-probes/README.md)
+[retained Release probes](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-glue-probes/README.md)
 show that normalize/convert plus packed publication is below 0.2% of request
 time in all four fixed cases. Eight-row Metal medians are 4.18 µs normalization/
 conversion and 0.50 µs packed publication versus 4,102 µs per request. Exactly
@@ -71,7 +71,7 @@ formal performance pass. No broad or sanitizer work occurred. All original
 OUT/NI/ACs remain intact. The owner of the next action and STEP-06 release QA is
 Codex under Adrian's direction.
 
-Adrian subsequently requested the [12-pair probes-disabled replay](../../performance/evidence/2026-09-14-ni-s4-quiet-release/README.md)
+Adrian subsequently requested the [12-pair probes-disabled replay](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-ni-s4-quiet-release/README.md)
 and accepted its indicative overhead/variation on 2026-09-14. P-04 is complete;
 NI-S4-P01 is an accepted observation with unresolved cause. S4-05 is active and
 no additional performance investigation is selected. The original data and

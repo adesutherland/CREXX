@@ -10,7 +10,7 @@ commit and complete regression status after the RXPA changes.
 The earlier full 2,314-test Debug run belongs to STEP-03 and predates the latest
 RXPA C object/compiler/executor changes. The current 87 focused Debug tests and
 70 typed consumer runs are retained separately; they are not a full-suite pass.
-`source-before.json` verifies the working implementation is identical to the
+[`source-before.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-baseline/source-before.json) verifies the working implementation is identical to the
 final typed acceptance capture and records the starting HEAD and all relevant
 source hashes.
 
@@ -31,7 +31,7 @@ variants and `ts_http_server_failures_rxbvm_noopt`. The diagnostics are
 `RETURNS_VOID` / `RETVAL_MISSING` for `client.request(...)` or `client.get(...)`.
 The latter reproduces independently with current Debug `rxc --no-exe-import -n
 -x -i cmake-build-debug/bin`; this is not just Ninja's return code or a timeout.
-See `debug-qa-prep.log` and `http-debug-reproducer.log`.
+See [`debug-qa-prep.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-baseline/debug-qa-prep.log) and `http-debug-reproducer.log`.
 
 This is an ordinary compiler/import qualification failure, not a sanitizer
 finding. It does not yet establish which edit caused it. Preserve the original
@@ -52,8 +52,8 @@ during this follow-up. Raw diagnostic logs preserve their original whitespace.
 
 CTest inventory contains **2347 ordinary tests** and
 **186 excluded performance measurements**; 0 selected tests are disabled.
-`test-selection.json` retains every name. The full CTest execution did not start
-because QA preparation failed. `source-after.json` verifies no behavioral production/test change during this
+[`test-selection.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-baseline/test-selection.json) retains every name. The full CTest execution did not start
+because QA preparation failed. [`source-after.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-baseline/source-after.json) verifies no behavioral production/test change during this
 qualification attempt and records two trailing-whitespace cleanups made at
 commit preparation. Those two raw hashes differ from the typed capture; their
 non-whitespace content is identical.

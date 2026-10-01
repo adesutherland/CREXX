@@ -31,5 +31,5 @@ tables, or call another selector.
 
 Classic Level C X2C instead uses configuration-coded characters; its separate
 contract and current dependency are documented in
-[`lib/rxfnsc/x2c.md`](../../rxfnsc/x2c.md). The focused native harness is
+[`lib/rxfnsc/x2c.md`](../../../lib/rxfnsc/x2c.md). The focused native harness is
 `lib/rxfnsb/tests_functional/ts_x2c.crexx`.

@@ -28,7 +28,7 @@ This is not the Classic Level C D2C contract. Level C converts a whole-number
 RexxValue to configuration-coded characters, supports signed twos-complement
 when a length is present, and pads or truncates in encoded-character units.
 That separate contract is documented in
-[`lib/rxfnsc/d2c.md`](../../rxfnsc/d2c.md).
+[`lib/rxfnsc/d2c.md`](../../../lib/rxfnsc/d2c.md).
 
 The focused optimized/unoptimized harness is
 `lib/rxfnsb/tests_functional/ts_d2c.crexx`.

@@ -1133,7 +1133,7 @@ refresh after signing. The latest develop #699 fix (`f786b15d8`, plus evidence
 at `94f2f228c`) has green Build/CodeQL but is not in this candidate. Integrate it
 and finish these existing delivery steps before one combined final Build/package
 check; reuse unchanged broad Deep/sanitizer evidence and focus integration tests
-on affected import/provider behavior. The [live status table](../qa/native-inference-ci/README.md#current-overall-status--16-september)
+on affected import/provider behavior. The [live status table](../qa/native-inference-ci/README.md#consolidated-delivery-result)
 records exact run/revision boundaries. Parent hardware/model criteria and actual
 signed/offline proof remain open; no scope change or promotion is implied.
 
@@ -1323,7 +1323,7 @@ the focused retained-artifact runner recorded below. Local native-manager
 controls pass 14/14. The `rxfs` contract passes all four VM/optimization cells
 in ordinary Debug and maintained Apple ASan; Apple LeakSanitizer is unavailable.
 Retained inputs and logs are under
-`docs/qa/native-inference-ci/local/native-manager/`.
+[`docs/qa/native-inference-ci/local/native-manager/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-ci/local/native-manager).
 Windows native install/provider/reinstall succeeded, but removal exposed a
 reinstall error: the manager ignored the returned `jsonmembers` count on a reused
 array and retired stale entries. The application fix at `182516b4a` has a
@@ -1367,7 +1367,7 @@ and offline Gatekeeper proof remain separate; no product/engine rebuild follows.
 actual core/plugin `.pkg` installation, installed compile/assemble/link/provider
 execution, reinstall, plugin-only removal and core execution afterward from a
 writable directory. Evidence and checksums are retained under
-`docs/qa/native-inference-ci/remote/be8fbf4e5-installers/`; product binaries are
+[`docs/qa/native-inference-ci/remote/be8fbf4e5-installers/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-ci/remote/be8fbf4e5-installers); product binaries are
 unchanged retained `f10e70ee5` artifacts. No product/engine/CUDA build, model
 download or sanitizer campaign was run. The Mac portions of INST-AC-01–03 now
 have native runner proof; Windows was still open at that checkpoint and is
@@ -1383,7 +1383,7 @@ variant, active reinstall with all declared hashes intact, independent backend
 removal and shared-tool removal only after the last backend. Core/model/environment
 preservation, core execution afterward, and backend registration cleanup on
 core uninstall also pass. Evidence and checksums are under
-`docs/qa/native-inference-ci/remote/182516b4a-installers/`. The run identifies the
+[`docs/qa/native-inference-ci/remote/182516b4a-installers/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-ci/remote/182516b4a-installers). The run identifies the
 Windows compiler/linker and source revision; local compiled-tool hashes and
 before/after controls are retained under `local/native-manager/`. Future workflow
 artifacts additionally retain the generated Windows manager manifest.
@@ -1435,7 +1435,7 @@ Authenticode on setup/payload/uninstallers and exercises the existing installed
 provider/coexistence/reinstall/removal workload. Delete the staging draft after
 retaining terminal evidence. This is QA transport, not a user release.
 
-Evidence: `docs/qa/native-inference-ci/local/final-delivery/`. Reuse #699's
+Evidence: [`docs/qa/native-inference-ci/local/final-delivery/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-ci/local/final-delivery). Reuse #699's
 retained full normal/focused ASan and the unchanged previous Deep/core sanitizer
 results. No develop promotion, release publication or hardware waiver occurs.
 
@@ -1536,7 +1536,7 @@ This is a QA host environment failure, not evidence of a bad signature.
 
 CI-AC-02/03/05 and CI-03 are satisfied by four core archives, the MinGW gate
 and six plugin package smokes at `21a5e9410` (Build `35143588581`). The retained
-[terminal metadata and QA](../qa/native-inference-ci/remote/21a5e9410/README.md)
+[terminal metadata and QA](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-ci/remote/21a5e9410/README.md)
 distinguish its Mac installer-only failure from successful compiled payloads;
 Mac packaging/offline repair evidence is recorded under PROM-AC-01. Windows
 runtime identity preflight and both plugin archives also close F17-AC-01/R16-02.
@@ -1564,7 +1564,7 @@ until its native Windows result, although Mac signed/offline proof has passed.
 
 **Development integration complete:** normal Build `35150686647` and CodeQL
 `35150686250` are terminal success on promoted `8ed983afd`. PROM-AC-03/PROM-02
-close with [terminal metadata](../qa/native-inference-ci/remote/8ed983afd-develop/README.md).
+close with [terminal metadata](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-ci/remote/8ed983afd-develop/README.md).
 CI-AC-08/CI-05 reconcile the human/agent guides, parent acceptance and exact
 artifact boundaries; open signed-Windows and real-device criteria remain named.
 PKG-02 is proved by the all-six retained-core plugin jobs; PKG-04 by actual split
@@ -1583,7 +1583,7 @@ DLL, plugin and uninstaller signatures are valid. Both optional variants install
 coexist and switch through native Rexx; both four-tool consumer checks pass.
 Reinstall, individual removal, model/core/environment preservation and core
 uninstall registration cleanup pass. Signed input/output hash identity is
-retained with the [terminal proof](../qa/native-inference-ci/remote/a6c989d85-windows-signed/README.md).
+retained with the [terminal proof](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-ci/remote/a6c989d85-windows-signed/README.md).
 
 This closes WINQA-AC-01/02 and WINQA-01/02. Together with both Mac signed/offline
 passes, it closes F19-AC-02/F19-02/03, INST-AC-04/INST-02 and PKG-01/03 for the
@@ -1610,7 +1610,7 @@ unchanged from the green `8ed983afd` integration.
 
 **Final monitoring closure — 17 September (UK):** both follow-up workflows are
 terminal success on `59fc02eb9`, and the development snapshot is published.
-[Final metadata and all core/plugin QA artifacts](../qa/native-inference-ci/remote/59fc02eb9-develop/README.md)
+[Final metadata and all core/plugin QA artifacts](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-ci/remote/59fc02eb9-develop/README.md)
 are retained. PROM-03 is complete; pause the heartbeat. Keep this evidence-only
 closeout on the candidate branch. Windows signing remains optional, and no full
 version release or remaining parent hardware/model acceptance is implied.

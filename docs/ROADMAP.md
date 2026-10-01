@@ -57,7 +57,7 @@ Use this authority split:
   found **OPT-BOUNDARY-01**, an RXAS incoming-argument alias defect, now repaired
   with permanent regressions and 102 passing affected tests. Repair `f7a8b08c1`
   is published to develop; normal combined-head hosted gates are tracked in
-  [the defect-batch execution record](release-1-plan.md#selected-defect-batch-execution--18-september).
+  [the defect-batch execution record](qa/beta3-defect-batch-2026-09-18/README.md).
   Adrian accepted the RXC-owned imported-inline and public
   RXAS status-bit boundaries. The follow-up maintainability/fusion-ownership
   mechanisms remain unselected individually; the Beta 6 phase below records
@@ -94,9 +94,9 @@ individually recorded decisions; "unfinished" is not "won't implement".
 The [release plan](release-1-plan.md#completion-contracts-and-acceptance) owns
 the numbered acceptance criteria and delivery steps.
 
-The [18–25 September working queue](release-1-plan.md#historical-working-window--1825-september-2026)
-records the earlier Beta 3 defect and Beta 4 scope decisions. Current release
-qualification is tracked in the formal beta 3 candidate handoff.
+Current release qualification is tracked in the
+[formal beta 3 candidate handoff](planning/beta-3/formal-candidate-2026-09-30.md).
+Outstanding preparation criteria remain in the consolidated release plan.
 
 ## Delivery Priorities And Parallel Tracks
 
@@ -373,7 +373,8 @@ prototype has been qualified by this roadmap update.
   Apple scorecard and a newer release candidate.
 - Close concrete release defects and reconcile issue status, package shape,
   examples, plugin classification, release notes, and documentation. Closed
-  work should move to evidence/history rather than remain in the active list.
+  work should be consolidated into durable decisions; recover its detailed
+  investigation and run records from Git history.
 
 ### Next-wave language, library, and integration work
 
@@ -391,6 +392,8 @@ prototype has been qualified by this roadmap update.
   Level G Unicode/collation; math-family expansion; and mixed Rexx/native
   libraries remain valuable, but are less decisive than the five outcomes
   above.
+- Class/interface constants remain a post-Release-1 design candidate; Release 1
+  constants remain procedure-scoped.
 - Compile-time build metadata, loose comparison changes, optional-argument
   redesign, broader native regex packaging, and richer callback/generic
   collection syntax wait for a concrete user contract.
@@ -460,69 +463,18 @@ prototype has been qualified by this roadmap update.
   at 512 context tokens; 4096 remains over the configured budget. Qualification
   and publication state are recorded in that delivery record.
 
-- Local native inference has a requirements backlog:
-  [`CREXX-NI-01` through `CREXX-NI-07`](planning/native-inference-backlog.md),
-  captured 2026-09-11 and approved as a plan on 2026-09-14. Adrian's
-  revised direction includes GPU support from the first delivery, runtime
-  hardware selection, persistent preparation and batch processing, embeddings
-  and lightweight local generation. The plan selects `llama.rexx` / `rxllama`,
-  CPU/Metal/CUDA/Vulkan packages, shared-model ownership evaluation, and numbered
-  outcomes, acceptance criteria and implementation steps. The provider remains
-  optional to install. STEP-01 output is approved and STEP-02 controls are
-  complete; [the STEP-02 report](planning/native-inference-step-02.md) retains
-  CPU/Metal, persistence/sharing, cancellation, scratch, normal/ASan and Release
-  measurement evidence, including failed historical controls and timing
-  uncertainty. [STEP-03](planning/native-inference-step-03.md) is implemented
-  through local CPU/Metal lifecycle, shared ownership and packaging controls;
-  the native-worker transition repair and its measured legacy-call cost are
-  approved, native four-worker CPU/Metal controls pass, and all 2,314
-  non-measurement Debug CTests pass. Adrian approved STEP-03 closure with the
-  remaining SAN-009/S3-D01 sanitizer proof assigned to STEP-06 native-inference
-  release QA, owned by Codex under his direction. STEP-04 native embedding
-  requests and S4-D01 complete-text handling pass normal CPU/Metal controls,
-  including real workers, both VM/optimization modes and installed/native
-  consumers. Adrian accepted the indicative Release overhead and unresolved
-  Metal variation. The [typed C llama API and installed persistent/shared-worker
-  examples](planning/native-inference-typed-interface-proposal.md) now pass their
-  normal local acceptance and delivery checks: 28 Debug and 42 installed/relocated
-  native Release runs across CPU/Metal and optimization/VM modes. The generic
-  [C RXPA object surface](planning/rxpa-native-objects.md) and its interface-only
-  provider/typed callback-return repairs also pass focused and installed SDK checks.
-  [S4-05 and S4-AC-01–06](planning/native-inference-step-04.md) are ticked complete
-  locally with retained evidence. The 15 September [QA01/QA02 repair and C
-  factory cleanup](qa/native-inference-qa01/README.md) fixes imported task
-  lowering and static archive relinking, removes the obsolete `linearfit` Rexx
-  construction shim, and updates human/agent guidance. All 2,347 ordinary Debug
-  tests now have passing evidence from the broad run plus affected rechecks;
-  the original failed baseline is retained historically. STEP-04 is closed
-  following acceptance of this report. [STEP-05 generation](planning/native-inference-step-05.md)
-  is now locally complete: persistent/batched CPU/Metal generation, owned UTF-8
-  chunks, shared workers and installed/native examples pass. Adrian accepted its
-  first Release comparison; no material positive Metal slowdown recurred. The
-  [closeout evidence](qa/native-inference-step05/README.md) retains 24 additional
-  Debug consumers, 32 installed VM and 16 relocated native runs, plus all 2,347
-  ordinary Debug CTests passing in a fresh broad run. Sanitizer execution and
-  Windows/Linux/CUDA/Vulkan qualification remain STEP-06; SAN-009 is still open.
-  The [dependency pins and contract](planning/native-inference-step-01.md)
-  and live parent plan retain the full scope and remaining qualification boundary.
-  Adrian's 15 September sequencing direction puts **STEP-07 documentation,
-  model-download/installation guides, runnable examples and review before
-  STEP-06 full QA and acceptance**. Stable step IDs are retained. Focused recipe
-  checks establish documentation readiness; an AC-01–14 coverage map guides
-  subsequent full qualification and final evidence reconciliation. The
-  [installed guide set](../lib/plugins/llama/README.md) and
-  [STEP-07 coverage/review ledger](qa/native-inference-step07/README.md) now hold
-  the completed documentation work. Adrian approved S7-AC-06 on 15 September;
-  STEP-07 is closed and [STEP-06 qualification](qa/native-inference-step06/README.md)
-  is in progress. Local full build/preparation and 2,349/2,349 Apple-ASan tests
-  now pass, alongside focused CPU/Metal and installed/relocated inference checks.
-  Linux/Windows, real CUDA/Vulkan and supported Linux leak qualification remain
-  open. Unchanged
-  valid test evidence is reused; missing platform evidence and SAN-009 remain
-  open. The detailed
-  API and package proposal is approved for the planned implementation. This plan does not change the five
-  priorities or assign Release 1 scope. Product
-  retrieval and graph policy remain in the companion crexx-rag backlog.
+- Local native inference is governed by the approved
+  [parent plan](planning/native-inference-backlog.md), including CREXX-NI-01–07
+  and AC-01–14. CPU/Metal embedding and generation, persistent preparation,
+  shared-worker ownership, typed C factories, installation guides and examples
+  have implemented acceptance evidence. The
+  [pipeline plan](planning/native-inference-ci.md) owns binary delivery and
+  signing. Remaining trained-model/device, resource-failure, sharing/drain,
+  provenance and supported-platform criteria stay open where the parent plan
+  records them. SAN-009 is closed in the
+  [sanitizer register](SANITIZER-WORKLIST.md#san-009--cpu-backend-probe-unloadreload-re-registers-apple-asan-globals);
+  its closure does not close those separate product criteria. The llama provider
+  remains optional. Product retrieval and graph policy belong to crexx-rag.
 - Public provider-plugin ABI, durable services, pool telemetry, server
   lifecycle, HTTP/2, WebSockets, and GPU work beyond the native-inference
   plan remain post-Release-1 design candidates.
@@ -534,8 +486,7 @@ prototype has been qualified by this roadmap update.
 
 ## Completed Or No Longer Active
 
-- [`KEYACCESS-01`](../performance/KEYACCESS-01-WORKLIST.md) and
-  [`KEYACCESS-02`](../performance/KEYACCESS-02-WORKLIST.md): Adrian accepted the
+- KEYACCESS-01 and KEYACCESS-02: Adrian accepted the
   Windows Release verdicts, retained both implementations and closed the work
   on 2026-09-18. [The decision](../performance/DECISIONS.md#keyaccess-decision-2026-09-18--accept-retain-and-close)
   closes PERF-CLOSEOUT-02; normal exact-candidate release qualification remains
@@ -563,7 +514,7 @@ prototype has been qualified by this roadmap update.
 - New-build Phase 4 implemented installed `crexx --program` and `--library`
   workflows with explicit source membership, incremental builds and atomic
   publication. The later
-  [`RXC-PROJECT-01`](../performance/RXC-PROJECT-SCALING-WORKLIST.md)
+  RXC-PROJECT-01
   repair implemented compiler-owned dependency snapshots and selective member
   rebuilding; both bounded Release performance verdicts are accepted.
   Dependencies used to decide rebuilds are discovered automatically; the
@@ -593,7 +544,7 @@ prototype has been qualified by this roadmap update.
   [`RXVM_INTERPRETER.md`](ai-context/RXVM_INTERPRETER.md)
 - Completed build migration and dependency-selection evidence:
   [new-build programme](planning/release-1/new-build-system-vision-and-migration-plan-2026-08-27.md)
-  and [`RXC-PROJECT-01`](../performance/RXC-PROJECT-SCALING-WORKLIST.md)
+  and RXC-PROJECT-01
 - Native-provider discovery and composition:
   [runtime capability composition](planning/release-1/runtime-capability-composition-roadmap.md)
 - Native inference requirements and the crexx-rag dependency:
@@ -605,8 +556,8 @@ prototype has been qualified by this roadmap update.
 - Current performance order and results:
   [`../performance/ROADMAP.md`](../performance/ROADMAP.md) and
   [`../performance/RESULTS.md`](../performance/RESULTS.md)
-- Completed PERF3 history:
-  [`../performance/PERF3-PROGRAMME-LEDGER-2026-08-17.md`](../performance/PERF3-PROGRAMME-LEDGER-2026-08-17.md)
+- Durable performance decisions:
+  [`../performance/DECISIONS.md`](../performance/DECISIONS.md)
 - Level C implementation status:
   [`../compiler/docs/levelc_remapping_target.md`](../compiler/docs/levelc_remapping_target.md)
 - RexxScript product documentation:

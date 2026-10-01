@@ -1,7 +1,7 @@
 ## parsestring
 
 `parsestring` executes the legacy parallel-array plan produced by
-[`parsecompile`](parsecompile.md):
+[`parsecompile`](levelb-parsecompile.md):
 
 ```rexx
 parsestring(parse_string = .string,

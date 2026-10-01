@@ -41,4 +41,4 @@ digit rounding. It does not pass through binary floating point and does not
 call the general Level B string BIFs on the optimized path.
 
 Classic Level C callers use the distinct RexxValue contract documented in
-[`lib/rxfnsc/format.md`](../../rxfnsc/format.md).
+[`lib/rxfnsc/format.md`](../../../lib/rxfnsc/format.md).

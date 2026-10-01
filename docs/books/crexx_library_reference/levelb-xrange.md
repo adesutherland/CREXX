@@ -20,5 +20,5 @@ codepoints and never prints a deprecation warning. It remains a legacy
 byte-domain helper; use `sequence` for a non-wrapping Unicode range.
 
 Classic Level C XRANGE is a distinct configuration-coded BIF documented in
-[`lib/rxfnsc/xrange.md`](../../rxfnsc/xrange.md). The focused native harness is
+[`lib/rxfnsc/xrange.md`](../../../lib/rxfnsc/xrange.md). The focused native harness is
 `lib/rxfnsb/tests_functional/ts_xrange.crexx`.

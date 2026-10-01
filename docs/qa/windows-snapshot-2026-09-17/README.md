@@ -12,7 +12,7 @@ Local checks:
   `git diff --check`: pass.
 - Default signer dry run pins both current `d8f59732d` inputs and the exact
   successful Build manager. A real artifact-ID download verifies its GitHub
-  SHA-256 plus manager manifest/bootstrap files (see `manager-preflight.log`).
+  SHA-256 plus manager manifest/bootstrap files (see [`manager-preflight.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/windows-snapshot-2026-09-17/manager-preflight.log)).
 
 Regression coverage includes actual complete/missing-setup collector execution,
 four-output publication, replaced plugin during upload, mismatched revisions,

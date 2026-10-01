@@ -85,7 +85,7 @@ Focused host-service validation passed in `/tmp/ni-s5/host-after.log` (0.81 s);
 `/tmp/ni-s5/public-debug-01`. The first Release verdict is accepted; Step 6 proof
 remains pending.
 
-The [first Release verdict](../../performance/evidence/2026-09-15-ni-s5-first-release/README.md)
+The [first Release verdict](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-15-ni-s5-first-release/README.md)
 now includes the output service and both generation surfaces. S5-D01 implementation
 criteria are checked; Adrian accepted the Step 5 performance disposition on
 15 September. [Ordinary closeout evidence](../qa/native-inference-step05/README.md)

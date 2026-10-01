@@ -2,7 +2,7 @@
 
 28 September 2026. **Review evidence only.** This characterizes the current
 desktop/default `rxfs` provider on Darwin 25.6.0 arm64 for the coordinator's
-[bounded RXFS proposal](../../planning/beta-3/rxfs-path-operations-proposal-2026-09-28.md),
+[bounded RXFS proposal](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/beta-3/rxfs-path-operations-proposal-2026-09-28.md),
 especially decision D-02. It does not test a concurrent path swap, a native
 Windows/Linux implementation, or mainframe services. The separate
 [#226 substitution probe](codeql-226-path-swap-probe-2026-09-28.md) remains

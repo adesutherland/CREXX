@@ -246,7 +246,7 @@ The first real lane is now cut over: a Level B controller owns the complete
 Level G/Unicode graph, using the public Level B task classes for parallel
 waves. CMake only bootstraps and invokes it, and the superseded Level G CMake
 producers have been removed. See
-`new-build-phase-3-progress-2026-08-31.md` for the ownership and acceptance
+[`new-build-phase-3-progress-2026-08-31.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/release-1/new-build-phase-3-progress-2026-08-31.md) for the ownership and acceptance
 evidence.
 
 The accepted Phase 3 boundary deliberately does not require wholesale
@@ -274,7 +274,7 @@ requirements or build-during-test behaviour; its exact-SHA optimized Release
 user-test artifact is available for every PR head and `develop` push.
 
 The approved, interruption-resistant work packages and resume state are in
-`new-build-phase-4-plan-2026-09-01.md`.
+[`new-build-phase-4-plan-2026-09-01.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/release-1/new-build-phase-4-plan-2026-09-01.md).
 
 ## 9. Human-facing interface
 
@@ -330,11 +330,11 @@ Only these remaining architectural choices require a new approval:
 
 ## References
 
-- `docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md`
-- `docs/planning/release-1/new-build-phase-3-progress-2026-08-31.md`
-- `docs/planning/release-1/new-build-phase-4-plan-2026-09-01.md`
-- `docs/planning/release-1/new-build-phase-1-progress-2026-08-27.md`
-- `docs/planning/release-1/new-build-phase-0-report-2026-08-27.md`
+- [`docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md)
+- [`docs/planning/release-1/new-build-phase-3-progress-2026-08-31.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/release-1/new-build-phase-3-progress-2026-08-31.md)
+- [`docs/planning/release-1/new-build-phase-4-plan-2026-09-01.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/release-1/new-build-phase-4-plan-2026-09-01.md)
+- [`docs/planning/release-1/new-build-phase-1-progress-2026-08-27.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/release-1/new-build-phase-1-progress-2026-08-27.md)
+- [`docs/planning/release-1/new-build-phase-0-report-2026-08-27.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/release-1/new-build-phase-0-report-2026-08-27.md)
 - `cmake/CrexxBuildResources.cmake`
 - `cmake/CrexxQaTiers.cmake`
 - `cmake/CrexxTestModes.cmake`

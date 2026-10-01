@@ -2,11 +2,11 @@
 
 Authority: [audit, findings and proposed decisions](../../planning/release-1/optimization-boundary-audit-2026-09-18.md).
 Source: `15c8a3ba42009ab8b5a9b447aa8c06ce86b9b392`, macOS ARM64 Debug.
-Tool hashes and runtime selection are in [baseline.json](baseline.json).
+Tool hashes and runtime selection are in [baseline.json](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/baseline.json).
 No production optimizer changes were made.
 
 This directory's original results describe the pre-repair audit. The
-[subsequent local correction](repair/README.md) preserves that evidence and
+[subsequent local correction](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/repair/README.md) preserves that evidence and
 records 102 passing affected tests plus the corrected original output.
 Adrian accepted the RXC-only inline transport and RXAS status-bit boundaries
 later on 18 September; those are no longer pending design decisions.
@@ -23,10 +23,10 @@ The fixture first exercises a separate global-mutation control, which prints
 
 The exact inputs and disassemblies are retained in:
 
-- [entry-alias.rxas](artifacts/entry-alias.rxas)
-- [optimized disassembly](artifacts/entry-alias-opt.disassembly)
-- [unoptimized disassembly](artifacts/entry-alias-noopt.disassembly)
-- [RXAS proof diagnostic](artifacts/entry-alias-rxas-debug.log)
+- [entry-alias.rxas](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias.rxas)
+- [optimized disassembly](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias-opt.disassembly)
+- [unoptimized disassembly](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias-noopt.disassembly)
+- [RXAS proof diagnostic](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/entry-alias-rxas-debug.log)
 
 **OPT-BOUNDARY-02 documents the now-accepted RXC coherence obligation.** A deliberately
 edited library contains executable `ret 99` but an unchanged inline AST for
@@ -35,10 +35,10 @@ in the `rxc -n` caller. The consistent-library control prints `42` in both
 modes; removing the stale template prints `99` in both. This is not a claim
 that normal compilation generates inconsistent libraries.
 
-See [original library](artifacts/library-consistent.rxas),
-[edited library](artifacts/library-stale.rxas),
-[optimized caller](artifacts/caller-stale-opt.rxas), and
-[unoptimized caller](artifacts/caller-stale-noopt.rxas).
+See [original library](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/library-consistent.rxas),
+[edited library](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/library-stale.rxas),
+[optimized caller](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/caller-stale-opt.rxas), and
+[unoptimized caller](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/artifacts/caller-stale-noopt.rxas).
 
 The metadata-free existing handwritten fixture
 `tests/rxas_optimizer/redundant_itos_runtime.rxas` passed in both modes, with
@@ -64,13 +64,13 @@ The focused build succeeded:
 cmake --build cmake-build-debug --target rxc rxas rxdas rxlink rxbvm test_rxop_metadata test_rxas_flow_graph --parallel 8
 ```
 
-[build.log](build.log) retains the output. Existing tests used:
+[build.log](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/build.log) retains the output. Existing tests used:
 
 ```sh
 ctest --test-dir cmake-build-debug --output-on-failure --parallel 4 -R '^(rxas_optimizer_(metadata|whole_procedure_flow(_noopt)?|storage_identity_flow|redundant_itos_flow(_noopt)?|duplicate_link_read_(meta_relevant|meta_unrelated|trace_relevant|trace_unrelated|call_alias)|barrier_(call|dcall|signal)|successful_guard_flow(_noopt)?|string_literal_reuse(_noopt)?)|rxas_flow_graph_contract|inline_(summary_(version|shape|formal)|receiver_summary)_fallback_binary_opt)$'
 ```
 
-Output: [focused-ctest.log](focused-ctest.log). No source/test/build input was
+Output: [focused-ctest.log](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/focused-ctest.log). No source/test/build input was
 changed by a repair and no broad suite or sanitizer gate was run.
 
 Run the bounded reproduction from the repository root after building those
@@ -87,10 +87,10 @@ stdout and stderr. It reports entry-alias semantic equivalence as a boolean:
 **a zero harness exit is completion of the audit probes, not a passing verdict
 for that defective behavior**. The expected correct output remains `42\n42`.
 
-The completed run is retained as [summary.json](summary.json) and
-[commands.json](commands.json). Temporary paths in the latter identify the
+The completed run is retained as [summary.json](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/summary.json) and
+[commands.json](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/commands.json). Temporary paths in the latter identify the
 actual run; the script recreates new paths on replay. Text fixtures are retained
-under `artifacts/`; generated executables are not checked in. These are dated
+under [`artifacts/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/artifacts); generated executables are not checked in. These are dated
 audit probes, not substitutes for a permanent product regression when the
 defect is repaired.
 

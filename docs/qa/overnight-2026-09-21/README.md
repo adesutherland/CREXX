@@ -25,10 +25,10 @@ Sanitizer infrastructure tracking: SAN-QA-017.
 
 ## Local reproduction and repair
 
-`baseline-vector.log` reproduces the exact assertion in the clean worktree.
-`baseline-prep.txt` records absence of the codec executable from the transitive
+[`baseline-vector.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-21/baseline-vector.log) reproduces the exact assertion in the clean worktree.
+[`baseline-prep.txt`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-21/baseline-prep.txt) records absence of the codec executable from the transitive
 `qa-prep-comprehensive` commands before repair. Failed hosted run metadata and
-compressed logs are in `failed/`.
+compressed logs are in [`failed/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-21/failed).
 
 Repair changes only the vector-specific manifest test, the codec preparation
 registration and documentation. No provider/runtime/compiler behavior changes.
@@ -55,7 +55,7 @@ incorrect stateless/owner policy and missing lifecycle hooks are rejected.
 - Policy controls: valid provider accepted; stateless procedure marked affine,
   owner marked reentrant, missing destroy hook and missing host-aware factory
   all rejected. Commands/script and individual diagnostics are retained.
-- `qualified-inputs.json` records relevant source/test SHA-256 values. The main
+- [`qualified-inputs.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-21/qualified-inputs.json) records relevant source/test SHA-256 values. The main
   checkout's 47 pre-existing dirty/untracked files remain byte-identical.
 
 ## Hosted qualification
@@ -80,7 +80,7 @@ Isolated Debug stress passes. Automatic core platforms, optimizer parity,
 MinGW correctness, all four native-provider package jobs and development
 snapshot publication pass. The optional comprehensive and beta-release
 jobs in Build are planned skips; Deep provides the comprehensive evidence.
-`hosted/` retains terminal workflow metadata, full comprehensive job logs,
+[`hosted/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-21/hosted) retains terminal workflow metadata, full comprehensive job logs,
 complete sanitizer build/preparation/CTest logs and the machine-readable
 `verdict.json`. Closing documentation changes no qualified code/test/build
 input; retained results are reused without another broad run.

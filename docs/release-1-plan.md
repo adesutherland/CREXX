@@ -23,7 +23,7 @@ Symposium. The exact 2027 symposium dates are not yet public on the
 [`RexxLA symposium listing`](https://rexx.oorexx.org/events/symposium.rsp) and
 must be updated when announced.
 
-The original beta 3 issue candidates and working team guidance remain in
+The beta 3 issue dispositions and working team guidance remain in
 [`planning/beta-3/issue-candidates.md`](planning/beta-3/issue-candidates.md).
 Many candidates have since become GitHub issues; product ordering and deferral
 decisions belong in `docs/ROADMAP.md`, while this file owns the release cadence
@@ -168,116 +168,14 @@ to mark the milestones complete or reduce them without Adrian's decision.
    the relevant core/G/L worklist before January; later additions require an
    explicit platform-scope exception, not an application-track workaround.
 
-## Historical Working Window — 18–25 September 2026
+## Outstanding preparation criteria
 
-Status: retained 18 September planning and execution snapshot. Subsequent
-beta 3 candidate preparation and release qualification are tracked in
-[`planning/beta-3/formal-candidate-2026-09-30.md`](planning/beta-3/formal-candidate-2026-09-30.md).
+Release qualification is owned by the
+[formal beta 3 candidate plan](planning/beta-3/formal-candidate-2026-09-30.md).
+The completed September defect-batch execution is available in Git history.
+The following still-open preparation criteria retain their stable IDs; removing
+an expired weekly schedule does not satisfy them.
 
-**Vision:** make Beta 3 a qualified publication of the accumulated product,
-while starting the November core programme with a complete coverage inventory
-and one useful implementation increment. Do not let another performance or
-framework programme consume the release-closeout week. Applications continue
-independently against existing APIs.
-
-### Selected defect-batch execution — 18 September
-
-Adrian explicitly authorized WEEK-AC-01: publish the qualified alias repair,
-fix #700/#702 and reconcile #699 using its existing repair/evidence. Preserve
-the unrelated local roadmap/audit/native-inference edits. This selects ordinary
-development publication, not a release tag, installation or new optimization.
-
-- [x] **BATCH-AC-01:** qualified alias source/test hashes still match, and the
-  repair, permanent fixture and bounded evidence are committed/published.
-- [x] **BATCH-AC-02:** the #700 complete fixed-fields example imports `rxfnsb`
-  and runs verbatim in optimized and unoptimized modes; other chapter uses of
-  `binresize` state the import prerequisite.
-- [x] **BATCH-AC-03:** #702 preserves const through shell-name lookup, builds
-  without the reported qualifier diagnostic and passes existing focused shell/
-  spawn regressions without changing command behavior.
-- [x] **BATCH-AC-04:** verify #699's repair is in current history and the
-  retained regression/qualification evidence supports its documented scope;
-  reconcile its issue state without reimplementing or repeating unchanged QA.
-- [x] **BATCH-AC-05:** push separate reviewable defect commits together to
-  `develop`, check terminal normal Build/optimizer-parity and CodeQL results for
-  the pushed revision, retain the result and reconcile #700/#702 issue status.
-  No unrelated dirty changes are included and no extra overnight run is dispatched.
-
-1. **BATCH-STEP-01 — complete** (AC-01/04): check inputs and retained evidence,
-   define the narrow publication file/hunk set and refresh remote state.
-2. **BATCH-STEP-02 — complete** (AC-02/03): make the import/const corrections;
-   run the exact example, core build and applicable existing focused tests.
-3. **BATCH-STEP-03 — complete** (AC-01/05): record compact evidence, inspect
-   staged scope, commit the causes separately and publish one combined head.
-4. **BATCH-STEP-04 — complete** (AC-04/05): verify the normal hosted gates,
-   reconcile the three issues with evidence and update this execution record.
-
-Published together to `develop`: alias `f7a8b08c1`, documentation `8453652e9`,
-const correction and combined evidence `e99136a1d5725d0c44128f64f505e1b46c64a51f`.
-The [batch evidence](qa/beta3-defect-batch-2026-09-18/README.md) records a
-successful core build, seven focused regressions, the verbatim documentation
-example in both modes, strict const compilation and absolute/relative shell
-dispatch. The alias's unchanged 102-test qualification is retained. #699's
-repair and closeout commits are ancestors and both permanent regressions pass.
-#699 is [reconciled and closed](https://github.com/adesutherland/CREXX/issues/699#issuecomment-5734783575).
-[Build CREXX](https://github.com/adesutherland/CREXX/actions/runs/35383125122)
-completed successfully on the exact combined head: all core platform jobs,
-Windows MinGW, downstream plugin/package jobs, development snapshot and Linux
-optimizer parity **778/778**, including both alias runtime variants.
-[CodeQL](https://github.com/adesutherland/CREXX/actions/runs/35383124920)
-also completed successfully for that exact head.
-[#700](https://github.com/adesutherland/CREXX/issues/700#issuecomment-5735361709)
-and [#702](https://github.com/adesutherland/CREXX/issues/702#issuecomment-5735362066)
-are closed with evidence. All BATCH criteria are complete; the broader weekly
-readiness and implementation outcomes below remain open. The evidence-only
-closeout reuses the qualified code/test/build inputs without repeating QA.
-The ordinary workflow's unsigned Windows
-plugin-installer result does not close the separate CI-F21 signing obligation.
-
-Evidence closeout `ab2473c6f` was published through merge `47168a1f1`, preserving
-the concurrent RXJSON publication `65275452d`. The delta from that newer remote
-head is QA evidence only, and `[skip ci]` avoids repeating unchanged work. This
-batch's terminal CI claims remain attached to `e99136a1d`; the JSON repair has
-its own worklist and qualification. All unrelated local edits, including the
-newer local RXJSON plan, were preserved. The local performance roadmap retains
-both its planning edits and the published RXJSON status paragraph.
-
-### Planning baseline, checked before defect-batch publication on 18 September
-
-- The live Beta 3 milestone has seven open issues: #610, #612, #616, #617,
-  #622, #624 and #625. They concern definitions, classification, packaging and
-  demos, rather than seven new feature implementations. Existing assignees are
-  Adrian (#610/#612/#616), Peter (#617/#622) and Rene (#624/#625); this plan
-  does not send assignments or change their issues.
-- Current `develop` HEAD `15c8a3ba42009ab8b5a9b447aa8c06ce86b9b392` has successful
-  [Build](https://github.com/adesutherland/CREXX/actions/runs/35350979174) and
-  [CodeQL](https://github.com/adesutherland/CREXX/actions/runs/35350978909).
-  The latest inspected Deep/Sanitizer successes are for `d8f59732d`, not this
-  newer revision; do not transfer that exact-head claim.
-- OPT-BOUNDARY-01 is locally repaired with 102 affected tests passing but is
-  uncommitted/unpublished. Keep its retained evidence and accepted imported-
-  inline/status-bit decisions; do not reopen them as release planning work.
-- #699 remains open although repair commit `f786b15d` and focused fixtures are
-  in the current history. Verify retained qualification and reconcile the issue;
-  do not start the same investigation again. #700's missing example import and
-  #702's const-qualifier warning are still visible in the inspected source.
-- CI-F21 current-snapshot Windows signing/delivery remains open in
-  [the existing pipeline plan](planning/native-inference-ci.md). Unsigned
-  publication success is not completion of that signed-delivery criterion.
-- The historical Stage 5 formal Linux QA-C obligation on `81f159186` remains
-  open in [performance closeout](../performance/PERFORMANCE-CLOSEOUT-PLAN.md).
-  Give it a concrete execution/disposition decision; a newer unrelated run
-  cannot be substituted silently. KeyAccess acceptance is already closed.
-- #663 says its RXPP macro facility is implemented; current RXPP documentation
-  describes script-macro behavior and source mapping. Check the actual
-  docs/tests/package evidence before deciding closure or residual work.
-
-### Checkable outcomes for the week
-
-- [x] **WEEK-AC-01 — bounded defect batch:** prepare/promote the alias repair
-  and the small #700/#702 corrections through their appropriate focused checks
-  and ordinary publication gates; resolve #699's evidence/status mismatch.
-  Keep unrelated dirty work intact and do not repeat unchanged broad tests.
 - [ ] **WEEK-AC-02 — Beta 3 readiness:** each of the seven milestone issues
   has a concrete acceptance/evidence disposition, and the package matrix names
   the intended assets, signatures, install/smoke paths and known limits.
@@ -304,34 +202,16 @@ both its planning edits and the published RXJSON status paragraph.
   applicable; do not make a new application or model download a Beta 3 release
   blocker. This is an early R1-AC-06 contribution, not its whole completion.
 
-### Recommended order and boundaries
-
-1. **WEEK-STEP-01 — 18–21 September** (AC-01/02): close the small correctness
-   batch and assemble the Beta 3 readiness sheet from existing evidence. Triage
-   new failures promptly. Package/signing work can proceed independently.
-2. **WEEK-STEP-02 — 21–23 September** (AC-02/03): finish the short preprocessor,
-   RexxScript, class-library and plugin-category decisions/inventory. Use the
-   implemented product as the starting point; avoid sweeping renames/removals.
-   In parallel, finish the Level C gap/exception matrix and polymorphism scope.
-3. **WEEK-STEP-03 — 23–25 September** (AC-03/04): begin the selected control-
-   flow slice on an isolated Beta 4 development line while the Beta 3 candidate
-   receives only release fixes. The isolation mechanism can be selected when
-   execution starts; do not mix the new slice into the release candidate by
-   accident. Review the remaining November scope against actual gaps.
-4. **WEEK-STEP-04 — parallel through the week** (AC-05): exercise one useful
-   existing application workflow; feed genuine platform defects into the
-   bounded defect queue, and retain feature requests on the appropriate later
-   track rather than expanding Beta 3.
-5. **WEEK-STEP-05 — 25 September review** (AC-01–05): name the candidate,
-   remaining release blockers and next qualification actions. Use 28–30
-   September for the required final-candidate gates and release packaging.
-   Do not claim the cut ready until those gates are complete.
-
-Memoization/adaptive quickening, additional fusions, broad RXAS restructuring,
-new ownership models, generator programmes and speculative performance tuning
-are not this week's implementation priorities. Record their requirements and
-dependencies; retain their approved future milestones and design gates. Shared
-proof/AST repairs needed by concrete correctness or Level C work remain in scope.
+1. **WEEK-STEP-01 — ongoing where unmet** (AC-02): reconcile beta readiness,
+   packaging/signing and exact-candidate evidence in the formal candidate plan.
+2. **WEEK-STEP-02 — open where unmet** (AC-02/03): finish required product
+   definitions and the complete Level C gap/exception and polymorphism matrices.
+3. **WEEK-STEP-03 — open** (AC-03/04): select the bounded control-flow increment
+   after the normal implementation-plan gate; use develop after the beta 3 cut.
+4. **WEEK-STEP-04 — open** (AC-05): select and qualify the useful existing-capability
+   application workflow, feeding concrete defects back into the appropriate track.
+5. **WEEK-STEP-05 — ongoing where unmet** (AC-02): reconcile the named candidate,
+   remaining blockers and final qualification actions with the formal plan.
 
 ## Release Principle
 
@@ -348,21 +228,6 @@ tools and showcases continue on their parallel track through RC1. Beta 6 closes 
 performance implementation phase on 2027-03-31; April is qualification and
 release-defect repair for the platform, with final application integration and
 asset qualification through RC1, not another platform optimization/feature phase.
-
-## Original Gates (Historical)
-
-These superseded dates preserve the original plan; they are not current
-deadlines or evidence that the gates passed. The rebaselined release train
-above owns the live dates, including the 2027-01-31 functional freeze and
-2027-03-31 optimization freeze.
-
-| Date | Gate | Exit condition |
-| --- | --- | --- |
-| 2026-06-17 | Beta 3 opens | Beta 2 has a tag, beta 1 to beta 2 delta is documented, `develop` is labelled beta 3 WIP, and the beta 3 planning note exists. |
-| 2026-07-03 | Design lock | Level B/G split, plugin policy, UTF ownership, Level C MVP, GPU/threading scope, and issue owners/labels are approved. |
-| 2026-07-31 | Beta 3 foundation target | High-risk VM/compiler foundations either landed with tests or moved out; large constants, perfect-hash select, Level C canonical-AST lowering proof, and beta 3 package shape have explicit go/no-go decisions. |
-| 2026-08-14 | Feature complete | User-facing surface is frozen; demos and tutorials are ready for manual testing; known limitations are drafted. |
-| 2026-08-31 | Release 1 | Release 1 is shipped, or a release candidate is ready with explicit residual risks. |
 
 ## Must Ship
 
@@ -579,75 +444,6 @@ Rene:
 - help stabilize library APIs and examples;
 - drive final sprint release-readiness reporting.
 
-## Original Issue Candidate Inventory
-
-This numbered inventory is retained from the original beta 3 planning pass.
-Many candidates have since landed, closed, changed scope, or become GitHub
-issues. The numbers below are local candidate numbers, not current GitHub issue
-numbers. Use `docs/ROADMAP.md` and the live issue list for current selection;
-do not recreate this table mechanically. The new R1-AC criteria supersede old
-Level C subset/parser-only fallbacks and G/L should-ship classifications.
-Suggested labels assumed a common
-`rel1` label plus the tier and area labels shown here.
-
-### Must-Ship Candidates
-
-| # | Candidate issue | Owner | Labels | Acceptance signal |
-| --- | --- | --- | --- | --- |
-| 1 | Open beta 3 branch baseline after beta 2 tag | Rene | `rel1`, `must`, `docs`, `release` | VERSION, README, release index, install docs, examples, security policy, and beta 3 release note identify `develop` as beta 3 WIP while preserving beta 2 as the latest completed tag. |
-| 2 | Keep beta 3 release note aligned with Release 1 gates | Rene | `rel1`, `must`, `docs` | Beta 3 note carries high-level scope, timetable, package expectations, known limitations, and explicit WIP status until the tag exists. |
-| 3 | Define Release 1 scope tiers and final feature-freeze date | Adrian | `rel1`, `must`, `planning` | GitHub discussion records tiers, dates, and fallback policy. |
-| 4 | Lock Level B Release 1 language surface | Adrian | `rel1`, `must`, `level-b`, `language` | Syntax and stable library surface are frozen or explicitly listed as exceptions by 2026-07-03. |
-| 5 | Define Level B versus Level G language and library boundary | Adrian | `rel1`, `must`, `level-b`, `level-g` | Short design note states what each level owns for Release 1. |
-| 6 | Stabilize Level B core library API and iterator/reference contracts | Rene | `rel1`, `must`, `library`, `tests` | Public API names, examples, and focused tests agree. |
-| 7 | Complete Unicode/text semantics issue #583 for Level B | Adrian | `rel1`, `must`, `unicode`, `level-b` | `.string`, `.binary`, conversion, comparison, and BIF behaviour are documented and tested. |
-| 8 | Normalize tool output path behaviour issue #584 | Adrian | `rel1`, `must`, `toolchain` | `rxc`, `rxas`, and driver workflows have consistent `-o` behaviour and tests. |
-| 9 | Complete RXAS float precision coverage issue #585 | Rene | `rel1`, `must`, `rxas`, `tests` | Regression coverage distinguishes stored binary64 precision from display formatting. |
-| 10 | Complete RXAS instruction coverage issue #586 | Rene | `rel1`, `must`, `rxas`, `tests` | Instruction inventory and regression coverage are updated. |
-| 11 | Retire/deprecate compiler-owned Unicode plugin path | Adrian | `rel1`, `must`, `unicode`, `plugins` | Obsolete path is removed, disabled, or documented as deprecated with replacement guidance. |
-| 12 | Inventory and classify all plugins and native-backed adapters as core, integration, optional, deprecated, or experimental | Peter | `rel1`, `must`, `plugins` | Classification table exists and matches build/package defaults, including the current `classlib_native.rxbin` adapters `Id`, `KeyDB`, and `Os` and any explicit decision to keep them separate, promote them to core, or move them elsewhere. |
-| 13 | Change default plugin build/package set to match Release 1 policy | Peter | `rel1`, `must`, `plugins`, `packaging` | Default build makes the release surface clear; optional legacy paths are opt-in. |
-| 14 | Harden `METALOADMODULE` late load and class/interface rebinding | Adrian | `rel1`, `must`, `vm`, `classes` | Implemented for beta 3 WIP with explicit-file late-load tests through `rxvm`, `rxbvm`, and the `crexx` driver; cross-platform QA remains. |
-| 15 | Replace interface method/factory linear scans with indexed lookup | Adrian | `rel1`, `must`, `vm`, `performance` | Implemented for beta 3 WIP with sorted indexes, late-load rebuilding, focused semantics tests, and a measured benchmark. |
-| 16 | Provide fast structured-data lookup without register-attribute metadata indexes | Adrian | `rel1`, `must`, `vm`, `compiler` | Superseded by byte-addressed binary memory, zero-copy comparison, packed jump tables, and compiler lowering; typed memory structs remain post-Release 1. |
-| 17 | Add large immutable constant structures to RXAS/RXBIN/VM | Adrian | `rel1`, `must`, `vm`, `rxas` | Release 1 minimum is implemented through binary constants and packed tables; dedicated typed arrays/records are deferred. |
-| 18 | Expose large constant structures through rxc for lexer/parser use | Adrian | `rel1`, `must`, `compiler`, `level-l` | Compiler can emit the minimum constant tables needed by approved demos, or surface syntax is deferred with VM/RXAS support documented. |
-| 19 | Add performance benchmark baseline for Release 1 | Rene | `rel1`, `must`, `performance`, `tests` | Linux ARM64 and native macOS ARM64 baselines are recorded with repeatable serial sampling. The four-slice dispatch refactor is implemented and locally validated on macOS ARM64, including the coherent frame cache and separate computed-goto runtime instruction image. Native Linux x86-64 counters, Windows x86-64 validation, and the cross-platform pipeline remain external gates before a default-VM or compiler-policy decision. |
-| 20 | Run final demo/tutorial usability pass | Rene | `rel1`, `must`, `docs`, `qa` | Curated examples have commands, expected output, and manual pass/fail notes. |
-| 21 | Run final packaging/signing/notarization validation | Rene | `rel1`, `must`, `packaging`, `qa` | Release assets, signing status, and platform package notes are verified before publishing. |
-| 22 | Publish Release 1 known limitations | Rene | `rel1`, `must`, `docs`, `release` | Known limitations are in release notes and match the shipped feature set. |
-
-### Should-Ship Candidates
-
-| # | Candidate issue | Owner | Labels | Fallback |
-| --- | --- | --- | --- | --- |
-| 23 | Decide and implement Level G Unicode baseline | Adrian | `rel1`, `should`, `level-g`, `unicode` | Ship LLM-focused Level G and document Unicode as planned if `utf8proc` or API design is not settled. |
-| 24 | Add build-time perfect hash optimization for static `select` | Adrian | `rel1`, `should`, `compiler`, `performance` | Implemented for the conservative eligible integer/string/binary cases; arbitrary ladder recognition remains post-Release 1. |
-| 25 | Add RXAS/VM lookup primitives needed by perfect-hash select | Adrian | `rel1`, `should`, `rxas`, `vm` | Implemented through packed jump tables with linear, open-hash, ACPH, and measured `auto` selection. |
-| 26 | Add Level L lexer/parser library demo | Peter | `rel1`, `should`, `level-l`, `demos` | Ship the generated-output proof using packed binary tables and document generator work as later. |
-| 27 | Define Level G first library baseline | Rene | `rel1`, `should`, `level-g`, `library` | The development baseline now documents LLM, structured concurrency and concurrent HTTP; complete portable evidence and explicitly decide which pieces are published. |
-| 28 | Add Level G tutorial and demos | Rene | `rel1`, `should`, `level-g`, `docs` | Checked task, parallel-block, typed-transfer and concurrent-HTTP examples now exist; complete the final usability and platform pass. |
-| 29 | Define initial Level C Release 1 milestone | Adrian | `rel1`, `should`, `level-c`, `planning` | Ship parser/highlighter milestone plus canonical-AST lowering plan. |
-| 30 | Implement first Level C canonical-AST lowering/execution proof if approved | Adrian | `rel1`, `should`, `level-c`, `compiler` | Keep normal Level C compilation unsupported and document the next phase. |
-| 31 | Establish `lib/rxfnsc` as the initial shared Level C/RexxScript runtime foundation | Adrian | `rel1`, `should`, `level-c`, `library` | Keep the current scalar/stem/pool runtime surface small and document later BIF/lowering work. |
-| 32 | Add Level C demo and known-limits documentation | Peter | `rel1`, `should`, `level-c`, `docs` | Ship DSLSH/highlighter demo with explicit no-compile limitation. |
-| 33 | Define RexxScript beta 3 integration slice | Adrian | `rel1`, `should`, `rexxscript`, `planning` | RexxScript is documented as an interpreted strings-only modern Rexx surface, not the Level C compiler path. |
-| 34 | Curate shared Rexx BIF surface for RexxScript and Level C | Rene | `rel1`, `should`, `bifs`, `level-c`, `rexxscript` | First BIF list separates string-first RexxScript use from Classic value/pool needs. |
-| 35 | Add RXAS peephole optimizer improvements from measured cases | Rene | `rel1`, `should`, `rxas`, `performance` | Keep baseline optimizer and publish benchmark results. |
-| 36 | Add rxc optimizer/inlining improvements from current fail-closed gates | Rene | `rel1`, `should`, `compiler`, `performance` | Keep gates fail-closed and document deferred cases. |
-| 37 | Clean up plugin demos and separate core from non-core examples | Peter | `rel1`, `should`, `plugins`, `demos` | Clarify status in docs/CMake even if directories are not moved. |
-
-### Initial, Experimental Or Post-Release Candidates
-
-| # | Candidate issue | Owner | Labels | Fallback |
-| --- | --- | --- | --- | --- |
-| 38 | Add Level L syntax-sugar demo if syntax is approved | Adrian | `rel1`, `experimental`, `level-l` | Keep Level L demo library-only for Release 1. |
-| 39 | Add GPU VM plugin proof of concept behind experimental status | Adrian | `rel1`, `experimental`, `vm`, `plugins` | Publish design notes or keep the work out of the release branch. |
-| 40 | Qualify and decide publication of structured concurrency | Adrian | `rel1`, `initial`, `vm` | Local/process tasks and ownership-safe transfer are implemented; keep the surface initial unless portable conformance, package proof and release approval complete. Shared-memory subtasks remain out of scope. |
-| 41 | Design class and interface constants for Release 2 | Adrian | `r2`, `level-b`, `classes`, `compiler` | Keep Release 1 constants procedure-scoped; investigate whether constants should have a public view as part of the R2 class/interface constant design. |
-| 42 | Replace file RXAS instructions with a measured typed `rx_io` call surface | Adrian | `post-r1`, `rxas`, `vm`, `library`, `performance` | Preserve current opcodes and context-owned behavior unless an approved design proves exact ownership/error equivalence, representative performance, dual lowering or migration, packaging, both VMs and the selected RXBIN tombstone policy. Transferred from former RCC-6. |
-| 43 | Review remaining host-shaped RXAS instruction families using measured dispositions | Adrian | `post-r1`, `rxas`, `vm`, `performance`, `compatibility` | Keep the current instructions unless separate FNV-1a, clock/environment/version/random, socket and reflection reviews justify typed-call conversion with use, ownership, size, performance and cross-platform evidence. Transferred from former RCC-7. |
-
 ## Dependency Map
 
 Decisions needed before implementation:
@@ -706,18 +502,3 @@ Documentation dependencies:
   keep pending release operations in the candidate handoff.
 - `docs/ai-context/CREXX_LIBS.md` should describe `rxfnsc` as the Level
   C/RexxScript runtime foundation now that the library directory exists.
-
-## Historical Final-Sprint Focus
-
-The original final sprint was reserved for:
-
-- full automated test pass and CI triage;
-- manual testing of release packages and all curated examples;
-- documentation, tutorials, known limitations, and usability cleanup;
-- performance measurement and safe optimizer/RXAS improvements only;
-- package/signing/notarization checks;
-- release notes and GitHub release materials.
-
-The underlying scope rule remains useful: feature work outside the selected
-release boundary should move to the later roadmap unless it fixes a must-ship
-defect.

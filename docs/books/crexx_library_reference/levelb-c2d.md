@@ -23,7 +23,7 @@ single code point directly.
 This is not the Classic Level C C2D contract. Level C accepts an optional
 length and interprets configuration-coded characters as a signed
 twos-complement value. That separate contract is documented in
-[`lib/rxfnsc/c2d.md`](../../rxfnsc/c2d.md).
+[`lib/rxfnsc/c2d.md`](../../../lib/rxfnsc/c2d.md).
 
 The focused optimized/unoptimized harness is
 `lib/rxfnsb/tests_functional/ts_c2d.crexx`.

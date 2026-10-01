@@ -1,0 +1,120 @@
+/*
+ * Detached book generation through the repository's cREXX TextTools port.
+ * René's original buildbooks.rexx and buildbooks.crexx remain as authored.
+ * Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all]
+ * Build with the texttools module. See BUILDING-DOCS.md for the commands.
+ */
+options levelb
+import rxfnsb
+import texttools
+
+arg args = .string[]
+i = .int
+book = .string
+path = .string
+tool = .string
+if args[0] < 3 | args[0] > 4 then do
+  say 'Usage: generate-books check|prepare|build REPO OUTPUT [BOOK|all]'
+  return 2
+end
+mode = args[1]
+if mode <> 'check' & mode <> 'prepare' & mode <> 'build' then return 2
+repo = strip(translate(args[2], '/', '\'), 't', '/')
+output = strip(translate(args[3], '/', '\'), 't', '/')
+books = 'crexx_language_reference crexx_programming_guide crexx_vm_spec crexx_library_reference'
+if args[0] = 4 then do
+  if args[4] <> 'all' then do
+    if wordpos(args[4], books) = 0 then do
+      say 'Unknown book:' args[4]
+      return 2
+    end
+    books = args[4]
+  end
+end
+if absolute_path(repo) = 0 | absolute_path(output) = 0 then do
+  say 'Use non-root absolute paths without dot components for REPO and OUTPUT.'
+  return 2
+end
+/* Resolve existing parent directories, including POSIX symlinks, before copying. */
+repo = canonical_directory(repo)
+if repo = '' then return 2
+parent = left(output, lastpos('/', output)-1)
+leaf = substr(output, lastpos('/', output)+1)
+parent = canonical_directory(parent)
+if parent = '' then do
+  say 'OUTPUT must have an existing parent directory.'
+  return 2
+end
+output = parent || '/' || leaf
+if lower(output) = lower(repo) | left(lower(output), length(repo)+1) = lower(repo) || '/' then do
+  say 'OUTPUT must be outside the source tree.'
+  return 2
+end
+errors = .string[]
+address crexx 'exists :output' error errors
+if rc = 0 then do
+  say 'OUTPUT already exists; choose a fresh directory:' output
+  return 2
+end
+missing = 0
+do i = 1 to words(books)
+  book = word(books, i)
+  path = repo || '/docs/books/' || book || '/structure.tex'
+  call arraydrop errors
+  address crexx 'exists :path' error errors
+  if rc <> 0 then do
+    say 'Missing book input:' path
+    missing = missing + 1
+  end
+end
+tools = 'pandoc'
+if mode <> 'prepare' then tools = tools || ' xelatex makeindex biber xdvipdfmx bash crexx rxc rxas rxvme stdbuf inkscape'
+do i = 1 to words(tools)
+  tool = word(tools, i)
+  call arraydrop errors
+  address crexx 'which :tool' error errors
+  if rc <> 0 then do
+    say 'Missing executable:' tool
+    missing = missing + 1
+  end
+end
+say 'Books:' books
+say 'Output:' output
+if missing > 0 then return 1
+if mode = 'check' then do
+  say 'Executables and book inputs found. Fonts/packages still need qualification.'
+  return 0
+end
+/* Native copy dereferences guide symlinks and omits only old tex/book outputs. */
+if texttools..copytree(repo || '/docs/books', output || '/docs/books', 1) <> 0 then return 1
+if texttools..copytree(repo || '/docs/instructions', output || '/docs/instructions') <> 0 then return 1
+do i = 1 to words(books)
+  book = word(books, i)
+  source = output || '/docs/books/' || book
+  work = source || '/tex/book'
+  say 'Publication:' book
+  if texttools..build(source, work, book, mode) <> 0 then do
+    say 'Build failed for' book 'Inspect the captured command log.'
+    return 1
+  end
+  if mode = 'prepare' then say 'Prepared TeX:' work || '/' || book || '.tex'
+  else say 'PDF produced; inspect layout and logs:' work || '/' || book || '.pdf'
+end
+return 0
+
+absolute_path: procedure = .boolean
+  arg path = .string
+  if path = '' | path = '/' then return 0
+  if left(path, 1) <> '/' & substr(path, 2, 2) <> ':/' then return 0
+  if pos('/../', path || '/') > 0 | pos('/./', path || '/') > 0 then return 0
+  return 1
+
+canonical_directory: procedure = .string
+  arg path = .string
+  result = .string[]
+  errors = .string[]
+  address crexx 'cd :path' error errors
+  if rc <> 0 then return ''
+  address crexx 'pwd' output result
+  if rc <> 0 then return ''
+  return strip(translate(result[1], '/', '\'), 't', '/')
