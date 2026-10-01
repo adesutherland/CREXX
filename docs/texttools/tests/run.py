@@ -114,8 +114,10 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
     boilerplate.mkdir(parents=True)
     (boilerplate / "preamble.tex").write_text(
         "\\usepackage{hyperref}\n\\usepackage{setspace}\n"
-        "\\usepackage{fontspec}\n\\usepackage{fancyvrb}\n"
+        "\\usepackage{fontspec}\n\\usepackage{longtable}\n"
+        "\\usepackage{fancyvrb}\n"
         "\\usepackage{bashful}\n\\usepackage{listings}\n"
+        "\\usepackage{longtable}\n\\usepackage{longtable}\n"
         "\\setmainfont[Mapping=tex-text]{Minion Pro}\n"
         "\\newfontfamily\\headingfont{Avenir Next}\n"
         "\\newfontfamily\\codefont{IBM Plex Mono}\n")
@@ -148,7 +150,9 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
     run("four-books", wrapper + ["build", source, work / "four books", "all"], env=env)
     staged = work / "four books/docs/books"
     preamble = (staged / "boilerplate/preamble.tex").read_text()
-    assert preamble.index("\\usepackage{setspace}") < preamble.index("\\usepackage{hyperref}")
+    assert preamble.index("\\usepackage{setspace}") < preamble.index("\\usepackage{longtable}")
+    assert preamble.index("\\usepackage{longtable}") < preamble.index("\\usepackage{hyperref}")
+    assert preamble.count("\\usepackage{longtable}") == 3
     assert "\\usepackage{fvextra}" in preamble
     assert "\\tracinglostchars=3" in preamble
     assert "\\lstset{indexstyle=\\BookIndex}" in preamble
@@ -238,7 +242,8 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
         original_staged / "boilerplate/preamble.tex").read_text()
     original_preamble = (original_staged / "boilerplate/preamble.tex").read_text()
     assert original_preamble.index("\\usepackage{setspace}") < original_preamble.index(
-        "\\usepackage{hyperref}")
+        "\\usepackage{longtable}") < original_preamble.index("\\usepackage{hyperref}")
+    assert original_preamble.count("\\usepackage{longtable}") == 3
     assert "\\input{../../../boilerplate/glyph-fallback}" not in (
         original_staged / "boilerplate/preamble.tex").read_text()
     run("original-fonts-versioned", wrapper + ["prepare", source,
@@ -329,13 +334,21 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
         assert source_preamble.read_bytes() == source_bytes
         staged_preamble = (actual / "docs/books/boilerplate/preamble.tex").read_text()
         assert staged_preamble.index("\\usepackage{setspace}") < staged_preamble.index(
-            "\\usepackage{hyperref}")
+            "\\usepackage{longtable}") < staged_preamble.index("\\usepackage{hyperref}")
+        assert staged_preamble.count("\\usepackage{longtable}") == (
+            source_bytes.decode().count("\\usepackage{longtable}"))
         fixture = actual / "docs/books" / BOOKS[1] / "tex/book"
-        (fixture / "footnote-fixture.tex").write_text(
-            "\\input{../../../boilerplate/preamble}\n"
-            "\\begin{document}\n"
-            "Body marker\\footnote{Retained readable footnote text.}\n"
-            "\\end{document}\n")
+        (fixture / "footnote-fixture.tex").write_text(r"""\input{../../../boilerplate/preamble}
+\begin{document}
+Body marker\footnote{Retained readable footnote text.}
+\begin{longtable}{p{0.2\linewidth}p{0.6\linewidth}}
+One & Table one\footnote{First retained table note.} \\
+Two & Table two\footnote{Second retained table note.} \\
+Three & Table three\footnote{Third retained table note.} \\
+Four & Table four\footnote{Fourth retained table note.} \\
+\end{longtable}
+\end{document}
+""")
         run("footnote-xelatex", ["xelatex", "-no-pdf", "-halt-on-error",
                                   "-interaction=nonstopmode", "footnote-fixture.tex"],
             env=real_env, cwd=fixture)
@@ -343,9 +356,11 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
                                     "footnote-fixture.xdv"], env=real_env, cwd=fixture)
         dests = run("footnote-destinations", ["pdfinfo", "-dests",
                     "footnote-fixture.pdf"], env=real_env, cwd=fixture).read_text()
-        assert '"Hfootnote.1"' in dests, "Footnote mark has no PDF destination"
+        for index in range(1, 6):
+            assert f'"Hfootnote.{index}"' in dests, (
+                f"Footnote {index} has no PDF destination")
         receipts.append({"real_footnote_pdf": str(fixture / "footnote-fixture.pdf"),
-                         "named_destination": "Hfootnote.1"})
+                         "named_destinations": [f"Hfootnote.{i}" for i in range(1, 6)]})
     (work / "results.json").write_text(json.dumps(receipts, indent=2) + "\n")
     print(f"TextTools checks passed. Receipts: {work / 'results.json'}")
     print("Mock typesetter checks do not qualify PDF output.")

@@ -647,16 +647,21 @@ preparetypesetting: procedure = .int
   end
   else if profile <> 'original' then return 1
   original = readbinary(preamble) as .string
-  /* setspace replaces the footnote text macro. Load it before hyperref so
-     hyperref's destination anchor remains in the detached PDF. */
+  /* setspace replaces the footnote text macro, and longtable delays table
+     footnotes. Hyperref must load after both to install their PDF anchors. */
   hyperref = '5c'x || 'usepackage{hyperref}'
   setspace = '5c'x || 'usepackage{setspace}'
-  if countstr(hyperref, original) <> 1 | countstr(setspace, original) <> 1 then do
-    say 'Expected one hyperref and one setspace package declaration in:' preamble
+  longtable = '5c'x || 'usepackage{longtable}'
+  if countstr(hyperref, original) <> 1 | countstr(setspace, original) <> 1 |,
+    countstr(longtable, original) < 1 then do
+    say 'Expected hyperref, setspace and longtable package declarations in:' preamble
     return 1
   end
-  updated = changestr(setspace, original, '')
-  updated = changestr(hyperref, updated, setspace || '0a'x || hyperref)
+  first = pos(longtable, original)
+  updated = left(original, first-1) || substr(original, first+length(longtable))
+  updated = changestr(setspace, updated, '')
+  updated = changestr(hyperref, updated,,
+    setspace || '0a'x || longtable || '0a'x || hyperref)
   anchor = '5c'x || 'usepackage{fancyvrb}'
   if countstr(anchor, updated) <> 1 then do
     say 'Expected one fancyvrb package declaration in:' preamble
