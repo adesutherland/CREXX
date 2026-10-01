@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -35,6 +36,8 @@ def main():
     parser.add_argument("--pandoc", type=Path)
     parser.add_argument("--footnote-pdf", action="store_true",
                         help="Prepare one real book and verify a XeLaTeX footnote PDF destination")
+    parser.add_argument("--listings-legacy-catalog", type=Path,
+                        help="Exercise the CMake fallback with a listings 1.9 catalog and native TeX")
     args = parser.parse_args()
     product = args.bin.resolve()
     work = (args.work.resolve() if args.work else
@@ -110,6 +113,8 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
         (REPO / "docs/texttools/splice-guard.tex").read_bytes())
     (guard_dir / "glyph-fallback.tex").write_bytes(
         (REPO / "docs/texttools/glyph-fallback.tex").read_bytes())
+    (guard_dir / "listings-cmake-compat.tex").write_bytes(
+        (REPO / "docs/texttools/listings-cmake-compat.tex").read_bytes())
     boilerplate = source / "docs/books/boilerplate"
     boilerplate.mkdir(parents=True)
     (boilerplate / "preamble.tex").write_text(
@@ -162,6 +167,10 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
         guard_dir / "splice-guard.tex").read_bytes()
     assert (staged / "boilerplate/glyph-fallback.tex").read_bytes() == (
         guard_dir / "glyph-fallback.tex").read_bytes()
+    assert (staged / "boilerplate/listings-cmake-compat.tex").read_bytes() == (
+        guard_dir / "listings-cmake-compat.tex").read_bytes()
+    assert "\\@ifundefined{lstlang@cmake$}" in preamble
+    assert "\\input{../../../boilerplate/listings-cmake-compat}" in preamble
     assert "texgyrepagella-regular.otf" in preamble
     assert "texgyreheros-regular.otf" in preamble
     assert "\\setsansfont[" in preamble
@@ -361,6 +370,127 @@ Four & Table four\footnote{Fourth retained table note.} \\
                 f"Footnote {index} has no PDF destination")
         receipts.append({"real_footnote_pdf": str(fixture / "footnote-fixture.pdf"),
                          "named_destinations": [f"Hfootnote.{i}" for i in range(1, 6)]})
+    if args.listings_legacy_catalog:
+        if not args.pandoc:
+            raise ValueError("--listings-legacy-catalog also requires --pandoc")
+        old_catalog = args.listings_legacy_catalog.resolve()
+        assert (old_catalog / "lstlang2.sty").is_file(), old_catalog
+        source_preamble = REPO / "docs/books/boilerplate/preamble.tex"
+        source_bytes = source_preamble.read_bytes()
+        real_tools = work / "cmake-real-tools"
+        real_tools.mkdir()
+        (real_tools / "pandoc").symlink_to(args.pandoc.resolve())
+        real_env = dict(os.environ, PATH=str(real_tools) + os.pathsep +
+                        str(product) + os.pathsep + os.environ.get("PATH", ""))
+        actual = work / "cmake-actual-book"
+        run("cmake-book-prepare", wrapper + [
+            "prepare", REPO, actual, BOOKS[1], "initial"], env=real_env)
+        assert source_preamble.read_bytes() == source_bytes
+        staged = actual / "docs/books"
+        staged_boilerplate = staged / "boilerplate"
+        assert (staged_boilerplate / "listings-cmake-compat.tex").read_bytes() == (
+            REPO / "docs/texttools/listings-cmake-compat.tex").read_bytes()
+        source_md = (REPO / "docs/books" / BOOKS[1] / "rxpa.md").read_text()
+        fence = chr(96) * 3
+        authored_cmake = source_md.split(fence + "cmake\n", 1)[1].split(
+            "\n" + fence, 1)[0] + "\n"
+        snapshot = staged / BOOKS[1] / "tex/book/rxpa-code-1.txt"
+        assert snapshot.read_text() == authored_cmake
+        probe = ('# CMake comment: keep % & ' + chr(92) + ' exactly\n'
+                 'set(_message "double # inside quoted string")\n'
+                 "set(_single 'single # inside quoted string')\n"
+                 "add_library(sample STATIC sample.c)\n")
+        outputs = {}
+        guard_open = "\\makeatletter\n\\@ifundefined{lstlang@cmake$}{\n"
+        for name in ("legacy-1.9", "native-1.11",
+                     "native-baseline-1.11", "registered-1.9"):
+            tree = work / ("cmake-" + name)
+            boilerplate = tree / "docs/books/boilerplate"
+            shutil.copytree(staged_boilerplate, boilerplate)
+            if name == "native-baseline-1.11":
+                preamble_path = boilerplate / "preamble.tex"
+                preamble = preamble_path.read_text()
+                start = preamble.index(guard_open)
+                end = preamble.index("\\makeatother", start) + len("\\makeatother")
+                preamble_path.write_text(preamble[:start] + preamble[end:])
+            if name == "registered-1.9":
+                preamble_path = boilerplate / "preamble.tex"
+                preamble = preamble_path.read_text()
+                registered = (
+                    "\\lstdefinelanguage{CMake}{morekeywords={RegisteredSentinel},"
+                    "morecomment=[l]\\#,morestring=[b]\"}\n"
+                    "\\makeatletter\n"
+                    "\\edef\\BookCMakeBefore{\\expandafter\\meaning"
+                    "\\csname lstlang@cmake$\\endcsname}\n"
+                    "\\makeatother\n")
+                checked = (
+                    "\\makeatletter\n"
+                    "\\edef\\BookCMakeAfter{\\expandafter\\meaning"
+                    "\\csname lstlang@cmake$\\endcsname}\n"
+                    "\\ifx\\BookCMakeBefore\\BookCMakeAfter\n"
+                    "\\typeout{CMAKE-REGISTERED-PRESERVED}\n"
+                    "\\else\\errmessage{CMake handler changed}\\fi\n"
+                    "\\makeatother\n")
+                start = preamble.index(guard_open)
+                end = preamble.index("\\makeatother", start) + len("\\makeatother")
+                preamble_path.write_text(
+                    preamble[:start] + registered + preamble[start:end] +
+                    "\n" + checked + preamble[end:])
+            fixture = tree / "docs/books" / BOOKS[1] / "tex/book"
+            fixture.mkdir(parents=True)
+            (fixture / "rxpa-code-1.txt").write_bytes(snapshot.read_bytes())
+            (fixture / "cmake-lexical-probe.txt").write_text(probe)
+            (fixture / "cmake-compat-fixture.tex").write_text(
+                "\\input{../../../boilerplate/preamble}\n"
+                "\\begin{document}\n"
+                "\\lstset{basicstyle=\\ttfamily\\small,"
+                "keywordstyle=\\color{nrblue},commentstyle=\\color{nrgreen},"
+                "stringstyle=\\color{nrorange}}\n"
+                "\\lstinputlisting[language=cmake,label=rxpa-code-1.txt,"
+                "caption=rxpa-code-1.txt]{\\detokenize{rxpa-code-1.txt}}\n"
+                "\\lstinputlisting[language=cmake,label=cmake-lexical-probe.txt,"
+                "caption=cmake-lexical-probe.txt]"
+                "{\\detokenize{cmake-lexical-probe.txt}}\n"
+                "\\end{document}\n")
+            tex_env = dict(real_env)
+            if name in ("legacy-1.9", "registered-1.9"):
+                tex_env["TEXINPUTS"] = str(old_catalog) + os.pathsep + (
+                    real_env.get("TEXINPUTS", ""))
+            log = run("cmake-" + name + "-xelatex", [
+                "xelatex", "-no-pdf", "-halt-on-error",
+                "-interaction=nonstopmode", "cmake-compat-fixture.tex"],
+                env=tex_env, cwd=fixture).read_text()
+            loaded_fallback = "(../../../boilerplate/listings-cmake-compat.tex)" in log
+            assert loaded_fallback == (name == "legacy-1.9"), name
+            if name == "registered-1.9":
+                assert "CMAKE-REGISTERED-PRESERVED" in log
+            run("cmake-" + name + "-xdvipdfmx", [
+                "xdvipdfmx", "-o", "cmake-compat-fixture.pdf",
+                "cmake-compat-fixture.xdv"], env=tex_env, cwd=fixture)
+            text_log = run("cmake-" + name + "-text", [
+                "gs", "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=txtwrite",
+                "-sOutputFile=-", "cmake-compat-fixture.pdf"],
+                env=tex_env, cwd=fixture).read_text()
+            for line in (authored_cmake + probe).splitlines():
+                assert line in text_log, (name, line)
+            page = fixture / "cmake-compat-page-1.png"
+            run("cmake-" + name + "-raster", [
+                "gs", "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=png16m",
+                "-r100", "-o", page, "cmake-compat-fixture.pdf"],
+                env=tex_env, cwd=fixture)
+            outputs[name] = {"pdf": str(fixture / "cmake-compat-fixture.pdf"),
+                             "text_sha256": hashlib.sha256(
+                                 text_log.encode()).hexdigest(),
+                             "page_sha256": hashlib.sha256(
+                                 page.read_bytes()).hexdigest()}
+        comparable = [outputs[k] for k in (
+            "legacy-1.9", "native-1.11", "native-baseline-1.11")]
+        assert len({v["text_sha256"] for v in comparable}) == 1, outputs
+        assert len({v["page_sha256"] for v in comparable}) == 1, outputs
+        receipts.append({"cmake_listings_real_fixture": outputs,
+                         "legacy_catalog": str(old_catalog),
+                         "authored_cmake_sha256": hashlib.sha256(
+                             authored_cmake.encode()).hexdigest()})
     (work / "results.json").write_text(json.dumps(receipts, indent=2) + "\n")
     print(f"TextTools checks passed. Receipts: {work / 'results.json'}")
     print("Mock typesetter checks do not qualify PDF output.")

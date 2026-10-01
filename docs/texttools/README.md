@@ -139,7 +139,14 @@ paths because native ADDRESS working directories do not change the process
 directory used by those BIFs.
 
 `preparetypesetting` adds `fvextra`, the checked splice guard and (for `initial`)
-the scoped Unicode fallback to a staged preamble. `applyfontprofile`
+the scoped Unicode fallback to a staged preamble. It also checks whether
+`listings` already registered CMake, then queries its installed language driver;
+only an older catalog without CMake loads the bundled
+[full CMake language definition](listings-cmake-compat.tex). That definition
+comes from `listings` 1.11b, copyright 2025 Firmin Launay, under LPPL 1.3c
+or later. A registered handler, including the native TeX Live 2026 definition,
+keeps precedence. The authored CMake fences, boilerplate and other language
+handlers remain untouched. `applyfontprofile`
 translates only detached `.tex`/`.sty` files for the `initial` profile; the
 `original` profile leaves font requests intact. The initial profile uses
 TeX Gyre OTF and JuliaMono TTF filenames with explicit bold/italic faces
@@ -224,6 +231,8 @@ transformation regressions run in cREXX:
 ```sh
 python3 docs/texttools/tests/run.py --bin "$product"
 python3 docs/texttools/tests/run.py --bin "$product" --pandoc /absolute/path/to/pandoc
+python3 docs/texttools/tests/run.py --bin "$product" --pandoc /absolute/path/to/pandoc \
+  --listings-legacy-catalog /absolute/path/to/texlive-2023/tex/latex/listings
 ```
 
 The harness compiles, assembles, links and executes the module/drivers. It checks
@@ -234,6 +243,12 @@ the legacy invocation and invalid version rejection. Fake typesetters test
 orchestration and never qualify real PDF output.
 The optional Pandoc run prepares the actual books and checks every extracted
 listing's path in the generated TeX.
+The optional listings catalog run additionally typesets an authored CMake
+listing and a comment/quote/punctuation probe with TeX Live 2023 `listings`
+1.9, current 1.11 and a native 1.11 baseline without the guard. It checks
+literal PDF text, page-raster equality and preservation of an already
+registered CMake handler. Point the argument at a real older listings catalog,
+not a renamed current one.
 
 Real PDF generation needs the TeX tools, packages, fonts and chapter-command
 dependencies described in [BUILDING-DOCS.md](../BUILDING-DOCS.md). macOS execution

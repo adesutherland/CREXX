@@ -471,6 +471,9 @@ Canonical's HTTPS archive; local developer mirror settings remain intact.
 Package/tool versions are retained with each build. This
 Linux distribution TeX installation differs from the qualified macOS TeX Live
 2026 installation; its first real four-book result needs independent review.
+Ubuntu's older `listings` catalogue lacks CMake. Detached output uses the
+upstream CMake definition bundled with the port only when no native handler
+exists; authored listings and newer installations' handlers remain intact.
 Windows generation and original typography remain unqualified.
 
 An optional sixth driver argument supplies the exact version token:

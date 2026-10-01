@@ -627,6 +627,8 @@ preparetypesetting: procedure = .int
   arg preamble = .string, guard_source = .string, fallback_source = .string, profile = .string
   guard_target = left(preamble, lastpos('/', preamble)) || 'splice-guard.tex'
   fallback_target = left(preamble, lastpos('/', preamble)) || 'glyph-fallback.tex'
+  cmake_source = left(guard_source, lastpos('/', guard_source)) || 'listings-cmake-compat.tex'
+  cmake_target = left(preamble, lastpos('/', preamble)) || 'listings-cmake-compat.tex'
   if file_kind(preamble) <> 'file' then do
     say 'Missing staged preamble:' preamble
     return 1
@@ -636,6 +638,12 @@ preparetypesetting: procedure = .int
     return 1
   end
   address crexx 'copy :guard_source :guard_target'
+  if rc <> 0 then return rc
+  if file_kind(cmake_source) <> 'file' then do
+    say 'Missing CMake listings compatibility definition:' cmake_source
+    return 1
+  end
+  address crexx 'copy :cmake_source :cmake_target'
   if rc <> 0 then return rc
   if profile = 'initial' then do
     if file_kind(fallback_source) <> 'file' then do
@@ -682,6 +690,21 @@ preparetypesetting: procedure = .int
       '5c'x || 'index{{' || '5c'x || 'ttfamily#1}}' || '5c'x || 'endgroup}' || '0a'x ||,
     '5c'x || 'makeatother' || '0a'x ||,
     '5c'x || 'lstset{indexstyle=' || '5c'x || 'BookIndex}')
+  /* Query the installed listings driver without requesting a failing CMake
+     load. Its registered definition wins; only older catalogs use our copy. */
+  anchor = '5c'x || 'lstset{indexstyle=' || '5c'x || 'BookIndex}'
+  updated = changestr(anchor, updated, anchor || '0a'x ||,
+    '5c'x || 'makeatletter' || '0a'x ||,
+    '5c'x || '@ifundefined{lstlang@cmake$}{' || '0a'x ||,
+    '5c'x || 'begingroup' || '0a'x ||,
+    '5c'x || 'def' || '5c'x || 'lst@require{cmake$,}' || '0a'x ||,
+    '5c'x || 'def' || '5c'x || 'lst@prefix{lang}' || '0a'x ||,
+    '5c'x || 'InputIfFileExists{lstlang2.sty}{}{}' || '0a'x ||,
+    '5c'x || 'endgroup' || '0a'x ||,
+    '5c'x || '@ifundefined{lstlang@cmake$}{' ||,
+      '5c'x || 'input{../../../boilerplate/listings-cmake-compat}}{}' || '0a'x ||,
+    '}{}' || '0a'x ||,
+    '5c'x || 'makeatother')
   if profile = 'initial' then do
     anchor = '5c'x || 'usepackage{fontspec}'
     if countstr(anchor, updated) <> 1 then do

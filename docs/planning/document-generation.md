@@ -341,13 +341,13 @@ macOS and product evidence instead of dispatching broad overnight suites.
    tagged version and a long development version in real rendered pages; CLI
    regression checks cover version validation/TeX escaping and unchanged legacy
    invocation. Compare authored-input hashes before/after generation.
-9. **DG-AC-09 — open; first hosted bootstrap failed, repair/retry required: real Linux four-book generation.** A hosted Ubuntu Linux
+9. **DG-AC-09 — open; Ubuntu listing compatibility repair/retry required: real Linux four-book generation.** A hosted Ubuntu Linux
    job builds the required actual cREXX tools and fresh PDFs through the current
    generator, free font profile and real Pandoc/XeLaTeX/index/Biber tools. Retain
    dependency versions, exact source/PDF hashes, logs, page counts and literal
    listing fidelity. Independently inspect covers and representative Linux
    pages; no mock build qualifies Linux execution.
-10. **DG-AC-10 — local policy passed; hosted publication open: publication policy and asset freshness.** Inspect/test
+10. **DG-AC-10 — policy passed locally and on hosted failure; successful PDF publication open: publication policy and asset freshness.** Inspect/test
    successful, failed and partial document outcomes. A complete successful set
    contributes four clearly named PDFs and provenance to matching snapshot/tag
    assets. Failed generation permits ordinary binaries, explicitly reports no
@@ -424,6 +424,13 @@ macOS and product evidence instead of dispatching broad overnight suites.
   succeeded, and the live dev-snapshot tag/body identify that exact SHA. The
   Linux CI follow-up is a separate reviewable commit and its new hosted output
   remains required before Linux generation/publication is claimed complete.
+- The actual hosted failure policy passes at `edf91e5c1827`: normal Build
+  `36931215235` completed successfully and published matching binaries despite
+  the CMake listing failure. The live snapshot tag identifies that exact commit,
+  its body explicitly reports unavailable PDFs and no document assets remain.
+  Receipt: `linux-ci/hosted/36931215235/failure-policy-verification.json`.
+  The required Deep failure wiring is unchanged; four successful Linux PDFs
+  and their matching snapshot publication remain the open qualification gate.
 
 ## Beta 3 PDF bundle and scheduled gate activation — approved follow-up
 
@@ -473,7 +480,7 @@ initial-font/historical-instruction-content handover limitations.
     repair in the next develop publication; no language/architecture decision
     or broad overnight matrix is needed. Receipts: `beta3-release/qa/`.
 
-12. **DG-STEP-12 — in progress; Linux bootstrap repair (AC-09/10/11).** Hosted
+12. **DG-STEP-12 — complete; Linux bootstrap repair (AC-09/10/11).** Hosted
     run `36918100438` failed before typesetting because the selected Ubuntu
     packages omit the Pagella/Heros OpenType files. Explicitly install
     `fonts-texgyre`, refresh the TeX filename cache and check all eight required
@@ -500,6 +507,36 @@ initial-font/historical-instruction-content handover limitations.
     `siunitx.sty` before generation. MacOS 2026-only filenames have explicit
     Ubuntu 2023 equivalent dispositions; no full TeX installation is needed.
     Inventory receipt: `linux-ci/qa/tex-package-inventory.json`.
+
+13. **DG-STEP-13 — complete locally; hosted qualification remains AC-09/10: Ubuntu listing compatibility (AC-04/06/09/10).**
+    Run `36931215235` passed dependency installation and produced the language
+    reference, then failed on the programming guide's authored CMake fence:
+    Ubuntu's TeX Live 2023 `listings` 1.9 lacks the language handler supplied by
+    the qualified macOS installation. The generation and independent QA agents
+    audit all active fence languages against the Ubuntu catalogue before
+    selecting a bounded staged compatibility handler. Preserve literal listings,
+    authored boilerplate and current native handlers; do not relabel CMake as
+    another language or remove its highlighting. Record the proposal, upstream
+    provenance and focused real old/current package fixtures before publication.
+    Root retains ownership of this plan and CI; the generator agent owns the
+    helper/integration/fixtures, with independent QA of output and preservation.
+    The selected repair copies `listings-cmake-compat.tex` into detached
+    boilerplate. A staged guard asks `listings` to register its own CMake
+    catalogue entry, then loads the full upstream 1.11b definition only when
+    the native entry is absent. Preserve the upstream author/LPPL notices and
+    adapt only its public registration command. The owned implementation files
+    are `texttools.crexx`, the new helper, `tests/run.py` and the port guide.
+    Real fixtures use the official Noble 1.9 files and the current 1.11b files;
+    verify older-package success, literal comments/quotes and native retention,
+    plus compiled-port preparation through all four cREXX tools.
+    Actual Linux four-book qualification and matching assets remain open.
+    Receipt: `linux-ci/hosted/36931215235/linux-documentation-evidence/`.
+    Final independent review passes: exact upstream definition/notices, native
+    and registered handler preservation, all 1,422 listing payloads and identical
+    legacy/native/baseline fixture rasters. An additional real Noble smoke covers
+    all eleven native/local route variants without changing them; unrelated
+    unknown languages still fail. Receipts: `linux-ci/listings-compat/step13-results.json`
+    and `linux-ci/qa/listings-linux-compatibility-review.json`.
 
 ### Current beta 3 publication evidence
 
