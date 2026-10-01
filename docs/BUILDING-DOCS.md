@@ -156,20 +156,27 @@ packages such as `bashful`, `svg` and PSTricks. Executable discovery does not
 establish font/package availability. cREXX has replaced the ooRexx requirement;
 it does not replace Pandoc or TeX.
 
-On 1 October 2026 the `initial` profile built all four real PDFs on macOS
-ARM64 with Pandoc 3.11, TeX Live 2026 and the current checkout's product
-tools. Independent review checked every page for text outside its physical
+The detached preamble loads `setspace` and the first existing `longtable`
+declaration before `hyperref`, so ordinary and table footnotes retain their
+clickable PDF destinations. The authored preamble and package count are
+preserved.
+
+On 1 October 2026 the `initial` profile built all four beta 3 PDFs on macOS
+ARM64 with Pandoc 3.11, TeX Live 2026 and fresh release-channel product
+tools. The edition is stamped `crexx-1.0.0-beta.3`, from documentation source
+`54eb6aa8bec320a8538377dbd2686c53cc0e7282`. Independent review checked every page for text outside its physical
 boundary, representative rendered pages, logs, font embedding, indices,
 references, and all 1,422 literal fenced snapshots (997 Rexx/cREXX colour
 blocks and 425 retained other handlers). No source file changed during
-generation. The qualified PDFs are:
+generation. All 1,716 internal PDF links resolve, including all 39 ordinary/table
+footnotes. The qualified PDFs are:
 
 | Book | Pages | SHA-256 |
 | --- | ---: | --- |
-| Language reference | 430 | `16eb8e82741a57f1a216d0d7963a3db27ef97720fe01d46d0c9e46c1af2cbd62` |
-| Programming guide | 260 | `abb47d40caf8c2ae500480fc877f528b2bca79aa1f33eec48c9166a4417f2a0a` |
-| VM specification | 361 | `307bc76594e27fa95d9ab9ee9236e13e48748784f13dc8cf1ee3d8cf166a51af` |
-| Library reference | 546 | `1b1bde77e4159f918b78aadf0cf735b5552a7904867e2d74739888b70108ff1d` |
+| Language reference | 430 | `ca0b6bb7658b0e836f1f2161947cb6327cde9ce0096636daaaddf0e4a655a488` |
+| Programming guide | 260 | `efb026c8857da4bef9c9dd38ad4c55d1d276a1739cf75bfb05d8d38d4278176d` |
+| VM specification | 361 | `91162253be742aa907b8d579a234fc7ca847defed09f208cb8fc888379407cb4` |
+| Library reference | 546 | `b16821867b6e82b4680bac5a3cc95bd6a9bc3217936a6c0a45c3bc1480e88239` |
 
 The current VM structure includes its checked-in generated instruction
 chapter, whose live splices and 92 present guarded inputs were typeset.
@@ -490,11 +497,12 @@ binary checks and latest-develop publication guard remain required.
 [Deep Build QA](../.github/workflows/deep-build.yml) invokes the identical Linux
 route with document failures fatal; it cannot record a qualified develop marker
 unless the four books pass. GitHub runs scheduled workflows from its default
-branch, currently `master`: the new scheduled gate becomes live when the
-workflow is promoted there. A Deep dispatch explicitly selecting `develop` uses
-its new required gate immediately. Until promotion, do not claim the scheduled
-master gate includes documents. This is an overnight assurance requirement, not a
-reason to dispatch the entire Deep matrix for ordinary documentation edits.
+branch, currently `master`. Adrian authorised deploying the reusable job and
+required Deep gate there on 1 October 2026; commit `7f33356264bd` activates that
+scheduled route. The scheduled workflow resolves and checks out the actual
+develop commit, including its generation scripts. This is an overnight
+assurance requirement, not a reason to dispatch the entire Deep matrix for
+ordinary documentation edits.
 
 Current status: CI wiring and focused failure/asset checks pass independent review;
 real hosted Linux PDFs and their first asset publication remain open in

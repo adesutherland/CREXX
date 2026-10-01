@@ -1,8 +1,10 @@
 # Initial cREXX document generation
 
-Status: **complete for the approved initial macOS scope; independently reviewed
-on 1 October 2026**. Adrian has authorised committing and publishing the work
-to `develop`, with the separate release-documentation changes in a second commit.
+Status: **initial macOS generation and beta 3 PDF bundle complete; independently
+reviewed and asset publication verified on 1 October 2026. First hosted Linux
+qualification and snapshot PDF publication remain open below.** Adrian has
+authorised committing and publishing the work to `develop`, with the separate
+release-documentation changes in a second commit.
 This is the authoritative plan and acceptance record for document generation.
 Issue: [#712](https://github.com/adesutherland/CREXX/issues/712).
 
@@ -188,8 +190,9 @@ Adrian subsequently authorised two separate commits (document generation,
 then release documentation), QA and publication to the existing `develop`
 branch. Use the retained unchanged qualification plus focused checks for the
 affected behavior, and verify the normal automatic publication workflows on
-the pushed revision. This does not authorise a new release, book upload or
-the later restoration of René's preferred typography.
+the pushed revision. That earlier publication authorisation did not cover a new release or book
+upload; the Linux/beta-3 follow-ups below explicitly extend asset publication.
+Restoration of René's preferred typography remains later work.
 
 Evidence root:
 `/Users/adrian/.codex/cleanups/CREXX-20260930-108257c3d/documentation-review-20261001/`.
@@ -299,7 +302,8 @@ finding remains unresolved.
   correction will be included when those books are next generated.
 - Publication follows Adrian's authorisation above. The two cleanup checkpoints
   remain in the ancestry; detailed commit/QA/publication receipts stay outside
-  the source tree. No release tag, book upload or branch/worktree is needed.
+  the source tree. The subsequent Linux/beta 3 asset request is tracked below;
+  no new release tag or branch/worktree is needed.
 
 ## Linux CI and versioned publication follow-up — 1 October 2026
 
@@ -350,7 +354,7 @@ macOS and product evidence instead of dispatching broad overnight suites.
    current PDFs and removes obsolete snapshot PDFs. Existing binary asset checks
    and latest-develop guard remain intact. Verify the first published PDF names,
    version/source provenance and hashes against its hosted build.
-11. **DG-AC-11 — wiring/handover passed; scheduled master activation pending: Deep failure and maintained handover.** The scheduled or
+11. **DG-AC-11 — passed: Deep failure and maintained handover.** The scheduled or
    explicitly selected Deep job invokes the identical Linux route with failure
    required, and the assurance marker depends on success. Focused workflow/policy
    checks establish failure propagation without dispatching the full overnight
@@ -391,13 +395,13 @@ macOS and product evidence instead of dispatching broad overnight suites.
   that set, reports the effective status and continues the existing binary
   gates. The approved policy is not limited to a typesetter failure.
 - GitHub's live default branch is `master`. Scheduled Deep workflow files and
-  relative reusable calls come from that branch. The new required-document
-  gate on `develop` is available for an explicitly selected Deep dispatch;
-  **scheduled activation remains pending promotion to master**. Under the
-  repository release-line rule root will not update master merely to activate
-  this ordinary develop follow-up. Owner: coordinator/maintainer at the next
-  approved release promotion. This is a named deployment boundary, not evidence
-  that the current scheduled master workflow already qualifies documentation.
+  relative reusable calls come from that branch. Adrian explicitly authorised
+  applying the reviewed reusable workflow and required Deep gate there now.
+  Remote commit `7f33356264bdfe1adef11baef1f190a60bef24ca` is independently
+  verified; only the two workflow files changed. Scheduled activation is
+  deployed. This establishes failure wiring and deployment, not a completed
+  overnight Deep matrix. The source selected by scheduled assurance remains
+  the actual resolved develop commit.
 
 - Root's ten focused document-publication checks and the fourteen existing
   provider/publication guards pass. These execute actual collector/failure/
@@ -420,3 +424,75 @@ macOS and product evidence instead of dispatching broad overnight suites.
   succeeded, and the live dev-snapshot tag/body identify that exact SHA. The
   Linux CI follow-up is a separate reviewable commit and its new hosted output
   remains required before Linux generation/publication is claimed complete.
+
+## Beta 3 PDF bundle and scheduled gate activation — approved follow-up
+
+Adrian explicitly authorised applying the two reviewed workflow files to master
+now, overriding the ordinary release-line restriction for this bounded workflow
+change. Commit `7f33356264bdfe1adef11baef1f190a60bef24ca` is pushed to master;
+only `build-docs.yml` and `deep-build.yml` changed. Develop contains a tree-identical
+history merge of that change. The default-branch scheduled required-documents
+route is now deployed; no release tag was moved or newly cut.
+
+Adrian additionally requested a PDF bundle in the existing beta 3 release assets.
+Produce a release-version edition of all four books, with
+`crexx-1.0.0-beta.3` on their covers/publication pages, through the same maintained
+route. The qualified macOS tool route may generate this platform-independent
+bundle while the first Linux run continues. Keep documentation source identity,
+platform/tools/font profile and PDF hashes explicit. Verify production-source
+identity against the beta 3 tag; do not rename development-version PDFs and
+present them as a release edition. Preserve all authorship/notices and the known
+initial-font/historical-instruction-content handover limitations.
+
+12. **DG-AC-12 — passed: beta 3 book bundle publication.** Four fresh, reviewed PDFs
+    stamped with the plain beta 3 version plus provenance are packaged as
+    `CREXX-v1.0.0-beta.3-docs.zip`. Independent QA checks the actual covers,
+    full typesetting logs and listing fidelity, reusing unchanged valid body/
+    generator evidence where appropriate. Upload to the existing public beta 3
+    release only after checks pass; reread the asset listing and verify the
+    uploaded digest/contents. No new tag, release or original typography claim.
+10. **DG-STEP-10 — complete (AC-12).** Root runs the release-version generation
+    with the maintained qualified native tools/initial profile, records exact
+    invocation and source-versus-beta3 identity and builds the bundle. Existing
+    independent QA reviews its actual output and package before root publishes
+    the explicitly authorised asset. Detailed receipts stay outside HEAD.
+
+11. **DG-STEP-11 — complete for macOS; hosted Linux verification remains AC-09 (AC-06/09/12).** The new actual
+    PDF-destination audit found 39 missing `Hfootnote` destinations in both the
+    beta 3 edition and previously reviewed PDFs. Footnote text is present and
+    readable; this is a package-order navigation defect, not source loss.
+    Independent real fixtures prove that loading `setspace` after `hyperref`
+    overwrites the latter's footnote anchor wrapper. The v2 rebuild repaired
+    35 ordinary targets; four language-reference table notes also require
+    `longtable` to be loaded before `hyperref` so its supported delayed-footnote
+    wrapper is installed. The generation agent stages `setspace` and `longtable`
+    before `hyperref`, preserving the authored template. Verify the compiled
+    port and real ordinary/table-footnote regression fixture,
+    regenerate the four beta 3 PDFs and independently inspect actual destinations
+    and unchanged text/layout before publication. Root includes this bounded
+    repair in the next develop publication; no language/architecture decision
+    or broad overnight matrix is needed. Receipts: `beta3-release/qa/`.
+
+### Current beta 3 publication evidence
+
+- Final document source: `54eb6aa8bec320a8538377dbd2686c53cc0e7282`.
+  The two bounded footnote commits preserve the authored shared preamble and
+  its package count. The compiled-port ordinary/table regression and independent
+  actual four-book checks pass. All 1,716 internal PDF links resolve, including
+  all 39 footnotes on their correct source pages; printed notes remain readable.
+- Fresh plain-version books are 430/260/361/546 pages. Full logs, glyph/font/
+  reference/index checks, all 1,597 page bounds, and representative visual/body
+  comparisons pass. All 1,422 listing snapshots (196,037 bytes) and the 1,336
+  authored-input/symlink records are preserved. Exact qualified PDF/tool hashes
+  and independent receipts are in `beta3-release/build-v3/release-assets/` and
+  `beta3-release/qa-v3/beta3-v3-independent-review.json`.
+- Existing public beta 3 release asset `604148580` is
+  [`CREXX-v1.0.0-beta.3-docs.zip`](https://github.com/adesutherland/CREXX/releases/download/v1.0.0-beta.3/CREXX-v1.0.0-beta.3-docs.zip):
+  four PDFs, provenance JSON and initial-font/source-identity README, 3,524,392
+  bytes, SHA-256 `5c17d6d6b726fb5b9d48022aec53dd59fe4e5c99abefdb50a844c93fb5002a88`.
+  GitHub's digest and downloaded six-member CRC/byte/hash readback match.
+  Receipt: `beta3-release/publication-verified.json`. The beta 3 tag/product
+  commit remains `ae1607b8e145174422cee7f3e73fbcc37a65226c`; its compiler/runtime/
+  library implementations match the release-channel tools used by the books.
+  Differences are documentation links and removed disabled experimental
+  benchmark options. No release body or tag changed.
