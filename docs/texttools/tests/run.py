@@ -349,7 +349,11 @@ if name == 'xdvipdfmx' and not os.environ.get('TT_NO_PDF'):
         assert "\\obeylines" not in rxcpack and "sed 's/" not in rxcpack
         architecture = (work / "actual books/docs/books/crexx_vm_spec/tex/book/"
                         "CREXX_ARCHITECTURE.tex").read_text()
-        assert "\\nolinkurl{performance/UNICODE-CERT-01-WORKLIST.md}" in architecture
+        vm_path_token = ("\\texttt{performance/\\allowbreak{}UNICODE-"
+                         "\\allowbreak{}CERT-\\allowbreak{}01-"
+                         "\\allowbreak{}WORKLIST.md}")
+        assert vm_path_token in architecture
+        assert "\\nolinkurl{performance/UNICODE-CERT-01-WORKLIST.md}" not in architecture
         assert "\\texttt{performance/UNICODE-CERT-01-WORKLIST.md}" not in architecture
         assert authored_layout == {
             path: hashlib.sha256((REPO / path).read_bytes()).hexdigest()
@@ -431,8 +435,11 @@ Four & Table four\footnote{Fourth retained table note.} \\
         rxcpack = (staged / "crexx_programming_guide/tex/book/rxcpack.tex").read_text()
         architecture = (staged / "crexx_vm_spec/tex/book/"
                         "CREXX_ARCHITECTURE.tex").read_text()
+        vm_path_token = ("\\texttt{performance/\\allowbreak{}UNICODE-"
+                         "\\allowbreak{}CERT-\\allowbreak{}01-"
+                         "\\allowbreak{}WORKLIST.md}")
         vm_path_line = next(line for line in architecture.splitlines()
-                            if "\\nolinkurl{performance/UNICODE-CERT-01-WORKLIST.md}" in line)
+                            if vm_path_token in line)
         (fixture / "rxcpack.tex").write_text(rxcpack)
         version = "crexx-1.0.0-beta.3+dev-snapshot.gdf9bf84d7b65"
         help_text = run("layout-actual-rxcpack-help", [product / "rxcpack", "-h"],
@@ -447,15 +454,24 @@ Four & Table four\footnote{Fourth retained table note.} \\
                         "test \"$1\" = \"-h\" || exit 2\n"
                         "cat ./rxcpack-help.txt\n")
         shim.chmod(0o755)
-        (fixture / "layout-fixture.tex").write_text(
+        fixture_tex = (
             "\\input{../../../boilerplate/preamble}\n"
-            "\\begin{document}\n"
+            "\\begin{document}\n\\large\n"
             "\\input{rxcpack.tex}\n"
             "\\section*{VM architecture path}\n"
             "\\begin{itemize}\n\\tightlist\n\\item\n"
             + vm_path_line + "\n"
             "\\end{itemize}\n"
+            "\\section*{Narrow path stress}\n"
+            "\\begin{minipage}{0.38\\linewidth}\n"
+            "\\begin{itemize}\n\\item " + vm_path_token + "\n"
+            "\\end{itemize}\n\\end{minipage}\n"
             "\\end{document}\n")
+        assert fixture_tex.count(vm_path_token) == 2
+        (fixture / "layout-fixture.tex").write_text(fixture_tex)
+        baseline_path = "\\nolinkurl{performance/UNICODE-CERT-01-WORKLIST.md}"
+        (fixture / "layout-baseline.tex").write_text(
+            fixture_tex.replace(vm_path_token, baseline_path, 1))
         tex_env = dict(real_env, PATH=str(tool_dir) + os.pathsep + real_env["PATH"])
         if args.layout_legacy_catalog:
             old_catalog = args.layout_legacy_catalog.resolve()
@@ -466,12 +482,27 @@ Four & Table four\footnote{Fourth retained table note.} \\
                 ["kpsewhich", "lstlang2.sty"], env=tex_env, cwd=fixture
                 ).read_text().strip()
             assert Path(resolved_catalog).resolve() == old_catalog / "lstlang2.sty"
+        baseline_log = run("layout-baseline-xelatex", [
+            "xelatex", "-no-pdf", "-shell-escape", "-halt-on-error",
+            "-interaction=nonstopmode", "layout-baseline.tex"],
+            env=tex_env, cwd=fixture).read_text()
+        baseline_overfull = [float(width) for width in re.findall(
+            r"Overfull \\hbox \(([\d.]+)pt too wide\) in paragraph",
+            baseline_log)]
+        assert any(width > 50 for width in baseline_overfull), baseline_overfull
+        run("layout-baseline-xdvipdfmx", ["xdvipdfmx", "-o",
+            "layout-baseline.pdf", "layout-baseline.xdv"], env=tex_env, cwd=fixture)
+        with pdfplumber.open(fixture / "layout-baseline.pdf") as baseline_pages:
+            baseline_outside = [ch for page in baseline_pages.pages for ch in page.chars
+                                if ch["x0"] < -0.01 or ch["x1"] > page.width + 0.01
+                                or ch["top"] < -0.01 or ch["bottom"] > page.height + 0.01]
+        assert baseline_outside, "Old URL path failed to reproduce the physical clip"
         log = run("layout-xelatex", ["xelatex", "-no-pdf", "-shell-escape", "-halt-on-error",
                                      "-interaction=nonstopmode", "layout-fixture.tex"],
                   env=tex_env, cwd=fixture).read_text()
-        assert not [line for line in log.splitlines()
-                    if "Overfull \\hbox" in line
-                    and "while \\output is active" not in line], "Content box overflow"
+        repaired_overfull = [float(width) for width in re.findall(
+            r"Overfull \\hbox \(([\d.]+)pt too wide\) in paragraph", log)]
+        assert all(width < 20 for width in repaired_overfull), repaired_overfull
         assert "Missing character:" not in log
         run("layout-xdvipdfmx", ["xdvipdfmx", "-o", "layout-fixture.pdf",
                                   "layout-fixture.xdv"], env=tex_env, cwd=fixture)
@@ -499,6 +530,10 @@ Four & Table four\footnote{Fourth retained table note.} \\
         assert len(pages) == page_count, pages
         receipts.append({"layout_pdf": str(pdf), "pages": page_count,
                          "physical_outside_characters": len(outside),
+                         "old_url_baseline_pdf": str(fixture / "layout-baseline.pdf"),
+                         "old_url_baseline_outside_characters": len(baseline_outside),
+                         "old_url_baseline_overfull_pt": baseline_overfull,
+                         "repaired_overfull_pt": repaired_overfull,
                          "version": version,
                          "literal_help_sha256": hashlib.sha256(help_text.encode()).hexdigest(),
                          "pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),

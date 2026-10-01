@@ -182,8 +182,9 @@ escaped ampersands only for raw TeX expansion; literal Verbatim prints the
 unchanged help bytes, line breaks and punctuation without that filter. The
 authored command and chapter stay intact. The long
 `performance/UNICODE-CERT-01-WORKLIST.md` path in the VM appendix receives
-legal line breaks through `\nolinkurl` in detached TeX; its printed text is
-unchanged.
+explicit zero-ink break opportunities after the slash and hyphens in detached
+`\texttt`. These breaks fit the VM driver's larger body text; the printed path
+is unchanged.
 
 The language book leaves RXPP's authored GitHub TOC links intact. Its
 [`rxpp-book-links.tsv`](../books/crexx_language_reference/rxpp-book-links.tsv)
@@ -263,9 +264,11 @@ not a renamed current one.
 The optional layout fixture requires Python `pdfplumber`, XeLaTeX,
 Ghostscript and the current product `rxcpack`. It prepares the actual books,
 then prints the exact authored help command with a matching long development
-version and the VM path inside its original list width. It checks literal text,
-page bounds and a malformed-context failure. The catalog argument selects the
-older listings files through `TEXINPUTS` for that real typesetting run.
+version. It sets the VM driver's `\large` body size, reproduces the old path
+clip inside its original list width, and checks the explicit-break repair at
+that width and in a narrower stress cell. It checks literal text, physical
+page bounds and a malformed-context failure. The catalog argument selects
+the older listings files through `TEXINPUTS` for that real typesetting run.
 
 Real PDF generation needs the TeX tools, packages, fonts and chapter-command
 dependencies described in [BUILDING-DOCS.md](../BUILDING-DOCS.md). macOS execution

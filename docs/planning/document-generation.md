@@ -341,7 +341,7 @@ macOS and product evidence instead of dispatching broad overnight suites.
    tagged version and a long development version in real rendered pages; CLI
    regression checks cover version validation/TeX escaping and unchanged legacy
    invocation. Compare authored-input hashes before/after generation.
-9. **DG-AC-09 — open; four Linux books built, repaired layout awaiting hosted review: real Linux four-book generation.** A hosted Ubuntu Linux
+9. **DG-AC-09 — open; Linux help passed, explicit VM path breaks awaiting hosted proof: real Linux four-book generation.** A hosted Ubuntu Linux
    job builds the required actual cREXX tools and fresh PDFs through the current
    generator, free font profile and real Pandoc/XeLaTeX/index/Biber tools. Retain
    dependency versions, exact source/PDF hashes, logs, page counts and literal
@@ -540,7 +540,7 @@ initial-font/historical-instruction-content handover limitations.
     unknown languages still fail. Receipts: `linux-ci/listings-compat/step13-results.json`
     and `linux-ci/qa/listings-linux-compatibility-review.json`.
 
-14. **DG-STEP-14 — complete locally; hosted output review open: repair reproduced Linux clipping (AC-06/08/09/10).**
+14. **DG-STEP-14 — help complete on Linux; explicit VM path repair passed locally, hosted proof open: repair reproduced Linux clipping (AC-06/08/09/10).**
     Hosted run `36935421320` produces all four PDFs with the exact development
     version and preserved source/listing payloads. Independent actual-page
     review finds two clipped lines: the programming guide's authored rxcpack
@@ -573,6 +573,23 @@ initial-font/historical-instruction-content handover limitations.
     rendered pages in `linux-ci/layout-repair/qa/independent-review.json`.
     These are focused local
     repair proofs; the next actual Linux output remains required for AC-09/10.
+    Actual run `36939319282` verifies the help repair and all other full-book
+    fidelity/link checks, but the VM path still exceeds the physical page.
+    The local fixture omitted the VM driver's persistent `\large` body size.
+    Keep this as the same `DG-LINUX-CLIP-02` finding. Replace the URL workaround
+    with explicit zero-ink breaks after the slash and each hyphen; reproduce the
+    failure in the real book font/list context before proving the replacement.
+    Root again withholds only the generated release artifact, preserving the
+    downloaded PDFs and hosted evidence. Actual next Linux layout and matching
+    publication remain open; do not repeat unchanged help/product qualification.
+    The corrected `\large` fixture reproduces the actual 104.18355pt overflow
+    and five clipped characters. Explicit slash/hyphen breaks preserve the full
+    path with zero physical outliers, including a narrower stress fixture.
+    Independent and coordinator raster review find no overlap or clipping;
+    the remaining 11.96378pt content-box warning enters empty margin and is
+    harmless. The help output is byte-identical to its qualified version.
+    Final receipts: `linux-ci/layout-repair/step14-results.json` and
+    `linux-ci/layout-repair/qa-v6/independent-review.json`.
 
 ### Current beta 3 publication evidence
 

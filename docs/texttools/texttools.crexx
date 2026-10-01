@@ -375,7 +375,7 @@ preprocessTEX: procedure = .int
         '\nolinkurl{docs/planning/beta-3/notes/binary-fastpath-research.md}')
     if pos('\texttt{performance/UNICODE-CERT-01-WORKLIST.md}', line) > 0 then
       line = changestr('\texttt{performance/UNICODE-CERT-01-WORKLIST.md}', line,,
-        '\nolinkurl{performance/UNICODE-CERT-01-WORKLIST.md}')
+        '\texttt{performance/\allowbreak{}UNICODE-\allowbreak{}CERT-\allowbreak{}01-\allowbreak{}WORKLIST.md}')
     if pos('.rxunicode..graphemes(text)', line) > 0 then
       line = changestr('.rxunicode..graphemes(text)', line,,
         '.rxunicode..\allowbreak{}graphemes(text)')
