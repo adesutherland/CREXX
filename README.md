@@ -8,16 +8,19 @@ run by the CREXX virtual machine.
 This documentation covers `crexx-1.0.0-beta.3`. Beta 3 combines the Level B
 toolchain and libraries, accumulated compiler/runtime and performance work,
 the initial Level G concurrency surface, optional native inference, and
-mainframe text and diagnostic I/O repairs.
+mainframe portability.
 
 ## Download And Install
 
 Get the [Beta 3 packages](https://github.com/adesutherland/CREXX/releases/tag/v1.0.0-beta.3)
 for Linux x64, Windows x64, macOS arm64, or macOS x86_64. The core runs on its
 own; `llama.rexx` is a separate optional download. Select the plugin for the
-same release and platform. See [Installing and running CREXX](INSTALL-RUN.md)
+same release and platform. Experimental
+[mainframe PoC packages](https://github.com/adesutherland/CREXX/releases/download/v1.0.0-beta.3/CREXX-v1.0.0-beta.3-mainframe.zip)
+are available for qualified CMS, TSO and managed PDOS routes and feedback from
+other installations. See [Installing and running CREXX](INSTALL-RUN.md)
 for package selection, installers, and a first program, and the
-[release notes](docs/releases/v1.0.0-beta.3.md) for features and limitations.
+[release notes](docs/releases/v1.0.0-beta.3.md) for exact qualification limits.
 
 The [Dev Snapshot](https://github.com/adesutherland/CREXX/releases/tag/dev-snapshot)
 tracks ongoing `develop` work and is replaced after each successful publication.
