@@ -1,0 +1,4 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-n', '-x', '-i', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-jshe71u3/installed Ω/bin', '-o', '/tmp/ni-s4-qa01/new-old', '/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/tests_functional/ts_http_server_failures.crexx']
+Error in ts_http_server_failures.crexx @ 19:16 - #RETURNS_VOID: Expression does not return a value., "client.get(\"/failure\", .httpheaders.empty"
+Error in ts_http_server_failures.crexx @ 19:16 - #RETVAL_MISSING: RETURN value is required., "client.get(\"/failure\", .httpheaders.empty"
+2 error(s) in source file

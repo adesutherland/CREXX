@@ -1,0 +1,5 @@
+before llama
+caught
+PANIC: (SIGNAL OUT_OF_RANGE)
+  at module 15 (llm) address 7706 (0x1e1a)
+  source: llm.crexx:710:14:     do i = 1 to _names.0

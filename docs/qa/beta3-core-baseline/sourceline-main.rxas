@@ -1,0 +1,52 @@
+/*
+ * SOURCE                 : main.crexx
+ */
+
+.globals=0
+
+main() .locals=4
+   .meta "main.main"="b" ".void" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "main.crexx" 5 5 21 "arg values = .string[]"
+   .meta "main.main.values"="b" ".string[*]" r0
+   brtpandt l7c,a1,512
+   copy r0,a1
+   br l7d
+l7c:
+   swap r0,a1
+l7d:
+   .srcstep 5 5 17 "main.crexx" 6 1 25 "say alpha..calc(values[0])"
+   .srcstep 4 4 17 "main.crexx" 6 5 16 "say alpha..calc(values[0])"
+   .srcstep 2 2 33 "main.crexx" 6 16 16 "say alpha..calc(values[0])"
+   .traceevent "C" 4 "R" "V" "r" 2 2 2 0 "values" ""
+   getattrs r3,r0,0
+   .traceevent "V" 6 "R" "I" "r" 3 2 2 0 "values" ""
+   icopy r1,r3
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "value" ""
+   .srcstep 3 3 25 "unit.crexx" 6 3 20 "  return value + 11"
+   .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "value" ""
+   iadd r3,r1,11
+   .traceevent "O" 4 "R" "I" "r" 3 5 5 0 "" ""
+   icopy r2,r3
+l76bexprend:
+   itos r2
+   say r2
+   .srcstep 9 9 17 "main.crexx" 7 1 24 "say beta..calc(values[0])"
+   .srcstep 8 8 17 "main.crexx" 7 5 15 "say beta..calc(values[0])"
+   .srcstep 6 6 33 "main.crexx" 7 15 15 "say beta..calc(values[0])"
+   .traceevent "C" 4 "R" "V" "r" 2 6 6 0 "values" ""
+   getattrs r1,r0,0
+   .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "values" ""
+   icopy r3,r1
+   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "value" ""
+   .srcstep 7 7 25 "unit.crexx" 6 3 20 "  return value + 29"
+   .traceevent "V" 6 "R" "I" "r" 3 9 9 0 "value" ""
+   iadd r2,r3,29
+   .traceevent "O" 4 "R" "I" "r" 2 9 9 0 "" ""
+   icopy r1,r2
+l86bexprend:
+   itos r1
+   say r1
+   .srcstep 10 10 1 "main.crexx" 7 24 24 "say beta..calc(values[0])"
+   ret
+   .meta "main.main.values"

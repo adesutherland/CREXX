@@ -1,0 +1,13 @@
+[0/2] Re-checking globbed directories...
+[1/5] Building C object interpreter/CMakeFiles/test_rxpa_host_services.dir/tests/test_rxpa_host_services.c.o
+/Users/adrian/CLionProjects/CREXX/interpreter/tests/test_rxpa_host_services.c:76:54: warning: incompatible pointer types passing 'rxpa_attribute_value[1]' (aka 'void *[1]') to parameter of type 'value **' (aka 'struct value **') [-Wincompatible-pointer-types]
+   76 |             rxvm_call_native_procedure(procedure, 1, argv, &ret, &sig);
+      |                                                      ^~~~
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmintp.h:722:51: note: passing argument to parameter 'argv' here
+  722 |                                           value **argv, value *ret,
+      |                                                   ^
+1 warning generated.
+[2/5] Linking C executable interpreter/test_rxpa_host_services
+[3/5] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_embedding_bridge.dir/__/__/__/tests/native-inference/embedding_bridge.cpp.o
+[4/5] Linking CXX executable lib/plugins/llama/tests/rxllama_embedding_bridge
+PASS: embedding glue parity, boundaries, batching, private state and cleanup cpu

@@ -1,0 +1,15 @@
+ASan run directory: /tmp/crexx-package-copy-asan/asan-logs/20260916-092413-ctest
+==> ctest
+    log: /tmp/crexx-package-copy-asan/asan-logs/20260916-092413-ctest/ctest.log
+==> ctest passed
+Command: ctest --test-dir /tmp/crexx-package-copy-asan --output-on-failure -R \^provider_package_copy\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /tmp/crexx-package-copy-asan
+    Start 1: provider_package_copy
+1/1 Test #1: provider_package_copy ............   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.09 sec
+ASan run complete: /tmp/crexx-package-copy-asan/asan-logs/20260916-092413-ctest

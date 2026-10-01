@@ -1,0 +1,3 @@
+argv=[PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/bin/rxas'), '-o', PosixPath('/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-typed_generation-dynamic'), PosixPath('/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-typed_generation-dynamic')]
+cwd=/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work
+rc=0

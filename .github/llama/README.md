@@ -1,0 +1,70 @@
+# Native inference candidate lanes
+
+The authoritative numbered work package is
+[`docs/planning/native-inference-ci.md`](../../docs/planning/native-inference-ci.md).
+`release-matrix.json` defines the six complete binary packages; candidate jobs
+use the same staging/smoke path as eventual publication. No trained GGUF is
+downloaded. The 4.8 MB generated fixture lives under `tests/native-inference` and
+is excluded from user archives, as is the engine test executable.
+
+Push `temp/llama-release-qa` to run the full package matrix. Other
+`temp/llama-release-*` diagnostic branches are manual-only, avoiding a delayed
+push event that cancels a selected lane and starts the whole matrix. Manual
+candidate runs may select `base`, `cuda`, or one named lane. Selection cannot narrow a develop/tag
+publication matrix. The separate Deep Build and Sanitizer workflows are
+dispatched against the same candidate branch after package triage:
+
+```sh
+gh workflow run build.yml --ref temp/llama-release-qa -f lane=linux
+gh workflow run deep-build.yml --ref temp/llama-release-qa
+gh workflow run sanitizers.yml --ref temp/llama-release-qa
+```
+
+Inspect the returned run's branch and `headSha` before cancelling or rerunning
+it. `gh run cancel RUN_ID` cancels that run; `gh run rerun RUN_ID --failed`
+retries its failed jobs at the same SHA. New runs supersede only the same
+workflow on the candidate branch. Publication remains limited to existing
+develop/tag events, never candidate pushes or manual candidate runs.
+
+Nested package smoke is serial with a 3,600-second outer hang guard and
+1,800-second child guards. It measured 44.5 seconds in Debug and 48.3 seconds
+under Apple ASan before CTest registration. It has the `qualification` tier:
+ordinary package jobs run it once against their final staged payload, while
+Deep Build qualification and full sanitizer QA include it through CTest.
+The broad hosted jobs use 240-minute outer backstops. Actual GPU presence and
+fixture computation are logged; an OS label is not device evidence.
+
+Package smoke executes the public `rxvm` entry point and checks its connection
+to the configured preferred VM. Linux ZIPs use `zip -y` to preserve relative
+symlinks; macOS `ditto` preserves them already. Windows uses the selected
+executable copy. The alternate VM is also exercised where supported.
+
+CUDA build inputs are NVIDIA 12.9.1 component archives pinned by size/SHA256 in
+`cuda-12.9.1.json`. `scripts/ci-cuda-toolkit.py` assembles and caches the SDK and
+retains component licenses in the provider notice and user guides. Windows CUDA
+uses the installed MSVC v143/14.44 toolset, which supplies cREXX's C11 atomics
+and passes the pinned CUDA host-version check; the base
+Windows package retains MinGW/Vulkan. The engine keeps its upstream portable
+CUDA architecture defaults (`GGML_NATIVE=OFF`); CI does not tune or narrow its
+GPU target list. OS graphics drivers are not redistributed.
+
+Windows consumer smoke removes development SDK/toolchain directories from PATH
+while executing the engine, compiler, VMs and relocated native program. Only
+native compilation retains its compiler environment. Small startup DLLs live
+beside the installed executables; large GPU dependencies stay in `bin/providers`.
+This checks package discovery without relying on the runner's development PATH;
+the hosted Windows image still has system runtimes/drivers, so retain dependency
+inspection and separate real-device qualification as well.
+
+For a macOS engine hang, the smoke harness accepts an explicit diagnostic
+`--capture-engine-after N`. If the engine is still running then, the harness
+captures its stack with `sample`, stops that child and fails the run. Use this
+only on a diagnostic branch; it is not a shorter qualification deadline or a
+pass. Normal workflows omit the option and retain the ordinary workload and
+1,800-second child hang guard. Engine stage markers identify how far it reached.
+
+After signing a trusted staged payload, verify its signatures before running
+`scripts/refresh-provider-manifests.py`. That script updates only the declared
+file hashes (including the runtime-manifest dependency) and is not installed.
+Final-payload smoke must pass before archiving. Never use it to repair a user's
+damaged package: the runtime must reject altered files.

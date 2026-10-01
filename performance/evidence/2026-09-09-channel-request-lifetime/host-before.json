@@ -1,0 +1,70 @@
+[
+  {
+    "argv": [
+      "/usr/bin/sw_vers"
+    ],
+    "exit": 0,
+    "output": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83\n"
+  },
+  {
+    "argv": [
+      "/usr/bin/uname",
+      "-srm"
+    ],
+    "exit": 0,
+    "output": "Darwin 25.6.0 arm64\n"
+  },
+  {
+    "argv": [
+      "/usr/sbin/sysctl",
+      "-n",
+      "machdep.cpu.brand_string",
+      "hw.logicalcpu",
+      "hw.memsize"
+    ],
+    "exit": 0,
+    "output": "Apple M5\n10\n25769803776\n"
+  },
+  {
+    "argv": [
+      "/usr/bin/pmset",
+      "-g",
+      "batt"
+    ],
+    "exit": 0,
+    "output": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=35324003)\t99%; finishing charge; 0:03 remaining present: true\n"
+  },
+  {
+    "argv": [
+      "/usr/bin/pmset",
+      "-g",
+      "custom"
+    ],
+    "exit": 0,
+    "output": "Battery Power:\n Sleep On Power Button 1\n lowpowermode         0\n standby              1\n ttyskeepawake        1\n hibernatemode        3\n powernap             1\n hibernatefile        /var/vm/sleepimage\n displaysleep         20\n womp                 0\n networkoversleep     0\n sleep                1\n lessbright           1\n tcpkeepalive         1\n disksleep            10\nAC Power:\n Sleep On Power Button 1\n lowpowermode         0\n standby              1\n ttyskeepawake        1\n hibernatemode        3\n powernap             1\n hibernatefile        /var/vm/sleepimage\n displaysleep         20\n womp                 1\n networkoversleep     0\n sleep                0\n tcpkeepalive         1\n disksleep            10\n"
+  },
+  {
+    "argv": [
+      "/usr/bin/pmset",
+      "-g",
+      "therm"
+    ],
+    "exit": 0,
+    "output": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+  },
+  {
+    "argv": [
+      "/usr/bin/uptime"
+    ],
+    "exit": 0,
+    "output": "11:20  up 11 days,  9:14, 2 users, load averages: 2.71 2.81 2.32\n"
+  },
+  {
+    "argv": [
+      "/usr/bin/cc",
+      "--version"
+    ],
+    "exit": 0,
+    "output": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n"
+  }
+]

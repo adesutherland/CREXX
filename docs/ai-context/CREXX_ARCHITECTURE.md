@@ -11,6 +11,23 @@
 before `rxc` when the wrapper or a build step asks for preprocessing, but `rxc`
 does not run RXPP internally.
 
+The opt-in [single-threaded port](../../ports/single-threaded/README.md) builds
+the same compiler with a constrained embedded VM, retaining compiler exits.
+It leaves the normal desktop configuration and language contracts intact.
+Source buffering accepts sequential streams and retains two scanner sentinels.
+The optional [CMS text adapter](../../ports/single-threaded/CMS-TEXT.md) converts
+external text before source/header/import lexical analysis and after RXC
+assembly emission. It does not change UTF-8 buffers or RXBIN 007. RXC/RXAS
+`-E` selects external encoding before opening files. The beta 3 native raw
+route uses the shared seven-page codec in the platform layer; `rxlink`, `rxdas`
+and the VM accept the same `-E` selector for supported text files. RXBIN and
+explicit binary paths stay raw. Read/write/close failures must prevent success.
+
+Native CMS/TSO SDK entry points explicitly disable runtime character conversion.
+The platform layer wraps raw native text files with the shared codec and converts
+first-party stdout/stderr diagnostics. Binary opens remain raw; sequential text
+update modes are rejected before opening. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md).
+
 ## The Compilation Pipeline
 
 The pipeline of transforming Rexx source code into executable bytecode is structured as follows:
@@ -50,6 +67,11 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
 4. **Emitter (IR -> Assembly)**
    - AST walkers (e.g., `rxcp_ast_walk.c`, `rxcp_emit_*.c`) traverse the tree.
    - Outputs intermediate string fragments representing the `rxas` Assembly instructions.
+   - Short-circuit `AND`/`OR` result-register donation checks each operand's
+     cleanup lifetime independently. A linked left attribute must remain live
+     through cleanup without preventing a computed right operand from receiving
+     the shared result register. `short_circuit_linked_left` covers both truth
+     paths, skipped side effects, and subsequent attribute reads in opt/noopt.
    - The optimiser performs opportunity-based AST inlining before emission. A
      callable may be structurally available for inlining, but each call site is
      still validated against the supported rewrite shapes. The release slice
@@ -70,6 +92,13 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      and leave the downstream emitter with an ordinary validated tree. This is
      why new inline cases are opened by specific parent/operand shape instead
      of by globally deciding that a callable is "always inlineable".
+     Statement-position return rewrites preserve two conversion boundaries:
+     the expression becomes the callee's declared return type, then that result
+     becomes the caller's target type. These assignments are built after final
+     type validation, so the inliner sets their target types explicitly. When
+     both conversions are needed, a temporary with the declared return type
+     preserves the intermediate result and any conversion error before receiver
+     copyback. Nested block expressions retain their caller conversion as well.
    - A real method call binds the receiver value directly as `a1`. The inliner
      may therefore place a proved direct-object receiver in that same storage.
      For a nested call on the enclosing method's direct `§this`, the current
@@ -89,7 +118,7 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      arguments, replacement writes, aliases, labels and dynamic `SIGNAL`
      retain `assertinitialized`.
    - Cross-file inlining uses compiler-owned `META_INLINE` payloads alongside
-     normal callable metadata. The current `I6` payload begins with a versioned
+     normal callable metadata. The current `I6`/`I7` payloads begin with a versioned
      callable summary containing formal read/write/escape and exact-shape
      facts, result/control/context facts, and structural cost. The reader
      reconstructs those facts from the body and checks the result shape against
@@ -105,6 +134,10 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      different generic registry procedure.
      Libraries preserve this metadata for downstream `rxc` optimisation; final
      linked images strip it by default.
+     This is an annotated compiler-IR transport, not an RXAS proof input.
+     Summary reconstruction uses the transported AST, including its symbol-use
+     annotations; it does not verify equivalence to the executable procedure.
+     A stale template can therefore disagree with a separately edited body.
    - Suitable `SELECT` and equality ladders are lowered through a dedicated
      dispatch AST to RXAS packed jump tables. Eligibility, semantic gates,
      profitability thresholds, and regression invariants are documented in
@@ -112,6 +145,11 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
 
 5. **Assembler (`rxas`)**
    - Parses the generated `rxas` Assembly instructions.
+   - Applies a bounded local peephole, then whole-procedure CFG, component
+     SSA, alias/storage, signal and observation proofs before emission.
+     These analyses consume the assembly and shared opcode-semantics tables;
+     they do not consume RXC's callable summaries or ASTs. Inlining in RXC
+     expands the caller body seen by this procedure-level analysis.
    - Translates human-readable IR assembly into packed binary format (`rxbin` bytecode).
    - Validates `.initializer` metadata against its local `.void`, zero-argument
      bytecode procedure and sets the RXBIN 007 initializer feature bit.
@@ -131,6 +169,16 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      `rxvm_initialize()` then advances each mutable module overlay through its
      once-only initializer state before `main` or a public call can enter it.
    - The execution loop happens inside the `rxvm_run` function (e.g., in `rxvmmain.c` / `rxvmintp.c`).
+
+The [2026-09-18 optimization-boundary audit](../planning/release-1/optimization-boundary-audit-2026-09-18.md)
+maps every optimization stage and the cross-tool trust surfaces. The RXAS
+entry-argument alias defect has a published shared-SSA repair in `f7a8b08c1`.
+Adrian accepted imported inline templates as an RXC-only concern and accepted
+the documented RXAS status-bit assertion semantics on 2026-09-18. Preserve the
+structured RXC AST-rewrite support, including its Level C role. The architecture
+above describes ownership, not a general optimizer soundness claim. The
+[maintainability/fusion proposal](../planning/release-1/optimization-maintainability-and-fusion-ownership.md)
+records the remaining unapproved structural and instruction-ownership changes.
 
 ## Text, UTF-8, and Binary Data
 
@@ -436,6 +484,124 @@ or symbol was ultimately supplied by that file. It is evidence of current
 selection behaviour only and does not enforce an expected provider or alter
 the timestamp/tie-break policy.
 
+Exposed global imports retain the complete type contract, including the class
+name, array bounds and reference referent. Source imports use the same
+`sym_2tp()` representation as emitted global metadata; reducing a class to
+`.object` loses information needed before local inference has converged.
+Global resolution parses the retained declaration with the normal type grammar
+and copies its complete shape into the consuming symbol. Matching declarations
+may share a namespace; incompatible shapes still produce a type diagnostic.
+Global metadata is emitted from the enclosing namespace for every global with
+a live use in the procedure, method or factory. Binary import walks each
+module's separate export chain and pairs exposed registers with type records
+from that module's metadata chain; this also applies to linked shared constant
+pools. Imported object and reference contracts load their classes into the
+consumer before member and indexer lowering.
+
+Older modules without populated global metadata can still use a complete
+caller declaration. Missing array shape must be diagnosed after type inference
+has converged, before register allocation; early constant-bound checks wait for
+complete bounds. Present but malformed type declarations report an import
+syntax error. The `global_import_types` and `binary_global_import_types`
+regressions cover source, opt-in RXAS, RXBIN and shared-pool imports, runtime
+values, legacy caller declarations and incompatible or incomplete contracts.
+
+### Project member invalidation and declaration lookup
+
+`bin/crexx.crexx` owns project/member action keys, worker selection and atomic
+link publication. `bin/crexx_build_worker.crexx` constructs the same compiler
+argv for compilation and dependency checking. A successful member compile uses
+`rxc --project-dependencies path`; `--check-project-dependencies path` checks
+that snapshot without compiling bodies or loading executable providers.
+`compiler/rxcp_project_dependencies.c` owns the private v1 snapshot. It reruns
+`rxfl_lst()` and calls `rxcp_importable_source_namespace()` so ordered-root,
+source-extension, header normalization, namespace exclusion and RXAS timestamp
+rules cannot drift from the actual resolver. Status 0 means current; any
+nonzero status must trigger compilation. The observe-only import report has
+unchanged semantics and is not an input to this reuse decision.
+
+The snapshot contains a digest and one full-content/header mode byte per
+ordered selected candidate. Primary contents and resolver options are included;
+loaded source bodies and binary candidates contribute full hashes. Unloaded
+source candidates contribute the existing scanner's normalized namespace.
+Candidate identity/order changes, source namespace changes and loaded input
+changes therefore invalidate it. Header-only entries never authorize reuse of
+a changed loaded body. Cross-file inline payloads make imported implementation
+contents dependencies even when exported signatures are unchanged. This policy
+is conservative: discovery changes and binary candidate changes can select
+members with no resulting semantic output change. Tool and complete action
+identity remain additional controller checks. The snapshot belongs to one
+member action directory; missing/malformed data forces recompilation.
+
+The normal global content-key fast path performs no compiler invocation. With
+RXAS imports enabled the controller also checks dependencies on a content-key
+hit, because mtime can change the selected artifact without changing its bytes.
+After an RXAS-enabled compile wave it rechecks all snapshots before publication
+for the same reason.
+The controller includes implicit installed binary candidates in the global key,
+rechecks content inputs after the wave, and drops stamps if those inputs moved.
+Compiler environment settings participate in the keys, including the distinction
+between unset and present-empty `RXCP_DISABLE_EXIT`, `RXCP_EXIT_MODULE`, diagnostic
+settings and locale variables. Explicit exit-module file contents also enter the
+controller key. Arbitrary external inputs read by custom compiler exits are not
+discovered automatically; callers must keep them stable and use `--rebuild` when
+changing those external inputs.
+Do not infer dependencies from emitted callable declarations alone: inlining can
+remove runtime references while retaining an implementation dependency.
+
+For compiler-time declaration existence, `current_source_declares_contract()`
+must inspect current declaration-bearing file children after source structure
+normalization. `ast_source_structure_walker()` rejects classes/interfaces
+inside executable bodies. `ast_declares_local_contract()` therefore descends
+through PROGRAM_FILE/IMPORTED_FILE nodes, not procedure/method bodies. It
+retains the guard against stale imported declarations when a local declaration
+appears later. No eligibility/AST cache or cutoff change is involved; inserted
+live declarations are visible on the next lookup. Traversing expanded bodies
+here multiplies inline eligibility work and caused pathological RAG scaling.
+
+Binary metadata has the corresponding forward-declaration boundary.
+`read_constant_pool_for_functions()` first inventories the current module's
+META_CLASS/META_INTERFACE names. `current_binary_declares_contract()` uses that
+per-master-context stack only while that module is being read. A signature
+referring to a class declared later in the same binary must not load an external
+same-namespace source while the class registry is incomplete. Existing registered
+contracts remain usable, and normal consumer validation resolves the pending
+declaration. The stack is restored after nested imports and freed on return;
+there is no persistent lookup cache. Metadata and eager inline-payload validation
+remain intact. `binary_forward_dependencies` proves that an unused `_rxsysb`
+source extension stays excluded while a real consumer still imports it, tracks
+its body and rejects an invalid call, in both optimization modes.
+
+Source discovery distinguishes a materialized dependency's namespace scope from
+an actual namespace import. An exact inline dependency such as `closefile`'s
+`_rxsysb._close` may create a declaration scope without authorizing the loading
+of unrelated `_rxsysb` source extensions. `source_import_file_is_visible()` checks
+the current program's own namespace and its live `IMPORT` nodes, including parsed
+header imports under `REXX_OPTIONS` and compiler-generated file imports. It does
+not traverse executable bodies or imported declaration stubs. This prevents
+speculative source-import cycles from consuming unfinished array or interface
+contracts; it does not add general support for arbitrary source-import cycles.
+The `source_import_private_dependency_convergence` and `_provider` tests retain
+the #699 failures, opt/noopt and binary controls, unused-body dependency checks,
+and explicit/generated/own-namespace extension validation. Inline payloads,
+exact callable lookup and legitimate extension imports remain enabled.
+
+Storage selectors have a separate syntax-role boundary. The compact suffixes
+in `<sizeof..float>`, `<at..u8>`, `<packed..float>` and `<compare..u8>` use
+leaf `CLASS` nodes, but describe binary storage, not object values. Existing
+inline payloads can annotate these leaves as `TP_OBJECT` with a bare name such
+as `float`. The inliner's reference-attribute check recognizes the validated
+selector position and does not resolve it as an object class. Otherwise a
+spurious lookup such as `rxfnsg.float` can load unrelated source bodies and
+correctly-but-unnecessarily make them snapshot dependencies. Actual object
+nodes and reference-bearing symbols retain their normal proof; there is no
+global type-name blacklist, metadata relaxation or inlining disablement.
+`binary_storage_selector_dependencies` isolates all four selector contexts
+from the ambient library set, checks unused-source snapshots in both compiler
+modes, and executes imported bodies through the full toolchain while requiring
+supported methods to remain inlined in optimized assembly.
+
+
 Compiler-generated consumer `.rxas` treats imported declaration blocks as a
 runtime dependency snapshot, not as a copy of the provider's full public
 surface. The provider artifact's exports and metadata remain definitive. When
@@ -492,13 +658,21 @@ That metadata is sufficient for import reconstruction of class/interface
 headers without parsing procedure bodies. Imported stubs are not re-exported as
 new local contracts, and richer imported stubs replace poorer duplicates.
 
+Task lowering waits until the participating task calls and ordinary calls have
+resolved return types. Import reconstruction may attach a callable definition
+one validation iteration before its call has a type. Rewriting at that point
+can leave a partial implicit/parallel block and produce misleading
+`RETURNS_VOID` / `RETVAL_MISSING` diagnostics. `rxcp_task_lower.c` therefore
+defers the rewrite until call types converge, preserving the source expression
+and the normal invalid-type diagnostics in the meantime.
+
 Dynamic RXPA discovery stages initializer callbacks before reconstructing any
 declaration. The initializer runs under the platform loader mutex, so `ADDPROC`
 and class/interface callbacks only collect their metadata at that point. After
 the initializer returns and releases the mutex, `rxc` imports class/interface
 metadata first and then parses the procedure declarations while the provider
 remains open. This ordering permits a native procedure to return a namespaced
-Rexx class such as `.rxstats..linearfit` without recursively reopening the
+Rexx class such as `.rxfnsg..packedfloat` (returned by `rxvector`) without recursively reopening the
 provider or deadlocking the loader.
 
 ### Runtime dispatch

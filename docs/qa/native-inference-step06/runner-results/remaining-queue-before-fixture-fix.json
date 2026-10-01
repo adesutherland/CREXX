@@ -1,0 +1,23 @@
+[
+  {
+    "label": "debug-rxllama_qualify_old_host",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debug",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_qualify_old_host",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:37:33.475491+00:00",
+    "returncode": 139,
+    "end": "2026-09-15T12:37:37.030865+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/asan-logs/20260915-133733-build"
+  }
+]

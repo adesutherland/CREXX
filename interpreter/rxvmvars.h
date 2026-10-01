@@ -499,6 +499,7 @@ RX_INLINE void value_init(value *v) {
 RX_INLINE value* value_f_in(rxvm_memory_worker *worker) {
     value* this;
     this = (value *)rxvm_memory_alloc_values(worker, 1u);
+    if (!this) RX_PANIC_OOM("allocate worker value", sizeof(value), 0);
     if (this) RXVM_PROFILE_RECORD_ALLOCATION(
             RXVM_PROFILE_ALLOC_VALUE, sizeof(value), 1);
     value_init(this);
@@ -518,6 +519,7 @@ RX_INLINE value* value_f() {
      * on libc; RXVM lifecycle boundaries use value_f_in() or an entered worker.
      */
     this = (value *)malloc(sizeof(value));
+    if (!this) RX_PANIC_OOM("malloc standalone value", sizeof(value), 0);
     if (this) RXVM_PROFILE_RECORD_ALLOCATION(
             RXVM_PROFILE_ALLOC_VALUE, sizeof(value), 1);
     value_init(this);

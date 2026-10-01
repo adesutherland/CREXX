@@ -1,0 +1,79 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 2434: rxpa_objects_workers_dynamic_rxbvm_noopt
+      Start 2438: rxpa_objects_workers_dynamic_rxbvm_opt
+ 1/32 Test #2434: rxpa_objects_workers_dynamic_rxbvm_noopt .......   Passed    2.01 sec
+      Start 2439: rxpa_objects_workers_static_rxbvm_opt
+ 2/32 Test #2438: rxpa_objects_workers_dynamic_rxbvm_opt .........   Passed    2.02 sec
+      Start 2436: rxpa_objects_workers_dynamic_rxtvm_noopt
+ 3/32 Test #2439: rxpa_objects_workers_static_rxbvm_opt ..........   Passed    3.07 sec
+      Start 2435: rxpa_objects_workers_static_rxbvm_noopt
+ 4/32 Test #2436: rxpa_objects_workers_dynamic_rxtvm_noopt .......   Passed    3.73 sec
+      Start 2440: rxpa_objects_workers_dynamic_rxtvm_opt
+ 5/32 Test #2435: rxpa_objects_workers_static_rxbvm_noopt ........   Passed    2.24 sec
+      Start 2437: rxpa_objects_workers_static_rxtvm_noopt
+ 6/32 Test #2440: rxpa_objects_workers_dynamic_rxtvm_opt .........   Passed    2.05 sec
+      Start 2441: rxpa_objects_workers_static_rxtvm_opt
+ 7/32 Test #2437: rxpa_objects_workers_static_rxtvm_noopt ........   Passed    2.23 sec
+      Start 2421: rxpa_objects_static_rxtvm_noopt
+      Start 2423: rxpa_objects_static_rxbvm_opt
+      Start 2420: rxpa_objects_dynamic_rxtvm_noopt
+ 8/32 Test #2441: rxpa_objects_workers_static_rxtvm_opt ..........   Passed    1.91 sec
+      Start 2418: rxpa_objects_dynamic_rxbvm_noopt
+      Start 2422: rxpa_objects_dynamic_rxbvm_opt
+      Start 2419: rxpa_objects_static_rxbvm_noopt
+ 9/32 Test #2421: rxpa_objects_static_rxtvm_noopt ................   Passed    0.98 sec
+      Start 2424: rxpa_objects_dynamic_rxtvm_opt
+10/32 Test #2423: rxpa_objects_static_rxbvm_opt ..................   Passed    1.00 sec
+      Start 2425: rxpa_objects_static_rxtvm_opt
+11/32 Test #2420: rxpa_objects_dynamic_rxtvm_noopt ...............   Passed    1.02 sec
+      Start 2426: rxpa_objects_class_only_dynamic_rxbvm_noopt
+12/32 Test #2418: rxpa_objects_dynamic_rxbvm_noopt ...............   Passed    1.09 sec
+      Start 2427: rxpa_objects_class_only_static_rxbvm_noopt
+13/32 Test #2419: rxpa_objects_static_rxbvm_noopt ................   Passed    1.11 sec
+      Start 2428: rxpa_objects_class_only_dynamic_rxtvm_noopt
+14/32 Test #2422: rxpa_objects_dynamic_rxbvm_opt .................   Passed    1.12 sec
+      Start 2430: rxpa_objects_class_only_dynamic_rxbvm_opt
+15/32 Test #2424: rxpa_objects_dynamic_rxtvm_opt .................   Passed    1.35 sec
+      Start 2432: rxpa_objects_class_only_dynamic_rxtvm_opt
+16/32 Test #2425: rxpa_objects_static_rxtvm_opt ..................   Passed    1.36 sec
+      Start 2433: rxpa_objects_class_only_static_rxtvm_opt
+17/32 Test #2426: rxpa_objects_class_only_dynamic_rxbvm_noopt ....   Passed    1.35 sec
+      Start 2429: rxpa_objects_class_only_static_rxtvm_noopt
+18/32 Test #2427: rxpa_objects_class_only_static_rxbvm_noopt .....   Passed    1.26 sec
+      Start 2431: rxpa_objects_class_only_static_rxbvm_opt
+19/32 Test #2428: rxpa_objects_class_only_dynamic_rxtvm_noopt ....   Passed    1.28 sec
+20/32 Test #2430: rxpa_objects_class_only_dynamic_rxbvm_opt ......   Passed    1.38 sec
+21/32 Test #2432: rxpa_objects_class_only_dynamic_rxtvm_opt ......   Passed    1.11 sec
+      Start 2442: rxpa_objects_text_worker_dynamic_rxbvm_noopt
+22/32 Test #2433: rxpa_objects_class_only_static_rxtvm_opt .......   Passed    1.12 sec
+23/32 Test #2429: rxpa_objects_class_only_static_rxtvm_noopt .....   Passed    1.11 sec
+24/32 Test #2431: rxpa_objects_class_only_static_rxbvm_opt .......   Passed    1.08 sec
+      Start 2443: rxpa_objects_text_worker_static_rxbvm_noopt
+25/32 Test #2442: rxpa_objects_text_worker_dynamic_rxbvm_noopt ...   Passed    2.46 sec
+      Start 2444: rxpa_objects_text_worker_dynamic_rxtvm_noopt
+26/32 Test #2443: rxpa_objects_text_worker_static_rxbvm_noopt ....   Passed    2.46 sec
+      Start 2445: rxpa_objects_text_worker_static_rxtvm_noopt
+27/32 Test #2444: rxpa_objects_text_worker_dynamic_rxtvm_noopt ...   Passed    4.90 sec
+      Start 2446: rxpa_objects_text_worker_dynamic_rxbvm_opt
+28/32 Test #2445: rxpa_objects_text_worker_static_rxtvm_noopt ....   Passed    4.96 sec
+      Start 2447: rxpa_objects_text_worker_static_rxbvm_opt
+29/32 Test #2446: rxpa_objects_text_worker_dynamic_rxbvm_opt .....   Passed    4.46 sec
+      Start 2448: rxpa_objects_text_worker_dynamic_rxtvm_opt
+30/32 Test #2447: rxpa_objects_text_worker_static_rxbvm_opt ......   Passed    4.37 sec
+      Start 2449: rxpa_objects_text_worker_static_rxtvm_opt
+31/32 Test #2448: rxpa_objects_text_worker_dynamic_rxtvm_opt .....   Passed    2.29 sec
+32/32 Test #2449: rxpa_objects_text_worker_static_rxtvm_opt ......   Passed    2.29 sec
+
+100% tests passed, 0 tests failed out of 32
+
+Label Time Summary:
+classes             = 161.03 sec*proc (32 tests)
+comprehensive       = 161.03 sec*proc (32 tests)
+dynamic             =  81.45 sec*proc (16 tests)
+native-objects      = 161.03 sec*proc (32 tests)
+optimizer-parity    = 161.03 sec*proc (32 tests)
+regression          = 161.03 sec*proc (32 tests)
+rxpa                = 161.03 sec*proc (32 tests)
+static              =  79.58 sec*proc (16 tests)
+
+Total Test time (real) =  27.28 sec

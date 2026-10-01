@@ -1,0 +1,16 @@
+Command: cmake --build cmake-build-debugasan --target rxllama_embedding_qualify_cross_device --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[  8%] Built target ggml-base
+[ 25%] Built target ggml-metal
+[ 33%] Built target ggml-cpu
+[ 33%] Built target ggml
+[100%] Built target llama
+[100%] Built target crexx_llama_bridge
+[100%] Built target llama_provider_static
+[100%] Built target llama_provider
+[100%] Built target rxllama_embedding_bridge
+[100%] Built target llama_provider_runtime_package
+PASS: CPU/GPU embedding parity for document/query layouts 1/4/8; absolute<=0.002 cosine>=0.9999
+Elapsed time (seconds): 4.66101
+[100%] Built target rxllama_embedding_qualify_cross_device

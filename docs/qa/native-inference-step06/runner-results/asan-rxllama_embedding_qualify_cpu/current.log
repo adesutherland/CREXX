@@ -1,0 +1,19 @@
+Command: cmake --build cmake-build-debugasan --target rxllama_embedding_qualify_cpu --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[  8%] Built target ggml-base
+[ 25%] Built target ggml-metal
+[ 33%] Built target ggml-cpu
+[ 33%] Built target ggml
+[100%] Built target llama
+[100%] Built target crexx_llama_bridge
+[100%] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_embedding_bridge.dir/__/__/__/tests/native-inference/embedding_bridge.cpp.o
+[100%] Built target llama_provider_static
+[100%] Built target llama_provider
+[100%] Built target llama_provider_runtime_package
+[100%] Linking CXX executable tests/rxllama_embedding_bridge
+[100%] Built target rxllama_embedding_bridge
+PASS: exact row/token/byte limits, query 512/513, cancellation, failed batch and recovery cpu
+PASS: embedding glue parity, boundaries, batching, private state and cleanup cpu
+Elapsed time (seconds): 7.49867
+[100%] Built target rxllama_embedding_qualify_cpu

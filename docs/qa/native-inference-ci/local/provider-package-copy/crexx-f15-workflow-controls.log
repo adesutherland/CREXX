@@ -1,0 +1,13 @@
+...........................
+----------------------------------------------------------------------
+Ran 27 tests in 0.055s
+
+OK
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpclkryxe8/rxllama.native.json
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpjxtwlt37/rxllama.native.json
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpsc2ne67n/output/plugin-stage/CREXX-windows-x64
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmp50xmqn6d/output/plugin-stage/CREXX-windows-x64
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpmv33ehh9/output/plugin-stage/CREXX-windows-x64
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpmv33ehh9/output/plugin-stage/CREXX-windows-x64/bin/providers/rxllama.native.json
+PACKAGED: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpmv33ehh9/output/assets/llama.rexx-user-test-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-windows-x64-vulkan.zip
+CONSUMER_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpmv33ehh9/output/combined/CREXX-windows-x64

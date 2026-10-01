@@ -1,0 +1,6 @@
+set(output "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-package-location-control-ze6tjgrp/out")
+set(runtime_files "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-package-location-control-ze6tjgrp/a/root-a.dylib" "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-package-location-control-ze6tjgrp/b/root-b.dylib" "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-package-location-control-ze6tjgrp/a/shared.dylib")
+set(platform "Darwin")
+set(provider control)
+set(arch arm64)
+set(engine fixture)

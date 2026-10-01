@@ -1,0 +1,19 @@
+COMMAND: /tmp/llama-typed-release-installed/installed Ω/bin/rxc;--no-exe-import;-i;/tmp/llama-typed-release-installed/installed Ω/bin;-o;/tmp/llama-typed-lowlevel-cpu/lifecycle;/Users/adrian/CLionProjects/CREXX/tests/native-inference/lifecycle_acceptance.crexx
+
+Warning in lifecycle_acceptance.crexx @ 6:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file
+
+COMMAND: /tmp/llama-typed-release-installed/installed Ω/bin/rxas;-o;/tmp/llama-typed-lowlevel-cpu/lifecycle;/tmp/llama-typed-lowlevel-cpu/lifecycle
+
+
+COMMAND: /tmp/llama-typed-release-installed/installed Ω/bin/rxlink;-o;/tmp/llama-typed-lowlevel-cpu/lifecycle-linked;/tmp/llama-typed-lowlevel-cpu/lifecycle;/tmp/llama-typed-release-installed/installed Ω/bin/library
+
+
+COMMAND: /tmp/llama-typed-release-installed/installed Ω/bin/rxbvm;/tmp/llama-typed-lowlevel-cpu/lifecycle-linked;-a;cpu;/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf;48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201;smollm2-360m-instruct
+PASS: rxllama lifecycle cpu smollm2-360m-instruct
+
+
+COMMAND: /tmp/llama-typed-release-installed/installed Ω/bin/rxtvm;/tmp/llama-typed-lowlevel-cpu/lifecycle-linked;-a;cpu;/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf;48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201;smollm2-360m-instruct
+PASS: rxllama lifecycle cpu smollm2-360m-instruct
+
+

@@ -1,0 +1,244 @@
+{
+  "crexx_head": "037e7939bc29eb91b29ed41e9b1b8debdef6353d",
+  "branch": "develop",
+  "scope": "Uncommitted approved QA/planning/guidance; no production provider changes",
+  "artifacts": [
+    {
+      "path": "tests/native-inference/fixture_loader.cpp",
+      "bytes": 699,
+      "sha256": "f5ea7c32cf81f71edb00851fe237fbdd3a92b103530e398ffcd27f1fdee006d5"
+    },
+    {
+      "path": "tests/native-inference/template_control.cpp",
+      "bytes": 3530,
+      "sha256": "1e247691ca1e65d4757cd4871b7708eb2433035cbbef503a440b09e2ed3b2a11"
+    },
+    {
+      "path": "tests/native-inference/direct_control.cpp",
+      "bytes": 42451,
+      "sha256": "deef42e03d8e4d9484b970613e5b6489440de8d61d15f19b5597464e26b5c386"
+    },
+    {
+      "path": "tests/native-inference/CMakeLists.txt",
+      "bytes": 8991,
+      "sha256": "8ed25eeb5fa11e27f239543197b41208ee8831c4ed7f5e50c8f4b11807bbe8d5"
+    },
+    {
+      "path": "tests/native-inference/provider_acceptance.crexx",
+      "bytes": 11025,
+      "sha256": "6fc217d087a95d09940d5f5fb960897ad7e709bd3d31ff3441e6ce3fa0fbb9c5"
+    },
+    {
+      "path": "tests/native-inference/provider_worker_acceptance.crexx",
+      "bytes": 1777,
+      "sha256": "5cfd52ea8edb61b1b7d447cdb5a10d6cfa62dd268d26d5ff499ebdbe9ddb00e0"
+    },
+    {
+      "path": "tests/native-inference/worker_transport_positive.crexx",
+      "bytes": 712,
+      "sha256": "470cf1309c8770f9246d2c26fa220fa4e4d6ca2456571d8c613f0fec05096983"
+    },
+    {
+      "path": "performance/tools/run_cross_runtime.crexx",
+      "bytes": 14341,
+      "sha256": "79f302b7898158a03199934a058be902aa66801fdedba4eb672c155f89c42a7c"
+    },
+    {
+      "path": "performance/tools/summarize_native_inference.crexx",
+      "bytes": 3227,
+      "sha256": "58564e703e0c6b6f626f0a90cb97e6ffd980d12e3ad4e837ec70aa0e5fe5855d"
+    },
+    {
+      "path": "cmake-build-llama-workload/native_inference_control",
+      "bytes": 363400,
+      "sha256": "ae3b877ad8fd9872db726ed73977b55cd5740c1b0028e2a15895f05d09de0ae7"
+    },
+    {
+      "path": "cmake-build-llama-workload/native_inference_template_control",
+      "bytes": 97152,
+      "sha256": "8625c537dd0450bd4632f2d9300faff6970fb4198807a765b269161cccedc28c"
+    },
+    {
+      "path": "cmake-build-llama-workload/native_inference_fixture_generator",
+      "bytes": 80768,
+      "sha256": "18d010eb1a569501cf545fbeb739f8347884032c56948f982132c694f5cfc132"
+    },
+    {
+      "path": "cmake-build-llama-workload/capture-control.rxbin",
+      "bytes": 21425,
+      "sha256": "81d3789415e8788c9036100376af1535fe28e76e3af17a9b40c7f39b3bab869b"
+    },
+    {
+      "path": "cmake-build-llama-workload/summarize-native-inference.rxbin",
+      "bytes": 6959,
+      "sha256": "84d6be74fea72a536609f6b2e8a81f409fb3ac7f57dfa32b9a56f880e53790db"
+    },
+    {
+      "path": "cmake-build-llama-workload/worker_transport_positive.rxbin",
+      "bytes": 5381,
+      "sha256": "a7f9dcf04c70e083d235669ff2d60f04b9b2df6a87354d0737440bfe69a0cede"
+    },
+    {
+      "path": "cmake-build-release/bin/rxc",
+      "bytes": 3624064,
+      "sha256": "21024131e9d26d5a21696517698b26ba601de5879803c3095a3f4c39e1d33e6e"
+    },
+    {
+      "path": "cmake-build-release/bin/rxas",
+      "bytes": 796872,
+      "sha256": "a7f380cfa818a2df27c8c8c5a44f823922a9f71882074c21277f95c1c9769794"
+    },
+    {
+      "path": "cmake-build-release/bin/rxlink",
+      "bytes": 180424,
+      "sha256": "d9bb085960915f956490edb7bd648df34903fde70ea032512230ad9658639cda"
+    },
+    {
+      "path": "cmake-build-release/bin/rxvm",
+      "bytes": 1481352,
+      "sha256": "822b4a899d24dc1f1b44721d4c46b6d9295e5d4156c496518d04d2a30acc0092"
+    },
+    {
+      "path": "cmake-build-release/bin/rxvme",
+      "bytes": 8830168,
+      "sha256": "7c9cd7dd5d5901057b797593aa45c40d1a43ec0cc8de48459f40c0cac70cf9a0"
+    },
+    {
+      "path": "cmake-build-llama-controls/bin/libllama.dylib",
+      "bytes": 3088800,
+      "sha256": "af6cc735a7604adfb779e18179c2b42a903f50139d988c198e7658e34de92890"
+    },
+    {
+      "path": "cmake-build-llama-controls/bin/libggml.dylib",
+      "bytes": 60320,
+      "sha256": "9f3114a3120e6481d4f0c92d863fb78ece62cede36f3e510b8a5eab4409d03fc"
+    },
+    {
+      "path": "cmake-build-llama-controls/bin/libggml-base.dylib",
+      "bytes": 732776,
+      "sha256": "05da9e816e2c4d2ea84cee4d36243bb37f6282e76c7dcde274a8c8a15f3cc044"
+    },
+    {
+      "path": "cmake-build-llama-controls/bin/libllama-common.dylib",
+      "bytes": 4966264,
+      "sha256": "8e1849e2a39edf0444f45b391e9b9a0ff5997a33e7c6f51b7adc6d6ca8be4f47"
+    },
+    {
+      "path": "cmake-build-llama-controls/bin/libggml-cpu.so",
+      "bytes": 985264,
+      "sha256": "9d208231520090431c5127db234af4bcdb0120173f2eea444df0f7f49a569c6d"
+    },
+    {
+      "path": "cmake-build-llama-controls/bin/libggml-metal.so",
+      "bytes": 2127296,
+      "sha256": "3d5d563c7dd8414d57e8fe5cd25c0d50769bb29177ea186b7510e159dd5842df"
+    },
+    {
+      "path": "cmake-build-llama-debug/bin/libllama.dylib",
+      "bytes": 11580384,
+      "sha256": "622f4fcb15e40e7491b02d95d9947e93ef82123bc3394de3a19f817762b7858c"
+    },
+    {
+      "path": "cmake-build-llama-debug/bin/libggml.dylib",
+      "bytes": 206496,
+      "sha256": "4382f142f788dd407c53fcf2b2ca3cbf2e998bba36216adb000dc07743308df6"
+    },
+    {
+      "path": "cmake-build-llama-debug/bin/libggml-base.dylib",
+      "bytes": 756744,
+      "sha256": "676bfd4f958d74f6950edd532045143834891acc0c43fdd557a7537e8a5b1eb0"
+    },
+    {
+      "path": "cmake-build-llama-debug/bin/libllama-common.dylib",
+      "bytes": 17552264,
+      "sha256": "f266147ce88a7730e768c8294627decf8b41fd36ce934760259bca734fd902af"
+    },
+    {
+      "path": "cmake-build-llama-debug/bin/libggml-cpu.so",
+      "bytes": 889184,
+      "sha256": "0b7287e6613f799fe7fe0372054336947dc8a59ebc29e6294de9ea9d9cd48f71"
+    },
+    {
+      "path": "cmake-build-llama-debug/bin/libggml-metal.so",
+      "bytes": 2190688,
+      "sha256": "f827782182743b0aa0427c120f0603631e68cfda971e7eacbf2cb94a55a868b9"
+    },
+    {
+      "path": "cmake-build-llama-debugasan/bin/libllama.dylib",
+      "bytes": 23128512,
+      "sha256": "6902e5824d92f1fda49645d8bccbf67e4dcb2da3cb1e2bd07468151e32f085c3"
+    },
+    {
+      "path": "cmake-build-llama-debugasan/bin/libggml.dylib",
+      "bytes": 366656,
+      "sha256": "9d1777e9b2d0ac5f4c6f20dfc51d692d27b262481c41f6e648529479629e3488"
+    },
+    {
+      "path": "cmake-build-llama-debugasan/bin/libggml-base.dylib",
+      "bytes": 1754856,
+      "sha256": "563548767e401c352ec619db740ad5b31da8df1d8a99ae406084780b4f8f90a0"
+    },
+    {
+      "path": "cmake-build-llama-debugasan/bin/libllama-common.dylib",
+      "bytes": 30278728,
+      "sha256": "6a1261fafde627a9f9b33747ee242035f25567de0ae5caa51284a4b225c26bbe"
+    },
+    {
+      "path": "cmake-build-llama-debugasan/bin/libggml-cpu.so",
+      "bytes": 1737424,
+      "sha256": "76ca481053242961ac1ea58c2a2e610376318383622581dcac50e08914f0e5c4"
+    },
+    {
+      "path": "cmake-build-llama-debugasan/bin/libggml-metal.so",
+      "bytes": 2641856,
+      "sha256": "a05bcee09146e9476f948362f1fb3546e2135259cc5b53c9e73e44a1f65e6150"
+    },
+    {
+      "path": "cmake-build-llama-debug/native_inference_control",
+      "bytes": 1935496,
+      "sha256": "1340c90542c7009a3899afc4da7ffd58d6d93e2040e085c555feee1e1aa95349"
+    },
+    {
+      "path": "cmake-build-llama-debug/native_inference_template_control",
+      "bytes": 733936,
+      "sha256": "181cfe9c642837a9c0af0f27b4457a88b82c9d81d2d0b88b953b0bdff1c39098"
+    },
+    {
+      "path": "cmake-build-llama-debugasan/native_inference_control",
+      "bytes": 3126952,
+      "sha256": "8aa56aff561ae942b54eb3ad66f5990eb854c557269f9a1f380bbfb47b11313a"
+    },
+    {
+      "path": "cmake-build-llama-debugasan/native_inference_template_control",
+      "bytes": 1079120,
+      "sha256": "a9dae69a45b211da9e2aca0f2574c688bb5fc7a01c58333475eb3e65077e5c75"
+    },
+    {
+      "path": "cmake-build-llama-workload/generated-fixtures/llama-moe.gguf",
+      "bytes": 7119040,
+      "sha256": "c546fcc39d5a28a5c215cbccfb00248ce189606060880aef04b93115a0eddd3f"
+    },
+    {
+      "path": "cmake-build-llama-workload/generated-fixtures/llama-dense.gguf",
+      "bytes": 4763872,
+      "sha256": "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+    }
+  ],
+  "supplementary_changes_after_native_workload_freeze": [
+    {
+      "path": "tests/native-inference/CMakeLists.txt",
+      "previous_sha256": "9456056a7d08dc95b3c51fcd66c8c6afd6d0e5e7f5ecd98bbf7e02e8cb48f9b2",
+      "reason": "Supplementary CPU four-thread test registration or corrected Level B reducer raw filename lookup; native workload/engine unchanged"
+    },
+    {
+      "path": "performance/tools/summarize_native_inference.crexx",
+      "previous_sha256": "0a1869e74e7b0655c7cb0b39eb400434e5f5d7df9cca6899ae4a0e495f233063",
+      "reason": "Supplementary CPU four-thread test registration or corrected Level B reducer raw filename lookup; native workload/engine unchanged"
+    },
+    {
+      "path": "cmake-build-llama-workload/summarize-native-inference.rxbin",
+      "previous_sha256": "d0702cb8abb4f2f8d30fa484dad8af23e9a536050d85efde395743769b21100a",
+      "reason": "Supplementary CPU four-thread test registration or corrected Level B reducer raw filename lookup; native workload/engine unchanged"
+    }
+  ]
+}

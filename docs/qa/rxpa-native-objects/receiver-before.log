@@ -1,0 +1,14 @@
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc;--no-exe-import;-n;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin\;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa;-o;/tmp/rxpa-objects-reentry-after/noopt;/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_objects.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/tmp/rxpa-objects-reentry-after/noopt;/tmp/rxpa-objects-reentry-after/noopt
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/tmp/rxpa-objects-reentry-after/noopt-linked;/tmp/rxpa-objects-reentry-after/noopt;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm;/tmp/rxpa-objects-reentry-after/noopt-linked
+PASS: C native factory and concrete method binding
+
+PANIC: missing box resource (SIGNAL INVALID_ARGUMENTS)
+

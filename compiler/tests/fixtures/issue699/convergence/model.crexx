@@ -1,0 +1,17 @@
+options levelg
+namespace issue699model expose record field
+import issue699cleanup
+main: procedure
+  call closeoutput
+  return
+field: class
+  value: method = .string
+    return "hello"
+record: class
+  _fields = .field[]
+  *: factory
+    arg fields = .field[]
+    _fields = fields
+    return
+  fields: method = .field[]
+    return _fields

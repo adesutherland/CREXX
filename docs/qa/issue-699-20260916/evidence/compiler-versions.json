@@ -1,0 +1,12 @@
+{
+  "current": {
+    "path": "/Users/adrian/.local/bin/rxc",
+    "sha256": "f9a7806fc95aab5295dc33864e6cee9c37d39d9d5da928e5e0825bf2c5406073",
+    "version": "crexx-1.0.0-beta.3+local.g17e844441ed8\n"
+  },
+  "reported": {
+    "path": "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+    "sha256": "4f0a15d5204d8cbecc9be5283b1fd8a679b657e2cb24f5f428123816a26e128f",
+    "version": "crexx-1.0.0-beta.3+local.g037e7939bc29\n"
+  }
+}

@@ -1,0 +1,65 @@
+SKIP: project member current provider_contract
+SKIP: project member current provider_catalog
+SKIP: project member current codex_provider
+SKIP: project member current ragmodel
+SKIP: project member current ragevidence
+SKIP: project member current ragjob
+SKIP: project member current ragconfig
+SKIP: project member current ragconfigfile
+SKIP: project member current ragglossary
+SKIP: project member current ragprofile
+SKIP: project member current ragprofilefile
+SKIP: project member current ragregistry
+SKIP: project member current ragschema
+SKIP: project member current ragfile
+SKIP: project member current ragstore
+SKIP: project member current ragbackup
+SKIP: project member current ragrepository
+SKIP: project member current ragcanonical
+SKIP: project member current ragconfiguration
+SKIP: project member current ragplanning
+SKIP: project member current ragtrace
+SKIP: project member current ragcommand
+SKIP: project member current ragingest
+SKIP: project member current ragfolder
+SKIP: project member current ragclaims
+SKIP: project member current ragproposalio
+SKIP: project member current ragwork
+SKIP: project member current ragquery
+SKIP: project member current ragfoundation
+SKIP: project member current ragquerypolicy
+SKIP: project member current architecture_local_config
+SKIP: project member current generic_profile
+SKIP: project member current it_architecture_profile
+SKIP: project member current operator_registry
+WAVE: project compile/assemble jobs=14
+START: project member crexxrag_cli
+START: project member provider_http
+START: project member ragmaintain
+START: project member industrial_provider
+START: project member ragembedding
+START: project member ragretrieval
+START: project member ragproduct
+START: project member ragmcp
+BUILT: project member ragmcp
+START: project member ragprocess
+START: project member ragevidencejson
+START: project member ragproviderdiagnostics
+START: project member ragimprove
+START: project member ragapplicationprovider
+START: project member ragqueryprovider
+BUILT: project member ragembedding
+BUILT: project member crexxrag_cli
+BUILT: project member ragprocess
+BUILT: project member ragproviderdiagnostics
+BUILT: project member provider_http
+BUILT: project member ragmaintain
+BUILT: project member ragapplicationprovider
+BUILT: project member ragevidencejson
+BUILT: project member ragretrieval
+BUILT: project member industrial_provider
+BUILT: project member ragimprove
+BUILT: project member ragproduct
+BUILT: project member ragqueryprovider
+BARRIER: link program
+PUBLISHED: program /Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/wave-qualified/crexxrag-project.rxbin

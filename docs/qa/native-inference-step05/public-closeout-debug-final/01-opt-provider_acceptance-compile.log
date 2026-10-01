@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin', '-o', '/private/tmp/ni-s5/public-closeout-debug-final/opt-provider_acceptance', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/provider_acceptance.crexx']
+rc=0

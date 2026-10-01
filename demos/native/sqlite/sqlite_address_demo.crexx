@@ -1,4 +1,4 @@
-options levelb
+options levelg
 namespace sqlite_address_demo expose main
 
 main: procedure = .int
@@ -9,28 +9,26 @@ main: procedure = .int
   total = .string
   env_instance = .addressenvironment
 
-  say "cREXX native SQLite ADDRESS demo"
-
-  address sqlite
+  say "cREXX rxsqlite ADDRESS demo"
 
   dbpath = ":memory:"
-  "OPEN ${dbpath}"
+  address sqlite "OPEN ${dbpath}"
 
-  "EXEC CREATE TABLE people (id INTEGER PRIMARY KEY, name TEXT, role TEXT)"
+  address sqlite "EXEC CREATE TABLE people (id INTEGER PRIMARY KEY, name TEXT, role TEXT)"
 
   name = "Ada"
   role = "compiler"
-  "EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
+  address sqlite "EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
 
   name = "Grace"
   role = "runtime"
-  "EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
+  address sqlite "EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
 
-  "QUERY SELECT id, name, role FROM people ORDER BY id" output rows
+  address sqlite "QUERY SELECT id, name, role FROM people ORDER BY id" output rows
   call show_lines("QUERY people", rows)
 
   total = ""
-  "VALUE SELECT count(*) FROM people INTO ${total}"
+  address sqlite "VALUE SELECT count(*) FROM people INTO ${total}"
   call show_value("COUNT via INTO", total)
 
   say "DRIVER() => " || addresscall("sqlite", "driver")

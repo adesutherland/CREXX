@@ -1,25 +1,20 @@
-# Native SQLite ADDRESS Environment Demo
+# SQLite ADDRESS Consumer Demo
 
-This demo is the database-shaped native ADDRESS provider. It is intentionally
-written around a small C driver table so later database demos can reuse the same
-environment protocol and add another driver behind a different ADDRESS
-environment name.
+This is an ordinary Level G consumer of CREXX's installed `rxsqlite_address`
+module. The façade implements `ADDRESS SQLITE` in cREXX over the generic typed
+`rxsqlite` provider. The demo contains no SQLite driver and no `sqlite3_*`
+calls.
 
-`ADDRESS SQLITE` is routed by the normal environment name carried in the
-`addressrequest` / `addressfunctionrequest`. The native provider looks up that
-name in its driver registry and dispatches to the SQLite driver. Future drivers
-can follow the same pattern with their own environment names, for example
-`ADDRESS POSTGRES` or `ADDRESS ODBC`.
-
-The CMake build downloads the pinned SQLite amalgamation from sqlite.org only
-when both the demo and network access are explicitly enabled:
+Build it with the normal demo group; no SQLite option or network access is
+needed:
 
 ```sh
-cmake -S . -B cmake-build-debug \
-  -DCREXX_BUILD_SQLITE_ADDRESS_DEMO=ON \
-  -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
-cmake --build cmake-build-debug --target native_sqlite_address_demo
-cmake-build-debug/compiler/tests/native_sqlite_address_demo
+cmake --build cmake-build-debug --target sqlite_address_demo_bin
+cmake-build-debug/bin/rxvm \
+  cmake-build-debug/demos/native/sqlite/sqlite_address_demo \
+  cmake-build-debug/bin/library \
+  cmake-build-debug/bin/classlib \
+  cmake-build-debug/bin/rxsqlite_address
 ```
 
 The demo commands are:
@@ -30,14 +25,16 @@ The demo commands are:
 - `VALUE sql INTO ${target}`
 - `CLOSE`
 
-SQL parameters use normal SQLite named parameters, so Rexx code can write:
+SQL parameters use normal SQLite named parameters. The ADDRESS exit exposes
+the host variables and the Level G façade binds their values:
 
 ```rexx
 name = "Ada"
 role = "compiler"
-"EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
+address sqlite "EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
 ```
 
-The ADDRESS exit auto-exposes `name` and `role`; the SQLite driver binds those
-values to the SQL parameters. `VALUE ... INTO ${target}` returns a scalar through
-the same ADDRESS updated-binding path used by the other demos.
+`VALUE ... INTO ${target}` returns a scalar through normal ADDRESS
+updated-binding copyback. See the supported [rxsqlite library
+reference](../../../docs/books/crexx_library_reference/rxsqlite.md) for typed
+provider APIs, all commands/functions, ownership and packaging.

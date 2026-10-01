@@ -172,6 +172,7 @@ typedef struct byte_channel_state byte_channel_state;
 typedef struct byte_channel_request {
     byte_channel_state *owner;
     struct byte_channel_request *next;
+    struct byte_channel_request *previous;
     byte_channel_thread thread;
     unsigned char *payload;
     size_t payload_length;
@@ -1005,6 +1006,7 @@ static rxvm_channel_status byte_channel_start(
         return RXVM_CHANNEL_CLOSED;
     }
     request->next = state->requests;
+    if (request->next) request->next->previous = request;
     state->requests = request;
     byte_mutex_unlock(&state->mutex);
     if (request->operation == BYTE_REQUEST_HALF_CLOSE) {
@@ -1030,9 +1032,11 @@ static rxvm_channel_status byte_channel_start(
         if (!byte_request_thread_start(request)) {
             byte_channel_request **cursor;
             byte_mutex_lock(&state->mutex);
-            cursor = &state->requests;
-            while (*cursor && *cursor != request) cursor = &(*cursor)->next;
-            if (*cursor == request) *cursor = request->next;
+            cursor = request->previous ? &request->previous->next : &state->requests;
+            if (*cursor == request) {
+                *cursor = request->next;
+                if (request->next) request->next->previous = request->previous;
+            }
             byte_mutex_unlock(&state->mutex);
             free(request->payload);
             free(request);
@@ -1170,13 +1174,13 @@ static rxvm_channel_status byte_channel_request_destroy(
         return RXVM_CHANNEL_INTERNAL_ERROR;
     }
     byte_mutex_lock(&state->mutex);
-    cursor = &state->requests;
-    while (*cursor && *cursor != request) cursor = &(*cursor)->next;
+    cursor = request->previous ? &request->previous->next : &state->requests;
     if (*cursor != request) {
         byte_mutex_unlock(&state->mutex);
         return RXVM_CHANNEL_INTERNAL_ERROR;
     }
     *cursor = request->next;
+    if (request->next) request->next->previous = request->previous;
     byte_mutex_unlock(&state->mutex);
     free(request->payload);
     free(request->result_node);

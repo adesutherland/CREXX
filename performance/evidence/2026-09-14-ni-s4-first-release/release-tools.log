@@ -1,0 +1,2 @@
+Warning in summarize_paired.crexx @ 69:4 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 33, column 3. Declare this binding explicitly if intentional., "group"
+1 warning(s) in source file

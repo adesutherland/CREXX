@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "provider": "rxllama",
+  "platform": "Linux",
+  "arch": "x86_64",
+  "engine": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+  "link_libraries": [
+    {
+      "path": "libcrexx-llama.so",
+      "sha256": "1a86b177a6385ce76c15680e58b6f78a722c9e1ce7badd2a2d9b4a6a6977973a"
+    }
+  ],
+  "runtime_files": [
+    {
+      "path": "libcrexx-llama.so.1",
+      "sha256": "1a86b177a6385ce76c15680e58b6f78a722c9e1ce7badd2a2d9b4a6a6977973a"
+    },
+    {
+      "path": "libcrexx-llama.so",
+      "sha256": "1a86b177a6385ce76c15680e58b6f78a722c9e1ce7badd2a2d9b4a6a6977973a"
+    },
+    {
+      "path": "libcrexx-llama-engine.so.0.4.0",
+      "sha256": "7e3ae47766d1d31b1ed64ad2ee760564292c2e5bd4457d2f960b52bc79fa0a41"
+    },
+    {
+      "path": "libcrexx-llama-engine.so",
+      "sha256": "7e3ae47766d1d31b1ed64ad2ee760564292c2e5bd4457d2f960b52bc79fa0a41"
+    },
+    {
+      "path": "libcrexx-llama-engine.so.0",
+      "sha256": "7e3ae47766d1d31b1ed64ad2ee760564292c2e5bd4457d2f960b52bc79fa0a41"
+    },
+    {
+      "path": "libcrexx-ggml.so.0.23.0",
+      "sha256": "a1ae8a989fa29c9f5103afdc0c08fc94781e5b02d9b124ca597af2d302dcec55"
+    },
+    {
+      "path": "libcrexx-ggml.so",
+      "sha256": "a1ae8a989fa29c9f5103afdc0c08fc94781e5b02d9b124ca597af2d302dcec55"
+    },
+    {
+      "path": "libcrexx-ggml.so.0",
+      "sha256": "a1ae8a989fa29c9f5103afdc0c08fc94781e5b02d9b124ca597af2d302dcec55"
+    },
+    {
+      "path": "libcrexx-ggml-base.so.0.23.0",
+      "sha256": "28e16932ebfd07fffc2b73571bfdf64f357256291a4931e615e5de3aaa5be414"
+    },
+    {
+      "path": "libcrexx-ggml-base.so",
+      "sha256": "28e16932ebfd07fffc2b73571bfdf64f357256291a4931e615e5de3aaa5be414"
+    },
+    {
+      "path": "libcrexx-ggml-base.so.0",
+      "sha256": "28e16932ebfd07fffc2b73571bfdf64f357256291a4931e615e5de3aaa5be414"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-x64.so",
+      "sha256": "2035beebb48a3d86b40a53c4d938bbd9e059201da084112a0af64427fe01c5bb"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-sse42.so",
+      "sha256": "b85cf90e113ad4d4b18c04829b1d2dd1637358b98bbabb7b0d902bfb71237ef0"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-sandybridge.so",
+      "sha256": "775ace4a7629752d84577369e3e971dc55249c194ff84629ed9979792cbff68e"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-ivybridge.so",
+      "sha256": "8f90bfeeb19d095b5f23cb2f091dc6cf8ab9bb76bbeb251becea1c2e723e2d12"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-piledriver.so",
+      "sha256": "feb1f8e5aea390d4340d11e29392658d5906d5b1410a0aca174d18657299cd24"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-haswell.so",
+      "sha256": "4cad8a884f05ea25ebaa34bc4f8f975a497f09ad665addb24980f2bf97f1c23b"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-skylakex.so",
+      "sha256": "c3f2562e845ceff6d921138006f6c3d4262839bcebd8db4becf675791fe6e978"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-cannonlake.so",
+      "sha256": "629a169bee7028b98936469822837aa8e047cd76c9ee11dc2e8f498237e01039"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-cascadelake.so",
+      "sha256": "e9244393075d6d1c01f973524f69cac925d5a0752b64e0ba3b1b96702b019443"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-icelake.so",
+      "sha256": "79affc788dd7439e76c161759bb802d48d0c42c73b619fd30e9716ee89f1656f"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-cooperlake.so",
+      "sha256": "321d54a3d7743506ecb66281f9e9e865186f2541da0ba5c06f37b3e4456a4d93"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-zen4.so",
+      "sha256": "40d33be660e4714166f13d02afc1de5b64f8abc94733a3408b9dad54a728c2b6"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-alderlake.so",
+      "sha256": "e3a2bbafb069b72e8cc43b87e6cbb9f4466dfc3c81861297669317b07ccb26df"
+    },
+    {
+      "path": "libcrexx-ggml-cpu-sapphirerapids.so",
+      "sha256": "0acd4633c29c548578deea206c6b971a076969689a4485c866c98d8c940880cb"
+    },
+    {
+      "path": "rxllama-NOTICES.txt",
+      "sha256": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7"
+    },
+    {
+      "path": "libgcc_s.so.1",
+      "sha256": "d93224d2b0dab4247598be683adca02f5cf00586f99c187579cd7e92058fb7cb"
+    },
+    {
+      "path": "libstdc++.so.6",
+      "sha256": "1fd75fe70354a416d75aef22bcae68c47bd25d20e2d0568c30b1a9838cf62f11"
+    },
+    {
+      "path": "rxllama.runtime.json",
+      "sha256": "4d4bd09133cca712a96b422cd42bcfbaaa26a1deabba02b0d173f59a7850962c"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+host-assemble.log
+['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas', '-o', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/host', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/host']
+
+
+host-compile.log
+['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-i', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin', '-o', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/host', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/host.crexx']
+
+
+host.crexx
+options levelg
+import rxfnsb
+import rxfnsg
+import llama
+arg args = .string[]
+caught = 0
+do
+  if loadmodule(args[1]) <= 0 then call raise "NOTREADY", "provider unavailable: llama", ""
+  config = .llama..configuration()
+  if config.status() <> 0 then exit 2
+  if config.set_text("hardware_mode", "cpu") <> 0 then exit 3
+  if config.close() <> 0 then exit 4
+on signal notready
+  caught = 1
+end
+say "late-native caught=" || caught
+if caught <> args[2] then exit 5
+client = .llm("fixture")
+if client.status() <> 0 then exit 6
+call client.close()
+say "PASS: optional native boundary and HTTP recovery"
+
+
+link.log
+['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink', '-o', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/linked', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/host', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/llama', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg']
+
+
+llama-assemble.log
+['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas', '-o', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/llama', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/llama']
+
+
+llama-compile.log
+['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-i', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin', '-o', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/llama', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/llama.crexx']
+
+
+llama.crexx
+options levelg
+namespace llama expose configuration
+configuration: interface
+  *: factory
+  status: method = .int
+  set_text: method = .int
+    arg key = .string, value = .string
+  close: method = .int
+
+
+rxbvm-absent.log
+['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/linked', '-a', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/missing.rxplugin', '1']
+late-native caught=1
+PASS: optional native boundary and HTTP recovery
+
+
+rxbvm-present.log
+['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/linked', '-a', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxllama.rxplugin', '0']
+late-native caught=0
+PASS: optional native boundary and HTTP recovery
+
+
+rxtvm-absent.log
+['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/linked', '-a', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/missing.rxplugin', '1']
+late-native caught=1
+PASS: optional native boundary and HTTP recovery
+
+
+rxtvm-present.log
+['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llm-late-native-3qx2nuea/linked', '-a', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxllama.rxplugin', '0']
+late-native caught=0
+PASS: optional native boundary and HTTP recovery

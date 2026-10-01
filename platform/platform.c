@@ -32,7 +32,314 @@
 #include <limits.h>
 #include <errno.h>
 
-#ifdef __linux__
+#define CREXX_PLATFORM_STDIO_IMPLEMENTATION 1
+#include "platform.h"
+#include "platform_native.h"
+#include "text_codec.h"
+
+#if defined(CREXX_MAINFRAME_ELF) && !defined(CREXX_NATIVE_RAW_IO) && \
+    (defined(CREXX_CMS_TEXT_IO) || defined(CREXX_PLATFORM_TSO))
+/* The SDK supplies raw record bytes when mainframe text conversion is off.
+ * Keep character decoding in cREXX's existing codec at its file boundary. */
+typedef struct {
+    FILE *raw;
+    const uint32_t *map;
+    crexx_utf8_state utf8;
+    unsigned char pending[4];
+    unsigned pending_at, pending_count;
+    int writing, failed;
+} crexx_file_codec;
+static const uint32_t *selected_file_map;
+static int selected_file_map_set;
+
+static const uint32_t *file_codec(void) {
+    const uint32_t *map;
+    if (selected_file_map_set) return selected_file_map;
+    if (platform_text_codec_lookup("IBM1047", &map)) return NULL;
+    return map;
+}
+static int native_file_codec(void) {
+    const uint32_t *native;
+    return !platform_text_codec_lookup("IBM1047", &native) && file_codec() == native;
+}
+static int codec_failure(crexx_file_codec *s, int error) {
+    if (!s->failed) s->failed = error ? error : EIO;
+    errno = s->failed;
+    return -1;
+}
+static int codec_read(void *cookie, char *out, int count) {
+    crexx_file_codec *s = cookie;
+    int done = 0;
+    if (s->failed) return codec_failure(s, s->failed);
+    while (done < count) {
+        int byte, n;
+        uint32_t scalar;
+        if (s->pending_at < s->pending_count) {
+            out[done++] = (char)s->pending[s->pending_at++];
+            continue;
+        }
+        s->pending_at = s->pending_count = 0;
+        byte = fgetc(s->raw);
+        if (byte == EOF) {
+            if (ferror(s->raw) || (!s->map && crexx_utf8_finish(&s->utf8))) {
+                codec_failure(s, ferror(s->raw) ? errno : EILSEQ);
+                return done ? done : -1;
+            }
+            break;
+        }
+        /* The SDK preserves ASCII LF as the record/byte-stream delimiter. */
+        if (byte == '\n') {
+            if (!s->map && crexx_utf8_finish(&s->utf8)) {
+                codec_failure(s, errno);
+                return done ? done : -1;
+            }
+            out[done++] = '\n';
+            continue;
+        }
+        if (!s->map) {
+            n = crexx_utf8_feed(&s->utf8, (unsigned char)byte, &scalar);
+            if (n < 0) {
+                codec_failure(s, errno);
+                return done ? done : -1;
+            }
+            out[done++] = (char)byte;
+        } else {
+            scalar = s->map[(unsigned char)byte];
+            n = crexx_utf8_emit(scalar, s->pending);
+            if (n < 0) {
+                codec_failure(s, errno);
+                return done ? done : -1;
+            }
+            s->pending_count = (unsigned)n;
+        }
+    }
+    return done;
+}
+static int codec_write(void *cookie, const char *input, int count) {
+    crexx_file_codec *s = cookie;
+    int i;
+    if (s->failed) return codec_failure(s, s->failed);
+    for (i = 0; i < count; ++i) {
+        uint32_t scalar;
+        unsigned char bytes[4];
+        int ready = crexx_utf8_feed(&s->utf8, (unsigned char)input[i], &scalar);
+        int n;
+        if (ready < 0) return codec_failure(s, errno);
+        if (!ready) continue;
+        if (scalar == '\n') { bytes[0] = '\n'; n = 1; }
+        else n = crexx_text_encode(s->map, scalar, bytes);
+        if (n < 0) return codec_failure(s, errno);
+        /* glibc fopencookie may report the requested count while leaving the
+         * stream error flag set after its write callback fails. */
+        if (fwrite(bytes, 1, (size_t)n, s->raw) != (size_t)n || ferror(s->raw))
+            return codec_failure(s, errno);
+    }
+    return count;
+}
+static int codec_close(void *cookie) {
+    crexx_file_codec *s = cookie;
+    int error = s->failed;
+    if (s->writing && !error && crexx_utf8_finish(&s->utf8)) error = errno;
+    if (s->writing && !error && fflush(s->raw) != 0) error = errno ? errno : EIO;
+    if (ferror(s->raw) && !error) error = errno ? errno : EIO;
+    if (fclose(s->raw) && !error) error = errno;
+    free(s);
+    if (error) { errno = error; return -1; }
+    return 0;
+}
+static FILE *codec_wrap(FILE *raw, const char *mode) {
+    crexx_file_codec *s;
+    FILE *file;
+    if (!raw) return NULL;
+    s = calloc(1, sizeof(*s));
+    if (!s) { int error = errno; fclose(raw); errno = error; return NULL; }
+    s->raw = raw;
+    s->map = file_codec();
+    s->writing = *mode != 'r';
+    file = funopen(s, s->writing ? NULL : codec_read,
+                   s->writing ? codec_write : NULL, NULL, codec_close);
+    if (!file) { int error = errno; fclose(raw); free(s); errno = error; }
+    return file;
+}
+static const char *codec_storage_mode(const char *mode) {
+    if (native_file_codec() || strchr(mode, 'b')) return mode;
+    return *mode == 'r' ? "rb" : *mode == 'w' ? "wb" : *mode == 'a' ? "ab" : mode;
+}
+static int codec_mode_supported(const char *mode) {
+    if (strchr(mode, '+')) { errno = ENOTSUP; return 0; }
+    return 1;
+}
+#endif
+
+int platform_console_text_write(FILE *stream, const char *text, size_t length) {
+    if (!length) return 0;
+#if defined(CREXX_MAINFRAME_ELF)
+    const uint32_t *native_map;
+    crexx_utf8_state state = {0, 0, 0};
+    unsigned char chunk[128];
+    size_t i, used = 0;
+    if (!stream || !text || platform_text_codec_lookup("IBM1047", &native_map)) return -1;
+    for (i = 0; i < length; ++i) {
+        uint32_t scalar;
+        unsigned char encoded[4];
+        int ready = crexx_utf8_feed(&state, (unsigned char)text[i], &scalar);
+        int count;
+        if (ready < 0) return -1;
+        if (!ready) continue;
+        /* The runtime keeps ASCII LF as its record delimiter in raw mode. */
+        if (scalar == '\n') { encoded[0] = '\n'; count = 1; }
+        else {
+            count = crexx_text_encode(native_map, scalar, encoded);
+            if (count < 0) return -1;
+        }
+        if (used + (size_t)count > sizeof(chunk)) {
+            if (fwrite(chunk, 1, used, stream) != used) return -1;
+            used = 0;
+        }
+        memcpy(chunk + used, encoded, (size_t)count);
+        used += (size_t)count;
+    }
+    if (crexx_utf8_finish(&state)) return -1;
+    return !used || fwrite(chunk, 1, used, stream) == used ? 0 : -1;
+#else
+    return fwrite(text, 1, length, stream) == length ? 0 : -1;
+#endif
+}
+
+int platform_text_getc(FILE *stream) {
+#if defined(CREXX_MAINFRAME_ELF)
+    /* Text handlers share stdin's partially emitted scalar. Byte/binary
+     * handlers deliberately continue to use raw libc reads. */
+    static unsigned char pending[4];
+    static unsigned at, count;
+    const uint32_t *native_map;
+    int byte, length;
+    if (stream != stdin) return fgetc(stream);
+    if (at < count) return pending[at++];
+    at = count = 0;
+    byte = fgetc(stream);
+    if (byte == EOF || byte == '\n') return byte;
+    if (platform_text_codec_lookup("IBM1047", &native_map)) return EOF;
+    length = crexx_utf8_emit(native_map[(unsigned char)byte], pending);
+    if (length < 0) return EOF;
+    count = (unsigned)length;
+    return pending[at++];
+#else
+    return fgetc(stream);
+#endif
+}
+
+#if defined(CREXX_MAINFRAME_ELF)
+int platform_vfprintf(FILE *stream, const char *format, va_list args) {
+    char local[256], *text = local;
+    va_list copy;
+    int length, result;
+    if (stream != stdout && stream != stderr) return vfprintf(stream, format, args);
+    va_copy(copy, args);
+    length = vsnprintf(local, sizeof(local), format, copy);
+    va_end(copy);
+    if (length < 0) return -1;
+    if ((size_t)length >= sizeof(local)) {
+        text = malloc((size_t)length + 1u);
+        if (!text) return -1;
+        va_copy(copy, args);
+        result = vsnprintf(text, (size_t)length + 1u, format, copy);
+        va_end(copy);
+        if (result != length) { free(text); return -1; }
+    }
+    result = platform_console_text_write(stream, text, (size_t)length);
+    if (text != local) free(text);
+    return result ? -1 : length;
+}
+int platform_fprintf(FILE *stream, const char *format, ...) {
+    va_list args;
+    int result;
+    va_start(args, format);
+    result = platform_vfprintf(stream, format, args);
+    va_end(args);
+    return result;
+}
+int platform_printf(const char *format, ...) {
+    va_list args;
+    int result;
+    va_start(args, format);
+    result = platform_vfprintf(stdout, format, args);
+    va_end(args);
+    return result;
+}
+int platform_fputs(const char *text, FILE *stream) {
+    if (stream != stdout && stream != stderr) return fputs(text, stream);
+    return platform_console_text_write(stream, text, strlen(text)) ? EOF : 0;
+}
+int platform_puts(const char *text) {
+    if (platform_fputs(text, stdout) == EOF) return EOF;
+    return platform_console_text_write(stdout, "\n", 1u) ? EOF : 0;
+}
+#endif
+
+int platform_text_putc(int byte, FILE *stream) {
+#if defined(CREXX_MAINFRAME_ELF)
+    if (stream == stdout || stream == stderr) {
+        char text = (char)(unsigned char)byte;
+        return platform_console_text_write(stream, &text, 1u) ? EOF : (unsigned char)byte;
+    }
+#endif
+    return fputc(byte, stream);
+}
+
+#if defined(CREXX_CMS_TEXT_IO)
+#if !defined(CREXX_MAINFRAME_ELF)
+#error CREXX_CMS_TEXT_IO requires an explicit CMS ELF platform
+#endif
+extern FILE *crexx_cms_text_open(const char *, const char *);
+extern int crexx_cms_text_encoding(const char *);
+#endif
+
+int platform_text_encoding(const char *encoding) {
+#if defined(CREXX_NATIVE_RAW_IO)
+    const uint32_t *map;
+    if (platform_text_codec_lookup(encoding, &map)) return -1;
+    crexx_native_select_file_codec(map);
+    return 0;
+#elif defined(CREXX_MAINFRAME_ELF) && \
+      (defined(CREXX_CMS_TEXT_IO) || defined(CREXX_PLATFORM_TSO))
+    const uint32_t *map;
+    if (platform_text_codec_lookup(encoding, &map)) return -1;
+    selected_file_map = map;
+    selected_file_map_set = 1;
+    return 0;
+#else
+    if (encoding && (!strcmp(encoding,"UTF8") || !strcmp(encoding,"utf8") ||
+                     !strcmp(encoding,"UTF-8") || !strcmp(encoding,"utf-8"))) return 0;
+    errno = EINVAL;
+    return -1;
+#endif
+}
+
+static FILE *platform_open_stream_storage(const char *path, const char *mode, int storage) {
+#if defined(CREXX_NATIVE_RAW_IO)
+    return crexx_native_fopen_storage(path, mode, storage);
+#elif defined(CREXX_CMS_TEXT_IO)
+    (void)storage;
+    if (!strchr(mode,'b')) {
+        FILE *raw;
+        if (!codec_mode_supported(mode)) return NULL;
+        if (native_file_codec()) {
+            if (crexx_cms_text_encoding("IBM1047")) return NULL;
+            raw = crexx_cms_text_open(path, mode);
+        } else raw = fopen(path, codec_storage_mode(mode));
+        return codec_wrap(raw, mode);
+    }
+#else
+    (void)storage;
+#endif
+    return fopen(path,mode);
+}
+static FILE *platform_open_stream(const char *path, const char *mode) {
+    return platform_open_stream_storage(path, mode, CREXX_TEXT_STORAGE_DEFAULT);
+}
+
+#if defined(__linux__) && !defined(CREXX_MAINFRAME_ELF)
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/sysinfo.h>
@@ -40,191 +347,93 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#include <psapi.h>
+#include <io.h>
 #endif
 
 #ifndef _MSC_VER // Windows Visual Studio
 #include <stdint.h>
 #endif
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(CREXX_MAINFRAME_ELF)
 #include <mach-o/dyld.h>
 #include <dirent.h>
 #include <unistd.h>
 #endif
 
-#include "platform.h"
-
-static void rx_print_bytes(FILE *out, const char *label, unsigned long long bytes) {
-    fprintf(out, "  %s: %llu bytes (%.2f MiB)\n",
-            label, bytes, (double)bytes / 1048576.0);
-}
-
-static unsigned long rx_process_id(void) {
-#ifdef _WIN32
-    return (unsigned long)GetCurrentProcessId();
-#elif defined(__linux__) || defined(__APPLE__)
-    return (unsigned long)getpid();
-#else
-    return 0;
+#if defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT)
+/* Supplied by the CMS host runtime, never inherited Linux directory services. */
+#include <dirent.h>
 #endif
+
+/* Keep basic filename handling within the ISO C library surface. */
+static char *platform_copy_string(const char *text) {
+    size_t size = strlen(text) + 1;
+    char *copy = malloc(size);
+    if (copy) memcpy(copy, text, size);
+    return copy;
 }
 
-#ifdef _WIN32
-static void rx_print_windows_commit_status(FILE *out, const MEMORYSTATUSEX *status) {
-    PERFORMANCE_INFORMATION performance;
-    unsigned long long commit_total;
-    unsigned long long commit_limit;
-
-    rx_print_bytes(out, "commit available to this process", (unsigned long long)status->ullAvailPageFile);
-
-    memset(&performance, 0, sizeof(performance));
-    performance.cb = sizeof(performance);
-    if (GetPerformanceInfo(&performance, (DWORD)sizeof(performance))) {
-        commit_total = (unsigned long long)performance.CommitTotal * (unsigned long long)performance.PageSize;
-        commit_limit = (unsigned long long)performance.CommitLimit * (unsigned long long)performance.PageSize;
-        rx_print_bytes(out, "system commit total", commit_total);
-        rx_print_bytes(out, "system commit limit", commit_limit);
-        if (commit_limit >= commit_total) {
-            rx_print_bytes(out, "system commit available", commit_limit - commit_total);
-        } else {
-            fprintf(out, "  system commit available: unavailable (total exceeds limit)\n");
+/* Sequential streams have no usable length. Retain two scanner sentinels,
+ * check growth before arithmetic, and never return partial data after error. */
+static char *stream2buf(FILE *file, size_t *bytes) {
+    size_t used = 0, capacity = 1024;
+    const size_t limit = (size_t)-1 - 2;
+    char *buff = (char *)malloc(capacity + 2);
+    if (!buff) {
+        RX_REPORT_OOM("malloc file read buffer", capacity + 2, "file2buf");
+        return 0;
+    }
+    for (;;) {
+        size_t n = fread(buff + used, 1, capacity - used, file);
+        used += n;
+        if (ferror(file)) { free(buff); return 0; }
+        if (feof(file)) break;
+        if (!n) { free(buff); return 0; }
+        if (used == capacity) {
+            size_t next = capacity <= limit / 2 ? capacity * 2 : limit;
+            char *grown;
+            if (next <= capacity) { free(buff); return 0; }
+            grown = (char *)realloc(buff, next + 2);
+            if (!grown) {
+                RX_REPORT_OOM("grow file read buffer", next + 2, "file2buf");
+                free(buff);
+                return 0;
+            }
+            buff = grown;
+            capacity = next;
         }
-    } else {
-        fprintf(out, "  system commit total: unavailable (GetPerformanceInfo failed)\n");
-        fprintf(out, "  system commit limit: unavailable (GetPerformanceInfo failed)\n");
-        fprintf(out, "  system commit available: unavailable (GetPerformanceInfo failed)\n");
     }
-}
-#endif
-
-static void rx_print_memory_status(FILE *out) {
-#ifdef _WIN32
-    MEMORYSTATUSEX status;
-    status.dwLength = sizeof(status);
-    if (GlobalMemoryStatusEx(&status)) {
-        fprintf(out, "  system memory load: %lu%%\n", (unsigned long)status.dwMemoryLoad);
-        rx_print_windows_commit_status(out, &status);
-        rx_print_bytes(out, "physical memory available", (unsigned long long)status.ullAvailPhys);
-        rx_print_bytes(out, "physical memory total", (unsigned long long)status.ullTotalPhys);
-        rx_print_bytes(out, "page file total", (unsigned long long)status.ullTotalPageFile);
-        rx_print_bytes(out, "virtual memory available", (unsigned long long)status.ullAvailVirtual);
-        rx_print_bytes(out, "virtual memory total", (unsigned long long)status.ullTotalVirtual);
-    } else {
-        fprintf(out, "  system memory: unavailable (GlobalMemoryStatusEx failed)\n");
-    }
-#elif defined(__linux__)
-    struct sysinfo info;
-    if (sysinfo(&info) == 0) {
-        unsigned long long unit = info.mem_unit ? (unsigned long long)info.mem_unit : 1ULL;
-        rx_print_bytes(out, "physical memory free", (unsigned long long)info.freeram * unit);
-        rx_print_bytes(out, "physical memory total", (unsigned long long)info.totalram * unit);
-        rx_print_bytes(out, "shared memory", (unsigned long long)info.sharedram * unit);
-        rx_print_bytes(out, "buffer memory", (unsigned long long)info.bufferram * unit);
-        rx_print_bytes(out, "swap free", (unsigned long long)info.freeswap * unit);
-        rx_print_bytes(out, "swap total", (unsigned long long)info.totalswap * unit);
-    } else {
-        fprintf(out, "  system memory: unavailable (sysinfo failed)\n");
-    }
-#elif defined(__APPLE__)
-    long page_size = -1;
-    long total_pages = -1;
-    long available_pages = -1;
-#ifdef _SC_PAGESIZE
-    page_size = sysconf(_SC_PAGESIZE);
-#endif
-#ifdef _SC_PHYS_PAGES
-    total_pages = sysconf(_SC_PHYS_PAGES);
-#endif
-#ifdef _SC_AVPHYS_PAGES
-    available_pages = sysconf(_SC_AVPHYS_PAGES);
-#endif
-    if (page_size > 0 && total_pages > 0) {
-        if (available_pages > 0) {
-            rx_print_bytes(out, "physical memory available",
-                           (unsigned long long)available_pages * (unsigned long long)page_size);
-        }
-        rx_print_bytes(out, "physical memory total",
-                       (unsigned long long)total_pages * (unsigned long long)page_size);
-    } else {
-        fprintf(out, "  system memory: unavailable\n");
-    }
-#else
-    fprintf(out, "  system memory: unavailable\n");
-#endif
+    buff[used] = buff[used + 1] = 0;
+    *bytes = used;
+    return buff;
 }
 
-void rx_report_out_of_memory(const char *operation, size_t requested_bytes,
-                             const char *detail, const char *source_file,
-                             int source_line, const char *function_name) {
-    int saved_errno = errno;
-    unsigned long pid = rx_process_id();
-
-    fprintf(stderr, "PANIC: Out of memory\n");
-    if (pid) fprintf(stderr, "  process id: %lu\n", pid);
-    if (operation && operation[0]) fprintf(stderr, "  allocation: %s\n", operation);
-    if (requested_bytes == RX_OOM_UNKNOWN_SIZE) {
-        fprintf(stderr, "  requested bytes: unknown\n");
-    } else {
-        rx_print_bytes(stderr, "requested bytes", (unsigned long long)requested_bytes);
-    }
-    if (detail && detail[0]) fprintf(stderr, "  detail: %s\n", detail);
-    if (source_file && source_file[0]) {
-        fprintf(stderr, "  source: %s:%d", source_file, source_line);
-        if (function_name && function_name[0]) fprintf(stderr, " (%s)", function_name);
-        fprintf(stderr, "\n");
-    }
-    fprintf(stderr, "  errno: %d", saved_errno);
-    if (saved_errno) fprintf(stderr, " (%s)", strerror(saved_errno));
-    else fprintf(stderr, " (not set)");
-    fprintf(stderr, "\n");
-    rx_print_memory_status(stderr);
-}
-
-void rx_panic_out_of_memory(const char *operation, size_t requested_bytes,
-                            const char *detail, const char *source_file,
-                            int source_line, const char *function_name) {
-    rx_report_out_of_memory(operation, requested_bytes, detail,
-                            source_file, source_line, function_name);
-    exit(-1);
-}
-
-/*
- * Read a file into a returned buffer
- *
- * This function malloc()s the buffer to the right size therefore it needs
- * to be free()d by the caller
- */
+/* Read a seekable file from the beginning, or a sequential stream from its
+ * current position. The caller frees the buffer, including two NUL sentinels. */
 char* file2buf(FILE *file, size_t *bytes) {
     char *buff;
     size_t n;
     long pos;
-
-    /* Get file size */
+    *bytes = 0;
     if (fseek(file, 0, SEEK_END) != 0) {
-        return 0;
+        clearerr(file);
+        return stream2buf(file, bytes);
     }
     pos = ftell(file);
-    if (pos < 0) {
-        return 0;
-    }
-    *bytes = (size_t)pos;
-    rewind(file);
-
-    /* Allocate buffer and read */
-    buff = (char*) malloc((*bytes + 2) * sizeof(char) );
+    if (pos < 0 || (unsigned long)pos > (size_t)-1 - 2) return 0;
+    if (fseek(file, 0, SEEK_SET) != 0) return 0;
+    buff = (char*)malloc((size_t)pos + 2);
     if (!buff) {
-        RX_REPORT_OOM("malloc file read buffer", *bytes + 2, "file2buf");
+        RX_REPORT_OOM("malloc file read buffer", (size_t)pos + 2, "file2buf");
         return 0;
     }
-    n = fread(buff, 1, *bytes, file);
-    if (n == 0 && *bytes > 0) {
+    n = fread(buff, 1, (size_t)pos, file);
+    if (ferror(file) || (n == 0 && pos > 0)) {
         free(buff);
         return 0;
     }
     *bytes = n;
-    buff[*bytes] = 0;
-    buff[*bytes+1] = 0; /* Add an extra byte for the token peak */
+    buff[n] = buff[n + 1] = 0;
     return buff;
 }
 
@@ -270,13 +479,13 @@ char *strip_rightmost_extension_if(const char *name, const char *ext) {
         return new_name;
     }
     {
-        char *copy = strdup(name);
+        char *copy = platform_copy_string(name);
         if (!copy) RX_PANIC_OOM("strdup file name", strlen(name) + 1, name);
         return copy;
     }
 }
 
-#if !defined(_WIN32) && !defined(__CMS__)
+#if !defined(_WIN32) && !defined(__CMS__) && !defined(CREXX_MAINFRAME_ELF)
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -448,6 +657,11 @@ void platform_install_signal_handlers(void) {}
  * returns 1 if the file exists
  */
 int fileexists(char *name, char *type, char *dir) {
+#if defined(CREXX_PLATFORM_TSO)
+    FILE *probe = crexx_tso_openfile(name, type, dir, "rb");
+    if (!probe) return 0;
+    return fclose(probe) == 0;
+#else
     size_t len;
     char *file_name;
     int result = 0;
@@ -467,8 +681,11 @@ int fileexists(char *name, char *type, char *dir) {
         if (!file_name) RX_PANIC_OOM("malloc file existence path", len, name);
         if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
-#if defined(__linux__) || defined(__APPLE__)
+#if (defined(__linux__) || defined(__APPLE__)) && !defined(CREXX_MAINFRAME_ELF)
         result = access(file_name, F_OK) != -1;
+#elif defined(CREXX_CMS_ELF)
+        FILE *probe = platform_open_stream(file_name, "rb");
+        if (probe) { result = 1; fclose(probe); }
 #elif defined(_WIN32)
         DWORD dwAttrib = GetFileAttributes(file_name);
         result = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
@@ -478,7 +695,7 @@ int fileexists(char *name, char *type, char *dir) {
     }
 
     /* Multiple directories support */
-    dir_copy = strdup(dir);
+    dir_copy = platform_copy_string(dir);
     if (!dir_copy) RX_PANIC_OOM("strdup file existence directory list", strlen(dir) + 1, dir);
     token = dir_copy;
     while (token) {
@@ -491,8 +708,11 @@ int fileexists(char *name, char *type, char *dir) {
             if (!file_name) RX_PANIC_OOM("malloc file existence path", len, name);
             if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
             else snprintf(file_name, len, "%s/%s.%s", token, name, type);
-#if defined(__linux__) || defined(__APPLE__)
+#if (defined(__linux__) || defined(__APPLE__)) && !defined(CREXX_MAINFRAME_ELF)
             result = access(file_name, F_OK) != -1;
+#elif defined(CREXX_CMS_ELF)
+            FILE *probe = platform_open_stream(file_name, "rb");
+            if (probe) { result = 1; fclose(probe); }
 #elif defined(_WIN32)
             DWORD dwAttrib = GetFileAttributes(file_name);
             result = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
@@ -506,6 +726,7 @@ int fileexists(char *name, char *type, char *dir) {
     free(dir_copy);
 
     return result;
+#endif
 }
 
 /*
@@ -514,6 +735,15 @@ int fileexists(char *name, char *type, char *dir) {
  * mode - is the fopen() file mode
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode) {
+#if defined(CREXX_PLATFORM_TSO)
+#if defined(CREXX_PLATFORM_TSO) && !defined(CREXX_NATIVE_RAW_IO)
+    if (!strchr(mode, 'b'))
+        return codec_mode_supported(mode) ?
+            codec_wrap(crexx_tso_openfile(name, type, dir,
+                                         codec_storage_mode(mode)), mode) : NULL;
+#endif
+    return crexx_tso_openfile(name, type, dir, mode);
+#else
     size_t len;
     char *file_name;
     FILE *stream = NULL;
@@ -533,13 +763,13 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
         if (!file_name) RX_PANIC_OOM("malloc openfile path", len, name);
         if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
-        stream = fopen(file_name, mode);
+        stream = platform_open_stream(file_name, mode);
         free(file_name);
         return stream;
     }
 
     /* Multiple directories support */
-    dir_copy = strdup(dir);
+    dir_copy = platform_copy_string(dir);
     if (!dir_copy) RX_PANIC_OOM("strdup openfile directory list", strlen(dir) + 1, dir);
     token = dir_copy;
     while (token) {
@@ -552,7 +782,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
             if (!file_name) RX_PANIC_OOM("malloc openfile path", len, name);
             if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
             else snprintf(file_name, len, "%s/%s.%s", token, name, type);
-            stream = fopen(file_name, mode);
+            stream = platform_open_stream(file_name, mode);
             free(file_name);
             if (stream) break;
         }
@@ -562,9 +792,28 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
     free(dir_copy);
 
     return stream;
+#endif
 }
 
-#if defined(__APPLE__) || defined(__linux__)
+FILE *platform_fopen_storage(const char *path, const char *mode, int storage) {
+#if defined(CREXX_PLATFORM_TSO)
+#if defined(CREXX_PLATFORM_TSO) && !defined(CREXX_NATIVE_RAW_IO)
+    if (!strchr(mode, 'b'))
+        return codec_mode_supported(mode) ?
+            codec_wrap(crexx_tso_openfile_storage(path, "", NULL,
+                                                 codec_storage_mode(mode), storage), mode) : NULL;
+#endif
+    return crexx_tso_openfile_storage(path, "", NULL, mode, storage);
+#else
+    return platform_open_stream_storage(path, mode, storage);
+#endif
+}
+FILE *platform_fopen(const char *path, const char *mode) {
+    return platform_fopen_storage(path, mode, CREXX_TEXT_STORAGE_DEFAULT);
+}
+
+#if ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_MAINFRAME_ELF)) || \
+    (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 struct fl_dir {
     DIR *d;
     char *type;
@@ -588,7 +837,12 @@ struct WIN_FILE_DATA {
  */
 char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
 
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(CREXX_PLATFORM_CMS) && defined(CREXX_NATIVE_RAW_IO)
+    return crexx_cms_dirfirst(dir, prefix, type, dir_ptr);
+#elif defined(CREXX_PLATFORM_TSO)
+    return crexx_tso_dirfirst(dir, prefix, type, dir_ptr);
+#elif ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_MAINFRAME_ELF)) || \
+    (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 
     struct fl_dir *ptr = malloc(sizeof(struct fl_dir));
     if (!ptr) RX_PANIC_OOM("malloc directory iterator", sizeof(struct fl_dir), dir);
@@ -623,8 +877,11 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
 
     if ( (win_data->hFind = FindFirstFile(win_data->sPath, &(win_data->fdFile) ) ) == INVALID_HANDLE_VALUE)
     {
+        DWORD error = GetLastError();
         *dir_ptr = 0;
         free(win_data);
+        errno = error == ERROR_FILE_NOT_FOUND ? 0 :
+                error == ERROR_PATH_NOT_FOUND ? ENOENT : EIO;
         return 0;
     }
 
@@ -635,6 +892,12 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
     }
 
     return win_data->fdFile.cFileName;
+
+#elif defined(CREXX_CMS_ELF)
+
+    if (dir_ptr) *dir_ptr = 0;
+    errno = ENOSYS;
+    return 0;
 
 #else
 
@@ -649,12 +912,19 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
  */
 char *dirnxtfl(void **dir_ptr) {
 
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(CREXX_PLATFORM_CMS) && defined(CREXX_NATIVE_RAW_IO)
+    return crexx_cms_dirnext(dir_ptr);
+#elif defined(CREXX_PLATFORM_TSO)
+    return crexx_tso_dirnext(dir_ptr);
+#elif ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_MAINFRAME_ELF)) || \
+    (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 
     struct dirent *dirent;
-    struct fl_dir *ptr = *dir_ptr;
+    struct fl_dir *ptr = dir_ptr ? *dir_ptr : NULL;
     const char *ext;
+    if (!ptr) { errno = 0; return NULL; }
     do {
+        errno = 0;
         dirent = readdir(ptr->d);
         if (!dirent) return 0;
         ext = filenext(dirent->d_name);
@@ -667,7 +937,7 @@ char *dirnxtfl(void **dir_ptr) {
 #elif defined(_WIN32)
 
     struct WIN_FILE_DATA *win_data = *dir_ptr;
-    if (!win_data) return 0;
+    if (!win_data) { errno = 0; return 0; }
 
     while ( FindNextFile(win_data->hFind, &(win_data->fdFile)) ) {
 
@@ -675,6 +945,13 @@ char *dirnxtfl(void **dir_ptr) {
 
         return win_data->fdFile.cFileName;
     }
+    errno = GetLastError() == ERROR_NO_MORE_FILES ? 0 : EIO;
+    return 0;
+
+#elif defined(CREXX_CMS_ELF)
+
+    if (dir_ptr) *dir_ptr = 0;
+    errno = ENOSYS;
     return 0;
 
 #else
@@ -689,12 +966,20 @@ char *dirnxtfl(void **dir_ptr) {
  */
 void dirclose(void **dir_ptr) {
 
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(CREXX_PLATFORM_CMS) && defined(CREXX_NATIVE_RAW_IO)
+    crexx_cms_dirclose(dir_ptr);
+#elif defined(CREXX_PLATFORM_TSO)
+    crexx_tso_dirclose(dir_ptr);
+#elif ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_MAINFRAME_ELF)) || \
+    (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 
-    struct fl_dir *ptr = *dir_ptr;
-
-    if (!ptr || !ptr->d) return;
-    closedir(ptr->d);
+    struct fl_dir *ptr = dir_ptr ? *dir_ptr : NULL;
+    int saved = errno, rc;
+    if (!ptr) return;
+    errno = 0;
+    rc = closedir(ptr->d);
+    if (saved) errno = saved;
+    else if (rc && !errno) errno = EIO;
     free(ptr);
     *dir_ptr = 0;
 
@@ -703,9 +988,16 @@ void dirclose(void **dir_ptr) {
     struct WIN_FILE_DATA *win_data = *dir_ptr;
     if (!win_data) return;
 
-    FindClose(win_data->hFind);
+    {
+        int saved = errno;
+        BOOL success = FindClose(win_data->hFind);
+        errno = saved ? saved : success ? 0 : EIO;
+    }
     free(win_data);
+    *dir_ptr = 0;
 
+#elif defined(CREXX_CMS_ELF)
+    if (dir_ptr) *dir_ptr = 0;
 #endif
 
 }
@@ -749,7 +1041,7 @@ char* exefqname()
 		exePath[0] = '\0';
 	}
 
-#elif defined(__linux)
+#elif defined(__linux) && !defined(CREXX_MAINFRAME_ELF)
 
     char buf[MAXFILEPATH] = {0};
     snprintf(buf, sizeof(buf), "/proc/%d/exe", getpid());
@@ -765,7 +1057,7 @@ char* exefqname()
         exePath[len] = '\0';
     }
 
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && !defined(CREXX_MAINFRAME_ELF)
 
 	uint32_t bufSize = MAXFILEPATH;
 	if(_NSGetExecutablePath(exePath, &bufSize) != 0)

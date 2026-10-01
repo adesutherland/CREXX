@@ -1,0 +1,10 @@
+> rxc warning: Warning in crexx_llama.crexx @ 201:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 183, column 7. Declare this binding explicitly if intentional., "name_count"
+> rxc warning: Warning in crexx_llama.crexx @ 217:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 183, column 7. Declare this binding explicitly if intentional., "name_count"
+> rxc warning: Warning in crexx_llama.crexx @ 231:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 183, column 7. Declare this binding explicitly if intentional., "name_count"
+> rxc warning: 3 warning(s) in source file
+crexx-llama status [--root DIR]
+crexx-llama use vulkan|cuda [--root DIR]
+Close programs using llama.rexx before switching.
+A system-wide installation requires an administrator terminal.
+PASS: rxfs public contract
+Built cREXX native manager: /private/tmp/crexx-llama-native-tool-reinstall

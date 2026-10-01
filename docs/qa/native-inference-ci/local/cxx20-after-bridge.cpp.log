@@ -1,0 +1,27 @@
+argv=['/usr/bin/c++', '-DCREXX_LLAMA_ARCH="arm64"', '-DCREXX_LLAMA_BUILD', '-DCREXX_LLAMA_BUILD_ID="26a52b8c646217acc18b708688f650ac91695d58d29558f1dcbbe409ea95877f:Debug"', '-DCREXX_LLAMA_PLATFORM="Darwin"', '-DCREXX_LLAMA_TESTING=1', '-DGGML_BACKEND_DL', '-DGGML_SHARED', '-DLLAMA_SHARED', '-Dcrexx_llama_bridge_EXPORTS', '-I/Users/adrian/CLionProjects/CREXX/cmake-build-debug/_deps/crexx_llama_source-src/vendor', '-I/Users/adrian/CLionProjects/CREXX/binutils/include', '-I/Users/adrian/CLionProjects/CREXX/cmake-build-debug/_deps/crexx_llama_source-src/src/../include', '-I/Users/adrian/CLionProjects/CREXX/cmake-build-debug/_deps/crexx_llama_source-src/ggml/src/../include', '-g', '-std=gnu++17', '-arch', 'arm64', '-fPIC', '-fcolor-diagnostics', '/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp', '-std=c++20', '-fsyntax-only']
+In file included from /Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp:3:
+[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/package.hpp:37:18: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   37 |     [0;34mauto[0m p = fs::u8path(name);[0m
+      | [0;1;32m                 ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp:753:43: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+  753 |                 model = open_model(c, fs::u8path(selector(a[[0;32m1[0m])), selector(a[[0;32m2[0m]), selector(a[[0;32m3[0m]), admission, rt.config.i([0;32m"vram_bytes"[0m) - rt.vram_reserved, selection);[0m
+      | [0;1;32m                                          ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m2 warnings generated.

@@ -1,0 +1,59 @@
+{
+  "completedAt": "2026-09-18T19:18:56Z",
+  "conclusion": "success",
+  "databaseId": 105723856578,
+  "name": "Linux Debug Optimizer Parity",
+  "startedAt": "2026-09-18T18:57:19Z",
+  "status": "completed",
+  "steps": [
+    {
+      "completedAt": "2026-09-18T18:57:21Z",
+      "conclusion": "success",
+      "name": "Set up job",
+      "number": 1,
+      "startedAt": "2026-09-18T18:57:20Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-18T18:57:31Z",
+      "conclusion": "success",
+      "name": "Checkout",
+      "number": 2,
+      "startedAt": "2026-09-18T18:57:21Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-18T18:57:39Z",
+      "conclusion": "success",
+      "name": "Configure Debug parity build",
+      "number": 3,
+      "startedAt": "2026-09-18T18:57:31Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-18T19:18:53Z",
+      "conclusion": "success",
+      "name": "Run optimized/non-optimized correctness parity",
+      "number": 4,
+      "startedAt": "2026-09-18T18:57:39Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-18T19:18:53Z",
+      "conclusion": "success",
+      "name": "Post Checkout",
+      "number": 8,
+      "startedAt": "2026-09-18T19:18:53Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-18T19:18:53Z",
+      "conclusion": "success",
+      "name": "Complete job",
+      "number": 9,
+      "startedAt": "2026-09-18T19:18:53Z",
+      "status": "completed"
+    }
+  ],
+  "url": "https://github.com/adesutherland/CREXX/actions/runs/35383125122/job/105723856578"
+}

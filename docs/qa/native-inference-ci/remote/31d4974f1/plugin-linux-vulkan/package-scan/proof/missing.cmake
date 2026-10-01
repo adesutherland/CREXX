@@ -1,0 +1,6 @@
+set(platform "Linux")
+set(provider copy_control)
+set(arch "x86_64")
+set(engine fixture)
+set(runtime_files "/home/runner/work/_temp/package-scan/a/libcopy_root_a.so")
+set(output "/home/runner/work/_temp/package-scan/proof/missing")

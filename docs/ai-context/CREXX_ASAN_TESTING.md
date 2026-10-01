@@ -3,6 +3,16 @@
 Use `tools/asan-run.sh` for AddressSanitizer and LeakSanitizer runs. Do not
 hand-run broad ASan builds or ctests unless the runner itself is broken.
 
+The hosted core gate explicitly uses `ENABLE_LLAMA=OFF`. Adrian clarified on
+15 September 2026 that sanitizer QA covers first-party cREXX code, not upstream
+llama.cpp or CUDA. Do not add CUDA SDK/backend builds to this gate. Separate
+adapter ownership checks may instrument our bridge/RXPA code while linking an
+ordinary uninstrumented engine; record that boundary and use ARM Mac where
+practical. This does not waive first-party findings or claim coverage inside
+an uninstrumented dependency. See the native-inference pipeline plan for the
+remaining adapter/platform acceptance and the worklist for SAN-009's retained
+16 September closure evidence.
+
 ## Defect ownership and closure
 
 `docs/SANITIZER-WORKLIST.md` is the canonical live register for maintained
@@ -148,6 +158,17 @@ all CTests. Both build steps are important because many tests consume generated
 `.rxbin` artifacts directly. A CTest-only run against a partially prepared tree
 can fail with missing module files and should not be treated as a code failure.
 
+CTest schedules the large `binary_global_import_types`,
+`crexx_project_build_contract`, and `crexx_process_runtime` end-to-end matrices
+with `RUN_SERIAL`. Each test launches substantial nested compiler, assembler,
+linker, or VM work; allowing these aggregates to compete with the broad pool can
+exhaust their outer or inner deadlines without a product or sanitizer failure.
+Keep them enabled in the full gate. The expanded binary-import and project-build
+matrices have 900-second outer limits to cover instrumented hosted execution.
+An explicit CTest timeout with no sanitizer diagnostic is a harness result until
+the unchanged test is checked under its declared isolated scheduling; it is not
+a sanitizer-clean result and must not be waived.
+
 For a stepwise full leak-clean loop after the tree is already built:
 
 ```sh
@@ -205,10 +226,10 @@ continue with the sanitizer tree rather than blocking the whole investigation.
 If `cmake-build-debug` is not configured locally, skip the plain Debug check and
 record that the command was validated only in the sanitizer tree.
 
-## Mandatory CI gates
+## Overnight assurance and exceptional qualification
 
-`.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs on
-pushes and pull requests to `develop` or `master`:
+`.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs for
+each workflow invocation:
 
 * Linux x64 runs AddressSanitizer with LeakSanitizer enabled for both the build
   and complete CTest phases.
@@ -222,10 +243,24 @@ replace these jobs with a CTest-only step or mark either job
 `continue-on-error`.  Logs are uploaded even when a job fails so the first
 build-time or test-time report remains attributable.
 
-After the workflow is committed, configure its stable `Linux x64 ASan/LSan`
-and `macOS arm64 ASan` check names as required checks in the repository's
-branch protection or ruleset.  Workflow YAML cannot set that repository-level
-merge policy by itself.
+These full jobs are mandatory **when this workflow is invoked**; they are
+not mandatory before every `develop` publication. Ordinary development changes
+can be integrated after the core build and appropriate functional tests pass,
+with relevant focused sanitizer checks when warranted. Full sanitizer assurance
+normally runs overnight on the current `develop` revision. Investigate and fix
+findings promptly, repeating the relevant deep scope when the repair requires it.
+Do not manually dispatch this workflow or make its two job names universal
+`develop` branch requirements merely to publish an ordinary fix.
+
+Additional pre-publication sanitizer qualification is a documented exception
+for explicitly agreed higher-risk work, release qualification, or closure of an
+actual first-party sanitizer finding. Record the reason and required scope in
+the work plan. The SAN worklist's broad closure requirements, supported Linux
+leak detection and prohibition on unapproved suppressions remain unchanged.
+Account for elapsed-time and integration-delay costs before selecting an extra
+long run; prefer focused checks and retained valid evidence for the concrete
+unresolved risk. See `AGENTS.md` for the canonical development-publication
+policy.
 
 ## Exploratory UBSan
 

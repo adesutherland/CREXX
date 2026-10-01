@@ -1,0 +1,1181 @@
+{
+  "conclusion": "success",
+  "databaseId": 35574185432,
+  "headSha": "45571319f49f2fd4ad09ad4ebf3f337b20482a00",
+  "jobs": [
+    {
+      "completedAt": "2026-09-21T07:42:04Z",
+      "conclusion": "success",
+      "databaseId": 106252196084,
+      "name": "Check for an unqualified develop change",
+      "startedAt": "2026-09-21T07:41:57Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:41:59Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:41:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:41:59Z",
+          "conclusion": "success",
+          "name": "Resolve the commit to qualify",
+          "number": 2,
+          "startedAt": "2026-09-21T07:41:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:00Z",
+          "conclusion": "success",
+          "name": "Read the exact candidate QA matrix",
+          "number": 3,
+          "startedAt": "2026-09-21T07:41:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:00Z",
+          "conclusion": "success",
+          "name": "Select core configurations",
+          "number": 4,
+          "startedAt": "2026-09-21T07:42:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:00Z",
+          "conclusion": "skipped",
+          "name": "Look for successful deep assurance of this develop commit",
+          "number": 5,
+          "startedAt": "2026-09-21T07:42:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:00Z",
+          "conclusion": "success",
+          "name": "Decide whether deep assurance is required",
+          "number": 6,
+          "startedAt": "2026-09-21T07:42:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:01Z",
+          "conclusion": "success",
+          "name": "Post Read the exact candidate QA matrix",
+          "number": 12,
+          "startedAt": "2026-09-21T07:42:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:01Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 13,
+          "startedAt": "2026-09-21T07:42:01Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252196084"
+    },
+    {
+      "completedAt": "2026-09-21T07:48:05Z",
+      "conclusion": "success",
+      "databaseId": 106252238005,
+      "name": "Isolated Debug stress QA",
+      "startedAt": "2026-09-21T07:42:07Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:42:08Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:42:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:18Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-21T07:42:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:31Z",
+          "conclusion": "success",
+          "name": "Configure Debug stress graph",
+          "number": 3,
+          "startedAt": "2026-09-21T07:42:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:48:03Z",
+          "conclusion": "success",
+          "name": "Run stress separately from correctness and performance",
+          "number": 4,
+          "startedAt": "2026-09-21T07:42:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:48:03Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 8,
+          "startedAt": "2026-09-21T07:48:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:48:03Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-09-21T07:48:03Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252238005"
+    },
+    {
+      "completedAt": "2026-09-21T07:48:24Z",
+      "conclusion": "success",
+      "databaseId": 106252238061,
+      "name": "Release product jobs 5",
+      "startedAt": "2026-09-21T07:42:07Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:42:08Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:42:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:19Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-21T07:42:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:26Z",
+          "conclusion": "success",
+          "name": "Configure reproducible Release graph",
+          "number": 3,
+          "startedAt": "2026-09-21T07:42:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:47:49Z",
+          "conclusion": "success",
+          "name": "Clean product build",
+          "number": 4,
+          "startedAt": "2026-09-21T07:42:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:47:49Z",
+          "conclusion": "success",
+          "name": "Prove immediate no-op",
+          "number": 5,
+          "startedAt": "2026-09-21T07:47:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:47:49Z",
+          "conclusion": "success",
+          "name": "Check generated-file dependencies",
+          "number": 6,
+          "startedAt": "2026-09-21T07:47:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:48:22Z",
+          "conclusion": "success",
+          "name": "Exercise incremental REXX change closure",
+          "number": 7,
+          "startedAt": "2026-09-21T07:47:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:48:22Z",
+          "conclusion": "success",
+          "name": "Record deterministic RXBIN manifest",
+          "number": 8,
+          "startedAt": "2026-09-21T07:48:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:48:23Z",
+          "conclusion": "success",
+          "name": "Upload deep-build evidence",
+          "number": 9,
+          "startedAt": "2026-09-21T07:48:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:48:23Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 18,
+          "startedAt": "2026-09-21T07:48:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:48:23Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-09-21T07:48:23Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252238061"
+    },
+    {
+      "completedAt": "2026-09-21T07:47:12Z",
+      "conclusion": "success",
+      "databaseId": 106252238065,
+      "name": "Release product jobs 30",
+      "startedAt": "2026-09-21T07:42:07Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:42:09Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:42:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:20Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-21T07:42:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:33Z",
+          "conclusion": "success",
+          "name": "Configure reproducible Release graph",
+          "number": 3,
+          "startedAt": "2026-09-21T07:42:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:46:37Z",
+          "conclusion": "success",
+          "name": "Clean product build",
+          "number": 4,
+          "startedAt": "2026-09-21T07:42:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:46:37Z",
+          "conclusion": "success",
+          "name": "Prove immediate no-op",
+          "number": 5,
+          "startedAt": "2026-09-21T07:46:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:46:38Z",
+          "conclusion": "success",
+          "name": "Check generated-file dependencies",
+          "number": 6,
+          "startedAt": "2026-09-21T07:46:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:47:09Z",
+          "conclusion": "success",
+          "name": "Exercise incremental REXX change closure",
+          "number": 7,
+          "startedAt": "2026-09-21T07:46:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:47:09Z",
+          "conclusion": "success",
+          "name": "Record deterministic RXBIN manifest",
+          "number": 8,
+          "startedAt": "2026-09-21T07:47:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:47:10Z",
+          "conclusion": "success",
+          "name": "Upload deep-build evidence",
+          "number": 9,
+          "startedAt": "2026-09-21T07:47:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:47:10Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 18,
+          "startedAt": "2026-09-21T07:47:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:47:10Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-09-21T07:47:10Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252238065"
+    },
+    {
+      "completedAt": "2026-09-21T07:53:02Z",
+      "conclusion": "success",
+      "databaseId": 106252238067,
+      "name": "Release product jobs 1",
+      "startedAt": "2026-09-21T07:42:08Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:42:09Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:42:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:20Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-21T07:42:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:26Z",
+          "conclusion": "success",
+          "name": "Configure reproducible Release graph",
+          "number": 3,
+          "startedAt": "2026-09-21T07:42:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:52:23Z",
+          "conclusion": "success",
+          "name": "Clean product build",
+          "number": 4,
+          "startedAt": "2026-09-21T07:42:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:52:23Z",
+          "conclusion": "success",
+          "name": "Prove immediate no-op",
+          "number": 5,
+          "startedAt": "2026-09-21T07:52:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:52:23Z",
+          "conclusion": "success",
+          "name": "Check generated-file dependencies",
+          "number": 6,
+          "startedAt": "2026-09-21T07:52:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:52:58Z",
+          "conclusion": "success",
+          "name": "Exercise incremental REXX change closure",
+          "number": 7,
+          "startedAt": "2026-09-21T07:52:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:52:58Z",
+          "conclusion": "success",
+          "name": "Record deterministic RXBIN manifest",
+          "number": 8,
+          "startedAt": "2026-09-21T07:52:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:52:59Z",
+          "conclusion": "success",
+          "name": "Upload deep-build evidence",
+          "number": 9,
+          "startedAt": "2026-09-21T07:52:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:53:00Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 18,
+          "startedAt": "2026-09-21T07:52:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:53:00Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-09-21T07:53:00Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252238067"
+    },
+    {
+      "completedAt": "2026-09-21T08:21:56Z",
+      "conclusion": "success",
+      "databaseId": 106252238103,
+      "name": "Comprehensive macOS x86_64",
+      "startedAt": "2026-09-21T07:42:08Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:42:12Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:42:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:36Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-21T07:42:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:37Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 3,
+          "startedAt": "2026-09-21T07:42:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:37Z",
+          "conclusion": "skipped",
+          "name": "Update toolchain (MSYS2)",
+          "number": 4,
+          "startedAt": "2026-09-21T07:42:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:37Z",
+          "conclusion": "success",
+          "name": "Python for package smoke",
+          "number": 5,
+          "startedAt": "2026-09-21T07:42:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:43:01Z",
+          "conclusion": "success",
+          "name": "Configure Release qualification build",
+          "number": 6,
+          "startedAt": "2026-09-21T07:42:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:43:01Z",
+          "conclusion": "skipped",
+          "name": "Configure Release qualification build",
+          "number": 7,
+          "startedAt": "2026-09-21T07:43:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:43:01Z",
+          "conclusion": "skipped",
+          "name": "Check MSVC atomics before the broad build",
+          "number": 8,
+          "startedAt": "2026-09-21T07:43:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:21:10Z",
+          "conclusion": "success",
+          "name": "Run comprehensive correctness QA",
+          "number": 9,
+          "startedAt": "2026-09-21T07:43:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:21:10Z",
+          "conclusion": "skipped",
+          "name": "Run comprehensive correctness QA",
+          "number": 10,
+          "startedAt": "2026-09-21T08:21:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:21:48Z",
+          "conclusion": "success",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 11,
+          "startedAt": "2026-09-21T08:21:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:21:48Z",
+          "conclusion": "skipped",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 12,
+          "startedAt": "2026-09-21T08:21:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:21:50Z",
+          "conclusion": "success",
+          "name": "Retain comprehensive qualification logs",
+          "number": 13,
+          "startedAt": "2026-09-21T08:21:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:21:51Z",
+          "conclusion": "success",
+          "name": "Post Python for package smoke",
+          "number": 25,
+          "startedAt": "2026-09-21T08:21:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:21:52Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 26,
+          "startedAt": "2026-09-21T08:21:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:21:52Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 27,
+          "startedAt": "2026-09-21T08:21:52Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252238103"
+    },
+    {
+      "completedAt": "2026-09-21T07:59:13Z",
+      "conclusion": "success",
+      "databaseId": 106252238122,
+      "name": "Comprehensive macOS arm64",
+      "startedAt": "2026-09-21T07:42:14Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:42:17Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:42:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:33Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-21T07:42:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:33Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 3,
+          "startedAt": "2026-09-21T07:42:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:33Z",
+          "conclusion": "skipped",
+          "name": "Update toolchain (MSYS2)",
+          "number": 4,
+          "startedAt": "2026-09-21T07:42:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:33Z",
+          "conclusion": "success",
+          "name": "Python for package smoke",
+          "number": 5,
+          "startedAt": "2026-09-21T07:42:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:46Z",
+          "conclusion": "success",
+          "name": "Configure Release qualification build",
+          "number": 6,
+          "startedAt": "2026-09-21T07:42:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:46Z",
+          "conclusion": "skipped",
+          "name": "Configure Release qualification build",
+          "number": 7,
+          "startedAt": "2026-09-21T07:42:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:46Z",
+          "conclusion": "skipped",
+          "name": "Check MSVC atomics before the broad build",
+          "number": 8,
+          "startedAt": "2026-09-21T07:42:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:58:43Z",
+          "conclusion": "success",
+          "name": "Run comprehensive correctness QA",
+          "number": 9,
+          "startedAt": "2026-09-21T07:42:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:58:43Z",
+          "conclusion": "skipped",
+          "name": "Run comprehensive correctness QA",
+          "number": 10,
+          "startedAt": "2026-09-21T07:58:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:59:06Z",
+          "conclusion": "success",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 11,
+          "startedAt": "2026-09-21T07:58:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:59:06Z",
+          "conclusion": "skipped",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 12,
+          "startedAt": "2026-09-21T07:59:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:59:08Z",
+          "conclusion": "success",
+          "name": "Retain comprehensive qualification logs",
+          "number": 13,
+          "startedAt": "2026-09-21T07:59:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:59:08Z",
+          "conclusion": "success",
+          "name": "Post Python for package smoke",
+          "number": 25,
+          "startedAt": "2026-09-21T07:59:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:59:08Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 26,
+          "startedAt": "2026-09-21T07:59:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:59:09Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 27,
+          "startedAt": "2026-09-21T07:59:08Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252238122"
+    },
+    {
+      "completedAt": "2026-09-21T08:12:03Z",
+      "conclusion": "success",
+      "databaseId": 106252238140,
+      "name": "Comprehensive Windows x64 MSVC",
+      "startedAt": "2026-09-21T07:42:07Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:42:10Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:42:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:33Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-21T07:42:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:36Z",
+          "conclusion": "success",
+          "name": "Select MSVC C11 toolchain",
+          "number": 3,
+          "startedAt": "2026-09-21T07:42:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:36Z",
+          "conclusion": "skipped",
+          "name": "Update toolchain (MSYS2)",
+          "number": 4,
+          "startedAt": "2026-09-21T07:42:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:36Z",
+          "conclusion": "success",
+          "name": "Python for package smoke",
+          "number": 5,
+          "startedAt": "2026-09-21T07:42:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:53Z",
+          "conclusion": "success",
+          "name": "Configure Release qualification build",
+          "number": 6,
+          "startedAt": "2026-09-21T07:42:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:53Z",
+          "conclusion": "skipped",
+          "name": "Configure Release qualification build",
+          "number": 7,
+          "startedAt": "2026-09-21T07:42:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:54Z",
+          "conclusion": "success",
+          "name": "Check MSVC atomics before the broad build",
+          "number": 8,
+          "startedAt": "2026-09-21T07:42:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:11:19Z",
+          "conclusion": "success",
+          "name": "Run comprehensive correctness QA",
+          "number": 9,
+          "startedAt": "2026-09-21T07:42:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:11:19Z",
+          "conclusion": "skipped",
+          "name": "Run comprehensive correctness QA",
+          "number": 10,
+          "startedAt": "2026-09-21T08:11:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:11:57Z",
+          "conclusion": "success",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 11,
+          "startedAt": "2026-09-21T08:11:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:11:57Z",
+          "conclusion": "skipped",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 12,
+          "startedAt": "2026-09-21T08:11:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:11:58Z",
+          "conclusion": "success",
+          "name": "Retain comprehensive qualification logs",
+          "number": 13,
+          "startedAt": "2026-09-21T08:11:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:11:59Z",
+          "conclusion": "success",
+          "name": "Post Python for package smoke",
+          "number": 25,
+          "startedAt": "2026-09-21T08:11:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:12:01Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 26,
+          "startedAt": "2026-09-21T08:11:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:12:01Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 27,
+          "startedAt": "2026-09-21T08:12:01Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252238140"
+    },
+    {
+      "completedAt": "2026-09-21T08:04:34Z",
+      "conclusion": "success",
+      "databaseId": 106252238155,
+      "name": "Comprehensive Linux x64",
+      "startedAt": "2026-09-21T07:42:07Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:42:09Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:42:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:19Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-21T07:42:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:19Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 3,
+          "startedAt": "2026-09-21T07:42:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:19Z",
+          "conclusion": "skipped",
+          "name": "Update toolchain (MSYS2)",
+          "number": 4,
+          "startedAt": "2026-09-21T07:42:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:19Z",
+          "conclusion": "success",
+          "name": "Python for package smoke",
+          "number": 5,
+          "startedAt": "2026-09-21T07:42:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:28Z",
+          "conclusion": "success",
+          "name": "Configure Release qualification build",
+          "number": 6,
+          "startedAt": "2026-09-21T07:42:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:28Z",
+          "conclusion": "skipped",
+          "name": "Configure Release qualification build",
+          "number": 7,
+          "startedAt": "2026-09-21T07:42:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:42:28Z",
+          "conclusion": "skipped",
+          "name": "Check MSVC atomics before the broad build",
+          "number": 8,
+          "startedAt": "2026-09-21T07:42:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:04:07Z",
+          "conclusion": "success",
+          "name": "Run comprehensive correctness QA",
+          "number": 9,
+          "startedAt": "2026-09-21T07:42:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:04:07Z",
+          "conclusion": "skipped",
+          "name": "Run comprehensive correctness QA",
+          "number": 10,
+          "startedAt": "2026-09-21T08:04:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:04:30Z",
+          "conclusion": "success",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 11,
+          "startedAt": "2026-09-21T08:04:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:04:30Z",
+          "conclusion": "skipped",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 12,
+          "startedAt": "2026-09-21T08:04:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:04:31Z",
+          "conclusion": "success",
+          "name": "Retain comprehensive qualification logs",
+          "number": 13,
+          "startedAt": "2026-09-21T08:04:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:04:31Z",
+          "conclusion": "success",
+          "name": "Post Python for package smoke",
+          "number": 25,
+          "startedAt": "2026-09-21T08:04:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:04:31Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 26,
+          "startedAt": "2026-09-21T08:04:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:04:31Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 27,
+          "startedAt": "2026-09-21T08:04:31Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252238155"
+    },
+    {
+      "completedAt": "2026-09-21T08:15:25Z",
+      "conclusion": "success",
+      "databaseId": 106252238167,
+      "name": "Comprehensive Windows x64 MinGW",
+      "startedAt": "2026-09-21T07:42:39Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:42:41Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:42:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:43:06Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-21T07:42:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:43:06Z",
+          "conclusion": "skipped",
+          "name": "Select MSVC C11 toolchain",
+          "number": 3,
+          "startedAt": "2026-09-21T07:43:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:45:02Z",
+          "conclusion": "success",
+          "name": "Update toolchain (MSYS2)",
+          "number": 4,
+          "startedAt": "2026-09-21T07:43:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:45:02Z",
+          "conclusion": "skipped",
+          "name": "Python for package smoke",
+          "number": 5,
+          "startedAt": "2026-09-21T07:45:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:45:02Z",
+          "conclusion": "skipped",
+          "name": "Configure Release qualification build",
+          "number": 6,
+          "startedAt": "2026-09-21T07:45:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:45:13Z",
+          "conclusion": "success",
+          "name": "Configure Release qualification build",
+          "number": 7,
+          "startedAt": "2026-09-21T07:45:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:45:13Z",
+          "conclusion": "skipped",
+          "name": "Check MSVC atomics before the broad build",
+          "number": 8,
+          "startedAt": "2026-09-21T07:45:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:45:13Z",
+          "conclusion": "skipped",
+          "name": "Run comprehensive correctness QA",
+          "number": 9,
+          "startedAt": "2026-09-21T07:45:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:14:46Z",
+          "conclusion": "success",
+          "name": "Run comprehensive correctness QA",
+          "number": 10,
+          "startedAt": "2026-09-21T07:45:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:14:46Z",
+          "conclusion": "skipped",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 11,
+          "startedAt": "2026-09-21T08:14:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:15:15Z",
+          "conclusion": "success",
+          "name": "Run install/package/external-consumer qualification",
+          "number": 12,
+          "startedAt": "2026-09-21T08:14:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:15:16Z",
+          "conclusion": "success",
+          "name": "Retain comprehensive qualification logs",
+          "number": 13,
+          "startedAt": "2026-09-21T08:15:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:15:19Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 26,
+          "startedAt": "2026-09-21T08:15:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T08:15:19Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 27,
+          "startedAt": "2026-09-21T08:15:19Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106252238167"
+    },
+    {
+      "completedAt": "2026-09-21T07:53:11Z",
+      "conclusion": "success",
+      "databaseId": 106254966225,
+      "name": "Compare Release RXBIN outputs",
+      "startedAt": "2026-09-21T07:53:06Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-21T07:53:08Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-21T07:53:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:53:09Z",
+          "conclusion": "success",
+          "name": "Download manifests",
+          "number": 2,
+          "startedAt": "2026-09-21T07:53:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:53:09Z",
+          "conclusion": "success",
+          "name": "Compare jobs 1, 5 and 30",
+          "number": 3,
+          "startedAt": "2026-09-21T07:53:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-21T07:53:09Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 4,
+          "startedAt": "2026-09-21T07:53:09Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106254966225"
+    },
+    {
+      "completedAt": "2026-09-21T08:21:56Z",
+      "conclusion": "skipped",
+      "databaseId": 106262596308,
+      "name": "Record qualified develop commit",
+      "startedAt": "2026-09-21T08:21:57Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432/job/106262596308"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432",
+  "workflowName": "Deep Build QA"
+}

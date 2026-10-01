@@ -1,0 +1,3 @@
+argv=['/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-wfgjlpr1/engine/rxllama_release_engine_smoke', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-wfgjlpr1/fixture.gguf']
+SMOKE_STAGE: runtime discovery
+FAIL: filesystem error: in file_size: No such file or directory ["/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-wfgjlpr1/engine/rxllama.runtime.json"]

@@ -1,0 +1,32 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(source_import_private_dependency_.\*\|binary_forward_dependencies\|binary_storage_selector_dependencies\|source_import_contract_stub_.\*\|global_import_types\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan
+    Start  18: binary_forward_dependencies
+1/7 Test  #18: binary_forward_dependencies ....................   Passed   28.78 sec
+    Start  19: source_import_private_dependency_convergence
+2/7 Test  #19: source_import_private_dependency_convergence ...   Passed   35.66 sec
+    Start  20: source_import_private_dependency_provider
+3/7 Test  #20: source_import_private_dependency_provider ......   Passed   50.57 sec
+    Start  22: global_import_types
+4/7 Test  #22: global_import_types ............................   Passed   20.95 sec
+    Start  24: binary_storage_selector_dependencies
+5/7 Test  #24: binary_storage_selector_dependencies ...........   Passed   53.33 sec
+    Start 635: source_import_contract_stub_implements
+6/7 Test #635: source_import_contract_stub_implements .........   Passed    2.86 sec
+    Start 638: source_import_contract_stub_covariant_cycle
+7/7 Test #638: source_import_contract_stub_covariant_cycle ....   Passed    3.01 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+binary           =  53.33 sec*proc (1 test)
+compiler         = 195.14 sec*proc (7 tests)
+comprehensive    = 106.06 sec*proc (4 tests)
+imports          = 195.14 sec*proc (7 tests)
+incremental      = 168.33 sec*proc (4 tests)
+inline           =  86.23 sec*proc (2 tests)
+regression       = 189.27 sec*proc (5 tests)
+smoke            =  89.08 sec*proc (3 tests)
+
+Total Test time (real) = 195.20 sec

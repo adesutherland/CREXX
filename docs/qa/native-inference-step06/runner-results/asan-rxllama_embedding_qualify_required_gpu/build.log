@@ -1,0 +1,17 @@
+Command: cmake --build cmake-build-debugasan --target rxllama_embedding_qualify_required_gpu --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[  8%] Built target ggml-base
+[ 25%] Built target ggml-metal
+[ 33%] Built target ggml-cpu
+[ 33%] Built target ggml
+[100%] Built target llama
+[100%] Built target crexx_llama_bridge
+[100%] Built target llama_provider_static
+[100%] Built target llama_provider
+[100%] Built target rxllama_embedding_bridge
+[100%] Built target llama_provider_runtime_package
+PASS: exact row/token/byte limits, query 512/513, cancellation, failed batch and recovery required-gpu
+PASS: embedding glue parity, boundaries, batching, private state and cleanup required-gpu
+Elapsed time (seconds): 2.45566
+[100%] Built target rxllama_embedding_qualify_required_gpu

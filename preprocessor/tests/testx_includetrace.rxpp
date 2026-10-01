@@ -1,0 +1,3 @@
+##CFLAG includetrace
+##INCLUDE testx_include.rxpp
+##INCLUDE testx_include.rxpp

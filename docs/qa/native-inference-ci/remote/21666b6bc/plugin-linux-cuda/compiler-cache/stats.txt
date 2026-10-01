@@ -1,0 +1,38 @@
+Compile requests                         585
+Compile requests executed               2873
+Cache hits                              1476
+Cache hits (C/C++)                       247
+Cache hits (CUBIN)                       307
+Cache hits (CUDA)                         75
+Cache hits (CUDA (Device code))           77
+Cache hits (PTX)                         770
+Cache misses                            1254
+Cache misses (C/C++)                     195
+Cache misses (CUBIN)                     265
+Cache misses (CUDA)                       68
+Cache misses (CUDA (Device code))         66
+Cache misses (PTX)                       660
+Cache hits rate                        54.07 %
+Cache hits rate (C/C++)                55.88 %
+Cache hits rate (CUBIN)                53.67 %
+Cache hits rate (CUDA)                 52.45 %
+Cache hits rate (CUDA (Device code))   53.85 %
+Cache hits rate (PTX)                  53.85 %
+Cache timeouts                             0
+Cache read errors                          0
+Forced recaches                            0
+Cache write errors                         1
+Cache errors                               0
+Compilations                            1397
+Compilation failures                       0
+Non-cacheable compilations               143
+Non-cacheable calls                        0
+Non-compilation calls                      0
+Unsupported compiler calls                 0
+Average cache write                    0.531 s
+Average compiler                       7.468 s
+Average cache read hit                 0.148 s
+Failed distributed compilations            0
+Cache location                       ghac, name: 90541733aa72480a9e77ce99e66fc1cfabfa835d74c751408eb0351b7adcec6b, prefix: /sccache/
+Base directories                     (none)
+Version (client)                     0.16.0

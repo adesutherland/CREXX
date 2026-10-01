@@ -1,0 +1,106 @@
+{
+  "compiler": "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+  "compiler_sha256": "4f0a15d5204d8cbecc9be5283b1fd8a679b657e2cb24f5f428123816a26e128f",
+  "source_sha256": {
+    "cleanup.crexx": "b5c8b3132643b91336e6a9652a1703ecb3e47e2325ff8db16bf330d48dfc5015",
+    "contract.crexx": "35e5a61cc2a967a06639cf15653122b36aed398e512e4ee03f3de1982280b4a2",
+    "extension.crexx": "2778e19bf3aeedc0264277c42b004b6160750a3f174d63a9509cdc09ae31f849",
+    "implementation.crexx": "0c1d642958399eb16639f0d23da026062d12c921b40c88bc0ec0c6b0b8dddadd",
+    "main.crexx": "3f4f72a413d1210e129571171efe2f00db7def368ba4636ccb92995cd81a66d7"
+  },
+  "results": [
+    {
+      "case": "closefile-opt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/closefile-opt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/closefile-opt/main",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/closefile-opt/main.crexx"
+      ],
+      "rc": 2,
+      "expected_defective_baseline_rc": 2,
+      "matches_defective_baseline": true,
+      "seconds": 0.2364601669833064
+    },
+    {
+      "case": "closefile-noopt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-n",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/closefile-noopt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/closefile-noopt/main",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/closefile-noopt/main.crexx"
+      ],
+      "rc": 2,
+      "expected_defective_baseline_rc": 2,
+      "matches_defective_baseline": true,
+      "seconds": 0.24019575002603233
+    },
+    {
+      "case": "lineout-opt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/lineout-opt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/lineout-opt/main",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/lineout-opt/main.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.23755849990993738
+    },
+    {
+      "case": "lineout-noopt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-n",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/lineout-noopt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/lineout-noopt/main",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/lineout-noopt/main.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.23720945813693106
+    },
+    {
+      "case": "no-extension-opt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/no-extension-opt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/no-extension-opt/main",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/no-extension-opt/main.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.24221575004048645
+    },
+    {
+      "case": "no-extension-noopt",
+      "command": [
+        "/Users/adrian/.local/state/crexx/install-backups/20260916T133851Z-before-17e844441/bin/rxc",
+        "-n",
+        "-s",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/no-extension-noopt",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/no-extension-noopt/main",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-controls-zegsen7b/no-extension-noopt/main.crexx"
+      ],
+      "rc": 0,
+      "expected_defective_baseline_rc": 0,
+      "matches_defective_baseline": true,
+      "seconds": 0.23598295892588794
+    }
+  ]
+}

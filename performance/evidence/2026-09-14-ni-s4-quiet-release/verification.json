@@ -1,0 +1,12 @@
+{
+  "source_hashes_unchanged": 41,
+  "artifact_model_hashes_unchanged": 34,
+  "passing_processes_including_warmups": 104,
+  "recorded_processes": 96,
+  "pairing": "12 complete balanced pairs for each of four workloads",
+  "one_model_load_markers": 104,
+  "probe_output_present": false,
+  "all_cells_explicitly_unset_probe_environment": true,
+  "sanitizer": "not run; latest remains 20260914-152638-ctest",
+  "scope": "data and identity verification only; performance reduction uses unchanged Level B reducer"
+}

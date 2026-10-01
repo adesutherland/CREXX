@@ -1,0 +1,63 @@
+options levelg comments_dash
+namespace project_worker_failures
+import rxfnsb
+import concurrency
+import crexx_build_worker
+
+main: procedure = .int
+  arg args = .string[]
+  if args[0] <> 2 then return 2
+  helper = args[1]
+  root = args[2]
+  cases = .string[]
+  cases[1] = "missing_output"
+  cases[2] = "stamp_write"
+  cases[3] = "stamp_rename"
+  pool = .taskpool.local(2, 8)
+  scope = .taskscope.collectall(pool, -1)
+  target = crexx_build_worker..compile_target()
+  i = .int
+  do i = 1 to cases[0]
+    request = make_request("fixture", cases[i], root || "/" || cases[i], "", "", helper, helper, "key", 0, 0, "", "")
+    child = scope.submit(target, request)
+  end
+  results = scope.join()
+  call scope.close()
+  call pool.close()
+  if results[0] <> 3 then return 3
+  do i = 1 to results[0]
+    if results[i].succeeded() = 0 then return 4
+    if results[i].value().as_integer() <> 1 then return 5
+  end
+  say "PASS: all three worker failure operations are reported"
+  return 0
+
+make_request: procedure = .channelvalue
+arg source = .string, stem = .string, workDir = .string, sourceRoots = .string, binaryRoots = .string, rxc = .string, rxas = .string, key = .string, optimize = .int, importRxas = .int, diagnostics = .string, diagnosticLocale = .string
+names = .string[]
+values = .channelvalue[]
+names[1] = 'binaryRoots'
+values[1] = .channelvalue.string_value(binaryRoots)
+names[2] = 'diagnosticLocale'
+values[2] = .channelvalue.string_value(diagnosticLocale)
+names[3] = 'diagnostics'
+values[3] = .channelvalue.string_value(diagnostics)
+names[4] = 'importRxas'
+values[4] = .channelvalue.integer_value(importRxas)
+names[5] = 'key'
+values[5] = .channelvalue.string_value(key)
+names[6] = 'optimize'
+values[6] = .channelvalue.integer_value(optimize)
+names[7] = 'rxas'
+values[7] = .channelvalue.string_value(rxas)
+names[8] = 'rxc'
+values[8] = .channelvalue.string_value(rxc)
+names[9] = 'source'
+values[9] = .channelvalue.string_value(source)
+names[10] = 'sourceRoots'
+values[10] = .channelvalue.string_value(sourceRoots)
+names[11] = 'stem'
+values[11] = .channelvalue.string_value(stem)
+names[12] = 'workDir'
+values[12] = .channelvalue.string_value(workDir)
+return .channelvalue.record_value('crexx.build.project.compile', 1, names, values)

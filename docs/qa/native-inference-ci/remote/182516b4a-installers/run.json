@@ -1,0 +1,143 @@
+{
+  "conclusion": "success",
+  "databaseId": 35119980116,
+  "event": "workflow_dispatch",
+  "headSha": "182516b4ac2b57533678103648856fbdfd5c7055",
+  "jobs": [
+    {
+      "completedAt": "2026-09-16T16:22:31Z",
+      "conclusion": "success",
+      "databaseId": 104874998321,
+      "name": "windows",
+      "startedAt": "2026-09-16T16:08:40Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-16T16:08:46Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-16T16:08:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:09:18Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v5",
+          "number": 2,
+          "startedAt": "2026-09-16T16:08:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:09:19Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-python@v6",
+          "number": 3,
+          "startedAt": "2026-09-16T16:09:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:09:30Z",
+          "conclusion": "success",
+          "name": "Run ilammy/msvc-dev-cmd@v1",
+          "number": 4,
+          "startedAt": "2026-09-16T16:09:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:09:43Z",
+          "conclusion": "success",
+          "name": "Resolve retained product identity",
+          "number": 5,
+          "startedAt": "2026-09-16T16:09:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:09:45Z",
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v8",
+          "number": 6,
+          "startedAt": "2026-09-16T16:09:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:10:16Z",
+          "conclusion": "success",
+          "name": "Compile only rxfs and native Rexx manager; run focused controls",
+          "number": 7,
+          "startedAt": "2026-09-16T16:09:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:10:18Z",
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v8",
+          "number": 8,
+          "startedAt": "2026-09-16T16:10:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:10:30Z",
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v8",
+          "number": 9,
+          "startedAt": "2026-09-16T16:10:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:25Z",
+          "conclusion": "success",
+          "name": "Native installers and installed provider lifecycle",
+          "number": 10,
+          "startedAt": "2026-09-16T16:10:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:26Z",
+          "conclusion": "success",
+          "name": "Run actions/upload-artifact@v7",
+          "number": 11,
+          "startedAt": "2026-09-16T16:22:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:27Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-python@v6",
+          "number": 21,
+          "startedAt": "2026-09-16T16:22:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:29Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v5",
+          "number": 22,
+          "startedAt": "2026-09-16T16:22:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:29Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 23,
+          "startedAt": "2026-09-16T16:22:29Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35119980116/job/104874998321"
+    },
+    {
+      "completedAt": "2026-09-16T16:08:37Z",
+      "conclusion": "skipped",
+      "databaseId": 104875000240,
+      "name": "Installer lifecycle ${{ matrix.platform }}",
+      "startedAt": "2026-09-16T16:08:37Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35119980116/job/104875000240"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/adesutherland/CREXX/actions/runs/35119980116"
+}

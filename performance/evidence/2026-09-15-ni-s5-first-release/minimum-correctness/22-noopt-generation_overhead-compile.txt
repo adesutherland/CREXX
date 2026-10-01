@@ -1,0 +1,4 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-n', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin', '-o', '/private/tmp/ni-s5/public-debug-01/noopt-generation_overhead', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/generation_overhead.crexx']
+rc=0
+Warning in generation_overhead.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file

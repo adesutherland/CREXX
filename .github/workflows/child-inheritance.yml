@@ -1,0 +1,76 @@
+name: Child Inheritance QA
+on:
+  push:
+    branches: [hotfix]
+    paths:
+      - 'interpreter/**'
+      - '.github/workflows/child-inheritance.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inheritance:
+    name: Inheritance ${{ matrix.toolchain }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, toolchain: linux, shell: bash, args: ''}
+          - {os: macos-15, toolchain: macos, shell: bash, args: ''}
+          - {os: windows-2025, toolchain: msvc, shell: bash, args: ''}
+          - {os: windows-2025, toolchain: mingw, shell: 'msys2 {0}', args: '-DCREXX_FORCE_SYSTEM_OPENSSL=ON'}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.toolchain == 'msvc'
+      - uses: msys2/setup-msys2@v2
+        if: matrix.toolchain == 'mingw'
+        with:
+          update: true
+          install: base-devel git
+          pacboy: toolchain:p cmake:p ninja:p openssl:p pkgconf:p
+      - name: Configure baseline control and current launcher
+        run: |
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/revision.txt
+          git show b5b827489d781f9e42d305ef264a22d2c1c42cb6:interpreter/rxspawn.c > interpreter/issue701-baseline.c
+          baseline="$PWD/interpreter/issue701-baseline.c"
+          if [ "${{ matrix.toolchain }}" = mingw ]; then baseline="$(cygpath -m "$baseline")"; fi
+          if [ "${{ matrix.toolchain }}" = msvc ]; then baseline="$(cygpath -m "$baseline")"; fi
+          cmake -S . -B build-701 -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+            -DRXSPAWN_BASELINE_SOURCE="$baseline" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON ${{ matrix.args }} \
+            > evidence/configure.log 2>&1
+      - name: Build controls
+        run: |
+          cmake --build build-701 --target test_rxspawn_inheritance test_rxspawn_inheritance_baseline test_rxvmfile -j 4 > evidence/build.log 2>&1
+      - name: Defective baseline must reproduce
+        run: |
+          set +e
+          build-701/bin/test_rxspawn_inheritance_baseline > evidence/baseline.log 2>&1
+          rc=$?
+          set -e
+          cat evidence/baseline.log
+          test "$rc" = 1
+          if [ "${{ runner.os }}" = Windows ]; then
+            grep -q 'Windows inheritance: 14 failures' evidence/baseline.log
+          else
+            grep -q 'POSIX inheritance: 2 failures' evidence/baseline.log
+          fi
+      - name: Current launcher must pass
+        run: |
+          build-701/bin/test_rxspawn_inheritance > evidence/current.log 2>&1
+          build-701/bin/test_rxvmfile >> evidence/current.log 2>&1
+          cat evidence/current.log
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: inheritance-${{ matrix.toolchain }}
+          path: evidence

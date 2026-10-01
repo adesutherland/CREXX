@@ -75,7 +75,7 @@ The current evaluator is deliberately simple:
    string literals.
 4. Scan labels.
 5. Execute statements with a program counter.
-6. Export sandbox variables and captured output.
+6. Export sandbox variables, captured output, and any COLLECT values.
 
 Structured `DO` blocks are tracked with parallel block arrays. `SIGNAL label`
 and `GOTO label` set a jump target from the precomputed label table.
@@ -104,6 +104,11 @@ until the later bulk lowering change.
 
 The caller pool is always the RexxScript sandbox pool. Do not pass the host
 CREXX pool into the BIF context.
+
+`COLLECT expression` is a scalar application-value statement. It appends to the
+evaluator-local ordered collection stream without terminating execution or
+changing the `SAY` output stream. The embedded compiler exit exposes that stream
+through the `VALUES target` clause, where the target is a `.string[]`.
 
 When changing intrinsic parsing, remember that intrinsic calls can be nested.
 `_eval_builtin()` must copy parsed argument text and omitted-argument flags

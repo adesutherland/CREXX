@@ -166,7 +166,7 @@ Their secondary tags preserve what they demonstrate:
 
 | Secondary purpose | Components |
 |---|---|
-| host/ADDRESS | two CMS demos, LLM ADDRESS demo/environment, native KV demo, native SQLite demo |
+| host/ADDRESS | two CMS demos, LLM ADDRESS demo/environment, native KV demo, installed rxsqlite provider/Level G ADDRESS consumer demo |
 | hosted LLMs | Anthropic, Gemini, Ollama, and OpenAI generation demos |
 | Rexx compatibility | RexxScript demo |
 | numeric/algorithms | Monte Carlo, factorial, Fibonacci, Gaussian square, GCD, LCM, nth-root, sieve, and sort examples |

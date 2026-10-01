@@ -1,0 +1,20 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^inline_receiver_signal_cleanup\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 656: inline_receiver_signal_cleanup
+1/1 Test #656: inline_receiver_signal_cleanup ...   Passed    4.60 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+compiler         =   4.60 sec*proc (1 test)
+comprehensive    =   4.60 sec*proc (1 test)
+correctness      =   4.60 sec*proc (1 test)
+flow             =   4.60 sec*proc (1 test)
+inlining         =   4.60 sec*proc (1 test)
+linked_opt       =   4.60 sec*proc (1 test)
+receiver         =   4.60 sec*proc (1 test)
+signals          =   4.60 sec*proc (1 test)
+
+Total Test time (real) =   4.65 sec

@@ -1,0 +1,52 @@
+{
+  "head": "6a330665507933a7bd06427d42923f777b78dbeb",
+  "file_count": 7400,
+  "input_manifest_sha256": "1f5db539c219edc23cf4417284011fbf47acd48e9bbacd8ad25930bee5ff5892",
+  "changes_since_broad": {
+    "compiler/tests/golden/parsing/address_exit_extended.txt": {
+      "broad": "85ff6c9ed4724015930cc602f1703bc92d3dd30af978a3a166c6657d60e3f575",
+      "final": "503685515d2a75180b6320c3a4cfc077ccf97e13712fe5249790e1f990ecbb49"
+    },
+    "compiler/tests/golden/parsing/address_inline_then.txt": {
+      "broad": "40b13a1c2a665ed4464f386a9145f50067a481344dc71bfaa9fdc114dd1847dd",
+      "final": "4bfa445e6989f5806a58ed0345c7881c2c6828dbbd9f52080c4abafdad64fcf2"
+    },
+    "interpreter/tests/test_rxpa_concurrency.c": {
+      "broad": "c0be3399b9b04ae758ad16f29914857a4888b73fafb21f8ce407715baa22c1ef",
+      "final": "b319e00a5acef8d23a8f9b48cf812d174432f2221c8f3d21888e0763f74260a3"
+    },
+    "lib/plugins/llama/CMakeLists.txt": {
+      "broad": "ea59df06bb22612498c02af0e91fdef67efee47970d2ee906fa387cd0a006fd1",
+      "final": "27832bac6ecea960d62a17c850b18b9c1b0735f0edff2c6708fa7673387b91b0"
+    },
+    "rxpa/RXPluginFunction.cmake": {
+      "broad": "d4e22a9bf1cf4812ad74d042f113b1ec93f71ec61e79bfe012d375d3ebae909a",
+      "final": "da9cf1f8ae55cccc73d955dfc8211d1a45ddc0274d4e95e3704beb5f944a3b68"
+    },
+    "tests/native-inference/bridge_lifecycle.cpp": {
+      "broad": "6b8c15428fcdf6aa3ccefa74fba24bcfc4593e35c61abacc5da804efa9336633",
+      "final": "ac7b942596f0e0ba22d978dd7175b09e7d3c0a6cf2591bcfffbc8bf5c9c76eaf"
+    },
+    "tests/rxpa/CMakeLists.txt": {
+      "broad": "3de89942a3cb72fd8aef0b33e061aa4f15045f8f13d1523bb6fd1fd69c5c7ff6",
+      "final": "d8b442480e2db672ef67b451af11884b857fd8ee3d63481ad2a41db551c46cec"
+    },
+    "tests/rxpa/external_sdk/CMakeLists.txt": {
+      "broad": "b7d52e285500049d36977e1ef501fb37860169be7d8ba85088736520cc800dd4",
+      "final": "772501ef8fbaf7d26648289e6aa8cda702992d0414c207a454768305867130b2"
+    },
+    "tests/rxpa/external_sdk/sdk_incremental_link.cmake": {
+      "broad": null,
+      "final": "dc3813b7bd75fd78c2f57c0f4486626905a53af09d1ea870489d795e555aef8f"
+    },
+    "tests/rxpa/rxpa_external_sdk_consumer.cmake": {
+      "broad": "70bb13bf1678a15c1b0658ec4209c38022a08decb8f2059964af630ac2ca9ed3",
+      "final": "3b1c7cf766a3287df22523174711ae356e1facccc3ba85e09a311ac2b868b45d"
+    }
+  },
+  "production_c_cpp_unchanged_since_broad": true,
+  "rebuild_result": "incremental-qa-prep.log: successful; no executable/object relink required after dependency repair",
+  "selection_unchanged": true,
+  "ordinary_passes": 2347,
+  "sanitizers": "HOLD STEP-06; SAN-009 open and release-blocking; Codex/Adrian"
+}

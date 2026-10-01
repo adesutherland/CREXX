@@ -29,7 +29,9 @@ This document combines the functionality of the RXPP macro preprocessor and the 
 - [📚 Sample Macros](#-sample-macros)
 - [🔧 RXPP Preprocessor Directives (##)](#-rxpp-preprocessor-directives-)
   - [`##USE file`](#use-file)
-  - [`##DATA array-name`](#data-array-name)
+  - [`##DATA array-name [keyword] [callback]`](#data-array-name-keyword-callback)
+  - [`##DALIAS alias1 [, alias2 ...]`](#dalias-alias1--alias2-)
+  - [`##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`](#relation-program-library-and-rule)
   - [`##SYSxxx`](#sysxxx)
   - [`##CFLAG values`](#cflag-values)
   - [`##SET var value`](#set-var-value)
@@ -614,13 +616,18 @@ This is particularly useful for appending utility code, subroutines, or deferred
 
 ---
 
-### `##DATA array-name`
+### `##DATA array-name [keyword] [callback]`
 
 The **##DATA** directive allows you to define literal data lines directly within the source file. These lines are assigned to a REXX stem array under the specified array-name.
 
 Each line is initially read as written, with surrounding quotes (single or double) preserved to retain the intended string content. Quotes within strings are not escaped or altered during this step.
 
 ***Note:*** If a line contains a macro call or preprocessor variable, it will be expanded in a later preprocessing stage. So while the line is treated as a literal string at first, it may still undergo transformation before reaching the final output.
+
+An optional callback may be specified after the array name. RXPP emits
+`call callback array-name` after the complete array has been generated. An
+optional keyword may precede the callback name; the keyword is syntactic and
+does not change the callback behavior.
 
 **Use Case:** This mechanism is useful for embedding configuration values, data records, or script fragments directly in the source, without relying on external files.
 
@@ -658,6 +665,67 @@ MYTEXT.0 = 2
 MYTEXT.1 = "This is a line with 'inner quotes'"
 MYTEXT.2 = 'This is a simple line'
 ```
+
+### `##DALIAS alias1 [, alias2 ...]`
+
+The **##DALIAS** directive registers additional directive names that use the
+same block-processing behavior as `##DATA`. It aliases the directive keyword,
+not the generated array name. Declare the aliases before using them.
+
+Alias names may be separated by commas or blanks and are matched
+case-insensitively. An aliased directive accepts the same array name, optional
+keyword, optional callback, and `##END` terminator as `##DATA`.
+
+**Syntax:**
+
+```rexx
+##DALIAS config, routes, fixtures
+
+##config settings load_config
+first record
+second record
+##END
+```
+
+This is equivalent to using `##DATA settings load_config`: RXPP generates
+the `settings.` stem and invokes `load_config settings` after the complete
+block has been collected. `##DALIAS` only registers names; it does not emit a
+data array by itself.
+
+### `##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`
+
+`##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE` are thin aliases for
+`##DATA`. They use the same block-processing mechanism and generate the same
+Rexx string-array representation. The directive names have no semantic effect;
+they are alternative spellings only.
+
+They support the same optional keyword and callback forms as `##DATA`:
+
+```rexx
+##PROGRAM program-name
+    source-file
+##END
+
+##LIBRARY library-name callback
+    source-file
+##END
+
+##RULE rule-name
+    rule source
+##END
+```
+
+The equivalent alternative spelling is:
+
+```rexx
+##RELATION relation-name callback
+    relation source
+##END
+```
+
+These directives only collect source or other free-form lines. They do not
+compile, link, or execute the collected members; such processing can be
+provided by an optional callback.
 
 ### `##SYSxxx`
 
@@ -766,6 +834,55 @@ Usage:
   current used prefix {prefix}
 #end  
 ```
+
+RXPP also initializes the following built-in variables before expanding the
+source. They can be referenced with braces wherever RXPP expands variables:
+
+| Variable | Value |
+| --- | --- |
+| `{date}` | Compilation date. |
+| `{time}` | Compilation time. |
+| `{syslib}` | System binary/library path selected by RXPP. |
+| `{syspath}` | RXPP system or macro search path. |
+| `{macpath}` | Directory containing the selected macro library. |
+| `{inpath}` | Directory containing the input source. |
+| `{buildpath}` | Directory containing the generated build output. |
+| `{sourcefile}` | Normalized path of the input source file. |
+| `{outputfile}` | Normalized path of the generated output file. |
+| `{platform}` | Host platform reported by the RXPP runtime. |
+| `{rxpp_version}` | CREXX version reported by the RXPP runtime, including build metadata when available. |
+| `{rxpp_rexx}` | Input module/file name (legacy compatibility variable). |
+| `{rxpp_date}` | Combined compilation date and time (legacy compatibility variable). |
+
+For example:
+
+```rexx
+say 'Built on {date} at {time}'
+say 'System binaries: {syslib}'
+say 'Search path: {syspath}'
+say 'Source: {inpath}'
+say 'Output: {buildpath}'
+say 'Version: {rxpp_version} on {platform}'
+```
+
+These values are substituted during preprocessing; they are not runtime
+variables. Variable names are case-insensitive. The `{syslib}` variable is
+the value form of the `&syslib/` prefix used by `##EXTERNAL`. The `cflags` and
+`printgen` variables are also initialized by RXPP and control preprocessing
+diagnostics; see the `##CFLAG` and `PRINTGEN` sections below. User-defined
+variables may be added with `##SET`.
+
+Normal comments are not expanded. To opt in for a generated metadata comment,
+put the marker at the start of the line (leading whitespace is allowed):
+
+```rexx
+/* RXPP:EXPAND */ -- Created {date} at {time}; RXPP {rxpp_version}
+/* RXPP:EXPAND */ -- Source {sourcefile}; system library {syslib}
+```
+
+RXPP removes the marker and expands the remaining text. The remaining text
+should use a comment form such as `--`; a remainder beginning with `/*` is
+still treated as a protected ordinary comment.
 
 The **PRINTGEN** variable controls whether generation steps are logged as comments in the generated REXX script. This does not affect whether the generation steps are performed — it only affects what is visible in the output.
 ```rexx

@@ -1,0 +1,39 @@
+{
+  "runs": [
+    "opt-typed_configuration-no-model-rxbvm",
+    "opt-typed_configuration-no-model-rxtvm",
+    "opt-typed_embeddings-cpu-rxbvm",
+    "opt-typed_embeddings-cpu-rxtvm",
+    "opt-typed_embeddings-required-gpu-rxbvm",
+    "opt-typed_embeddings-required-gpu-rxtvm",
+    "opt-persistent_embeddings-cpu-rxbvm",
+    "opt-persistent_embeddings-cpu-rxtvm",
+    "opt-persistent_embeddings-required-gpu-rxbvm",
+    "opt-persistent_embeddings-required-gpu-rxtvm",
+    "opt-shared_embeddings-cpu-rxbvm",
+    "opt-shared_embeddings-cpu-rxtvm",
+    "opt-shared_embeddings-required-gpu-rxbvm",
+    "opt-shared_embeddings-required-gpu-rxtvm",
+    "noopt-typed_configuration-no-model-rxbvm",
+    "noopt-typed_configuration-no-model-rxtvm",
+    "noopt-typed_embeddings-cpu-rxbvm",
+    "noopt-typed_embeddings-cpu-rxtvm",
+    "noopt-typed_embeddings-required-gpu-rxbvm",
+    "noopt-typed_embeddings-required-gpu-rxtvm",
+    "noopt-persistent_embeddings-cpu-rxbvm",
+    "noopt-persistent_embeddings-cpu-rxtvm",
+    "noopt-persistent_embeddings-required-gpu-rxbvm",
+    "noopt-persistent_embeddings-required-gpu-rxtvm",
+    "noopt-shared_embeddings-cpu-rxbvm",
+    "noopt-shared_embeddings-cpu-rxtvm",
+    "noopt-shared_embeddings-required-gpu-rxbvm",
+    "noopt-shared_embeddings-required-gpu-rxtvm"
+  ],
+  "model_sha256": "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+  "sources": {
+    "tests/native-inference/typed_configuration.crexx": "a7e6318572ab0dee696cc4dc49cdce237a8a1585a629bbd0866eae72584eee64",
+    "tests/native-inference/typed_embeddings.crexx": "8ae2de54ae128183deff8ddc19f645e4eeb15ac4f5cf58c19bfdfc80d62a0be1",
+    "lib/plugins/llama/examples/persistent_embeddings.crexx": "2e297bcbb4f803a07aca0e5545dbfd52f6d87d8bb1b4cd8e0f55f623e5573340",
+    "lib/plugins/llama/examples/shared_embeddings.crexx": "d4724c3e1706595f499929072f19c5fefe2648cdff1e3a2f528e8384d85a4d0d"
+  }
+}

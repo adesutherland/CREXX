@@ -229,7 +229,8 @@ The following macros are provided for plugin developers (defined in
 | ARG() | Returns the nth argument (which is an opaque pointer to the cRexx register)|
 | RETURN | Returns the register used to pass the function’s returned value.|
 | GETSTRING() | Gets the String value of a register|
-| SETSTRING() | Sets the String value of a register|
+| SETSTRING() | Copies a NUL-terminated C string into a register|
+| SETSTRINGLENGTH(host,value,data,byte_length) | Copies complete counted UTF-8 through the optional negotiated host service; returns zero or -1. |
 | GETINT() | Gets the Integer value of a register|
 | SETINT() | Sets the Integer value of a register|
 | GETFLOAT() | Gets the float (double) value of a register|
@@ -251,6 +252,29 @@ caller therefore retains ownership and may reuse or release a mutable source
 buffer as soon as the macro returns. Pass a non-null, null-terminated string;
 use `""` for an empty value.
 
+For complete UTF-8 that may contain U+0000, use the size-negotiated host table
+obtained through `RXPA_PLUGIN_SESSION_WITH_HOST`. `rxpa_host_has_string_view`
+checks the input-view service and `rxpa_host_has_string_set` checks output.
+`host->string_view(value, &data, &byte_length)` borrows read-only bytes until
+value mutation/reentrant mutation or native-call return. No terminator is
+promised. Copy input retained beyond that boundary into plugin-owned storage.
+
+`SETSTRINGLENGTH(host,value,data,byte_length)` copies exactly that many bytes into
+VM-owned text. The VM validates UTF-8 and maintains codepoint counts; the C length
+counts **bytes**, while ordinary Rexx string positions count codepoints. The
+source needs no terminator or padding and remains caller-owned. NULL is accepted
+only with length zero. Invalid/oversized text or an unavailable service returns
+-1 without changing the destination. A borrowed destination view is safe as
+input, including self-copy and substring-copy. Use only live borrowed value
+handles during the active VM call.
+
+The legacy C-string getter supplies one trailing NUL. Extra NUL padding adds no
+UTF-8 meaning and cannot prevent embedded U+0000 from truncating a C-string
+consumer. The counted interface hides VM storage and codepoint bookkeeping;
+plugins pass only the readable bytes and their length. The legacy initializer
+layout is unchanged. Require the optional service only for operations that need
+complete text, and report its absence explicitly.
+
 `CALLMETHOD(receiver, descriptor, argc, args, result)` enables a native
 procedure to call back into an object supplied by cREXX. The descriptor uses
 the canonical `rxsig1|name|return_type|arguments` form. `args` is an array of
@@ -268,6 +292,34 @@ nested RXPA calls. Never store any of these handles in plugin or session state
 beyond the lifetime of the active outer RXPA call. Because `callmethod` is an
 appended pre-release initializer callback and `rxpa_initctx` has no negotiated
 size, plugins using it must be rebuilt together with the host.
+
+### Native factories and methods
+
+A native provider can own an entire class implementation. Use `ADDCLASS` and
+`ADDIMPLEMENTS` for its contract, `ADDFACTORYPROC` or `ADDNAMEDFACTORYPROC` for
+construction, and `ADDMETHODPROC` for C method bodies. Interface declarations
+use `ADDINTERFACE`, `ADDFACTORY` and `ADDMETHOD`; declarations alone do not bind
+executable bodies.
+
+Factories use `PROCEDURE`, read declared arguments from `ARG0`, initialize
+`RETURN` and publish its concrete class with `SETOBJECTTYPE(host, RETURN, name)`.
+Get the host through `RXPA_PLUGIN_SESSION_WITH_HOST` and check
+`rxpa_host_has_object_set_type(host)` when creating the session. A return-type
+annotation alone does not set the object's runtime type. Methods use
+`METHODPROCEDURE`, with the initialized receiver in `ARG0` and declared
+arguments starting at `ARG1`. Native payload copy/finalize hooks retain their
+ordinary ownership rules.
+
+This replaces the former need for a Rexx construction shim around native
+results. Keep one implementation of each factory; retain Rexx implementations
+when they provide behavior of their own. See the complete
+[C provider](../../../tests/rxpa/rxpa_objects.c) and its
+[Rexx consumer](../../../tests/rxpa/rxpa_objects.crexx), the
+[binding reference](../../ai-context/CREXX_LIBS.md#constructing-and-binding-objects-entirely-in-c),
+and the [typed llama example](../../../lib/plugins/llama/README.md).
+The `rxpa_classdecl` fixture only tests metadata compilation and is not an
+executable object-construction example. Platform and sanitizer qualification
+remain tracked in the [native-object plan](../../planning/rxpa-native-objects.md).
 
 The Signal values are:
 

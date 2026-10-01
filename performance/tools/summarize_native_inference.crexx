@@ -1,0 +1,90 @@
+/* STEP-02 direct-library absolute timing reducer. No corpus or product verdict.
+ * Uses the canonical serial capture's ten recorded samples; retains all rows. */
+options levelb comments_dash floats_binary
+import rxfnsb
+import rxjson
+
+read_control: procedure = .string
+  arg path = .string
+  result = ""
+  do while lines(path)
+    line = linein(path)
+    if left(line, 13) = "CONTROL_JSON " then result = substr(line, 14)
+  end
+  call linein path
+  return result
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  estimate = value
+  if estimate < 1.0 then estimate = 1.0
+  do iteration = 1 to 60
+    estimate = (estimate + value / estimate) / 2.0
+  end
+  return estimate
+
+main: procedure = .int
+  arg args = .string[]
+  if args.0 < 2 then do
+    say "Usage: summarize_native_inference OUTPUT_CSV CAPTURE_DIR ..."
+    return 2
+  end
+  output_path = args[1]
+  empty = .binary
+  if writebinary(output_path, empty) <> 0 then return 1
+  header = "capture,metric,samples,mean,min,max,mean_t95_low,mean_t95_high,relative_halfwidth_percent"
+  if lineout(output_path, header) <> 0 then return 1
+  metrics = .string[]
+  metrics[1] = "backend_setup_ms"
+  metrics[2] = "model_load_ms"
+  metrics[3] = "context_create_ms.1"
+  metrics[4] = "first_request_ms"
+  metrics[5] = "preparation_requests_ms"
+  metrics[6] = "warm_single_total_ms"
+  metrics[7] = "warm_batch_total_ms"
+  metrics[8] = "retained_growth_bytes"
+  metrics[9] = "load_cancel_elapsed_ms"
+  do directory_index = 2 to args.0
+    directory = args[directory_index]
+    values = .float[]
+    do sample = 1 to 10
+      sequence = sample as .string
+      document = read_control(directory || "/raw/recorded-" || sequence || ".stdout.txt")
+      if jsonvalid(document) <> 1 then return 1
+      if jsonget(document, "result") <> "PASS" then return 1
+      if jsonget(document, "repeated_requests") <> "100" | ,
+         jsonget(document, "batches") <> "20" | jsonget(document, "owners") <> "4" then return 1
+      do metric = 1 to metrics.0
+        number = jsonget(document, metrics[metric])
+        if datatype(number, "N") = 0 then return 1
+        values[(metric - 1) * 10 + sample] = number as .float
+      end
+    end
+    do metric = 1 to metrics.0
+      sum = 0.0
+      minimum = values[(metric - 1) * 10 + 1]
+      maximum = minimum
+      do sample = 1 to 10
+        value = values[(metric - 1) * 10 + sample]
+        sum = sum + value
+        minimum = min(minimum, value)
+        maximum = max(maximum, value)
+      end
+      mean = sum / 10.0
+      squared = 0.0
+      do sample = 1 to 10
+        difference = values[(metric - 1) * 10 + sample] - mean
+        squared = squared + difference * difference
+      end
+      halfwidth = 2.2621571628 * square_root(squared / 9.0) / square_root(10.0)
+      relative = 0.0
+      if mean > 0.0 then relative = halfwidth * 100.0 / mean
+      row = directory || "," || metrics[metric] || ",10," || mean || "," || minimum || "," || maximum || ,
+            "," || (mean - halfwidth) || "," || (mean + halfwidth) || "," || relative
+      if lineout(output_path, row) <> 0 then return 1
+    end
+  end
+  call lineout output_path
+  say "PASS: native inference absolute summary" output_path
+  return 0

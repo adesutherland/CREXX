@@ -255,7 +255,7 @@ code {
 </head>
 <body>
 <h1>CREXX is installed</h1>
-<p>Open a new terminal and run <code>crexx ${install_root}/examples/hello.crexx</code> to check the installation.</p>
+<p>Copy <code>${install_root}/examples/hello.crexx</code> into a writable working directory, open a new terminal there and run <code>crexx hello.crexx</code> to check the installation.</p>
 </body>
 </html>
 EOF

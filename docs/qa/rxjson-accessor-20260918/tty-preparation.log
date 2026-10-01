@@ -1,0 +1,3 @@
+[0/2] Re-checking globbed directories...
+[1/3] Building C object lib/rxfnsb/tests_functional/CMakeFiles/linein_tty_harness.dir/linein_tty_harness.c.o
+[2/3] Linking C executable bin/linein_tty_harness

@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-n', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin', '-o', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/typed-3l_x9oku/work/noopt-persistent_embeddings', '/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/examples/persistent_embeddings.crexx']
+rc=0

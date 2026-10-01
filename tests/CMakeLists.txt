@@ -224,6 +224,22 @@ foreach(_c2e2_runner IN ITEMS rxvm)
     endforeach()
 endforeach()
 
+add_custom_target(entry_alias_runtime ALL)
+crexx_add_rxas_opt_matrix(
+        NAME entry_alias_runtime_rxvm
+        SOURCE ${RXAS_OPTIMIZER_DIR}/entry_alias_runtime
+        TARGET_GROUP entry_alias_runtime
+        RUNNER rxvm
+        DEPENDS ${RXAS_OPTIMIZER_DIR}/entry_alias_runtime.rxas rxas rxvm rxlink
+        TEST_LABELS "rxas;optimizer;runtime;flow"
+)
+foreach(_entry_alias_mode IN ITEMS noopt opt)
+    set_tests_properties(entry_alias_runtime_rxvm_${_entry_alias_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: incoming argument alias runtime"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+
 add_custom_target(redundant_itos_runtime ALL)
 foreach(_perf3_10_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(

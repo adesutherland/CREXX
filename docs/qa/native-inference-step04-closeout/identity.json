@@ -1,0 +1,182 @@
+{
+  "baseline_head": "c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8",
+  "profile": "normal Debug; CPU/Metal; Apple M5; no sanitizer; no production edits",
+  "sources": {
+    "tests/native-inference/embedding_bridge.cpp": "fb39ab9d62d3c5bab7df6c1ce2b1004b7b0a7d2d8a48d4e1bff63eb917f6bfc2",
+    "tests/native-inference/embedding_acceptance.crexx": "4b03e344d57cd80f13851773acbb11b541050518fd21da5a2a0edacf1711628a",
+    "tests/native-inference/shared_worker_embeddings.crexx": "1f043f9eb5cb1dd9f52d81c537e2799750320b9139221a001218ab644b65df0a",
+    "tests/native-inference/step04_toolchain.cmake": "31bbec02ec5ee5325d9370e020a60963723bc9e2d67759604116e37a059a8ab0",
+    "tests/native-inference/step04_package_consumer.py": "2e1afa382af48b42c2c633fa4669e7d141cfb004c17a2c00bad989e9ef7c7056"
+  },
+  "artifacts": {
+    "cmake-build-debug/bin/rxc": "d07e91ccdb1692eeb31566e29c10d40d670e4c7ad247c55a094c62a873891299",
+    "cmake-build-debug/bin/rxas": "203c1f8a4967689bdca981aac81706dde560fed7c50fd4422e9f86735e2bd0f7",
+    "cmake-build-debug/bin/rxlink": "c0fbac4c3c78f66113bd29c5d25184a0fb4c6fa1f98aceb8ba5ed38b7f80f7c3",
+    "cmake-build-debug/bin/rxbvm": "f3dfe1ca3f1ce7d5ade2e66621775feaa8704af8779d2d86719ed617eb53b530",
+    "cmake-build-debug/bin/rxtvm": "03a7d047ddcecb855857aba96220c81d87552250598cd81e2654ce5bc2ba33bb",
+    "cmake-build-debug/bin/rxfnsg.rxbin": "eb7010598f76ee350f5b1cb35b4b550a6cec302b16caf14ae9f7d8914a2575e3",
+    "cmake-build-debug/bin/classlib.rxbin": "c2514187ff96eda01576361dea4741c07351eb7abf8695955008ea7ceb38c262",
+    "cmake-build-debug/bin/rxllama.rxplugin": "a4d5578c33c1a8cfcbeb4bb467d8e5f191b949cad2b3c3b05132056ad54be814",
+    "cmake-build-debug/bin/providers/libcrexx-llama.1.dylib": "a970e79ae8d03f95bc25000c0f984cc56cf24e19eb68896d271c9bfad69023f1",
+    "cmake-build-debug/lib/plugins/llama/tests/rxllama_embedding_bridge": "ac140a248cea6523eaab1970d1f41a6507dcb2b84a0130dce672e91ac95b239f"
+  },
+  "accepted_release_production_sources_verified_unchanged": {
+    "CMakeLists.txt": "c07df86d14f4eb929d65043660be55493a40bbf62da793e65c5b5f57682f98e6",
+    "bin/crexx.crexx": "414247aa04d953693f9b2ff43a2bcfe06613e444528d94f82bbc0929c38ba1b4",
+    "interpreter/CMakeLists.txt": "363fb47b05ac130fa25add6e350f81cea3e567562f04abe51e368d9a7a4f3616",
+    "interpreter/rxpacompat.c": "fc026e6ab1d564d289c8338d51785cb4db3a28ef51e22c432cbedce1f6218531",
+    "interpreter/rxpacompat.h": "93ab0eb6df2e1d81e7be712d55b1c81287e398700ea07fed138712e1cc46fa8c",
+    "interpreter/rxpafuncs.c": "930eb1d76306b028c70529b5b65412c7e95e744dc9d307e7c4dff74496523b7f",
+    "interpreter/rxvmexecutor.c": "db6553794c49acf3dd7e9eddb29431a122e93477beff3ab74ec37ccdd34e1f23",
+    "interpreter/rxvmintp.h": "3e5210a3ad42a12f937ecaaeef7402b7e04270db0a4835ed1646f17c4f724613",
+    "interpreter/rxvmload.c": "29a35bc8d871c192f05cfab38094ac4b179af33534eea0f881c08e8f90657c74",
+    "interpreter/tests/rxpa_host_service_fixture.c": "4a202cbc4f2abf448c0a2ff780e8b9263f7f89d5deacda4538ca3dd5a9d79e75",
+    "interpreter/tests/test_rxpa_concurrency.c": "c0be3399b9b04ae758ad16f29914857a4888b73fafb21f8ce407715baa22c1ef",
+    "interpreter/tests/test_rxpa_host_services.c": "bc9dc13c0605e21b6ff3b1e382e1358e53655385290e190cdcbb19d65b7ba088",
+    "interpreter/tests/test_rxpa_worker_startup.c": "7fbc35d4a6c5eb24f8f66e3f4779f9f188e395121b6158b0afcfa77c9c6ca997",
+    "lib/plugins/CMakeLists.txt": "aafef4ec99378ce743f1312b6890ce12d1c0f93b53bff830ac0dfbd8396f2ce3",
+    "lib/plugins/llama/CMakeLists.txt": "12948573c5f2ab9eaa41fe8c18830a6975f325756392fd29f5cbdcd7f2f3f8a3",
+    "lib/plugins/llama/bridge.cpp": "affcfe9ba2ec854623204965757c76268aa27a0a41e1eb8f7307655c928d3f98",
+    "lib/plugins/llama/bridge.h": "23edda511fad1bdf8c81f3791bbeb8f2b49114e76dc12f1bf2b73617439c31b4",
+    "lib/plugins/llama/package.hpp": "e8838e941de202332afc8b19d3ef6b269540ee084d5c350195ee847afcf37e6f",
+    "lib/plugins/llama/provider_package.cpp": "42a8f403ba71c922964244aca30f51af0870a1b434a07d0c9bac71bf4404a6b0",
+    "lib/plugins/llama/rxllama.c": "78d03394e1b63d5bdcf20ee53d979139fcb64d9102abef3a537e6022e3370999",
+    "rxpa/RXPluginFunction.cmake": "d4e22a9bf1cf4812ad74d042f113b1ec93f71ec61e79bfe012d375d3ebae909a",
+    "rxpa/WriteProviderPackage.cmake": "559e5ebb5c0764b9125a77857e006f98bccc0b0818eb71d4eeed10122030d7c0",
+    "rxpa/crexxpa.h": "a13675fa3e5f6409242c53f21f427ca7bf961f024d423d7297090badce413a5e",
+    "rxpa/rxpa.c": "5afd57114f655c0c0dc6c425de1e70d07d89ed91624ab720874c754876573b9c"
+  },
+  "accepted_release_artifacts_verified_unchanged": {
+    "cmake-build-release/bin/providers/libcrexx-ggml-base.0.23.0.dylib": "ca9b9102bbb35f0d0076f827dccba5529d07dbd911ef2bd2f7bb558adc10c8d4",
+    "cmake-build-release/bin/providers/libcrexx-ggml-base.0.dylib": "ca9b9102bbb35f0d0076f827dccba5529d07dbd911ef2bd2f7bb558adc10c8d4",
+    "cmake-build-release/bin/providers/libcrexx-ggml-base.dylib": "ca9b9102bbb35f0d0076f827dccba5529d07dbd911ef2bd2f7bb558adc10c8d4",
+    "cmake-build-release/bin/providers/libcrexx-ggml-cpu.so": "7207fd013626368a6aaac339558994936b0818fe8826aff59b476444cea38fbe",
+    "cmake-build-release/bin/providers/libcrexx-ggml-metal.so": "d5a271569b17adc968cf1dd619c1bf844c2df19af6446e36c3ad77f6bb72e223",
+    "cmake-build-release/bin/providers/libcrexx-ggml.0.23.0.dylib": "2176230c0f999912d666df82e72ec05a406f80fd4335835417befdd2a22ab359",
+    "cmake-build-release/bin/providers/libcrexx-ggml.0.dylib": "2176230c0f999912d666df82e72ec05a406f80fd4335835417befdd2a22ab359",
+    "cmake-build-release/bin/providers/libcrexx-ggml.dylib": "2176230c0f999912d666df82e72ec05a406f80fd4335835417befdd2a22ab359",
+    "cmake-build-release/bin/providers/libcrexx-llama-engine.0.4.0.dylib": "1d21520ba678fdccb70bba74389a21dbfc5b5c338e16c6a21f251fd3eb0eda6b",
+    "cmake-build-release/bin/providers/libcrexx-llama-engine.0.dylib": "1d21520ba678fdccb70bba74389a21dbfc5b5c338e16c6a21f251fd3eb0eda6b",
+    "cmake-build-release/bin/providers/libcrexx-llama-engine.dylib": "1d21520ba678fdccb70bba74389a21dbfc5b5c338e16c6a21f251fd3eb0eda6b",
+    "cmake-build-release/bin/rxas": "6b6a02201752cc53cd3daa839665cdf7380c3923451433c7edfe4730b6d6fe24",
+    "cmake-build-release/bin/rxc": "440b0fb48d69614c6f988fa3ba869e0b595da20dd6e2afed47447865d07b2abe",
+    "cmake-build-release/bin/rxlink": "d49b14e5242eb3e4072c1485d121d4e50f12c3b85109da10e2010c6e927064ec",
+    "cmake-build-release/tests/performance/ni-s4-matrix-linked.rxbin": "6b8d1d860d09d847f1079a54340248db44bc99e2414c781782319621f81e4354",
+    "cmake-build-release/tests/performance/ni-s4-matrix.rxas": "eb8628e85306c3310ac8025ecf731bde4bb28b278a38029050d8e97e0e19b126",
+    "cmake-build-release/tests/performance/ni-s4-matrix.rxbin": "b83970f688726331b71a7b75102afe1d2326c1d587c0ce2f658ee19f26e49035",
+    "cmake-build-release/tests/performance/ni-s4-overhead-linked.rxbin": "a13e6962719f150bd66322b9d00db2f2241dbe564a9443a551b78b11ac6e64d7",
+    "cmake-build-release/tests/performance/ni-s4-overhead.rxas": "2e16107c32b77e3832c26b0150c37e9888a51cde6344f25c2e10e915aca4400e",
+    "cmake-build-release/tests/performance/ni-s4-overhead.rxbin": "5e9a77822121c6023f7a6dda82243a5fef51ca1c3a8fed535abf80fdfaeef265",
+    "cmake-build-release/tests/performance/ni-s4-summary-linked.rxbin": "dccce656aef528c4d3ac7f85ea9f02019e7aa6aa31ae89dca4d7028202c2e092",
+    "cmake-build-release/tests/performance/ni-s4-summary.rxas": "176738cc8399b96124405a5c006805716727e3498652a66c349c7c1a60873ecd",
+    "cmake-build-release/tests/performance/ni-s4-summary.rxbin": "4124cd3e0a29bb4c6c38b5f2081e3f82f777a8620afda3b2f98b90cae25f38ba",
+    "cmake-build-release/CMakeCache.txt": "acecebdd5d3c54c69feecc55c0a1ea6410dd25cee9ac447a2f883ad216140e31",
+    "cmake-build-release/bin/rxvm": "e7791889bde7da77b5087706a3d1f33d2ac4e1f7c1ab2f72f663126068db1cd6",
+    "cmake-build-release/bin/rxllama.rxplugin": "2fe8deac32244828ab887e508738db94947aa9e8e45d9f660a9ba2955dfb614a",
+    "cmake-build-release/bin/providers/libcrexx-llama.1.dylib": "3ebc039f8150ee15cc45cdba12824e551c489403cb41ff51c19be27a423ac124",
+    "cmake-build-release/bin/library.rxbin": "2a2b5445390f760438ad62790cafb0a875f7bd13de76407c8e81a8b47203f674",
+    "cmake-build-release/lib/plugins/llama/tests/rxllama_embedding_reference": "d6262260ca223acdc1fd78abb2bee0d40ffbda7a267169f378a9d1bca07bb0c0",
+    "cmake-build-release/lib/plugins/llama/tests/rxllama_embedding_bridge": "dcb88f2b8812db125215caa2aa5dbb8572280ce388a3f76051027c7a336e25d4",
+    "cmake-build-release/tests/performance/ni-s4-probes-linked.rxbin": "ce4b28e1e44f334273b9de09264409febce1ef5be745fa24ca648a865c1b9b64",
+    "cmake-build-release/tests/performance/ni-s4-probe-summary-linked.rxbin": "3cf2da39b64ff98ab1c48681423a00495d75d595c0cf0fbd5b837f2f57bd21d0"
+  },
+  "generated_artifacts": {
+    "embedding_acceptance-cpu-noopt/embedding-linked.rxbin": {
+      "sha256": "b1d638fa8fae37590bfc6a7d43b4402e67a0cc44d6127c0d328c73ce9eb231a3",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-cpu-noopt/embedding-linked.rxbin"
+    },
+    "embedding_acceptance-cpu-noopt/embedding.rxas": {
+      "sha256": "f0670b144223d2dc77079ae3e6c4a9cb5d94a34198071cde1b2cc161352477bc",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-cpu-noopt/embedding.rxas"
+    },
+    "embedding_acceptance-cpu-noopt/embedding.rxbin": {
+      "sha256": "4295da3b814fa3c3a7be8b9f5947d3c5c5ed2b3dad12282b9c9be1044948c1a0",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-cpu-noopt/embedding.rxbin"
+    },
+    "embedding_acceptance-cpu-opt/embedding-linked.rxbin": {
+      "sha256": "3745e77fbeb97c644ec8083c346b29ab5882a3fd42bbe9e511279210aada7494",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-cpu-opt/embedding-linked.rxbin"
+    },
+    "embedding_acceptance-cpu-opt/embedding.rxas": {
+      "sha256": "cf45c6fdfa654dc774e4aae66f1563f8eb75161bfa10da1df4ebc310241f2d84",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-cpu-opt/embedding.rxas"
+    },
+    "embedding_acceptance-cpu-opt/embedding.rxbin": {
+      "sha256": "660f0934fd182456c17d2236ad3661658ef6b1062aecf780858eb531cdec95b1",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-cpu-opt/embedding.rxbin"
+    },
+    "embedding_acceptance-required-gpu-noopt/embedding-linked.rxbin": {
+      "sha256": "d6ebb0932ca4d333e2de46e2a23306a6e201bda9fdd7eac09b6ff63a9dc459f4",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-required-gpu-noopt/embedding-linked.rxbin"
+    },
+    "embedding_acceptance-required-gpu-noopt/embedding.rxas": {
+      "sha256": "f0670b144223d2dc77079ae3e6c4a9cb5d94a34198071cde1b2cc161352477bc",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-required-gpu-noopt/embedding.rxas"
+    },
+    "embedding_acceptance-required-gpu-noopt/embedding.rxbin": {
+      "sha256": "319c9cc8a589cb080aee95b4e1471afbb1623ca4b2dea2090ce71af4d7164a0e",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-required-gpu-noopt/embedding.rxbin"
+    },
+    "embedding_acceptance-required-gpu-opt/embedding-linked.rxbin": {
+      "sha256": "a72cb2b1eafd13aea5e900546cbb059267314759cc04f4ac0c870351f065dfed",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-required-gpu-opt/embedding-linked.rxbin"
+    },
+    "embedding_acceptance-required-gpu-opt/embedding.rxas": {
+      "sha256": "cf45c6fdfa654dc774e4aae66f1563f8eb75161bfa10da1df4ebc310241f2d84",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-required-gpu-opt/embedding.rxas"
+    },
+    "embedding_acceptance-required-gpu-opt/embedding.rxbin": {
+      "sha256": "797d88b4ef07831a7834d9fb7ae7f1ecd978e93d1b8d27397798afead4960b9a",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/embedding_acceptance-required-gpu-opt/embedding.rxbin"
+    },
+    "shared_worker_embeddings-cpu-noopt/embedding-linked.rxbin": {
+      "sha256": "7129820588b52dcaa81d928537b0f4213c910ad23758f731b2229e1dc450a486",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/shared_worker_embeddings-cpu-noopt/embedding-linked.rxbin"
+    },
+    "shared_worker_embeddings-cpu-noopt/embedding.rxas": {
+      "sha256": "f4119f2b7a962ff123e176259b446671aa00fa5c7ab66dd85de62e2817ffa133",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/shared_worker_embeddings-cpu-noopt/embedding.rxas"
+    },
+    "shared_worker_embeddings-cpu-noopt/embedding.rxbin": {
+      "sha256": "07a6b839e0afd9f3c0314ea9a290fa21ac0b138bf8d9b09a4fddeff8eb931116",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/shared_worker_embeddings-cpu-noopt/embedding.rxbin"
+    },
+    "shared_worker_embeddings-required-gpu-noopt/embedding-linked.rxbin": {
+      "sha256": "8118e56b89e011c260a7980cc7913eee2580a81669a6876fd54f829af025985b",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/shared_worker_embeddings-required-gpu-noopt/embedding-linked.rxbin"
+    },
+    "shared_worker_embeddings-required-gpu-noopt/embedding.rxas": {
+      "sha256": "f4119f2b7a962ff123e176259b446671aa00fa5c7ab66dd85de62e2817ffa133",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/shared_worker_embeddings-required-gpu-noopt/embedding.rxas"
+    },
+    "shared_worker_embeddings-required-gpu-noopt/embedding.rxbin": {
+      "sha256": "78e9ee727d478115e7fc0ece22118f94c8c87729de700b4db10b77263cb9e968",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/shared_worker_embeddings-required-gpu-noopt/embedding.rxbin"
+    },
+    "shared_worker_embeddings-required-gpu-opt/embedding-linked.rxbin": {
+      "sha256": "566f016a8884a06285c5e60b7ba1526c002f88d5f87bf3dedae7bd482fc6ced0",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/shared_worker_embeddings-required-gpu-opt/embedding-linked.rxbin"
+    },
+    "shared_worker_embeddings-required-gpu-opt/embedding.rxas": {
+      "sha256": "8f65299fc6bc94fcbeeff1a46612d49cadb182625452e7ce78fcef0ee70a422a",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/shared_worker_embeddings-required-gpu-opt/embedding.rxas"
+    },
+    "shared_worker_embeddings-required-gpu-opt/embedding.rxbin": {
+      "sha256": "cd435df26740716b38ad9d8815121c50323d9f8edb6c99d04b7aa21f8d20b304",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/shared_worker_embeddings-required-gpu-opt/embedding.rxbin"
+    },
+    "worker-cpu-opt/embedding-linked.rxbin": {
+      "sha256": "7eb2e9784229ea9221bb1f30be4774ac7691ff2bb999790bc4e6cac55a6d1c9b",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/worker-cpu-opt/embedding-linked.rxbin"
+    },
+    "worker-cpu-opt/embedding.rxas": {
+      "sha256": "8f65299fc6bc94fcbeeff1a46612d49cadb182625452e7ce78fcef0ee70a422a",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/worker-cpu-opt/embedding.rxas"
+    },
+    "worker-cpu-opt/embedding.rxbin": {
+      "sha256": "528adad79ba047d8a86b9f979a8a4cfe75b6619027a83f278ad02a7f71db8d1c",
+      "retained_at": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/native-inference-step04-closeout-artifacts/worker-cpu-opt/embedding.rxbin"
+    }
+  },
+  "sanitizer_latest": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260914-152638-ctest"
+}

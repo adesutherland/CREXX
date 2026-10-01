@@ -15,6 +15,11 @@ main: procedure = .int
   call values.set(1, 2.0)
   call values.set(2, 3.0)
   if rxstats..mean(values) <> 2.0 then return 1
+  fit = rxstats..regression(values, values)
+  fit_object = fit as .object
+  manual = .linearfit(2.0, 3.0)
+  if \(fit_object is .linearfit) | <typeof>(manual) <> ".rxstats..linearfit" then return 9
+  if (fit_object as .linearfit).slope() <> 1.0 | manual.intercept() <> 3.0 then return 10
   if bin2x(rxhash..sha256("616263"x as .binary)) <> "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD" then return 2
   identifier = rxid..uuid4()
   if length(identifier) <> 36 | substr(identifier, 15, 1) <> "4" then return 3

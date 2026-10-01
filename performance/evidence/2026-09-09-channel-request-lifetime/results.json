@@ -1,0 +1,77 @@
+[
+  {
+    "sample": "retained-release-1",
+    "max_rss_bytes": 21577728,
+    "close_cpu_seconds": 0.001,
+    "cpu_seconds": 0.036,
+    "real_seconds": 0.33,
+    "user_seconds": 0.04,
+    "sys_seconds": 0.0
+  },
+  {
+    "sample": "released-release-1",
+    "max_rss_bytes": 6193152,
+    "close_cpu_seconds": 0.0,
+    "cpu_seconds": 0.085,
+    "real_seconds": 0.32,
+    "user_seconds": 0.08,
+    "sys_seconds": 0.0
+  },
+  {
+    "sample": "paired-a1",
+    "max_rss_bytes": 18939904,
+    "close_cpu_seconds": 13.92,
+    "cpu_seconds": 1.169,
+    "real_seconds": 15.11,
+    "user_seconds": 15.05,
+    "sys_seconds": 0.04
+  },
+  {
+    "sample": "paired-b1",
+    "max_rss_bytes": 21594112,
+    "close_cpu_seconds": 0.001,
+    "cpu_seconds": 0.019,
+    "real_seconds": 0.02,
+    "user_seconds": 0.02,
+    "sys_seconds": 0.0
+  },
+  {
+    "sample": "paired-b2",
+    "max_rss_bytes": 21561344,
+    "close_cpu_seconds": 0.001,
+    "cpu_seconds": 0.018,
+    "real_seconds": 0.02,
+    "user_seconds": 0.02,
+    "sys_seconds": 0.0
+  },
+  {
+    "sample": "paired-a2",
+    "max_rss_bytes": 18956288,
+    "close_cpu_seconds": 14.311,
+    "cpu_seconds": 1.266,
+    "real_seconds": 15.58,
+    "user_seconds": 15.53,
+    "sys_seconds": 0.04
+  },
+  {
+    "sample": "typed-1000-release",
+    "max_rss_bytes": 14614528,
+    "real_seconds": 0.03,
+    "user_seconds": 0.03,
+    "sys_seconds": 0.0
+  },
+  {
+    "sample": "typed-200000-release",
+    "max_rss_bytes": 14680064,
+    "real_seconds": 2.93,
+    "user_seconds": 2.91,
+    "sys_seconds": 0.01
+  },
+  {
+    "sample": "lifetime-release",
+    "max_rss_bytes": 22233088,
+    "real_seconds": 0.37,
+    "user_seconds": 0.1,
+    "sys_seconds": 0.0
+  }
+]

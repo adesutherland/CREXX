@@ -1,0 +1,28 @@
+{
+  "purpose": "LLM-AC-03/04 compatibility controls, not broad retrieval/hardware qualification",
+  "source": "https://huggingface.co/CompendiumLabs/bge-base-en-v1.5-gguf",
+  "revision": "24914efdfa9ee54e815c3fcaa78a617031251c5c",
+  "license": "MIT per converter and original BAAI model cards",
+  "original": "https://huggingface.co/BAAI/bge-base-en-v1.5",
+  "profile": "embedding",
+  "dimensions": 768,
+  "pooling": "cls",
+  "normalization": "l2",
+  "query_prefix": "Represent this sentence for searching relevant passages: ",
+  "document_prefix": "",
+  "context_tokens": 256,
+  "models": [
+    {
+      "file": "bge-base-en-v1.5-f16.gguf",
+      "sha256": "88360fdf8521af0ac08d43818bd272da679ab97c685d9b273c48efd01a4187c2"
+    },
+    {
+      "file": "bge-base-en-v1.5-q4_k_m.gguf",
+      "sha256": "74aebb552ea73b271d3b9c709923b4b7633b304fbc897a0498e52a180c3a9da9"
+    }
+  ],
+  "controls": {
+    "common_embedding": "CLS, L2, documented BGE query prefix, empty document prefix; dynamic dimensions/owned results/changed space",
+    "upstream_comparison": "Both CLS and MEAN, L2, query prefix query: (with trailing space), empty document prefix; per-coordinate tolerance 1e-5"
+  }
+}

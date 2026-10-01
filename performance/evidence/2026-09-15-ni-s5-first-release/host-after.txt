@@ -1,0 +1,53 @@
+Darwin Adrians-MacBook-Air.local 25.6.0 Darwin Kernel Version 25.6.0: Fri Jul 31 19:16:20 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+25769803776
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Processes: 656 total, 4 running, 652 sleeping, 4007 threads 
+2026/09/15 10:18:14
+Load Avg: 3.06, 6.27, 5.73 
+CPU usage: 17.91% user, 12.8% sys, 70.0% idle 
+SharedLibs: 677M resident, 142M data, 192M linkedit.
+MemRegions: 317489 total, 5843M resident, 323M private, 3934M shared.
+PhysMem: 19G used (3100M wired, 2498M compressor), 4098M unused.
+VM: 283T vsize, 6144M framework vsize, 3921339(0) swapins, 5944472(0) swapouts.
+Networks: packets: 409297833/37G in, 402820648/30G out.
+Disks: 601616974/8227G read, 84137594/2509G written.
+
+PID    COMMAND          %CPU TIME     #TH #WQ #PORTS MEM   PURG CMPRS PGRP  PPID  STATE    BOOSTS %CPU_ME %CPU_OTHRS UID FAULTS     COW MSGSENT MSGRECV SYSBSD     SYSMACH CSW        PAGEINS IDLEW     POWER INSTRS CYCLES JETPRI USER     #MREGS RPRVT VPRVT VSIZE KPRVT KSHRD
+94997  ssh              0.0  00:12.34 1   0   9      3584K 0B   2976K 94997 1     sleeping *0[1]  0.00000 0.00000    501 100592     49  10      5       1972539    2495    284755     114     5534      0.0   0      0      180    adrian   N/A    N/A   N/A   N/A   N/A   N/A  
+94406  qemu-system-aarc 0.0  81:37:35 69  1   95     11G   0B   8495M 94405 1     sleeping *0[1]  0.00000 0.00000    501 2147483647 123 36131   3889    2147483647 54480   2147483647 1237    144803786 0.0   0      0      180    adrian   N/A    N/A   N/A   N/A   N/A   N/A  
+94350  netbiosd         0.0  00:01.79 2   1   26     3664K 0B   2112K 94350 1     sleeping *0[1]  0.00000 0.00000    222 17607      106 567     317     109968     2645    35781      155     389       0.0   0      0      40     _netbios N/A    N/A   N/A   N/A   N/A   N/A  
+94074  node_repl        0.0  00:00.08 14  1   43     8945K 0B   7648K 94073 94073 sleeping *0[2]  0.00000 0.00000    501 2722       78  258     72      1815       742     761        0       4         0.0   0      0      180    adrian   N/A    N/A   N/A   N/A   N/A   N/A  
+94073  node             0.0  00:00.04 11  0   23     14M   0B   13M   94073 32859 sleeping *0[1]  0.00000 0.00000    501 3259       62  49      24      679        175     477        469     0         0.0   0      0      180    adrian   N/A    N/A   N/A   N/A   N/A   N/A  

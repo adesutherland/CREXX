@@ -1,0 +1,14 @@
+{
+  "name": "llama.rexx-user-test-31d4974f12454842902224d495e4aafd111c2134-macos-arm64-metal.zip",
+  "bytes": 2449561,
+  "sha256": "423cc59f05b11acb837e62d1ee1ab1de94cefeac8bb39046e9f46a3686324092",
+  "schema": 1,
+  "component": "llama.rexx",
+  "commit": "31d4974f12454842902224d495e4aafd111c2134",
+  "platform": "macos-arm64",
+  "toolchain": "clang",
+  "backend": "metal",
+  "core_archive": "CREXX-user-test-31d4974f12454842902224d495e4aafd111c2134-macos-arm64.zip",
+  "core_archive_sha256": "2c60b69455ec0a68eb2d6fda875ae0323218d3402693fca054f20cfed0812f0c",
+  "core_binaries_rebuilt": false
+}

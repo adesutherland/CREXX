@@ -1343,6 +1343,38 @@ static int task_materialize_all_pending(RxcpParallelPlan *plan,
     return 1;
 }
 
+/* The compiler-generated parallel guard owns structured-scope cleanup for
+ * controller failures. POSIX_CHLD is an execution notification whose existing
+ * caller/default policy must remain in force; catching it here can interrupt
+ * classlib completion caching after CHANWAIT has consumed native delivery. */
+static const char *task_parallel_abort_signal_names[] = {
+        "FAILURE", "ERROR", "OVERFLOW_UNDERFLOW", "DIVISION_BY_ZERO",
+        "CONVERSION_ERROR", "INVALID_ARGUMENTS", "OUT_OF_RANGE",
+        "UNICODE_ERROR", "REFERENCE_INVALID", "OBJECT_NOT_INITIALIZED",
+        "RXBIN_CORRUPTION", "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND",
+        "NOT_IMPLEMENTED", "INVALID_SIGNAL_CODE", "NOTREADY", "QUIT",
+        "TERM", "POSIX_INT", "POSIX_HUP", "POSIX_USR1", "POSIX_USR2",
+        "CHANNEL_ERROR", "TASK_FAILURE", "OTHER", 0
+};
+
+static int task_parallel_add_abort_signal_names(RxcpParallelPlan *plan,
+                                                ASTNode *names,
+                                                ASTNode *anchor) {
+    const char **signal_name;
+
+    if (!plan || !names || !anchor) return 0;
+    for (signal_name = task_parallel_abort_signal_names;
+         *signal_name; signal_name++) {
+        ASTNode *name = rxcp_remap_create_named_ref(
+                plan->task.context, anchor, SIGNAL_NAME, *signal_name);
+        if (!name) return 0;
+        name->is_compiler_added = 1;
+        name->scope = plan->task.scope;
+        add_ast(names, name);
+    }
+    return 1;
+}
+
 static ASTNode *task_parallel_signal_handler(RxcpParallelPlan *plan,
                                              ASTNode *anchor) {
     ASTNode *handler;
@@ -1392,6 +1424,10 @@ static ASTNode *task_parallel_signal_handler(RxcpParallelPlan *plan,
     instructions->scope = plan->task.scope;
     instructions->inherit_parent_scope = 1;
     instructions->inherit_parent_reg_scope = 1;
+    if (!task_parallel_add_abort_signal_names(plan, names, anchor)) {
+        free(problem_name);
+        return 0;
+    }
     add_ast(binding, binding_target);
     add_ast(binding, binding_type);
 
@@ -1695,6 +1731,27 @@ static ASTNode *task_statement_expression(ASTNode *node) {
     }
 }
 
+/* Import resolution can attach a task definition before its call/argument
+ * types converge. Lowering mutates the source tree, so wait for those types
+ * instead of mistaking an unresolved result for a non-transferable value and
+ * leaving a partial block without its LEAVE WITH. Ordinary calls are captured
+ * into temporaries by the same lowering and must also have resolved types. */
+static int task_call_types_ready(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 1;
+    if (node->node_type == PROCEDURE || node->node_type == METHOD ||
+        node->node_type == FACTORY || node->node_type == MATCH) return 1;
+    if ((node->node_type == FUNCTION || node->node_type == MEMBER_CALL ||
+         node->node_type == FACTORY_CALL) && node->value_type == TP_UNKNOWN) {
+        return 0;
+    }
+    for (child = node->child; child; child = child->sibling) {
+        if (!task_call_types_ready(child)) return 0;
+    }
+    return 1;
+}
+
 walker_result rxcp_task_calls_walker(walker_direction direction,
                                      ASTNode *node,
                                      void *payload) {
@@ -1707,6 +1764,7 @@ walker_result rxcp_task_calls_walker(walker_direction direction,
         ast_chld(node, ERROR, 0)) return result_normal;
     expression = task_statement_expression(node);
     if (node->node_type == PARALLEL_BLOCK_EXPR) {
+        if (!task_call_types_ready(node)) return result_normal;
         if (!task_lower_parallel_block_expression(context, node) &&
             !ast_chld(node, ERROR, 0)) {
             mknd_err(node, "TASK_LOWERING_FAILED");
@@ -1714,6 +1772,7 @@ walker_result rxcp_task_calls_walker(walker_direction direction,
         return result_normal;
     }
     if (node->node_type == PARALLEL_DO) {
+        if (!task_call_types_ready(node)) return result_normal;
         if (!task_lower_parallel_do(context, node) && !ast_chld(node, ERROR, 0)) {
             mknd_err(node, "TASK_LOWERING_FAILED");
         }
@@ -1722,6 +1781,7 @@ walker_result rxcp_task_calls_walker(walker_direction direction,
     if (!expression || expression->node_type == BLOCK_EXPR ||
         !task_subtree_has_call(expression)) return result_normal;
     if (!task_calls_language_valid(context, expression)) return result_normal;
+    if (!task_call_types_ready(expression)) return result_normal;
     if (!task_result_contracts_valid(context, expression)) return result_normal;
 
     if (task_inside_task_callable(expression)) {

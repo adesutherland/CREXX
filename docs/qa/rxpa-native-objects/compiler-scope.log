@@ -1,0 +1,36 @@
+(lldb) target create "cmake-build-debug/bin/rxc"
+Current executable set to '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc' (arm64).
+(lldb) settings set -- target.run-args  "--no-exe-import" "-n" "-i" "/tmp/rxpa-objects-minimal-import" "-o" "/tmp/rxpa-objects-isolated/one_callback/out" "/tmp/rxpa-objects-isolated/one_callback/main.crexx"
+(lldb) breakpoint set -n scp_f -c "type == 1 && symbol && symbol->name && (unsigned char)symbol->name[0] == 194"
+Breakpoint 1: where = rxc`scp_f + 32 at rxcpsymb.c:97:29, address = 0x00000001001427c4
+(lldb) run
+Process 58132 launched: '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc' (arm64)
+Process 58132 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 1.1
+    frame #0: 0x00000001001427c4 rxc`scp_f(context=0x0000000100adc650, parent=0x0000000caf040b00, node=0x0000000000000000, symbol=0x0000000caec23900, type=SCOPE_NAMESPACE) at rxcpsymb.c:97:29
+   94  	/* Scope Factory */
+   95  	Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type) {
+   96  	    char* name;
+-> 97  	    Scope *scope = (Scope*) malloc(sizeof(Scope));
+    	                            ^
+   98  	    scope->defining_node = node;
+   99  	    scope->type = type;
+   100 	    if (symbol) {
+Target 0: (rxc) stopped.
+(lldb) expression symbol->name
+(char *) $0 = 0x0000000caf050050 "§factory"
+(lldb) bt 13
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 1.1
+  * frame #0: 0x00000001001427c4 rxc`scp_f(context=0x0000000100adc650, parent=0x0000000caf040b00, node=0x0000000000000000, symbol=0x0000000caec23900, type=SCOPE_NAMESPACE) at rxcpsymb.c:97:29
+    frame #1: 0x0000000100146478 rxc`sym_afqn(root=0x0000000caec4a300, fqname="rxpa_objects.box.§factory.from") at rxcpsymb.c:1003:29
+    frame #2: 0x0000000100005ca0 rxc`add_dast_walker_handler1(direction=in, node=0x0000000caec28a00, payload=0x000000016fdfdc18) at rxcp_ast_core.c:588:30
+    frame #3: 0x000000010000f270 rxc`ast_wlkr(tree=0x0000000caec28a00, handler=(rxc`add_dast_walker_handler1 at rxcp_ast_core.c:555), payload=0x000000016fdfdc18) at rxcp_ast_walk.c:43:14
+    frame #4: 0x000000010000f2dc rxc`ast_wlkr(tree=0x0000000caec25180, handler=(rxc`add_dast_walker_handler1 at rxcp_ast_core.c:555), payload=0x000000016fdfdc18) at rxcp_ast_walk.c:48:18
+    frame #5: 0x000000010000f2dc rxc`ast_wlkr(tree=0x0000000caec2aa80, handler=(rxc`add_dast_walker_handler1 at rxcp_ast_core.c:555), payload=0x000000016fdfdc18) at rxcp_ast_walk.c:48:18
+    frame #6: 0x00000001000060bc rxc`add_dast(dest=0x0000000caec4a300, source=0x0000000caec2aa80) at rxcp_ast_core.c:658:5
+    frame #7: 0x00000001001c5074 rxc`load_imported_contract(context=0x0000000100adc650, found_cls=0x0000000100ad91c0) at rxcpfunc.c:1208:25
+    frame #8: 0x00000001001c6180 rxc`sym_imcls(context=0x0000000100adc650, node=0x000000016fdfdcf8) at rxcpfunc.c:3597:24
+    frame #9: 0x00000001001c6790 rxc`ensure_class_imported(context=0x0000000100adc650, class_name=".rxpa_objects..box\narg initial=.int\n", class_name_length=18) at rxcpfunc.c:3614:12
+    frame #10: 0x000000010013d160 rxc`node_to_type(context=0x0000000100adc650, node=0x0000000caec49400, dims=0x000000016fdfe0f8, dim_base=0x000000016fdfe0f0, dim_elements=0x000000016fdfe0e8, class_name=0x000000016fdfe0e0) at rxcp_val_orch.c:1089:13
+    frame #11: 0x000000010011d7a8 rxc`structure_symbols_walker(direction=in, node=0x0000000caec49680, payload=0x0000000100adc650) at rxcp_val_sym.c:321:32
+    frame #12: 0x000000010000f270 rxc`ast_wlkr(tree=0x0000000caec49680, handler=(rxc`structure_symbols_walker at rxcp_val_sym.c:234), payload=0x0000000100adc650) at rxcp_ast_walk.c:43:14

@@ -1,0 +1,29 @@
+{
+  "consistent": {
+    "optimized": "42",
+    "unoptimized": "42"
+  },
+  "stale_template": {
+    "optimized": "42",
+    "unoptimized": "99"
+  },
+  "template_removed": {
+    "optimized": "99",
+    "unoptimized": "99"
+  },
+  "handwritten": {
+    "outputs": "both PASS",
+    "itos_counts": {
+      "opt": 9,
+      "noopt": 14
+    }
+  },
+  "mutable_boundary": {
+    "expected": "42\n42",
+    "outputs": {
+      "opt": "42\n41",
+      "noopt": "42\n42"
+    },
+    "optimization_preserves_semantics": false
+  }
+}

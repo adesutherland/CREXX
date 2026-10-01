@@ -1,0 +1,337 @@
+﻿2026-09-15T22:22:21.1260200Z Current runner version: '2.337.0'
+2026-09-15T22:22:21.1302600Z ##[group]Runner Image Provisioner
+2026-09-15T22:22:21.1303900Z Hosted Compute Agent
+2026-09-15T22:22:21.1304750Z Version: 20260819.586
+2026-09-15T22:22:21.1305700Z Commit: 3cc4a88dfa507ef76119ad1bb3eccc6378bb2b76
+2026-09-15T22:22:21.1306840Z Build Date: 2026-08-18T23:20:18Z
+2026-09-15T22:22:21.1307890Z Worker ID: {0bad5bc7-bb9b-493f-a89f-72cf6843a433}
+2026-09-15T22:22:21.1309020Z Azure Region: westus
+2026-09-15T22:22:21.1309860Z ##[endgroup]
+2026-09-15T22:22:21.1314180Z ##[group]Operating System
+2026-09-15T22:22:21.1315130Z macOS
+2026-09-15T22:22:21.1315850Z 15.7.9
+2026-09-15T22:22:21.1316570Z 24G830
+2026-09-15T22:22:21.1317590Z ##[endgroup]
+2026-09-15T22:22:21.1318420Z ##[group]Runner Image
+2026-09-15T22:22:21.1319400Z Image: macos-15
+2026-09-15T22:22:21.1320220Z Version: 20260824.0482.1
+2026-09-15T22:22:21.1322270Z Included Software: https://github.com/actions/runner-images/blob/macos-15/20260824.0482/images/macos/macos-15-Readme.md
+2026-09-15T22:22:21.1324960Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15%2F20260824.0482
+2026-09-15T22:22:21.1326650Z ##[endgroup]
+2026-09-15T22:22:21.1328640Z ##[group]GITHUB_TOKEN Permissions
+2026-09-15T22:22:21.1332960Z Actions: read
+2026-09-15T22:22:21.1333830Z Contents: read
+2026-09-15T22:22:21.1334630Z Metadata: read
+2026-09-15T22:22:21.1335490Z ##[endgroup]
+2026-09-15T22:22:21.1341960Z Secret source: Actions
+2026-09-15T22:22:21.1344100Z Cache mode: write
+2026-09-15T22:22:21.1347510Z Prepare workflow directory
+2026-09-15T22:22:21.2024190Z Prepare all required actions
+2026-09-15T22:22:21.2122330Z Getting action download info
+2026-09-15T22:22:21.4255590Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-09-15T22:22:21.8547030Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+2026-09-15T22:22:22.2361630Z Download action repository 'actions/download-artifact@v8' (SHA:3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c)
+2026-09-15T22:22:23.3235520Z Download action repository 'actions/upload-artifact@v7' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-09-15T22:22:23.7520900Z Complete job name: replay
+2026-09-15T22:22:23.9604760Z ##[group]Run actions/checkout@v5
+2026-09-15T22:22:23.9608060Z with:
+2026-09-15T22:22:23.9610000Z   repository: adesutherland/CREXX
+2026-09-15T22:22:23.9633530Z   token: ***
+2026-09-15T22:22:23.9635480Z   ssh-strict: true
+2026-09-15T22:22:23.9637440Z   ssh-user: git
+2026-09-15T22:22:23.9639420Z   persist-credentials: true
+2026-09-15T22:22:23.9641640Z   clean: true
+2026-09-15T22:22:23.9643710Z   sparse-checkout-cone-mode: true
+2026-09-15T22:22:23.9646630Z   fetch-depth: 1
+2026-09-15T22:22:23.9648910Z   fetch-tags: false
+2026-09-15T22:22:23.9650910Z   show-progress: true
+2026-09-15T22:22:23.9652960Z   lfs: false
+2026-09-15T22:22:23.9654850Z   submodules: false
+2026-09-15T22:22:23.9656890Z   set-safe-directory: true
+2026-09-15T22:22:23.9659250Z   allow-unsafe-pr-checkout: false
+2026-09-15T22:22:23.9663070Z ##[endgroup]
+2026-09-15T22:22:25.0359490Z Syncing repository: adesutherland/CREXX
+2026-09-15T22:22:25.0368000Z ##[group]Getting Git version info
+2026-09-15T22:22:25.0372950Z Working directory is '/Users/runner/work/CREXX/CREXX'
+2026-09-15T22:22:25.0379110Z [command]/usr/local/bin/git version
+2026-09-15T22:22:25.0912750Z git version 2.55.0
+2026-09-15T22:22:25.0959780Z ##[endgroup]
+2026-09-15T22:22:25.0981010Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/03984912-458b-499c-bbe8-276abebb3da9/.gitconfig'
+2026-09-15T22:22:25.1009690Z Temporarily overriding HOME='/Users/runner/work/_temp/03984912-458b-499c-bbe8-276abebb3da9' before making global git config changes
+2026-09-15T22:22:25.1020610Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T22:22:25.1029940Z [command]/usr/local/bin/git config --global --add safe.directory /Users/runner/work/CREXX/CREXX
+2026-09-15T22:22:25.1259740Z Deleting the contents of '/Users/runner/work/CREXX/CREXX'
+2026-09-15T22:22:25.1272780Z ##[group]Initializing the repository
+2026-09-15T22:22:25.1288190Z [command]/usr/local/bin/git init /Users/runner/work/CREXX/CREXX
+2026-09-15T22:22:25.1860720Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-15T22:22:25.1867200Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-15T22:22:25.1873170Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-15T22:22:25.1878520Z hint: call:
+2026-09-15T22:22:25.1880940Z hint:
+2026-09-15T22:22:25.1884710Z hint: 	git config --global init.defaultBranch <name>
+2026-09-15T22:22:25.1888590Z hint:
+2026-09-15T22:22:25.1892040Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-15T22:22:25.1897590Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-15T22:22:25.1902210Z hint:
+2026-09-15T22:22:25.1904660Z hint: 	git branch -m <name>
+2026-09-15T22:22:25.1907370Z hint:
+2026-09-15T22:22:25.1910600Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-15T22:22:25.1917980Z Initialized empty Git repository in /Users/runner/work/CREXX/CREXX/.git/
+2026-09-15T22:22:25.1928340Z [command]/usr/local/bin/git remote add origin https://github.com/adesutherland/CREXX
+2026-09-15T22:22:25.2131410Z ##[endgroup]
+2026-09-15T22:22:25.2137500Z ##[group]Disabling automatic garbage collection
+2026-09-15T22:22:25.2141580Z [command]/usr/local/bin/git config --local gc.auto 0
+2026-09-15T22:22:25.2337830Z ##[endgroup]
+2026-09-15T22:22:25.2342210Z ##[group]Setting up auth
+2026-09-15T22:22:25.2347660Z [command]/usr/local/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T22:22:25.2527370Z [command]/usr/local/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-15T22:22:25.5861900Z [command]/usr/local/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T22:22:25.6044510Z [command]/usr/local/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-15T22:22:26.0432420Z [command]/usr/local/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T22:22:26.0799700Z [command]/usr/local/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-15T22:22:26.2246560Z [command]/usr/local/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-15T22:22:26.2282360Z ##[endgroup]
+2026-09-15T22:22:26.2288450Z ##[group]Fetching the repository
+2026-09-15T22:22:26.2297610Z [command]/usr/local/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +f29a8d3b9588944a4a0198e678579577d8eaf732:refs/remotes/origin/temp/llama-release-intel-native
+2026-09-15T22:22:33.7226370Z From https://github.com/adesutherland/CREXX
+2026-09-15T22:22:33.7232270Z  * [new ref]           f29a8d3b9588944a4a0198e678579577d8eaf732 -> origin/temp/llama-release-intel-native
+2026-09-15T22:22:33.7238070Z ##[endgroup]
+2026-09-15T22:22:33.7239990Z ##[group]Determining the checkout info
+2026-09-15T22:22:33.7243420Z ##[endgroup]
+2026-09-15T22:22:33.7254470Z [command]/usr/local/bin/git sparse-checkout disable
+2026-09-15T22:22:33.7416560Z [command]/usr/local/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-15T22:22:33.7550630Z ##[group]Checking out the ref
+2026-09-15T22:22:33.7558430Z [command]/usr/local/bin/git checkout --progress --force -B temp/llama-release-intel-native refs/remotes/origin/temp/llama-release-intel-native
+2026-09-15T22:22:35.1181340Z Updating files:   4% (1788/38014)
+2026-09-15T22:22:35.5733370Z Updating files:   5% (1901/38014)
+2026-09-15T22:22:35.8535080Z Updating files:   6% (2281/38014)
+2026-09-15T22:22:35.8957260Z Updating files:   6% (2581/38014)
+2026-09-15T22:22:36.0638370Z Updating files:   7% (2661/38014)
+2026-09-15T22:22:36.7376650Z Updating files:   8% (3042/38014)
+2026-09-15T22:22:36.8715070Z Updating files:   9% (3422/38014)
+2026-09-15T22:22:37.1079560Z Updating files:   9% (3550/38014)
+2026-09-15T22:22:37.3306950Z Updating files:  10% (3802/38014)
+2026-09-15T22:22:37.6480030Z Updating files:  11% (4182/38014)
+2026-09-15T22:22:37.8499480Z Updating files:  12% (4562/38014)
+2026-09-15T22:22:37.9509820Z Updating files:  12% (4863/38014)
+2026-09-15T22:22:38.2402250Z Updating files:  13% (4942/38014)
+2026-09-15T22:22:38.4953460Z Updating files:  14% (5322/38014)
+2026-09-15T22:22:38.6945930Z Updating files:  15% (5703/38014)
+2026-09-15T22:22:38.8401250Z Updating files:  16% (6083/38014)
+2026-09-15T22:22:38.9206300Z Updating files:  16% (6293/38014)
+2026-09-15T22:22:39.1093600Z Updating files:  17% (6463/38014)
+2026-09-15T22:22:39.4201370Z Updating files:  18% (6843/38014)
+2026-09-15T22:22:39.6206380Z Updating files:  19% (7223/38014)
+2026-09-15T22:22:39.8213080Z Updating files:  20% (7603/38014)
+2026-09-15T22:22:40.0219080Z Updating files:  21% (7983/38014)
+2026-09-15T22:22:40.2225400Z Updating files:  21% (8070/38014)
+2026-09-15T22:22:40.3025910Z Updating files:  22% (8364/38014)
+2026-09-15T22:22:40.5403310Z Updating files:  23% (8744/38014)
+2026-09-15T22:22:40.6844900Z Updating files:  24% (9124/38014)
+2026-09-15T22:22:40.8039240Z Updating files:  25% (9504/38014)
+2026-09-15T22:22:40.8400180Z Updating files:  26% (9884/38014)
+2026-09-15T22:22:40.9738090Z Updating files:  26% (9998/38014)
+2026-09-15T22:22:41.1156160Z Updating files:  27% (10264/38014)
+2026-09-15T22:22:41.4055640Z Updating files:  28% (10644/38014)
+2026-09-15T22:22:41.6007200Z Updating files:  29% (11025/38014)
+2026-09-15T22:22:41.7008440Z Updating files:  30% (11405/38014)
+2026-09-15T22:22:41.9022740Z Updating files:  31% (11785/38014)
+2026-09-15T22:22:42.0026390Z Updating files:  31% (11988/38014)
+2026-09-15T22:22:42.1339630Z Updating files:  32% (12165/38014)
+2026-09-15T22:22:42.3042120Z Updating files:  33% (12545/38014)
+2026-09-15T22:22:42.4517240Z Updating files:  34% (12925/38014)
+2026-09-15T22:22:42.6162660Z Updating files:  35% (13305/38014)
+2026-09-15T22:22:42.7302990Z Updating files:  36% (13686/38014)
+2026-09-15T22:22:42.8689840Z Updating files:  37% (14066/38014)
+2026-09-15T22:22:42.9109910Z Updating files:  37% (14346/38014)
+2026-09-15T22:22:43.2456240Z Updating files:  38% (14446/38014)
+2026-09-15T22:22:43.6098270Z Updating files:  39% (14826/38014)
+2026-09-15T22:22:43.7945620Z Updating files:  40% (15206/38014)
+2026-09-15T22:22:43.8471280Z Updating files:  41% (15586/38014)
+2026-09-15T22:22:43.9960970Z Updating files:  41% (15681/38014)
+2026-09-15T22:22:44.1973440Z Updating files:  42% (15966/38014)
+2026-09-15T22:22:44.4781850Z Updating files:  43% (16347/38014)
+2026-09-15T22:22:44.7110760Z Updating files:  44% (16727/38014)
+2026-09-15T22:22:44.8075620Z Updating files:  45% (17107/38014)
+2026-09-15T22:22:44.8450440Z Updating files:  46% (17487/38014)
+2026-09-15T22:22:45.1181880Z Updating files:  46% (17580/38014)
+2026-09-15T22:22:45.3239910Z Updating files:  47% (17867/38014)
+2026-09-15T22:22:45.6138380Z Updating files:  48% (18247/38014)
+2026-09-15T22:22:45.6582460Z Updating files:  49% (18627/38014)
+2026-09-15T22:22:45.8519670Z Updating files:  50% (19007/38014)
+2026-09-15T22:22:45.8542070Z Updating files:  50% (19385/38014)
+2026-09-15T22:22:46.0210860Z Updating files:  51% (19388/38014)
+2026-09-15T22:22:46.1931180Z Updating files:  52% (19768/38014)
+2026-09-15T22:22:46.4561250Z Updating files:  53% (20148/38014)
+2026-09-15T22:22:46.6337630Z Updating files:  54% (20528/38014)
+2026-09-15T22:22:46.7265070Z Updating files:  55% (20908/38014)
+2026-09-15T22:22:46.8564140Z Updating files:  56% (21288/38014)
+2026-09-15T22:22:46.8706640Z Updating files:  57% (21668/38014)
+2026-09-15T22:22:46.9194310Z Updating files:  57% (21790/38014)
+2026-09-15T22:22:47.1296910Z Updating files:  58% (22049/38014)
+2026-09-15T22:22:47.2306570Z Updating files:  59% (22429/38014)
+2026-09-15T22:22:47.3417540Z Updating files:  60% (22809/38014)
+2026-09-15T22:22:47.5093660Z Updating files:  61% (23189/38014)
+2026-09-15T22:22:47.7533650Z Updating files:  62% (23569/38014)
+2026-09-15T22:22:47.8043190Z Updating files:  63% (23949/38014)
+2026-09-15T22:22:47.8932050Z Updating files:  64% (24329/38014)
+2026-09-15T22:22:48.0605080Z Updating files:  64% (24380/38014)
+2026-09-15T22:22:48.2398050Z Updating files:  65% (24710/38014)
+2026-09-15T22:22:48.9375220Z Updating files:  66% (25090/38014)
+2026-09-15T22:22:48.9714450Z Updating files:  66% (25381/38014)
+2026-09-15T22:22:49.1304730Z Updating files:  67% (25470/38014)
+2026-09-15T22:22:49.5221200Z Updating files:  68% (25850/38014)
+2026-09-15T22:22:49.6971910Z Updating files:  69% (26230/38014)
+2026-09-15T22:22:49.8444450Z Updating files:  70% (26610/38014)
+2026-09-15T22:22:50.0077820Z Updating files:  70% (26815/38014)
+2026-09-15T22:22:50.0580380Z Updating files:  71% (26990/38014)
+2026-09-15T22:22:50.3512770Z Updating files:  72% (27371/38014)
+2026-09-15T22:22:50.6336180Z Updating files:  73% (27751/38014)
+2026-09-15T22:22:50.8831610Z Updating files:  74% (28131/38014)
+2026-09-15T22:22:50.9259290Z Updating files:  74% (28447/38014)
+2026-09-15T22:22:51.3830980Z Updating files:  75% (28511/38014)
+2026-09-15T22:22:51.5921500Z Updating files:  76% (28891/38014)
+2026-09-15T22:22:51.8082970Z Updating files:  77% (29271/38014)
+2026-09-15T22:22:51.8810620Z Updating files:  78% (29651/38014)
+2026-09-15T22:22:52.3791300Z Updating files:  78% (29712/38014)
+2026-09-15T22:22:52.8608740Z Updating files:  79% (30032/38014)
+2026-09-15T22:22:52.8762210Z Updating files:  79% (30369/38014)
+2026-09-15T22:22:53.2629240Z Updating files:  80% (30412/38014)
+2026-09-15T22:22:53.4374700Z Updating files:  81% (30792/38014)
+2026-09-15T22:22:53.7657170Z Updating files:  82% (31172/38014)
+2026-09-15T22:22:53.8659930Z Updating files:  83% (31552/38014)
+2026-09-15T22:22:54.0063920Z Updating files:  83% (31779/38014)
+2026-09-15T22:22:54.1379150Z Updating files:  84% (31932/38014)
+2026-09-15T22:22:54.3908340Z Updating files:  85% (32312/38014)
+2026-09-15T22:22:54.5522380Z Updating files:  86% (32693/38014)
+2026-09-15T22:22:54.8577070Z Updating files:  87% (33073/38014)
+2026-09-15T22:22:54.8679520Z Updating files:  87% (33447/38014)
+2026-09-15T22:22:55.0319890Z Updating files:  88% (33453/38014)
+2026-09-15T22:22:55.2839590Z Updating files:  89% (33833/38014)
+2026-09-15T22:22:55.4243350Z Updating files:  90% (34213/38014)
+2026-09-15T22:22:55.5713240Z Updating files:  91% (34593/38014)
+2026-09-15T22:22:55.7441540Z Updating files:  92% (34973/38014)
+2026-09-15T22:22:55.8855090Z Updating files:  93% (35354/38014)
+2026-09-15T22:22:55.9873550Z Updating files:  93% (35625/38014)
+2026-09-15T22:22:56.1114760Z Updating files:  94% (35734/38014)
+2026-09-15T22:22:56.2780650Z Updating files:  95% (36114/38014)
+2026-09-15T22:22:56.5032050Z Updating files:  96% (36494/38014)
+2026-09-15T22:22:56.5828530Z Updating files:  97% (36874/38014)
+2026-09-15T22:22:56.7466240Z Updating files:  98% (37254/38014)
+2026-09-15T22:22:56.8798890Z Updating files:  99% (37634/38014)
+2026-09-15T22:22:56.9802930Z Updating files:  99% (37854/38014)
+2026-09-15T22:22:57.0081730Z Updating files: 100% (38014/38014)
+2026-09-15T22:22:57.0105560Z Updating files: 100% (38014/38014), done.
+2026-09-15T22:22:57.0863860Z Switched to a new branch 'temp/llama-release-intel-native'
+2026-09-15T22:22:57.0959920Z branch 'temp/llama-release-intel-native' set up to track 'origin/temp/llama-release-intel-native'.
+2026-09-15T22:22:57.1222040Z ##[endgroup]
+2026-09-15T22:22:57.1481440Z [command]/usr/local/bin/git log -1 --format=%H
+2026-09-15T22:22:57.1700310Z f29a8d3b9588944a4a0198e678579577d8eaf732
+2026-09-15T22:22:57.2755920Z ##[group]Run actions/setup-python@v6
+2026-09-15T22:22:57.2758050Z with:
+2026-09-15T22:22:57.2760070Z   python-version: 3.12
+2026-09-15T22:22:57.2760850Z   check-latest: false
+2026-09-15T22:22:57.2770070Z   token: ***
+2026-09-15T22:22:57.2770720Z   update-environment: true
+2026-09-15T22:22:57.2772810Z   allow-prereleases: false
+2026-09-15T22:22:57.2773530Z   freethreaded: false
+2026-09-15T22:22:57.2774150Z ##[endgroup]
+2026-09-15T22:22:57.6153540Z ##[group]Installed versions
+2026-09-15T22:22:57.6186200Z Successfully set up CPython (3.12.10)
+2026-09-15T22:22:57.6187300Z ##[endgroup]
+2026-09-15T22:22:57.6494150Z ##[group]Run actions/download-artifact@v8
+2026-09-15T22:22:57.6494930Z with:
+2026-09-15T22:22:57.6495770Z   name: user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-CREXX-macos-x86_64
+2026-09-15T22:22:57.6496820Z   run-id: 35013130021
+2026-09-15T22:22:57.6503170Z   github-token: ***
+2026-09-15T22:22:57.6503780Z   path: /Users/runner/work/_temp/candidate
+2026-09-15T22:22:57.6504510Z   merge-multiple: false
+2026-09-15T22:22:57.6505130Z   repository: adesutherland/CREXX
+2026-09-15T22:22:57.6505810Z   skip-decompress: false
+2026-09-15T22:22:57.6506410Z   digest-mismatch: error
+2026-09-15T22:22:57.6506970Z env:
+2026-09-15T22:22:57.6507690Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:22:57.6509110Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/x64/lib/pkgconfig
+2026-09-15T22:22:57.6510390Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:22:57.6511670Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:22:57.6512840Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:22:57.6513770Z ##[endgroup]
+2026-09-15T22:22:57.9837240Z Downloading single artifact
+2026-09-15T22:22:58.5345380Z Preparing to download the following artifacts:
+2026-09-15T22:22:58.5971460Z - user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-CREXX-macos-x86_64 (ID: 10415053371, Size: 29648030, Expected Digest: sha256:eb3209e05a7a83d1f0dc158cc153b7a8e87e9fdd0ba8258b0f2bc119f1e1688a)
+2026-09-15T22:22:58.6036060Z Downloading artifact '10415053371' from 'adesutherland/CREXX'
+2026-09-15T22:22:58.7045240Z Redirecting to blob download url: https://productionresultssa17.blob.core.windows.net/actions-results/d7d02833-17c3-47c8-89c4-49cf2f9b7b9f/workflow-job-run-d6ad10a6-0dfd-5b17-aed5-f94365c08b57/artifacts/d19c3f25ed1349da91f475936fb2e9a5fa8bb48f3415d945796be8f5b01bd6b8.zip
+2026-09-15T22:22:58.7149720Z Starting download of artifact to: /Users/runner/work/_temp/candidate
+2026-09-15T22:22:58.8532970Z (node:23298) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-09-15T22:22:58.8598700Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-15T22:23:00.0409790Z SHA256 digest of downloaded artifact is eb3209e05a7a83d1f0dc158cc153b7a8e87e9fdd0ba8258b0f2bc119f1e1688a
+2026-09-15T22:23:00.0599780Z Artifact download completed successfully.
+2026-09-15T22:23:00.0631500Z Total of 1 artifact(s) downloaded
+2026-09-15T22:23:00.0640120Z Download artifact has finished successfully
+2026-09-15T22:23:00.0788170Z ##[group]Run python .github/diagnostics/llama-bridge-probe.py \
+2026-09-15T22:23:00.0790140Z [36;1mpython .github/diagnostics/llama-bridge-probe.py \[0m
+2026-09-15T22:23:00.0793560Z [36;1m  --archive "/Users/runner/work/_temp/candidate/CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-macos-x86_64.zip" \[0m
+2026-09-15T22:23:00.0796550Z [36;1m  --sha256 91a4fb9f8347d582789fc1ee986cc0d646236d145de0c6ffe2ffaa30e49f187c \[0m
+2026-09-15T22:23:00.0798950Z [36;1m  --output-root "/Users/runner/work/_temp/bridge-probe" \[0m
+2026-09-15T22:23:00.0845450Z [36;1m  --repeat 3 --capture-after 180[0m
+2026-09-15T22:23:00.1010580Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-15T22:23:00.1011470Z env:
+2026-09-15T22:23:00.1012410Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:23:00.1013910Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/x64/lib/pkgconfig
+2026-09-15T22:23:00.1015740Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:23:00.1018430Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:23:00.1020050Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:23:00.1021340Z ##[endgroup]
+2026-09-15T22:23:06.5908540Z PASS: compile
+2026-09-15T22:23:08.0882480Z PASS: dependencies
+2026-09-15T22:23:08.4445420Z PASS: compile-direct
+2026-09-15T22:24:25.5963640Z PASS: native-quiet
+2026-09-15T22:24:25.8790650Z PASS: native-default
+2026-09-15T22:25:50.1362390Z PASS: python-direct
+2026-09-15T22:25:50.6355120Z PASS: bridge
+2026-09-15T22:25:50.6788800Z ##[group]Run actions/upload-artifact@v7
+2026-09-15T22:25:50.6789840Z with:
+2026-09-15T22:25:50.6790480Z   name: intel-native-process-startup-diagnosis
+2026-09-15T22:25:50.6791320Z   path: /Users/runner/work/_temp/bridge-probe
+2026-09-15T22:25:50.6792080Z   retention-days: 14
+2026-09-15T22:25:50.6792710Z   if-no-files-found: warn
+2026-09-15T22:25:50.6793340Z   compression-level: 6
+2026-09-15T22:25:50.6793910Z   overwrite: false
+2026-09-15T22:25:50.6794590Z   include-hidden-files: false
+2026-09-15T22:25:50.6795220Z   archive: true
+2026-09-15T22:25:50.6795790Z env:
+2026-09-15T22:25:50.6796660Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:25:50.6797940Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/x64/lib/pkgconfig
+2026-09-15T22:25:50.6799210Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:25:50.6800360Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:25:50.6801900Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/x64
+2026-09-15T22:25:50.6803180Z ##[endgroup]
+2026-09-15T22:25:51.0389300Z With the provided path, there will be 10 files uploaded
+2026-09-15T22:25:51.0418090Z Artifact name is valid!
+2026-09-15T22:25:51.0420150Z Root directory input is valid!
+2026-09-15T22:25:51.2666430Z Uploading artifact: intel-native-process-startup-diagnosis.zip
+2026-09-15T22:25:51.2734020Z Beginning upload of artifact content to blob storage
+2026-09-15T22:25:51.4270170Z Uploaded bytes 18633
+2026-09-15T22:25:51.4465330Z Finished uploading artifact content to blob storage!
+2026-09-15T22:25:51.4469950Z SHA256 digest of uploaded artifact is 207605e5dde387c76b4e1ed382b6c89f53e28aa86b144c437b9e8bc4550cdf1c
+2026-09-15T22:25:51.4473340Z Finalizing artifact upload
+2026-09-15T22:25:51.6627400Z Artifact intel-native-process-startup-diagnosis successfully finalized. Artifact ID 10421113902
+2026-09-15T22:25:51.6631630Z Artifact intel-native-process-startup-diagnosis has been successfully uploaded! Final size is 18633 bytes. Artifact ID is 10421113902
+2026-09-15T22:25:51.6635450Z Artifact download URL: https://github.com/adesutherland/CREXX/actions/runs/35030619064/artifacts/10421113902
+2026-09-15T22:25:51.6902080Z Post job cleanup.
+2026-09-15T22:25:51.9851580Z Post job cleanup.
+2026-09-15T22:25:52.2144200Z [command]/usr/local/bin/git version
+2026-09-15T22:25:52.2258000Z git version 2.55.0
+2026-09-15T22:25:52.2307780Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/cc5a0658-4386-48c3-a186-be4eb1f9012e/.gitconfig'
+2026-09-15T22:25:52.2337800Z Temporarily overriding HOME='/Users/runner/work/_temp/cc5a0658-4386-48c3-a186-be4eb1f9012e' before making global git config changes
+2026-09-15T22:25:52.2348040Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T22:25:52.2351380Z [command]/usr/local/bin/git config --global --add safe.directory /Users/runner/work/CREXX/CREXX
+2026-09-15T22:25:52.2526290Z [command]/usr/local/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T22:25:52.2671550Z [command]/usr/local/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-15T22:25:52.4947000Z [command]/usr/local/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T22:25:52.5046930Z http.https://github.com/.extraheader
+2026-09-15T22:25:52.5069050Z [command]/usr/local/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-15T22:25:52.5204020Z [command]/usr/local/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-15T22:25:52.7235720Z [command]/usr/local/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T22:25:52.7364420Z [command]/usr/local/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-15T22:25:52.9830800Z Cleaning up orphan processes

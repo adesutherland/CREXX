@@ -8,6 +8,7 @@ g0 .expose=refcomputed.idx
 main() .locals=6
    .meta "refcomputed.main"="b" ".int" main() ""
    .srcstep 9 9 17 "inline_test_ref_computed.crexx" 4 1 23 "main: procedure = .int"
+   .meta "refcomputed.idx"="b" ".int" g0
    numsci 18,1,1
    .meta "refcomputed.main.values"="b" ".int[3]" r0
    .srcstep 1 1 17 "inline_test_ref_computed.crexx" 5 3 18 "  values = .int[3]"
@@ -58,10 +59,12 @@ main() .locals=6
    .srcstep 8 8 17 "inline_test_ref_computed.crexx" 13 3 11 "  return 0"
    ret 0
    .meta "refcomputed.main.values"
+   .meta "refcomputed.idx"
 
 bump() .locals=1
    .meta "refcomputed.bump"="b" ".int" bump() "expose slot=.int"
    .srcstep 14 14 17 "inline_test_ref_computed.crexx" 15 1 23 "bump: procedure = .int"
+   .meta "refcomputed.idx"="b" ".int" g0
    numsci 18,1,1
    .srcstep 10 10 17 "inline_test_ref_computed.crexx" 16 7 25 "  arg expose slot = .int"
    .meta "refcomputed.bump.slot"="b" ".int" a1
@@ -80,3 +83,4 @@ bump() .locals=1
    .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "slot" ""
    ret a1
    .meta "refcomputed.bump.slot"
+   .meta "refcomputed.idx"

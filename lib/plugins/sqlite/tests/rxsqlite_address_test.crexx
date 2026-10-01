@@ -1,0 +1,102 @@
+/* Installed-style Level-G ADDRESS SQLITE facade qualification. */
+options levelg
+
+namespace rxsqlite_address_test
+
+import _rxsysb
+import rxfnsb
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if \condition then do
+    say "FAIL: ADDRESS SQLITE " || label
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+  errors = 0
+  rows = .string[]
+  diagnostic_lines = .string[]
+  database_path = ":memory:"
+  name = .string
+  role = .string
+  total = .string
+  selected = .string
+  sqlite_environment = .addressenvironment
+
+  address sqlite "OPEN ${database_path} CREATE"
+  errors = errors + check(rc = 0, "OPEN command")
+  address sqlite "EXEC CREATE TABLE people(id INTEGER PRIMARY KEY, name TEXT, role TEXT, payload BLOB)"
+  errors = errors + check(rc = 0, "CREATE command")
+
+  name = "Ada"
+  role = "compiler"
+  address sqlite "EXEC INSERT INTO people(name, role, payload) VALUES(:name, :role, X'410042')"
+  errors = errors + check(rc = 0, "named host bindings first row")
+  errors = errors + check(addresscall("sqlite", "changes") = "1", "CHANGES function")
+  errors = errors + check(addresscall("sqlite", "last_insert_id") = "1", "LAST_INSERT_ID function")
+
+  name = "Grace"
+  role = "runtime"
+  address sqlite "EXEC INSERT INTO people(name, role, payload) VALUES(:name, :role, NULL)"
+  errors = errors + check(rc = 0, "named host bindings second row")
+  errors = errors + check(addresscall("sqlite", "last_insert_rowid") = "2", "LAST_INSERT_ROWID function")
+
+  address sqlite "QUERY SELECT id, name, role, payload FROM people ORDER BY id" output rows
+  errors = errors + check(rc = 0, "QUERY command")
+  errors = errors + check(rows.0 = 2, "QUERY row count")
+  errors = errors + check(rows[1] = "1|Ada|compiler|X'410042'", "QUERY typed first row")
+  errors = errors + check(rows[2] = "2|Grace|runtime|", "QUERY null second row")
+
+  total = ""
+  address sqlite "VALUE SELECT count(*) FROM people INTO ${total}"
+  errors = errors + check(rc = 0 & total = "2", "VALUE INTO update")
+  selected = ""
+  name = "Grace"
+  address sqlite "VALUE SELECT role FROM people WHERE name=:name INTO ${selected}"
+  errors = errors + check(rc = 0 & selected = "runtime", "VALUE named binding")
+
+  errors = errors + check(addresscall("sqlite", "driver") = "sqlite", "DRIVER function")
+  errors = errors + check(length(addresscall("sqlite", "version")) > 0, "VERSION function")
+  errors = errors + check(addresscall("sqlite", "scalar", "SELECT count(*) FROM people") = "2", "SCALAR function")
+  errors = errors + check(addresscall("sqlite", "name") = "SQLITE", "NAME function")
+  errors = errors + check(addresscall("sqlite", "id") = "rexx:SQLITE", "ID function")
+
+  address sqlite "EXEC INSERT INTO missing_table VALUES(1)" error diagnostic_lines
+  errors = errors + check(rc = 8, "SQL diagnostic rc")
+  errors = errors + check(diagnostic_lines.0 = 1 & pos("prepare:", diagnostic_lines[1]) > 0, "SQL diagnostic redirection")
+  errors = errors + check(addresscall("sqlite", "status") = "-6", "SQL diagnostic status")
+  errors = errors + check(pos("prepare:", addresscall("sqlite", "error")) > 0, "SQL diagnostic message")
+
+  /* SQLITE and SQLITE3 are distinct cached environment objects and states. */
+  address sqlite3 "OPEN"
+  errors = errors + check(rc = 0, "second environment OPEN")
+  address sqlite3 "EXEC CREATE TABLE people(id INTEGER)"
+  errors = errors + check(rc = 0, "second environment table")
+  address sqlite3 "EXEC INSERT INTO people VALUES(9)"
+  errors = errors + check(rc = 0, "second environment seed")
+  total = ""
+  address sqlite3 "VALUE SELECT count(*) FROM people INTO ${total}"
+  errors = errors + check(rc = 0 & total = "1", "second environment state")
+  errors = errors + check(addresscall("sqlite3", "id") = "rexx:SQLITE3", "second environment identity")
+
+  total = ""
+  address sqlite "VALUE SELECT count(*) FROM people INTO ${total}"
+  errors = errors + check(rc = 0 & total = "2", "first environment remains independent")
+  sqlite_environment = addressenv("sqlite")
+  errors = errors + check(sqlite_environment.environment_id() <> addressenv("sqlite3").environment_id(), "independent environment instances")
+
+  address sqlite "CLOSE"
+  errors = errors + check(rc = 0, "first CLOSE")
+  address sqlite3 "CLOSE"
+  errors = errors + check(rc = 0, "second CLOSE")
+
+  if errors <> 0 then do
+    say "FAIL: ADDRESS SQLITE errors=" || errors
+    return 1
+  end
+  say "PASS: ADDRESS SQLITE commands functions bindings output diagnostics instances=2"
+  return 0
+
+exit main()

@@ -1,0 +1,165 @@
+{
+  "outcome": "passed",
+  "scope": "same-run native/Python GGML and archived bridge startup attribution; no VM, model or engine rebuild",
+  "archive": "CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-macos-arm64.zip",
+  "archive_sha256": "47e894f0c7e63e5441b25696138c6862ac70dd57f0101bf4a5b0dee465dd5b82",
+  "providers": {
+    "version": 1,
+    "provider": "rxllama",
+    "platform": "Darwin",
+    "arch": "arm64",
+    "engine": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+    "link_libraries": [
+      {
+        "path": "libcrexx-llama.dylib",
+        "sha256": "5b839310029a63092addca35a0d8f7ccabb307df1886953014c0432c05024475"
+      }
+    ],
+    "runtime_files": [
+      {
+        "path": "libcrexx-llama.1.dylib",
+        "sha256": "5b839310029a63092addca35a0d8f7ccabb307df1886953014c0432c05024475"
+      },
+      {
+        "path": "libcrexx-llama.dylib",
+        "sha256": "5b839310029a63092addca35a0d8f7ccabb307df1886953014c0432c05024475"
+      },
+      {
+        "path": "libcrexx-llama-engine.0.4.0.dylib",
+        "sha256": "e1b1498cda63e939a04cf9d727a363b0861e417c7f45a66e2b0bf7b056fc2015"
+      },
+      {
+        "path": "libcrexx-llama-engine.dylib",
+        "sha256": "e1b1498cda63e939a04cf9d727a363b0861e417c7f45a66e2b0bf7b056fc2015"
+      },
+      {
+        "path": "libcrexx-llama-engine.0.dylib",
+        "sha256": "e1b1498cda63e939a04cf9d727a363b0861e417c7f45a66e2b0bf7b056fc2015"
+      },
+      {
+        "path": "libcrexx-ggml.0.23.0.dylib",
+        "sha256": "49f74344d8939aabf37b60c5945624bd8121c6f3343bf5d4c1a55fa03faf7760"
+      },
+      {
+        "path": "libcrexx-ggml.dylib",
+        "sha256": "49f74344d8939aabf37b60c5945624bd8121c6f3343bf5d4c1a55fa03faf7760"
+      },
+      {
+        "path": "libcrexx-ggml.0.dylib",
+        "sha256": "49f74344d8939aabf37b60c5945624bd8121c6f3343bf5d4c1a55fa03faf7760"
+      },
+      {
+        "path": "libcrexx-ggml-base.0.23.0.dylib",
+        "sha256": "d6aa3d0e6a98bd12c60e3959b2188eee84f3e95df0a661d0b8dc739e91a63449"
+      },
+      {
+        "path": "libcrexx-ggml-base.dylib",
+        "sha256": "d6aa3d0e6a98bd12c60e3959b2188eee84f3e95df0a661d0b8dc739e91a63449"
+      },
+      {
+        "path": "libcrexx-ggml-base.0.dylib",
+        "sha256": "d6aa3d0e6a98bd12c60e3959b2188eee84f3e95df0a661d0b8dc739e91a63449"
+      },
+      {
+        "path": "libcrexx-ggml-cpu.so",
+        "sha256": "8478acfc7d43f830d361b9f157ee413dc36d1b8bfbae48ae5ef828289832ef24"
+      },
+      {
+        "path": "libcrexx-ggml-metal.so",
+        "sha256": "20abce3816c1a588c7a4a7d86dd1cccd6fa2a5602c80f4ce61c6c01783f4c713"
+      },
+      {
+        "path": "rxllama-NOTICES.txt",
+        "sha256": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7"
+      },
+      {
+        "path": "rxllama.runtime.json",
+        "sha256": "9ac7c082bf1eb83357f5e39abea945285156155ec494422fe2140cd62363319d"
+      }
+    ]
+  },
+  "source_sha256": "7d916d6f21d28733f34cd6c595a460436d5c9c31dbc61de9d18ace543885709f",
+  "direct_source_sha256": "833892bb5b667867e23394c7a7d44f821c1ad0eb10ed8fa3923aeffd783ad041",
+  "capture_after": 180,
+  "commands": [
+    {
+      "label": "compile",
+      "argv": [
+        "/usr/bin/cc",
+        "/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-ci/local/native-process-arm-control/bridge-probe.c",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers/libcrexx-llama.dylib",
+        "-Wl,-rpath,/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/bridge-probe"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 0.048
+    },
+    {
+      "label": "dependencies",
+      "argv": [
+        "/usr/bin/otool",
+        "-L",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/bridge-probe"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 0.012
+    },
+    {
+      "label": "compile-direct",
+      "argv": [
+        "/usr/bin/cc",
+        "/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-ci/local/native-process-arm-control/direct-ggml.c",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers/libcrexx-ggml.dylib",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers/libcrexx-ggml-base.dylib",
+        "-Wl,-rpath,/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/direct-ggml"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 0.047
+    },
+    {
+      "label": "native-quiet",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/direct-ggml",
+        "quiet",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers/libcrexx-ggml-metal.so",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers/libcrexx-ggml-cpu.so"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 1.216
+    },
+    {
+      "label": "native-default",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/direct-ggml",
+        "default",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers/libcrexx-ggml-metal.so",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers/libcrexx-ggml-cpu.so"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 0.089
+    },
+    {
+      "label": "python-direct",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-intel-native-x82yhe8s/.github/diagnostics/llama-ggml-replay.py",
+        "--direct",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/archive/CREXX-macos-arm64/bin/providers"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 0.144
+    },
+    {
+      "label": "bridge",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bridge-probe-i3x7lvzy/bridge-probe"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 0.807
+    }
+  ]
+}

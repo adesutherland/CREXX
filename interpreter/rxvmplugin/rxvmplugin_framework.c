@@ -30,13 +30,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+#ifndef CREXX_VM_STATIC_ONLY
+#include <dlfcn.h>
+#include <unistd.h>
+#endif
+#define RXVMPLUGIN_LOCK() ((void)0)
+#define RXVMPLUGIN_UNLOCK() ((void)0)
+#elif defined(_WIN32)
 #include <windows.h>
 #define RXVMPLUGIN_LOCK() AcquireSRWLockExclusive(&rxvmplugin_catalogue_lock)
 #define RXVMPLUGIN_UNLOCK() ReleaseSRWLockExclusive(&rxvmplugin_catalogue_lock)
 #else
 #include <dlfcn.h> // Linux/OSX
+#ifndef CREXX_VM_SINGLE_THREADED
 #include <pthread.h>
+#endif
 #include <unistd.h>
 #define RXVMPLUGIN_LOCK() ((void)pthread_mutex_lock(&rxvmplugin_catalogue_lock))
 #define RXVMPLUGIN_UNLOCK() ((void)pthread_mutex_unlock(&rxvmplugin_catalogue_lock))
@@ -65,13 +74,17 @@ typedef struct rxvmplugin_load_transaction {
     int failed;
 } rxvmplugin_load_transaction;
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXVMPLUGIN_THREAD_LOCAL
+#elif defined(_MSC_VER)
 #define RXVMPLUGIN_THREAD_LOCAL __declspec(thread)
 #else
 #define RXVMPLUGIN_THREAD_LOCAL __thread
 #endif
 
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+/* No concurrent catalogue access. */
+#elif defined(_WIN32)
 static SRWLOCK rxvmplugin_catalogue_lock = SRWLOCK_INIT;
 #else
 static pthread_mutex_t rxvmplugin_catalogue_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -147,7 +160,9 @@ static int rxvmplugin_configure_instance(rxvm_plugin *plugin) {
 
 static void rxvmplugin_close_library(void *handle) {
     if (!handle) return;
-#ifdef _WIN32
+#ifdef CREXX_VM_STATIC_ONLY
+    abort(); /* Static descriptors have no dynamic handle. */
+#elif defined(_WIN32)
     FreeLibrary((HMODULE)handle);
 #else
     dlclose(handle);
@@ -349,6 +364,11 @@ static int rxvmplugin_commit_dynamic_transaction(
 
 /* Function to load a dynamic plugin */
 int load_rxvmplugin(char* dir, char *name) {
+#ifdef CREXX_VM_STATIC_ONLY
+    (void)dir; (void)name;
+    fputs("RXVM: dynamic plugins are not supported in this build\n", stderr);
+    return -1;
+#else
     int rc = 0;
     int commit_result;
     char *file_name;
@@ -493,6 +513,7 @@ int load_rxvmplugin(char* dir, char *name) {
     rxvmplugin_memory_free(full_file_name);
     rxvmplugin_memory_free(file_name);
     return rc;
+#endif
 }
 
 /* Function to register a plugin factory */

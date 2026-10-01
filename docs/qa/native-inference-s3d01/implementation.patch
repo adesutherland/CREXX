@@ -1,0 +1,393 @@
+diff --git a/interpreter/CMakeLists.txt b/interpreter/CMakeLists.txt
+index f91485ac9..ed8beb374 100644
+--- a/interpreter/CMakeLists.txt
++++ b/interpreter/CMakeLists.txt
+@@ -714,6 +714,22 @@ target_include_directories(test_rxpa_concurrency PRIVATE
+         ../platform ../avl_tree ../utf8 ../inc)
+ target_link_libraries(test_rxpa_concurrency rxvml Threads::Threads)
+ 
++add_executable(test_rxpa_worker_startup tests/test_rxpa_worker_startup.c)
++target_include_directories(test_rxpa_worker_startup PRIVATE
++        ${CMAKE_CURRENT_SOURCE_DIR}
++        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
++        ../platform ../avl_tree ../utf8 ../inc)
++target_link_libraries(test_rxpa_worker_startup rxvml Threads::Threads)
++foreach(mode IN ITEMS attached callback)
++    add_test(NAME rxpa_worker_startup_${mode}
++        COMMAND test_rxpa_worker_startup ${mode}
++                ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_control.rxbin)
++    set_tests_properties(rxpa_worker_startup_${mode} PROPERTIES
++        TIMEOUT 30 LABELS "interpreter;worker;plugins;rxpa;regression")
++    crexx_register_test_prep_targets(TESTS rxpa_worker_startup_${mode}
++        TARGETS test_rxpa_worker_startup test_program_generation_control_bins)
++endforeach()
++
+ add_executable(test_rxpa_odbc tests/test_rxpa_odbc.c)
+ target_include_directories(test_rxpa_odbc PRIVATE
+         ${CMAKE_CURRENT_SOURCE_DIR}
+@@ -822,6 +838,12 @@ add_test(NAME rxpa_bound_legacy_serialization
+         COMMAND test_rxpa_concurrency bound-legacy)
+ add_test(NAME rxpa_legacy_transition_quiescence
+         COMMAND test_rxpa_concurrency transition)
++add_test(NAME rxpa_worker_startup_transition
++        COMMAND test_rxpa_concurrency startup-transition)
++set_tests_properties(rxpa_worker_startup_transition PROPERTIES
++        TIMEOUT 30 LABELS "interpreter;worker;plugins;rxpa;regression")
++crexx_register_test_prep_targets(TESTS rxpa_worker_startup_transition
++        TARGETS test_rxpa_concurrency)
+ set_tests_properties(rxvmmemory_allocator PROPERTIES
+         LABELS "interpreter;memory")
+ set_tests_properties(rxvmworker_lifecycle PROPERTIES
+diff --git a/interpreter/rxpacompat.c b/interpreter/rxpacompat.c
+index a564673ee..72360f359 100644
+--- a/interpreter/rxpacompat.c
++++ b/interpreter/rxpacompat.c
+@@ -19,6 +19,25 @@ typedef struct rxpa_compatibility_coordinator {
+ 
+ static rxpa_compatibility_coordinator rxpa_coordinator;
+ 
++#if defined(_MSC_VER)
++#define RXPA_COMPAT_THREAD_LOCAL __declspec(thread)
++#else
++#define RXPA_COMPAT_THREAD_LOCAL __thread
++#endif
++static RXPA_COMPAT_THREAD_LOCAL rxpa_compatibility_context *rxpa_thread_contexts;
++static RXPA_COMPAT_THREAD_LOCAL size_t rxpa_callback_depth;
++static RXPA_COMPAT_THREAD_LOCAL unsigned char rxpa_thread_suspended;
++
++void rxpa_compatibility_callback_enter(void) {
++    if (rxpa_callback_depth == SIZE_MAX || rxpa_thread_suspended) abort();
++    rxpa_callback_depth++;
++}
++
++void rxpa_compatibility_callback_leave(void) {
++    if (!rxpa_callback_depth) abort();
++    rxpa_callback_depth--;
++}
++
+ #ifdef _WIN32
+ #include <windows.h>
+ 
+@@ -42,9 +61,11 @@ void rxpa_compatibility_enter(void) {
+     InitOnceExecuteOnce(&rxpa_compatibility_once,
+                         rxpa_init_compatibility_lock, NULL, NULL);
+     EnterCriticalSection(&rxpa_compatibility_lock);
++    rxpa_compatibility_callback_enter();
+ }
+ 
+ void rxpa_compatibility_leave(void) {
++    rxpa_compatibility_callback_leave();
+     LeaveCriticalSection(&rxpa_compatibility_lock);
+ }
+ 
+@@ -90,9 +111,11 @@ void rxpa_compatibility_enter(void) {
+         pthread_mutex_lock(&rxpa_compatibility_lock) != 0) {
+         abort();
+     }
++    rxpa_compatibility_callback_enter();
+ }
+ 
+ void rxpa_compatibility_leave(void) {
++    rxpa_compatibility_callback_leave();
+     if (pthread_mutex_unlock(&rxpa_compatibility_lock) != 0) abort();
+ }
+ 
+@@ -130,6 +153,8 @@ void rxpa_compatibility_context_init(rxpa_compatibility_context *context,
+     context->legacy_invoker_count = 0u;
+     context->legacy_invoker_capacity = 0u;
+     context->execution_depth = 0u;
++    context->execution_thread_next = NULL;
++    context->execution_parked = 0u;
+     context->coordinator_next = NULL;
+     context->direct_invoker = NULL;
+     context->locked_invoker = NULL;
+@@ -191,7 +216,8 @@ int rxpa_compatibility_bind_legacy(
+ 
+     rxpa_coordinator_enter();
+     while (rxpa_coordinator.transitioning &&
+-           !(context->legacy_registered && context->execution_depth != 0u)) {
++           !(context->legacy_registered && context->execution_depth != 0u &&
++             !context->execution_parked)) {
+         rxpa_coordinator_wait();
+     }
+     for (index = 0u; index < context->legacy_invoker_count; index++) {
+@@ -240,7 +266,8 @@ int rxpa_compatibility_bind_legacy(
+         rxpa_coordinator.legacy_contexts = context;
+         rxpa_coordinator.legacy_context_count++;
+         context->legacy_registered = 1u;
+-        if (!rxpa_coordinator.locked_mode && context->execution_depth != 0u) {
++        if (!rxpa_coordinator.locked_mode && context->execution_depth != 0u &&
++            !context->execution_parked) {
+             rxpa_coordinator.active_legacy_executions++;
+         }
+     }
+@@ -261,7 +288,7 @@ int rxpa_compatibility_bind_legacy(
+ 
+ void rxpa_compatibility_execution_enter(
+         rxpa_compatibility_context *context) {
+-    if (!context || !context->memory_worker) abort();
++    if (!context || !context->memory_worker || rxpa_thread_suspended) abort();
+     rxpa_coordinator_enter();
+     while (rxpa_coordinator.transitioning && context->legacy_registered &&
+            context->execution_depth == 0u) {
+@@ -271,22 +298,32 @@ void rxpa_compatibility_execution_enter(
+         rxpa_coordinator_leave();
+         abort();
+     }
+-    if (context->execution_depth++ == 0u && context->legacy_registered &&
+-        !rxpa_coordinator.locked_mode) {
+-        rxpa_coordinator.active_legacy_executions++;
++    if (context->execution_depth++ == 0u) {
++        context->execution_thread_next = rxpa_thread_contexts;
++        rxpa_thread_contexts = context;
++        if (context->legacy_registered && !rxpa_coordinator.locked_mode) {
++            rxpa_coordinator.active_legacy_executions++;
++        }
+     }
+     rxpa_coordinator_leave();
+ }
+ 
+ void rxpa_compatibility_execution_leave(
+         rxpa_compatibility_context *context) {
+-    if (!context || !context->memory_worker) abort();
++    if (!context || !context->memory_worker || rxpa_thread_suspended) abort();
+     rxpa_coordinator_enter();
+     if (context->execution_depth == 0u) {
+         rxpa_coordinator_leave();
+         abort();
+     }
+     context->execution_depth--;
++    if (context->execution_depth == 0u) {
++        rxpa_compatibility_context **link = &rxpa_thread_contexts;
++        while (*link && *link != context) link = &(*link)->execution_thread_next;
++        if (*link != context) abort();
++        *link = context->execution_thread_next;
++        context->execution_thread_next = NULL;
++    }
+     if (context->execution_depth == 0u && context->legacy_registered &&
+         !rxpa_coordinator.locked_mode) {
+         if (rxpa_coordinator.active_legacy_executions == 0u) {
+@@ -299,6 +336,42 @@ void rxpa_compatibility_execution_leave(
+     rxpa_coordinator_leave();
+ }
+ 
++int rxpa_compatibility_suspend_thread(void) {
++    rxpa_compatibility_context *context;
++    if (rxpa_callback_depth || rxpa_thread_suspended) return 0;
++    rxpa_coordinator_enter();
++    for (context = rxpa_thread_contexts; context;
++         context = context->execution_thread_next) {
++        if (!context->execution_depth || context->execution_parked) abort();
++        if (context->legacy_registered && !rxpa_coordinator.locked_mode) {
++            if (!rxpa_coordinator.active_legacy_executions) abort();
++            rxpa_coordinator.active_legacy_executions--;
++        }
++        context->execution_parked = 1u;
++    }
++    rxpa_thread_suspended = 1u;
++    rxpa_coordinator_broadcast();
++    rxpa_coordinator_leave();
++    return 1;
++}
++
++void rxpa_compatibility_resume_thread(void) {
++    rxpa_compatibility_context *context;
++    if (!rxpa_thread_suspended) abort();
++    rxpa_coordinator_enter();
++    while (rxpa_coordinator.transitioning) rxpa_coordinator_wait();
++    for (context = rxpa_thread_contexts; context;
++         context = context->execution_thread_next) {
++        if (!context->execution_depth || !context->execution_parked) abort();
++        context->execution_parked = 0u;
++        if (context->legacy_registered && !rxpa_coordinator.locked_mode) {
++            rxpa_coordinator.active_legacy_executions++;
++        }
++    }
++    rxpa_thread_suspended = 0u;
++    rxpa_coordinator_leave();
++}
++
+ void rxpa_compatibility_context_destroy(rxpa_compatibility_context *context) {
+     if (!context || !context->memory_worker) return;
+     rxpa_coordinator_enter();
+@@ -328,6 +401,8 @@ void rxpa_compatibility_context_destroy(rxpa_compatibility_context *context) {
+     context->legacy_invoker_count = 0u;
+     context->legacy_invoker_capacity = 0u;
+     context->execution_depth = 0u;
++    context->execution_thread_next = NULL;
++    context->execution_parked = 0u;
+     context->coordinator_next = NULL;
+     context->direct_invoker = NULL;
+     context->locked_invoker = NULL;
+diff --git a/interpreter/rxpacompat.h b/interpreter/rxpacompat.h
+index a24c99a2f..0a54ca4b7 100644
+--- a/interpreter/rxpacompat.h
++++ b/interpreter/rxpacompat.h
+@@ -49,10 +49,12 @@ typedef struct rxpa_compatibility_context {
+     size_t legacy_invoker_count;
+     size_t legacy_invoker_capacity;
+     size_t execution_depth;
++    struct rxpa_compatibility_context *execution_thread_next;
+     struct rxpa_compatibility_context *coordinator_next;
+     rxvm_native_invoker direct_invoker;
+     rxvm_native_invoker locked_invoker;
+     unsigned char legacy_registered;
++    unsigned char execution_parked;
+ } rxpa_compatibility_context;
+ 
+ void rxpa_compatibility_enter(void);
+@@ -69,6 +71,13 @@ void rxpa_compatibility_execution_enter(
+         rxpa_compatibility_context *context);
+ void rxpa_compatibility_execution_leave(
+         rxpa_compatibility_context *context);
++/* Cold attached-worker startup boundary. Park every executing VM on this OS
++ * thread without changing nesting depths. Returns zero inside legacy callbacks
++ * or protected provider callbacks; successful suspension requires one resume. */
++int rxpa_compatibility_suspend_thread(void);
++void rxpa_compatibility_resume_thread(void);
++void rxpa_compatibility_callback_enter(void);
++void rxpa_compatibility_callback_leave(void);
+ /* Internal test synchronization for the cold legacy-binding transition.
+  * The caller must arrange for a transition to start; the owning CTest timeout
+  * bounds a missing transition. */
+diff --git a/interpreter/rxpafuncs.c b/interpreter/rxpafuncs.c
+index ded533674..44ba0a3d8 100644
+--- a/interpreter/rxpafuncs.c
++++ b/interpreter/rxpafuncs.c
+@@ -224,6 +224,13 @@ void rxvm_callfunc_direct(void* function, int args, value** argv,
+     rxpa_compat_pool_slot = saved_compat_slot;
+ }
+ 
++void rxvm_callfunc_legacy_direct(void* function, int args, value** argv,
++                                 value* ret, value* signal) {
++    rxpa_compatibility_callback_enter();
++    rxvm_callfunc_direct(function, args, argv, ret, signal);
++    rxpa_compatibility_callback_leave();
++}
++
+ void rxvm_callfunc(void* function, int args, value** argv, value* ret,
+                    value* signal) {
+     rxpa_compatibility_enter();
+diff --git a/interpreter/rxvmexecutor.c b/interpreter/rxvmexecutor.c
+index 56e7e0fbe..554c4ccd6 100644
+--- a/interpreter/rxvmexecutor.c
++++ b/interpreter/rxvmexecutor.c
+@@ -2158,6 +2158,14 @@ rxvm_executor *rxvm_executor_create_attached(
+         queue_capacity > SIZE_MAX / sizeof(*executor->workers[0].queue)) {
+         return 0;
+     }
++    /* The child can trigger legacy invoker rebinding while this thread waits
++     * for startup. Park all nested VM executions, but never a live legacy C
++     * callback or protected provider callback. Keep the boundary through join
++     * on failure so a partially started child can finish its cold transition. */
++    if (!rxpa_compatibility_suspend_thread()) {
++        if (result_out) *result_out = RXVM_EXECUTOR_WORKER_START_FAILED;
++        return 0;
++    }
+     executor = (rxvm_executor *)calloc(1u, sizeof(*executor));
+     if (!executor) {
+         result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+@@ -2249,6 +2257,7 @@ rxvm_executor *rxvm_executor_create_attached(
+         if (result != RXVM_EXECUTOR_OK) goto fail;
+     }
+ 
++    rxpa_compatibility_resume_thread();
+     if (result_out) *result_out = RXVM_EXECUTOR_OK;
+     return executor;
+ 
+@@ -2260,6 +2269,7 @@ fail:
+     }
+     if (executor) executor->runtime = 0;
+     executor_storage_destroy(executor);
++    rxpa_compatibility_resume_thread();
+     if (result_out) *result_out = result;
+     return 0;
+ }
+diff --git a/interpreter/rxvmintp.h b/interpreter/rxvmintp.h
+index 48f1c4b80..a64f721b7 100644
+--- a/interpreter/rxvmintp.h
++++ b/interpreter/rxvmintp.h
+@@ -711,6 +711,8 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
+ /* Function to call a native RXPA (CREXX Plugin Architecture) function */
+ void rxvm_callfunc_direct(void* function, int args, value** argv,
+                           value* ret, value* signal);
++void rxvm_callfunc_legacy_direct(void* function, int args, value** argv,
++                                 value* ret, value* signal);
+ void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal);
+ void rxvm_callfunc_session(void* binding, int args, value** argv,
+                            value* ret, value* signal);
+diff --git a/interpreter/rxvmload.c b/interpreter/rxvmload.c
+index db98e3a59..38c42d722 100644
+--- a/interpreter/rxvmload.c
++++ b/interpreter/rxvmload.c
+@@ -2273,7 +2273,7 @@ static void bind_rxpa_runtime_policy(rxvm_context *context,
+     } else if (!rxpa_compatibility_bind_legacy(
+                        &context->rxpa_compatibility,
+                        &runtime->native_invoker,
+-                       rxvm_callfunc_direct, rxvm_callfunc)) {
++                       rxvm_callfunc_legacy_direct, rxvm_callfunc)) {
+         RX_PANIC_OOM("bind legacy rxpa procedure",
+                      sizeof(runtime->native_invoker), runtime->name);
+     }
+diff --git a/interpreter/tests/test_rxpa_concurrency.c b/interpreter/tests/test_rxpa_concurrency.c
+index ea369e86e..cfd4502a2 100644
+--- a/interpreter/tests/test_rxpa_concurrency.c
++++ b/interpreter/tests/test_rxpa_concurrency.c
+@@ -804,7 +804,7 @@ static int test_branch_free_binding(void) {
+     rxinimod(&first);
+     if (rxldmodp(&first) <= 0) failed = 1;
+     first_legacy = context_find_procedure(&first, "e3b.binding_legacy");
+-    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_direct ||
++    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_legacy_direct ||
+         context_procedure_invoker(&first, "e3b.binding_reentrant") !=
+                 rxvm_callfunc_direct) {
+         failed = 1;
+@@ -1003,7 +1003,7 @@ static void *transition_thread_entry(void *unused) {
+ }
+ #endif
+ 
+-static int test_legacy_transition_quiescence(void) {
++static int test_legacy_transition_quiescence(int suspend_for_startup) {
+     rxvm_context first;
+     proc_runtime *first_legacy;
+     rxvm_memory_worker *previous_worker;
+@@ -1021,7 +1021,7 @@ static int test_legacy_transition_quiescence(void) {
+     rxinimod(&first);
+     if (rxldmodp(&first) <= 0) binding_failures++;
+     first_legacy = context_find_procedure(&first, "e3b.binding_legacy");
+-    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_direct) {
++    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_legacy_direct) {
+         binding_failures++;
+     }
+ 
+@@ -1053,6 +1053,18 @@ static int test_legacy_transition_quiescence(void) {
+     if (binding_gate.maximum_active) binding_failures++;
+     gate_unlock(&binding_gate);
+ 
++    if (suspend_for_startup && execution_started) {
++        if (!rxpa_compatibility_suspend_thread()) abort();
++        gate_lock(&binding_gate);
++        while (!binding_gate.maximum_active) gate_wait(&binding_gate);
++        gate_unlock(&binding_gate);
++        rxpa_compatibility_resume_thread();
++        if (first.rxpa_compatibility.execution_depth != 1u ||
++            !first_legacy || first_legacy->native_invoker != rxvm_callfunc) {
++            binding_failures++;
++        }
++    }
++
+     if (execution_started) {
+         rxpa_compatibility_execution_leave(&first.rxpa_compatibility);
+         if (rxvm_worker_end_execution(&first.worker) !=
+@@ -1594,7 +1606,10 @@ int main(int argc, char **argv) {
+         return test_bound_legacy_serialization();
+     }
+     if (strcmp(argv[1], "transition") == 0) {
+-        return test_legacy_transition_quiescence();
++        return test_legacy_transition_quiescence(0);
++    }
++    if (strcmp(argv[1], "startup-transition") == 0) {
++        return test_legacy_transition_quiescence(1);
+     }
+     if (strcmp(argv[1], "legacy") == 0) return test_call_policy(0u, 1);
+     if (strcmp(argv[1], "recursive") == 0) return test_recursive_legacy_call();

@@ -1,0 +1,50 @@
+--- tests/native-inference/direct_control.cpp
++++ tests/native-inference/direct_control.cpp
+@@ -236,6 +236,13 @@
+            "<|im_start|>user\n" + text + "<|im_end|>\n<|im_start|>assistant\n";
+ }
+ struct Generated { std::vector<Tokens> tokens; std::vector<std::string> finish; };
++static llama_token greedy(llama_context * ctx, const llama_vocab * vocab, int output) {
++    const float * values = llama_get_logits_ith(ctx,output);
++    require(values != nullptr,"missing logits");
++    int size = llama_vocab_n_tokens(vocab);
++    for (int i = 0; i < size; ++i) require(std::isfinite(values[i]),"nonfinite logits");
++    return int(std::max_element(values,values+size)-values);
++}
+ static Generated generate(llama_context * ctx, llama_model * model, const std::vector<Tokens> & inputs) {
+     require(!inputs.empty() && inputs.size() <= 8, "generation row limit");
+     auto vocab = llama_model_get_vocab(model);
+@@ -250,17 +257,27 @@
+         positions[row] = int(inputs[row].size());
+     }
+     clear(ctx);
+-    require(decode_unit(ctx, batch.value,"prefill") == 0, "generation prefill failed");
++    // Causal generation can yield between the already configured 128-token
++    // physical batches. Preserve all logical rows/positions; collect each
++    // prompt's first sample before a later decode replaces its logits. BERT's
++    // noncausal embedding batch must not use this splitting path.
++    std::vector<llama_token> first_tokens(inputs.size());
++    Batch unit(int(llama_n_ubatch(ctx)));
++    for (int first = 0; first < batch.value.n_tokens; first += int(llama_n_ubatch(ctx))) {
++        unit.value.n_tokens = 0;
++        int end = std::min(batch.value.n_tokens,first+int(llama_n_ubatch(ctx)));
++        for (int i = first; i < end; ++i)
++            unit.add(batch.value.token[i],batch.value.pos[i],batch.value.seq_id[i][0],batch.value.logits[i]);
++        require(decode_unit(ctx,unit.value,"prefill") == 0,"generation prefill failed");
++        for (int i = 0; i < unit.value.n_tokens; ++i)
++            if (unit.value.logits[i]) first_tokens[size_t(unit.value.seq_id[i][0])] = greedy(ctx,vocab,i);
++    }
+     Generated result{std::vector<Tokens>(inputs.size()), std::vector<std::string>(inputs.size())};
+     for (int step = 0; step < 32; ++step) {
+         batch.value.n_tokens = 0;
+         for (size_t row = 0; row < inputs.size(); ++row) {
+             if (!result.finish[row].empty()) continue;
+-            const float * values = llama_get_logits_ith(ctx, logits[row]);
+-            require(values != nullptr, "missing logits");
+-            int size = llama_vocab_n_tokens(vocab);
+-            for (int i = 0; i < size; ++i) require(std::isfinite(values[i]), "nonfinite logits");
+-            llama_token next = int(std::max_element(values, values + size) - values);
++            llama_token next = step == 0 ? first_tokens[row] : greedy(ctx,vocab,logits[row]);
+             if (llama_vocab_is_eog(vocab, next)) { result.finish[row] = "eos"; continue; }
+             result.tokens[row].push_back(next);
+             if (step == 31) { result.finish[row] = "output_limit"; continue; }

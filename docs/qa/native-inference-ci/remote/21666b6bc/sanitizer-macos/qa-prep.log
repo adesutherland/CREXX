@@ -1,0 +1,192 @@
+Command: cmake --build /Users/runner/work/_temp/debugasan --target qa-prep --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[0/2] Re-checking globbed directories...
+[1/46] Generating source-mapped Text Inspector application with RXPP
+CRX0010I [22:21:21.561562] Pre-Compile started
+Input File:   /Users/runner/work/CREXX/CREXX/examples/ui/text-inspector/text_inspector.rxpp
+Output File:  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector.crexx
+Macro Lib:    /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0100I [22:21:21.614171] Pre-Compile pass one
+CRX0110I [22:21:21.614229] System Path /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [22:21:21.614245] Input Path  /Users/runner/work/CREXX/CREXX/examples/ui/text-inspector/
+CRX0110I [22:21:21.614258] Macro Path  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [22:21:21.614270] Build Path  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/
+CRX0120I [22:21:21.654243] Maclib loaded:      68 records
+CRX0130I [22:21:21.654299] Macros extracted:   35
+CRX0120I [22:21:21.691588] System Maclib loaded: 42 records
+CRX0130I [22:21:21.691649] Macros extracted:     29
+CRX0140I [22:21:21.704835] Rexx Source loaded: 210 records
+CRX0110I [22:21:21.723156] Macro Path  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [22:21:21.820438] Macros extracted:   0
+CRX0160I [22:21:21.853080] Macros arranged:    64
+CRX0200I [22:21:21.879618] Pre-Compile pass two
+CRX0171I Script macro ##ui_command selected from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/ui_command.rxpm
+CRX0171I Script macro ##ui_node selected from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/ui_node.rxpm
+CRX0300I [22:21:23.317975] Pre-Compiled REXX generated 
+CRX0310I [22:21:23.318029] Pre-Compiled REXX saved
+CRX0510I [22:21:23.345669] Library import names passed to /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector.inc
+CRX0500I [22:21:23.345729] Pre-Compile completed, 8 macro calls expanded, total source lines 600
+CRX0101I [22:21:23.345791] Elapsed Time 1.786568 seconds, 1786.568 milliseconds
+[2/46] Building optimized arraydump function example
+[3/46] Building optimized arrayformat function example
+[4/46] Bundling array-formatting function example
+[5/46] Generating decimal_gate1_common18_opt.rxbin
+[6/46] Building C object tests/rxpa/CMakeFiles/objects_rxbvm.dir/__/__/interpreter/rxvmmain.c.o
+/Users/runner/work/CREXX/CREXX/interpreter/rxvmmain.c:367:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  367 |             sprintf(installed_provider_path, "%s/providers", exe_path);
+      |             ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:218:48: note: expanded from macro '__deprecated_msg'
+  218 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/runner/work/CREXX/CREXX/interpreter/rxvmmain.c:384:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  384 |         sprintf(combined_location, ".;%s;%s", context.location, exe_path);
+      |         ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:218:48: note: expanded from macro '__deprecated_msg'
+  218 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/runner/work/CREXX/CREXX/interpreter/rxvmmain.c:388:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  388 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:218:48: note: expanded from macro '__deprecated_msg'
+  218 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+[7/46] Building C object tests/rxpa/CMakeFiles/objects_rxtvm.dir/__/__/interpreter/rxvmmain.c.o
+/Users/runner/work/CREXX/CREXX/interpreter/rxvmmain.c:367:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  367 |             sprintf(installed_provider_path, "%s/providers", exe_path);
+      |             ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:218:48: note: expanded from macro '__deprecated_msg'
+  218 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/runner/work/CREXX/CREXX/interpreter/rxvmmain.c:384:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  384 |         sprintf(combined_location, ".;%s;%s", context.location, exe_path);
+      |         ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:218:48: note: expanded from macro '__deprecated_msg'
+  218 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/runner/work/CREXX/CREXX/interpreter/rxvmmain.c:388:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  388 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:218:48: note: expanded from macro '__deprecated_msg'
+  218 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+[8/46] Compiling and assembling Text Inspector application
+[9/46] Building optimized array-formatting example program
+[10/46] Generating Text Inspector TUI launcher with RXPP
+CRX0010I [22:21:31.469886] Pre-Compile started
+Input File:   /Users/runner/work/CREXX/CREXX/examples/ui/text-inspector/text_inspector_tui.rxpp
+Output File:  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector_tui.crexx
+Macro Lib:    /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0100I [22:21:31.514180] Pre-Compile pass one
+CRX0110I [22:21:31.514288] System Path /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [22:21:31.514342] Input Path  /Users/runner/work/CREXX/CREXX/examples/ui/text-inspector/
+CRX0110I [22:21:31.514388] Macro Path  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [22:21:31.514435] Build Path  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/
+CRX0120I [22:21:31.560103] Maclib loaded:      68 records
+CRX0130I [22:21:31.560147] Macros extracted:   35
+CRX0120I [22:21:31.629980] System Maclib loaded: 42 records
+CRX0130I [22:21:31.630071] Macros extracted:     29
+CRX0140I [22:21:31.631584] Rexx Source loaded: 7 records
+CRX0110I [22:21:31.634744] Macro Path  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [22:21:31.644007] Macros extracted:   0
+CRX0160I [22:21:31.679686] Macros arranged:    64
+CRX0200I [22:21:31.686197] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [22:21:31.810997] Pre-Compiled REXX generated 
+CRX0310I [22:21:31.811054] Pre-Compiled REXX saved
+CRX0510I [22:21:31.813534] Library import names passed to /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector_tui.inc
+CRX0500I [22:21:31.813584] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [22:21:31.813625] Elapsed Time 0.35095 seconds, 350.95 milliseconds
+[11/46] Generating decimal_gate1_classic9_opt.rxbin
+[12/46] Generating generated/text_inspector_ansi.crexx
+CRX0010I [22:21:32.353351] Pre-Compile started
+Input File:   /Users/runner/work/CREXX/CREXX/examples/ui/text-inspector/text_inspector_ansi.rxpp
+Output File:  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector_ansi.crexx
+Macro Lib:    /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0100I [22:21:32.390468] Pre-Compile pass one
+CRX0110I [22:21:32.390561] System Path /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [22:21:32.390614] Input Path  /Users/runner/work/CREXX/CREXX/examples/ui/text-inspector/
+CRX0110I [22:21:32.390662] Macro Path  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [22:21:32.390712] Build Path  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/
+CRX0120I [22:21:32.422892] Maclib loaded:      68 records
+CRX0130I [22:21:32.422944] Macros extracted:   35
+CRX0120I [22:21:32.453857] System Maclib loaded: 42 records
+CRX0130I [22:21:32.453916] Macros extracted:     29
+CRX0140I [22:21:32.454861] Rexx Source loaded: 7 records
+CRX0110I [22:21:32.457016] Macro Path  /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [22:21:32.460880] Macros extracted:   0
+CRX0160I [22:21:32.511726] Macros arranged:    64
+CRX0200I [22:21:32.518804] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [22:21:32.629441] Pre-Compiled REXX generated 
+CRX0310I [22:21:32.629491] Pre-Compiled REXX saved
+CRX0510I [22:21:32.631267] Library import names passed to /Users/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector_ansi.inc
+CRX0500I [22:21:32.635353] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [22:21:32.635552] Elapsed Time 0.287031 seconds, 287.031 milliseconds
+[13/46] Compiling ollama_generate.crexx ...
+[14/46] Building optimized pprint compiler-exit example
+[15/46] Bundling standalone pprint compiler-exit example
+[16/46] Generating text_inspector_test_host.rxbin
+[17/46] Compiling openai_generate.crexx ...
+[18/46] Compiling anthropic_generate.crexx ...
+[19/46] Compiling gemini_generate.crexx ...
+[20/46] Building the rxsqlite ADDRESS consumer demo ...
+[21/46] Compiling llm_address_demo.crexx ...
+Warning in llm_address_demo.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognized but not used., "rxfnsg"
+1 warning(s) in source file
+[22/46] Compiling llm_address_environment.crexx ...
+[23/46] Building program with standalone pprint exit example
+[24/46] Building Text Inspector TUI launcher
+[25/46] Generating text_inspector_ansi.rxbin
+[26/46] Generating text_inspector_core_noopt.rxbin
+[27/46] Generating text_inspector_core_opt.rxbin
+[28/46] Generating san002_concat_after_wide_decimal_rxbvm_noopt.rxbin
+[29/46] Generating text_inspector_tui_noopt.rxbin
+[30/46] Generating text_inspector_tui_opt.rxbin
+[31/46] Generating san002_concat_after_wide_decimal_rxbvm_opt.rxbin
+[32/46] Generating san002_concat_after_wide_decimal_rxtvm_noopt.rxbin
+[33/46] Generating san002_concat_after_wide_decimal_rxtvm_opt.rxbin
+[34/46] Generating san002_wide_decimal_extract_rxbvm_noopt.rxbin
+[35/46] Generating san002_wide_decimal_extract_rxbvm_opt.rxbin
+[36/46] Generating decimal_gate1_common18_opt_rxas_noopt.rxbin
+[37/46] Generating san002_wide_decimal_extract_rxtvm_noopt.rxbin
+[38/46] Generating decimal_gate1_classic9_opt_rxas_noopt.rxbin
+[39/46] Generating san002_wide_decimal_extract_rxtvm_opt.rxbin
+[40/46] Generating decimal_gate1_common18_noopt.rxbin
+[41/46] Linking C executable tests/objects_rxbvm
+[42/46] Linking C executable tests/objects_rxtvm
+[43/46] Generating decimal_gate1_classic9_noopt.rxbin
+[44/46] Generating decimal_gate1_rexxcps_family_noopt.rxbin
+[45/46] Generating decimal_gate1_rexxcps_family_opt.rxbin

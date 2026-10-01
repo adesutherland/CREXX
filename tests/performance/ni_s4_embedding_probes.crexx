@@ -1,0 +1,144 @@
+/* NI-S4-P01: fixed opt-in phase attribution, not a model/backend benchmark. */
+options levelb floats_binary
+import rxfnsb
+import rxfnsg
+import rxllama
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL: rxllama" label
+  return 1
+
+elapsed: procedure = .int
+  arg started = .int
+  duration = time("us") - started
+  if duration < 0 then duration = duration + 86400000000
+  return duration
+
+ready_model: procedure = .int
+  arg model = .binary
+  started = time("us")
+  do while elapsed(started) < 60000000
+    state = ""
+    if rxllama..modelstate(model, state) <> 0 then return 1
+    if state = "ready" then return 0
+    if state <> "loading" then return 1
+  end
+  say "FAIL: model preparation deadline"
+  return 1
+
+ready_session: procedure = .int
+  arg session = .binary
+  started = time("us")
+  do while elapsed(started) < 60000000
+    state = ""
+    if rxllama..prepare(session, 512, state) <> 0 then return 1
+    if state = "ready" then return 0
+    if state = "failed" | state = "cancelled" then return 1
+  end
+  say "FAIL: session preparation deadline"
+  return 1
+
+complete_request: procedure = .int
+  arg request = .binary
+  started = time("us")
+  do while elapsed(started) < 60000000
+    state = ""
+    if rxllama..process(request, 512, state) <> 0 then return 1
+    if state = "complete" then return 0
+    if state <> "running" then return 1
+  end
+  say "FAIL: request deadline"
+  return 1
+
+one_request: procedure = .int
+  arg session = .binary, config = .binary, count = .int
+  request = .binary
+  if rxllama..requestopen(session, config, request) <> 0 then return 1
+  do i = 1 to count
+    row = 0
+    if rxllama..addembedding(request, "A cat sits by the window.", "document", row) <> 0 then return 1
+    if row <> i then return 1
+  end
+  if rxllama..submit(request) <> 0 then return 1
+  state = ""
+  if rxllama..process(request, 1, state) <> 0 | state <> "complete" then return 1
+  values = .packedfloat(0)
+  rows = 0
+  dimensions = 0
+  if rxllama..embeddings(request, values, rows, dimensions) <> 0 then return 1
+  if rows <> count | dimensions <> 384 | values.size() <> count * 384 then return 1
+  if rxllama..close(request) <> 0 then return 1
+  if values.get(0) <> values.get(0) then return 1
+  return 0
+
+probe_counts: procedure = .int[]
+  arg runtime = .binary
+  result = .int[]
+  names = "probe_admit_ns probe_submit_ns probe_setup_ns probe_decode_ns probe_normalize_ns probe_copy_ns probe_copies probe_bytes probe_requests"
+  do i = 1 to words(names)
+    value = 0
+    if rxllama..infoint(runtime, word(names, i), value) <> 0 then do
+      say "FAIL: unavailable glue probe" word(names, i)
+      return result
+    end
+    result[i] = value
+  end
+  return result
+
+main: procedure = .int
+  arg args = .string[]
+  if args.0 <> 5 then return 2
+  count = args[4] as .int
+  repeats = args[5] as .int
+  if (count <> 1 & count <> 8) | repeats < 1 then return 2
+  started = time("us")
+  config = .binary
+  runtime = .binary
+  model = .binary
+  session = .binary
+  if rxllama..configcreate(config) <> 0 then return 1
+  if rxllama..configtext(config, "hardware_mode", args[1]) <> 0 then return 1
+  if rxllama..runtimeopen(config, runtime) <> 0 then return 1
+  if rxllama..modelopen(runtime, args[2], args[3], "bge-small-en-v1.5", config, model) <> 0 then return 1
+  if ready_model(model) <> 0 then return 1
+  if rxllama..sessionopen(model, "embedding", config, session) <> 0 then return 1
+  if ready_session(session) <> 0 then return 1
+  prepare_us = elapsed(started)
+  started = time("us")
+  if one_request(session, config, count) <> 0 then return 1
+  first_us = elapsed(started)
+  i = .int
+  before = .int[]
+  before = probe_counts(runtime)
+  if before.0 <> 9 then return 1
+  started = time("us")
+  do i = 1 to repeats
+    if one_request(session, config, count) <> 0 then return 1
+  end
+  warm_us = elapsed(started)
+  after = .int[]
+  after = probe_counts(runtime)
+  if after.0 <> 9 then return 1
+  if after[7] - before[7] <> repeats | after[8] - before[8] <> repeats * count * 384 * 8 | after[9] - before[9] <> repeats then do
+    say "FAIL: packed copy/decode count or byte volume"
+    return 1
+  end
+  names = "admit_ns submit_ns setup_ns decode_ns normalize_ns copy_ns copies bytes requests"
+  do i = 1 to 9
+    say "PROBE_" || word(names, i) || "=" || (after[i] - before[i])
+  end
+  loads = 0
+  if rxllama..infoint(model, "load_count", loads) <> 0 | loads <> 1 then return 1
+  completed = 0
+  if rxllama..infoint(session, "completed_requests", completed) <> 0 | completed <> repeats + 1 then return 1
+  if rxllama..close(session) <> 0 then return 1
+  if rxllama..close(model) <> 0 then return 1
+  if rxllama..close(runtime) <> 0 then return 1
+  if rxllama..close(config) <> 0 then return 1
+  say "PREPARE_US=" || prepare_us
+  say "FIRST_US=" || first_us
+  say "WARM_US=" || warm_us "us"
+  say "PASS: NI-S4 fixed embedding work" count repeats "load_count=1"
+  return 0

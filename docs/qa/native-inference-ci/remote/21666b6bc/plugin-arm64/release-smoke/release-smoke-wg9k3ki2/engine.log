@@ -1,0 +1,16 @@
+argv=['/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-release-smoke-chudjd3k/engine/rxllama_release_engine_smoke', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-release-smoke-chudjd3k/fixture.gguf']
+SMOKE_STAGE: runtime discovery
+SMOKE_STAGE: runtime ready
+SMOKE_STAGE: CPU model load
+SMOKE_STAGE: CPU private contexts
+SMOKE_STAGE: CPU generation repeat 0
+SMOKE_STAGE: CPU generation repeat 1
+SMOKE_STAGE: CPU embeddings
+PASS: packaged engine CPU repeated two-row generation and finite embeddings
+SMOKE_STAGE: MTL0 model load
+SMOKE_STAGE: MTL0 private contexts
+SMOKE_STAGE: MTL0 generation repeat 0
+SMOKE_STAGE: MTL0 generation repeat 1
+SMOKE_STAGE: MTL0 embeddings
+PASS: packaged engine MTL0 repeated two-row generation and finite embeddings
+PASS: release engine smoke; actual_gpu_devices=1

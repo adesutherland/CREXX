@@ -1,0 +1,204 @@
+{
+  "outcome": "passed",
+  "elapsed_seconds": 15.387,
+  "commands": [
+    {
+      "label": "stage-guides",
+      "argv": [
+        "cmake",
+        "--install",
+        "/home/runner/work/_temp/qualification",
+        "--prefix",
+        "/tmp/crexx-release-smoke-cmyg_28t/payload",
+        "--component",
+        "llama-docs"
+      ],
+      "returncode": 0,
+      "consumer_environment": false
+    },
+    {
+      "label": "engine",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/engine/rxllama_release_engine_smoke",
+        "/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "altered-backend-rejected",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/engine/rxllama_release_engine_smoke",
+        "/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf"
+      ],
+      "returncode": 1,
+      "consumer_environment": true
+    },
+    {
+      "label": "missing-manifest-rejected",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/engine/rxllama_release_engine_smoke",
+        "/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf"
+      ],
+      "returncode": 1,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-compile",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxc",
+        "--no-exe-import",
+        "-i",
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin",
+        "-o",
+        "/tmp/crexx-release-smoke-cmyg_28t/opt",
+        "/tmp/crexx-release-smoke-cmyg_28t/smoke.crexx"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-assemble",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxas",
+        "-o",
+        "/tmp/crexx-release-smoke-cmyg_28t/opt",
+        "/tmp/crexx-release-smoke-cmyg_28t/opt"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-link",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxlink",
+        "-o",
+        "/tmp/crexx-release-smoke-cmyg_28t/opt-linked",
+        "/tmp/crexx-release-smoke-cmyg_28t/opt",
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/library",
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/classlib",
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxfnsg"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-rxvm",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxvm",
+        "/tmp/crexx-release-smoke-cmyg_28t/opt-linked",
+        "-a",
+        "/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-rxbvm",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxbvm",
+        "/tmp/crexx-release-smoke-cmyg_28t/opt-linked",
+        "-a",
+        "/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-compile",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxc",
+        "--no-exe-import",
+        "-n",
+        "-i",
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin",
+        "-o",
+        "/tmp/crexx-release-smoke-cmyg_28t/noopt",
+        "/tmp/crexx-release-smoke-cmyg_28t/smoke.crexx"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-assemble",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxas",
+        "-o",
+        "/tmp/crexx-release-smoke-cmyg_28t/noopt",
+        "/tmp/crexx-release-smoke-cmyg_28t/noopt"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-link",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxlink",
+        "-o",
+        "/tmp/crexx-release-smoke-cmyg_28t/noopt-linked",
+        "/tmp/crexx-release-smoke-cmyg_28t/noopt",
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/library",
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/classlib",
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxfnsg"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-rxvm",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxvm",
+        "/tmp/crexx-release-smoke-cmyg_28t/noopt-linked",
+        "-a",
+        "/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-rxbvm",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxbvm",
+        "/tmp/crexx-release-smoke-cmyg_28t/noopt-linked",
+        "-a",
+        "/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "native-build",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/payload/bin/crexx",
+        "--program",
+        "/tmp/crexx-release-smoke-cmyg_28t/native/smoke",
+        "/tmp/crexx-release-smoke-cmyg_28t/smoke.crexx",
+        "--jobs",
+        "1",
+        "--native"
+      ],
+      "returncode": 0,
+      "consumer_environment": false
+    },
+    {
+      "label": "relocated-native",
+      "argv": [
+        "/tmp/crexx-release-smoke-cmyg_28t/relocated/smoke",
+        "/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    }
+  ],
+  "work": "/tmp/crexx-release-smoke-cmyg_28t",
+  "build": "/home/runner/work/_temp/qualification",
+  "required_backends": "cpu",
+  "preferred_vm": "rxtvm",
+  "model_downloads": 0,
+  "scope": "package and fixture smoke; not full BGE/Smol or device qualification"
+}

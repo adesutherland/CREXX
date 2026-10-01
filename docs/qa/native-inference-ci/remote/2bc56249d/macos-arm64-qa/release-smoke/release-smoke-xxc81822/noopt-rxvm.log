@@ -1,0 +1,2 @@
+argv=['/Users/runner/work/_temp/release-payload/CREXX-macos-arm64/bin/rxvm', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-release-smoke-gpzo3hry/noopt-linked', '-a', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-release-smoke-gpzo3hry/fixture.gguf', 'bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de']
+PASS: public llama release provider discovery, profile rejection and cleanup

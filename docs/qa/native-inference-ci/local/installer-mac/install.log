@@ -1,0 +1,3 @@
+argv=['sh', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx final installer proof pxo0iygd/expanded/Scripts/manage.sh', 'install', '/tmp/crexx-plugin-installers-retained/unpacked-core/CREXX-macos-arm64']
+Verified matching cREXX installation: /private/tmp/crexx-plugin-installers-retained/unpacked-core/CREXX-macos-arm64
+Installed llama.rexx in /private/tmp/crexx-plugin-installers-retained/unpacked-core/CREXX-macos-arm64

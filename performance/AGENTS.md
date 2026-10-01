@@ -8,8 +8,8 @@ These instructions apply to the `performance/` subtree. The repository-root
 Before performance work, read only the sources relevant to the activity, but
 always start with:
 
-1. `performance/ROADMAP.md` for current status, ownership, notes and captured
-   ideas;
+1. `performance/ROADMAP.md` for current closeout, selection status and the
+   compact candidate queue;
 2. `docs/planning/release-1/performance-programme-report-2026-07-15.md` for the
    programme terms, evidence and design gates; and
 3. the relevant technical guide named in `performance/README.md`.
@@ -33,11 +33,13 @@ bundles point to the exact versioned workload and record the commit used.
 
 ## Roadmap discipline
 
-- Every performance idea goes in the idea ledger in `ROADMAP.md` before or as
-  it is investigated, even if it is speculative.
+- Every performance idea that is plausible enough to retain goes in the idea
+  ledger in `ROADMAP.md` before or as it is investigated, even if it is
+  speculative.
 - Give an idea a stable ID. Record the hypothesis, affected surfaces, semantic
   risks, evidence needed and disposition. Do not silently delete rejected or
-  negative ideas; mark the outcome and retain the reason.
+  negative ideas; move durable outcomes to `DECISIONS.md` or a dated historical
+  ledger and retain the reason.
 - Update an activity's status and dated notes in the same change that starts,
   completes, pauses or invalidates it.
 - `complete` means the activity's exit criterion in the programme report is

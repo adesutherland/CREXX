@@ -1,0 +1,4 @@
+argv=[PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/bin/rxbvm'), '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work/opt-shared_generation-dynamic-linked', '-a', 'cpu', PosixPath('/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf'), '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201']
+cwd=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work
+rc=0
+PASS: four typed generation workers, 20 ordered batches each, shared weights/private outputs cpu

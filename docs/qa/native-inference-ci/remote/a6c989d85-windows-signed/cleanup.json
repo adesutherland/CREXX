@@ -1,0 +1,8 @@
+{
+  "release_id": 390272446,
+  "deleted": true,
+  "release_api_status": 404,
+  "tag": "qa-llama-signing-21a5e9410925cac7e4f577119e4e09fe6393d7f4",
+  "remote_tag_exists": false,
+  "local_signed_files_retained": "/tmp/crexx-final-21a5e9410/signed-retry"
+}

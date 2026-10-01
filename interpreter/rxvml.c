@@ -33,6 +33,7 @@
 #include "rxastree.h"
 #include "rxvmplugin.h"
 #include "rxsignature.h"
+#include "platform.h"
 
 #define RXVML_SECTION_MARK "\xc2\xa7"
 
@@ -956,7 +957,9 @@ static int rxvml_address_emit_to_endpoint(
     rxvml_value* args[1];
     int64_t handled = 0;
     int call_rc;
+#ifndef CREXX_VM_SINGLE_THREADED
     int write_rc;
+#endif
 
     if (!text) text = "";
 
@@ -973,6 +976,11 @@ static int rxvml_address_emit_to_endpoint(
         endpoint_value->binary_length != 0) {
         /* Transitional compatibility for an already-running host whose
          * request was created before the Level B adapter migration. */
+#ifdef CREXX_VM_SINGLE_THREADED
+        if (ctx) ctx->last_error =
+            "Legacy native ADDRESS redirects are not supported in this build";
+        return -1;
+#else
         write_rc = redrwriteclose(endpoint_value, text, strlen(text));
         if (write_rc == 0) return 0;
         if (write_rc != 1) {
@@ -981,6 +989,7 @@ static int rxvml_address_emit_to_endpoint(
                 : "Failed to emit native ADDRESS output text";
             return -1;
         }
+#endif
     } else if (endpoint_value && ctx) {
         object_type_name = rxvml_object_type_name(
             endpoint_value, &object_type_name_length);
@@ -1016,7 +1025,7 @@ static int rxvml_address_emit_to_endpoint(
 
     {
         if (is_error) {
-            fputs(text, stderr);
+            (void)platform_console_text_write(stderr, text, strlen(text));
             fflush(stderr);
         } else {
             rxvm_mprintf("%s", text);

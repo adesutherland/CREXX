@@ -1,0 +1,296 @@
+{
+  "date": "2026-09-11",
+  "code_revision": "beee17322956a86cbdb3fcbf8fc0db6d560fc02b",
+  "platform": "macOS ARM64 Debug",
+  "source_archives": {
+    "crexx_bug_report_claude.zip": "aa96b0f683500147aafa50f13d1036a8ca83730d74435d1bb81c314a709ff9f4",
+    "crexx_prolog.zip": "4df7ba1e726ce774be80b800f0526cf64c1be18e2ab9258bff0d29b6b75879bb"
+  },
+  "source_hashes": {
+    "bug7_datatype_dot_unconfirmed/repro_direct.crexx": "b8ac50846ebfd9ec7579a049ae8729e767ff494e7afea2d3ad668af1668f1b98",
+    "bug7_datatype_dot_unconfirmed/repro_context_attempt.crexx": "ed266aa05c7659b4541f9f3f833f90ae4c5cd9a3dbf10cedbfc06ffb7323ac59",
+    "bug7_datatype_dot_unconfirmed/repro_loop_scan.crexx": "97002d18c5f8e9c2d23e7ec9d3577ca00bfbb0c07e7f306b8e717ad8ff997497",
+    "bug3_rc_reserved_name/repro_A_compile_time.crexx": "fa0cbddac95da1e23a9b66ba14b375b00a10cba8d68b28db9c5b643a3b4b8143",
+    "bug3_rc_reserved_name/repro_B_runtime_panic.crexx": "87177a5e03875d1638ec84f6353523ffeffc2eabc34a1ca684afc92f693a22ff",
+    "fixed_items_regression_checks/charout_now_writes_ok.crexx": "15160b900b041599088b019cf2947b8207ad37b5a82edf1b4c654f3263eb0b3e",
+    "fixed_items_regression_checks/subword_3arg_now_ok.crexx": "a8a9521b91af39665ce5ea22cb9a73b26aa2e724fb854b92efb922d2043681d9",
+    "bug1_cross_module_import/usemod.crexx": "b125ba1ea4c3c71bb626af0eddc844023c2d5ae2f1a88a047efb6aa4244e7a50",
+    "bug1_cross_module_import/libmod.crexx": "6d3ada3ccebd4dbdcd91a4a88af541f3bb95f92e80059c21d9cc5dc46e4cae51",
+    "bug5_silent_codegen_stale_value/prolog_BROKEN_original.crexx": "dbed47f2a7ea121dab5e9ad273726acaccaa6abf0d595beeaadeb84bde5e1e63",
+    "bug5_silent_codegen_stale_value/prolog_FIXED_working.crexx": "3640a57976af3d6ac25182be870f11b4abbd1b778e217b3744197a05d2f157ee",
+    "bug2_filename_dependent_compile/prolog.crexx": "8d1dd81ef5001c5d6d47e283616f51164dd1eaa895e575d25f4d3d4599168e92",
+    "bug2_filename_dependent_compile/sibling_same_namespace_large_repro.crexx": "8d1dd81ef5001c5d6d47e283616f51164dd1eaa895e575d25f4d3d4599168e92",
+    "bug2_filename_dependent_compile/minimal_repro_modB.crexx": "7ffada16c6266b3faf6073c5397ead425c9079086d834970a39dc58e3251bfd0",
+    "bug2_filename_dependent_compile/minimal_repro_modA.crexx": "a1d0eaae5cf1138b30dee2c2277b6d84580bfb6b1da71ed2ce75b0033e07b89f",
+    "bug6_block_scoping_trap/repro.crexx": "bbede5ff03d170d2ea0661bbd09198cc2e5198924e63934768c393a98a88f5b9",
+    "bug4_array_reset_on_reassign/repro.crexx": "a178ef03e4ccd6b1c64dd37004671c4dab581ab1a46864a0c47d64ba52084a68"
+  },
+  "runs": [
+    {
+      "label": "minimal_sibling_False_import_False",
+      "args": [
+        "rxc",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "modA.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/minimal_sibling_False_import_False",
+      "exit": 2,
+      "seconds": 0.57,
+      "output": "Error in modA.crexx @ 5:7 - #CLASS_NOT_FOUND: Class was not found., \".stem\"\n1 error(s) in source file\n"
+    },
+    {
+      "label": "minimal_sibling_False_import_True",
+      "args": [
+        "rxc",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "modA.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/minimal_sibling_False_import_True",
+      "exit": 0,
+      "seconds": 0.51,
+      "output": ""
+    },
+    {
+      "label": "minimal_sibling_True_import_False",
+      "args": [
+        "rxc",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "modA.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/minimal_sibling_True_import_False",
+      "exit": 2,
+      "seconds": 0.51,
+      "output": "Error in modA.crexx @ 5:7 - #CLASS_NOT_FOUND: Class was not found., \".stem\"\n1 error(s) in source file\n"
+    },
+    {
+      "label": "minimal_sibling_True_import_True",
+      "args": [
+        "rxc",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "modA.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/minimal_sibling_True_import_True",
+      "exit": 0,
+      "seconds": 0.5,
+      "output": ""
+    },
+    {
+      "label": "large_sibling_False",
+      "args": [
+        "rxc",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/large_sibling_False",
+      "exit": 0,
+      "seconds": 0.87,
+      "output": ""
+    },
+    {
+      "label": "large_sibling_True",
+      "args": [
+        "rxc",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/large_sibling_True",
+      "exit": 2,
+      "seconds": 0.99,
+      "output": "Error in prolog.crexx @ 305:17 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 409:10 - #BAD_CONVERSION: Value cannot be converted to the required type., \"QUERYVARMAP[varName\"\nError in prolog.crexx @ 443:16 - #TYPE_MISMATCH: Type mismatch., \"\\'\\'\"\nError in prolog.crexx @ 452:21 - #BAD_CONVERSION: Value cannot be converted to the required type., \"tmplref\"\nError in prolog.crexx @ 818:13 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 819:14 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 875:25 - #TYPE_MISMATCH: Type mismatch., \"\\'\\'\"\nError in prolog.crexx @ 880:26 - #TYPE_MISMATCH: Type mismatch., \"\\'\\'\"\nError in prolog.crexx @ 885:15 - #BAD_CONVERSION: Value cannot be converted to the required type., \"OPINFIX[opname\"\nError in prolog.crexx @ 889:15 - #BAD_CONVERSION: Value cannot be converted to the required type., \"OPINFIX[opname\"\nError in prolog.crexx @ 893:15 - #BAD_CONVERSION: Value cannot be converted to the required type., \"OPPREFIX[opname\"\nError in prolog.crexx @ 897:15 - #BAD_CONVERSION: Value cannot be converted to the required type., \"OPPREFIX[opname\"\nError in prolog.crexx @ 914:13 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 924:13 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 1207:26 - #TYPE_MISMATCH: Type mismatch., \"\\'\\'\"\nError in prolog.crexx @ 1207:41 - #BAD_CONVERSION: Value cannot be converted to the required type., \"PVARMAP[srcname\"\nError in prolog.crexx @ 1377:12 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 1378:12 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 1379:10 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 1403:18 - #TYPE_MISMATCH: Type mismatch., \"\\'\\'\"\nError in prolog.crexx @ 1404:42 - #BAD_CONVERSION: Value cannot be converted to the required type., \"PRED[key\"\nError in prolog.crexx @ 1405:34 - #BAD_CONVERSION: Value cannot be converted to the required type., \"PRED[key\"\nError in prolog.crexx @ 1423:9 - #BAD_CONVERSION: Value cannot be converted to the required type., \"PRED[key\"\nError in prolog.crexx @ 1428:24 - #BAD_CONVERSION: Value cannot be converted to the required type., \"CLHEAD[id\"\nError in prolog.crexx @ 1429:46 - #BAD_CONVERSION: Value cannot be converted to the required type., \"CLBODY[id\"\nError in prolog.crexx @ 1703:9 - #BAD_CONVERSION: Value cannot be converted to the required type., \"PRED[key\"\nError in prolog.crexx @ 1715:24 - #BAD_CONVERSION: Value cannot be converted to the required type., \"CLHEAD[id\"\nError in prolog.crexx @ 1717:30 - #BAD_CONVERSION: Value cannot be converted to the required type., \"CLBODY[id\"\nError in prolog.crexx @ 2065:10 - #BAD_CONVERSION: Value cannot be converted to the required type., \"CLHEAD[id\"\nError in prolog.crexx @ 2066:10 - #BAD_CONVERSION: Value cannot be converted to the required type., \"CLBODY[id\"\nError in prolog.crexx @ 2074:11 - #BAD_CONVERSION: Value cannot be converted to the required type., \"PRED[key\"\nError in prolog.crexx @ 2089:11 - #BAD_CONVERSION: Value cannot be converted to the required type., \"PRED[key\"\nError in prolog.crexx @ 2101:11 - #BAD_CONVERSION: Value cannot be converted to the required type., \"PRED[key\"\nError in prolog.crexx @ 2205:11 - #NOT_AN_OBJECT: Value is not an object., \"QUERYVARMAP.tails\"\nError in prolog.crexx @ 2206:9 - #ARRAY_DIMS_MISMATCH: Array dimensions do not match., \"names[0\"\nError in prolog.crexx @ 2211:15 - #ARRAY_DIMS_MISMATCH: Array dimensions do not match., \"names[i\"\nError in prolog.crexx @ 2212:14 - #BAD_CONVERSION: Value cannot be converted to the required type., \"QUERYVARMAP[vname\"\nError in prolog.crexx @ 2239:10 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 2251:12 - #TYPE_MISMATCH: Type mismatch., \"\\'\\'\"\nError in prolog.crexx @ 2252:9 - #BAD_CONVERSION: Value cannot be converted to the required type., \"b\"\nError in prolog.crexx @ 2343:13 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 2350:23 - #TYPE_MISMATCH: Type mismatch., \"\\'\\'\"\nError in prolog.crexx @ 2350:38 - #BAD_CONVERSION: Value cannot be converted to the required type., \"RVARMAP[vn\"\nError in prolog.crexx @ 2378:38 - #TYPE_MISMATCH: Type mismatch., \"\\\"1\\\"\"\nError in prolog.crexx @ 2382:16 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in prolog.crexx @ 2880:9 - #BAD_CONVERSION: Value cannot be converted to the required type., \"PRED[key\"\nError in prolog.crexx @ 2886:24 - #BAD_CONVERSION: Value cannot be converted to the required type., \"CLHEAD[id\"\n47 error(s) in source file\n"
+    },
+    {
+      "label": "stale_BROKEN_original_opt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/stale_BROKEN_original",
+      "exit": 0,
+      "seconds": 3.78,
+      "output": "Prolog-in-CREXX -- type )help for session commands, halt. to quit\n?-\nF = foo, A = 0\n     more (;)? ?-\nprolog: halt\n"
+    },
+    {
+      "label": "stale_BROKEN_original_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/stale_BROKEN_original",
+      "exit": 0,
+      "seconds": 1.51,
+      "output": "Prolog-in-CREXX -- type )help for session commands, halt. to quit\n?-\nF = foo, A = 3\n     more (;)? ?-\nprolog: halt\n"
+    },
+    {
+      "label": "stale_FIXED_working_opt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/stale_FIXED_working",
+      "exit": 0,
+      "seconds": 3.32,
+      "output": "Prolog-in-CREXX -- type )help for session commands, halt. to quit\n?-\nF = foo, A = 3\n     more (;)? ?-\nprolog: halt\n"
+    },
+    {
+      "label": "stale_FIXED_working_noopt",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nooptimize",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/stale_FIXED_working",
+      "exit": 0,
+      "seconds": 1.49,
+      "output": "Prolog-in-CREXX -- type )help for session commands, halt. to quit\n?-\nF = foo, A = 3\n     more (;)? ?-\nprolog: halt\n"
+    },
+    {
+      "name": "compiler_noopt_False_assembler_noopt_True_compile",
+      "args": [
+        "rxc",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/compiler_noopt_False_assembler_noopt_True",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "compiler_noopt_False_assembler_noopt_True_assemble",
+      "args": [
+        "rxas",
+        "-n",
+        "prolog.rxas"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/compiler_noopt_False_assembler_noopt_True",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "compiler_noopt_False_assembler_noopt_True_run",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nocompile",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/compiler_noopt_False_assembler_noopt_True",
+      "exit": 0,
+      "output": "Prolog-in-CREXX -- type )help for session commands, halt. to quit\n?-\nF = foo, A = 0\n     more (;)? ?-\nprolog: halt\n"
+    },
+    {
+      "name": "compiler_noopt_True_assembler_noopt_False_compile",
+      "args": [
+        "rxc",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/compiler_noopt_True_assembler_noopt_False",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "compiler_noopt_True_assembler_noopt_False_assemble",
+      "args": [
+        "rxas",
+        "prolog.rxas"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/compiler_noopt_True_assembler_noopt_False",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "compiler_noopt_True_assembler_noopt_False_run",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "-nocompile",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/compiler_noopt_True_assembler_noopt_False",
+      "exit": 0,
+      "output": "Prolog-in-CREXX -- type )help for session commands, halt. to quit\n?-\nF = foo, A = 3\n     more (;)? ?-\nprolog: halt\n"
+    },
+    {
+      "name": "standalone_callback",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "prolog.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/distributed_prolog",
+      "exit": 0,
+      "output": "Prolog-in-CREXX -- type )help for session commands, halt. to quit\n(end a QUERY with ? -- e.g. female(ann)?  or parent(tom,X)? -- end a FACT or RULE with . to add it -- e.g. female(ann). or foo(X):-bar(X).)\n?-\nR = 42\n     more (;)? ?-\nprolog: halt\n"
+    },
+    {
+      "name": "distributed_program_build",
+      "args": [
+        "crexx",
+        "-nocolor",
+        "--program",
+        "combined",
+        "caller_example.crexx",
+        "prolog.crexx",
+        "crexxcallback.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/distributed_prolog",
+      "exit": 0,
+      "output": "WAVE: project compile/assemble jobs=3\nSTART: project member prolog\nSTART: project member caller_example\nSTART: project member crexxcallback\nBUILT: project member caller_example\nBUILT: project member crexxcallback\nBUILT: project member prolog\nBARRIER: link program\nPUBLISHED: program /private/tmp/crexx-mike-followup.BL7S8c/validation/distributed_prolog/combined.rxbin\n"
+    },
+    {
+      "name": "distributed_program_run",
+      "args": [
+        "rxvm",
+        "combined.rxbin"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/distributed_prolog",
+      "exit": 0,
+      "output": "=== calling a prolog predicate with parameters and getting a value back ===\nfactorial(6) = 720\n\n=== lower-level PrologCall + PrologGetVar ===\ncall ok= 1\nX = 3628800\n\n=== consulting a family tree and finding all grandchildren ===\nfound 2 grandchildren of tom:\n   ann\n   pat\n\n=== a failing call ===\nfactorial(6,999) call ok= 0\n\n=== PrologReset then confirm the family facts are gone ===\nprolog: unknown procedure parent/2\nparent(tom,bob) after reset, ok= 0\n\n=== the OTHER direction: Prolog calling back into CREXX ===\n(via crexx_call/2,3 -- see crexxcallback.crexx; this build uses\n the shipped default stub, which implements 'hello' and 'double')\ncrexx_call(hello, R) -> R = hello from CREXX\ncrexx_call(double, 21, R) call ok= 1  R= 42\n"
+    },
+    {
+      "name": "global_mini_False",
+      "args": [
+        "rxc",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "a.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/global_mini_False",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "name": "global_mini_True",
+      "args": [
+        "rxc",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+        "a.crexx"
+      ],
+      "cwd": "/tmp/crexx-mike-followup.BL7S8c/validation/global_mini_True",
+      "exit": 2,
+      "output": "Error in a.crexx @ 5:7 - #TYPE_MISMATCH: Type mismatch., \".stem\"\nError in a.crexx @ 9:10 - #BAD_CONVERSION: Value cannot be converted to the required type., \"S[\\\"x\\\"\"\n2 error(s) in source file\n"
+    }
+  ],
+  "reduced_namespace_fixture": "options levelb\nimport rxfnsb\nnamespace shared expose Make Read\nMake: procedure = .void expose S\n  S = .stem()\n  S[\"x\"] = \"hello\"\n  return\nRead: procedure = .string expose S\n  return S[\"x\"]\n",
+  "python_example": "options levelb\nargv = .string[]\nargv[1] = \"python3\"\nargv[2] = \"-u\"\nargv[3] = \"python_worker.py\"\nrequest = .string[]\nrequest[1] = \"hello from CREXX\"\nreply = .string[]\nerrors = .string[]\naddress crexx \"run :argv[]\" input request output reply error errors\nsay \"status:\" rc\ni = .int\ndo i = 1 to reply[0]\n  say reply[i]\nend\ndo i = 1 to errors[0]\n  say \"stderr:\" errors[i]\nend\nexit rc\n",
+  "python_worker": "import sys\nfor line in sys.stdin:\n    print('python:' + line.rstrip('\\n'), flush=True)\n",
+  "python_result": {
+    "exit": 0,
+    "output": "status: 0\npython:hello from CREXX\n"
+  },
+  "scope": "Source archives retained outside repository in local email-draft delivery folder; no implementation changes or Linux qualification."
+}

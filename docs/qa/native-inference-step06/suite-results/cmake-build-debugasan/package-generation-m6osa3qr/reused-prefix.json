@@ -1,0 +1,117 @@
+{
+  "recovered_after_later_case_failure": true,
+  "cases": [
+    {
+      "case": "opt-typed_generation",
+      "passed_commands": 10,
+      "consumer_executions": 6,
+      "logs": [
+        "work/01-opt-typed_generation-compile.log",
+        "work/02-opt-typed_generation-assemble.log",
+        "work/03-opt-typed_generation-link.log",
+        "work/04-opt-typed_generation-installed-rxbvm-cpu.log",
+        "work/05-opt-typed_generation-installed-rxtvm-cpu.log",
+        "work/06-opt-typed_generation-installed-rxbvm-required-gpu.log",
+        "work/07-opt-typed_generation-installed-rxtvm-required-gpu.log",
+        "work/08-opt-typed_generation-native-build.log",
+        "work/09-opt-typed_generation-relocated-native-cpu.log",
+        "work/10-opt-typed_generation-relocated-native-required-gpu.log"
+      ],
+      "source_sha256": "b8d50efc29c8ab9c2a02ddcaf80212bd0a420b9e4bd6f0889d767e30b94e1207",
+      "relocated_files": {
+        "libcrexx-ggml.0.23.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+        "rxllama.runtime.json": "f61f62cda7042abb894f4411d329ea5f3cea8b573dcdfbfc41ac63a760053361",
+        "rxllama.native.json": "d6d2795307f7f961a9b8a63978590f07685215389aea5b2058d15246d3e5a423",
+        "libcrexx-llama-engine.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+        "libcrexx-ggml-metal.so": "87e3afbb1c3e5722d7c55b15ffba04e2d559ce9d065d7d66f4a031ec705e2873",
+        "persistent": "ce161040ed2ca090ab868cd034d054a3b198188648fab35a5405c8e6aa93f8d7",
+        "libcrexx-llama-engine.0.4.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+        "libcrexx-ggml-base.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+        "libcrexx-llama.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+        "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+        "libcrexx-ggml-base.0.23.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+        "libcrexx-ggml-cpu.so": "d734a4093cd4455ad84f0b537173d263546fc40ee7213ffe46655b267f5ab7cf",
+        "libcrexx-llama-engine.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+        "libcrexx-ggml.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+        "libcrexx-ggml-base.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+        "libcrexx-llama.1.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+        "libcrexx-ggml.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf"
+      }
+    },
+    {
+      "case": "opt-generation_overhead",
+      "passed_commands": 10,
+      "consumer_executions": 6,
+      "logs": [
+        "work/11-opt-generation_overhead-compile.log",
+        "work/12-opt-generation_overhead-assemble.log",
+        "work/13-opt-generation_overhead-link.log",
+        "work/14-opt-generation_overhead-installed-rxbvm-cpu.log",
+        "work/15-opt-generation_overhead-installed-rxtvm-cpu.log",
+        "work/16-opt-generation_overhead-installed-rxbvm-required-gpu.log",
+        "work/17-opt-generation_overhead-installed-rxtvm-required-gpu.log",
+        "work/18-opt-generation_overhead-native-build.log",
+        "work/19-opt-generation_overhead-relocated-native-cpu.log",
+        "work/20-opt-generation_overhead-relocated-native-required-gpu.log"
+      ],
+      "source_sha256": "8fbb31bfa0a03a61b1959a0fddd41a68e3494468b8a4a57452ff223b3be49cb7",
+      "relocated_files": {
+        "libcrexx-ggml.0.23.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+        "rxllama.runtime.json": "f61f62cda7042abb894f4411d329ea5f3cea8b573dcdfbfc41ac63a760053361",
+        "rxllama.native.json": "d6d2795307f7f961a9b8a63978590f07685215389aea5b2058d15246d3e5a423",
+        "libcrexx-llama-engine.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+        "libcrexx-ggml-metal.so": "87e3afbb1c3e5722d7c55b15ffba04e2d559ce9d065d7d66f4a031ec705e2873",
+        "persistent": "20c4e07ae5294e74a7ee5d5a74f312593cd476e6077402ea1c147027186c6bc3",
+        "libcrexx-llama-engine.0.4.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+        "libcrexx-ggml-base.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+        "libcrexx-llama.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+        "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+        "libcrexx-ggml-base.0.23.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+        "libcrexx-ggml-cpu.so": "d734a4093cd4455ad84f0b537173d263546fc40ee7213ffe46655b267f5ab7cf",
+        "libcrexx-llama-engine.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+        "libcrexx-ggml.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+        "libcrexx-ggml-base.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+        "libcrexx-llama.1.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+        "libcrexx-ggml.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf"
+      }
+    },
+    {
+      "case": "opt-persistent_generation",
+      "passed_commands": 10,
+      "consumer_executions": 6,
+      "logs": [
+        "work/21-opt-persistent_generation-compile.log",
+        "work/22-opt-persistent_generation-assemble.log",
+        "work/23-opt-persistent_generation-link.log",
+        "work/24-opt-persistent_generation-installed-rxbvm-cpu.log",
+        "work/25-opt-persistent_generation-installed-rxtvm-cpu.log",
+        "work/26-opt-persistent_generation-installed-rxbvm-required-gpu.log",
+        "work/27-opt-persistent_generation-installed-rxtvm-required-gpu.log",
+        "work/28-opt-persistent_generation-native-build.log",
+        "work/29-opt-persistent_generation-relocated-native-cpu.log",
+        "work/30-opt-persistent_generation-relocated-native-required-gpu.log"
+      ],
+      "source_sha256": "0f747ab385eaf3ceb39b9bd27a44012a0bb2acf73cc033204c75965cfa7a2fa2",
+      "relocated_files": {
+        "libcrexx-ggml.0.23.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+        "rxllama.runtime.json": "f61f62cda7042abb894f4411d329ea5f3cea8b573dcdfbfc41ac63a760053361",
+        "rxllama.native.json": "d6d2795307f7f961a9b8a63978590f07685215389aea5b2058d15246d3e5a423",
+        "libcrexx-llama-engine.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+        "libcrexx-ggml-metal.so": "87e3afbb1c3e5722d7c55b15ffba04e2d559ce9d065d7d66f4a031ec705e2873",
+        "persistent": "67ca2b17b1f33a7907d98c6cfe77256c5ae9520b2f352c31afc221cbf8504e2b",
+        "libcrexx-llama-engine.0.4.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+        "libcrexx-ggml-base.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+        "libcrexx-llama.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+        "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+        "libcrexx-ggml-base.0.23.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+        "libcrexx-ggml-cpu.so": "d734a4093cd4455ad84f0b537173d263546fc40ee7213ffe46655b267f5ab7cf",
+        "libcrexx-llama-engine.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+        "libcrexx-ggml.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+        "libcrexx-ggml-base.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+        "libcrexx-llama.1.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+        "libcrexx-ggml.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf"
+      }
+    }
+  ],
+  "consumer_executions": 18
+}

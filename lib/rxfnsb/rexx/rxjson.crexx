@@ -1044,11 +1044,13 @@ _json_append_node: procedure
   return
 
 _json_node_u8: procedure = .int
-  arg nodes = .binary, node = .int, field = .int
+  /* Borrow the document's immutable index; even a scalar read must not copy
+   * its complete node buffer. Public results remain independently owned. */
+  arg expose nodes = .binary, node = .int, field = .int
   return <at..u8>((node - 1) * 40 + field) nodes
 
 _json_node_u32: procedure = .int
-  arg nodes = .binary, node = .int, field = .int
+  arg expose nodes = .binary, node = .int, field = .int
   return <at..u32>((node - 1) * 40 + field) nodes
 
 _json_set_node_u32: procedure
@@ -1062,7 +1064,7 @@ _json_node_valid: procedure = .int
   return 0
 
 _json_node_get: procedure = .string
-  arg source = .binary, nodes = .binary, node = .int
+  arg expose source = .binary, expose nodes = .binary, node = .int
   kind = _json_node_u8(nodes, node, 0)
   start = _json_node_u32(nodes, node, 24)
   after = _json_node_u32(nodes, node, 28)
@@ -1149,7 +1151,7 @@ _json_parse_path: procedure = .int
   return count
 
 _json_member_node: procedure = .int
-  arg nodes = .binary, keys = .binary, parent = .int, name = .string
+  arg expose nodes = .binary, expose keys = .binary, parent = .int, name = .string
   wanted = name as .binary
   wanted_length = binlength(wanted)
   child = _json_node_u32(nodes, parent, 8)
@@ -1176,7 +1178,7 @@ _json_key_matches: procedure = .int
   return 0
 
 _json_element_node: procedure = .int
-  arg nodes = .binary, parent = .int, wanted = .int
+  arg expose nodes = .binary, parent = .int, wanted = .int
   if wanted < 1 then return 0
   child = _json_node_u32(nodes, parent, 8)
   index = 1

@@ -1,0 +1,42 @@
+{
+  "samples": 104,
+  "recorded": 96,
+  "warmups": 8,
+  "sources_unchanged": 24,
+  "artifacts_unchanged": 58,
+  "work_identities": {
+    "NI-S5-cpu-1": {
+      "TOKENS": "6",
+      "TEXT1": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH1": "eos"
+    },
+    "NI-S5-cpu-4": {
+      "TOKENS": "24",
+      "TEXT1": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH1": "eos",
+      "TEXT2": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH2": "eos",
+      "TEXT3": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH3": "eos",
+      "TEXT4": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH4": "eos"
+    },
+    "NI-S5-required-gpu-1": {
+      "TOKENS": "6",
+      "TEXT1": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH1": "eos"
+    },
+    "NI-S5-required-gpu-4": {
+      "TOKENS": "24",
+      "TEXT1": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH1": "eos",
+      "TEXT2": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH2": "eos",
+      "TEXT3": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH3": "eos",
+      "TEXT4": "4F6E6520616E696D616C2069732061206361742E",
+      "FINISH4": "eos"
+    }
+  },
+  "no_removed_samples": true
+}

@@ -1,0 +1,13 @@
+{
+  "libcrexx-llama-engine.0.4.0.dylib": "e1b1498cda63e939a04cf9d727a363b0861e417c7f45a66e2b0bf7b056fc2015",
+  "libcrexx-llama-engine.dylib": "e1b1498cda63e939a04cf9d727a363b0861e417c7f45a66e2b0bf7b056fc2015",
+  "libcrexx-llama-engine.0.dylib": "e1b1498cda63e939a04cf9d727a363b0861e417c7f45a66e2b0bf7b056fc2015",
+  "libcrexx-ggml.0.23.0.dylib": "49f74344d8939aabf37b60c5945624bd8121c6f3343bf5d4c1a55fa03faf7760",
+  "libcrexx-ggml.dylib": "49f74344d8939aabf37b60c5945624bd8121c6f3343bf5d4c1a55fa03faf7760",
+  "libcrexx-ggml.0.dylib": "49f74344d8939aabf37b60c5945624bd8121c6f3343bf5d4c1a55fa03faf7760",
+  "libcrexx-ggml-base.0.23.0.dylib": "d6aa3d0e6a98bd12c60e3959b2188eee84f3e95df0a661d0b8dc739e91a63449",
+  "libcrexx-ggml-base.dylib": "d6aa3d0e6a98bd12c60e3959b2188eee84f3e95df0a661d0b8dc739e91a63449",
+  "libcrexx-ggml-base.0.dylib": "d6aa3d0e6a98bd12c60e3959b2188eee84f3e95df0a661d0b8dc739e91a63449",
+  "libcrexx-ggml-cpu.so": "8478acfc7d43f830d361b9f157ee413dc36d1b8bfbae48ae5ef828289832ef24",
+  "libcrexx-ggml-metal.so": "20abce3816c1a588c7a4a7d86dd1cccd6fa2a5602c80f4ce61c6c01783f4c713"
+}

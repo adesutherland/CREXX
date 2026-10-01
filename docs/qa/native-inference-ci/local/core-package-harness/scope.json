@@ -1,0 +1,6 @@
+{
+  "scope": "archive and consumer harness validation with copied existing Release tools; not a fresh llama-free core build",
+  "source": "existing cmake-build-release/bin copied without providers/llama components",
+  "script_sha256": "4f2c84b3d0f9d99d8dffdc49540e100efae762a3ff32c8de0b1a30c43b36500a",
+  "hosted_four_platform_gate": "pending"
+}

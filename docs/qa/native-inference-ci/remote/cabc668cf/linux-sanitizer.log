@@ -1,0 +1,489 @@
+﻿2026-09-15T18:31:02.8173300Z Current runner version: '2.337.0'
+2026-09-15T18:31:02.8189644Z ##[group]Runner Image Provisioner
+2026-09-15T18:31:02.8190237Z Hosted Compute Agent
+2026-09-15T18:31:02.8190728Z Version: 20260828.587
+2026-09-15T18:31:02.8191377Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-15T18:31:02.8191875Z Build Date: 2026-08-28T16:44:25Z
+2026-09-15T18:31:02.8192367Z Worker ID: {daf15f60-cebc-4741-b7a5-e4f2a4e7d2c2}
+2026-09-15T18:31:02.8192847Z Azure Region: centralus
+2026-09-15T18:31:02.8193241Z ##[endgroup]
+2026-09-15T18:31:02.8194199Z ##[group]Operating System
+2026-09-15T18:31:02.8194626Z Ubuntu
+2026-09-15T18:31:02.8194992Z 24.04.5
+2026-09-15T18:31:02.8195329Z LTS
+2026-09-15T18:31:02.8195703Z ##[endgroup]
+2026-09-15T18:31:02.8196080Z ##[group]Runner Image
+2026-09-15T18:31:02.8196531Z Image: ubuntu-24.04
+2026-09-15T18:31:02.8196921Z Version: 20260907.300.1
+2026-09-15T18:31:02.8197773Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-15T18:31:02.8198808Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+2026-09-15T18:31:02.8199461Z ##[endgroup]
+2026-09-15T18:31:02.8200310Z ##[group]GITHUB_TOKEN Permissions
+2026-09-15T18:31:02.8202367Z Actions: read
+2026-09-15T18:31:02.8202780Z Contents: read
+2026-09-15T18:31:02.8203147Z Metadata: read
+2026-09-15T18:31:02.8203708Z ##[endgroup]
+2026-09-15T18:31:02.8205249Z Secret source: Actions
+2026-09-15T18:31:02.8205867Z Cache mode: write
+2026-09-15T18:31:02.8206386Z Prepare workflow directory
+2026-09-15T18:31:02.8430252Z Prepare all required actions
+2026-09-15T18:31:02.8476609Z Getting action download info
+2026-09-15T18:31:03.1003050Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-09-15T18:31:03.3782835Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+2026-09-15T18:31:03.5513172Z Download action repository 'actions/upload-artifact@v7' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-09-15T18:31:03.8590060Z Complete job name: Linux x64 ASan/LSan
+2026-09-15T18:31:03.9202624Z ##[group]Run actions/checkout@v5
+2026-09-15T18:31:03.9204051Z with:
+2026-09-15T18:31:03.9204743Z   submodules: recursive
+2026-09-15T18:31:03.9205545Z   ref: cabc668cf242a969994dc750f6a71d41b15d385e
+2026-09-15T18:31:03.9206512Z   repository: adesutherland/CREXX
+2026-09-15T18:31:03.9212451Z   token: ***
+2026-09-15T18:31:03.9213225Z   ssh-strict: true
+2026-09-15T18:31:03.9213907Z   ssh-user: git
+2026-09-15T18:31:03.9214592Z   persist-credentials: true
+2026-09-15T18:31:03.9215379Z   clean: true
+2026-09-15T18:31:03.9216095Z   sparse-checkout-cone-mode: true
+2026-09-15T18:31:03.9216908Z   fetch-depth: 1
+2026-09-15T18:31:03.9217615Z   fetch-tags: false
+2026-09-15T18:31:03.9218313Z   show-progress: true
+2026-09-15T18:31:03.9219032Z   lfs: false
+2026-09-15T18:31:03.9219717Z   set-safe-directory: true
+2026-09-15T18:31:03.9220558Z   allow-unsafe-pr-checkout: false
+2026-09-15T18:31:03.9221691Z ##[endgroup]
+2026-09-15T18:31:03.9945433Z Syncing repository: adesutherland/CREXX
+2026-09-15T18:31:03.9947612Z ##[group]Getting Git version info
+2026-09-15T18:31:03.9948635Z Working directory is '/home/runner/work/CREXX/CREXX'
+2026-09-15T18:31:03.9950042Z [command]/usr/bin/git version
+2026-09-15T18:31:04.2830525Z git version 2.55.0
+2026-09-15T18:31:04.2843726Z ##[endgroup]
+2026-09-15T18:31:04.2854637Z Temporarily overriding HOME='/home/runner/work/_temp/f00953a9-5139-4283-abe9-caf464855a71' before making global git config changes
+2026-09-15T18:31:04.2855272Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T18:31:04.2858649Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/CREXX/CREXX
+2026-09-15T18:31:04.2899337Z Deleting the contents of '/home/runner/work/CREXX/CREXX'
+2026-09-15T18:31:04.2905928Z ##[group]Initializing the repository
+2026-09-15T18:31:04.2908933Z [command]/usr/bin/git init /home/runner/work/CREXX/CREXX
+2026-09-15T18:31:04.3725118Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-15T18:31:04.3725982Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-15T18:31:04.3726606Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-15T18:31:04.3727082Z hint: call:
+2026-09-15T18:31:04.3727400Z hint:
+2026-09-15T18:31:04.3727977Z hint: 	git config --global init.defaultBranch <name>
+2026-09-15T18:31:04.3728412Z hint:
+2026-09-15T18:31:04.3728842Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-15T18:31:04.3729484Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-15T18:31:04.3729901Z hint:
+2026-09-15T18:31:04.3730167Z hint: 	git branch -m <name>
+2026-09-15T18:31:04.3730410Z hint:
+2026-09-15T18:31:04.3730776Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-15T18:31:04.3731524Z Initialized empty Git repository in /home/runner/work/CREXX/CREXX/.git/
+2026-09-15T18:31:04.3734756Z [command]/usr/bin/git remote add origin https://github.com/adesutherland/CREXX
+2026-09-15T18:31:04.3775191Z ##[endgroup]
+2026-09-15T18:31:04.3775642Z ##[group]Disabling automatic garbage collection
+2026-09-15T18:31:04.3777733Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-15T18:31:04.3909019Z ##[endgroup]
+2026-09-15T18:31:04.3909688Z ##[group]Setting up auth
+2026-09-15T18:31:04.3914219Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T18:31:04.3935986Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-15T18:31:04.4219221Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T18:31:04.4239540Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-15T18:31:04.4385492Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T18:31:04.4405342Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-15T18:31:04.4549907Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-15T18:31:04.4573421Z ##[endgroup]
+2026-09-15T18:31:04.4573927Z ##[group]Fetching the repository
+2026-09-15T18:31:04.4579289Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin cabc668cf242a969994dc750f6a71d41b15d385e
+2026-09-15T18:31:10.7572776Z From https://github.com/adesutherland/CREXX
+2026-09-15T18:31:10.7573938Z  * branch              cabc668cf242a969994dc750f6a71d41b15d385e -> FETCH_HEAD
+2026-09-15T18:31:10.7575629Z ##[endgroup]
+2026-09-15T18:31:10.7576082Z ##[group]Determining the checkout info
+2026-09-15T18:31:10.7576993Z ##[endgroup]
+2026-09-15T18:31:10.7584711Z [command]/usr/bin/git sparse-checkout disable
+2026-09-15T18:31:10.8621494Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-15T18:31:10.8643154Z ##[group]Checking out the ref
+2026-09-15T18:31:10.8646568Z [command]/usr/bin/git checkout --progress --force cabc668cf242a969994dc750f6a71d41b15d385e
+2026-09-15T18:31:12.0634940Z Updating files:  66% (25044/37883)
+2026-09-15T18:31:12.0673490Z Updating files:  67% (25382/37883)
+2026-09-15T18:31:12.0775563Z Updating files:  68% (25761/37883)
+2026-09-15T18:31:12.0898027Z Updating files:  69% (26140/37883)
+2026-09-15T18:31:12.1545758Z Updating files:  70% (26519/37883)
+2026-09-15T18:31:12.1623191Z Updating files:  71% (26897/37883)
+2026-09-15T18:31:12.1687434Z Updating files:  72% (27276/37883)
+2026-09-15T18:31:12.1810513Z Updating files:  73% (27655/37883)
+2026-09-15T18:31:12.1962155Z Updating files:  74% (28034/37883)
+2026-09-15T18:31:12.2099626Z Updating files:  75% (28413/37883)
+2026-09-15T18:31:12.2226921Z Updating files:  76% (28792/37883)
+2026-09-15T18:31:12.2358909Z Updating files:  77% (29170/37883)
+2026-09-15T18:31:12.2494466Z Updating files:  78% (29549/37883)
+2026-09-15T18:31:12.2606358Z Updating files:  79% (29928/37883)
+2026-09-15T18:31:12.2791390Z Updating files:  80% (30307/37883)
+2026-09-15T18:31:12.2968658Z Updating files:  81% (30686/37883)
+2026-09-15T18:31:12.3152012Z Updating files:  82% (31065/37883)
+2026-09-15T18:31:12.3315694Z Updating files:  83% (31443/37883)
+2026-09-15T18:31:12.3360063Z Updating files:  84% (31822/37883)
+2026-09-15T18:31:12.3409798Z Updating files:  85% (32201/37883)
+2026-09-15T18:31:12.3542891Z Updating files:  86% (32580/37883)
+2026-09-15T18:31:12.3833260Z Updating files:  87% (32959/37883)
+2026-09-15T18:31:12.4071624Z Updating files:  88% (33338/37883)
+2026-09-15T18:31:12.4249291Z Updating files:  89% (33716/37883)
+2026-09-15T18:31:12.4355259Z Updating files:  90% (34095/37883)
+2026-09-15T18:31:12.4460277Z Updating files:  91% (34474/37883)
+2026-09-15T18:31:12.4529044Z Updating files:  92% (34853/37883)
+2026-09-15T18:31:12.4575228Z Updating files:  93% (35232/37883)
+2026-09-15T18:31:12.4633284Z Updating files:  94% (35611/37883)
+2026-09-15T18:31:12.4718192Z Updating files:  95% (35989/37883)
+2026-09-15T18:31:12.4931958Z Updating files:  96% (36368/37883)
+2026-09-15T18:31:12.5056812Z Updating files:  97% (36747/37883)
+2026-09-15T18:31:12.5146175Z Updating files:  98% (37126/37883)
+2026-09-15T18:31:12.5480818Z Updating files:  99% (37505/37883)
+2026-09-15T18:31:12.5481262Z Updating files: 100% (37883/37883)
+2026-09-15T18:31:12.5481625Z Updating files: 100% (37883/37883), done.
+2026-09-15T18:31:12.6716313Z Note: switching to 'cabc668cf242a969994dc750f6a71d41b15d385e'.
+2026-09-15T18:31:12.6716661Z 
+2026-09-15T18:31:12.6716831Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-15T18:31:12.6717282Z changes and commit them, and you can discard any commits you make in this
+2026-09-15T18:31:12.6717883Z state without impacting any branches by switching back to a branch.
+2026-09-15T18:31:12.6718080Z 
+2026-09-15T18:31:12.6718248Z If you want to create a new branch to retain commits you create, you may
+2026-09-15T18:31:12.6718617Z do so (now or later) by using -c with the switch command. Example:
+2026-09-15T18:31:12.6718826Z 
+2026-09-15T18:31:12.6718924Z   git switch -c <new-branch-name>
+2026-09-15T18:31:12.6719105Z 
+2026-09-15T18:31:12.6719185Z Or undo this operation with:
+2026-09-15T18:31:12.6719365Z 
+2026-09-15T18:31:12.6719469Z   git switch -
+2026-09-15T18:31:12.6719573Z 
+2026-09-15T18:31:12.6719761Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-15T18:31:12.6719959Z 
+2026-09-15T18:31:12.6720176Z HEAD is now at cabc668c Start wider qualification on the combined isolated candidate
+2026-09-15T18:31:12.6764023Z ##[endgroup]
+2026-09-15T18:31:12.6764411Z ##[group]Setting up auth for fetching submodules
+2026-09-15T18:31:12.6770444Z [command]/usr/bin/git config --global http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-15T18:31:12.6803470Z [command]/usr/bin/git config --global --unset-all url.https://github.com/.insteadOf
+2026-09-15T18:31:12.6826554Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf git@github.com:
+2026-09-15T18:31:12.6856185Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf org-4367482@github.com:
+2026-09-15T18:31:12.6876750Z ##[endgroup]
+2026-09-15T18:31:12.6877299Z ##[group]Fetching submodules
+2026-09-15T18:31:12.6880342Z [command]/usr/bin/git submodule sync --recursive
+2026-09-15T18:31:12.7081077Z [command]/usr/bin/git -c protocol.version=2 submodule update --init --force --depth=1 --recursive
+2026-09-15T18:31:12.7290835Z [command]/usr/bin/git submodule foreach --recursive git config --local gc.auto 0
+2026-09-15T18:31:12.7487477Z ##[endgroup]
+2026-09-15T18:31:12.7488146Z ##[group]Persisting credentials for submodules
+2026-09-15T18:31:12.7492482Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'url\.https\:\/\/github\.com\/\.insteadOf' && git config --local --unset-all 'url.https://github.com/.insteadOf' || :"
+2026-09-15T18:31:12.7702872Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local 'http.https://github.com/.extraheader' 'AUTHORIZATION: basic ***' && git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-09-15T18:31:12.7896920Z [command]/usr/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'git@github.com:'
+2026-09-15T18:31:12.8094723Z [command]/usr/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'org-4367482@github.com:'
+2026-09-15T18:31:12.8290474Z ##[endgroup]
+2026-09-15T18:31:12.8320321Z [command]/usr/bin/git log -1 --format=%H
+2026-09-15T18:31:12.8337677Z cabc668cf242a969994dc750f6a71d41b15d385e
+2026-09-15T18:31:12.8542771Z ##[group]Run actions/setup-python@v6
+2026-09-15T18:31:12.8543090Z with:
+2026-09-15T18:31:12.8543339Z   python-version: 3.12
+2026-09-15T18:31:12.8543588Z   check-latest: false
+2026-09-15T18:31:12.8545591Z   token: ***
+2026-09-15T18:31:12.8545865Z   update-environment: true
+2026-09-15T18:31:12.8546137Z   allow-prereleases: false
+2026-09-15T18:31:12.8546407Z   freethreaded: false
+2026-09-15T18:31:12.8546646Z ##[endgroup]
+2026-09-15T18:31:12.9552056Z ##[group]Installed versions
+2026-09-15T18:31:12.9620270Z Successfully set up CPython (3.12.14)
+2026-09-15T18:31:12.9621149Z ##[endgroup]
+2026-09-15T18:31:12.9717810Z ##[group]Run set -euo pipefail
+2026-09-15T18:31:12.9718187Z [36;1mset -euo pipefail[0m
+2026-09-15T18:31:12.9718494Z [36;1mcmake -S . -G Ninja -B "${RUNNER_TEMP}/debugasan" \[0m
+2026-09-15T18:31:12.9718810Z [36;1m  -DCMAKE_BUILD_TYPE=Debug \[0m
+2026-09-15T18:31:12.9719134Z [36;1m  -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \[0m
+2026-09-15T18:31:12.9719558Z [36;1m  -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \[0m
+2026-09-15T18:31:12.9719940Z [36;1m  -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \[0m
+2026-09-15T18:31:12.9720260Z [36;1m  -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \[0m
+2026-09-15T18:31:12.9720603Z [36;1m  -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON \[0m
+2026-09-15T18:31:12.9721083Z [36;1m  [0m
+2026-09-15T18:31:12.9934893Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-15T18:31:12.9935319Z env:
+2026-09-15T18:31:12.9935613Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:31:12.9936107Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-15T18:31:12.9936460Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:31:12.9936770Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:31:12.9937115Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:31:12.9937457Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-15T18:31:12.9937830Z ##[endgroup]
+2026-09-15T18:31:15.1875804Z -- The C compiler identification is GNU 13.3.0
+2026-09-15T18:31:15.8982390Z -- The CXX compiler identification is GNU 13.3.0
+2026-09-15T18:31:15.9598403Z -- Detecting C compiler ABI info
+2026-09-15T18:31:16.3316413Z -- Detecting C compiler ABI info - done
+2026-09-15T18:31:16.3418526Z -- Check for working C compiler: /usr/bin/cc - skipped
+2026-09-15T18:31:16.3423178Z -- Detecting C compile features
+2026-09-15T18:31:16.3430070Z -- Detecting C compile features - done
+2026-09-15T18:31:16.3527093Z -- Detecting CXX compiler ABI info
+2026-09-15T18:31:16.4696889Z -- Detecting CXX compiler ABI info - done
+2026-09-15T18:31:16.4801847Z -- Check for working CXX compiler: /usr/bin/c++ - skipped
+2026-09-15T18:31:16.4803812Z -- Detecting CXX compile features
+2026-09-15T18:31:16.4808093Z -- Detecting CXX compile features - done
+2026-09-15T18:31:16.4958254Z -- CMake Version: 3.31.6
+2026-09-15T18:31:16.4958799Z -- CREXX Version: crexx-1.0.0-beta.3+local.gcabc668cf242
+2026-09-15T18:31:16.4959377Z -- CREXX Build Channel: local
+2026-09-15T18:31:16.4959713Z -- CREXX Build Timestamp: 20260915T183113Z
+2026-09-15T18:31:16.4960017Z -- CREXX Build Commit: cabc668cf242
+2026-09-15T18:31:16.4960333Z -- CMake Generator: Ninja
+2026-09-15T18:31:16.4960761Z -- cREXX build resources: profile=portable, vm-compile=2, native-link=2, backend=Ninja pools
+2026-09-15T18:31:16.5409675Z -- Fetching DSL-Syntax-Highlighter develop from https://github.com/adesutherland/DSL-Syntax-Highlighter.git
+2026-09-15T18:31:17.7932495Z -- Performing Test cxxflag__W
+2026-09-15T18:31:17.8538665Z -- Performing Test cxxflag__W - Success
+2026-09-15T18:31:17.8543598Z -- Performing Test cxxflag__Wall
+2026-09-15T18:31:17.9100657Z -- Performing Test cxxflag__Wall - Success
+2026-09-15T18:31:17.9105507Z -- Performing Test cxxflag__Wextra
+2026-09-15T18:31:17.9690782Z -- Performing Test cxxflag__Wextra - Success
+2026-09-15T18:31:17.9695754Z -- Performing Test cxxflag__Weffc__
+2026-09-15T18:31:18.1034176Z -- Performing Test cxxflag__Weffc__ - Success
+2026-09-15T18:31:18.1039466Z -- Performing Test cxxflag__pedantic
+2026-09-15T18:31:18.1676510Z -- Performing Test cxxflag__pedantic - Success
+2026-09-15T18:31:18.1682269Z -- Performing Test cxxflag__Wformat_2
+2026-09-15T18:31:18.2277780Z -- Performing Test cxxflag__Wformat_2 - Success
+2026-09-15T18:31:18.2282400Z -- Performing Test cxxflag__Wredundant_decls
+2026-09-15T18:31:18.2882539Z -- Performing Test cxxflag__Wredundant_decls - Success
+2026-09-15T18:31:18.2887317Z -- Performing Test cxxflag__Wsuggest_attribute_format
+2026-09-15T18:31:18.3462543Z -- Performing Test cxxflag__Wsuggest_attribute_format - Success
+2026-09-15T18:31:18.3467269Z -- Performing Test cxxflag__Wconversion
+2026-09-15T18:31:18.4054524Z -- Performing Test cxxflag__Wconversion - Success
+2026-09-15T18:31:18.4059148Z -- Performing Test cxxflag__Wsign_conversion
+2026-09-15T18:31:18.4642959Z -- Performing Test cxxflag__Wsign_conversion - Success
+2026-09-15T18:31:18.4647540Z -- Performing Test cxxflag__Werror_return_type
+2026-09-15T18:31:18.5231722Z -- Performing Test cxxflag__Werror_return_type - Success
+2026-09-15T18:31:18.5236593Z -- Performing Test cxxflag__Weverything
+2026-09-15T18:31:18.5407573Z -- Performing Test cxxflag__Weverything - Failed
+2026-09-15T18:31:18.5412234Z -- Performing Test cxxflag__fdiagnostics_color_always
+2026-09-15T18:31:18.5988721Z -- Performing Test cxxflag__fdiagnostics_color_always - Success
+2026-09-15T18:31:18.5989218Z -- C compiler flags: -fsanitize=address -fno-omit-frame-pointer
+2026-09-15T18:31:18.5990007Z -- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wsuggest-attribute=format -Wconversion -Wsign-conversion -Werror=return-type -fdiagnostics-color=always -fsanitize=address -fno-omit-frame-pointer
+2026-09-15T18:31:18.5990738Z -- Linker flags for executables: -fsanitize=address
+2026-09-15T18:31:18.5991228Z -- Linker flags for shared libs: -fsanitize=address
+2026-09-15T18:31:18.5991498Z -- Debug C compiler flags: -g
+2026-09-15T18:31:18.5991789Z -- Debug C++ compiler flags: -g
+2026-09-15T18:31:18.5992025Z -- Debug linker flags for executables: 
+2026-09-15T18:31:18.5992272Z -- Debug linker flags for shared libs: 
+2026-09-15T18:31:18.9735120Z -- Looking for sys/types.h
+2026-09-15T18:31:19.0636667Z -- Looking for sys/types.h - found
+2026-09-15T18:31:19.0637029Z -- Looking for sys/stat.h
+2026-09-15T18:31:19.1044358Z -- Looking for sys/stat.h - found
+2026-09-15T18:31:19.1044762Z -- Looking for fcntl.h
+2026-09-15T18:31:19.1429435Z -- Looking for fcntl.h - found
+2026-09-15T18:31:19.1430745Z -- Looking for unistd.h
+2026-09-15T18:31:19.2766348Z -- Looking for unistd.h - found
+2026-09-15T18:31:19.2766855Z -- Looking for io.h
+2026-09-15T18:31:19.2953654Z -- Looking for io.h - not found
+2026-09-15T18:31:19.2956069Z -- Writing config.h
+2026-09-15T18:31:19.3106037Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-09-15T18:31:19.6478317Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+2026-09-15T18:31:19.6485391Z -- Found Threads: TRUE
+2026-09-15T18:31:19.7905438Z -- cREXX VM handler panel: profile-20
+2026-09-15T18:31:20.0310427Z -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")
+2026-09-15T18:31:20.0313059Z -- cREXX VM core socket TLS backend: OPENSSL
+2026-09-15T18:31:20.0315900Z -- cREXX product VM: rxvm -> rxtvm (GNU)
+2026-09-15T18:31:27.6610594Z CMAKE_BUILD_TYPE=Debug
+2026-09-15T18:31:27.6611179Z -- llama.cpp version: 0.4.0
+2026-09-15T18:31:27.6620781Z -- Found Git: /usr/bin/git (found version "2.55.0")
+2026-09-15T18:31:27.6637493Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-15T18:31:27.6651416Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-15T18:31:27.6714954Z -- The ASM compiler identification is GNU
+2026-09-15T18:31:27.6726571Z -- Found assembler: /usr/bin/cc
+2026-09-15T18:31:27.6841794Z -- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+2026-09-15T18:31:27.7014142Z -- CMAKE_SYSTEM_PROCESSOR: x86_64
+2026-09-15T18:31:27.7014488Z -- GGML_SYSTEM_ARCH: x86
+2026-09-15T18:31:27.7028233Z -- Including CPU backend
+2026-09-15T18:31:27.7031677Z -- x86 detected
+2026-09-15T18:31:27.7033243Z -- Adding CPU backend variant ggml-cpu-x64:  
+2026-09-15T18:31:27.7036081Z -- x86 detected
+2026-09-15T18:31:27.7037625Z -- Adding CPU backend variant ggml-cpu-sse42: -msse4.2 GGML_SSE42
+2026-09-15T18:31:27.7040130Z -- x86 detected
+2026-09-15T18:31:27.7042044Z -- Adding CPU backend variant ggml-cpu-sandybridge: -msse4.2;-mavx GGML_SSE42;GGML_AVX
+2026-09-15T18:31:27.7044757Z -- x86 detected
+2026-09-15T18:31:27.7046346Z -- Adding CPU backend variant ggml-cpu-ivybridge: -msse4.2;-mf16c;-mavx GGML_SSE42;GGML_F16C;GGML_AVX
+2026-09-15T18:31:27.7048828Z -- x86 detected
+2026-09-15T18:31:27.7050499Z -- Adding CPU backend variant ggml-cpu-piledriver: -msse4.2;-mf16c;-mfma;-mavx GGML_SSE42;GGML_F16C;GGML_FMA;GGML_AVX
+2026-09-15T18:31:27.7053122Z -- x86 detected
+2026-09-15T18:31:27.7054995Z -- Adding CPU backend variant ggml-cpu-haswell: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2
+2026-09-15T18:31:27.7057465Z -- x86 detected
+2026-09-15T18:31:27.7059566Z -- Adding CPU backend variant ggml-cpu-skylakex: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512
+2026-09-15T18:31:27.7061859Z -- x86 detected
+2026-09-15T18:31:27.7064043Z -- Adding CPU backend variant ggml-cpu-cannonlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI
+2026-09-15T18:31:27.7066217Z -- x86 detected
+2026-09-15T18:31:27.7068518Z -- Adding CPU backend variant ggml-cpu-cascadelake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VNNI
+2026-09-15T18:31:27.7070621Z -- x86 detected
+2026-09-15T18:31:27.7073055Z -- Adding CPU backend variant ggml-cpu-icelake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI
+2026-09-15T18:31:27.7075181Z -- x86 detected
+2026-09-15T18:31:27.7077575Z -- Adding CPU backend variant ggml-cpu-cooperlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vnni;-mavx512bf16 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VNNI;GGML_AVX512_BF16
+2026-09-15T18:31:27.7079806Z -- x86 detected
+2026-09-15T18:31:27.7082338Z -- Adding CPU backend variant ggml-cpu-zen4: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni;-mavx512bf16 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI;GGML_AVX512_BF16
+2026-09-15T18:31:27.7084449Z -- x86 detected
+2026-09-15T18:31:27.7086428Z -- Adding CPU backend variant ggml-cpu-alderlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavxvnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX_VNNI
+2026-09-15T18:31:27.7088911Z -- x86 detected
+2026-09-15T18:31:27.7091473Z -- Adding CPU backend variant ggml-cpu-sapphirerapids: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni;-mavx512bf16;-mamx-tile;-mamx-int8 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI;GGML_AVX512_BF16;GGML_AMX_TILE;GGML_AMX_INT8
+2026-09-15T18:31:27.7132570Z -- ggml version: 0.23.0
+2026-09-15T18:31:27.7132916Z -- ggml commit:  5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+2026-09-15T18:31:28.4617538Z -- Found Python3: /opt/hostedtoolcache/Python/3.12.14/x64/bin/python3.12 (found version "3.12.14") found components: Interpreter
+2026-09-15T18:31:28.5713789Z -- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+2026-09-15T18:31:28.5714287Z -- GTK Gui support is disabled, skipping subdirectory.
+2026-09-15T18:31:28.5724314Z -- ODBC support is disabled; building the mock-driver qualification target only.
+2026-09-15T18:31:29.1417769Z -- Configuring done (16.0s)
+2026-09-15T18:31:29.7931974Z -- Generating done (0.6s)
+2026-09-15T18:31:29.7940877Z -- Build files have been written to: /home/runner/work/_temp/debugasan
+2026-09-15T18:31:29.8767912Z ##[group]Run set -euo pipefail
+2026-09-15T18:31:29.8768228Z [36;1mset -euo pipefail[0m
+2026-09-15T18:31:29.8768499Z [36;1msanitizer_args=([0m
+2026-09-15T18:31:29.8768779Z [36;1m  --build-dir "${RUNNER_TEMP}/debugasan"[0m
+2026-09-15T18:31:29.8769090Z [36;1m  --phase full[0m
+2026-09-15T18:31:29.8769332Z [36;1m  --build-jobs 4[0m
+2026-09-15T18:31:29.8769564Z [36;1m  --test-jobs 8[0m
+2026-09-15T18:31:29.8769855Z [36;1m  --exclude-label '^performance-measurement$'[0m
+2026-09-15T18:31:29.8770159Z [36;1m  --no-live-tail[0m
+2026-09-15T18:31:29.8770365Z [36;1m)[0m
+2026-09-15T18:31:29.8770582Z [36;1m[0m
+2026-09-15T18:31:29.8770790Z [36;1mif [ "linux" = "macos" ]; then[0m
+2026-09-15T18:31:29.8771291Z [36;1m  sanitizer_args+=(--build-leaks off --leaks off)[0m
+2026-09-15T18:31:29.8771627Z [36;1melse[0m
+2026-09-15T18:31:29.8771858Z [36;1m  sanitizer_args+=(--build-leaks on --leaks on)[0m
+2026-09-15T18:31:29.8772148Z [36;1mfi[0m
+2026-09-15T18:31:29.8772427Z [36;1m[0m
+2026-09-15T18:31:29.8772694Z [36;1mtools/asan-run.sh "${sanitizer_args[@]}"[0m
+2026-09-15T18:31:29.8793336Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-15T18:31:29.8793640Z env:
+2026-09-15T18:31:29.8793898Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:31:29.8794321Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-15T18:31:29.8794679Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:31:29.8795070Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:31:29.8795394Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:31:29.8795713Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-15T18:31:29.8796044Z ##[endgroup]
+2026-09-15T18:31:29.8897727Z ASan run directory: /home/runner/work/_temp/debugasan/asan-logs/20260915-183129-full
+2026-09-15T18:31:29.8901737Z ==> build
+2026-09-15T18:31:29.8902182Z     log: /home/runner/work/_temp/debugasan/asan-logs/20260915-183129-full/build.log
+2026-09-15T18:40:33.4546357Z ==> build failed with rc 1
+2026-09-15T18:40:33.4562597Z [894/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_dyn_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+2026-09-15T18:40:33.4563798Z [895/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+2026-09-15T18:40:33.4565081Z [896/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_full_tests.dir/mc_decimal_full_tests.c.o
+2026-09-15T18:40:33.4565618Z [897/2499] Linking C shared module bin/rxvm_db_decimal.rxvmplugin
+2026-09-15T18:40:33.4565989Z [898/2499] Linking C static library bin/rxvm_db_decimal_manual.a
+2026-09-15T18:40:33.4566461Z [899/2499] Building C object interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_tests.dir/db_decimal_tests.c.o
+2026-09-15T18:40:33.4567162Z [900/2499] Linking C executable bin/address_argv_fixture
+2026-09-15T18:40:33.4567597Z [901/2499] Linking C executable bin/address_spawn_transfer_fixture
+2026-09-15T18:40:33.4568018Z [902/2499] Linking C executable bin/linein_stdin_harness
+2026-09-15T18:40:33.4568492Z [903/2499] Building C object lib/rxfnsb/tests_functional/CMakeFiles/linein_tty_harness.dir/linein_tty_harness.c.o
+2026-09-15T18:40:33.4569125Z [904/2499] Linking C shared module bin/rx_rxpa_session_failure.rxplugin
+2026-09-15T18:40:33.4569480Z [905/2499] Linking C shared module bin/rx_arrays.rxplugin
+2026-09-15T18:40:33.4569810Z [906/2499] Linking C shared module bin/rxstats.rxplugin
+2026-09-15T18:40:33.4570108Z [907/2499] Linking C static library bin/rxstats_static.a
+2026-09-15T18:40:33.4570400Z [908/2499] Linking C shared module bin/rxvector.rxplugin
+2026-09-15T18:40:33.4570750Z [909/2499] Linking C static library bin/rxvector_static.a
+2026-09-15T18:40:33.4571255Z [910/2499] Linking C shared module bin/rx_stack.rxplugin
+2026-09-15T18:40:33.4571718Z [911/2499] Linking C static library bin/rx_stack_static.a
+2026-09-15T18:40:33.4572034Z [912/2499] Linking C shared module bin/rx_cipher.rxplugin
+2026-09-15T18:40:33.4572361Z [913/2499] Linking C static library bin/rx_cipher_static.a
+2026-09-15T18:40:33.4572744Z [914/2499] Linking C static library bin/rxsqlite_static.a
+2026-09-15T18:40:33.4573175Z [915/2499] Building C object lib/plugins/sqlite/CMakeFiles/rxsqlite_thread_test.dir/tests/rxsqlite_thread_test.c.o
+2026-09-15T18:40:33.4573615Z [916/2499] Linking C shared module bin/rxllama.rxplugin
+2026-09-15T18:40:33.4573954Z [917/2499] Linking C static library bin/rxllama_static.a
+2026-09-15T18:40:33.4574345Z [918/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmintp.c.o
+2026-09-15T18:40:33.4574870Z [919/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmworker.c.o
+2026-09-15T18:40:33.4575369Z [920/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmprogram.c.o
+2026-09-15T18:40:33.4575908Z [921/2499] Building CXX object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/provider_package.cpp.o
+2026-09-15T18:40:33.4576468Z [922/2499] Building C object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/__/__/__/binutils/rxsha256.c.o
+2026-09-15T18:40:33.4577082Z [923/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmexecutor.c.o
+2026-09-15T18:40:33.4577772Z [924/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_release_engine_smoke.dir/__/__/__/tests/native-inference/release_engine_smoke.cpp.o
+2026-09-15T18:40:33.4578425Z [925/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmchannel.c.o
+2026-09-15T18:40:33.4578952Z [926/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmchannel_process.c.o
+2026-09-15T18:40:33.4579535Z [927/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmprocessprotocol.c.o
+2026-09-15T18:40:33.4580129Z [928/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmprocessworker.c.o
+2026-09-15T18:40:33.4580706Z [929/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmbyteendpoint.c.o
+2026-09-15T18:40:33.4581472Z [930/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmchannel_byte.c.o
+2026-09-15T18:40:33.4582177Z [931/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmchannel_child.c.o
+2026-09-15T18:40:33.4582785Z [932/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmactive.c.o
+2026-09-15T18:40:33.4583404Z [933/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_package_utf8_cxx17.dir/__/__/__/tests/native-inference/package_utf8.cpp.o
+2026-09-15T18:40:33.4583989Z [934/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmload.c.o
+2026-09-15T18:40:33.4584500Z [935/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/interrupt.c.o
+2026-09-15T18:40:33.4584978Z [936/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxspawn.c.o
+2026-09-15T18:40:33.4585489Z [937/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxcrexxcmd.c.o
+2026-09-15T18:40:33.4585972Z [938/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/exitfunc.c.o
+2026-09-15T18:40:33.4586481Z [939/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxpacallmethod.c.o
+2026-09-15T18:40:33.4587059Z [940/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_package_utf8_cxx20.dir/__/__/__/tests/native-inference/package_utf8.cpp.o
+2026-09-15T18:40:33.4587670Z In file included from /home/runner/work/CREXX/CREXX/tests/native-inference/package_utf8.cpp:2:
+2026-09-15T18:40:33.4589354Z /home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp: In function ‘std::filesystem::__cxx11::path rxllama_package::relative(const std::filesystem::__cxx11::path&, const std::string&)’:
+2026-09-15T18:40:33.4590810Z /home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp:37:24: warning: ‘std::filesystem::__cxx11::path std::filesystem::__cxx11::u8path(const _Source&) [with _Source = std::__cxx11::basic_string<char>; _Require = path; _CharT = char]’ is deprecated: use 'path((const char8_t*)&*source)' instead [-Wdeprecated-declarations]
+2026-09-15T18:40:33.4591858Z    37 |     auto p = fs::u8path(name);
+2026-09-15T18:40:33.4592162Z       |              ~~~~~~~~~~^~~~~~
+2026-09-15T18:40:33.4592485Z In file included from /usr/include/c++/13/filesystem:49,
+2026-09-15T18:40:33.4592904Z                  from /home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp:3:
+2026-09-15T18:40:33.4593320Z /usr/include/c++/13/bits/fs_path.h:843:5: note: declared here
+2026-09-15T18:40:33.4593678Z   843 |     u8path(const _Source& __source)
+2026-09-15T18:40:33.4593969Z       |     ^~~~~~
+2026-09-15T18:40:33.4594404Z /home/runner/work/CREXX/CREXX/tests/native-inference/package_utf8.cpp: In function ‘int main()’:
+2026-09-15T18:40:33.4595745Z /home/runner/work/CREXX/CREXX/tests/native-inference/package_utf8.cpp:11:50: warning: ‘std::filesystem::__cxx11::path std::filesystem::__cxx11::u8path(const _Source&) [with _Source = std::__cxx11::basic_string<char>; _Require = path; _CharT = char]’ is deprecated: use 'path((const char8_t*)&*source)' instead [-Wdeprecated-declarations]
+2026-09-15T18:40:33.4596737Z    11 |         const auto path = std::filesystem::u8path(expected);
+2026-09-15T18:40:33.4597096Z       |                           ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+2026-09-15T18:40:33.4597433Z /usr/include/c++/13/bits/fs_path.h:843:5: note: declared here
+2026-09-15T18:40:33.4597755Z   843 |     u8path(const _Source& __source)
+2026-09-15T18:40:33.4598082Z       |     ^~~~~~
+2026-09-15T18:40:33.4598703Z [941/2499] Building C object lib/plugins/llama/CMakeFiles/rxllama_text_old_host.dir/__/__/__/tests/native-inference/text_old_host.c.o
+2026-09-15T18:40:33.4599350Z [942/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxpafuncs.c.o
+2026-09-15T18:40:33.4599882Z [943/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvml/rxvm_run.c.o
+2026-09-15T18:40:33.4600553Z [944/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_embedding_reference.dir/__/__/__/tests/native-inference/embedding_reference_control.cpp.o
+2026-09-15T18:40:33.4601643Z [945/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o
+2026-09-15T18:40:33.4602384Z FAILED: [code=1] lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o 
+2026-09-15T18:40:33.4604465Z /usr/bin/c++ -DGGML_BACKEND_DL -DGGML_SHARED -DLLAMA_SHARED -I/home/runner/work/CREXX/CREXX/lib/plugins/llama -I/home/runner/work/_temp/debugasan/_deps/crexx_llama_source-src/src/../include -I/home/runner/work/_temp/debugasan/_deps/crexx_llama_source-src/ggml/src/../include -fsanitize=address -fno-omit-frame-pointer -g -MD -MT lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o -MF lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o.d -o lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o -c /home/runner/work/CREXX/CREXX/tests/native-inference/generation_bridge.cpp
+2026-09-15T18:40:33.4606443Z In file included from /home/runner/work/CREXX/CREXX/tests/native-inference/generation_bridge.cpp:47:
+2026-09-15T18:40:33.4607075Z /home/runner/work/CREXX/CREXX/tests/native-inference/generation_qualification.hpp:15:11: fatal error: sanitizer/allocator_interface.h: No such file or directory
+2026-09-15T18:40:33.4607597Z    15 | # include <sanitizer/allocator_interface.h>
+2026-09-15T18:40:33.4607929Z       |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-09-15T18:40:33.4608197Z compilation terminated.
+2026-09-15T18:40:33.4608640Z [946/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_embedding_bridge.dir/__/__/__/tests/native-inference/embedding_bridge.cpp.o
+2026-09-15T18:40:33.4609236Z [947/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmintp.c.o
+2026-09-15T18:40:33.4609624Z [948/2499] Create REXX B Lexer...
+2026-09-15T18:40:33.4609876Z ninja: build stopped: subcommand failed.
+2026-09-15T18:40:33.4619657Z ##[error]Process completed with exit code 1.
+2026-09-15T18:40:33.4685036Z ##[group]Run actions/upload-artifact@v7
+2026-09-15T18:40:33.4685347Z with:
+2026-09-15T18:40:33.4685577Z   name: sanitizer-logs-linux
+2026-09-15T18:40:33.4686039Z   path: /home/runner/work/_temp/debugasan/asan-logs
+/home/runner/work/_temp/debugasan/lib/plugins/llama/tests/release-smoke
+
+2026-09-15T18:40:33.4686496Z   if-no-files-found: error
+2026-09-15T18:40:33.4686730Z   retention-days: 14
+2026-09-15T18:40:33.4686999Z   compression-level: 6
+2026-09-15T18:40:33.4687228Z   overwrite: false
+2026-09-15T18:40:33.4687456Z   include-hidden-files: false
+2026-09-15T18:40:33.4687732Z   archive: true
+2026-09-15T18:40:33.4687930Z env:
+2026-09-15T18:40:33.4688238Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:40:33.4688615Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-15T18:40:33.4689004Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:40:33.4689464Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:40:33.4689832Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T18:40:33.4690182Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-15T18:40:33.4690478Z ##[endgroup]
+2026-09-15T18:40:33.5728571Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-09-15T18:40:33.5729888Z The least common ancestor is /home/runner/work/_temp/debugasan. This will be the root directory of the artifact
+2026-09-15T18:40:33.5730481Z With the provided path, there will be 10 files uploaded
+2026-09-15T18:40:33.5733195Z Artifact name is valid!
+2026-09-15T18:40:33.5733526Z Root directory input is valid!
+2026-09-15T18:40:33.8459373Z Uploading artifact: sanitizer-logs-linux.zip
+2026-09-15T18:40:33.8487378Z Beginning upload of artifact content to blob storage
+2026-09-15T18:40:34.0732986Z Uploaded bytes 48188
+2026-09-15T18:40:34.1483686Z Finished uploading artifact content to blob storage!
+2026-09-15T18:40:34.1485488Z SHA256 digest of uploaded artifact is 0e3ebc0bd9ac2f772d29dc9c7baeb87a6b0742574904a36459978e0d1c51a22f
+2026-09-15T18:40:34.1492573Z Finalizing artifact upload
+2026-09-15T18:40:34.4243034Z Artifact sanitizer-logs-linux successfully finalized. Artifact ID 10413205206
+2026-09-15T18:40:34.4243824Z Artifact sanitizer-logs-linux has been successfully uploaded! Final size is 48188 bytes. Artifact ID is 10413205206
+2026-09-15T18:40:34.4248012Z Artifact download URL: https://github.com/adesutherland/CREXX/actions/runs/35007947861/artifacts/10413205206
+2026-09-15T18:40:34.4394773Z Post job cleanup.
+2026-09-15T18:40:34.5015158Z [command]/usr/bin/git version
+2026-09-15T18:40:34.5043100Z git version 2.55.0
+2026-09-15T18:40:34.5069800Z Temporarily overriding HOME='/home/runner/work/_temp/33377163-abe4-4976-b957-d4894b01b44a' before making global git config changes
+2026-09-15T18:40:34.5071087Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T18:40:34.5074327Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/CREXX/CREXX
+2026-09-15T18:40:34.5101884Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T18:40:34.5127384Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-15T18:40:34.5323539Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T18:40:34.5344471Z http.https://github.com/.extraheader
+2026-09-15T18:40:34.5350149Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-15T18:40:34.5374342Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-15T18:40:34.5557370Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T18:40:34.5577877Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-15T18:40:34.5878548Z Cleaning up orphan processes

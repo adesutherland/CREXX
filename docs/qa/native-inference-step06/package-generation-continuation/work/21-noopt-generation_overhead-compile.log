@@ -1,0 +1,5 @@
+argv=[PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/bin/rxc'), '--no-exe-import', '-n', '-i', PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/bin'), '-o', PosixPath('/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-generation_overhead-dynamic'), PosixPath('/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-generation_overhead.crexx')]
+cwd=/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work
+rc=0
+Warning in noopt-generation_overhead.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file

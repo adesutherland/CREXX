@@ -1,0 +1,19 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload
+    Start  4: native_inference_smol_cpu
+1/7 Test  #4: native_inference_smol_cpu ............   Passed   26.44 sec
+    Start  5: native_inference_co_resident_cpu
+2/7 Test  #5: native_inference_co_resident_cpu .....   Passed    7.79 sec
+    Start  7: native_inference_smol_metal
+3/7 Test  #7: native_inference_smol_metal ..........   Passed   17.41 sec
+    Start  8: native_inference_co_resident_metal
+4/7 Test  #8: native_inference_co_resident_metal ...   Passed    2.87 sec
+    Start  9: native_inference_smol_cpu_threads4
+5/7 Test  #9: native_inference_smol_cpu_threads4 ...   Passed   23.57 sec
+    Start 10: native_inference_scratch
+6/7 Test #10: native_inference_scratch .............   Passed    0.43 sec
+    Start 12: native_inference_generated_scratch
+7/7 Test #12: native_inference_generated_scratch ...   Passed    0.47 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) =  78.99 sec

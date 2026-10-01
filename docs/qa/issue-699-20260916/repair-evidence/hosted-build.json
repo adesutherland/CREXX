@@ -1,0 +1,1203 @@
+{
+  "conclusion": "success",
+  "createdAt": "2026-09-16T16:13:37Z",
+  "headSha": "f786b15d86a66b52c8ab1ce631054afc7a5937e8",
+  "jobs": [
+    {
+      "completedAt": "2026-09-16T16:13:53Z",
+      "conclusion": "success",
+      "databaseId": 104876837972,
+      "name": "Determine Version Metadata",
+      "startedAt": "2026-09-16T16:13:41Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-16T16:13:42Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-16T16:13:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:13:51Z",
+          "conclusion": "success",
+          "name": "Checkout version file",
+          "number": 2,
+          "startedAt": "2026-09-16T16:13:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:13:51Z",
+          "conclusion": "success",
+          "name": "Determine metadata",
+          "number": 3,
+          "startedAt": "2026-09-16T16:13:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:13:51Z",
+          "conclusion": "success",
+          "name": "Check Windows publication safeguards",
+          "number": 4,
+          "startedAt": "2026-09-16T16:13:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:13:52Z",
+          "conclusion": "success",
+          "name": "Post Checkout version file",
+          "number": 8,
+          "startedAt": "2026-09-16T16:13:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:13:52Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-09-16T16:13:52Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324/job/104876837972"
+    },
+    {
+      "completedAt": "2026-09-16T16:29:35Z",
+      "conclusion": "success",
+      "databaseId": 104876934506,
+      "name": "Linux Debug Optimizer Parity",
+      "startedAt": "2026-09-16T16:13:56Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-16T16:13:58Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-16T16:13:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:06Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-16T16:13:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:23Z",
+          "conclusion": "success",
+          "name": "Configure Debug parity build",
+          "number": 3,
+          "startedAt": "2026-09-16T16:14:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:29:33Z",
+          "conclusion": "success",
+          "name": "Run optimized/non-optimized correctness parity",
+          "number": 4,
+          "startedAt": "2026-09-16T16:14:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:29:33Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 8,
+          "startedAt": "2026-09-16T16:29:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:29:33Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-09-16T16:29:33Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324/job/104876934506"
+    },
+    {
+      "completedAt": "2026-09-16T16:20:11Z",
+      "conclusion": "success",
+      "databaseId": 104876934518,
+      "name": "macOS arm64",
+      "startedAt": "2026-09-16T16:14:00Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-16T16:14:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-16T16:14:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:10Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-16T16:14:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:10Z",
+          "conclusion": "skipped",
+          "name": "Update toolchain (MSYS2)",
+          "number": 3,
+          "startedAt": "2026-09-16T16:14:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:19Z",
+          "conclusion": "success",
+          "name": "Configure",
+          "number": 4,
+          "startedAt": "2026-09-16T16:14:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:19Z",
+          "conclusion": "skipped",
+          "name": "Configure",
+          "number": 5,
+          "startedAt": "2026-09-16T16:14:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:17:08Z",
+          "conclusion": "success",
+          "name": "Build Release user product",
+          "number": 6,
+          "startedAt": "2026-09-16T16:14:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:17:08Z",
+          "conclusion": "skipped",
+          "name": "Build Release user product",
+          "number": 7,
+          "startedAt": "2026-09-16T16:17:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:18:50Z",
+          "conclusion": "success",
+          "name": "Run fast candidate QA",
+          "number": 8,
+          "startedAt": "2026-09-16T16:17:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:18:51Z",
+          "conclusion": "skipped",
+          "name": "Run fast candidate QA",
+          "number": 9,
+          "startedAt": "2026-09-16T16:18:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:18:51Z",
+          "conclusion": "success",
+          "name": "Stage release payload",
+          "number": 10,
+          "startedAt": "2026-09-16T16:18:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:18:51Z",
+          "conclusion": "skipped",
+          "name": "Stage release payload",
+          "number": 11,
+          "startedAt": "2026-09-16T16:18:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:18:52Z",
+          "conclusion": "success",
+          "name": "Package exact-SHA user-test archive",
+          "number": 12,
+          "startedAt": "2026-09-16T16:18:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:18:52Z",
+          "conclusion": "skipped",
+          "name": "Package exact-SHA user-test archive",
+          "number": 13,
+          "startedAt": "2026-09-16T16:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:18:54Z",
+          "conclusion": "success",
+          "name": "Upload exact-SHA user-test archive",
+          "number": 14,
+          "startedAt": "2026-09-16T16:18:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:18:55Z",
+          "conclusion": "success",
+          "name": "Configure Apple signing keychain",
+          "number": 15,
+          "startedAt": "2026-09-16T16:18:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:19:00Z",
+          "conclusion": "success",
+          "name": "Sign macOS release payload",
+          "number": 16,
+          "startedAt": "2026-09-16T16:18:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:19:02Z",
+          "conclusion": "success",
+          "name": "Verify macOS signatures",
+          "number": 17,
+          "startedAt": "2026-09-16T16:19:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:19:03Z",
+          "conclusion": "success",
+          "name": "Package release asset",
+          "number": 18,
+          "startedAt": "2026-09-16T16:19:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:19:06Z",
+          "conclusion": "success",
+          "name": "Package macOS installer",
+          "number": 19,
+          "startedAt": "2026-09-16T16:19:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:19:06Z",
+          "conclusion": "skipped",
+          "name": "Package Linux Debian dev snapshot",
+          "number": 20,
+          "startedAt": "2026-09-16T16:19:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:19:06Z",
+          "conclusion": "skipped",
+          "name": "Package release asset",
+          "number": 21,
+          "startedAt": "2026-09-16T16:19:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:19:06Z",
+          "conclusion": "skipped",
+          "name": "Build and test unsigned Windows snapshot installer",
+          "number": 22,
+          "startedAt": "2026-09-16T16:19:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:19:06Z",
+          "conclusion": "success",
+          "name": "Report macOS package status",
+          "number": 23,
+          "startedAt": "2026-09-16T16:19:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:19:37Z",
+          "conclusion": "success",
+          "name": "Notarize macOS ZIP asset",
+          "number": 24,
+          "startedAt": "2026-09-16T16:19:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:20:04Z",
+          "conclusion": "success",
+          "name": "Notarize and staple macOS installer",
+          "number": 25,
+          "startedAt": "2026-09-16T16:19:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:20:06Z",
+          "conclusion": "success",
+          "name": "Upload packaged asset",
+          "number": 26,
+          "startedAt": "2026-09-16T16:20:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:20:06Z",
+          "conclusion": "success",
+          "name": "Cleanup Apple signing keychain",
+          "number": 27,
+          "startedAt": "2026-09-16T16:20:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:20:06Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 54,
+          "startedAt": "2026-09-16T16:20:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:20:08Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 55,
+          "startedAt": "2026-09-16T16:20:06Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324/job/104876934518"
+    },
+    {
+      "completedAt": "2026-09-16T16:25:42Z",
+      "conclusion": "success",
+      "databaseId": 104876934577,
+      "name": "Windows x64",
+      "startedAt": "2026-09-16T16:13:57Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-16T16:13:59Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-16T16:13:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:20Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-16T16:13:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:15:51Z",
+          "conclusion": "success",
+          "name": "Update toolchain (MSYS2)",
+          "number": 3,
+          "startedAt": "2026-09-16T16:14:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:15:51Z",
+          "conclusion": "skipped",
+          "name": "Configure",
+          "number": 4,
+          "startedAt": "2026-09-16T16:15:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:15:58Z",
+          "conclusion": "success",
+          "name": "Configure",
+          "number": 5,
+          "startedAt": "2026-09-16T16:15:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:15:58Z",
+          "conclusion": "skipped",
+          "name": "Build Release user product",
+          "number": 6,
+          "startedAt": "2026-09-16T16:15:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:08Z",
+          "conclusion": "success",
+          "name": "Build Release user product",
+          "number": 7,
+          "startedAt": "2026-09-16T16:15:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:08Z",
+          "conclusion": "skipped",
+          "name": "Run fast candidate QA",
+          "number": 8,
+          "startedAt": "2026-09-16T16:22:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:09Z",
+          "conclusion": "success",
+          "name": "Run fast candidate QA",
+          "number": 9,
+          "startedAt": "2026-09-16T16:22:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:09Z",
+          "conclusion": "skipped",
+          "name": "Stage release payload",
+          "number": 10,
+          "startedAt": "2026-09-16T16:24:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:10Z",
+          "conclusion": "success",
+          "name": "Stage release payload",
+          "number": 11,
+          "startedAt": "2026-09-16T16:24:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:10Z",
+          "conclusion": "skipped",
+          "name": "Package exact-SHA user-test archive",
+          "number": 12,
+          "startedAt": "2026-09-16T16:24:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:13Z",
+          "conclusion": "success",
+          "name": "Package exact-SHA user-test archive",
+          "number": 13,
+          "startedAt": "2026-09-16T16:24:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:16Z",
+          "conclusion": "success",
+          "name": "Upload exact-SHA user-test archive",
+          "number": 14,
+          "startedAt": "2026-09-16T16:24:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:16Z",
+          "conclusion": "skipped",
+          "name": "Configure Apple signing keychain",
+          "number": 15,
+          "startedAt": "2026-09-16T16:24:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:16Z",
+          "conclusion": "skipped",
+          "name": "Sign macOS release payload",
+          "number": 16,
+          "startedAt": "2026-09-16T16:24:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:16Z",
+          "conclusion": "skipped",
+          "name": "Verify macOS signatures",
+          "number": 17,
+          "startedAt": "2026-09-16T16:24:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:16Z",
+          "conclusion": "skipped",
+          "name": "Package release asset",
+          "number": 18,
+          "startedAt": "2026-09-16T16:24:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:16Z",
+          "conclusion": "skipped",
+          "name": "Package macOS installer",
+          "number": 19,
+          "startedAt": "2026-09-16T16:24:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:16Z",
+          "conclusion": "skipped",
+          "name": "Package Linux Debian dev snapshot",
+          "number": 20,
+          "startedAt": "2026-09-16T16:24:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:18Z",
+          "conclusion": "success",
+          "name": "Package release asset",
+          "number": 21,
+          "startedAt": "2026-09-16T16:24:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:33Z",
+          "conclusion": "success",
+          "name": "Build and test unsigned Windows snapshot installer",
+          "number": 22,
+          "startedAt": "2026-09-16T16:24:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:33Z",
+          "conclusion": "skipped",
+          "name": "Report macOS package status",
+          "number": 23,
+          "startedAt": "2026-09-16T16:25:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:33Z",
+          "conclusion": "skipped",
+          "name": "Notarize macOS ZIP asset",
+          "number": 24,
+          "startedAt": "2026-09-16T16:25:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:33Z",
+          "conclusion": "skipped",
+          "name": "Notarize and staple macOS installer",
+          "number": 25,
+          "startedAt": "2026-09-16T16:25:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:36Z",
+          "conclusion": "success",
+          "name": "Upload packaged asset",
+          "number": 26,
+          "startedAt": "2026-09-16T16:25:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:36Z",
+          "conclusion": "skipped",
+          "name": "Cleanup Apple signing keychain",
+          "number": 27,
+          "startedAt": "2026-09-16T16:25:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:37Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 54,
+          "startedAt": "2026-09-16T16:25:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:38Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 55,
+          "startedAt": "2026-09-16T16:25:37Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324/job/104876934577"
+    },
+    {
+      "completedAt": "2026-09-16T16:22:31Z",
+      "conclusion": "success",
+      "databaseId": 104876934601,
+      "name": "Linux x64",
+      "startedAt": "2026-09-16T16:13:56Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-16T16:13:58Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-16T16:13:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:04Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-16T16:13:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:04Z",
+          "conclusion": "skipped",
+          "name": "Update toolchain (MSYS2)",
+          "number": 3,
+          "startedAt": "2026-09-16T16:14:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:09Z",
+          "conclusion": "success",
+          "name": "Configure",
+          "number": 4,
+          "startedAt": "2026-09-16T16:14:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:09Z",
+          "conclusion": "skipped",
+          "name": "Configure",
+          "number": 5,
+          "startedAt": "2026-09-16T16:14:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:20:17Z",
+          "conclusion": "success",
+          "name": "Build Release user product",
+          "number": 6,
+          "startedAt": "2026-09-16T16:14:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:20:17Z",
+          "conclusion": "skipped",
+          "name": "Build Release user product",
+          "number": 7,
+          "startedAt": "2026-09-16T16:20:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:07Z",
+          "conclusion": "success",
+          "name": "Run fast candidate QA",
+          "number": 8,
+          "startedAt": "2026-09-16T16:20:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:07Z",
+          "conclusion": "skipped",
+          "name": "Run fast candidate QA",
+          "number": 9,
+          "startedAt": "2026-09-16T16:22:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:07Z",
+          "conclusion": "success",
+          "name": "Stage release payload",
+          "number": 10,
+          "startedAt": "2026-09-16T16:22:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:07Z",
+          "conclusion": "skipped",
+          "name": "Stage release payload",
+          "number": 11,
+          "startedAt": "2026-09-16T16:22:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:10Z",
+          "conclusion": "success",
+          "name": "Package exact-SHA user-test archive",
+          "number": 12,
+          "startedAt": "2026-09-16T16:22:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:10Z",
+          "conclusion": "skipped",
+          "name": "Package exact-SHA user-test archive",
+          "number": 13,
+          "startedAt": "2026-09-16T16:22:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:11Z",
+          "conclusion": "success",
+          "name": "Upload exact-SHA user-test archive",
+          "number": 14,
+          "startedAt": "2026-09-16T16:22:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:11Z",
+          "conclusion": "skipped",
+          "name": "Configure Apple signing keychain",
+          "number": 15,
+          "startedAt": "2026-09-16T16:22:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:11Z",
+          "conclusion": "skipped",
+          "name": "Sign macOS release payload",
+          "number": 16,
+          "startedAt": "2026-09-16T16:22:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:11Z",
+          "conclusion": "skipped",
+          "name": "Verify macOS signatures",
+          "number": 17,
+          "startedAt": "2026-09-16T16:22:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:14Z",
+          "conclusion": "success",
+          "name": "Package release asset",
+          "number": 18,
+          "startedAt": "2026-09-16T16:22:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:14Z",
+          "conclusion": "skipped",
+          "name": "Package macOS installer",
+          "number": 19,
+          "startedAt": "2026-09-16T16:22:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:27Z",
+          "conclusion": "success",
+          "name": "Package Linux Debian dev snapshot",
+          "number": 20,
+          "startedAt": "2026-09-16T16:22:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:27Z",
+          "conclusion": "skipped",
+          "name": "Package release asset",
+          "number": 21,
+          "startedAt": "2026-09-16T16:22:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:27Z",
+          "conclusion": "skipped",
+          "name": "Build and test unsigned Windows snapshot installer",
+          "number": 22,
+          "startedAt": "2026-09-16T16:22:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:27Z",
+          "conclusion": "skipped",
+          "name": "Report macOS package status",
+          "number": 23,
+          "startedAt": "2026-09-16T16:22:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:27Z",
+          "conclusion": "skipped",
+          "name": "Notarize macOS ZIP asset",
+          "number": 24,
+          "startedAt": "2026-09-16T16:22:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:27Z",
+          "conclusion": "skipped",
+          "name": "Notarize and staple macOS installer",
+          "number": 25,
+          "startedAt": "2026-09-16T16:22:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:29Z",
+          "conclusion": "success",
+          "name": "Upload packaged asset",
+          "number": 26,
+          "startedAt": "2026-09-16T16:22:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:29Z",
+          "conclusion": "skipped",
+          "name": "Cleanup Apple signing keychain",
+          "number": 27,
+          "startedAt": "2026-09-16T16:22:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:30Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 54,
+          "startedAt": "2026-09-16T16:22:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:22:30Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 55,
+          "startedAt": "2026-09-16T16:22:30Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324/job/104876934601"
+    },
+    {
+      "completedAt": "2026-09-16T16:26:25Z",
+      "conclusion": "success",
+      "databaseId": 104876934607,
+      "name": "macOS x86_64",
+      "startedAt": "2026-09-16T16:13:58Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-16T16:14:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-16T16:13:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:22Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-16T16:14:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:22Z",
+          "conclusion": "skipped",
+          "name": "Update toolchain (MSYS2)",
+          "number": 3,
+          "startedAt": "2026-09-16T16:14:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:43Z",
+          "conclusion": "success",
+          "name": "Configure",
+          "number": 4,
+          "startedAt": "2026-09-16T16:14:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:43Z",
+          "conclusion": "skipped",
+          "name": "Configure",
+          "number": 5,
+          "startedAt": "2026-09-16T16:14:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:21:43Z",
+          "conclusion": "success",
+          "name": "Build Release user product",
+          "number": 6,
+          "startedAt": "2026-09-16T16:14:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:21:43Z",
+          "conclusion": "skipped",
+          "name": "Build Release user product",
+          "number": 7,
+          "startedAt": "2026-09-16T16:21:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:56Z",
+          "conclusion": "success",
+          "name": "Run fast candidate QA",
+          "number": 8,
+          "startedAt": "2026-09-16T16:21:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:56Z",
+          "conclusion": "skipped",
+          "name": "Run fast candidate QA",
+          "number": 9,
+          "startedAt": "2026-09-16T16:24:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:56Z",
+          "conclusion": "success",
+          "name": "Stage release payload",
+          "number": 10,
+          "startedAt": "2026-09-16T16:24:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:56Z",
+          "conclusion": "skipped",
+          "name": "Stage release payload",
+          "number": 11,
+          "startedAt": "2026-09-16T16:24:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:58Z",
+          "conclusion": "success",
+          "name": "Package exact-SHA user-test archive",
+          "number": 12,
+          "startedAt": "2026-09-16T16:24:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:24:58Z",
+          "conclusion": "skipped",
+          "name": "Package exact-SHA user-test archive",
+          "number": 13,
+          "startedAt": "2026-09-16T16:24:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:01Z",
+          "conclusion": "success",
+          "name": "Upload exact-SHA user-test archive",
+          "number": 14,
+          "startedAt": "2026-09-16T16:24:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:02Z",
+          "conclusion": "success",
+          "name": "Configure Apple signing keychain",
+          "number": 15,
+          "startedAt": "2026-09-16T16:25:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:08Z",
+          "conclusion": "success",
+          "name": "Sign macOS release payload",
+          "number": 16,
+          "startedAt": "2026-09-16T16:25:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:11Z",
+          "conclusion": "success",
+          "name": "Verify macOS signatures",
+          "number": 17,
+          "startedAt": "2026-09-16T16:25:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:13Z",
+          "conclusion": "success",
+          "name": "Package release asset",
+          "number": 18,
+          "startedAt": "2026-09-16T16:25:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:16Z",
+          "conclusion": "success",
+          "name": "Package macOS installer",
+          "number": 19,
+          "startedAt": "2026-09-16T16:25:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:16Z",
+          "conclusion": "skipped",
+          "name": "Package Linux Debian dev snapshot",
+          "number": 20,
+          "startedAt": "2026-09-16T16:25:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:16Z",
+          "conclusion": "skipped",
+          "name": "Package release asset",
+          "number": 21,
+          "startedAt": "2026-09-16T16:25:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:16Z",
+          "conclusion": "skipped",
+          "name": "Build and test unsigned Windows snapshot installer",
+          "number": 22,
+          "startedAt": "2026-09-16T16:25:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:16Z",
+          "conclusion": "success",
+          "name": "Report macOS package status",
+          "number": 23,
+          "startedAt": "2026-09-16T16:25:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:25:49Z",
+          "conclusion": "success",
+          "name": "Notarize macOS ZIP asset",
+          "number": 24,
+          "startedAt": "2026-09-16T16:25:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:26:17Z",
+          "conclusion": "success",
+          "name": "Notarize and staple macOS installer",
+          "number": 25,
+          "startedAt": "2026-09-16T16:25:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:26:21Z",
+          "conclusion": "success",
+          "name": "Upload packaged asset",
+          "number": 26,
+          "startedAt": "2026-09-16T16:26:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:26:21Z",
+          "conclusion": "success",
+          "name": "Cleanup Apple signing keychain",
+          "number": 27,
+          "startedAt": "2026-09-16T16:26:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:26:21Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 54,
+          "startedAt": "2026-09-16T16:26:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:26:22Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 55,
+          "startedAt": "2026-09-16T16:26:21Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324/job/104876934607"
+    },
+    {
+      "completedAt": "2026-09-16T16:13:54Z",
+      "conclusion": "skipped",
+      "databaseId": 104876936555,
+      "name": "Comprehensive ${{ matrix.name }}",
+      "startedAt": "2026-09-16T16:13:54Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324/job/104876936555"
+    },
+    {
+      "completedAt": "2026-09-16T16:26:25Z",
+      "conclusion": "skipped",
+      "databaseId": 104881474916,
+      "name": "Create GitHub Release",
+      "startedAt": "2026-09-16T16:26:26Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324/job/104881474916"
+    },
+    {
+      "completedAt": "2026-09-16T16:30:22Z",
+      "conclusion": "success",
+      "databaseId": 104882607680,
+      "name": "Publish Dev Snapshot",
+      "startedAt": "2026-09-16T16:29:39Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-16T16:29:41Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-16T16:29:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:29:50Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-09-16T16:29:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:29:50Z",
+          "conclusion": "success",
+          "name": "Verify develop still points at this commit",
+          "number": 3,
+          "startedAt": "2026-09-16T16:29:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:29:54Z",
+          "conclusion": "success",
+          "name": "Download packaged assets",
+          "number": 4,
+          "startedAt": "2026-09-16T16:29:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:29:54Z",
+          "conclusion": "success",
+          "name": "Collect dev snapshot assets",
+          "number": 5,
+          "startedAt": "2026-09-16T16:29:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:29:54Z",
+          "conclusion": "success",
+          "name": "Prepare dev snapshot notes",
+          "number": 6,
+          "startedAt": "2026-09-16T16:29:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:30:20Z",
+          "conclusion": "success",
+          "name": "Publish dev snapshot release",
+          "number": 7,
+          "startedAt": "2026-09-16T16:29:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:30:20Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 14,
+          "startedAt": "2026-09-16T16:30:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:30:20Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 15,
+          "startedAt": "2026-09-16T16:30:20Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324/job/104882607680"
+    }
+  ],
+  "status": "completed",
+  "updatedAt": "2026-09-16T16:30:23Z",
+  "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521324"
+}

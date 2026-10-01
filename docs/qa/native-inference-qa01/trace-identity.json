@@ -1,0 +1,8 @@
+{
+  "full_debug_dump_sha256": "5abee8592eb322840ee9769511eaf0ff48f8f56212f2de36500e1403d60856f0",
+  "bytes": 70854233,
+  "excerpt_line_start": 1169711,
+  "excerpt_line_end": 1169820,
+  "excerpt_decoding": "UTF-8 with invalid diagnostic bytes replaced",
+  "scratch_dump": "/tmp/ni-s4-qa01/minimal-debug.log"
+}

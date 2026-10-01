@@ -1,0 +1,167 @@
+[
+  {
+    "label": "bge-preset-parity",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_embedding_bridge",
+      "cpu",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+      "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 7.084
+  },
+  {
+    "label": "smol-preset-parity",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_generation_bridge",
+      "cpu",
+      "/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf",
+      "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 16.99
+  },
+  {
+    "label": "stories-generation",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_model_compatibility",
+      "/Users/adrian/Library/Caches/crexx/native-inference/stories260K.gguf",
+      "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+      "generation",
+      "64"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.341
+  },
+  {
+    "label": "common-embedding-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-trained/common-embedding",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/common_embedding.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.188
+  },
+  {
+    "label": "common-embedding-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-trained/common-embedding",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-trained/common-embedding"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.269
+  },
+  {
+    "label": "common-embedding-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-trained/common-embedding-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-trained/common-embedding",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 3.274
+  },
+  {
+    "label": "bge-base-en-v1.5-f16.gguf-mean-parity",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_model_compatibility",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-base-en-v1.5-f16.gguf",
+      "88360fdf8521af0ac08d43818bd272da679ab97c685d9b273c48efd01a4187c2",
+      "embedding",
+      "768",
+      "mean"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 6.8
+  },
+  {
+    "label": "bge-base-en-v1.5-f16.gguf-cls-parity",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_model_compatibility",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-base-en-v1.5-f16.gguf",
+      "88360fdf8521af0ac08d43818bd272da679ab97c685d9b273c48efd01a4187c2",
+      "embedding",
+      "768",
+      "cls"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 6.756
+  },
+  {
+    "label": "bge-base-en-v1.5-f16.gguf-common",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-trained/common-embedding-linked",
+      "-a",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-base-en-v1.5-f16.gguf",
+      "88360fdf8521af0ac08d43818bd272da679ab97c685d9b273c48efd01a4187c2",
+      "768"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 15.142
+  },
+  {
+    "label": "bge-base-en-v1.5-q4_k_m.gguf-mean-parity",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_model_compatibility",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-base-en-v1.5-q4_k_m.gguf",
+      "74aebb552ea73b271d3b9c709923b4b7633b304fbc897a0498e52a180c3a9da9",
+      "embedding",
+      "768",
+      "mean"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 2.679
+  },
+  {
+    "label": "bge-base-en-v1.5-q4_k_m.gguf-cls-parity",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_model_compatibility",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-base-en-v1.5-q4_k_m.gguf",
+      "74aebb552ea73b271d3b9c709923b4b7633b304fbc897a0498e52a180c3a9da9",
+      "embedding",
+      "768",
+      "cls"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 2.602
+  },
+  {
+    "label": "bge-base-en-v1.5-q4_k_m.gguf-common",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-trained/common-embedding-linked",
+      "-a",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-base-en-v1.5-q4_k_m.gguf",
+      "74aebb552ea73b271d3b9c709923b4b7633b304fbc897a0498e52a180c3a9da9",
+      "768"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 6.43
+  },
+  {
+    "label": "common_generation-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-trained/common_generation",
+      "/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/examples/common_generation.crexx"
+    ],
+    "exit": 2,
+    "elapsed_seconds": 1.333
+  }
+]

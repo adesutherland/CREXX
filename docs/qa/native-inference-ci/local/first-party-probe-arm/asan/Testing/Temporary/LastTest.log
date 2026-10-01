@@ -1,0 +1,18 @@
+Start testing: Sep 15 22:43 BST
+----------------------------------------------------------
+1/1 Testing: rxllama_backend_probe_cycle
+1/1 Test: rxllama_backend_probe_cycle
+Command: "/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/asan/rxllama_bridge_lifecycle" "--probe-cycle"
+Directory: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/asan
+"rxllama_backend_probe_cycle" start time: Sep 15 22:43 BST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =  13.47 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_backend_probe_cycle" end time: Sep 15 22:43 BST
+"rxllama_backend_probe_cycle" time elapsed: 00:00:13
+----------------------------------------------------------
+
+End testing: Sep 15 22:43 BST

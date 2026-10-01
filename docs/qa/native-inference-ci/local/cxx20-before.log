@@ -1,0 +1,40 @@
+In file included from /Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp:3:
+[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/package.hpp:31:18: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   31 |     [0;34mauto[0m p = fs::u8path(name);[0m
+      | [0;1;32m                 ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp:142:24: [0m[0;1;31merror: [0m[1mno matching function for call to 'ggml_backend_load'[0m
+  142 |             [0;34mauto[0m reg = ggml_backend_load(file.u8string().c_str());[0m
+      | [0;1;32m                       ^~~~~~~~~~~~~~~~~
+[0m[1m/Users/adrian/CLionProjects/CREXX/cmake-build-debug/_deps/crexx_llama_source-src/ggml/src/../include/ggml-backend.h:255:33: [0m[0;1;36mnote: [0mcandidate function not viable: no known conversion from 'const value_type *' (aka 'const char8_t *') to 'const char *' for 1st argument[0m
+  255 |     GGML_API ggml_backend_reg_t ggml_backend_load([0;34mconst[0m [0;34mchar[0m * path);[0m
+      | [0;1;32m                                ^                 ~~~~~~~~~~~~~~~~~
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp:389:26: [0m[0;1;31merror: [0m[1mno matching function for call to 'llama_model_load_from_file'[0m
+  389 |             [0;34mauto[0m model = llama_model_load_from_file(path.u8string().c_str(), params);[0m
+      | [0;1;32m                         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+[0m[1m/Users/adrian/CLionProjects/CREXX/cmake-build-debug/_deps/crexx_llama_source-src/src/../include/llama.h:516:36: [0m[0;1;36mnote: [0mcandidate function not viable: no known conversion from 'const value_type *' (aka 'const char8_t *') to 'const char *' for 1st argument[0m
+  516 |     LLAMA_API [0;34mstruct[0m llama_model * llama_model_load_from_file([0m
+      | [0;1;32m                                   ^
+[0m  517 |                              [0;34mconst[0m [0;34mchar[0m * path_model,[0m
+      | [0;1;32m                             ~~~~~~~~~~~~~~~~~~~~~~~
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/bridge.cpp:753:43: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+  753 |                 model = open_model(c, fs::u8path(selector(a[[0;32m1[0m])), selector(a[[0;32m2[0m]), selector(a[[0;32m3[0m]), admission, rt.config.i([0;32m"vram_bytes"[0m) - rt.vram_reserved, selection);[0m
+      | [0;1;32m                                          ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m2 warnings and 2 errors generated.

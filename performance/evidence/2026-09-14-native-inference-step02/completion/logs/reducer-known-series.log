@@ -1,0 +1,6 @@
+WAVE: project compile/assemble jobs=1
+START: project member summarize_native_inference
+BUILT: project member summarize_native_inference
+BARRIER: link program
+PUBLISHED: program /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/summarize-native-inference.rxbin
+PASS: native inference absolute summary /tmp/crexx-ni-reducer-fixture.LmjaIJ/summary.csv

@@ -1,0 +1,17 @@
+{
+  "base_head": "e457f5ec38806907ac94303dead240b92eac3381",
+  "files": {
+    "lib/plugins/llama/bridge.cpp": "14c2a6e3bdfd20fe216300172d54a824d21b6c6da8d7cb2eb4bc6bf6cc63be8b",
+    "lib/plugins/llama/model_spec.h": "4ef87c1126e8cfff80567dbf746397a0fcd174274fd32a34a84807117cde6c91",
+    "lib/plugins/llama/typed.h": "5f0d88c016488edc149deb0bb51dfcc5acc46acef1b9410271b62c6cd5beff8a",
+    "lib/plugins/llama/examples/common_generation.crexx": "78361da49fc3e6790949fb949af534f64eceec3e834f3532986eb9e457206c8b",
+    "tests/native-inference/common_driver.crexx": "3a362d8c6422696c69697c325dff01ea8ea73eab05864a822f6eeb4c7283b06a",
+    "tests/native-inference/common_embedding.crexx": "aa73c0f497d3ad2208adcb0817097f5e555f0ddd0cb382745b09c121f2493665",
+    "tests/native-inference/model_compatibility.cpp": "80c39e2f8daf5c35c6d719d065eebd3640cbc5a92e6fff41af36ea0faa679949",
+    "tests/native-inference/common_driver_run.py": "40820dd457f32b9cc43eea070a476273e82806648b45c5fa325a1093e0881c3b",
+    "tests/native-inference/CommonDriver.cmake": "1ee4d8ffcd19b1d21884f98a7090bd1afbfcb00499d0ab8b1361001cecd5af1e",
+    "lib/plugins/llama/CMakeLists.txt": "bd725fd2d778f242f666097373fb280dafa32534b1b3c557cad66f718fbbf148",
+    "tests/native-inference/fixtures/llama-text.gguf": "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+    "tests/native-inference/fixtures/text-manifest.json": "67a59bd5f18a789f2e24ff47df73316fd73cfc8d9916eacf6166e847466bb545"
+  }
+}

@@ -1,0 +1,14 @@
+Test project /Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/rag-build-qualified
+    Start 1: linked_application
+1/1 Test #1: linked_application ...............   Passed    5.20 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+application      =   5.20 sec*proc (1 test)
+linked           =   5.20 sec*proc (1 test)
+provider         =   5.20 sec*proc (1 test)
+sqlite           =   5.20 sec*proc (1 test)
+zero-outbound    =   5.20 sec*proc (1 test)
+
+Total Test time (real) =   5.20 sec

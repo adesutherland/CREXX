@@ -67,7 +67,210 @@ strings, ordinary identifiers, keywords, numbers, and operators. It does not yet
 project generated CREXX semantic tokens or included-file macro definitions back
 onto the authored RXPP buffer.
 
+`##DATA name [callback]` captures free-form lines through `##END` as array
+assignments. When the optional callback name is present, RXPP emits
+`call callback name` after the complete array has been generated. The original
+`##DATA name` form remains array-only. `##RELATION name [callback]`,
+`##PROGRAM name [callback]`, and `##LIBRARY name [callback]` are thin aliases
+for the same conversion path;
+their names have no semantic effect.
+
+RXPP initializes these built-in preprocessor variables before source
+expansion: `{date}` (compilation date), `{time}` (compilation time),
+`{syslib}` (system binary/library path), `{syspath}` (system or macro search
+path), `{macpath}` (macro library directory), `{inpath}` (input source
+directory), and `{buildpath}` (generated output directory). The compatibility
+variables `{rxpp_rexx}` (input module/file name) and `{rxpp_date}` (combined
+compilation date and time) are also retained. `{sourcefile}` and
+`{outputfile}` provide normalized input and output file paths. `{platform}`
+and `{rxpp_version}` are derived from the runtime `rxvers` instruction rather
+than manually maintained. References use braces and are substituted at
+compile time, for example:
+
+```rexx
+say 'Build {date} {time}'
+say 'System binaries: {syslib}'
+say 'Output: {buildpath}'
+say 'Version: {rxpp_version} on {platform}'
+```
+
+Names are case-insensitive. `{syslib}` is the value form of the `&syslib/`
+prefix used by `##EXTERNAL`; neither form is a runtime variable. `cflags` and
+`printgen` are initialized control variables, and `##SET` can define
+additional user variables.
+
+Ordinary comments are not expanded. A line beginning with
+`/* RXPP:EXPAND */` opts into expansion and removes the marker before
+replacement. Use a line-comment remainder for generated metadata, for example:
+
+```rexx
+/* RXPP:EXPAND */ -- Created {date} at {time}; RXPP {rxpp_version}
+```
+
+A remainder beginning with `/*` remains protected as an ordinary comment.
+
+`##DALIAS alias1 [, alias2 ...]` registers additional directive names for the
+same `##DATA` conversion path. Alias names may be comma- or blank-separated,
+are matched case-insensitively, and must be declared before use. For example:
+
+```rexx
+##DALIAS config, routes, fixtures
+##config settings load_config
+first record
+second record
+##END
+```
+
+The alias applies to the directive name (`##config`), not to the generated
+`settings.` stem. The aliased form retains the normal optional keyword/callback
+syntax and invokes the callback once after the complete block.
+
+## Build metadata directives
+
+Recent additions separate macro discovery from output placement:
+
+- `##LOADMACRO ui` registers the `.rxpm` files in the `ui` directory relative
+  to RXPP's selected system/macro-library directory (an absolute directory also
+  works). Bodies load lazily on invocation. Later search roots override an
+  earlier same-named package. Current package filenames must be lowercase,
+  using letters, digits and underscores; each file contains one `##MACRO` body
+  terminated by `##MEND`. The complete macro name is matched, not a prefix.
+  The selected macro-library root remains authoritative when input and output
+  live in separate directories; `##LOADMACRO` does not switch to the input
+  source directory. `rxpp_loadmacro` retains a conflicting source-relative
+  package to exercise that distinction.
+- `##BUILDDIR path` is consumed by `bin/crexx.crexx`, which scans the first
+  64 source lines and resolves it relative to the command's working directory.
+  RXPP suppresses the directive in generated cREXX but does not itself move
+  build products. Direct CMake recipes should keep their explicit `-o` paths.
+
+RXPP also supports explicit external-module and link metadata. These directives
+are suppressed from generated cREXX and recorded in the typed `.inc` manifest
+beside the generated output:
+
+```rexx
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK CallCatalog_linked
+```
+
+`##NORUN` is a compile-only directive. It takes no argument, is suppressed
+from generated cREXX, and records `norun|1` in the manifest. `crexx.exe` still
+runs RXC and RXAS but does not start RXVME. It is the RXPP equivalent of the
+driver's `--noexec` option. A link recipe already stops after RXLINK.
+
+`##EXTERNAL` declares an existing RXBIN module that is added to the final
+runtime or link stage. The case-insensitive `&syslib/` prefix resolves inside RXPP to
+the system binary directory returned by `env.LoadPath()`. For example:
+
+```rexx
+##EXTERNAL &syslib/library.rxbin
+##EXTERNAL &syslib/classlib.rxbin
+##EXTERNAL &syslib/rxfnsg.rxbin
+```
+
+RXPP writes the resulting full paths to the `external|...` records in the
+`.inc` manifest. The later `crexx.exe` stages consume those manifest paths
+unchanged; no special handling in `crexx.crexx` is required. This keeps the
+same source usable from a development build tree and an installed, flatter
+layout.
+
+Except for `&syslib/` paths, external paths resolve relative to the input source
+directory, including when the source is a bare filename in the working
+directory. Each `external|` record
+holds one complete path; spaces in the source directory must survive manifest
+reading and argv construction. Duplicate declarations match the complete,
+case-preserved path. Resolving an external path must not change the selected
+macro-library root used by a later `##LOADMACRO`. A missing module name is a
+preprocessing error and stops the pipeline.
+
+The presence of `##EXTERNAL` does not change the normal RXPP compilation
+pipeline:
+
+```text
+source.rxpp
+  -> rxpp
+generated.crexx
+  -> rxc
+generated.rxas
+  -> rxas
+generated.rxbin
+```
+
+Without `##LINK`, `crexx.exe` invokes `rxvme` with the newly generated RXBIN
+followed by the declared external modules:
+
+```text
+rxvme generated.rxbin external1.rxbin external2.rxbin ...
+```
+
+When `##LINK` is present, the preprocessing, compilation, and assembly stages
+are unchanged. Only the final stage changes: `crexx.exe` invokes `rxlink`
+instead of `rxvme`, linking the newly generated RXBIN together with the
+declared external modules:
+
+```text
+rxlink generated.rxbin external1.rxbin external2.rxbin ...
+  -> member.rxbin
+```
+
+The linked result is not automatically executed.
+
+`##LINKGO` takes no arguments and is valid only when `##LINK` is also present.
+It marks the recipe for the `crexx.exe` driver, which runs the linked member
+after a successful link. The ordinary `##LINK` recipe remains link-only; it
+never requests execution.
+
+Compilation or assembly errors stop the recipe before linking. The driver
+continues processing later command-line source members after a successful
+recipe; `##NORUN` also applies to its own member without changing the command's
+execution option for later members. `--nokeep` removes intermediates while
+preserving the linked result, including when its member name matches the input.
+
+`##LINK` accepts exactly one bare output member name. It must not contain a
+directory separator, drive prefix, or `.rxbin` suffix. `##BUILDDIR` owns the
+output directory, while `##LINK` supplies the output member name.
+
+For example:
+
+```rexx
+##BUILDDIR ../temp
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK CallCatalog_linked
+```
+
+produces:
+
+```text
+../temp/CallCatalog_linked.rxbin
+```
+
+The manifest uses typed records so compiler imports are never mistaken for
+external runtime/link modules:
+
+```text
+import|data_CallCatalog
+external|../lib/CallCatalog.rxbin
+link|CallCatalog_linked
+linkgo|1
+norun|1
+```
+
+---
+The UI worked example uses `##LOADMACRO ui` with `ui_node.rxpm`,
+`ui_command.rxpm` and `ui_launcher.rxpm`, staged below the selected macro-library
+root. It retains one RXPP invocation per generated source file: these additions
+do not introduce arbitrary multi-output generation. See
+`preprocessor/tests/run_rxpp_loadmacro.cmake` and the Text Inspector generation
+test for executable examples.
+
 ## Source Maps
+
+The compiler applies the source-map prepass to imported generated source as
+well as directly compiled source. `source_import_srcmap_factory` retains the
+regression for an RXPP-mapped factory argument: map directives must not enter
+the ordinary grammar or be mistaken for instructions before `ARG`. Attached
+argument diagnostic nodes are skipped during formal-argument traversal, not
+silently treated as parameters.
 
 RXPP emits source maps by default for generated CREXX. The generated file's
 leading options include `srcmap`, followed by raw source-map directives in the

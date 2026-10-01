@@ -1,0 +1,16 @@
+argv=[PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/bin/rxbvm'), '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work/opt-generation_overhead-dynamic-linked', '-a', 'required-gpu', PosixPath('/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf'), '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201', '4', '1']
+cwd=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work
+rc=0
+PREPARE_US=13060274
+FIRST_US=242502
+WARM_US=191146 us
+TOKENS=24
+TEXT1=4F6E6520616E696D616C2069732061206361742E
+FINISH1=eos
+TEXT2=4F6E6520616E696D616C2069732061206361742E
+FINISH2=eos
+TEXT3=4F6E6520616E696D616C2069732061206361742E
+FINISH3=eos
+TEXT4=4F6E6520616E696D616C2069732061206361742E
+FINISH4=eos
+PASS: NI-S5 fixed generation work 4 1 load_count=1

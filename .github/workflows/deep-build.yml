@@ -4,6 +4,16 @@ on:
   schedule:
     - cron: '23 2 * * *'
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Core platform to qualify (all for the complete Deep gate)
+        type: choice
+        default: all
+        options: [all, linux-x64, windows-mingw, windows-msvc, macos-arm64, macos-x86_64]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/temp/llama-release-') }}
 
 permissions:
   contents: read
@@ -16,6 +26,8 @@ jobs:
     outputs:
       should_run: ${{ steps.decision.outputs.should_run }}
       target_sha: ${{ steps.target.outputs.target_sha }}
+      core_matrix: ${{ steps.matrix.outputs.core_matrix }}
+      full_gate: ${{ steps.matrix.outputs.full_gate }}
 
     steps:
       - name: Resolve the commit to qualify
@@ -35,6 +47,21 @@ jobs:
             )"
           fi
           echo "target_sha=${target_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Read the exact candidate QA matrix
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.target.outputs.target_sha }}
+          sparse-checkout: |
+            .github/qa
+            scripts
+
+      - name: Select core configurations
+        id: matrix
+        shell: bash
+        env:
+          SELECTED_PLATFORM: ${{ inputs.platform || 'all' }}
+        run: python scripts/ci-core-qa-matrix.py
 
       - name: Look for successful deep assurance of this develop commit
         id: qualified
@@ -70,36 +97,11 @@ jobs:
     needs: assurance-gate
     if: needs.assurance-gate.outputs.should_run == 'true'
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: Linux x64
-            os: ubuntu-24.04
-            platform: linux
-            build_jobs: 2
-            test_jobs: 5
-            cmake_args: ""
-          - name: Windows x64
-            os: windows-2025
-            platform: windows
-            build_jobs: 4
-            test_jobs: 2
-            cmake_args: "-DCREXX_FORCE_SYSTEM_OPENSSL=ON"
-          - name: macOS arm64
-            os: macos-15
-            platform: macos
-            build_jobs: 2
-            test_jobs: 5
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
-          - name: macOS x86_64
-            os: macos-15-intel
-            platform: macos
-            build_jobs: 2
-            test_jobs: 5
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64"
+      matrix: ${{ fromJSON(needs.assurance-gate.outputs.core_matrix) }}
 
     steps:
       - name: Checkout
@@ -108,8 +110,15 @@ jobs:
           submodules: recursive
           ref: ${{ needs.assurance-gate.outputs.target_sha }}
 
+      - name: Select MSVC C11 toolchain
+        if: matrix.toolchain == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          toolset: '14.44'
+
       - name: Update toolchain (MSYS2)
-        if: matrix.platform == 'windows'
+        if: matrix.toolchain == 'mingw'
         uses: msys2/setup-msys2@v2
         with:
           update: true
@@ -122,9 +131,16 @@ jobs:
             ninja:p
             openssl:p
             pkgconf:p
+            python:p
+
+      - name: Python for package smoke
+        if: matrix.toolchain != 'mingw'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
 
       - name: Configure Release qualification build
-        if: matrix.platform != 'windows'
+        if: matrix.toolchain != 'mingw'
         shell: bash
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
@@ -132,11 +148,11 @@ jobs:
             -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
             -DCREXX_BUILD_CHANNEL=nightly \
             -DCREXX_BUILD_COMMIT="${{ needs.assurance-gate.outputs.target_sha }}" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF \
             ${{ matrix.cmake_args }}
 
       - name: Configure Release qualification build
-        if: matrix.platform == 'windows'
+        if: matrix.toolchain == 'mingw'
         shell: msys2 {0}
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
@@ -144,10 +160,17 @@ jobs:
             -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
             -DCREXX_BUILD_CHANNEL=nightly \
             -DCREXX_BUILD_COMMIT="${{ needs.assurance-gate.outputs.target_sha }}" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF -DENABLE_PARSER_MODE=OFF \
             ${{ matrix.cmake_args }}
 
+      - name: Check MSVC atomics before the broad build
+        if: matrix.toolchain == 'msvc'
+        shell: bash
+        run: |
+          python scripts/ci-msvc-atomics-preflight.py "${{ runner.temp }}/qualification"
+
       - name: Run comprehensive correctness QA
-        if: matrix.platform != 'windows'
+        if: matrix.toolchain != 'mingw'
         shell: bash
         run: |
           cmake --build "${{ runner.temp }}/qualification" \
@@ -155,7 +178,7 @@ jobs:
             --parallel ${{ matrix.build_jobs }}
 
       - name: Run comprehensive correctness QA
-        if: matrix.platform == 'windows'
+        if: matrix.toolchain == 'mingw'
         shell: msys2 {0}
         run: |
           cmake --build "${{ runner.temp }}/qualification" \
@@ -163,7 +186,7 @@ jobs:
             --parallel ${{ matrix.build_jobs }}
 
       - name: Run install/package/external-consumer qualification
-        if: matrix.platform != 'windows'
+        if: matrix.toolchain != 'mingw'
         shell: bash
         run: |
           cmake --build "${{ runner.temp }}/qualification" \
@@ -171,19 +194,31 @@ jobs:
             --parallel ${{ matrix.build_jobs }}
 
       - name: Run install/package/external-consumer qualification
-        if: matrix.platform == 'windows'
+        if: matrix.toolchain == 'mingw'
         shell: msys2 {0}
         run: |
           cmake --build "${{ runner.temp }}/qualification" \
             --target qa-qualification \
             --parallel ${{ matrix.build_jobs }}
+
+      - name: Retain comprehensive qualification logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: comprehensive-logs-${{ matrix.os }}-${{ matrix.toolchain || 'native' }}
+          path: |
+            ${{ runner.temp }}/qualification/Testing/Temporary
+            ${{ runner.temp }}/qualification/CMakeFiles/CMakeConfigureLog.yaml
+            ${{ runner.temp }}/qualification/atomics-preflight
+          if-no-files-found: warn
+          retention-days: 14
 
   parallel-product:
     name: Release product jobs ${{ matrix.jobs }}
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.full_gate == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     strategy:
       fail-fast: false
@@ -207,7 +242,7 @@ jobs:
             -DCREXX_BUILD_TIMESTAMP=19700101T000000Z \
             -DCREXX_BUILD_COMMIT="${{ needs.assurance-gate.outputs.target_sha }}" \
             -DCREXX_QA_CTEST_JOBS=5 \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
 
       - name: Clean product build
         shell: bash
@@ -303,9 +338,9 @@ jobs:
   stress:
     name: Isolated Debug stress QA
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.full_gate == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     steps:
       - name: Checkout
@@ -321,7 +356,7 @@ jobs:
           cmake -S . -G Ninja -B "${RUNNER_TEMP}/stress-build" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCREXX_QA_CTEST_JOBS=5 \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
 
       - name: Run stress separately from correctness and performance
         shell: bash

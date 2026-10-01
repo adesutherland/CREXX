@@ -1,0 +1,3 @@
+argv=['D:/a/_temp/msys64/tmp/crexx-release-smoke-opgwgmcs/engine/rxllama_release_engine_smoke.exe', 'D:/a/_temp/msys64/tmp/crexx-release-smoke-opgwgmcs/fixture.gguf']
+SMOKE_STAGE: runtime discovery
+FAIL: no usable verified CPU backend variant

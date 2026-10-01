@@ -1,0 +1,19 @@
+{
+  "source_matches_before": true,
+  "production_changes_during_followup": "No behavioral changes; only the two recorded whitespace cleanups after the failed QA preparation.",
+  "qa_prep_exit": 2,
+  "ctest_full_executed": false,
+  "finding": "NI-S4-QA01",
+  "whitespace_cleanup_at_commit": {
+    "lib/plugins/llama/bridge.cpp": {
+      "before_sha256": "affcfe9ba2ec854623204965757c76268aa27a0a41e1eb8f7307655c928d3f98",
+      "after_sha256": "ae76f487f9f9f0a5727af01f7c9e9b31002ae9841daf25a176336166371805f6",
+      "change": "trailing whitespace / blank final line only"
+    },
+    "tests/rxpa/rxpa_objects_text_worker.crexx": {
+      "before_sha256": "6553772d5b190a0408ea7e87840e039e0284db6a05748c5f7424258d7e0a5ec4",
+      "after_sha256": "1fba04603974161489f0ca9f9b064ad0f481ecae20b8d3acea5a83c8d7d0accc",
+      "change": "trailing whitespace / blank final line only"
+    }
+  }
+}

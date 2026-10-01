@@ -8,11 +8,11 @@
 
 The *crexxsaa* facility enables the implementation of addressing environments. These can adress functionality using external programs, in the style of Classic Rexx *subcommand handlers*, or implement macro functionality for applications.
 
-Some Address Environments, like `address crexx`, `address shell`, and others, are part of the language core. Other environments can be best classified as libraries; regardless, all are packaged as libraries. In this part of the library reference these environments are discussed and documented. A good example is the `address sqlite` environment, which delivers an embedded SQL interface to SQLite and can serve as an example of delivering this for other database engines.
+Some Address Environments, like `address crexx`, `address shell`, and others, are part of the language core. Other environments can be best classified as libraries; regardless, all are packaged as libraries. The supported `rxsqlite_address` Level G module implements `address sqlite` over CREXX's generic typed `rxsqlite` provider. It delivers an embedded SQL interface without introducing a second native SQLite driver.
 
 Other documented addressing environments are:
 
-- SQLite: a demonstration of Embedded SQL[^embedded];
+- [SQLite](rxsqlite.md): a supported core provider with an optional Level G Embedded SQL façade[^embedded];
 - CMS: a demonstration of sending commands to an environment which simulates a VM/CMS host;
 - THE: The Hessling Editor, a close approximation of the VM/CMS XEDIT editor[^the];
 

@@ -1,0 +1,1806 @@
+[
+  {
+    "name": "rxsha256_unit",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/test_rxsha256"
+    ]
+  },
+  {
+    "name": "crexx_contract_generation",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-DCONTRACT_TOOL=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx-contract",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX/contract/tests/operation_contract.crexx",
+      "-DINVALID_SOURCE=/Users/adrian/CLionProjects/CREXX/contract/tests/operation_contract_invalid.crexx",
+      "-DAMBIGUOUS_RXAS=/Users/adrian/CLionProjects/CREXX/contract/tests/ambiguous_contract.rxas",
+      "-DGOLDEN=/Users/adrian/CLionProjects/CREXX/contract/tests/operation_contract.rxcontract.json",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/contract/tests/generation",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/contract/tests/contract_generation.cmake"
+    ]
+  },
+  {
+    "name": "rxas_invalid_diagnostic",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/rxas_invalid_diagnostic.cmake"
+    ]
+  },
+  {
+    "name": "rxc_function_lookup_diagnostic",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/rxc_function_lookup_diagnostic.cmake"
+    ]
+  },
+  {
+    "name": "rxc_constants_levelb",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/rxc_constants_levelb.cmake"
+    ]
+  },
+  {
+    "name": "01_assign_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/noopt/01_assign.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/01_assign_noopt.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/01_assign_noopt",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/01_assign.crexx"
+    ]
+  },
+  {
+    "name": "03_calc_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/opt/03_calc.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/03_calc_opt.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/03_calc_opt",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/03_calc.crexx"
+    ]
+  },
+  {
+    "name": "07_loops_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/noopt/07_loops.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/07_loops_noopt.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/07_loops_noopt",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/07_loops.crexx"
+    ]
+  },
+  {
+    "name": "08_select_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/opt/08_select.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/08_select_opt.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/08_select_opt",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/08_select.crexx"
+    ]
+  },
+  {
+    "name": "10_procs_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/noopt/10_procs.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/10_procs_noopt.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/10_procs_noopt",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/10_procs.crexx"
+    ]
+  },
+  {
+    "name": "15_imports_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "--copy",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/mymath.crexx",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/opt/15_imports.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/15_imports_opt.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/15_imports_opt",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/15_imports.crexx"
+    ]
+  },
+  {
+    "name": "err_01_type_fail",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "--expect-fail",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/errors/err_01_type.txt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/err_01_type_fail.txt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/err_01_type.crexx"
+    ]
+  },
+  {
+    "name": "err_02_syntax_fail",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "--expect-fail",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/errors/err_02_syntax.txt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/err_02_syntax_fail.txt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/err_02_syntax.crexx"
+    ]
+  },
+  {
+    "name": "err_06_missing_method_fail",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "--expect-fail",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/errors/err_06_missing_method.txt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/err_06_missing_method_fail.txt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/err_06_missing_method.crexx"
+    ]
+  },
+  {
+    "name": "unused_import_warn",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/crexx_test_driver",
+      "--warnings",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/golden/warnings/unused_import.txt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/unused_import_warn.txt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/unused_import_warning.crexx"
+    ]
+  },
+  {
+    "name": "repro_opt_args_run_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_repro_opt_args_noopt.cmake"
+    ]
+  },
+  {
+    "name": "basic_arrays_run_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_basic_arrays_noopt.cmake"
+    ]
+  },
+  {
+    "name": "13_stems_run_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_13_stems_noopt.cmake"
+    ]
+  },
+  {
+    "name": "optional_arg_presence_copy_run_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_optional_arg_presence_copy_noopt.cmake"
+    ]
+  },
+  {
+    "name": "interface_runtime_dispatch_multi_run_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_interface_runtime_dispatch_multi_isolated_noopt.cmake"
+    ]
+  },
+  {
+    "name": "interface_source_import_run_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_interface_source_import_source_noopt.cmake"
+    ]
+  },
+  {
+    "name": "source_import_contract_stub_implements",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_source_import_contract_stub_implements.cmake"
+    ]
+  },
+  {
+    "name": "source_import_optional_factory_arg",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_source_import_optional_factory_arg.cmake"
+    ]
+  },
+  {
+    "name": "levelc_slice1_pool_say",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/levelc_slice1_pool_say.cmake"
+    ]
+  },
+  {
+    "name": "levelc_slice6_expressions",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/levelc_slice6_expressions.cmake"
+    ]
+  },
+  {
+    "name": "address_bridge",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/test_address_bridge"
+    ]
+  },
+  {
+    "name": "address_callback_host",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/test_address_callback_host"
+    ]
+  },
+  {
+    "name": "dynamic_load",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/test_dynamic_load"
+    ]
+  },
+  {
+    "name": "crexxsaa_variables",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/test_crexxsaa_variables"
+    ]
+  },
+  {
+    "name": "crexxsaa_status",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/test_crexxsaa_status"
+    ]
+  },
+  {
+    "name": "source_provenance",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/test_source_provenance"
+    ]
+  },
+  {
+    "name": "rxc_srcmap",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/rxc_srcmap",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/run_rxc_srcmap.cmake"
+    ]
+  },
+  {
+    "name": "trace_stem_sugar",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "-DBIN_DIR=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-DLIBRARY=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/trace_stem_sugar",
+      "-DRXVM_TIMEOUT=60",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/compiler/tests/run_trace_stem_sugar.cmake"
+    ]
+  },
+  {
+    "name": "rxc_diagnostic_catalogs",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/rxc_diagnostic_catalogs.cmake"
+    ]
+  },
+  {
+    "name": "rxlink_success_run",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "tests_linked_success"
+    ]
+  },
+  {
+    "name": "rxlink_control_run",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "tests_linked_omit"
+    ]
+  },
+  {
+    "name": "rxlink_interface_run",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "tests_linked_interface"
+    ]
+  },
+  {
+    "name": "rxlink_format_check",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/linker/test_linked_format"
+    ]
+  },
+  {
+    "name": "rxlink_signature_mismatch_error",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXLINK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink",
+      "-DWORKING_DIRECTORY=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/linker",
+      "-DOUTPUT_BASENAME=tests_linked_signature_mismatch",
+      "-DINPUTS=tests_link_signature_bad_impl.rxbin",
+      "-DEXPECT_TEXT=ERROR: class link_sig.box does not satisfy interface member link_sig.shape.describe signature",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/linker/tests/check_expected_failure.cmake"
+    ]
+  },
+  {
+    "name": "rxlink_rxdas_inline_preserve_smoke",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXDAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+      "-DWORKING_DIRECTORY=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/linker",
+      "-DINPUT_RXBIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/linker/tests_linked_inline.rxbin",
+      "-DOUTPUT_RXAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/linker/tests_linked_inline.rxas",
+      "-DEXPECT_TEXT_1=tests_link_provider_a.rxas",
+      "-DEXPECT_TEXT_2=.meta \"linktest.helper\"=\".inline\" \"I4;a;b\"",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/linker/tests/check_rxdas_contains.cmake"
+    ]
+  },
+  {
+    "name": "rxdas_roundtrip_basic",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXDAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "-DRXBVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "-DINPUT_RXBIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/tests_basic.rxbin",
+      "-DWORKING_DIRECTORY=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler",
+      "-DTEST_BASENAME=rxdas_roundtrip_basic",
+      "-DREQUIRE_NO_UNKNOWN=ON",
+      "-DEXPECT_DISASSEMBLY_TEXT_1=",
+      "-DEXPECT_DISASSEMBLY_TEXT_2=",
+      "-DEXPECT_DISASSEMBLY_TEXT_3=",
+      "-DEXPECT_DISASSEMBLY_TEXT_4=",
+      "-DEXPECT_DISASSEMBLY_TEXT_5=",
+      "-DEXPECT_DISASSEMBLY_TEXT_6=",
+      "-DEXPECT_DISASSEMBLY_TEXT_7=",
+      "-DEXPECT_DISASSEMBLY_TEXT_8=",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/disassembler/tests/check_roundtrip.cmake"
+    ]
+  },
+  {
+    "name": "rxdas_graph_error",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXDAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+      "-DINPUT_RXBIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/tests_compact_format_corrupt_graph.rxbin",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/disassembler/tests/check_graph_error.cmake"
+    ]
+  },
+  {
+    "name": "rxdas_roundtrip_interfaces",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXDAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "-DRXBVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "-DINPUT_RXBIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/tests_interfaces.rxbin",
+      "-DWORKING_DIRECTORY=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler",
+      "-DTEST_BASENAME=rxdas_roundtrip_interfaces",
+      "-DREQUIRE_NO_UNKNOWN=ON",
+      "-DEXPECT_DISASSEMBLY_TEXT_1=",
+      "-DEXPECT_DISASSEMBLY_TEXT_2=",
+      "-DEXPECT_DISASSEMBLY_TEXT_3=",
+      "-DEXPECT_DISASSEMBLY_TEXT_4=",
+      "-DEXPECT_DISASSEMBLY_TEXT_5=",
+      "-DEXPECT_DISASSEMBLY_TEXT_6=",
+      "-DEXPECT_DISASSEMBLY_TEXT_7=",
+      "-DEXPECT_DISASSEMBLY_TEXT_8=",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/disassembler/tests/check_roundtrip.cmake"
+    ]
+  },
+  {
+    "name": "rxdas_roundtrip_large_binary_alias",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXDAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "-DRXBVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "-DINPUT_RXBIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/tests_rxdas_large_binary.rxbin",
+      "-DWORKING_DIRECTORY=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler",
+      "-DTEST_BASENAME=rxdas_roundtrip_large_binary_alias",
+      "-DREQUIRE_NO_UNKNOWN=ON",
+      "-DEXPECT_DISASSEMBLY_TEXT_1=.const \u00a7rxdas.const.",
+      "-DEXPECT_DISASSEMBLY_TEXT_2=load r0,\u00a7rxdas.const.",
+      "-DEXPECT_DISASSEMBLY_TEXT_3=",
+      "-DEXPECT_DISASSEMBLY_TEXT_4=",
+      "-DEXPECT_DISASSEMBLY_TEXT_5=",
+      "-DEXPECT_DISASSEMBLY_TEXT_6=",
+      "-DEXPECT_DISASSEMBLY_TEXT_7=",
+      "-DEXPECT_DISASSEMBLY_TEXT_8=",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/disassembler/tests/check_roundtrip.cmake"
+    ]
+  },
+  {
+    "name": "rxdas_dump_support",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/disassembler/test_disassembler_dump"
+    ]
+  },
+  {
+    "name": "crexxsaa_cache_tool_location",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexxsaa",
+      "--cache-dir",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/crexxsaa-cache-tool-test",
+      "--location"
+    ]
+  },
+  {
+    "name": "rxpa_utf_validation",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/test_rxpa_utf_validation"
+    ]
+  },
+  {
+    "name": "ts_regvalue_tester",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/ts_regvalue_tester"
+    ]
+  },
+  {
+    "name": "rxassignalstests",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/rxassignalstests_expected_failure.cmake"
+    ]
+  },
+  {
+    "name": "rxasregisterflagtests",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "tests_register_flags"
+    ]
+  },
+  {
+    "name": "rxasutfflagtests",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "tests_utf_flags"
+    ]
+  },
+  {
+    "name": "rxasreferencetests",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "tests_references"
+    ]
+  },
+  {
+    "name": "rxasbasictests",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "tests_basic"
+    ]
+  },
+  {
+    "name": "compact_format_check",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/test_compact_format"
+    ]
+  },
+  {
+    "name": "rxasstringtests",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "tests_string"
+    ]
+  },
+  {
+    "name": "rxasdecimaltests-mc",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "-p",
+      "rxvm_mc_decimal",
+      "tests_decimal"
+    ]
+  },
+  {
+    "name": "rxasinterfacetests",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "tests_interfaces"
+    ]
+  },
+  {
+    "name": "reentrancy_check",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/test_reentrancy"
+    ]
+  },
+  {
+    "name": "db_decimal_archive_link",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/interpreter/test_db_decimal_archive_link"
+    ]
+  },
+  {
+    "name": "rxpp_smoke",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DRXC_BIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-DINPUT_FILE=/Users/adrian/CLionProjects/CREXX/preprocessor/tests/rxpp_smoke.rxpp",
+      "-DOUTPUT_FILE=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/preprocessor/tests/rxpp_smoke.out.crexx",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX/preprocessor/maclib.rexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/preprocessor/tests/run_rxpp_smoke.cmake"
+    ]
+  },
+  {
+    "name": "rxpp_srcmap",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DRXC_BIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-DINPUT_FILE=/Users/adrian/CLionProjects/CREXX/preprocessor/tests/rxpp_srcmap.rxpp",
+      "-DOUTPUT_FILE=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/preprocessor/tests/rxpp_srcmap.out.crexx",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX/preprocessor/maclib.rexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/preprocessor/tests/run_rxpp_srcmap.cmake"
+    ]
+  },
+  {
+    "name": "rxpp_relative_include",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/preprocessor/tests/rxpp_relative_include",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/preprocessor/tests/run_rxpp_relative_include.cmake"
+    ]
+  },
+  {
+    "name": "rxpp_script_macro_exact_match",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/preprocessor/tests/rxpp_script_macro_exact_match",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/preprocessor/tests/run_rxpp_script_macro_exact_match.cmake"
+    ]
+  },
+  {
+    "name": "rxpp_loadmacro",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/preprocessor/tests/rxpp_loadmacro",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/preprocessor/tests/run_rxpp_loadmacro.cmake"
+    ]
+  },
+  {
+    "name": "rxpp_diagnostics",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXPP_BIN=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/preprocessor/tests/rxpp_diagnostics",
+      "-DMACLIB_FILE=/Users/adrian/CLionProjects/CREXX/preprocessor/maclib.rexx",
+      "-DMESSAGE_PATH=/Users/adrian/CLionProjects/CREXX/messages",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/preprocessor/tests/run_rxpp_diagnostics.cmake"
+    ]
+  },
+  {
+    "name": "ts_address_noopt",
+    "serial": true,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "ts_address_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "ts_parse_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "ts_parse_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "ts_stem_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "ts_stem_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "ts_rxjson_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "ts_rxjson_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "ts_rxsocket_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "ts_rxsocket_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "ts_tinyexpr_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "ts_tinyexpr_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsl"
+    ]
+  },
+  {
+    "name": "rxfloat_contract_surface_coverage",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DPROVIDER_SOURCE=/Users/adrian/CLionProjects/CREXX/lib/plugins/float/rxfloat.c",
+      "-DCONTRACT_SOURCE=/Users/adrian/CLionProjects/CREXX/lib/plugins/float/rxfloat_test.crexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/lib/plugins/float/check_contract_surface.cmake"
+    ]
+  },
+  {
+    "name": "stack_test_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "stack_test_noopt",
+      "rx_stack",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "strings_test_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "strings_test_noopt",
+      "rx_strings",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "keyaccess_test_noopt",
+    "serial": false,
+    "lock": [
+      "keyaccess_compaction"
+    ],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "keyaccess_test_noopt",
+      "rx_keyaccess",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "-a",
+      "keyaccess_test_noopt"
+    ]
+  },
+  {
+    "name": "keyaccess_compact_failure",
+    "serial": false,
+    "lock": [
+      "keyaccess_compaction"
+    ],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/keyaccess/keyaccess_compact_failure_test"
+    ]
+  },
+  {
+    "name": "map_test_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "map_test_noopt",
+      "rx_map",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "testStringArrayList_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testStringArrayList_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib"
+    ]
+  },
+  {
+    "name": "testStringHashMap_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testStringHashMap_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib"
+    ]
+  },
+  {
+    "name": "testObjectCollections_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testObjectCollections_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib"
+    ]
+  },
+  {
+    "name": "testJSON_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testJSON_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib"
+    ]
+  },
+  {
+    "name": "testOS_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testOS_noopt",
+      "rx_keyaccess",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib_native"
+    ]
+  },
+  {
+    "name": "rxunicode_contract_surface",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/rexx/unicode.crexx",
+      "-DDOC=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/rexx/unicode.md",
+      "-DUSER_DOC=/Users/adrian/CLionProjects/CREXX/docs/books/crexx_library_reference/unicode.md",
+      "-DNORMALIZATION_TEST=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_normalization.crexx",
+      "-DCASE_MAPPING_TEST=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_case_mapping.crexx",
+      "-DCASEFOLD_TEST=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_casefold.crexx",
+      "-DGRAPHEME_TEST=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_grapheme.crexx",
+      "-DCODEC_TEST=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/rexx/../tests_functional/ts_unicode_codec.crexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/rexx/../unicode/check_casefold_contract.cmake"
+    ]
+  },
+  {
+    "name": "rcc5c_math_contract_surface_coverage",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DINTEGER_SOURCE=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/tests_functional/../rexx/integer.crexx",
+      "-DINTEGER_CONTRACT=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/tests_functional/ts_math_integer_contract.crexx",
+      "-DDECIMAL_SOURCE=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/tests_functional/../rexx/decimal.crexx",
+      "-DDECIMAL_CONTRACT=/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/tests_functional/ts_math_decimal_contract.crexx",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/tests_functional/check_math_contract_surface.cmake"
+    ]
+  },
+  {
+    "name": "ts_math_integer_contract_rxbvm_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "ts_math_integer_contract_rxbvm_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/rxfnsg/tests_functional/numeric_test_support",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"
+    ]
+  },
+  {
+    "name": "ts_math_integer_contract_rxbvm_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/rxfnsg/tests_functional/ts_math_integer_contract_rxbvm_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "ts_math_integer_contract_rxtvm_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+      "ts_math_integer_contract_rxtvm_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/rxfnsg/tests_functional/numeric_test_support",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"
+    ]
+  },
+  {
+    "name": "ts_math_integer_contract_rxtvm_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/rxfnsg/tests_functional/ts_math_integer_contract_rxtvm_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "ts_math_decimal_contract_rxbvm_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "ts_math_decimal_contract_rxbvm_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/rxfnsg/tests_functional/numeric_test_support",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"
+    ]
+  },
+  {
+    "name": "ts_math_decimal_contract_rxbvm_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/rxfnsg/tests_functional/ts_math_decimal_contract_rxbvm_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "ts_math_decimal_contract_rxtvm_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+      "ts_math_decimal_contract_rxtvm_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/rxfnsg/tests_functional/numeric_test_support",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"
+    ]
+  },
+  {
+    "name": "ts_math_decimal_contract_rxtvm_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/rxfnsg/tests_functional/ts_math_decimal_contract_rxtvm_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "ts_llm_providers_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "ts_llm_providers_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"
+    ]
+  },
+  {
+    "name": "testRexxValue_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testRexxValue_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsc"
+    ]
+  },
+  {
+    "name": "testRexxRuntimePools_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testRexxRuntimePools_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsc"
+    ]
+  },
+  {
+    "name": "testRexxClassicBifs_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testRexxClassicBifs_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsc"
+    ]
+  },
+  {
+    "name": "testRexxScriptRuntime_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testRexxScriptRuntime_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsc",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rexxscript"
+    ]
+  },
+  {
+    "name": "testRexxScriptCompat_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "testRexxScriptCompat_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsc",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rexxscript"
+    ]
+  },
+  {
+    "name": "rexxscript_cli_smoke",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/rexxscript/tests_functional/run_rexxscript_cli_smoke.cmake"
+    ]
+  },
+  {
+    "name": "rxas_optimizer_copy_acopy_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-DRXDAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+      "-DSOURCE=/Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/copy_acopy.rxas",
+      "-DWORKING_DIRECTORY=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxas_optimizer",
+      "-DCASE=copy_acopy_opt",
+      "-DRXAS_FLAGS=-d",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/check_optimizer.cmake"
+    ]
+  },
+  {
+    "name": "QUIT",
+    "serial": true,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tools/signal_tester",
+      "QUIT",
+      "QUIT Signal",
+      "5",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "intr_test"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_sieve_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_sieve_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_permute_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_permute_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_mandelbrot_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_mandelbrot_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_mandelbrot_hoisted_control_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_mandelbrot_hoisted_control_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_towers_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_towers_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_bounce_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_bounce_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_storage_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_storage_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_list_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_list_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_richards_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_richards_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_queens_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_queens_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_deltablue_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_deltablue_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_cd_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_cd_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_havlak_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_havlak_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_json_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_json_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_json_parser_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_json_parser_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_json_parse_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_json_parse_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_json_query_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_json_query_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_base64_roundtrip_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_base64_roundtrip_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_base64_roundtrip_v2_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_base64_roundtrip_v2_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_parse_frozen_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_parse_frozen_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_rexxcps_levelb_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_rexxcps_levelb_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_awfy_nbody_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_awfy_nbody_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_rexxcps_levelb_opaque_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_rexxcps_levelb_opaque_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "benchmark_runner_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/benchmarks/benchmark_runner_opt_linked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "rxpa_dynlink_run_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "rxpa_dynlink_run_noopt",
+      "rx_rxpa_dynlink",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "rxpa_staticlink_run_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/testvm",
+      "rxpa_staticlink_run_noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "rxpa_classdecl_static_compile_opt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxc_classdecl_static",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa",
+      "-o",
+      "rxpa_classdecl_static_compile_opt",
+      "/Users/adrian/CLionProjects/CREXX/tests/rxpa/rxpa_classdecl.crexx"
+    ]
+  },
+  {
+    "name": "rxpa_signal_funcs_dynamic_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/rxpa_signal_funcs_dynamic_noopt_checked_runtime.cmake"
+    ]
+  },
+  {
+    "name": "rxpa_native_payload_funcs_dynamic_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "rxpa_native_payload_funcs_dynamic_noopt",
+      "rx_testfuncs_dynamic",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "rxpa_native_unwind_funcs_dynamic_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "rxpa_native_unwind_funcs_dynamic_noopt",
+      "rx_testfuncs_dynamic",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "rxpa_mult_test_noopt",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "rxpa_mult_test_noopt",
+      "rx_plugin1",
+      "rx_plugin2",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library"
+    ]
+  },
+  {
+    "name": "rxbin_autoload_contract",
+    "serial": false,
+    "lock": [],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DRXC=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "-DRXAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-DRXDAS=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+      "-DRXLINK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink",
+      "-DRXVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvm",
+      "-DRXBVM=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "-DPROVIDER_SOURCE=/Users/adrian/CLionProjects/CREXX/tests/autoload/provider/provider.crexx",
+      "-DCONSUMER_SOURCE=/Users/adrian/CLionProjects/CREXX/tests/autoload/consumer/consumer.crexx",
+      "-DWORK=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/autoload/work",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/tests/autoload/check_autoload.cmake"
+    ]
+  },
+  {
+    "name": "crexx_help_smoke",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_help_smoke.cmake"
+    ]
+  },
+  {
+    "name": "crexx_headerless_simple_smoke",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_headerless_smoke.cmake"
+    ]
+  },
+  {
+    "name": "crexx_args_smoke",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_args_smoke.cmake"
+    ]
+  },
+  {
+    "name": "crexx_rexxscript_smoke",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_rexxscript_smoke.cmake"
+    ]
+  },
+  {
+    "name": "crexx_levelc_classic_runtime_smoke",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_levelc_classic_runtime_smoke.cmake"
+    ]
+  },
+  {
+    "name": "crexx_status_diagnostics",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_status_diagnostics.cmake"
+    ]
+  },
+  {
+    "name": "crexx_project_build_contract",
+    "serial": true,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvme",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/crexx_project_build_ws",
+      "-DSOURCE_ROOT=/Users/adrian/CLionProjects/CREXX/bin/tests/rexx_src",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_project_build.cmake"
+    ]
+  },
+  {
+    "name": "crexx_rxpp_builddir",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/crexx_rxpp_builddir_ws",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_rxpp_builddir.cmake"
+    ]
+  },
+  {
+    "name": "crexx_rxpp_metadata_link",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/rxpp_metadata_link",
+      "-DCASE=link",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+    ]
+  },
+  {
+    "name": "crexx_rxpp_metadata_link_invalid_source",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/rxpp_metadata_link_invalid_source",
+      "-DCASE=link_invalid_source",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+    ]
+  },
+  {
+    "name": "crexx_rxpp_metadata_external_bare",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/rxpp_metadata_external_bare",
+      "-DCASE=external_bare",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+    ]
+  },
+  {
+    "name": "crexx_rxpp_metadata_external_spaces",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/rxpp_metadata_external_spaces",
+      "-DCASE=external_spaces",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+    ]
+  },
+  {
+    "name": "crexx_rxpp_metadata_external_names",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/rxpp_metadata_external_names",
+      "-DCASE=external_names",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+    ]
+  },
+  {
+    "name": "crexx_rxpp_metadata_external_missing",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/rxpp_metadata_external_missing",
+      "-DCASE=external_missing",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+    ]
+  },
+  {
+    "name": "crexx_rxpp_metadata_norun",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-DCREXX=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "-DRXVME=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxvme",
+      "-DRXPP=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxpp",
+      "-DMACLIB=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/maclib.rexx",
+      "-DWORK_ROOT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/rxpp_metadata_norun",
+      "-DCASE=norun",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/bin/tests/crexx_rxpp_metadata.cmake"
+    ]
+  },
+  {
+    "name": "crexx_source_root_compile_only",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_source_root_compile_only.cmake"
+    ]
+  },
+  {
+    "name": "crexx_native_explicit_header_smoke",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_native_explicit_header_smoke.cmake"
+    ]
+  },
+  {
+    "name": "crexx_native_rx_hash_provider",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_native_rx_hash_provider.cmake"
+    ]
+  },
+  {
+    "name": "crexx_native_default_link_strip",
+    "serial": false,
+    "lock": [
+      "crexx_bin_workspace"
+    ],
+    "command": [
+      "/opt/homebrew/bin/cmake",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/crexx_driver/tests/run_crexx_native_default_link_strip.cmake"
+    ]
+  }
+]

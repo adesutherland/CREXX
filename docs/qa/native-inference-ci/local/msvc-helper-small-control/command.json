@@ -1,0 +1,8 @@
+[
+  "c++",
+  "-std=c++17",
+  "-Dsmall=char",
+  "-Ilib/plugins/llama",
+  "-fsyntax-only",
+  "tests/native-inference/bridge_lifecycle.cpp"
+]

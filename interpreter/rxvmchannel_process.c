@@ -146,6 +146,7 @@ typedef struct process_request {
     process_channel *owner;
     process_worker *worker;
     struct process_request *owner_next;
+    struct process_request *owner_previous;
     struct process_request *queue_next;
     unsigned char *envelope;
     size_t envelope_length;
@@ -200,6 +201,7 @@ struct process_shared {
     process_request *queue_tail;
     char *program_path;
     char *worker_executable;
+    char *provider_location;
     size_t worker_count;
     size_t admission_capacity;
     size_t active_requests;
@@ -457,7 +459,7 @@ static PROCESS_THREAD_RETURN process_monitor_run(void *opaque) {
             worker->output, &worker->output_stopped);
     REDIRECT *error_redirect = rxspawn_redirect_to_byte_endpoint(
             worker->error, &worker->output_stopped);
-    const char *argv[4];
+    const char *argv[5];
     int spawn_status = SHELLSPAWN_FAILURE;
     int exit_status = 0;
     int termination_reason = 0;
@@ -466,10 +468,11 @@ static PROCESS_THREAD_RETURN process_monitor_run(void *opaque) {
     argv[0] = worker->shared->worker_executable;
     argv[1] = "--rxvm-process-worker";
     argv[2] = worker->shared->program_path;
-    argv[3] = 0;
+    argv[3] = worker->shared->provider_location;
+    argv[4] = 0;
     if (input_redirect && output_redirect && error_redirect) {
         spawn_status = shellspawn_argv_snapshot(
-                argv, 3, input_redirect, output_redirect, error_redirect,
+                argv, 4, input_redirect, output_redirect, error_redirect,
                 0, 0, -1, &worker->process_cancelled,
                 &worker->input_stopped, &worker->output_stopped,
                 &termination_reason, &exit_status, &message);
@@ -937,9 +940,12 @@ static rxvm_channel_status process_open(
     }
     shared->program_path = process_temp_program(generation);
     shared->worker_executable = process_worker_executable();
+    shared->provider_location = process_strdup(
+            context->provider_location ? context->provider_location : "");
     shared->workers = (process_worker *)calloc(
             worker_count, sizeof(*shared->workers));
     if (!shared->program_path || !shared->worker_executable ||
+        !shared->provider_location ||
         !shared->workers) goto open_failure;
     shared->worker_count = worker_count;
     shared->admission_capacity = admission_capacity;
@@ -995,6 +1001,7 @@ open_failure:
     if (shared->program_path) remove(shared->program_path);
     free(shared->program_path);
     free(shared->worker_executable);
+    free(shared->provider_location);
     free(shared->workers);
     process_condition_destroy(&shared->changed);
     process_mutex_destroy(&shared->mutex);
@@ -1102,6 +1109,7 @@ static rxvm_channel_status process_start(
     }
     request->request_id = shared->next_request_id++;
     request->owner_next = channel->requests;
+    if (request->owner_next) request->owner_next->owner_previous = request;
     channel->requests = request;
     request->queued = 1u;
     if (shared->queue_tail) shared->queue_tail->queue_next = request;
@@ -1320,13 +1328,13 @@ static rxvm_channel_status process_request_destroy(void *channel_state,
         process_mutex_unlock(&channel->shared->mutex);
         return RXVM_CHANNEL_INTERNAL_ERROR;
     }
-    cursor = &channel->requests;
-    while (*cursor && *cursor != request) cursor = &(*cursor)->owner_next;
+    cursor = request->owner_previous ? &request->owner_previous->owner_next : &channel->requests;
     if (*cursor != request) {
         process_mutex_unlock(&channel->shared->mutex);
         return RXVM_CHANNEL_INTERNAL_ERROR;
     }
     *cursor = request->owner_next;
+    if (request->owner_next) request->owner_next->owner_previous = request->owner_previous;
     process_mutex_unlock(&channel->shared->mutex);
     free(request->envelope);
     free(request->completion_document);
@@ -1355,6 +1363,7 @@ static void process_shared_destroy(process_shared *shared) {
     if (shared->program_path) remove(shared->program_path);
     free(shared->program_path);
     free(shared->worker_executable);
+    free(shared->provider_location);
     free(shared->workers);
     process_condition_destroy(&shared->changed);
     process_mutex_destroy(&shared->mutex);

@@ -1,0 +1,19 @@
+options levelg
+import rxfnsb
+import rxfnsg
+import rxstats
+
+main: procedure = .int
+  x = .packedfloat(2)
+  y = .packedfloat(2)
+  call x.set(0, 1.0)
+  call x.set(1, 2.0)
+  call y.set(0, 3.0)
+  call y.set(1, 5.0)
+  native = rxstats..regression(x, y)
+  rexx = .linearfit(2.0, 1.0)
+  say "native" native.slope() native.intercept() <typeof>(native) initialized(native)
+  say "factory" rexx.slope() rexx.intercept() <typeof>(rexx) initialized(rexx)
+  object = native as .object
+  say "native via object" <typeof>(object) (object is .linearfit)
+  return 0

@@ -1,0 +1,39 @@
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release
+      Start 1646: ts_rxjson_noopt
+      Start 1647: ts_rxjson_opt
+      Start 1648: ts_rxjson_document_noopt
+      Start 1649: ts_rxjson_document_opt
+      Start 1650: ts_rxjson_numeric_projection_noopt
+      Start 1651: ts_rxjson_numeric_projection_opt
+      Start 1652: ts_rxjson_noisy_contract_noopt
+      Start 1653: ts_rxjson_noisy_contract_opt
+ 1/14 Test #1648: ts_rxjson_document_noopt ...................   Passed    0.02 sec
+      Start 1664: ts_rxjson_document_rxbvm_noopt
+ 2/14 Test #1646: ts_rxjson_noopt ............................   Passed    0.02 sec
+      Start 1665: ts_rxjson_document_rxbvm_opt
+ 3/14 Test #1650: ts_rxjson_numeric_projection_noopt .........   Passed    0.02 sec
+      Start 1666: ts_rxjson_noisy_contract_rxbvm_noopt
+ 4/14 Test #1652: ts_rxjson_noisy_contract_noopt .............   Passed    0.02 sec
+      Start 1667: ts_rxjson_noisy_contract_rxbvm_opt
+ 5/14 Test #1651: ts_rxjson_numeric_projection_opt ...........   Passed    0.03 sec
+      Start 1668: ts_rxjson_numeric_projection_rxbvm_noopt
+ 6/14 Test #1647: ts_rxjson_opt ..............................   Passed    0.03 sec
+ 7/14 Test #1653: ts_rxjson_noisy_contract_opt ...............   Passed    0.03 sec
+      Start 1669: ts_rxjson_numeric_projection_rxbvm_opt
+ 8/14 Test #1666: ts_rxjson_noisy_contract_rxbvm_noopt .......   Passed    0.02 sec
+ 9/14 Test #1649: ts_rxjson_document_opt .....................   Passed    0.04 sec
+10/14 Test #1664: ts_rxjson_document_rxbvm_noopt .............   Passed    0.02 sec
+11/14 Test #1665: ts_rxjson_document_rxbvm_opt ...............   Passed    0.03 sec
+12/14 Test #1668: ts_rxjson_numeric_projection_rxbvm_noopt ...   Passed    0.02 sec
+13/14 Test #1667: ts_rxjson_noisy_contract_rxbvm_opt .........   Passed    0.03 sec
+14/14 Test #1669: ts_rxjson_numeric_projection_rxbvm_opt .....   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Label Time Summary:
+comprehensive       =   0.33 sec*proc (13 tests)
+linked_opt          =   0.22 sec*proc (7 tests)
+optimizer-parity    =   0.21 sec*proc (8 tests)
+smoke               =   0.02 sec*proc (1 test)
+
+Total Test time (real) =   0.10 sec

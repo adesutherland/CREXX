@@ -1,0 +1,72 @@
+﻿2026-09-15T18:41:48.5532223Z Current runner version: '2.337.0'
+2026-09-15T18:41:48.5553411Z ##[group]Runner Image Provisioner
+2026-09-15T18:41:48.5554156Z Hosted Compute Agent
+2026-09-15T18:41:48.5554713Z Version: 20260828.587
+2026-09-15T18:41:48.5555438Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-15T18:41:48.5556034Z Build Date: 2026-08-28T16:44:25Z
+2026-09-15T18:41:48.5556632Z Worker ID: {93927fe4-12cc-4c6d-be03-1dba0ecfa1b4}
+2026-09-15T18:41:48.5557228Z Azure Region: centralus
+2026-09-15T18:41:48.5557716Z ##[endgroup]
+2026-09-15T18:41:48.5558933Z ##[group]Operating System
+2026-09-15T18:41:48.5559443Z Ubuntu
+2026-09-15T18:41:48.5559901Z 24.04.5
+2026-09-15T18:41:48.5560336Z LTS
+2026-09-15T18:41:48.5560801Z ##[endgroup]
+2026-09-15T18:41:48.5561289Z ##[group]Runner Image
+2026-09-15T18:41:48.5561788Z Image: ubuntu-24.04
+2026-09-15T18:41:48.5562270Z Version: 20260907.300.1
+2026-09-15T18:41:48.5563363Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-15T18:41:48.5564648Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+2026-09-15T18:41:48.5565553Z ##[endgroup]
+2026-09-15T18:41:48.5566526Z ##[group]GITHUB_TOKEN Permissions
+2026-09-15T18:41:48.5568450Z Actions: read
+2026-09-15T18:41:48.5568992Z Contents: read
+2026-09-15T18:41:48.5569450Z Metadata: read
+2026-09-15T18:41:48.5569893Z ##[endgroup]
+2026-09-15T18:41:48.5571613Z Secret source: Actions
+2026-09-15T18:41:48.5572644Z Cache mode: write
+2026-09-15T18:41:48.5573331Z Prepare workflow directory
+2026-09-15T18:41:48.5925020Z Prepare all required actions
+2026-09-15T18:41:48.5970339Z Getting action download info
+2026-09-15T18:41:48.8699021Z Download action repository 'actions/download-artifact@v8' (SHA:3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c)
+2026-09-15T18:41:49.5743512Z Complete job name: Compare Release RXBIN outputs
+2026-09-15T18:41:49.6276418Z ##[group]Run actions/download-artifact@v8
+2026-09-15T18:41:49.6277204Z with:
+2026-09-15T18:41:49.6277673Z   pattern: deep-build-j*
+2026-09-15T18:41:49.6278221Z   path: /home/runner/work/_temp/deep-evidence
+2026-09-15T18:41:49.6278892Z   merge-multiple: true
+2026-09-15T18:41:49.6279383Z   repository: adesutherland/CREXX
+2026-09-15T18:41:49.6279947Z   run-id: 35007946063
+2026-09-15T18:41:49.6280418Z   skip-decompress: false
+2026-09-15T18:41:49.6280890Z   digest-mismatch: error
+2026-09-15T18:41:49.6281491Z ##[endgroup]
+2026-09-15T18:41:49.9226640Z Found 3 artifact(s)
+2026-09-15T18:41:49.9228032Z Filtering artifacts by pattern 'deep-build-j*'
+2026-09-15T18:41:49.9229445Z Preparing to download the following artifacts:
+2026-09-15T18:41:49.9231121Z - deep-build-j30 (ID: 10412537651, Size: 1289, Expected Digest: sha256:e3c97a324e6e5d6801793b93129be3a50294a1f783aa56d890fa962cf5b39871)
+2026-09-15T18:41:49.9233109Z - deep-build-j1 (ID: 10412373858, Size: 1287, Expected Digest: sha256:b41032c51de7115c977bbe0828e95d73369eca60b767cc7f18df0d9ded94dda6)
+2026-09-15T18:41:49.9235030Z - deep-build-j5 (ID: 10411719557, Size: 1287, Expected Digest: sha256:a188c009e5883d466e97d0cb28d93c4eb70a687bd03a1520893af04a17ab44b8)
+2026-09-15T18:41:50.2064395Z Redirecting to blob download url: https://productionresultssa7.blob.core.windows.net/actions-results/d55e0548-eadf-4af9-995c-435bf5e65cb4/workflow-job-run-7476bafb-0c01-59ef-afb7-4803408cf8d1/artifacts/12a764c71e0d5143ae8d6538e79341ad173aa304b8ef941fe3e8d62ed996ff89.zip
+2026-09-15T18:41:50.2070403Z Starting download of artifact to: /home/runner/work/_temp/deep-evidence
+2026-09-15T18:41:50.2292506Z Redirecting to blob download url: https://productionresultssa7.blob.core.windows.net/actions-results/d55e0548-eadf-4af9-995c-435bf5e65cb4/workflow-job-run-9fca3886-8da1-5c80-9a43-e23249a2e1d7/artifacts/1d459cf5492872f26f4fa0eadfbd34b262e82444913c7ffc2e8c82209ef590f2.zip
+2026-09-15T18:41:50.2299076Z Starting download of artifact to: /home/runner/work/_temp/deep-evidence
+2026-09-15T18:41:50.2385687Z Redirecting to blob download url: https://productionresultssa7.blob.core.windows.net/actions-results/d55e0548-eadf-4af9-995c-435bf5e65cb4/workflow-job-run-fdbabc5b-379a-5f4a-8195-6d8edc1b61bb/artifacts/55e8111a41dae56fa972d13783299f3bb24e6f723b37700b1c3eaf6f9a933552.zip
+2026-09-15T18:41:50.2392198Z Starting download of artifact to: /home/runner/work/_temp/deep-evidence
+2026-09-15T18:41:50.3639566Z (node:1909) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-09-15T18:41:50.3644237Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-15T18:41:50.3677674Z SHA256 digest of downloaded artifact is a188c009e5883d466e97d0cb28d93c4eb70a687bd03a1520893af04a17ab44b8
+2026-09-15T18:41:50.3680301Z Artifact download completed successfully.
+2026-09-15T18:41:50.3772079Z SHA256 digest of downloaded artifact is e3c97a324e6e5d6801793b93129be3a50294a1f783aa56d890fa962cf5b39871
+2026-09-15T18:41:50.3775098Z Artifact download completed successfully.
+2026-09-15T18:41:50.4203114Z SHA256 digest of downloaded artifact is b41032c51de7115c977bbe0828e95d73369eca60b767cc7f18df0d9ded94dda6
+2026-09-15T18:41:50.4206955Z Artifact download completed successfully.
+2026-09-15T18:41:50.4209249Z Total of 3 artifact(s) downloaded
+2026-09-15T18:41:50.4211384Z Download artifact has finished successfully
+2026-09-15T18:41:50.4381115Z ##[group]Run set -euo pipefail
+2026-09-15T18:41:50.4382420Z [36;1mset -euo pipefail[0m
+2026-09-15T18:41:50.4383507Z [36;1mevidence="${RUNNER_TEMP}/deep-evidence"[0m
+2026-09-15T18:41:50.4385008Z [36;1mdiff -u "$evidence/rxbin-j1.sha256" "$evidence/rxbin-j5.sha256"[0m
+2026-09-15T18:41:50.4386452Z [36;1mdiff -u "$evidence/rxbin-j1.sha256" "$evidence/rxbin-j30.sha256"[0m
+2026-09-15T18:41:50.4413575Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-15T18:41:50.4415009Z ##[endgroup]
+2026-09-15T18:41:50.4768815Z Cleaning up orphan processes

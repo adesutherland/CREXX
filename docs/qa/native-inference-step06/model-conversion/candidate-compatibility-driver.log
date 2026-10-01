@@ -1,0 +1,5 @@
+PASS candidate_embedding cpu
+PASS candidate_embedding required-gpu
+PASS candidate_embedding cross-device
+PASS candidate_generation cpu
+PASS candidate_generation required-gpu

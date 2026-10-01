@@ -10,6 +10,12 @@
 #include <direct.h>
 #include <io.h>
 #include <windows.h>
+#ifndef S_ISDIR
+#define S_ISDIR(mode) (((mode) & _S_IFMT) == _S_IFDIR)
+#endif
+#ifndef S_ISREG
+#define S_ISREG(mode) (((mode) & _S_IFMT) == _S_IFREG)
+#endif
 #define RXFS_CHDIR _chdir
 #define RXFS_GETCWD _getcwd
 #define RXFS_MKDIR(path) _mkdir(path)
@@ -30,7 +36,7 @@
 
 #include "crexxpa.h"
 
-RXPA_PLUGIN_PROCESS_REENTRANT
+#include "rxfs_ops.h"
 
 #define RXFS_PATH_CAPACITY 4096
 
@@ -307,6 +313,17 @@ PROCEDURE(append_file)
 }
 
 LOADFUNCS
+    ADDPROC(path_kind, "rxfs.pathkind", "b", ".int", "path = .string");
+    ADDPROC(absolute_path, "rxfs.abspath", "b", ".string", "path = .string");
+    ADDPROC(copy_file, "rxfs.copy", "b", ".int", "source = .string,target = .string");
+    ADDPROC(hard_link, "rxfs.hardlink", "b", ".int", "source = .string,target = .string");
+    ADDPROC(move_file, "rxfs.move", "b", ".int", "source = .string,target = .string");
+    ADDCLASS("rxfs.fileguard");
+    ADDFACTORYPROC(make_guard, "rxfs.fileguard", ".rxfs..fileguard", "path=.string,mode=.string");
+    ADDMETHODPROC(guard_held, "rxfs.fileguard", "held", ".int", "");
+    ADDMETHODPROC(guard_status, "rxfs.fileguard", "status", ".int", "");
+    ADDMETHODPROC(guard_busy, "rxfs.fileguard", "busy", ".int", "");
+    ADDMETHODPROC(guard_close, "rxfs.fileguard", "close", ".int", "");
     ADDPROC(cwd, "rxfs.cwd", "b", ".string", "");
     ADDPROC(loadpath, "rxfs.loadpath", "b", ".string", "");
     ADDPROC(change_directory, "rxfs.chdir", "b", ".int", "path = .string");

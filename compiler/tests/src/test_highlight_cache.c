@@ -255,6 +255,8 @@ int main(void) {
     char exit_file[MAXFILEPATH];
     char library_source[MAXFILEPATH];
     char exit_module_source[MAXFILEPATH];
+    char sandbox_library_file[MAXFILEPATH];
+    char sandbox_exit_module_file[MAXFILEPATH];
     char library_file[MAXFILEPATH];
     char exit_module_file[MAXFILEPATH];
     RXCPHighlightCacheStats stats1;
@@ -289,6 +291,8 @@ int main(void) {
                      build_path(exit_file, sizeof(exit_file), feature_sandbox, "/exit_cache.rexx") &&
                      build_path(library_source, sizeof(library_source), bin_dir, "/library.rxbin") &&
                      build_path(exit_module_source, sizeof(exit_module_source), bin_dir, "/rxcexits.rxbin") &&
+                     build_path(sandbox_library_file, sizeof(sandbox_library_file), sandbox, "/library.rxbin") &&
+                     build_path(sandbox_exit_module_file, sizeof(sandbox_exit_module_file), sandbox, "/rxcexits.rxbin") &&
                      build_path(library_file, sizeof(library_file), feature_sandbox, "/library.rxbin") &&
                      build_path(exit_module_file, sizeof(exit_module_file), feature_sandbox, "/rxcexits.rxbin"),
                      "Failed to derive feature cache file paths")) return 1;
@@ -296,6 +300,8 @@ int main(void) {
 
     cleanup_test_paths(main_a, dep_a, dir_a);
     cleanup_test_paths(main_b, dep_b, dir_b);
+    remove(sandbox_library_file);
+    remove(sandbox_exit_module_file);
     rxcp_test_rmdir(sandbox);
     cleanup_feature_cache_paths(external_file, exit_file, library_file, exit_module_file, feature_sandbox);
 
@@ -309,12 +315,11 @@ int main(void) {
         rxcp_test_rmdir(sandbox);
         return 1;
     }
-    if (!expect_true(rxcp_test_chdir(sandbox) == 0, "Failed to enter cache test sandbox")) {
-        cleanup_test_paths(main_a, dep_a, dir_a);
-        cleanup_test_paths(main_b, dep_b, dir_b);
-        rxcp_test_rmdir(sandbox);
-        return 1;
-    }
+    if (!expect_true(copy_binary_file(library_source, sandbox_library_file),
+                     "Failed to copy library.rxbin into cache test sandbox")) goto fail;
+    if (!expect_true(copy_binary_file(exit_module_source, sandbox_exit_module_file),
+                     "Failed to copy rxcexits.rxbin into cache test sandbox")) goto fail;
+    if (!expect_true(rxcp_test_chdir(sandbox) == 0, "Failed to enter cache test sandbox")) goto fail;
 
     if (!expect_true(write_text_file("a/main.rexx", "say 'file a'\n"), "Failed to write first main file")) goto fail;
     if (!expect_true(write_text_file("a/dep.rexx", "say 'dep a'\n"), "Failed to write first dependency file")) goto fail;
@@ -420,6 +425,8 @@ int main(void) {
     }
     cleanup_test_paths(main_a, dep_a, dir_a);
     cleanup_test_paths(main_b, dep_b, dir_b);
+    remove(sandbox_library_file);
+    remove(sandbox_exit_module_file);
     rxcp_test_rmdir(sandbox);
     cleanup_feature_cache_paths(external_file, exit_file, library_file, exit_module_file, feature_sandbox);
     if (saved_exit_module) {
@@ -437,6 +444,8 @@ fail:
     }
     cleanup_test_paths(main_a, dep_a, dir_a);
     cleanup_test_paths(main_b, dep_b, dir_b);
+    remove(sandbox_library_file);
+    remove(sandbox_exit_module_file);
     rxcp_test_rmdir(sandbox);
     cleanup_feature_cache_paths(external_file, exit_file, library_file, exit_module_file, feature_sandbox);
     if (saved_exit_module) {

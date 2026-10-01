@@ -1,0 +1,3 @@
+/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-bridge-probe-u77lluop/bridge-probe:
+	@rpath/libcrexx-llama.1.dylib (compatibility version 1.0.0, current version 1.0.0)
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)

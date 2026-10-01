@@ -1,5 +1,9 @@
 file(REMOVE_RECURSE "${WORK}")
 file(MAKE_DIRECTORY "${WORK}")
+set(runners "${RXBVM}")
+if(DEFINED RXTVM AND NOT RXTVM STREQUAL "")
+    list(PREPEND runners "${RXTVM}")
+endif()
 
 foreach(mode IN ITEMS opt noopt)
     if(mode STREQUAL "noopt")
@@ -98,7 +102,7 @@ foreach(mode IN ITEMS opt noopt)
         message(FATAL_ERROR "rxlink ${mode} failed:\n${out}${err}")
     endif()
 
-    foreach(runner IN ITEMS "${RXTVM}" "${RXBVM}")
+    foreach(runner IN LISTS runners)
         execute_process(
                 COMMAND "${runner}" "${WORK}/linked_${mode}.rxbin"
                 WORKING_DIRECTORY "${WORK}"

@@ -1,0 +1,20 @@
+Command: ctest --test-dir cmake-build-debug --output-on-failure -R \^keyaccess_\(test_\(noopt\|opt\)\|compact_failure\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1754: keyaccess_test_noopt
+1/3 Test #1754: keyaccess_test_noopt .............   Passed    0.06 sec
+    Start 1755: keyaccess_test_opt
+2/3 Test #1755: keyaccess_test_opt ...............   Passed    0.04 sec
+    Start 1756: keyaccess_compact_failure
+3/3 Test #1756: keyaccess_compact_failure ........   Passed    0.29 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+comprehensive       =   0.04 sec*proc (1 test)
+linked_opt          =   0.04 sec*proc (1 test)
+optimizer-parity    =   0.11 sec*proc (2 tests)
+smoke               =   0.36 sec*proc (2 tests)
+
+Total Test time (real) =   0.44 sec

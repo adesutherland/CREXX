@@ -1,0 +1,100 @@
+rxfs.c
+   Creating library C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\providers\rxfs.lib and object C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\providers\rxfs.exp
+rxfs.c
+> rxc warning: Warning in crexx_llama.crexx @ 201:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 183, column 7. Declare this binding explicitly if intentional., "name_count"
+> rxc warning: Warning in crexx_llama.crexx @ 217:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 183, column 7. Declare this binding explicitly if intentional., "name_count"
+> rxc warning: Warning in crexx_llama.crexx @ 231:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 183, column 7. Declare this binding explicitly if intentional., "name_count"
+> rxc warning: 3 warning(s) in source file
+Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36256 for x64
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+crexx_llama.c
+Microsoft (R) Incremental Linker Version 14.51.36256.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\crexx_llama.exe 
+/INCLUDE:main 
+/LIBPATH:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin 
+/WHOLEARCHIVE:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rx_treemap_static.lib 
+/WHOLEARCHIVE:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rx_llist_static.lib 
+/WHOLEARCHIVE:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rx_keyaccess_static.lib 
+/WHOLEARCHIVE:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\providers\rxfs.lib 
+/WHOLEARCHIVE:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\providers\rx_hash.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxvml.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxpashim.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxvmplugin.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxvmref.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxvmmemory.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxbin.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\platform.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin/rxvm_mc_decimal_manual.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\decnumber.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\avl_tree.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxpa.lib 
+ws2_32.lib 
+advapi32.lib 
+secur32.lib 
+crypt32.lib 
+psapi.lib 
+kernel32.lib 
+user32.lib 
+gdi32.lib 
+winspool.lib 
+shell32.lib 
+ole32.lib 
+oleaut32.lib 
+uuid.lib 
+comdlg32.lib 
+advapi32.lib 
+/machine:x64 
+/INCREMENTAL:NO 
+crexx_llama.obj 
+crexx-llama status [--root DIR]
+crexx-llama use vulkan|cuda [--root DIR]
+Close programs using llama.rexx before switching.
+A system-wide installation requires an administrator terminal.
+Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36256 for x64
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+fs_contract.c
+Microsoft (R) Incremental Linker Version 14.51.36256.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\fs_contract.exe 
+/INCLUDE:main 
+/LIBPATH:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin 
+/WHOLEARCHIVE:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rx_treemap_static.lib 
+/WHOLEARCHIVE:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rx_llist_static.lib 
+/WHOLEARCHIVE:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rx_keyaccess_static.lib 
+/WHOLEARCHIVE:C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\providers\rxfs.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxvml.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxpashim.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxvmplugin.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxvmref.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxvmmemory.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxbin.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\platform.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin/rxvm_mc_decimal_manual.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\decnumber.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\avl_tree.lib 
+C:\Users\RUNNER~1\AppData\Local\Temp\crexx-llama-native-0rvw2r0b\core\bin\rxpa.lib 
+ws2_32.lib 
+advapi32.lib 
+secur32.lib 
+crypt32.lib 
+psapi.lib 
+kernel32.lib 
+user32.lib 
+gdi32.lib 
+winspool.lib 
+shell32.lib 
+ole32.lib 
+oleaut32.lib 
+uuid.lib 
+comdlg32.lib 
+advapi32.lib 
+/machine:x64 
+/INCREMENTAL:NO 
+fs_contract.obj 
+PASS: rxfs public contract
+Built cREXX native manager: D:\a\_temp\manager

@@ -1,0 +1,2 @@
+PASS: native inference absolute summary /tmp/crexx-ni-reducer-fixture.LmjaIJ/summary-unpadded.csv
+PASS: native inference absolute summary /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/completion/bge-absolute-summary.csv

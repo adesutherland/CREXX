@@ -1,0 +1,11 @@
+options levelb
+import rxfnsb
+##cflags macrotrace nosrcmap
+
+/* The 17th generated .mcall must be rejected at the depth-16 limit. */
+##MACRO LOOP
+    .mcall LOOP
+##MEND
+
+##LOOP
+say "preprocessing completed after the recursion guard"

@@ -32,6 +32,9 @@
 #include <windows.h>
 #endif
 #include "platform.h"
+#if defined(CREXX_MAINFRAME_ELF)
+#include <mainframe_text.h>
+#endif
 #include "rxvmintp.h"
 #include "rxvmplugin_framework.h"
 #include "rxvmprocessworker.h"
@@ -76,6 +79,7 @@ static void help() {
             "                  Write the instruction-sequence execution profile\n"
 #endif
             "  -l location     Working Location (directory)\n"
+            "  -E encoding     VM text-file encoding (RXBIN and .binary stay raw)\n"
             "  -v              Prints Version\n"
             "\n*   VM Extension Plugin are specified by the full file name without the extension\n"
             "    Multiple plugins can be loaded by specifying multiple -p options\n"
@@ -146,6 +150,9 @@ static void license() {
 }
 
 int main(int argc, char *argv[]) {
+#if defined(CREXX_MAINFRAME_ELF)
+    mainframe_set_text_conversion(0);
+#endif
     char *file_name;
     char *combined_location = 0;
     char *exe_path = 0;
@@ -157,12 +164,19 @@ int main(int argc, char *argv[]) {
     rxvm_context context;
     size_t num_modules;
 
+#ifndef CREXX_VM_SINGLE_THREADED
     platform_install_signal_handlers();
+#endif
 
     /* Private, rebuild-together process-provider worker mode. It is kept out
      * of public help and executes only the versioned framed task protocol. */
-    if (argc == 3 && strcmp(argv[1], "--rxvm-process-worker") == 0) {
-        return rxvm_process_worker_main(argv[2]);
+    if (argc == 4 && strcmp(argv[1], "--rxvm-process-worker") == 0) {
+#ifdef CREXX_VM_SINGLE_THREADED
+        fputs("RXVM: process workers are not supported in this build\n", stderr);
+        return 2;
+#else
+        return rxvm_process_worker_main(argv[2], argv[3]);
+#endif
     }
 
 #ifdef _WIN32
@@ -302,6 +316,12 @@ int main(int argc, char *argv[]) {
                     error_and_exit("Missing location after -l");
                 }
                 context.location = argv[i];
+                break;
+
+            case 'E': /* VM application text files */
+                i++;
+                if (i >= argc || platform_text_encoding(argv[i]) != 0)
+                    error_and_exit("Missing or unsupported text encoding after -E");
                 break;
 
             case 'P': /* Load Plugin */

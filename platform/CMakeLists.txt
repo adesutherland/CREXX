@@ -4,10 +4,216 @@ project(PLATFORM C)
 
 set(CMAKE_C_STANDARD 90)
 
-add_library(platform platform.h platform.c rxinteger.h rxinteger.c)
+set(platform_sources platform.c platform_tso.c platform_native.c text_codec.c oom.c)
+if(APPLE AND BUILD_TESTING)
+    # Select real handler bodies; every other handler is discarded by the
+    # preprocessor, so the fixture tests wiring without replacing those bodies.
+    set(handler_selectors "")
+    foreach(group IN ITEMS control string system)
+        set(handler_file "${CMAKE_SOURCE_DIR}/interpreter/rxvmhandlers_${group}.inc")
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${handler_file}")
+        file(READ "${handler_file}" handler_source)
+        string(REGEX MATCHALL "RXVM_HANDLER\\([A-Z0-9_]+" handler_names "${handler_source}")
+        foreach(declaration IN LISTS handler_names)
+            string(REPLACE "RXVM_HANDLER(" "" handler_name "${declaration}")
+            string(APPEND handler_selectors "#define FIXTURE_${handler_name}(...)\n")
+        endforeach()
+    endforeach()
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/mainframe_handler_selectors.h" "${handler_selectors}")
+    foreach(mode IN ITEMS utf8 byte)
+        add_executable(test_mainframe_handlers_${mode} tests/test_mainframe_handlers.c ${platform_sources})
+        target_include_directories(test_mainframe_handlers_${mode} PRIVATE . "${CMAKE_CURRENT_BINARY_DIR}")
+        target_compile_definitions(test_mainframe_handlers_${mode} PRIVATE CREXX_CMS_ELF=1)
+        if(mode STREQUAL "byte")
+            target_compile_definitions(test_mainframe_handlers_${mode} PRIVATE NUTF8=1)
+        endif()
+        set_property(TARGET test_mainframe_handlers_${mode} PROPERTY C_STANDARD 99)
+        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mainframe-handlers-${mode}")
+        add_test(NAME mainframe_handlers_${mode} COMMAND test_mainframe_handlers_${mode})
+        set_tests_properties(mainframe_handlers_${mode} PROPERTIES LABELS "platform;text;cms;vm"
+            TIMEOUT 30 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mainframe-handlers-${mode}"
+            CREXX_PREP_TARGETS test_mainframe_handlers_${mode})
+    endforeach()
+    add_executable(test_mainframe_stdio tests/test_mainframe_stdio.c ${platform_sources})
+    target_include_directories(test_mainframe_stdio PRIVATE .)
+    target_compile_definitions(test_mainframe_stdio PRIVATE CREXX_CMS_ELF=1 CREXX_CMS_TEXT_IO=1)
+    set_property(TARGET test_mainframe_stdio PROPERTY C_STANDARD 99)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mainframe-stdio")
+    add_test(NAME mainframe_stdio COMMAND test_mainframe_stdio)
+    set_tests_properties(mainframe_stdio PROPERTIES LABELS "platform;text;cms"
+        TIMEOUT 30 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mainframe-stdio"
+        CREXX_PREP_TARGETS test_mainframe_stdio)
+endif()
+add_library(platform platform.h ${platform_sources} rxinteger.h rxinteger.c)
 target_include_directories(platform PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if(WIN32)
     target_link_libraries(platform PUBLIC psapi)
+endif()
+
+if(APPLE AND BUILD_TESTING)
+    # Reuse the ordinary VM core; replace only entry/SAY/platform console code
+    # with its native-page build to test real execution and signal transport.
+    add_executable(rxvm_mainframe_console_harness EXCLUDE_FROM_ALL
+            ../interpreter/rxvmmain.c ../interpreter/exitfunc.c
+            ${platform_sources} rxinteger.c tests/mainframe_console_mock.c)
+    target_include_directories(rxvm_mainframe_console_harness PRIVATE . tests
+            ../interpreter ../interpreter/rxvmplugin ../assembler
+            ../binutils/include ../avl_tree ../rxpa ../utf8 ../inc)
+    target_compile_definitions(rxvm_mainframe_console_harness PRIVATE
+            CREXX_CMS_ELF=1 NTHREADED=1)
+    set_property(TARGET rxvm_mainframe_console_harness PROPERTY C_STANDARD 99)
+    target_link_libraries(rxvm_mainframe_console_harness PRIVATE rxbvml)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME mainframe_console_signals
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/console_signals.py
+            --assembler $<TARGET_FILE:rxas> --vm $<TARGET_FILE:rxvm_mainframe_console_harness>
+            --codec $<TARGET_FILE:text_fixture_codec>
+            --work ${CMAKE_CURRENT_BINARY_DIR}/console-signals)
+    # Debug 0.37 s; Apple ASan 4.09 s (2026-09-30).
+    # Serialize the tool/VM matrix; timeout is a generous hang backstop.
+    set_tests_properties(mainframe_console_signals PROPERTIES
+            LABELS "platform;text;cms;vm" RUN_SERIAL TRUE TIMEOUT 300
+            CREXX_PREP_TARGETS "rxas;rxvm_mainframe_console_harness;text_fixture_codec")
+endif()
+
+if(UNIX AND BUILD_TESTING)
+    # Deliberately retain Linux aliases to test profile precedence on both hosts.
+    add_executable(platform_cms_harness platform_cms_harness.c ${platform_sources})
+    target_compile_definitions(platform_cms_harness PRIVATE
+            __MAINFRAME_LAB_VM370_4381__=1 __linux__=1 __linux=1)
+    add_test(NAME platform_cms_selection COMMAND platform_cms_harness)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cms24")
+    set_tests_properties(platform_cms_selection PROPERTIES
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cms24"
+            LABELS "platform;cms" TIMEOUT 30)
+    add_executable(platform_cms31_harness platform_cms_harness.c ${platform_sources})
+    target_compile_definitions(platform_cms31_harness PRIVATE
+            __MAINFRAME_LAB_CMS20_ESA31__=1 __linux__=1 __linux=1)
+    add_test(NAME platform_cms31_selection COMMAND platform_cms31_harness)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cms31")
+    set_tests_properties(platform_cms31_selection PROPERTIES
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cms31"
+            LABELS "platform;cms" TIMEOUT 30)
+    crexx_register_test_prep_targets(TESTS platform_cms_selection
+            TARGETS platform_cms_harness)
+    crexx_register_test_prep_targets(TESTS platform_cms31_selection
+            TARGETS platform_cms31_harness)
+endif()
+
+if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    set(text_selector_command "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_text_selectors.py"
+            --rxc $<TARGET_FILE:rxc> --rxas $<TARGET_FILE:rxas>
+            --rxlink $<TARGET_FILE:rxlink> --rxdas $<TARGET_FILE:rxdas>
+            --rxbvm $<TARGET_FILE:rxbvm>)
+    add_custom_target(check_text_selectors COMMAND ${text_selector_command}
+            DEPENDS rxc rxas rxlink rxdas rxbvm VERBATIM)
+    # Isolated command on this host: 0.13 s Debug, 0.49 s Apple ASan runner.
+    # Serialize its nested front ends; 300 s is a hang guard on slower CI.
+    add_test(NAME text_selector_cli COMMAND ${text_selector_command})
+    set_tests_properties(text_selector_cli PROPERTIES
+            LABELS "platform;text;tools" RUN_SERIAL TRUE TIMEOUT 300
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxdas;rxbvm")
+endif()
+
+if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
+    foreach(profile IN ITEMS cms tso)
+        string(TOUPPER "${profile}" profile_upper)
+        add_executable(test_native_raw_${profile} tests/test_native_raw_adapter.c
+                platform.c platform_native.c text_codec.c oom.c rxinteger.c
+                ../interpreter/rxenv.c)
+        if(profile STREQUAL "tso")
+            target_sources(test_native_raw_${profile} PRIVATE platform_tso.c)
+        endif()
+        target_include_directories(test_native_raw_${profile} PRIVATE .)
+        target_compile_definitions(test_native_raw_${profile} PRIVATE CREXX_NATIVE_RAW_IO=1
+                CREXX_NATIVE_HOST_MOCK=1 CREXX_${profile_upper}_ELF=1)
+        add_test(NAME native_raw_${profile} COMMAND test_native_raw_${profile})
+        set_tests_properties(native_raw_${profile} PROPERTIES
+                LABELS "platform;text;raw" TIMEOUT 30
+                CREXX_PREP_TARGETS test_native_raw_${profile})
+    endforeach()
+endif()
+
+if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
+    # Link the real front ends to an injected text-stream provider. These are
+    # host interface tests, not an implementation of the CMS runtime/code page.
+    foreach(tool IN ITEMS rxc rxas)
+        if(tool STREQUAL rxc)
+            set(entry "${CMAKE_SOURCE_DIR}/compiler/rxc_main.c")
+            set(frontend rxclib)
+        else()
+            set(entry "${CMAKE_SOURCE_DIR}/assembler/rxasmain.c")
+            set(frontend rxaslib)
+        endif()
+        add_executable(${tool}_cms_text_harness EXCLUDE_FROM_ALL
+                ${entry} ${platform_sources} rxinteger.c tests/cms_text_mock.c)
+        target_include_directories(${tool}_cms_text_harness PRIVATE .
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests"
+                "${CMAKE_SOURCE_DIR}/compiler" "${CMAKE_SOURCE_DIR}/assembler"
+                "${CMAKE_BINARY_DIR}/assembler"
+                "${CMAKE_SOURCE_DIR}/binutils/include")
+        target_compile_definitions(${tool}_cms_text_harness PRIVATE
+                __MAINFRAME_LAB_CMS20_ESA31__=1 CREXX_CMS_TEXT_IO=1 CREXX_CMS_DIRENT=1)
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            target_sources(${tool}_cms_text_harness PRIVATE tests/funopen_compat.c)
+            target_compile_options(${tool}_cms_text_harness PRIVATE
+                -include "${CMAKE_CURRENT_SOURCE_DIR}/tests/funopen_compat.h")
+        endif()
+        set_property(TARGET ${tool}_cms_text_harness PROPERTY C_STANDARD 99)
+        target_link_libraries(${tool}_cms_text_harness PRIVATE ${frontend})
+        if(tool STREQUAL rxas)
+            target_link_libraries(${tool}_cms_text_harness PRIVATE avl_tree)
+        endif()
+    endforeach()
+    add_executable(text_fixture_codec tests/text_fixture_codec.c text_codec.c)
+    target_include_directories(text_fixture_codec PRIVATE .)
+    add_executable(platform_cms_directory_harness tests/cms_directory.c ${platform_sources})
+    target_include_directories(platform_cms_directory_harness PRIVATE .)
+    target_compile_definitions(platform_cms_directory_harness PRIVATE
+            __MAINFRAME_LAB_CMS20_ESA31__=1 CREXX_CMS_DIRENT=1 __linux__=1)
+    set_property(TARGET platform_cms_directory_harness PROPERTY C_STANDARD 99)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cms-directory")
+    add_test(NAME platform_cms_directory COMMAND platform_cms_directory_harness)
+    set_tests_properties(platform_cms_directory PROPERTIES LABELS "platform;cms"
+            TIMEOUT 30 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cms-directory")
+    crexx_register_test_prep_targets(TESTS platform_cms_directory
+            TARGETS platform_cms_directory_harness)
+
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    set(cms_text_command "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/cms_text.py"
+            --rxc $<TARGET_FILE:rxc> --rxas $<TARGET_FILE:rxas>
+            --mock-rxc $<TARGET_FILE:rxc_cms_text_harness>
+            --mock-rxas $<TARGET_FILE:rxas_cms_text_harness>
+            --link $<TARGET_FILE:rxlink> --vm $<TARGET_FILE:rxbvm>
+            --codec $<TARGET_FILE:text_fixture_codec>
+            --work "${CMAKE_CURRENT_BINARY_DIR}/cms-text")
+    # Explicit target also permits isolated Debug/sanitizer timing.
+    add_custom_target(check_cms_text COMMAND ${cms_text_command}
+            DEPENDS rxc rxas rxlink rxbvm rxc_cms_text_harness rxas_cms_text_harness text_fixture_codec
+            VERBATIM)
+    add_test(NAME platform_cms_text COMMAND ${cms_text_command})
+    # Updated raw-codec matrix: Debug 0.95 s; Apple ASan 19.06 s (2026-09-30).
+    # Serialize nested tool invocations; the deadline is hang protection.
+    set_tests_properties(platform_cms_text PROPERTIES LABELS "platform;cms;text"
+            RUN_SERIAL TRUE TIMEOUT 300)
+    crexx_register_test_prep_targets(TESTS platform_cms_text
+            TARGETS rxc rxas rxlink rxbvm rxc_cms_text_harness rxas_cms_text_harness text_fixture_codec)
+endif()
+
+if(BUILD_TESTING)
+    crexx_schedule_directory_qa_tier_finalization()
+endif()
+
+if(UNIX AND BUILD_TESTING)
+    add_executable(test_oom_mainframe tests/test_oom_mainframe.c text_codec.c)
+    target_include_directories(test_oom_mainframe PRIVATE .)
+    target_compile_definitions(test_oom_mainframe PRIVATE CREXX_MAINFRAME_ELF=1)
+    set_property(TARGET test_oom_mainframe PROPERTY C_STANDARD 99)
+    add_test(NAME oom_mainframe COMMAND test_oom_mainframe)
+    set_tests_properties(oom_mainframe PROPERTIES LABELS "platform;allocation;text"
+        TIMEOUT 30 CREXX_PREP_TARGETS test_oom_mainframe)
 endif()
 
 if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
@@ -30,4 +236,17 @@ if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
             LABELS "platform;terminal;tty;disconnect"
             PASS_REGULAR_EXPRESSION "PASS: terminal disconnect semantics"
             TIMEOUT 10)
+endif()
+
+if(UNIX AND BUILD_TESTING)
+    add_executable(test_oom_diagnostic tests/test_oom.c text_codec.c)
+    target_include_directories(test_oom_diagnostic PRIVATE .)
+    add_test(NAME oom_diagnostic COMMAND test_oom_diagnostic)
+    set_tests_properties(oom_diagnostic PROPERTIES LABELS "platform;allocation" TIMEOUT 30
+        CREXX_PREP_TARGETS test_oom_diagnostic)
+    add_executable(test_text_codec tests/test_text_codec.c text_codec.c)
+    target_include_directories(test_text_codec PRIVATE .)
+    add_test(NAME text_codec COMMAND test_text_codec)
+    set_tests_properties(text_codec PROPERTIES LABELS "platform;text" TIMEOUT 30
+        CREXX_PREP_TARGETS test_text_codec)
 endif()

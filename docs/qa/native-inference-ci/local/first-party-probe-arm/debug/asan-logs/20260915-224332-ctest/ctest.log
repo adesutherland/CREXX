@@ -1,0 +1,10 @@
+Command: ctest --test-dir /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/debug --output-on-failure -R \^rxllama_backend_probe_cycle\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/debug
+    Start 1: rxllama_backend_probe_cycle
+1/1 Test #1: rxllama_backend_probe_cycle ......   Passed    2.14 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   2.14 sec

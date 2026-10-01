@@ -1,0 +1,117 @@
+[
+  {
+    "test": "opt-shared_generation",
+    "relocated": "/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/opt-shared_generation relocated \u00c5",
+    "files": {
+      "libcrexx-ggml-base.0.23.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-cpu.so": "d734a4093cd4455ad84f0b537173d263546fc40ee7213ffe46655b267f5ab7cf",
+      "libcrexx-ggml-metal.so": "87e3afbb1c3e5722d7c55b15ffba04e2d559ce9d065d7d66f4a031ec705e2873",
+      "libcrexx-ggml.0.23.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-llama-engine.0.4.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama.1.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "libcrexx-llama.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "persistent": "1b2d04b41eb6e9ff695c5032c56965e512689bb2d8a112c07138c35ab3a74052",
+      "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+      "rxllama.native.json": "d6d2795307f7f961a9b8a63978590f07685215389aea5b2058d15246d3e5a423",
+      "rxllama.runtime.json": "f61f62cda7042abb894f4411d329ea5f3cea8b573dcdfbfc41ac63a760053361"
+    }
+  },
+  {
+    "test": "noopt-typed_generation",
+    "relocated": "/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-typed_generation relocated \u00c5",
+    "files": {
+      "libcrexx-ggml-base.0.23.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-cpu.so": "d734a4093cd4455ad84f0b537173d263546fc40ee7213ffe46655b267f5ab7cf",
+      "libcrexx-ggml-metal.so": "87e3afbb1c3e5722d7c55b15ffba04e2d559ce9d065d7d66f4a031ec705e2873",
+      "libcrexx-ggml.0.23.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-llama-engine.0.4.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama.1.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "libcrexx-llama.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "persistent": "76593b985d81972ee889d277da4eb82bfa6f7d77ac9e7b9b18d6c28abdc510f6",
+      "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+      "rxllama.native.json": "d6d2795307f7f961a9b8a63978590f07685215389aea5b2058d15246d3e5a423",
+      "rxllama.runtime.json": "f61f62cda7042abb894f4411d329ea5f3cea8b573dcdfbfc41ac63a760053361"
+    }
+  },
+  {
+    "test": "noopt-generation_overhead",
+    "relocated": "/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-generation_overhead relocated \u00c5",
+    "files": {
+      "libcrexx-ggml-base.0.23.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-cpu.so": "d734a4093cd4455ad84f0b537173d263546fc40ee7213ffe46655b267f5ab7cf",
+      "libcrexx-ggml-metal.so": "87e3afbb1c3e5722d7c55b15ffba04e2d559ce9d065d7d66f4a031ec705e2873",
+      "libcrexx-ggml.0.23.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-llama-engine.0.4.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama.1.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "libcrexx-llama.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "persistent": "431f24a7d740571dce41cf94f5210bcc8ebe4424f4e63cd60f5780bc4e8cdb78",
+      "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+      "rxllama.native.json": "d6d2795307f7f961a9b8a63978590f07685215389aea5b2058d15246d3e5a423",
+      "rxllama.runtime.json": "f61f62cda7042abb894f4411d329ea5f3cea8b573dcdfbfc41ac63a760053361"
+    }
+  },
+  {
+    "test": "noopt-persistent_generation",
+    "relocated": "/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-persistent_generation relocated \u00c5",
+    "files": {
+      "libcrexx-ggml-base.0.23.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-cpu.so": "d734a4093cd4455ad84f0b537173d263546fc40ee7213ffe46655b267f5ab7cf",
+      "libcrexx-ggml-metal.so": "87e3afbb1c3e5722d7c55b15ffba04e2d559ce9d065d7d66f4a031ec705e2873",
+      "libcrexx-ggml.0.23.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-llama-engine.0.4.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama.1.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "libcrexx-llama.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "persistent": "5588d77f0e6177542c7233146bd0acde77baa1be5f91174ce2c7a9d58f08609f",
+      "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+      "rxllama.native.json": "d6d2795307f7f961a9b8a63978590f07685215389aea5b2058d15246d3e5a423",
+      "rxllama.runtime.json": "f61f62cda7042abb894f4411d329ea5f3cea8b573dcdfbfc41ac63a760053361"
+    }
+  },
+  {
+    "test": "noopt-shared_generation",
+    "relocated": "/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-shared_generation relocated \u00c5",
+    "files": {
+      "libcrexx-ggml-base.0.23.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.0.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-base.dylib": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909",
+      "libcrexx-ggml-cpu.so": "d734a4093cd4455ad84f0b537173d263546fc40ee7213ffe46655b267f5ab7cf",
+      "libcrexx-ggml-metal.so": "87e3afbb1c3e5722d7c55b15ffba04e2d559ce9d065d7d66f4a031ec705e2873",
+      "libcrexx-ggml.0.23.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.0.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-ggml.dylib": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf",
+      "libcrexx-llama-engine.0.4.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.0.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama-engine.dylib": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f",
+      "libcrexx-llama.1.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "libcrexx-llama.dylib": "e5b51a5b660eb2e5e1dc1381f13df5cf0923602ac2b2ccf63ff281fc541ea454",
+      "persistent": "5bd30ff0a7118346432f0a646ba940b8122e270d5d7607538634a2d4299b2cf5",
+      "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+      "rxllama.native.json": "d6d2795307f7f961a9b8a63978590f07685215389aea5b2058d15246d3e5a423",
+      "rxllama.runtime.json": "f61f62cda7042abb894f4411d329ea5f3cea8b573dcdfbfc41ac63a760053361"
+    }
+  }
+]

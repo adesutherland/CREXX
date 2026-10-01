@@ -1,0 +1,11 @@
+Warning in summarize_probes.crexx @ 30:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 14, column 3. Declare this binding explicitly if intentional., "line"
+Warning in summarize_probes.crexx @ 31:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 17, column 3. Declare this binding explicitly if intentional., "fields"
+Warning in summarize_probes.crexx @ 33:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 3. Declare this binding explicitly if intentional., "index"
+Warning in summarize_probes.crexx @ 75:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 50, column 3. Declare this binding explicitly if intentional., "count"
+Warning in summarize_probes.crexx @ 76:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 56, column 3. Declare this binding explicitly if intentional., "row"
+Warning in summarize_probes.crexx @ 80:5 - #SHADOWING: Symbol shadows an earlier declaration., "values"
+Warning in summarize_probes.crexx @ 83:27 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 58, column 5. Declare this binding explicitly if intentional., "value"
+Warning in summarize_probes.crexx @ 90:7 - #SHADOWING: Symbol shadows an earlier declaration., "values"
+Warning in summarize_probes.crexx @ 90:14 - #SHADOWING: Symbol shadows an earlier declaration., "values"
+Warning in summarize_probes.crexx @ 92:31 - #SHADOWING: Symbol shadows an earlier declaration., "(value"
+10 warning(s) in source file

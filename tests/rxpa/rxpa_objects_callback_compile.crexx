@@ -1,0 +1,11 @@
+options levelb
+import rxpa_objects
+main: procedure = .int
+  target = .callback_impl()
+  return 0
+callback_impl: class implements .callback
+  *: factory
+    return
+  apply: method = .int
+    arg value = .counter
+    return value.add(1)

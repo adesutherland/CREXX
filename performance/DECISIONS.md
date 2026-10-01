@@ -1,13 +1,95 @@
 # cREXX performance decisions and lessons
 
-Status: **enduring decision record; initially seeded with the completed
-DECIMAL-01 Stage 3 decision; broader Stage 6 consolidation remains plan-only**
+Status: **enduring decision record; PERF3/POSTPERF and DECIMAL-01 durable
+decisions consolidated; Stage 6 authority consolidation complete; KeyAccess
+verdicts accepted and closed 2026-09-18**
 
 This file records accepted mechanisms, rejected experiments, lessons and
 explicit reopening triggers. It prevents a later performance review from
 repeating a closed experiment merely because its evidence is no longer in the
-immediate working set. Current measurements remain in `performance/RESULTS.md`
-when that Stage 6 authority is created; raw evidence remains in dated bundles.
+immediate working set. Current measurements remain in `performance/RESULTS.md`;
+raw evidence remains in dated bundles.
+
+## Consolidated Programme Decisions
+
+These are durable selection boundaries from the completed programmes, not
+current release or exact-head performance claims. The full dated activity and
+negative-result history remains in
+[`PERF3-PROGRAMME-LEDGER-2026-08-17.md`](PERF3-PROGRAMME-LEDGER-2026-08-17.md).
+
+| ID | Durable decision | Do not infer or repeat | Reopening trigger |
+| --- | --- | --- | --- |
+| PERF-DEC-01 | PERF3 and `POSTPERF-01` through `POSTPERF-05` are closed. New production performance work requires a separately selected gate and first ordinary profiling-off Release verdict. | A retained idea, old profile, or compiling PoC is not authorization for `POSTPERF-06`. | A current product/profile question is ranked and Adrian selects a bounded gate. |
+| PERF-DEC-02 | Keep the versioned portfolio-v3 capability and aggregation boundary. Report product `rxvm` once and concrete `rxtvm`/`rxbvm` only for dispatch comparisons; keep throughput, lifecycle, RSS, and artifacts separate. | Do not pool incomparable workloads, duplicate an executable alias, or reinterpret historical VM labels. | A separately approved portfolio/version change with requalification of affected results. |
+| PERF-DEC-03 | Retain the proved C1abc copy/receiver-ownership compiler ladder. Broad aliasing, whole-value replacement, escape, dynamic/interface, or otherwise unproved shapes remain ordinary calls or copies. | Do not replace the supported optimized shape with a broad fail-closed guard, and do not broaden it without lifetime proof. | A current hot supported shape has material evidence and a complete ownership/copyback proof. |
+| PERF-DEC-04 | Retain the private locale-aware C4 v3 string-to-number prefilter and the accepted bounded conversion paths. Broad value caching remains unselected. | Do not infer a numeric-context cache, public ABI span, or value-layout change from the private prefilter result. | A current residual census shows material same-source/same-context conversions after existing proof consumers. |
+| PERF-DEC-05 | Reuse the immutable CFG, signal policy, sparse component/value proof, and transactional rewrite services for bounded RXAS consumers. Keep exact local normalizations in the cheap peephole. | Do not recreate dense whole-procedure scans or duplicate proof authorities for one optimization. | A selected consumer demonstrates that the shared proof lacks a required semantic fact or cannot scale. |
+| PERF-DEC-06 | Dynamic PARSE uses exit-owned compiled-pattern lowering through existing instructions; no new instruction was justified. Generic scalar access and bounded late-profitability consumers completed their governed verdicts. | Do not reopen an opcode or broad late-inline programme merely because the historical alternatives remain replayable. | A new semantic requirement or current profile establishes a material gap the existing instruction/proof surface cannot represent. |
+| PERF-DEC-07 | Storage/List and related graph deficits are product evidence for a Level G ownership/nested-container decision. They are not common-score cells or benchmark-local speed-patch authority. | Do not weaken Level B ownership, comparisons, or workload equivalence to improve a score. | Adrian selects a product ownership/lifetime contract and equivalent control. |
+| PERF-DEC-08 | JIT/MIR/LLVM, VM handler placement, and broad ISA migration remain deferred research. | Do not treat a historical handler-layout result or external JIT reputation as a product selection. | The accepted non-JIT product has a current material residual gap and Adrian opens the architecture gate. |
+| PERF-DEC-09 | Concurrency product capability, portability, and publication moved to `concurrency/`; performance retains only workload and regression evidence. | Do not infer current concurrency product status from historical Gate E/F labels in the PERF3 ledger. | A selected concurrency change needs a governed performance verdict under the current concurrency contract. |
+
+## BETA6-PERFORMANCE-DECISION-2026-09-18 — performance after functional completion
+
+Adrian selects Beta 6 (2027-03-31) as the Performance Beta, following core
+completion on 2026-11-30 and platform functional completion, including baseline
+Levels G/L, on 2027-01-31. Core includes Level C and polymorphism; Level C means
+complete compatibility coverage except individually approved "won't implement"
+features. Applications, practical tools, LLM consumers and showcases form a
+parallel asset track through RC1 on 2027-04-15. Release 1 remains 2027-05-01.
+
+The [release plan](../docs/release-1-plan.md) owns the scope contracts,
+acceptance criteria and dates. The [performance roadmap](ROADMAP.md) owns the
+candidate queue, including adaptive procedure-result memoization (VM-MEMO-01),
+static-fusion ownership, other evidence-backed specialization and compiler,
+RXAS, runtime and lifecycle work. Phase selection does not approve every
+candidate, a new public purity assertion, ISA or transported-proof contract.
+Preserve the first Release verdict and explicit architecture gates; settle
+public contracts before January's platform freeze or obtain an explicit scope
+exception. Negative experiments remain valid outcomes. April qualifies the
+candidate rather than continuing open-ended performance implementation.
+
+## OPT-BOUNDARY-DECISION-2026-09-18 — retain documented compiler and RXAS contracts
+
+Adrian accepts imported inlining as an RXC-owned concern. Retain the optional
+I6/I7 compiler-IR transport and document its template/executable coherence
+obligation; it is not an RXAS proof input. This disposition is closed, rather
+than a pending request to disable or redesign imported inlining. Preserve and
+consistently extend the compiler's structured AST rewriting, including Level C.
+
+Adrian also accepts the documented RXAS status-bit assertion semantics as part
+of the public instruction contract. No new restriction is selected.
+
+The incoming-alias defect is a separate correctness repair. RXAS maintainability
+and VM fusion ownership are separately proposed in the
+[follow-up review](../docs/planning/release-1/optimization-maintainability-and-fusion-ownership.md);
+these accepted boundaries do not authorize its new ISA/architecture choices.
+
+## KEYACCESS-DECISION-2026-09-18 — accept, retain and close
+
+Adrian accepted both first Release verdicts on 18 September 2026 with the
+direction **"Accept, retain and close"**. Retain the implementations introduced
+in `8ebdc5f26f4072e0493885d10ed34910e6815eb8`; KEYACCESS-01, KEYACCESS-02 and the
+PERF-CLOSEOUT-02 maintainer-review item are closed.
+
+- [KEYACCESS-01](KEYACCESS-01-WORKLIST.md): retain incremental maintenance of the
+  existing hash index for write/delete lookup. The recorded Windows Release
+  50,000-key insert workload improved from 379.952295 s to 2.028873 s, about
+  187x. Preserve full-key collision checks, replacement offsets, transaction
+  semantics and invalidation at rollback/compaction/reopen/reset boundaries.
+- [KEYACCESS-02](KEYACCESS-02-WORKLIST.md): retain `NOT_FOUND` as an ordinary
+  lookup result without per-miss error-log I/O. The recorded Windows Release
+  negative-lookup workload at 500,000 active keys improved from 198.232571 s to
+  10.640404 s, about 18.6x; the missing/present ratio fell from 17.97x to 0.95x.
+  Preserve full-key verification and logging for actual parameter, I/O, memory
+  and corruption failures.
+
+The worklists retain the original samples, comparison limits and recorded
+correctness evidence. This acceptance does not turn those Windows workloads
+into a cross-platform or portfolio performance claim. Normal release-candidate
+qualification remains separate; no unchanged benchmark rerun is required by
+this decision. Reopen only for a reproduced correctness regression or a current
+material workload finding selected for a new bounded review.
 
 ## DECIMAL-01-DECISION-2026-08-18 — retain current `mc_decimal`
 

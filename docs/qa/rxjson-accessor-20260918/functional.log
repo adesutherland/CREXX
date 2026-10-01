@@ -1,0 +1,993 @@
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release
+        Start 1037: rxc_diagnostic_catalogs
+        Start    3: rxsha256_unit
+        Start    5: crexx_contract_generation
+        Start    7: test_rxas_01_init
+        Start    9: test_rxas_03_token_types
+        Start   10: test_rxas_04_errors
+        Start   11: rxas_reject_non_source_mnemonics
+        Start   12: rxas_constant_aliases
+        Start   14: rxc_help_syntaxhighlight
+        Start   28: rxas_invalid_diagnostic
+        Start   35: rxc_function_lookup_diagnostic
+        Start   42: rxc_constants_levelb
+        Start   53: 01_assign_noopt
+        Start   58: 03_calc_opt
+        Start   81: 07_loops_noopt
+        Start   84: 08_select_opt
+        Start  103: 10_procs_noopt
+        Start  130: 15_imports_opt
+        Start  134: err_01_type_fail
+        Start  135: err_02_syntax_fail
+        Start  138: err_06_missing_method_fail
+        Start  227: unused_import_warn
+        Start  413: repro_opt_args_run_noopt
+        Start  429: basic_arrays_run_noopt
+        Start  461: 13_stems_run_noopt
+        Start  483: optional_arg_presence_copy_run_noopt
+        Start  521: interface_runtime_dispatch_multi_run_noopt
+        Start  598: interface_source_import_run_noopt
+        Start  637: source_import_contract_stub_implements
+        Start  638: source_import_optional_factory_arg
+  1/437 Test   #14: rxc_help_syntaxhighlight ........................   Passed    0.02 sec
+  2/437 Test   #28: rxas_invalid_diagnostic .........................   Passed    0.02 sec
+        Start  995: levelc_slice1_pool_say
+        Start 1009: levelc_slice6_expressions
+  3/437 Test   #12: rxas_constant_aliases ...........................   Passed    0.03 sec
+        Start 1018: address_bridge
+  4/437 Test   #11: rxas_reject_non_source_mnemonics ................   Passed    0.17 sec
+        Start 1023: address_callback_host
+  5/437 Test    #3: rxsha256_unit ...................................   Passed    0.24 sec
+        Start 1025: dynamic_load
+  6/437 Test   #35: rxc_function_lookup_diagnostic ..................   Passed    0.38 sec
+        Start 1028: crexxsaa_variables
+  7/437 Test    #9: test_rxas_03_token_types ........................   Passed    0.49 sec
+        Start 1029: crexxsaa_status
+  8/437 Test   #10: test_rxas_04_errors .............................   Passed    0.49 sec
+        Start 1030: source_provenance
+  9/437 Test    #7: test_rxas_01_init ...............................   Passed    0.49 sec
+        Start 1031: rxc_srcmap
+ 10/437 Test  #521: interface_runtime_dispatch_multi_run_noopt ......   Passed    0.53 sec
+        Start 1033: trace_stem_sugar
+ 11/437 Test  #638: source_import_optional_factory_arg ..............   Passed    0.55 sec
+        Start 1035: source_semantics
+ 12/437 Test  #429: basic_arrays_run_noopt ..........................   Passed    0.56 sec
+        Start 1128: rxlink_success_run
+ 13/437 Test #1128: rxlink_success_run ..............................   Passed    0.01 sec
+        Start 1129: rxlink_control_run
+ 14/437 Test #1129: rxlink_control_run ..............................   Passed    0.01 sec
+        Start 1131: rxlink_interface_run
+ 15/437 Test #1131: rxlink_interface_run ............................   Passed    0.01 sec
+        Start 1134: rxlink_format_check
+ 16/437 Test  #483: optional_arg_presence_copy_run_noopt ............   Passed    0.59 sec
+        Start 1138: rxlink_signature_mismatch_error
+ 17/437 Test #1138: rxlink_signature_mismatch_error .................   Passed    0.01 sec
+        Start 1140: rxlink_rxdas_inline_preserve_smoke
+ 18/437 Test  #637: source_import_contract_stub_implements ..........   Passed    0.62 sec
+        Start 1142: rxdas_roundtrip_basic
+ 19/437 Test  #413: repro_opt_args_run_noopt ........................   Passed    0.64 sec
+        Start 1147: rxdas_graph_error
+ 20/437 Test  #461: 13_stems_run_noopt ..............................   Passed    0.64 sec
+        Start 1148: rxdas_roundtrip_interfaces
+ 21/437 Test  #135: err_02_syntax_fail ..............................   Passed    0.72 sec
+        Start 1152: rxdas_roundtrip_large_binary_alias
+ 22/437 Test  #995: levelc_slice1_pool_say ..........................   Passed    0.75 sec
+        Start 1156: rxdas_dump_support
+ 23/437 Test #1018: address_bridge ..................................   Passed    1.00 sec
+        Start 1159: rxspawn_resource_inheritance
+ 24/437 Test  #138: err_06_missing_method_fail ......................   Passed    1.13 sec
+        Start 1160: rxvmfile_private_open
+ 25/437 Test   #42: rxc_constants_levelb ............................   Passed    1.15 sec
+        Start 1190: crexxsaa_cache_tool_location
+ 26/437 Test  #227: unused_import_warn ..............................   Passed    1.18 sec
+        Start 1192: rxpa_utf_validation
+ 27/437 Test   #58: 03_calc_opt .....................................   Passed    1.20 sec
+        Start 1193: ts_regvalue_tester
+ 28/437 Test  #134: err_01_type_fail ................................   Passed    1.21 sec
+        Start 1196: rxassignalstests
+ 29/437 Test  #598: interface_source_import_run_noopt ...............   Passed    1.21 sec
+        Start 1205: rxasregisterflagtests
+ 30/437 Test #1205: rxasregisterflagtests ...........................   Passed    0.01 sec
+        Start 1206: rxasutfflagtests
+ 31/437 Test  #103: 10_procs_noopt ..................................   Passed    1.23 sec
+        Start 1210: rxasreferencetests
+ 32/437 Test #1023: address_callback_host ...........................   Passed    1.07 sec
+        Start 1242: rxasbasictests
+ 33/437 Test #1206: rxasutfflagtests ................................   Passed    0.01 sec
+        Start 1253: compact_format_check
+ 34/437 Test #1210: rxasreferencetests ..............................   Passed    0.01 sec
+        Start 1254: rxasstringtests
+ 35/437 Test #1242: rxasbasictests ..................................   Passed    0.01 sec
+        Start 1314: rxasdecimaltests-mc
+ 36/437 Test #1196: rxassignalstests ................................   Passed    0.03 sec
+        Start 1319: rxasinterfacetests
+ 37/437 Test  #130: 15_imports_opt ..................................   Passed    1.25 sec
+        Start 1326: reentrancy_check
+ 38/437 Test   #81: 07_loops_noopt ..................................   Passed    1.25 sec
+        Start 1378: db_decimal_archive_link
+ 39/437 Test #1254: rxasstringtests .................................   Passed    0.01 sec
+        Start 1387: rxpp_smoke
+ 40/437 Test #1319: rxasinterfacetests ..............................   Passed    0.01 sec
+        Start 1388: rxpp_srcmap
+ 41/437 Test   #53: 01_assign_noopt .................................   Passed    1.26 sec
+        Start 1389: rxpp_relative_include
+ 42/437 Test   #84: 08_select_opt ...................................   Passed    1.30 sec
+        Start 1390: rxpp_script_macro_exact_match
+ 43/437 Test #1389: rxpp_relative_include ...........................   Passed    0.06 sec
+        Start 1391: rxpp_loadmacro
+ 44/437 Test #1390: rxpp_script_macro_exact_match ...................   Passed    0.07 sec
+        Start 1395: rxpp_diagnostics
+ 45/437 Test #1009: levelc_slice6_expressions .......................   Passed    1.36 sec
+        Start 1397: ts_linein_stdin_prompt
+ 46/437 Test #1391: rxpp_loadmacro ..................................   Passed    0.06 sec
+        Start 1400: tlinesz_noopt
+ 47/437 Test #1400: tlinesz_noopt ...................................   Passed    0.02 sec
+        Start 1401: tlinesz_opt
+ 48/437 Test #1401: tlinesz_opt .....................................   Passed    0.04 sec
+        Start 1402: ts_abbrev_noopt
+ 49/437 Test #1402: ts_abbrev_noopt .................................   Passed    0.02 sec
+        Start 1403: ts_abbrev_opt
+ 50/437 Test #1403: ts_abbrev_opt ...................................   Passed    0.04 sec
+        Start 1404: ts_abs_noopt
+ 51/437 Test #1404: ts_abs_noopt ....................................   Passed    0.02 sec
+        Start 1405: ts_abs_opt
+ 52/437 Test #1025: dynamic_load ....................................   Passed    1.30 sec
+        Start 1406: ts_typed_numeric_noopt
+ 53/437 Test #1406: ts_typed_numeric_noopt ..........................   Passed    0.02 sec
+        Start 1407: ts_typed_numeric_opt
+ 54/437 Test #1405: ts_abs_opt ......................................   Passed    0.04 sec
+        Start 1408: ts_address_protocol_noopt
+ 55/437 Test #1408: ts_address_protocol_noopt .......................   Passed    0.03 sec
+        Start 1409: ts_address_protocol_opt
+ 56/437 Test #1407: ts_typed_numeric_opt ............................   Passed    0.04 sec
+        Start 1412: ts_address_crexx_noopt
+ 57/437 Test #1409: ts_address_protocol_opt .........................   Passed    0.09 sec
+        Start 1413: ts_address_crexx_opt
+ 58/437 Test #1412: ts_address_crexx_noopt ..........................   Passed    0.12 sec
+        Start 1414: ts_address_capture_noopt
+ 59/437 Test #1414: ts_address_capture_noopt ........................   Passed    0.03 sec
+        Start 1415: ts_address_capture_opt
+ 60/437 Test #1415: ts_address_capture_opt ..........................   Passed    0.08 sec
+        Start 1416: ts_address_argv_noopt
+ 61/437 Test #1033: trace_stem_sugar ................................   Passed    1.29 sec
+        Start 1417: ts_address_argv_opt
+ 62/437 Test #1413: ts_address_crexx_opt ............................   Passed    0.19 sec
+        Start 1418: ts_address_array_lifecycle_noopt
+ 63/437 Test #1418: ts_address_array_lifecycle_noopt ................   Passed    0.03 sec
+        Start 1419: ts_address_array_lifecycle_opt
+ 64/437 Test #1031: rxc_srcmap ......................................   Passed    1.45 sec
+        Start 1420: ts_address_spawn_transfer_noopt
+ 65/437 Test #1419: ts_address_array_lifecycle_opt ..................   Passed    0.08 sec
+        Start 1421: ts_address_spawn_transfer_opt
+ 66/437 Test #1037: rxc_diagnostic_catalogs .........................   Passed    2.02 sec
+        Start 1422: ts_binary_noopt
+ 67/437 Test #1422: ts_binary_noopt .................................   Passed    0.02 sec
+        Start 1423: ts_binary_opt
+ 68/437 Test #1395: rxpp_diagnostics ................................   Passed    0.69 sec
+        Start 1424: ts_c2x_noopt
+ 69/437 Test #1423: ts_binary_opt ...................................   Passed    0.04 sec
+        Start 1425: ts_c2x_opt
+ 70/437 Test #1424: ts_c2x_noopt ....................................   Passed    0.02 sec
+        Start 1426: ts_center_noopt
+ 71/437 Test #1426: ts_center_noopt .................................   Passed    0.02 sec
+        Start 1427: ts_center_opt
+ 72/437 Test #1425: ts_c2x_opt ......................................   Passed    0.03 sec
+        Start 1428: ts_changestr_noopt
+ 73/437 Test #1428: ts_changestr_noopt ..............................   Passed    0.02 sec
+        Start 1429: ts_changestr_opt
+ 74/437 Test #1387: rxpp_smoke ......................................   Passed    0.88 sec
+        Start 1430: ts_compare_noopt
+ 75/437 Test #1427: ts_center_opt ...................................   Passed    0.03 sec
+        Start 1431: ts_compare_opt
+ 76/437 Test #1430: ts_compare_noopt ................................   Passed    0.02 sec
+        Start 1432: ts_countstr_noopt
+ 77/437 Test #1429: ts_changestr_opt ................................   Passed    0.03 sec
+        Start 1433: ts_countstr_opt
+ 78/437 Test #1388: rxpp_srcmap .....................................   Passed    0.91 sec
+        Start 1434: ts_d2c_noopt
+ 79/437 Test #1431: ts_compare_opt ..................................   Passed    0.03 sec
+        Start 1435: ts_d2c_opt
+ 80/437 Test #1432: ts_countstr_noopt ...............................   Passed    0.02 sec
+        Start 1436: ts_d2x_noopt
+ 81/437 Test #1434: ts_d2c_noopt ....................................   Passed    0.02 sec
+        Start 1437: ts_d2x_opt
+ 82/437 Test #1436: ts_d2x_noopt ....................................   Passed    0.02 sec
+        Start 1438: ts_date_noopt
+ 83/437 Test #1433: ts_countstr_opt .................................   Passed    0.04 sec
+        Start 1439: ts_date_opt
+ 84/437 Test #1435: ts_d2c_opt ......................................   Passed    0.03 sec
+        Start 1440: ts_date2_noopt
+ 85/437 Test #1437: ts_d2x_opt ......................................   Passed    0.03 sec
+        Start 1441: ts_date2_opt
+ 86/437 Test #1438: ts_date_noopt ...................................   Passed    0.03 sec
+        Start 1442: ts_date_core_noopt
+ 87/437 Test #1440: ts_date2_noopt ..................................   Passed    0.02 sec
+        Start 1443: ts_date_core_opt
+ 88/437 Test #1439: ts_date_opt .....................................   Passed    0.04 sec
+        Start 1444: ts_delstr_noopt
+ 89/437 Test #1442: ts_date_core_noopt ..............................   Passed    0.02 sec
+        Start 1445: ts_delstr_opt
+ 90/437 Test #1441: ts_date2_opt ....................................   Passed    0.03 sec
+        Start 1446: ts_delword_noopt
+ 91/437 Test #1443: ts_date_core_opt ................................   Passed    0.03 sec
+        Start 1447: ts_delword_opt
+ 92/437 Test #1444: ts_delstr_noopt .................................   Passed    0.02 sec
+        Start 1448: ts_fileio_binary_noopt
+ 93/437 Test #1446: ts_delword_noopt ................................   Passed    0.02 sec
+        Start 1449: ts_fileio_binary_opt
+ 94/437 Test #1445: ts_delstr_opt ...................................   Passed    0.03 sec
+        Start 1452: ts_format_noopt
+ 95/437 Test #1448: ts_fileio_binary_noopt ..........................   Passed    0.02 sec
+        Start 1453: ts_format_opt
+ 96/437 Test #1447: ts_delword_opt ..................................   Passed    0.03 sec
+        Start 1454: ts_fnv_noopt
+ 97/437 Test #1452: ts_format_noopt .................................   Passed    0.02 sec
+        Start 1455: ts_fnv_opt
+ 98/437 Test #1454: ts_fnv_noopt ....................................   Passed    0.02 sec
+        Start 1456: ts_fsayfmt_noopt
+ 99/437 Test #1453: ts_format_opt ...................................   Passed    0.03 sec
+        Start 1457: ts_fsayfmt_opt
+100/437 Test #1449: ts_fileio_binary_opt ............................   Passed    0.04 sec
+        Start 1458: ts_insert_noopt
+101/437 Test #1455: ts_fnv_opt ......................................   Passed    0.03 sec
+        Start 1459: ts_insert_opt
+102/437 Test #1456: ts_fsayfmt_noopt ................................   Passed    0.02 sec
+        Start 1460: ts_left_noopt
+103/437 Test #1458: ts_insert_noopt .................................   Passed    0.02 sec
+        Start 1461: ts_left_opt
+104/437 Test #1457: ts_fsayfmt_opt ..................................   Passed    0.03 sec
+        Start 1462: ts_length_noopt
+105/437 Test #1460: ts_left_noopt ...................................   Passed    0.02 sec
+        Start 1463: ts_length_opt
+106/437 Test #1459: ts_insert_opt ...................................   Passed    0.03 sec
+        Start 1464: ts_lower_noopt
+107/437 Test #1462: ts_length_noopt .................................   Passed    0.02 sec
+        Start 1465: ts_lower_opt
+108/437 Test #1461: ts_left_opt .....................................   Passed    0.03 sec
+        Start 1466: ts_min_max_noopt
+109/437 Test #1464: ts_lower_noopt ..................................   Passed    0.02 sec
+        Start 1467: ts_min_max_opt
+110/437 Test #1463: ts_length_opt ...................................   Passed    0.03 sec
+        Start 1468: ts_overlay_noopt
+111/437 Test #1466: ts_min_max_noopt ................................   Passed    0.02 sec
+        Start 1469: ts_overlay_opt
+112/437 Test #1465: ts_lower_opt ....................................   Passed    0.03 sec
+        Start 1470: ts_pos_noopt
+113/437 Test #1468: ts_overlay_noopt ................................   Passed    0.02 sec
+        Start 1471: ts_pos_opt
+114/437 Test #1467: ts_min_max_opt ..................................   Passed    0.03 sec
+        Start 1472: ts_qpos_noopt
+115/437 Test #1470: ts_pos_noopt ....................................   Passed    0.02 sec
+        Start 1473: ts_qpos_opt
+116/437 Test #1030: source_provenance ...............................   Passed    1.93 sec
+        Start 1474: ts_qlibrary_noopt
+117/437 Test #1469: ts_overlay_opt ..................................   Passed    0.03 sec
+        Start 1475: ts_qlibrary_opt
+118/437 Test #1472: ts_qpos_noopt ...................................   Passed    0.02 sec
+        Start 1476: ts_random_noopt
+119/437 Test #1471: ts_pos_opt ......................................   Passed    0.03 sec
+        Start 1477: ts_random_opt
+120/437 Test #1474: ts_qlibrary_noopt ...............................   Passed    0.02 sec
+        Start 1478: ts_reverse_noopt
+121/437 Test #1473: ts_qpos_opt .....................................   Passed    0.03 sec
+        Start 1479: ts_reverse_opt
+122/437 Test #1476: ts_random_noopt .................................   Passed    0.02 sec
+        Start 1480: ts_regex_noopt
+123/437 Test #1475: ts_qlibrary_opt .................................   Passed    0.04 sec
+        Start 1481: ts_regex_opt
+124/437 Test #1478: ts_reverse_noopt ................................   Passed    0.02 sec
+        Start 1482: ts_right_noopt
+125/437 Test #1477: ts_random_opt ...................................   Passed    0.03 sec
+        Start 1483: ts_right_opt
+126/437 Test #1480: ts_regex_noopt ..................................   Passed    0.03 sec
+        Start 1484: ts_sign_noopt
+127/437 Test #1479: ts_reverse_opt ..................................   Passed    0.03 sec
+        Start 1485: ts_sign_opt
+128/437 Test #1482: ts_right_noopt ..................................   Passed    0.02 sec
+        Start 1486: ts_space_noopt
+129/437 Test #1483: ts_right_opt ....................................   Passed    0.03 sec
+        Start 1487: ts_space_opt
+130/437 Test #1484: ts_sign_noopt ...................................   Passed    0.02 sec
+        Start 1488: ts_strip_noopt
+131/437 Test #1481: ts_regex_opt ....................................   Passed    0.04 sec
+        Start 1489: ts_strip_opt
+132/437 Test #1486: ts_space_noopt ..................................   Passed    0.02 sec
+        Start 1490: ts_symbol_noopt
+133/437 Test #1485: ts_sign_opt .....................................   Passed    0.03 sec
+        Start 1491: ts_symbol_opt
+134/437 Test #1488: ts_strip_noopt ..................................   Passed    0.02 sec
+        Start 1492: ts_test_noopt
+135/437 Test #1490: ts_symbol_noopt .................................   Passed    0.02 sec
+        Start 1493: ts_test_opt
+136/437 Test #1487: ts_space_opt ....................................   Passed    0.03 sec
+        Start 1494: ts_time_noopt
+137/437 Test #1489: ts_strip_opt ....................................   Passed    0.03 sec
+        Start 1495: ts_time_opt
+138/437 Test #1492: ts_test_noopt ...................................   Passed    0.02 sec
+        Start 1496: ts_trace_noopt
+139/437 Test #1491: ts_symbol_opt ...................................   Passed    0.03 sec
+        Start 1497: ts_trace_opt
+140/437 Test #1494: ts_time_noopt ...................................   Passed    0.02 sec
+        Start 1498: ts_translate_noopt
+141/437 Test #1493: ts_test_opt .....................................   Passed    0.03 sec
+        Start 1499: ts_translate_opt
+142/437 Test #1495: ts_time_opt .....................................   Passed    0.04 sec
+        Start 1500: ts_trunc_noopt
+143/437 Test #1498: ts_translate_noopt ..............................   Passed    0.03 sec
+        Start 1501: ts_trunc_opt
+144/437 Test #1500: ts_trunc_noopt ..................................   Passed    0.02 sec
+        Start 1502: ts_upper_noopt
+145/437 Test #1499: ts_translate_opt ................................   Passed    0.04 sec
+        Start 1503: ts_upper_opt
+146/437 Test #1502: ts_upper_noopt ..................................   Passed    0.02 sec
+        Start 1504: ts_upper_lower_noopt
+147/437 Test #1501: ts_trunc_opt ....................................   Passed    0.03 sec
+        Start 1505: ts_upper_lower_opt
+148/437 Test #1503: ts_upper_opt ....................................   Passed    0.04 sec
+        Start 1506: ts_version_noopt
+149/437 Test #1504: ts_upper_lower_noopt ............................   Passed    0.02 sec
+        Start 1507: ts_version_opt
+150/437 Test #1497: ts_trace_opt ....................................   Passed    0.09 sec
+        Start 1508: ts_sourceinfo_noopt
+151/437 Test #1505: ts_upper_lower_opt ..............................   Passed    0.03 sec
+        Start 1509: ts_sourceinfo_opt
+152/437 Test #1506: ts_version_noopt ................................   Passed    0.02 sec
+        Start 1510: ts_value_noopt
+153/437 Test #1508: ts_sourceinfo_noopt .............................   Passed    0.02 sec
+        Start 1511: ts_value_opt
+154/437 Test #1507: ts_version_opt ..................................   Passed    0.03 sec
+        Start 1512: ts_verify_noopt
+155/437 Test #1509: ts_sourceinfo_opt ...............................   Passed    0.03 sec
+        Start 1513: ts_verify_opt
+156/437 Test #1510: ts_value_noopt ..................................   Passed    0.02 sec
+        Start 1514: ts_wordlength_noopt
+157/437 Test #1512: ts_verify_noopt .................................   Passed    0.02 sec
+        Start 1515: ts_wordlength_opt
+158/437 Test #1511: ts_value_opt ....................................   Passed    0.03 sec
+        Start 1516: ts_wordpos_noopt
+159/437 Test #1514: ts_wordlength_noopt .............................   Passed    0.02 sec
+        Start 1517: ts_wordpos_opt
+160/437 Test #1513: ts_verify_opt ...................................   Passed    0.03 sec
+        Start 1518: ts_wrdix_noopt
+161/437 Test #1516: ts_wordpos_noopt ................................   Passed    0.02 sec
+        Start 1519: ts_wrdix_opt
+162/437 Test #1515: ts_wordlength_opt ...............................   Passed    0.03 sec
+        Start 1520: ts_x2b_noopt
+163/437 Test #1518: ts_wrdix_noopt ..................................   Passed    0.02 sec
+        Start 1521: ts_x2b_opt
+164/437 Test #1517: ts_wordpos_opt ..................................   Passed    0.03 sec
+        Start 1522: ts_x2c_noopt
+165/437 Test #1520: ts_x2b_noopt ....................................   Passed    0.02 sec
+        Start 1523: ts_x2c_opt
+166/437 Test #1519: ts_wrdix_opt ....................................   Passed    0.03 sec
+        Start 1524: ts_x2d_noopt
+167/437 Test #1522: ts_x2c_noopt ....................................   Passed    0.02 sec
+        Start 1525: ts_x2d_opt
+168/437 Test #1521: ts_x2b_opt ......................................   Passed    0.03 sec
+        Start 1526: tscopies_noopt
+169/437 Test #1524: ts_x2d_noopt ....................................   Passed    0.02 sec
+        Start 1527: tscopies_opt
+170/437 Test #1523: ts_x2c_opt ......................................   Passed    0.04 sec
+        Start 1528: tslastpos_noopt
+171/437 Test #1526: tscopies_noopt ..................................   Passed    0.02 sec
+        Start 1529: tslastpos_opt
+172/437 Test #1525: ts_x2d_opt ......................................   Passed    0.03 sec
+        Start 1530: tsubstr_noopt
+173/437 Test #1528: tslastpos_noopt .................................   Passed    0.02 sec
+        Start 1531: tsubstr_opt
+174/437 Test #1527: tscopies_opt ....................................   Passed    0.03 sec
+        Start 1532: tsword_noopt
+175/437 Test #1530: tsubstr_noopt ...................................   Passed    0.02 sec
+        Start 1533: tsword_opt
+176/437 Test #1529: tslastpos_opt ...................................   Passed    0.04 sec
+        Start 1534: ts_words_noopt
+177/437 Test #1532: tsword_noopt ....................................   Passed    0.02 sec
+        Start 1535: ts_words_opt
+178/437 Test #1531: tsubstr_opt .....................................   Passed    0.03 sec
+        Start 1536: ts_reradix_noopt
+179/437 Test #1035: source_semantics ................................   Passed    2.28 sec
+        Start 1537: ts_reradix_opt
+180/437 Test #1534: ts_words_noopt ..................................   Passed    0.02 sec
+        Start 1538: ts_sequence_noopt
+181/437 Test #1533: tsword_opt ......................................   Passed    0.04 sec
+        Start 1539: ts_sequence_opt
+182/437 Test #1536: ts_reradix_noopt ................................   Passed    0.02 sec
+        Start 1540: ts_find_noopt
+183/437 Test #1535: ts_words_opt ....................................   Passed    0.04 sec
+        Start 1541: ts_find_opt
+184/437 Test #1538: ts_sequence_noopt ...............................   Passed    0.02 sec
+        Start 1542: ts_index_noopt
+185/437 Test #1537: ts_reradix_opt ..................................   Passed    0.03 sec
+        Start 1543: ts_index_opt
+186/437 Test #1539: ts_sequence_opt .................................   Passed    0.03 sec
+        Start 1544: ts_parse_noopt
+187/437 Test #1540: ts_find_noopt ...................................   Passed    0.02 sec
+        Start 1545: ts_parse_opt
+188/437 Test #1542: ts_index_noopt ..................................   Passed    0.02 sec
+        Start 1546: ts_datatype_noopt
+189/437 Test #1541: ts_find_opt .....................................   Passed    0.04 sec
+        Start 1547: ts_datatype_opt
+190/437 Test #1544: ts_parse_noopt ..................................   Passed    0.02 sec
+        Start 1548: ts_numeric_noopt
+191/437 Test #1543: ts_index_opt ....................................   Passed    0.03 sec
+        Start 1549: ts_numeric_opt
+192/437 Test #1546: ts_datatype_noopt ...............................   Passed    0.02 sec
+        Start 1550: ts_splice_noopt
+193/437 Test #1545: ts_parse_opt ....................................   Passed    0.04 sec
+        Start 1551: ts_splice_opt
+194/437 Test #1548: ts_numeric_noopt ................................   Passed    0.02 sec
+        Start 1552: ts_arraydelete_noopt
+195/437 Test #1550: ts_splice_noopt .................................   Passed    0.02 sec
+        Start 1553: ts_arraydelete_opt
+196/437 Test #1547: ts_datatype_opt .................................   Passed    0.04 sec
+        Start 1554: ts_arraydelete_focused_noopt
+197/437 Test #1549: ts_numeric_opt ..................................   Passed    0.03 sec
+        Start 1555: ts_arraydelete_focused_opt
+198/437 Test #1551: ts_splice_opt ...................................   Passed    0.03 sec
+        Start 1556: ts_arrayappend_noopt
+199/437 Test #1552: ts_arraydelete_noopt ............................   Passed    0.03 sec
+        Start 1557: ts_arrayappend_opt
+200/437 Test #1554: ts_arraydelete_focused_noopt ....................   Passed    0.02 sec
+        Start 1558: ts_arraycontains_noopt
+201/437 Test #1553: ts_arraydelete_opt ..............................   Passed    0.04 sec
+        Start 1559: ts_arraycontains_opt
+202/437 Test #1556: ts_arrayappend_noopt ............................   Passed    0.02 sec
+        Start 1560: ts_arraycopy_noopt
+203/437 Test #1555: ts_arraydelete_focused_opt ......................   Passed    0.04 sec
+        Start 1561: ts_arraycopy_opt
+204/437 Test #1558: ts_arraycontains_noopt ..........................   Passed    0.02 sec
+        Start 1562: ts_arraydrop_noopt
+205/437 Test #1557: ts_arrayappend_opt ..............................   Passed    0.03 sec
+        Start 1563: ts_arraydrop_opt
+206/437 Test #1560: ts_arraycopy_noopt ..............................   Passed    0.02 sec
+        Start 1564: ts_arrayfind_noopt
+207/437 Test #1562: ts_arraydrop_noopt ..............................   Passed    0.02 sec
+        Start 1565: ts_arrayfind_opt
+208/437 Test #1559: ts_arraycontains_opt ............................   Passed    0.03 sec
+        Start 1566: ts_arrayget_noopt
+209/437 Test #1561: ts_arraycopy_opt ................................   Passed    0.03 sec
+        Start 1567: ts_arrayget_opt
+210/437 Test #1134: rxlink_format_check .............................   Passed    2.43 sec
+        Start 1568: ts_arrayhi_noopt
+211/437 Test #1564: ts_arrayfind_noopt ..............................   Passed    0.02 sec
+        Start 1569: ts_arrayhi_opt
+212/437 Test #1563: ts_arraydrop_opt ................................   Passed    0.03 sec
+        Start 1570: ts_arrayindexof_noopt
+213/437 Test #1566: ts_arrayget_noopt ...............................   Passed    0.02 sec
+        Start 1571: ts_arrayindexof_opt
+214/437 Test #1565: ts_arrayfind_opt ................................   Passed    0.03 sec
+        Start 1572: ts_arrayinsert_noopt
+215/437 Test #1568: ts_arrayhi_noopt ................................   Passed    0.02 sec
+        Start 1573: ts_arrayinsert_opt
+216/437 Test #1570: ts_arrayindexof_noopt ...........................   Passed    0.02 sec
+        Start 1574: ts_arrayjoin_noopt
+217/437 Test #1567: ts_arrayget_opt .................................   Passed    0.03 sec
+        Start 1575: ts_arrayjoin_opt
+218/437 Test #1569: ts_arrayhi_opt ..................................   Passed    0.03 sec
+        Start 1576: ts_arraymove_noopt
+219/437 Test #1572: ts_arrayinsert_noopt ............................   Passed    0.02 sec
+        Start 1577: ts_arraymove_opt
+220/437 Test #1571: ts_arrayindexof_opt .............................   Passed    0.03 sec
+        Start 1578: ts_arraypop_noopt
+221/437 Test #1574: ts_arrayjoin_noopt ..............................   Passed    0.02 sec
+        Start 1579: ts_arraypop_opt
+222/437 Test #1573: ts_arrayinsert_opt ..............................   Passed    0.03 sec
+        Start 1580: ts_arrayprepend_noopt
+223/437 Test #1576: ts_arraymove_noopt ..............................   Passed    0.02 sec
+        Start 1581: ts_arrayprepend_opt
+224/437 Test #1575: ts_arrayjoin_opt ................................   Passed    0.03 sec
+        Start 1582: ts_arrayreverse_noopt
+225/437 Test #1578: ts_arraypop_noopt ...............................   Passed    0.02 sec
+        Start 1583: ts_arrayreverse_opt
+226/437 Test #1577: ts_arraymove_opt ................................   Passed    0.03 sec
+        Start 1584: ts_arrayset_noopt
+227/437 Test #1580: ts_arrayprepend_noopt ...........................   Passed    0.02 sec
+        Start 1585: ts_arrayset_opt
+228/437 Test #1579: ts_arraypop_opt .................................   Passed    0.03 sec
+        Start 1586: ts_arrayshift_noopt
+229/437 Test #1582: ts_arrayreverse_noopt ...........................   Passed    0.02 sec
+        Start 1587: ts_arrayshift_opt
+230/437 Test #1581: ts_arrayprepend_opt .............................   Passed    0.03 sec
+        Start 1588: ts_arraysort_noopt
+231/437 Test #1584: ts_arrayset_noopt ...............................   Passed    0.02 sec
+        Start 1589: ts_arraysort_opt
+232/437 Test #1583: ts_arrayreverse_opt .............................   Passed    0.03 sec
+        Start 1590: ts_b2d_noopt
+233/437 Test #1586: ts_arrayshift_noopt .............................   Passed    0.02 sec
+        Start 1591: ts_b2d_opt
+234/437 Test #1585: ts_arrayset_opt .................................   Passed    0.03 sec
+        Start 1592: ts_b2x_noopt
+235/437 Test #1588: ts_arraysort_noopt ..............................   Passed    0.02 sec
+        Start 1593: ts_b2x_opt
+236/437 Test #1587: ts_arrayshift_opt ...............................   Passed    0.03 sec
+        Start 1594: ts_c2d_noopt
+237/437 Test #1590: ts_b2d_noopt ....................................   Passed    0.02 sec
+        Start 1595: ts_c2d_opt
+238/437 Test #1589: ts_arraysort_opt ................................   Passed    0.03 sec
+        Start 1596: ts_centre_noopt
+239/437 Test #1592: ts_b2x_noopt ....................................   Passed    0.02 sec
+        Start 1597: ts_centre_opt
+240/437 Test #1591: ts_b2d_opt ......................................   Passed    0.03 sec
+        Start 1598: ts_d2b_noopt
+241/437 Test #1594: ts_c2d_noopt ....................................   Passed    0.02 sec
+        Start 1599: ts_d2b_opt
+242/437 Test #1496: ts_trace_noopt ..................................   Passed    0.63 sec
+        Start 1600: ts_ftrunc_noopt
+243/437 Test #1593: ts_b2x_opt ......................................   Passed    0.04 sec
+        Start 1601: ts_ftrunc_opt
+244/437 Test #1596: ts_centre_noopt .................................   Passed    0.02 sec
+        Start 1602: ts_getenv_noopt
+245/437 Test #1595: ts_c2d_opt ......................................   Passed    0.04 sec
+        Start 1603: ts_getenv_opt
+246/437 Test #1598: ts_d2b_noopt ....................................   Passed    0.02 sec
+        Start 1604: ts_itrunc_noopt
+247/437 Test #1600: ts_ftrunc_noopt .................................   Passed    0.02 sec
+        Start 1605: ts_itrunc_opt
+248/437 Test #1597: ts_centre_opt ...................................   Passed    0.04 sec
+        Start 1606: ts_loadmodule_noopt
+249/437 Test #1599: ts_d2b_opt ......................................   Passed    0.04 sec
+        Start 1607: ts_loadmodule_opt
+250/437 Test #1602: ts_getenv_noopt .................................   Passed    0.02 sec
+        Start 1608: ts_max_noopt
+251/437 Test #1604: ts_itrunc_noopt .................................   Passed    0.02 sec
+        Start 1609: ts_max_opt
+252/437 Test #1601: ts_ftrunc_opt ...................................   Passed    0.04 sec
+        Start 1610: ts_min_noopt
+253/437 Test #1603: ts_getenv_opt ...................................   Passed    0.04 sec
+        Start 1611: ts_min_opt
+254/437 Test #1608: ts_max_noopt ....................................   Passed    0.03 sec
+        Start 1612: ts_objectarrayappend_noopt
+255/437 Test #1605: ts_itrunc_opt ...................................   Passed    0.04 sec
+        Start 1613: ts_objectarrayappend_opt
+256/437 Test #1606: ts_loadmodule_noopt .............................   Passed    0.04 sec
+        Start 1614: ts_objectarraydelete_noopt
+257/437 Test #1610: ts_min_noopt ....................................   Passed    0.03 sec
+        Start 1615: ts_objectarraydelete_opt
+258/437 Test #1607: ts_loadmodule_opt ...............................   Passed    0.04 sec
+        Start 1616: ts_objectarraydrop_noopt
+259/437 Test #1609: ts_max_opt ......................................   Passed    0.04 sec
+        Start 1617: ts_objectarraydrop_opt
+260/437 Test #1612: ts_objectarrayappend_noopt ......................   Passed    0.02 sec
+        Start 1618: ts_objectarrayinsert_noopt
+261/437 Test #1614: ts_objectarraydelete_noopt ......................   Passed    0.03 sec
+        Start 1619: ts_objectarrayinsert_opt
+262/437 Test #1611: ts_min_opt ......................................   Passed    0.04 sec
+        Start 1620: ts_objectarraymove_noopt
+263/437 Test #1613: ts_objectarrayappend_opt ........................   Passed    0.04 sec
+        Start 1621: ts_objectarraymove_opt
+264/437 Test #1616: ts_objectarraydrop_noopt ........................   Passed    0.02 sec
+        Start 1622: ts_objectarrayprepend_noopt
+265/437 Test #1618: ts_objectarrayinsert_noopt ......................   Passed    0.02 sec
+        Start 1623: ts_objectarrayprepend_opt
+266/437 Test #1615: ts_objectarraydelete_opt ........................   Passed    0.04 sec
+        Start 1624: ts_qwordlength_noopt
+267/437 Test #1620: ts_objectarraymove_noopt ........................   Passed    0.02 sec
+        Start 1625: ts_qwordlength_opt
+268/437 Test #1617: ts_objectarraydrop_opt ..........................   Passed    0.04 sec
+        Start 1626: ts_raise_noopt
+269/437 Test #1622: ts_objectarrayprepend_noopt .....................   Passed    0.02 sec
+        Start 1627: ts_raise_opt
+270/437 Test #1619: ts_objectarrayinsert_opt ........................   Passed    0.04 sec
+        Start 1628: ts_rxsystem_noopt
+271/437 Test #1624: ts_qwordlength_noopt ............................   Passed    0.03 sec
+        Start 1629: ts_rxsystem_opt
+272/437 Test #1140: rxlink_rxdas_inline_preserve_smoke ..............   Passed    2.69 sec
+273/437 Test #1147: rxdas_graph_error ...............................   Passed    2.65 sec
+        Start 1630: ts_rxsystem_exit_noopt
+        Start 1631: ts_rxsystem_exit_opt
+274/437 Test #1626: ts_raise_noopt ..................................   Passed    0.02 sec
+        Start 1632: ts_rxqueue_noopt
+275/437 Test #1621: ts_objectarraymove_opt ..........................   Passed    0.05 sec
+        Start 1634: ts_signal_noopt
+276/437 Test #1623: ts_objectarrayprepend_opt .......................   Passed    0.04 sec
+        Start 1635: ts_signal_opt
+277/437 Test #1628: ts_rxsystem_noopt ...............................   Passed    0.03 sec
+        Start 1636: ts_substro_noopt
+278/437 Test #1625: ts_qwordlength_opt ..............................   Passed    0.04 sec
+        Start 1637: ts_substro_opt
+279/437 Test #1627: ts_raise_opt ....................................   Passed    0.05 sec
+        Start 1638: ts_subword_noopt
+280/437 Test #1634: ts_signal_noopt .................................   Passed    0.03 sec
+        Start 1639: ts_subword_opt
+281/437 Test #1152: rxdas_roundtrip_large_binary_alias ..............   Passed    2.62 sec
+        Start 1640: ts_xrange_noopt
+282/437 Test #1631: ts_rxsystem_exit_opt ............................   Passed    0.04 sec
+283/437 Test #1142: rxdas_roundtrip_basic ...........................   Passed    2.71 sec
+        Start 1641: ts_xrange_opt
+        Start 1642: ts_objectarray_noopt
+284/437 Test #1148: rxdas_roundtrip_interfaces ......................   Passed    2.70 sec
+        Start 1643: ts_objectarray_opt
+285/437 Test #1630: ts_rxsystem_exit_noopt ..........................   Passed    0.05 sec
+        Start 1644: ts_stem_noopt
+286/437 Test #1629: ts_rxsystem_opt .................................   Passed    0.06 sec
+        Start 1645: ts_stem_opt
+287/437 Test #1638: ts_subword_noopt ................................   Passed    0.03 sec
+        Start 1654: ts_rxsocket_noopt
+288/437 Test #1636: ts_substro_noopt ................................   Passed    0.06 sec
+        Start 1655: ts_rxsocket_opt
+289/437 Test #1642: ts_objectarray_noopt ............................   Passed    0.03 sec
+        Start 1656: ts_socket_tls_live_noopt
+290/437 Test #1637: ts_substro_opt ..................................   Passed    0.05 sec
+        Start 1657: ts_socket_tls_live_opt
+291/437 Test #1640: ts_xrange_noopt .................................   Passed    0.03 sec
+        Start 1658: ts_afterword_noopt
+292/437 Test #1632: ts_rxqueue_noopt ................................   Passed    0.07 sec
+        Start 1633: ts_rxqueue_opt
+293/437 Test #1644: ts_stem_noopt ...................................   Passed    0.03 sec
+        Start 1659: ts_afterword_opt
+294/437 Test #1635: ts_signal_opt ...................................   Passed    0.07 sec
+        Start 1660: ts_fileio_binary_rxbvm_noopt
+295/437 Test #1641: ts_xrange_opt ...................................   Passed    0.04 sec
+        Start 1661: ts_fileio_binary_rxbvm_opt
+296/437 Test #1643: ts_objectarray_opt ..............................   Passed    0.04 sec
+        Start 1662: ts_fileio_binary_rxtvm_noopt
+297/437 Test #1639: ts_subword_opt ..................................   Passed    0.05 sec
+        Start 1663: ts_fileio_binary_rxtvm_opt
+298/437 Test #1658: ts_afterword_noopt ..............................   Passed    0.03 sec
+        Start 1670: ts_address_capture_rxbvm_noopt
+299/437 Test #1645: ts_stem_opt .....................................   Passed    0.05 sec
+        Start 1671: ts_address_capture_rxbvm_opt
+300/437 Test #1656: ts_socket_tls_live_noopt ........................   Passed    0.03 sec
+        Start 1672: ts_address_argv_rxbvm_noopt
+301/437 Test #1660: ts_fileio_binary_rxbvm_noopt ....................   Passed    0.03 sec
+        Start 1673: ts_address_argv_rxbvm_opt
+302/437 Test #1657: ts_socket_tls_live_opt ..........................   Passed    0.04 sec
+        Start 1674: ts_address_array_lifecycle_rxbvm_noopt
+303/437 Test #1659: ts_afterword_opt ................................   Passed    0.04 sec
+        Start 1675: ts_address_array_lifecycle_rxbvm_opt
+304/437 Test #1633: ts_rxqueue_opt ..................................   Passed    0.05 sec
+        Start 1676: ts_address_spawn_transfer_rxbvm_noopt
+305/437 Test #1670: ts_address_capture_rxbvm_noopt ..................   Passed    0.04 sec
+        Start 1677: ts_address_spawn_transfer_rxbvm_opt
+306/437 Test #1674: ts_address_array_lifecycle_rxbvm_noopt ..........   Passed    0.03 sec
+        Start 1678: ts_address_spawn_transfer_rxtvm_noopt
+307/437 Test #1661: ts_fileio_binary_rxbvm_opt ......................   Passed    0.06 sec
+        Start 1679: ts_address_spawn_transfer_rxtvm_opt
+308/437 Test #1654: ts_rxsocket_noopt ...............................   Passed    0.10 sec
+        Start 1680: ts_arraysort_errors_noopt
+309/437 Test #1655: ts_rxsocket_opt .................................   Passed    0.10 sec
+        Start 1681: ts_arraysort_errors_opt
+310/437 Test #1680: ts_arraysort_errors_noopt .......................   Passed    0.02 sec
+        Start 1682: ts_stem_errors_noopt
+311/437 Test #1671: ts_address_capture_rxbvm_opt ....................   Passed    0.09 sec
+        Start 1683: ts_stem_errors_opt
+312/437 Test #1675: ts_address_array_lifecycle_rxbvm_opt ............   Passed    0.08 sec
+313/437 Test #1682: ts_stem_errors_noopt ............................   Passed    0.02 sec
+        Start 1691: ts_tinyexpr_noopt
+        Start 1709: rxfloat_contract_surface_coverage
+314/437 Test #1681: ts_arraysort_errors_opt .........................   Passed    0.04 sec
+        Start 1723: stack_test_noopt
+315/437 Test #1709: rxfloat_contract_surface_coverage ...............   Passed    0.01 sec
+        Start 1744: strings_test_noopt
+316/437 Test #1683: ts_stem_errors_opt ..............................   Passed    0.04 sec
+        Start 1748: keyaccess_test_noopt
+317/437 Test #1691: ts_tinyexpr_noopt ...............................   Passed    0.02 sec
+        Start 1773: map_test_noopt
+318/437 Test #1723: stack_test_noopt ................................   Passed    0.02 sec
+        Start 1788: testStringArrayList_noopt
+319/437 Test #1744: strings_test_noopt ..............................   Passed    0.02 sec
+        Start 1790: testStringHashMap_noopt
+320/437 Test #1773: map_test_noopt ..................................   Passed    0.02 sec
+        Start 1802: testObjectCollections_noopt
+321/437 Test #1748: keyaccess_test_noopt ............................   Passed    0.03 sec
+        Start 1750: keyaccess_compact_failure
+322/437 Test #1788: testStringArrayList_noopt .......................   Passed    0.08 sec
+        Start 1820: testJSON_noopt
+323/437 Test #1790: testStringHashMap_noopt .........................   Passed    0.08 sec
+        Start 1830: testOS_noopt
+324/437 Test #1802: testObjectCollections_noopt .....................   Passed    0.08 sec
+        Start 1865: rxunicode_contract_surface
+325/437 Test #1865: rxunicode_contract_surface ......................   Passed    0.01 sec
+        Start 1873: rcc5c_math_contract_surface_coverage
+326/437 Test #1873: rcc5c_math_contract_surface_coverage ............   Passed    0.01 sec
+        Start 1874: ts_math_integer_contract_rxbvm_noopt
+327/437 Test #1820: testJSON_noopt ..................................   Passed    0.07 sec
+        Start 1875: ts_math_integer_contract_rxbvm_opt
+328/437 Test #1156: rxdas_dump_support ..............................   Passed    3.07 sec
+        Start 1876: ts_math_integer_contract_rxtvm_noopt
+329/437 Test    #5: crexx_contract_generation .......................   Passed    3.90 sec
+        Start 1877: ts_math_integer_contract_rxtvm_opt
+330/437 Test #1159: rxspawn_resource_inheritance ....................   Passed    3.07 sec
+        Start 1878: ts_math_decimal_contract_rxbvm_noopt
+331/437 Test #1160: rxvmfile_private_open ...........................   Passed    3.18 sec
+        Start 1879: ts_math_decimal_contract_rxbvm_opt
+332/437 Test #1192: rxpa_utf_validation .............................   Passed    3.56 sec
+        Start 1880: ts_math_decimal_contract_rxtvm_noopt
+333/437 Test #1193: ts_regvalue_tester ..............................   Passed    3.75 sec
+        Start 1881: ts_math_decimal_contract_rxtvm_opt
+334/437 Test #1253: compact_format_check ............................   Passed    3.92 sec
+        Start 1910: ts_llm_providers_noopt
+335/437 Test #1326: reentrancy_check ................................   Passed    4.15 sec
+        Start 1947: testRexxValue_noopt
+336/437 Test #1947: testRexxValue_noopt .............................   Passed    0.05 sec
+        Start 1949: testRexxRuntimePools_noopt
+337/437 Test #1949: testRexxRuntimePools_noopt ......................   Passed    0.05 sec
+        Start 1951: testRexxClassicBifs_noopt
+338/437 Test #1951: testRexxClassicBifs_noopt .......................   Passed    0.05 sec
+        Start 2068: testRexxScriptRuntime_noopt
+339/437 Test #2068: testRexxScriptRuntime_noopt .....................   Passed    0.05 sec
+        Start 2070: testRexxScriptCompat_noopt
+340/437 Test #1378: db_decimal_archive_link .........................   Passed    4.37 sec
+        Start 2072: rexxscript_cli_smoke
+341/437 Test #2070: testRexxScriptCompat_noopt ......................   Passed    0.05 sec
+        Start 2093: rxas_optimizer_copy_acopy_opt
+342/437 Test #2093: rxas_optimizer_copy_acopy_opt ...................   Passed    0.01 sec
+        Start 2207: benchmark_awfy_sieve_opt
+343/437 Test #2207: benchmark_awfy_sieve_opt ........................   Passed    0.02 sec
+        Start 2209: benchmark_awfy_permute_opt
+344/437 Test #2209: benchmark_awfy_permute_opt ......................   Passed    0.02 sec
+        Start 2211: benchmark_awfy_mandelbrot_opt
+345/437 Test #2211: benchmark_awfy_mandelbrot_opt ...................   Passed    0.02 sec
+        Start 2213: benchmark_awfy_mandelbrot_hoisted_control_opt
+346/437 Test #2213: benchmark_awfy_mandelbrot_hoisted_control_opt ...   Passed    0.02 sec
+        Start 2215: benchmark_awfy_towers_opt
+347/437 Test #2215: benchmark_awfy_towers_opt .......................   Passed    0.04 sec
+        Start 2217: benchmark_awfy_bounce_opt
+348/437 Test #2217: benchmark_awfy_bounce_opt .......................   Passed    0.02 sec
+        Start 2219: benchmark_awfy_storage_opt
+349/437 Test #1314: rxasdecimaltests-mc .............................   Passed    4.58 sec
+        Start 2221: benchmark_awfy_list_opt
+350/437 Test #2221: benchmark_awfy_list_opt .........................   Passed    0.02 sec
+        Start 2223: benchmark_awfy_richards_opt
+351/437 Test #2219: benchmark_awfy_storage_opt ......................   Passed    0.11 sec
+        Start 2225: benchmark_awfy_queens_opt
+352/437 Test #2223: benchmark_awfy_richards_opt .....................   Passed    0.04 sec
+        Start 2227: benchmark_awfy_deltablue_opt
+353/437 Test #2225: benchmark_awfy_queens_opt .......................   Passed    0.02 sec
+        Start 2229: benchmark_awfy_cd_opt
+354/437 Test #2227: benchmark_awfy_deltablue_opt ....................   Passed    0.02 sec
+        Start 2231: benchmark_awfy_havlak_opt
+355/437 Test #1190: crexxsaa_cache_tool_location ....................   Passed    5.21 sec
+        Start 2233: benchmark_awfy_json_opt
+356/437 Test #1028: crexxsaa_variables ..............................   Passed    6.00 sec
+        Start 2235: benchmark_json_parser_opt
+357/437 Test #2233: benchmark_awfy_json_opt .........................   Passed    0.05 sec
+        Start 2237: benchmark_json_parse_opt
+358/437 Test #2235: benchmark_json_parser_opt .......................   Passed    0.06 sec
+        Start 2239: benchmark_json_query_opt
+359/437 Test #2237: benchmark_json_parse_opt ........................   Passed    0.06 sec
+        Start 2241: benchmark_base64_roundtrip_opt
+360/437 Test #2239: benchmark_json_query_opt ........................   Passed    0.04 sec
+        Start 2243: benchmark_base64_roundtrip_v2_opt
+361/437 Test #2241: benchmark_base64_roundtrip_opt ..................   Passed    0.04 sec
+        Start 2245: benchmark_parse_frozen_opt
+362/437 Test #2243: benchmark_base64_roundtrip_v2_opt ...............   Passed    0.04 sec
+        Start 2249: benchmark_rexxcps_levelb_opt
+363/437 Test #2245: benchmark_parse_frozen_opt ......................   Passed    0.04 sec
+        Start 2251: benchmark_awfy_nbody_opt
+364/437 Test #1416: ts_address_argv_noopt ...........................   Passed    4.79 sec
+        Start 2254: benchmark_rexxcps_levelb_opaque_opt
+365/437 Test #1672: ts_address_argv_rxbvm_noopt .....................   Passed    3.21 sec
+        Start 2256: benchmark_runner_opt
+366/437 Test #1417: ts_address_argv_opt .............................   Passed    4.80 sec
+        Start 2457: rxpa_dynlink_run_noopt
+367/437 Test #1673: ts_address_argv_rxbvm_opt .......................   Passed    3.22 sec
+        Start 2459: rxpa_staticlink_run_noopt
+368/437 Test #2457: rxpa_dynlink_run_noopt ..........................   Passed    0.02 sec
+        Start 2469: rxpa_classdecl_static_compile_opt
+369/437 Test #2254: benchmark_rexxcps_levelb_opaque_opt .............   Passed    0.05 sec
+        Start 2472: rxpa_signal_funcs_dynamic_noopt
+370/437 Test #2472: rxpa_signal_funcs_dynamic_noopt .................   Passed    0.05 sec
+        Start 2492: rxpa_native_payload_funcs_dynamic_noopt
+371/437 Test #2492: rxpa_native_payload_funcs_dynamic_noopt .........   Passed    0.02 sec
+        Start 2496: rxpa_native_unwind_funcs_dynamic_noopt
+372/437 Test #2496: rxpa_native_unwind_funcs_dynamic_noopt ..........   Passed    0.03 sec
+        Start 2500: rxpa_mult_test_noopt
+373/437 Test #2500: rxpa_mult_test_noopt ............................   Passed    0.03 sec
+        Start 2502: rxbin_autoload_contract
+374/437 Test #2502: rxbin_autoload_contract .........................   Passed    0.15 sec
+        Start 2503: crexx_help_smoke
+375/437 Test #1420: ts_address_spawn_transfer_noopt .................   Passed    5.27 sec
+376/437 Test #1676: ts_address_spawn_transfer_rxbvm_noopt ...........   Passed    3.78 sec
+377/437 Test #1421: ts_address_spawn_transfer_opt ...................   Passed    5.23 sec
+378/437 Test #1677: ts_address_spawn_transfer_rxbvm_opt .............   Passed    3.80 sec
+379/437 Test #1662: ts_fileio_binary_rxtvm_noopt ....................   Passed    3.88 sec
+380/437 Test #1663: ts_fileio_binary_rxtvm_opt ......................   Passed    3.89 sec
+381/437 Test #1029: crexxsaa_status .................................   Passed    6.89 sec
+382/437 Test #1750: keyaccess_compact_failure .......................   Passed    3.97 sec
+383/437 Test #1679: ts_address_spawn_transfer_rxtvm_opt .............   Passed    4.14 sec
+384/437 Test #1678: ts_address_spawn_transfer_rxtvm_noopt ...........   Passed    4.14 sec
+385/437 Test #1830: testOS_noopt ....................................   Passed    4.19 sec
+386/437 Test #2249: benchmark_rexxcps_levelb_opt ....................   Passed    1.33 sec
+387/437 Test #1877: ts_math_integer_contract_rxtvm_opt ..............   Passed    3.97 sec
+388/437 Test #1881: ts_math_decimal_contract_rxtvm_opt ..............   Passed    2.93 sec
+389/437 Test #1879: ts_math_decimal_contract_rxbvm_opt ..............   Passed    3.60 sec
+390/437 Test #1875: ts_math_integer_contract_rxbvm_opt ..............   Passed    4.23 sec
+391/437 Test #1876: ts_math_integer_contract_rxtvm_noopt ............   Passed    4.12 sec
+392/437 Test #1878: ts_math_decimal_contract_rxbvm_noopt ............   Passed    3.87 sec
+393/437 Test #1880: ts_math_decimal_contract_rxtvm_noopt ............   Passed    3.22 sec
+394/437 Test #1874: ts_math_integer_contract_rxbvm_noopt ............   Passed    4.32 sec
+395/437 Test #2072: rexxscript_cli_smoke ............................   Passed    2.50 sec
+396/437 Test #2251: benchmark_awfy_nbody_opt ........................   Passed    1.71 sec
+397/437 Test #2229: benchmark_awfy_cd_opt ...........................   Passed    2.34 sec
+398/437 Test #2256: benchmark_runner_opt ............................   Passed    1.92 sec
+399/437 Test #1910: ts_llm_providers_noopt ..........................   Passed    3.43 sec
+400/437 Test #1397: ts_linein_stdin_prompt ..........................   Passed    7.44 sec
+        Start 1398: ts_linein_stdin_crexx_driver
+401/437 Test #2459: rxpa_staticlink_run_noopt .......................   Passed    2.30 sec
+402/437 Test #2469: rxpa_classdecl_static_compile_opt ...............   Passed    2.80 sec
+403/437 Test #2503: crexx_help_smoke ................................   Passed    2.56 sec
+        Start 2504: crexx_headerless_simple_smoke
+404/437 Test #1398: ts_linein_stdin_crexx_driver ....................   Passed    1.13 sec
+        Start 1399: ts_linein_stdin_crexx_tty
+Could not find executable /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/linein_tty_harness
+Looked in the following places:
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Release/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Release/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Debug/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Debug/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/MinSizeRel/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/MinSizeRel/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/RelWithDebInfo/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/RelWithDebInfo/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Deployment/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Deployment/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Development/linein_tty_harness
+/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Development/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Release/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Release/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Debug/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Debug/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/MinSizeRel/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/MinSizeRel/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/RelWithDebInfo/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/RelWithDebInfo/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Deployment/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Deployment/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Development/linein_tty_harness
+Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/Development/linein_tty_harness
+Unable to find executable: /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release/bin/linein_tty_harness
+405/437 Test #1399: ts_linein_stdin_crexx_tty .......................***Not Run   0.00 sec
+406/437 Test #2504: crexx_headerless_simple_smoke ...................   Passed    0.85 sec
+        Start 2508: crexx_args_smoke
+407/437 Test #2508: crexx_args_smoke ................................   Passed    0.42 sec
+        Start 2509: crexx_rexxscript_smoke
+408/437 Test #2509: crexx_rexxscript_smoke ..........................   Passed    0.41 sec
+        Start 2510: crexx_levelc_classic_runtime_smoke
+409/437 Test #2510: crexx_levelc_classic_runtime_smoke ..............   Passed    0.88 sec
+        Start 2511: crexx_status_diagnostics
+410/437 Test #2511: crexx_status_diagnostics ........................   Passed    0.97 sec
+        Start 2519: crexx_rxpp_builddir
+411/437 Test #2519: crexx_rxpp_builddir .............................   Passed    0.46 sec
+        Start 2520: crexx_rxpp_metadata_link
+412/437 Test #2231: benchmark_awfy_havlak_opt .......................   Passed    8.04 sec
+413/437 Test #2520: crexx_rxpp_metadata_link ........................   Passed    1.53 sec
+        Start   19: source_import_private_dependency_convergence
+414/437 Test   #19: source_import_private_dependency_convergence ....   Passed    3.11 sec
+        Start   20: source_import_private_dependency_provider
+415/437 Test   #20: source_import_private_dependency_provider .......   Passed    4.20 sec
+        Start  924: syntaxhighlight_trace_keywords
+416/437 Test  #924: syntaxhighlight_trace_keywords ..................   Passed    0.37 sec
+        Start 1394: rxpp_sh_tokens
+417/437 Test #1394: rxpp_sh_tokens ..................................   Passed    0.82 sec
+        Start 1410: ts_address_noopt
+418/437 Test #1410: ts_address_noopt ................................   Passed    0.12 sec
+        Start 1411: ts_address_opt
+419/437 Test #1411: ts_address_opt ..................................   Passed    0.14 sec
+        Start 1450: ts_fileio_chars_noopt
+420/437 Test #1450: ts_fileio_chars_noopt ...........................   Passed    0.01 sec
+        Start 1451: ts_fileio_chars_opt
+421/437 Test #1451: ts_fileio_chars_opt .............................   Passed    0.02 sec
+        Start 1867: ts_llm_http_fixture_noopt
+422/437 Test #1867: ts_llm_http_fixture_noopt .......................   Passed    1.03 sec
+        Start 1868: ts_llm_http_fixture_opt
+423/437 Test #1868: ts_llm_http_fixture_opt .........................   Passed    1.00 sec
+        Start 2201: QUIT
+424/437 Test #2201: QUIT ............................................   Passed    0.33 sec
+        Start 2203: INT
+425/437 Test #2203: INT .............................................   Passed    0.08 sec
+        Start 2518: crexx_project_build_contract
+426/437 Test #2518: crexx_project_build_contract ....................   Passed   22.09 sec
+        Start 2521: crexx_rxpp_metadata_link_invalid_source
+427/437 Test #2521: crexx_rxpp_metadata_link_invalid_source .........   Passed    0.32 sec
+        Start 2522: crexx_rxpp_metadata_external_bare
+428/437 Test #2522: crexx_rxpp_metadata_external_bare ...............   Passed    0.55 sec
+        Start 2523: crexx_rxpp_metadata_external_spaces
+429/437 Test #2523: crexx_rxpp_metadata_external_spaces .............   Passed    0.56 sec
+        Start 2524: crexx_rxpp_metadata_external_names
+430/437 Test #2524: crexx_rxpp_metadata_external_names ..............   Passed    0.25 sec
+        Start 2525: crexx_rxpp_metadata_external_missing
+431/437 Test #2525: crexx_rxpp_metadata_external_missing ............   Passed    0.27 sec
+        Start 2526: crexx_rxpp_metadata_norun
+432/437 Test #2526: crexx_rxpp_metadata_norun .......................   Passed    1.27 sec
+        Start 2527: crexx_source_root_compile_only
+433/437 Test #2527: crexx_source_root_compile_only ..................   Passed    0.24 sec
+        Start 2531: crexx_native_explicit_header_smoke
+434/437 Test #2531: crexx_native_explicit_header_smoke ..............   Passed    0.61 sec
+        Start 2533: crexx_native_rx_hash_provider
+435/437 Test #2533: crexx_native_rx_hash_provider ...................   Passed    0.64 sec
+        Start 2534: crexx_native_default_link_strip
+436/437 Test #2534: crexx_native_default_link_strip .................   Passed    0.35 sec
+        Start 2539: crexx_project_worker_diagnostics
+437/437 Test #2539: crexx_project_worker_diagnostics ................   Passed    0.79 sec
+
+99% tests passed, 1 tests failed out of 437
+
+Label Time Summary:
+assembler                            =   0.15 sec*proc (1 test)
+autoload                             =  22.24 sec*proc (2 tests)
+benchmark                            =  16.06 sec*proc (24 tests)
+binary-io                            =   7.86 sec*proc (4 tests)
+binutils                             =   3.90 sec*proc (1 test)
+build                                =  27.29 sec*proc (9 tests)
+canonical-contract                   =   1.92 sec*proc (1 test)
+classlib                             =  20.62 sec*proc (8 tests)
+compiler                             =  40.65 sec*proc (21 tests)
+comprehensive                        =  67.70 sec*proc (269 tests)
+concurrency                          =  39.48 sec*proc (15 tests)
+concurrency-sp03                     =   2.43 sec*proc (1 test)
+concurrency-sp04                     =  26.59 sec*proc (10 tests)
+concurrency-sp07                     =   3.43 sec*proc (1 test)
+concurrency-sp08                     =  26.36 sec*proc (6 tests)
+contract                             =  34.20 sec*proc (12 tests)
+decimal                              =  13.64 sec*proc (5 tests)
+diagnostics                          =   5.33 sec*proc (5 tests)
+driver                               =  29.20 sec*proc (12 tests)
+essential                            =   4.17 sec*proc (4 tests)
+file                                 =   0.24 sec*proc (1 test)
+float                                =   0.01 sec*proc (1 test)
+hash                                 =   0.24 sec*proc (1 test)
+http                                 =   2.03 sec*proc (2 tests)
+imports                              =   8.48 sec*proc (4 tests)
+includes                             =   0.06 sec*proc (1 test)
+incremental                          =  29.40 sec*proc (3 tests)
+indexed-red-black-tree-adaptation    =   2.34 sec*proc (1 test)
+inline                               =   7.31 sec*proc (2 tests)
+integer                              =  16.64 sec*proc (5 tests)
+interpreter                          =  18.52 sec*proc (7 tests)
+job-control                          =   0.00 sec*proc (1 test)
+language                             =  14.14 sec*proc (23 tests)
+levelc                               =   2.11 sec*proc (2 tests)
+levelg                               =  32.31 sec*proc (12 tests)
+library                              =  32.57 sec*proc (14 tests)
+linked_opt                           =  61.17 sec*proc (163 tests)
+linker                               =   0.15 sec*proc (1 test)
+llm                                  =   2.03 sec*proc (2 tests)
+macros                               =   0.13 sec*proc (2 tests)
+math                                 =  30.28 sec*proc (10 tests)
+native-adapter                       =   4.19 sec*proc (1 test)
+native-math-control                  =   4.05 sec*proc (2 tests)
+native_signal                        =   0.40 sec*proc (2 tests)
+noncanonical                         =   1.33 sec*proc (1 test)
+optimizer                            =   0.01 sec*proc (1 test)
+optimizer-parity                     =  86.10 sec*proc (310 tests)
+optimizer-resistance                 =   0.05 sec*proc (1 test)
+parallel                             =  22.09 sec*proc (1 test)
+plugins                              =   0.01 sec*proc (1 test)
+preprocessor                         =   6.91 sec*proc (13 tests)
+regression                           =  35.73 sec*proc (16 tests)
+rexxcps-smoke                        =   1.33 sec*proc (1 test)
+runner                               =   1.92 sec*proc (1 test)
+rxas                                 =   0.01 sec*proc (1 test)
+rxbvm                                =  16.11 sec*proc (6 tests)
+rxpa                                 =   3.57 sec*proc (2 tests)
+rxtvm                                =  22.01 sec*proc (6 tests)
+sanitizer                            =   6.24 sec*proc (2 tests)
+sha256                               =   0.24 sec*proc (1 test)
+smoke                                = 218.85 sec*proc (164 tests)
+spawn                                =   7.03 sec*proc (3 tests)
+srcmap                               =   1.45 sec*proc (1 test)
+stable-indexed-cfg-adaptation        =   8.04 sec*proc (1 test)
+stable-indexed-graph-adaptation      =   0.02 sec*proc (1 test)
+stage0                               =   0.37 sec*proc (1 test)
+stage2                               =   1.93 sec*proc (1 test)
+stage3                               =  16.26 sec*proc (5 tests)
+stage4                               =   1.29 sec*proc (1 test)
+stage5                               =   2.28 sec*proc (1 test)
+standard-library-adaptation          =   0.05 sec*proc (1 test)
+stdin                                =   8.56 sec*proc (3 tests)
+syntax_highlighting                  =   3.49 sec*proc (4 tests)
+tty                                  =   0.00 sec*proc (1 test)
+unicode                              =   0.01 sec*proc (1 test)
+unit                                 =   0.24 sec*proc (1 test)
+utf                                  =   3.56 sec*proc (1 test)
+
+Total Test time (real) =  54.25 sec
+
+The following tests FAILED:
+	1399 - ts_linein_stdin_crexx_tty (Not Run)               classlib comprehensive driver interpreter job-control stdin tty
+Errors while running CTest

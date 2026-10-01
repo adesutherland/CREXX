@@ -150,6 +150,7 @@ typedef struct child_channel child_channel;
 typedef struct child_request {
     child_channel *owner;
     struct child_request *next;
+    struct child_request *previous;
     child_thread thread;
     char **argv;
     int argc;
@@ -1032,6 +1033,7 @@ static rxvm_channel_status child_channel_start(
         goto status_failure;
     }
     request->next = channel->requests;
+    if (request->next) request->next->previous = request;
     channel->requests = request;
     channel->running++;
     child_mutex_unlock(&channel->mutex);
@@ -1044,9 +1046,11 @@ static rxvm_channel_status child_channel_start(
     if (!child_thread_start(request)) {
         child_request **cursor;
         child_mutex_lock(&channel->mutex);
-        cursor = &channel->requests;
-        while (*cursor && *cursor != request) cursor = &(*cursor)->next;
-        if (*cursor == request) *cursor = request->next;
+        cursor = request->previous ? &request->previous->next : &channel->requests;
+        if (*cursor == request) {
+            *cursor = request->next;
+            if (request->next) request->next->previous = request->previous;
+        }
         channel->running--;
         child_mutex_unlock(&channel->mutex);
         status = RXVM_CHANNEL_RESOURCE_EXHAUSTED;
@@ -1207,13 +1211,13 @@ static rxvm_channel_status child_channel_request_destroy(
     if (!channel || !request || request->owner != channel ||
         !child_thread_join(request)) return RXVM_CHANNEL_INTERNAL_ERROR;
     child_mutex_lock(&channel->mutex);
-    cursor = &channel->requests;
-    while (*cursor && *cursor != request) cursor = &(*cursor)->next;
+    cursor = request->previous ? &request->previous->next : &channel->requests;
     if (*cursor != request) {
         child_mutex_unlock(&channel->mutex);
         return RXVM_CHANNEL_INTERNAL_ERROR;
     }
     *cursor = request->next;
+    if (request->next) request->next->previous = request->previous;
     child_mutex_unlock(&channel->mutex);
     child_string_array_free(request->argv);
     child_string_array_free(request->environment);

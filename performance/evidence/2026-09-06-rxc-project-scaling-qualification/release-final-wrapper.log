@@ -1,0 +1,16 @@
+Test project /Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release
+    Start 2367: crexx_project_build_contract
+1/1 Test #2367: crexx_project_build_contract .....   Passed   38.44 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+autoload       =  38.44 sec*proc (1 test)
+build          =  38.44 sec*proc (1 test)
+driver         =  38.44 sec*proc (1 test)
+incremental    =  38.44 sec*proc (1 test)
+parallel       =  38.44 sec*proc (1 test)
+regression     =  38.44 sec*proc (1 test)
+smoke          =  38.44 sec*proc (1 test)
+
+Total Test time (real) =  38.54 sec

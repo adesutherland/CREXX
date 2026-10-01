@@ -461,8 +461,11 @@ void meta_set_global_symbol(Symbol *symbol, void *payload) {
     char* symbol_fqn;
 
     if (symbol->symbol_type == VARIABLE_SYMBOL) {
-        /* Is the global used in the procedure? */
-        if ( symislnk(ast_chld(node, INSTRUCTIONS, NOP), symbol) ) {
+        /* A node owns one symbol link; several globals can be used by one
+         * procedure. Inspect the symbol's live uses, not the body's single
+         * bookkeeping link. */
+        if (symbol->register_type == 'g' && symbol->register_num >= 0 &&
+            symbol_has_live_node_in_proc(symbol, node)) {
             symbol_fqn = sym_frnm(symbol);
             char *type = sym_2tp(symbol);
             buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
@@ -480,21 +483,19 @@ void meta_set_global_symbol(Symbol *symbol, void *payload) {
     }
 }
 
-/* Add Global Variable Metadata
- * node is the PROCEDURE node*/
+/* Global contracts belong to the enclosing namespace, not a procedure's
+ * local/alias table or a method's class-attribute table. */
+static Scope *procedure_namespace_scope(ASTNode *node) {
+    Scope *scope;
+    while (node && !node->scope) node = node->parent;
+    scope = node ? node->scope : 0;
+    while (scope && scope->type != SCOPE_NAMESPACE) scope = scope->parent;
+    return scope;
+}
+
+/* Add Global Variable Metadata; node is the PROCEDURE/METHOD/FACTORY node. */
 void add_global_variable_metadata(ASTNode* node) {
-
-    Scope *scope = node->scope;
-    ASTNode *n = node;
-
-    while (!scope) {
-        n = n->parent;
-        if (!n) return; /* No scope ... ! */
-        scope = n->scope;
-    }
-
-    /* Sets the Procedure's Symbols from metadata */
-    scp_4all(scope, meta_set_global_symbol, node);
+    scp_4all(procedure_namespace_scope(node), meta_set_global_symbol, node);
 }
 
 /* Clears Symbol metadata */
@@ -605,8 +606,8 @@ void meta_clear_global_symbol(Symbol *symbol, void *payload) {
     char* symbol_fqn;
 
     if (symbol->symbol_type == VARIABLE_SYMBOL) {
-        /* Is the global used in the procedure */
-        if ( symislnk(ast_chld(node, INSTRUCTIONS, NOP), symbol) ) {
+        if (symbol->register_type == 'g' && symbol->register_num >= 0 &&
+            symbol_has_live_node_in_proc(symbol, node)) {
             symbol_fqn = sym_frnm(symbol);
             buffer = mprintf("   .meta \"%s\"\n", symbol_fqn);
             free(symbol_fqn);
@@ -618,25 +619,9 @@ void meta_clear_global_symbol(Symbol *symbol, void *payload) {
     }
 }
 
-/* Clear Global Variable Metadata
- * node is the PROCEDURE node*/
+/* Clear the same namespace-global contracts emitted at procedure entry. */
 void clear_global_variable_metadata(ASTNode* node) {
-
-    Scope *scope = node->scope;
-    ASTNode *n = node;
-
-    /*  Find the node (procedure scope) */
-    while (!scope) {
-        n = n->parent;
-        if (!n) return; /* No scope ... ! */
-        scope = n->scope;
-    }
-
-    /* namespace scope */
-    scope = scope->parent;
-
-    /* Clears the Procedure's Global Symbols from metadata */
-    scp_4all(scope, meta_clear_global_symbol, node);
+    scp_4all(procedure_namespace_scope(node), meta_clear_global_symbol, node);
 }
 
 /* Returns Argument definition from the ARG Node as a malloced string to be used in meta-data */

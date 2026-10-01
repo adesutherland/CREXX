@@ -1,0 +1,25 @@
+{
+  "scope": "new staged-core finalization harness on the retained hosted ARM core; not a fresh current-source core build",
+  "source_archive": "/tmp/crexx-core-9caac6dcb-macos-arm64/CREXX-user-test-9caac6dcb47dbacc9f8011ab0f9a2e53acf5feb2-macos-arm64.zip",
+  "arguments": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/adrian/CLionProjects/CREXX/scripts/package-core-release.py",
+    "--source",
+    "/Users/adrian/CLionProjects/CREXX",
+    "--build",
+    "/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-ci/remote/9caac6dcb/core-macos-arm64-qa/core-build",
+    "--payload",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-finalize-xkc6yee6/stage/CREXX-macos-arm64",
+    "--output",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-finalize-xkc6yee6/result",
+    "--platform",
+    "macos-arm64",
+    "--toolchain",
+    "clang",
+    "--preferred-vm",
+    "rxbvm",
+    "--commit",
+    "9caac6dcb47dbacc9f8011ab0f9a2e53acf5feb2"
+  ],
+  "returncode": 0
+}

@@ -1,0 +1,25 @@
+/* Positive control for the binary-by-value task transport used by the
+ * foreign-handle rejection acceptance test. No inference provider required. */
+options levelg
+namespace rxllama_transport_positive
+import rxfnsb
+import concurrency
+
+roundtrip: task = .binary
+  arg value = .binary
+  return value
+
+main: procedure = .int
+  value = x2bin("000102FEFF")
+  pool = .taskpool.local(2, 4)
+  scope = .taskscope.collectall(pool, 60000)
+  do parallel using scope
+    first = roundtrip(value)
+    second = roundtrip(value)
+  end
+  call pool.close()
+  if bincompare(first, value) <> 0 | bincompare(second, value) <> 0 then return 1
+  say "PASS: native inference worker transport positive control"
+  return 0
+
+exit main()

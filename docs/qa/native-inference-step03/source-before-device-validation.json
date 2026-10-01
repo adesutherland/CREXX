@@ -1,0 +1,68 @@
+{
+  "baseline": "c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8",
+  "state": "uncommitted STEP-03 candidate; no interpreter edit",
+  "files": {
+    "CMakeLists.txt": "c07df86d14f4eb929d65043660be55493a40bbf62da793e65c5b5f57682f98e6",
+    "bin/crexx.crexx": "414247aa04d953693f9b2ff43a2bcfe06613e444528d94f82bbc0929c38ba1b4",
+    "lib/plugins/CMakeLists.txt": "aafef4ec99378ce743f1312b6890ce12d1c0f93b53bff830ac0dfbd8396f2ce3",
+    "lib/plugins/llama/CMakeLists.txt": "fdb7d1b60b512f3abce6d11b5ab0a82e5194a151264b21723dc09ba8f494864d",
+    "lib/plugins/llama/bridge.cpp": "f065a5478bacf58778887b60db9431d273de1d4acc11ab7b68cc6253c999a204",
+    "lib/plugins/llama/bridge.h": "65e8acd4cae09c29df72b95862b18953aac1278e74460dad976911a8f89474de",
+    "lib/plugins/llama/package.hpp": "e8838e941de202332afc8b19d3ef6b269540ee084d5c350195ee847afcf37e6f",
+    "lib/plugins/llama/provider_package.cpp": "42a8f403ba71c922964244aca30f51af0870a1b434a07d0c9bac71bf4404a6b0",
+    "lib/plugins/llama/rxllama.c": "d1ff608fc1a6032d4df1a8e413ca67c7661f3f4a00cea997bfebd9dca36111a2",
+    "rxpa/RXPluginFunction.cmake": "d4e22a9bf1cf4812ad74d042f113b1ec93f71ec61e79bfe012d375d3ebae909a",
+    "rxpa/WriteProviderPackage.cmake": "559e5ebb5c0764b9125a77857e006f98bccc0b0818eb71d4eeed10122030d7c0",
+    "tests/native-inference/bridge_lifecycle.cpp": "30ef332efa3278f9cc85268bbe66d239f7fd24032fef4d67f3ac29cb5df32341",
+    "tests/native-inference/lifecycle_acceptance.crexx": "d03e95f0c68789e14dfef0eedc3cb2a253763619ff2c6d613720628072d7230f",
+    "tests/native-inference/package_acceptance.py": "2936a7f3d3da8cc11c7cd04a42179baafb7ad10c712de121c47736975f4c5dbe",
+    "tests/native-inference/provider_worker_acceptance.crexx": "5cfd52ea8edb61b1b7d447cdb5a10d6cfa62dd268d26d5ff499ebdbe9ddb00e0",
+    "tests/native-inference/shared_worker_lifecycle.crexx": "a4abefc8d260adcd8ff3cf7d4d87f4e6c2dbd157e2d9c933d838ee5cc74ac967",
+    "tests/native-inference/step03_install_qualification.py": "4c0a065a500e96148809e7639ac8908d95f6ac9eb623b01ee0a872c6a42e3d99",
+    "tests/native-inference/step03_package_consumer.py": "1398ba6ed28ec828c991d15db06abd0de95ebccdf62828788a3836efa427ea17",
+    "tests/native-inference/step03_toolchain.cmake": "c53c37c14386f6a173dcafc4a9e7b3d436ee069f12e6fa04de66c85471f80010",
+    "tests/native-inference/worker_transport_positive.crexx": "470cf1309c8770f9246d2c26fa220fa4e4d6ca2456571d8c613f0fec05096983"
+  },
+  "host": {
+    "system": "Darwin 25.6.0 arm64",
+    "processor": "Apple M5",
+    "logical_cpus": "10",
+    "memory_bytes": "25769803776"
+  },
+  "configs": {
+    "cmake-build-debug": [
+      "CMAKE_BUILD_TYPE:STRING=Debug",
+      "CMAKE_CXX_FLAGS:STRING=",
+      "CMAKE_C_FLAGS:STRING=",
+      "CREXX_LLAMA_ARCHIVE:FILEPATH=/Users/adrian/Library/Caches/crexx/native-inference/llama.cpp-5266f24da75dc449bd56cbed7addb9c8e4a6a73e.tar.gz",
+      "CREXX_LLAMA_CUDA:BOOL=OFF",
+      "CREXX_LLAMA_METAL:BOOL=ON",
+      "CREXX_LLAMA_TEST_MODELS:PATH=/Users/adrian/Library/Caches/crexx/native-inference",
+      "CREXX_LLAMA_VULKAN:BOOL=OFF",
+      "ENABLE_LLAMA:BOOL=ON",
+      "GGML_CPU_ALL_VARIANTS:BOOL=OFF",
+      "GGML_CUDA:BOOL=OFF",
+      "GGML_METAL:BOOL=ON",
+      "GGML_NATIVE:BOOL=OFF",
+      "GGML_OPENMP:BOOL=OFF",
+      "GGML_VULKAN:BOOL=OFF"
+    ],
+    "cmake-build-debugasan": [
+      "CMAKE_BUILD_TYPE:STRING=Debug",
+      "CMAKE_CXX_FLAGS:STRING=-fsanitize=address -fno-omit-frame-pointer",
+      "CMAKE_C_FLAGS:STRING=-fsanitize=address -fno-omit-frame-pointer",
+      "CREXX_LLAMA_ARCHIVE:FILEPATH=/Users/adrian/Library/Caches/crexx/native-inference/llama.cpp-5266f24da75dc449bd56cbed7addb9c8e4a6a73e.tar.gz",
+      "CREXX_LLAMA_CUDA:BOOL=OFF",
+      "CREXX_LLAMA_METAL:BOOL=ON",
+      "CREXX_LLAMA_TEST_MODELS:PATH=/Users/adrian/Library/Caches/crexx/native-inference",
+      "CREXX_LLAMA_VULKAN:BOOL=OFF",
+      "ENABLE_LLAMA:BOOL=ON",
+      "GGML_CPU_ALL_VARIANTS:BOOL=OFF",
+      "GGML_CUDA:BOOL=OFF",
+      "GGML_METAL:BOOL=ON",
+      "GGML_NATIVE:BOOL=OFF",
+      "GGML_OPENMP:BOOL=OFF",
+      "GGML_VULKAN:BOOL=OFF"
+    ]
+  }
+}

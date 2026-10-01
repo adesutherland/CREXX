@@ -1,0 +1,3 @@
+argv=['/tmp/crexx-ni-s7.oheu5td2/install/bin/rxc', '--no-exe-import', '-i', '/tmp/crexx-ni-s7.oheu5td2/install/bin', '-o', 'embeddings_vm', '/tmp/crexx-ni-s7.oheu5td2/install/share/crexx/llama/examples/persistent_embeddings.crexx']
+cwd=/tmp/crexx-ni-s7.oheu5td2/llama-example-work
+rc=0

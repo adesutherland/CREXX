@@ -1,0 +1,15 @@
+--- before/lib/plugins/llama/CMakeLists.txt
++++ after/lib/plugins/llama/CMakeLists.txt
+@@ -197,9 +197,10 @@
+         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")
+ endif()
+ set(CREXX_LLAMA_TEST_MODELS "" CACHE PATH "Explicit local STEP-01 model directory for opt-in provider QA")
+-install(FILES README.md DESTINATION share/crexx/llama)
++install(FILES README.md installation.md models.md reference.md qualification.md
++    DESTINATION share/crexx/llama COMPONENT llama-docs)
+ install(DIRECTORY examples/ DESTINATION share/crexx/llama/examples
+-    FILES_MATCHING PATTERN "*.crexx")
++    COMPONENT llama-docs FILES_MATCHING PATTERN "*.crexx" PATTERN "*.md")
+ if(BUILD_TESTING AND CREXX_LLAMA_TEST_MODELS)
+     set(_bge "${CREXX_LLAMA_TEST_MODELS}/bge-small-en-v1.5-f16.gguf")
+     set(_smol "${CREXX_LLAMA_TEST_MODELS}/smollm2-360m-instruct-q8_0.gguf")

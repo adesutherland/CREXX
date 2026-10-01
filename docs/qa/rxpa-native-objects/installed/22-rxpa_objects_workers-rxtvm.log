@@ -1,0 +1,3 @@
+argv=[PosixPath('/private/tmp/rxpa-objects-installed-20260914-final/installed Ω/bin/rxtvm'), '/private/tmp/rxpa-objects-installed-20260914-final/rxpa_objects_workers-dynamic-linked']
+rc=0
+PASS: C native objects in isolated attached worker sessions

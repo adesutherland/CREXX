@@ -1,0 +1,12 @@
+{
+  "outcome": "passed",
+  "purpose": "Archive/extract a payload with bin/rxvm -> rxbvm; require the extracted entry to remain a relative symlink and resolve to the original bytes.",
+  "linux": [
+    "zip -qry linux.zip payload",
+    "unzip -q linux.zip -d linux"
+  ],
+  "macos": [
+    "ditto -c -k --norsrc --keepParent payload macos.zip",
+    "unzip -q macos.zip -d macos"
+  ]
+}

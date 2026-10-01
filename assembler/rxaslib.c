@@ -204,7 +204,10 @@ int rxasinfl(Assembler_Context *scanner, int file_name_includes_type_extension) 
     }
 
     scanner->buff = file2buf(fp, &bytes);
-    fclose(fp);
+    if (fclose(fp) != 0) {
+        free(scanner->buff);
+        scanner->buff = NULL;
+    }
     if (scanner->buff == NULL) {
         if (!scanner->quiet) fprintf(stderr, "Can't read input file %s\n", scanner->file_name);
         return -1;

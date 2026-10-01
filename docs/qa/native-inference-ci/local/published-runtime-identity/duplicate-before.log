@@ -1,0 +1,17 @@
+Test project /tmp/crexx-package-copy-debug
+    Start 1: provider_package_copy
+1/1 Test #1: provider_package_copy ............***Failed    0.15 sec
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/tests/rxpa/provider-package-copy/check.py", line 34, in <module>
+    assert len(entries) == len(manifest['runtime_files']), 'duplicate published runtime dependency'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: duplicate published runtime dependency
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   0.15 sec
+
+The following tests FAILED:
+	  1 - provider_package_copy (Failed)
+Errors while running CTest

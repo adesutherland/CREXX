@@ -1,0 +1,438 @@
+﻿2026-09-15T18:31:08.0555620Z Current runner version: '2.337.0'
+2026-09-15T18:31:08.0598450Z ##[group]Runner Image Provisioner
+2026-09-15T18:31:08.0599140Z Hosted Compute Agent
+2026-09-15T18:31:08.0599530Z Version: 20260828.587
+2026-09-15T18:31:08.0599960Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-15T18:31:08.0600440Z Build Date: 2026-08-28T16:44:25Z
+2026-09-15T18:31:08.0600910Z Worker ID: {0bd2c212-aa4d-4e3d-b8c4-0ba6d856cd04}
+2026-09-15T18:31:08.0601390Z Azure Region: westus
+2026-09-15T18:31:08.0601770Z ##[endgroup]
+2026-09-15T18:31:08.0602790Z ##[group]Operating System
+2026-09-15T18:31:08.0603250Z macOS
+2026-09-15T18:31:08.0603650Z 15.7.9
+2026-09-15T18:31:08.0604000Z 24G830
+2026-09-15T18:31:08.0604350Z ##[endgroup]
+2026-09-15T18:31:08.0604710Z ##[group]Runner Image
+2026-09-15T18:31:08.0605120Z Image: macos-15-arm64
+2026-09-15T18:31:08.0605500Z Version: 20260907.0337.1
+2026-09-15T18:31:08.0606410Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+2026-09-15T18:31:08.0607580Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+2026-09-15T18:31:08.0608340Z ##[endgroup]
+2026-09-15T18:31:08.0609270Z ##[group]GITHUB_TOKEN Permissions
+2026-09-15T18:31:08.0610980Z Actions: read
+2026-09-15T18:31:08.0611350Z Contents: read
+2026-09-15T18:31:08.0611740Z Metadata: read
+2026-09-15T18:31:08.0612110Z ##[endgroup]
+2026-09-15T18:31:08.0613860Z Secret source: Actions
+2026-09-15T18:31:08.0614470Z Cache mode: write
+2026-09-15T18:31:08.0615290Z Prepare workflow directory
+2026-09-15T18:31:08.0855900Z Prepare all required actions
+2026-09-15T18:31:08.0891460Z Getting action download info
+2026-09-15T18:31:08.4012280Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-09-15T18:31:08.6654240Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+2026-09-15T18:31:08.8170170Z Download action repository 'actions/upload-artifact@v7' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-09-15T18:31:09.0160060Z Complete job name: macOS arm64 ASan
+2026-09-15T18:31:09.0722890Z ##[group]Run actions/checkout@v5
+2026-09-15T18:31:09.0723520Z with:
+2026-09-15T18:31:09.0723840Z   submodules: recursive
+2026-09-15T18:31:09.0724220Z   ref: cabc668cf242a969994dc750f6a71d41b15d385e
+2026-09-15T18:31:09.0724650Z   repository: adesutherland/CREXX
+2026-09-15T18:31:09.0727560Z   token: ***
+2026-09-15T18:31:09.0727870Z   ssh-strict: true
+2026-09-15T18:31:09.0728200Z   ssh-user: git
+2026-09-15T18:31:09.0728520Z   persist-credentials: true
+2026-09-15T18:31:09.0728880Z   clean: true
+2026-09-15T18:31:09.0729210Z   sparse-checkout-cone-mode: true
+2026-09-15T18:31:09.0729580Z   fetch-depth: 1
+2026-09-15T18:31:09.0729910Z   fetch-tags: false
+2026-09-15T18:31:09.0730230Z   show-progress: true
+2026-09-15T18:31:09.0730560Z   lfs: false
+2026-09-15T18:31:09.0730870Z   set-safe-directory: true
+2026-09-15T18:31:09.0731240Z   allow-unsafe-pr-checkout: false
+2026-09-15T18:31:09.0731970Z ##[endgroup]
+2026-09-15T18:31:09.4283490Z Syncing repository: adesutherland/CREXX
+2026-09-15T18:31:09.4286330Z ##[group]Getting Git version info
+2026-09-15T18:31:09.4286980Z Working directory is '/Users/runner/work/CREXX/CREXX'
+2026-09-15T18:31:09.4287820Z [command]/opt/homebrew/bin/git version
+2026-09-15T18:31:09.4854470Z git version 2.55.0
+2026-09-15T18:31:09.4870940Z ##[endgroup]
+2026-09-15T18:31:09.4878990Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/e9deed3b-fec8-4d2b-b5e7-eb670a6a1ae2/.gitconfig'
+2026-09-15T18:31:09.4890520Z Temporarily overriding HOME='/Users/runner/work/_temp/e9deed3b-fec8-4d2b-b5e7-eb670a6a1ae2' before making global git config changes
+2026-09-15T18:31:09.4893310Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T18:31:09.4895560Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/CREXX/CREXX
+2026-09-15T18:31:09.5024710Z Deleting the contents of '/Users/runner/work/CREXX/CREXX'
+2026-09-15T18:31:09.5032360Z ##[group]Initializing the repository
+2026-09-15T18:31:09.5042670Z [command]/opt/homebrew/bin/git init /Users/runner/work/CREXX/CREXX
+2026-09-15T18:31:09.5298350Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-15T18:31:09.5299290Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-15T18:31:09.5300360Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-15T18:31:09.5302310Z hint: call:
+2026-09-15T18:31:09.5303430Z hint:
+2026-09-15T18:31:09.5304510Z hint: 	git config --global init.defaultBranch <name>
+2026-09-15T18:31:09.5305760Z hint:
+2026-09-15T18:31:09.5306930Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-15T18:31:09.5308770Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-15T18:31:09.5310260Z hint:
+2026-09-15T18:31:09.5311410Z hint: 	git branch -m <name>
+2026-09-15T18:31:09.5312480Z hint:
+2026-09-15T18:31:09.5313870Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-15T18:31:09.5316150Z Initialized empty Git repository in /Users/runner/work/CREXX/CREXX/.git/
+2026-09-15T18:31:09.5319900Z [command]/opt/homebrew/bin/git remote add origin https://github.com/adesutherland/CREXX
+2026-09-15T18:31:09.5415160Z ##[endgroup]
+2026-09-15T18:31:09.5417100Z ##[group]Disabling automatic garbage collection
+2026-09-15T18:31:09.5417890Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+2026-09-15T18:31:09.5491020Z ##[endgroup]
+2026-09-15T18:31:09.5492870Z ##[group]Setting up auth
+2026-09-15T18:31:09.5495550Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T18:31:09.5571790Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-15T18:31:09.6687650Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T18:31:09.6799350Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-15T18:31:09.8420910Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T18:31:09.8423630Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-15T18:31:09.9249680Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-15T18:31:09.9325620Z ##[endgroup]
+2026-09-15T18:31:09.9327510Z ##[group]Fetching the repository
+2026-09-15T18:31:09.9331630Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin cabc668cf242a969994dc750f6a71d41b15d385e
+2026-09-15T18:31:15.8565720Z From https://github.com/adesutherland/CREXX
+2026-09-15T18:31:15.8568610Z  * branch              cabc668cf242a969994dc750f6a71d41b15d385e -> FETCH_HEAD
+2026-09-15T18:31:15.8573100Z ##[endgroup]
+2026-09-15T18:31:15.8574230Z ##[group]Determining the checkout info
+2026-09-15T18:31:15.8575470Z ##[endgroup]
+2026-09-15T18:31:15.8581680Z [command]/opt/homebrew/bin/git sparse-checkout disable
+2026-09-15T18:31:15.8680950Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-15T18:31:15.8777760Z ##[group]Checking out the ref
+2026-09-15T18:31:15.8783840Z [command]/opt/homebrew/bin/git checkout --progress --force cabc668cf242a969994dc750f6a71d41b15d385e
+2026-09-15T18:31:16.9851400Z Updating files:  16% (6162/37883)
+2026-09-15T18:31:17.0522060Z Updating files:  17% (6441/37883)
+2026-09-15T18:31:17.1439880Z Updating files:  18% (6819/37883)
+2026-09-15T18:31:17.2032590Z Updating files:  19% (7198/37883)
+2026-09-15T18:31:17.2751520Z Updating files:  20% (7577/37883)
+2026-09-15T18:31:17.3344560Z Updating files:  21% (7956/37883)
+2026-09-15T18:31:17.3865480Z Updating files:  22% (8335/37883)
+2026-09-15T18:31:17.4508110Z Updating files:  23% (8714/37883)
+2026-09-15T18:31:17.5389210Z Updating files:  24% (9092/37883)
+2026-09-15T18:31:17.5998460Z Updating files:  25% (9471/37883)
+2026-09-15T18:31:17.6534200Z Updating files:  26% (9850/37883)
+2026-09-15T18:31:17.7227180Z Updating files:  27% (10229/37883)
+2026-09-15T18:31:17.7818830Z Updating files:  28% (10608/37883)
+2026-09-15T18:31:17.8326820Z Updating files:  29% (10987/37883)
+2026-09-15T18:31:17.8821650Z Updating files:  30% (11365/37883)
+2026-09-15T18:31:17.9132260Z Updating files:  31% (11744/37883)
+2026-09-15T18:31:17.9306530Z Updating files:  32% (12123/37883)
+2026-09-15T18:31:17.9469940Z Updating files:  32% (12348/37883)
+2026-09-15T18:31:17.9889050Z Updating files:  33% (12502/37883)
+2026-09-15T18:31:18.0302690Z Updating files:  34% (12881/37883)
+2026-09-15T18:31:18.0760400Z Updating files:  35% (13260/37883)
+2026-09-15T18:31:18.1442430Z Updating files:  36% (13638/37883)
+2026-09-15T18:31:18.2206970Z Updating files:  37% (14017/37883)
+2026-09-15T18:31:18.3176500Z Updating files:  38% (14396/37883)
+2026-09-15T18:31:18.4659640Z Updating files:  39% (14775/37883)
+2026-09-15T18:31:18.5341450Z Updating files:  40% (15154/37883)
+2026-09-15T18:31:18.5848930Z Updating files:  41% (15533/37883)
+2026-09-15T18:31:18.6421110Z Updating files:  42% (15911/37883)
+2026-09-15T18:31:18.6938380Z Updating files:  43% (16290/37883)
+2026-09-15T18:31:18.7519230Z Updating files:  44% (16669/37883)
+2026-09-15T18:31:18.7890400Z Updating files:  45% (17048/37883)
+2026-09-15T18:31:18.9123240Z Updating files:  46% (17427/37883)
+2026-09-15T18:31:18.9316440Z Updating files:  47% (17806/37883)
+2026-09-15T18:31:18.9774190Z Updating files:  47% (17976/37883)
+2026-09-15T18:31:19.0453960Z Updating files:  48% (18184/37883)
+2026-09-15T18:31:19.0830530Z Updating files:  49% (18563/37883)
+2026-09-15T18:31:19.1296210Z Updating files:  50% (18942/37883)
+2026-09-15T18:31:19.1856550Z Updating files:  51% (19321/37883)
+2026-09-15T18:31:19.2514130Z Updating files:  52% (19700/37883)
+2026-09-15T18:31:19.2876810Z Updating files:  53% (20078/37883)
+2026-09-15T18:31:19.3470100Z Updating files:  54% (20457/37883)
+2026-09-15T18:31:19.3930550Z Updating files:  55% (20836/37883)
+2026-09-15T18:31:19.4466550Z Updating files:  56% (21215/37883)
+2026-09-15T18:31:19.5500500Z Updating files:  57% (21594/37883)
+2026-09-15T18:31:19.6297710Z Updating files:  58% (21973/37883)
+2026-09-15T18:31:19.6712180Z Updating files:  59% (22351/37883)
+2026-09-15T18:31:19.7225030Z Updating files:  60% (22730/37883)
+2026-09-15T18:31:19.7883210Z Updating files:  61% (23109/37883)
+2026-09-15T18:31:19.8277480Z Updating files:  62% (23488/37883)
+2026-09-15T18:31:19.8777660Z Updating files:  63% (23867/37883)
+2026-09-15T18:31:19.9310510Z Updating files:  64% (24246/37883)
+2026-09-15T18:31:19.9376720Z Updating files:  64% (24592/37883)
+2026-09-15T18:31:20.0127940Z Updating files:  65% (24624/37883)
+2026-09-15T18:31:20.3728780Z Updating files:  66% (25003/37883)
+2026-09-15T18:31:20.4076360Z Updating files:  67% (25382/37883)
+2026-09-15T18:31:20.4575650Z Updating files:  68% (25761/37883)
+2026-09-15T18:31:20.5444270Z Updating files:  69% (26140/37883)
+2026-09-15T18:31:20.7146650Z Updating files:  70% (26519/37883)
+2026-09-15T18:31:20.7671470Z Updating files:  71% (26897/37883)
+2026-09-15T18:31:20.8277810Z Updating files:  72% (27276/37883)
+2026-09-15T18:31:20.9048600Z Updating files:  73% (27655/37883)
+2026-09-15T18:31:20.9313780Z Updating files:  74% (28034/37883)
+2026-09-15T18:31:20.9646570Z Updating files:  74% (28211/37883)
+2026-09-15T18:31:21.0608540Z Updating files:  75% (28413/37883)
+2026-09-15T18:31:21.1480420Z Updating files:  76% (28792/37883)
+2026-09-15T18:31:21.2061600Z Updating files:  77% (29170/37883)
+2026-09-15T18:31:21.2667660Z Updating files:  78% (29549/37883)
+2026-09-15T18:31:21.3284440Z Updating files:  79% (29928/37883)
+2026-09-15T18:31:21.4051250Z Updating files:  80% (30307/37883)
+2026-09-15T18:31:21.4680930Z Updating files:  81% (30686/37883)
+2026-09-15T18:31:21.5183460Z Updating files:  82% (31065/37883)
+2026-09-15T18:31:21.5668100Z Updating files:  83% (31443/37883)
+2026-09-15T18:31:21.6103570Z Updating files:  84% (31822/37883)
+2026-09-15T18:31:21.6479760Z Updating files:  85% (32201/37883)
+2026-09-15T18:31:21.6938180Z Updating files:  86% (32580/37883)
+2026-09-15T18:31:21.7749600Z Updating files:  87% (32959/37883)
+2026-09-15T18:31:21.9063820Z Updating files:  88% (33338/37883)
+2026-09-15T18:31:21.9312480Z Updating files:  89% (33716/37883)
+2026-09-15T18:31:21.9876780Z Updating files:  89% (33874/37883)
+2026-09-15T18:31:22.0327570Z Updating files:  90% (34095/37883)
+2026-09-15T18:31:22.0821420Z Updating files:  91% (34474/37883)
+2026-09-15T18:31:22.1888250Z Updating files:  92% (34853/37883)
+2026-09-15T18:31:22.2493770Z Updating files:  93% (35232/37883)
+2026-09-15T18:31:22.2869070Z Updating files:  94% (35611/37883)
+2026-09-15T18:31:22.3512610Z Updating files:  95% (35989/37883)
+2026-09-15T18:31:22.3990620Z Updating files:  96% (36368/37883)
+2026-09-15T18:31:22.4434460Z Updating files:  97% (36747/37883)
+2026-09-15T18:31:22.5251040Z Updating files:  98% (37126/37883)
+2026-09-15T18:31:22.7666180Z Updating files:  99% (37505/37883)
+2026-09-15T18:31:22.7684190Z Updating files: 100% (37883/37883)
+2026-09-15T18:31:22.7685390Z Updating files: 100% (37883/37883), done.
+2026-09-15T18:31:22.8140100Z HEAD is now at cabc668c Start wider qualification on the combined isolated candidate
+2026-09-15T18:31:22.8296410Z ##[endgroup]
+2026-09-15T18:31:22.8304230Z ##[group]Setting up auth for fetching submodules
+2026-09-15T18:31:22.8305350Z [command]/opt/homebrew/bin/git config --global http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-15T18:31:22.8410120Z [command]/opt/homebrew/bin/git config --global --unset-all url.https://github.com/.insteadOf
+2026-09-15T18:31:22.8501440Z [command]/opt/homebrew/bin/git config --global --add url.https://github.com/.insteadOf git@github.com:
+2026-09-15T18:31:22.8699510Z [command]/opt/homebrew/bin/git config --global --add url.https://github.com/.insteadOf org-4367482@github.com:
+2026-09-15T18:31:22.8801970Z ##[endgroup]
+2026-09-15T18:31:22.8802810Z ##[group]Fetching submodules
+2026-09-15T18:31:22.8803200Z [command]/opt/homebrew/bin/git submodule sync --recursive
+2026-09-15T18:31:22.9929700Z [command]/opt/homebrew/bin/git -c protocol.version=2 submodule update --init --force --depth=1 --recursive
+2026-09-15T18:31:23.1318280Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local gc.auto 0
+2026-09-15T18:31:23.2897150Z ##[endgroup]
+2026-09-15T18:31:23.2898160Z ##[group]Persisting credentials for submodules
+2026-09-15T18:31:23.2903380Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'url\.https\:\/\/github\.com\/\.insteadOf' && git config --local --unset-all 'url.https://github.com/.insteadOf' || :"
+2026-09-15T18:31:23.3821620Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local 'http.https://github.com/.extraheader' 'AUTHORIZATION: basic ***' && git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-09-15T18:31:23.4851260Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'git@github.com:'
+2026-09-15T18:31:23.6057160Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'org-4367482@github.com:'
+2026-09-15T18:31:23.6927690Z ##[endgroup]
+2026-09-15T18:31:23.7029240Z [command]/opt/homebrew/bin/git log -1 --format=%H
+2026-09-15T18:31:23.7102240Z cabc668cf242a969994dc750f6a71d41b15d385e
+2026-09-15T18:31:23.7480300Z ##[group]Run actions/setup-python@v6
+2026-09-15T18:31:23.7480610Z with:
+2026-09-15T18:31:23.7480800Z   python-version: 3.12
+2026-09-15T18:31:23.7481040Z   check-latest: false
+2026-09-15T18:31:23.7483380Z   token: ***
+2026-09-15T18:31:23.7483950Z   update-environment: true
+2026-09-15T18:31:23.7484210Z   allow-prereleases: false
+2026-09-15T18:31:23.7484420Z   freethreaded: false
+2026-09-15T18:31:23.7484660Z ##[endgroup]
+2026-09-15T18:31:24.0080060Z ##[group]Installed versions
+2026-09-15T18:31:24.0696390Z Successfully set up CPython (3.12.10)
+2026-09-15T18:31:24.0697370Z ##[endgroup]
+2026-09-15T18:31:24.0864080Z ##[group]Run set -euo pipefail
+2026-09-15T18:31:24.0864440Z [36;1mset -euo pipefail[0m
+2026-09-15T18:31:24.0864720Z [36;1mcmake -S . -G Ninja -B "${RUNNER_TEMP}/debugasan" \[0m
+2026-09-15T18:31:24.0865060Z [36;1m  -DCMAKE_BUILD_TYPE=Debug \[0m
+2026-09-15T18:31:24.0865360Z [36;1m  -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \[0m
+2026-09-15T18:31:24.0865780Z [36;1m  -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \[0m
+2026-09-15T18:31:24.0866170Z [36;1m  -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \[0m
+2026-09-15T18:31:24.0866510Z [36;1m  -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \[0m
+2026-09-15T18:31:24.0866910Z [36;1m  -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON \[0m
+2026-09-15T18:31:24.0867230Z [36;1m  -DCMAKE_OSX_ARCHITECTURES=arm64[0m
+2026-09-15T18:31:24.0984960Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-15T18:31:24.0985760Z env:
+2026-09-15T18:31:24.0986570Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:31:24.0987690Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/lib/pkgconfig
+2026-09-15T18:31:24.0988800Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:31:24.0989850Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:31:24.0990830Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:31:24.0991600Z ##[endgroup]
+2026-09-15T18:31:26.5613080Z -- The C compiler identification is AppleClang 17.0.0.17000013
+2026-09-15T18:31:27.6074320Z -- The CXX compiler identification is AppleClang 17.0.0.17000013
+2026-09-15T18:31:27.6477930Z -- Detecting C compiler ABI info
+2026-09-15T18:31:27.8060990Z -- Detecting C compiler ABI info - done
+2026-09-15T18:31:27.8493380Z -- Check for working C compiler: /usr/bin/cc - skipped
+2026-09-15T18:31:27.8503670Z -- Detecting C compile features
+2026-09-15T18:31:27.8514850Z -- Detecting C compile features - done
+2026-09-15T18:31:27.8624230Z -- Detecting CXX compiler ABI info
+2026-09-15T18:31:28.0168620Z -- Detecting CXX compiler ABI info - done
+2026-09-15T18:31:28.0580080Z -- Check for working CXX compiler: /usr/bin/c++ - skipped
+2026-09-15T18:31:28.0581450Z -- Detecting CXX compile features
+2026-09-15T18:31:28.0586390Z -- Detecting CXX compile features - done
+2026-09-15T18:31:28.0659970Z -- CMake Version: 4.4.3
+2026-09-15T18:31:28.0661050Z -- CREXX Version: crexx-1.0.0-beta.3+local.gcabc668cf242
+2026-09-15T18:31:28.0662070Z -- CREXX Build Channel: local
+2026-09-15T18:31:28.0662650Z -- CREXX Build Timestamp: 20260915T183124Z
+2026-09-15T18:31:28.0663280Z -- CREXX Build Commit: cabc668cf242
+2026-09-15T18:31:28.0663920Z -- CMake Generator: Ninja
+2026-09-15T18:31:28.0665640Z -- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+2026-09-15T18:31:28.0723690Z -- Fetching DSL-Syntax-Highlighter develop from https://github.com/adesutherland/DSL-Syntax-Highlighter.git
+2026-09-15T18:31:29.5727120Z -- Performing Test cxxflag__W
+2026-09-15T18:31:29.7154110Z -- Performing Test cxxflag__W - Success
+2026-09-15T18:31:29.7158500Z -- Performing Test cxxflag__Wall
+2026-09-15T18:31:29.9110310Z -- Performing Test cxxflag__Wall - Success
+2026-09-15T18:31:29.9114640Z -- Performing Test cxxflag__Wextra
+2026-09-15T18:31:30.2265020Z -- Performing Test cxxflag__Wextra - Success
+2026-09-15T18:31:30.2271070Z -- Performing Test cxxflag__Weffc__
+2026-09-15T18:31:30.4123670Z -- Performing Test cxxflag__Weffc__ - Success
+2026-09-15T18:31:30.4131510Z -- Performing Test cxxflag__pedantic
+2026-09-15T18:31:30.5773290Z -- Performing Test cxxflag__pedantic - Success
+2026-09-15T18:31:30.5778370Z -- Performing Test cxxflag__Wformat_2
+2026-09-15T18:31:30.7722070Z -- Performing Test cxxflag__Wformat_2 - Success
+2026-09-15T18:31:30.7733700Z -- Performing Test cxxflag__Wredundant_decls
+2026-09-15T18:31:30.9667880Z -- Performing Test cxxflag__Wredundant_decls - Success
+2026-09-15T18:31:30.9682170Z -- Performing Test cxxflag__Wsuggest_attribute_format
+2026-09-15T18:31:31.1790270Z -- Performing Test cxxflag__Wsuggest_attribute_format - Failed
+2026-09-15T18:31:31.1794710Z -- Performing Test cxxflag__Wconversion
+2026-09-15T18:31:31.3413870Z -- Performing Test cxxflag__Wconversion - Success
+2026-09-15T18:31:31.3418200Z -- Performing Test cxxflag__Wsign_conversion
+2026-09-15T18:31:31.5103420Z -- Performing Test cxxflag__Wsign_conversion - Success
+2026-09-15T18:31:31.5113690Z -- Performing Test cxxflag__Werror_return_type
+2026-09-15T18:31:31.6930480Z -- Performing Test cxxflag__Werror_return_type - Success
+2026-09-15T18:31:31.6946540Z -- Performing Test cxxflag__Weverything
+2026-09-15T18:31:31.9013400Z -- Performing Test cxxflag__Weverything - Success
+2026-09-15T18:31:31.9032000Z -- Performing Test cxxflag__fdiagnostics_color_always
+2026-09-15T18:31:32.0932780Z -- Performing Test cxxflag__fdiagnostics_color_always - Success
+2026-09-15T18:31:32.0936270Z -- C compiler flags: -fsanitize=address -fno-omit-frame-pointer
+2026-09-15T18:31:32.0938680Z -- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always -fsanitize=address -fno-omit-frame-pointer
+2026-09-15T18:31:32.0955730Z -- Linker flags for executables: -fsanitize=address
+2026-09-15T18:31:32.0956140Z -- Linker flags for shared libs: -fsanitize=address
+2026-09-15T18:31:32.0956580Z -- Debug C compiler flags: -g
+2026-09-15T18:31:32.0956920Z -- Debug C++ compiler flags: -g
+2026-09-15T18:31:32.0957250Z -- Debug linker flags for executables: 
+2026-09-15T18:31:32.0957540Z -- Debug linker flags for shared libs: 
+2026-09-15T18:31:32.8191030Z -- Looking for sys/types.h
+2026-09-15T18:31:33.0631100Z -- Looking for sys/types.h - found
+2026-09-15T18:31:33.0631920Z -- Looking for sys/stat.h
+2026-09-15T18:31:33.2552310Z -- Looking for sys/stat.h - found
+2026-09-15T18:31:33.2553050Z -- Looking for fcntl.h
+2026-09-15T18:31:33.4406720Z -- Looking for fcntl.h - found
+2026-09-15T18:31:33.4407440Z -- Looking for unistd.h
+2026-09-15T18:31:33.6442410Z -- Looking for unistd.h - found
+2026-09-15T18:31:33.6443620Z -- Looking for io.h
+2026-09-15T18:31:33.7556870Z -- Looking for io.h - not found
+2026-09-15T18:31:33.7565900Z -- Writing config.h
+2026-09-15T18:31:33.7858160Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-09-15T18:31:33.9659890Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+2026-09-15T18:31:33.9660680Z -- Found Threads: TRUE
+2026-09-15T18:31:34.1809160Z -- cREXX VM handler panel: profile-20
+2026-09-15T18:31:34.1962540Z -- cREXX VM core socket TLS backend: NETWORK
+2026-09-15T18:31:34.1964470Z -- cREXX product VM: rxvm -> rxbvm (AppleClang)
+2026-09-15T18:31:41.6597380Z CMAKE_BUILD_TYPE=Debug
+2026-09-15T18:31:41.6597780Z -- llama.cpp version: 0.4.0
+2026-09-15T18:31:41.6631210Z -- Found Git: /opt/homebrew/bin/git (found version "2.55.0")
+2026-09-15T18:31:41.6851060Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-15T18:31:41.6948810Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-15T18:31:41.7965960Z -- The ASM compiler identification is AppleClang
+2026-09-15T18:31:41.8007790Z -- Found assembler: /usr/bin/cc
+2026-09-15T18:31:41.8297690Z -- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+2026-09-15T18:31:41.9094920Z -- CMAKE_SYSTEM_PROCESSOR: arm64
+2026-09-15T18:31:41.9096680Z -- GGML_SYSTEM_ARCH: ARM
+2026-09-15T18:31:41.9102590Z -- Including CPU backend
+2026-09-15T18:31:41.9129320Z -- Accelerate framework found
+2026-09-15T18:31:41.9131150Z -- ARM detected
+2026-09-15T18:31:41.9136340Z -- Performing Test GGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E
+2026-09-15T18:31:42.1123900Z -- Performing Test GGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E - Failed
+2026-09-15T18:31:42.1124810Z -- Checking for ARM features using flags:
+2026-09-15T18:31:42.1133480Z -- Performing Test HAVE_DOTPROD
+2026-09-15T18:31:42.3767090Z -- Performing Test HAVE_DOTPROD - Success
+2026-09-15T18:31:42.3769700Z -- Performing Test HAVE_SVE
+2026-09-15T18:31:42.5478800Z -- Performing Test HAVE_SVE - Failed
+2026-09-15T18:31:42.5480400Z -- Performing Test HAVE_MATMUL_INT8
+2026-09-15T18:31:42.6781660Z -- Performing Test HAVE_MATMUL_INT8 - Failed
+2026-09-15T18:31:42.6784820Z -- Performing Test HAVE_FMA
+2026-09-15T18:31:42.8643290Z -- Performing Test HAVE_FMA - Success
+2026-09-15T18:31:42.8650850Z -- Performing Test HAVE_FP16_VECTOR_ARITHMETIC
+2026-09-15T18:31:43.0892760Z -- Performing Test HAVE_FP16_VECTOR_ARITHMETIC - Success
+2026-09-15T18:31:43.0893890Z -- Performing Test HAVE_SME
+2026-09-15T18:31:43.2228560Z -- Performing Test HAVE_SME - Failed
+2026-09-15T18:31:43.2230320Z -- Adding CPU backend variant ggml-cpu:  
+2026-09-15T18:31:43.2285260Z -- Metal framework found
+2026-09-15T18:31:43.2464340Z -- Including METAL backend
+2026-09-15T18:31:43.2567590Z -- ggml version: 0.23.0
+2026-09-15T18:31:43.2568030Z -- ggml commit:  5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+2026-09-15T18:31:43.7287380Z -- Found Python3: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/bin/python3.12 (found version "3.12.10") found components: Interpreter
+2026-09-15T18:31:44.0855890Z -- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+2026-09-15T18:31:44.0955740Z -- GTK Gui support is disabled, skipping subdirectory.
+2026-09-15T18:31:44.1033360Z -- ODBC support is disabled; building the mock-driver qualification target only.
+2026-09-15T18:31:45.4513500Z -- Configuring done (21.3s)
+2026-09-15T18:31:47.8009750Z -- Generating done (2.3s)
+2026-09-15T18:31:47.8026990Z -- Build files have been written to: /Users/runner/work/_temp/debugasan
+2026-09-15T18:31:47.8938630Z ##[group]Run set -euo pipefail
+2026-09-15T18:31:47.8939060Z [36;1mset -euo pipefail[0m
+2026-09-15T18:31:47.8939300Z [36;1msanitizer_args=([0m
+2026-09-15T18:31:47.8939650Z [36;1m  --build-dir "${RUNNER_TEMP}/debugasan"[0m
+2026-09-15T18:31:47.8939980Z [36;1m  --phase full[0m
+2026-09-15T18:31:47.8940290Z [36;1m  --build-jobs 4[0m
+2026-09-15T18:31:47.8940610Z [36;1m  --test-jobs 8[0m
+2026-09-15T18:31:47.8940970Z [36;1m  --exclude-label '^performance-measurement$'[0m
+2026-09-15T18:31:47.8941380Z [36;1m  --no-live-tail[0m
+2026-09-15T18:31:47.8941650Z [36;1m)[0m
+2026-09-15T18:31:47.8941940Z [36;1m[0m
+2026-09-15T18:31:47.8942220Z [36;1mif [ "macos" = "macos" ]; then[0m
+2026-09-15T18:31:47.8942750Z [36;1m  sanitizer_args+=(--build-leaks off --leaks off)[0m
+2026-09-15T18:31:47.8943120Z [36;1melse[0m
+2026-09-15T18:31:47.8943380Z [36;1m  sanitizer_args+=(--build-leaks on --leaks on)[0m
+2026-09-15T18:31:47.8943770Z [36;1mfi[0m
+2026-09-15T18:31:47.8944110Z [36;1m[0m
+2026-09-15T18:31:47.8944430Z [36;1mtools/asan-run.sh "${sanitizer_args[@]}"[0m
+2026-09-15T18:31:47.8995780Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-15T18:31:47.8996250Z env:
+2026-09-15T18:31:47.8996670Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:31:47.8997380Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/lib/pkgconfig
+2026-09-15T18:31:47.8999040Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:31:47.9000030Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:31:47.9000510Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:31:47.9000950Z ##[endgroup]
+2026-09-15T18:31:48.0177330Z ASan run directory: /Users/runner/work/_temp/debugasan/asan-logs/20260915-183147-full
+2026-09-15T18:31:48.0195210Z ==> build
+2026-09-15T18:31:48.0196120Z     log: /Users/runner/work/_temp/debugasan/asan-logs/20260915-183147-full/build.log
+2026-09-15T18:50:07.6747560Z ##[error]The operation was canceled.
+2026-09-15T18:50:07.6947800Z ##[group]Run actions/upload-artifact@v7
+2026-09-15T18:50:07.6948540Z with:
+2026-09-15T18:50:07.6948790Z   name: sanitizer-logs-macos
+2026-09-15T18:50:07.6949390Z   path: /Users/runner/work/_temp/debugasan/asan-logs
+/Users/runner/work/_temp/debugasan/lib/plugins/llama/tests/release-smoke
+
+2026-09-15T18:50:07.6950020Z   if-no-files-found: error
+2026-09-15T18:50:07.6950240Z   retention-days: 14
+2026-09-15T18:50:07.6950520Z   compression-level: 6
+2026-09-15T18:50:07.6950730Z   overwrite: false
+2026-09-15T18:50:07.6951040Z   include-hidden-files: false
+2026-09-15T18:50:07.6951320Z   archive: true
+2026-09-15T18:50:07.6951880Z env:
+2026-09-15T18:50:07.6952600Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:50:07.6953330Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/lib/pkgconfig
+2026-09-15T18:50:07.6954200Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:50:07.6954770Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:50:07.6955310Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-09-15T18:50:07.6955670Z ##[endgroup]
+2026-09-15T18:50:08.4591910Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-09-15T18:50:08.4592920Z The least common ancestor is /Users/runner/work/_temp/debugasan. This will be the root directory of the artifact
+2026-09-15T18:50:08.4593550Z With the provided path, there will be 10 files uploaded
+2026-09-15T18:50:08.4594280Z Artifact name is valid!
+2026-09-15T18:50:08.4594600Z Root directory input is valid!
+2026-09-15T18:50:08.8306360Z Uploading artifact: sanitizer-logs-macos.zip
+2026-09-15T18:50:08.8358830Z Beginning upload of artifact content to blob storage
+2026-09-15T18:50:09.3409900Z Uploaded bytes 97542
+2026-09-15T18:50:09.4014870Z Finished uploading artifact content to blob storage!
+2026-09-15T18:50:09.4117660Z SHA256 digest of uploaded artifact is d4263c73d252f43fd84810a616d33c057d59870bfbebac4893d15da79b94d4ef
+2026-09-15T18:50:09.4219360Z Finalizing artifact upload
+2026-09-15T18:50:09.6882880Z Artifact sanitizer-logs-macos successfully finalized. Artifact ID 10412569627
+2026-09-15T18:50:09.6883770Z Artifact sanitizer-logs-macos has been successfully uploaded! Final size is 97542 bytes. Artifact ID is 10412569627
+2026-09-15T18:50:09.6884750Z Artifact download URL: https://github.com/adesutherland/CREXX/actions/runs/35007947861/artifacts/10412569627
+2026-09-15T18:50:09.7112320Z Post job cleanup.
+2026-09-15T18:50:09.8290940Z [command]/opt/homebrew/bin/git version
+2026-09-15T18:50:09.8585930Z git version 2.55.0
+2026-09-15T18:50:09.8626210Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/66d4cde0-ea3d-4960-93f9-48720ddb9712/.gitconfig'
+2026-09-15T18:50:09.8639280Z Temporarily overriding HOME='/Users/runner/work/_temp/66d4cde0-ea3d-4960-93f9-48720ddb9712' before making global git config changes
+2026-09-15T18:50:09.8640650Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T18:50:09.8649180Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/CREXX/CREXX
+2026-09-15T18:50:09.8807340Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T18:50:09.8984950Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-15T18:50:10.0853760Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T18:50:10.0948710Z http.https://github.com/.extraheader
+2026-09-15T18:50:10.0969610Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-15T18:50:10.1053120Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-15T18:50:10.2716940Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T18:50:10.2847700Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-15T18:50:10.4313130Z Cleaning up orphan processes
+2026-09-15T18:50:10.5961120Z Terminate orphan process: pid (33243) (rxc)
+2026-09-15T18:50:10.6362720Z Terminate orphan process: pid (33241) (bash)

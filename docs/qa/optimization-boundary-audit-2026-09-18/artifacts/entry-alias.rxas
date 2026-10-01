@@ -1,0 +1,23 @@
+.globals=1
+main() .locals=5
+    numsci 18,1,1
+    load g0,41
+    itos g0
+    call mutate_global()
+    itos g0
+    say g0
+    load r0,2
+    load r1,41
+    link r2,r1
+    call r3,aliased_args(),r0
+    unlink r2
+    say r3
+    ret 0
+mutate_global() .locals=0
+    inc g0
+    ret
+aliased_args() .locals=0
+    itos a1
+    inc a2
+    itos a1
+    ret a1

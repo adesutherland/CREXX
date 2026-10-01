@@ -1,0 +1,38 @@
+Test project /Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release
+      Start 382: reference_source_inline_lifetime_rxvm_noopt
+ 1/12 Test #382: reference_source_inline_lifetime_rxvm_noopt .......   Passed    0.65 sec
+      Start 383: reference_source_inline_lifetime_rxvm_opt
+ 2/12 Test #383: reference_source_inline_lifetime_rxvm_opt .........   Passed    0.19 sec
+      Start 581: interface_source_import_run_noopt
+ 3/12 Test #581: interface_source_import_run_noopt .................   Passed    0.34 sec
+      Start 582: interface_source_import_run_opt
+ 4/12 Test #582: interface_source_import_run_opt ...................   Passed    0.34 sec
+      Start 589: interface_named_factory_source_import_run_noopt
+ 5/12 Test #589: interface_named_factory_source_import_run_noopt ...   Passed    0.34 sec
+      Start 590: interface_named_factory_source_import_run_opt
+ 6/12 Test #590: interface_named_factory_source_import_run_opt .....   Passed    0.34 sec
+      Start 597: interface_split_same_namespace_source_run_noopt
+ 7/12 Test #597: interface_split_same_namespace_source_run_noopt ...   Passed    0.51 sec
+      Start 598: interface_split_same_namespace_source_run_opt
+ 8/12 Test #598: interface_split_same_namespace_source_run_opt .....   Passed    0.52 sec
+      Start 610: inline_cross_file_binary_opt
+ 9/12 Test #610: inline_cross_file_binary_opt ......................   Passed    0.35 sec
+      Start 618: inline_cross_file_source_opt
+10/12 Test #618: inline_cross_file_source_opt ......................   Passed    0.36 sec
+      Start 620: source_import_contract_stub_implements
+11/12 Test #620: source_import_contract_stub_implements ............   Passed    0.17 sec
+      Start 622: source_import_contract_stub_covariant_cycle
+12/12 Test #622: source_import_contract_stub_covariant_cycle .......   Passed    0.17 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Label Time Summary:
+compiler         =   1.18 sec*proc (4 tests)
+comprehensive    =   3.76 sec*proc (10 tests)
+imports          =   0.34 sec*proc (2 tests)
+linked_opt       =   2.10 sec*proc (6 tests)
+reference        =   0.83 sec*proc (2 tests)
+smoke            =   0.50 sec*proc (2 tests)
+source           =   0.83 sec*proc (2 tests)
+
+Total Test time (real) =   4.31 sec

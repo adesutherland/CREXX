@@ -1,0 +1,75 @@
+argv=['/usr/bin/c++', '-DCREXX_LLAMA_ARCH="arm64"', '-DCREXX_LLAMA_PLATFORM="Darwin"', '-I/Users/adrian/CLionProjects/CREXX/cmake-build-debug/_deps/crexx_llama_source-src/vendor', '-I/Users/adrian/CLionProjects/CREXX/binutils/include', '-g', '-std=gnu++17', '-arch', 'arm64', '-fcolor-diagnostics', '/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp', '-std=c++20', '-fsyntax-only']
+In file included from /Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:2:
+[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/package.hpp:37:18: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   37 |     [0;34mauto[0m p = fs::u8path(name);[0m
+      | [0;1;32m                 ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:11:40: [0m[0;1;35mwarning: [0m[1m'u8path<char *, 0>' is deprecated [-Wdeprecated-declarations][0m
+   11 |         [0;34mauto[0m source = fs::absolute(fs::u8path(argv[fingerprint ? [0;32m2[0m : [0;32m1[0m])); [0;34mauto[0m root = source.parent_path();[0m
+      | [0;1;32m                                       ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<char *, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:24:45: [0m[0;1;35mwarning: [0m[1m'u8path<char *, 0>' is deprecated [-Wdeprecated-declarations][0m
+   24 |         [0;34mauto[0m destination = fs::absolute(fs::u8path(argv[[0;32m2[0m])).parent_path();[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<char *, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:37:21: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   37 |             [0;34mif[0m (fs::u8path(name).filename() != fs::u8path(name)) [0;34mthrow[0m std::runtime_error([0;32m"runtime dependency must be an adjacent file"[0m);[0m
+      | [0;1;32m                    ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:37:52: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   37 |             [0;34mif[0m (fs::u8path(name).filename() != fs::u8path(name)) [0;34mthrow[0m std::runtime_error([0;32m"runtime dependency must be an adjacent file"[0m);[0m
+      | [0;1;32m                                                   ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:38:43: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   38 |             [0;34mauto[0m dest = destination / fs::u8path(name);[0m
+      | [0;1;32m                                          ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m6 warnings generated.

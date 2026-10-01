@@ -1,0 +1,36 @@
+Isolated Debug stress QA	UNKNOWN STEP	2026-09-16T08:59:30.3586295Z 100% tests passed, 0 tests failed out of 9
+Isolated Debug stress QA	UNKNOWN STEP	2026-09-16T08:59:30.3593602Z Total Test time (real) =  10.30 sec
+Release product jobs 1	Exercise incremental REXX change closure	2026-09-16T09:05:09.8506019Z 1/1 Test #2506: crexx_project_build_contract .....   Passed   33.35 sec
+Release product jobs 1	Exercise incremental REXX change closure	2026-09-16T09:05:09.8676535Z 100% tests passed, 0 tests failed out of 1
+Release product jobs 1	Exercise incremental REXX change closure	2026-09-16T09:05:09.8680837Z Total Test time (real) =  33.53 sec
+Release product jobs 5	UNKNOWN STEP	2026-09-16T08:59:26.0045054Z 1/1 Test #2506: crexx_project_build_contract .....   Passed   30.90 sec
+Release product jobs 5	UNKNOWN STEP	2026-09-16T08:59:26.0257327Z 100% tests passed, 0 tests failed out of 1
+Release product jobs 5	UNKNOWN STEP	2026-09-16T08:59:26.0260095Z Total Test time (real) =  31.06 sec
+Release product jobs 30	UNKNOWN STEP	2026-09-16T09:00:04.8761935Z 1/1 Test #2506: crexx_project_build_contract .....   Passed   33.08 sec
+Release product jobs 30	UNKNOWN STEP	2026-09-16T09:00:04.8781144Z 100% tests passed, 0 tests failed out of 1
+Release product jobs 30	UNKNOWN STEP	2026-09-16T09:00:04.8784646Z Total Test time (real) =  33.19 sec
+Comprehensive macOS x86_64	Run comprehensive correctness QA	2026-09-16T09:42:30.0944000Z 2306/2326 Test #2506: crexx_project_build_contract ..................................   Passed   73.43 sec
+Comprehensive macOS x86_64	Run comprehensive correctness QA	2026-09-16T09:44:18.1745840Z 100% tests passed out of 2326
+Comprehensive macOS x86_64	Run comprehensive correctness QA	2026-09-16T09:44:18.2175170Z Total Test time (real) = 1343.30 sec
+Comprehensive macOS x86_64	Run install/package/external-consumer qualification	2026-09-16T09:45:21.8170670Z 100% tests passed out of 3
+Comprehensive macOS x86_64	Run install/package/external-consumer qualification	2026-09-16T09:45:21.8191950Z Total Test time (real) =  49.18 sec
+Comprehensive macOS arm64	Run comprehensive correctness QA	2026-09-16T09:10:48.9121700Z 2308/2326 Test #2506: crexx_project_build_contract ..................................   Passed   43.28 sec
+Comprehensive macOS arm64	Run comprehensive correctness QA	2026-09-16T09:11:32.6558920Z 100% tests passed out of 2326
+Comprehensive macOS arm64	Run comprehensive correctness QA	2026-09-16T09:11:32.6717560Z Total Test time (real) = 493.21 sec
+Comprehensive macOS arm64	Run install/package/external-consumer qualification	2026-09-16T09:11:55.4644610Z 100% tests passed out of 3
+Comprehensive macOS arm64	Run install/package/external-consumer qualification	2026-09-16T09:11:55.4660120Z Total Test time (real) =  18.32 sec
+Comprehensive Linux x64	Run comprehensive correctness QA	2026-09-16T09:14:50.3780863Z 2306/2326 Test #2506: crexx_project_build_contract ..................................   Passed   34.79 sec
+Comprehensive Linux x64	Run comprehensive correctness QA	2026-09-16T09:15:43.9344215Z 100% tests passed, 0 tests failed out of 2326
+Comprehensive Linux x64	Run comprehensive correctness QA	2026-09-16T09:15:43.9479334Z Total Test time (real) = 527.03 sec
+Comprehensive Linux x64	Run install/package/external-consumer qualification	2026-09-16T09:16:07.9376178Z 100% tests passed, 0 tests failed out of 3
+Comprehensive Linux x64	Run install/package/external-consumer qualification	2026-09-16T09:16:07.9385735Z Total Test time (real) =  19.32 sec
+Comprehensive Windows x64 MSVC	Run comprehensive correctness QA	2026-09-16T09:24:43.0060165Z 2110/2130 Test #2303: crexx_project_build_contract .................................   Passed   37.41 sec
+Comprehensive Windows x64 MSVC	Run comprehensive correctness QA	2026-09-16T09:25:52.8208917Z 100% tests passed out of 2130
+Comprehensive Windows x64 MSVC	Run comprehensive correctness QA	2026-09-16T09:25:52.8386888Z Total Test time (real) = 872.81 sec
+Comprehensive Windows x64 MSVC	Run install/package/external-consumer qualification	2026-09-16T09:26:36.3504461Z 100% tests passed out of 3
+Comprehensive Windows x64 MSVC	Run install/package/external-consumer qualification	2026-09-16T09:26:36.3517641Z Total Test time (real) =  35.10 sec
+Comprehensive Windows x64 MinGW	Run comprehensive correctness QA	2026-09-16T09:23:48.2501709Z 2228/2248 Test #2432: crexx_project_build_contract .................................   Passed   34.35 sec
+Comprehensive Windows x64 MinGW	Run comprehensive correctness QA	2026-09-16T09:24:48.3405788Z 100% tests passed out of 2248
+Comprehensive Windows x64 MinGW	Run comprehensive correctness QA	2026-09-16T09:24:48.3603012Z Total Test time (real) = 847.89 sec
+Comprehensive Windows x64 MinGW	Run install/package/external-consumer qualification	2026-09-16T09:25:20.5399626Z 100% tests passed out of 3
+Comprehensive Windows x64 MinGW	Run install/package/external-consumer qualification	2026-09-16T09:25:20.5413352Z Total Test time (real) =  24.93 sec

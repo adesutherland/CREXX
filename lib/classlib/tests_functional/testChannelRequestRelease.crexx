@@ -1,0 +1,106 @@
+/* Public channel lifecycle regression; no network, child process or provider calls. */
+options levelb comments_dash
+import rxfnsb
+import concurrency
+
+arg arguments = .string[]
+cycles = 512
+i = .int
+ignored = .completion
+if arguments[0] > 0 then do
+  cycles = arguments[1] as .int
+end
+names = .string[]
+values = .channelvalue[]
+names[1] = "capacity"; values[1] = .channelvalue.integer_value(8)
+names[2] = "direction"; values[2] = .channelvalue.integer_value(3)
+configuration = .channelvalue.record_value("crexx.channel.byte-memory", 1, names, values)
+channel = .channel.open(4, 0, configuration)
+operation_names = .string[]; operation_values = .channelvalue[]
+operation_names[1] = "direction"; operation_values[1] = .channelvalue.integer_value(2)
+operation = .channelvalue.record_value("crexx.channel.byte-half-close", 1, operation_names, operation_values)
+request = channel.start(operation, 0)
+copy_before = request
+caught = 0
+do
+  call request.release()
+on signal channel_error
+  caught = 1
+end
+if caught = 0 then exit 1
+saved = channel.wait(-1)
+if saved.request_identity() <> request.identity() then exit 2
+if request.wait(0).state() <> 1 then exit 3
+copy_cached = request
+call request.cancel(.channelvalue.null_value())
+call request.release()
+if saved.state() <> 1 then exit 4
+if copy_before.identity() <> saved.request_identity() then exit 5
+caught = 0
+do
+  ignored = copy_before.wait(0)
+on signal channel_error
+  caught = 1
+end
+if caught = 0 then exit 6
+caught = 0
+do
+  ignored = copy_cached.completion()
+on signal channel_error
+  caught = 1
+end
+if caught = 0 then exit 7
+caught = 0
+do
+  call request.release()
+on signal channel_error
+  caught = 1
+end
+if caught = 0 then exit 8
+
+-- Rehash, collect unrelated completions, remove in non-insertion order, reuse.
+requests = .channelrequest[]
+do i = 1 to 128
+  requests[i] = channel.start(operation, 0)
+end
+last = requests[128].wait(-1)
+do i = 1 to 128 by 2
+  if requests[i].completion().request_identity() <> requests[i].identity() then exit 9
+  call requests[i].release()
+end
+do i = 2 to 128 by 2
+  call requests[i].release()
+end
+previous_identity = last.request_identity()
+do i = 1 to cycles
+  request = channel.start(operation, 0)
+  completed = request.wait(-1)
+  if completed.succeeded() = 0 then exit 10
+  if request.identity() <= previous_identity then exit 11
+  previous_identity = request.identity()
+  call request.release()
+end
+call channel.close(1)
+if saved.state() <> 1 then exit 12
+
+endpoint = .byteendpoint.memory(3, 8)
+do i = 1 to 32
+  writer = endpoint.start_write('78'x as .binary, 0)
+  written = writer.wait(-1)
+  call writer.release()
+  reader = endpoint.start_read(1, 0)
+  read = reader.wait(-1)
+  call reader.release()
+  if written.value().as_integer() <> 1 then exit 13
+  if read.value().as_binary() <> '78'x as .binary then exit 14
+end
+pending = endpoint.start_read(1, -1)
+if pending.wait(0).available() then exit 15
+call pending.cancel(.channelvalue.string_value("release regression"))
+cancelled = pending.wait(-1)
+if cancelled.state() <> 3 then exit 16
+call pending.release()
+call endpoint.half_close(2)
+call endpoint.close()
+say "PASS: channel release preserves outcomes and reclaims requests"
+exit 0

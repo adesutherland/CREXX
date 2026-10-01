@@ -29,13 +29,21 @@
 #ifndef CREXX_PLATFORM_H
 #define CREXX_PLATFORM_H
 #define MAXFILEPATH 4096
+#include "platform_config.h"
 
 #include <stdio.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include "crexx_license.h"
 #include "rxinteger.h"
 
-#if defined(__clang__) || defined(__GNUC__)
+#if defined(CREXX_VM_COMPACT)
+/* Let a size-optimizing compiler share helpers instead of forcing expansion
+ * at every VM handler. This is a code-size policy, not a value/ABI change. */
+# define RX_INLINE static
+# define RX_MOSTLYINLINE static
+# define RX_FLATTEN
+#elif defined(__clang__) || defined(__GNUC__)
 # ifdef NDEBUG  // RELEASE
 #  define RX_INLINE static inline __attribute__((always_inline))
 #  define RX_MOSTLYINLINE static inline
@@ -67,10 +75,10 @@
 #include "cms.h"
 #endif
 
-#if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
-#define RX_FUNCTION_NAME __FUNCTION__
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define RX_FUNCTION_NAME __func__
+#elif defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
+#define RX_FUNCTION_NAME __FUNCTION__
 #else
 #define RX_FUNCTION_NAME "unknown"
 #endif
@@ -96,10 +104,9 @@ void rx_panic_out_of_memory(const char *operation, size_t requested_bytes,
     rx_panic_out_of_memory((operation), (requested_bytes), (detail), __FILE__, __LINE__, RX_FUNCTION_NAME)
 
 /*
- * Read a file into a returned buffer
- *
- * This function malloc()s the buffer to the right size therefore it needs
- * to be free()d by the caller
+ * Read a seekable file from the beginning, or a sequential stream from its
+ * current position. The caller frees the buffer; two trailing NUL bytes are
+ * provided for scanners. Returns NULL with *bytes == 0 on failure.
  */
 char* file2buf(FILE *file, size_t *bytes);
 
@@ -116,6 +123,50 @@ int fileexists(char *name, char *type, char *dir);
  * mode - is the fopen() file mode
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode);
+/* A complete logical path through the same text/native naming boundary. */
+FILE *platform_fopen(const char *path, const char *mode);
+/* Native text storage is independent of its codec. DEFAULT preserves the
+ * platform's established exchange-file policy; explicit layouts are captured
+ * by the newly opened stream. Binary modes always preserve raw bytes. */
+#define CREXX_TEXT_STORAGE_DEFAULT (-1)
+#define CREXX_TEXT_STORAGE_BYTES 0
+#define CREXX_TEXT_STORAGE_RECORDS 1
+FILE *platform_fopen_storage(const char *path, const char *mode, int storage);
+#if defined(CREXX_PLATFORM_TSO)
+FILE *crexx_tso_openfile(const char *, const char *, const char *, const char *);
+FILE *crexx_tso_openfile_storage(const char *, const char *, const char *, const char *, int);
+char *crexx_tso_dirfirst(const char *, const char *, const char *, void **);
+char *crexx_tso_dirnext(void **);
+void crexx_tso_dirclose(void **);
+#endif
+
+/* Select the external encoding for subsequently opened text streams. Existing
+ * streams retain their selected codec and storage layout; binary modes bypass
+ * conversion. Native IBM1047 defaults to records, exchange pages to bytes. */
+int platform_text_encoding(const char *encoding);
+/* Text emitted by cREXX to a native mainframe standard stream. */
+int platform_console_text_write(FILE *stream, const char *text, size_t length);
+/* UTF-8 bytes at the VM text boundary; stdin is native IBM1047. Ordinary
+ * file streams have already selected their codec when opened. */
+int platform_text_getc(FILE *stream);
+/* A diagnostic character, never a binary/byte instruction. */
+int platform_text_putc(int byte, FILE *stream);
+#if defined(CREXX_MAINFRAME_ELF)
+int platform_vfprintf(FILE *stream, const char *format, va_list args);
+int platform_fprintf(FILE *stream, const char *format, ...);
+int platform_printf(const char *format, ...);
+int platform_fputs(const char *text, FILE *stream);
+int platform_puts(const char *text);
+/* stdio declarations above are complete before forwarding first-party text
+ * diagnostics. Non-console streams retain their existing libc behavior. */
+#if !defined(CREXX_PLATFORM_STDIO_IMPLEMENTATION)
+#define vfprintf platform_vfprintf
+#define fprintf platform_fprintf
+#define printf platform_printf
+#define fputs platform_fputs
+#define puts platform_puts
+#endif
+#endif
 
 /*
  * Get the first file from a directory (or null if there isn't one)
@@ -133,6 +184,9 @@ char *dirnxtfl(void **dir_ptr);
 /*
  * Close the opaque directory context
  */
+/* Iteration returns NULL with errno=0 at clean EOF, or nonzero on error.
+ * ENOENT/ENOTDIR mean an absent root. close always releases and nulls the
+ * context, preserving a previous error or setting errno for a close failure. */
 void dirclose(void **dir_ptr);
 
 /* Returns the executable directory path in a malloced buffer */

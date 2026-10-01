@@ -1,0 +1,11 @@
+-- START: project member missing_output
+START: project member stamp_write
+FAILED: missing assembled project output /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/crexx_driver/tests/issue701-diagnostics/members/missing_output/missing_output.rxbin
+START: project member stamp_rename
+FAILED: write project stamp /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/crexx_driver/tests/issue701-diagnostics/members/stamp_write/action.sha256.tmp WRITEBINARY cannot open /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/crexx_driver/tests/issue701-diagnostics/members/stamp_write/action.sha256.tmp
+FAILED: rename project stamp /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/crexx_driver/tests/issue701-diagnostics/members/stamp_rename/action.sha256.tmp to /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/crexx_driver/tests/issue701-diagnostics/members/stamp_rename/action.sha256 rc=-8
+PASS: all three worker failure operations are reported
+
+real 2.99
+user 2.86
+sys 0.07

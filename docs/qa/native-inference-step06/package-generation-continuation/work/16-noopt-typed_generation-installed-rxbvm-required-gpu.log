@@ -1,0 +1,4 @@
+argv=[PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/bin/rxbvm'), '/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-typed_generation-dynamic-linked', '-a', 'required-gpu', PosixPath('/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf'), '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201']
+cwd=/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work
+rc=0
+PASS: typed llama generation

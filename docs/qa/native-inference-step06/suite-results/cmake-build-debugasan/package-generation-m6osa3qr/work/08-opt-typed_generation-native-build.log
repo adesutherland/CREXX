@@ -1,0 +1,9 @@
+argv=[PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/bin/crexx'), '--program', PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work/opt-typed_generation native Ω/persistent'), PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work/opt-typed_generation.crexx'), '--jobs', '1', '--native']
+cwd=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work
+rc=0
+WAVE: project compile/assemble jobs=1
+START: project member opt-typed_generation
+BUILT: project member opt-typed_generation
+BARRIER: link program
+PUBLISHED: program /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work/opt-typed_generation native Ω/persistent.rxbin
+PUBLISHED: native program /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work/opt-typed_generation native Ω/persistent

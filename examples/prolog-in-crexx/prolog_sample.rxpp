@@ -1,0 +1,269 @@
+options levelb
+##cflags nosrcmap
+
+import prolog
+
+/*
+ * Build the Prolog source.
+ *
+ * Start with an empty Prolog source buffer. Each following
+ * ##relation or ##rule block is collected into a cREXX array.
+ * WITH prolog..PrologSourceAppendArray appends each completed
+ * block to the Prolog source buffer.
+ *
+ * PrologConsultExecute later parses and installs the complete
+ * accumulated Prolog source.
+ */
+call prolog..PrologSourceClear
+
+
+/* -----------------------------
+ * Relation: person(Person)
+ * -----------------------------
+ */
+##relation person WITH prolog..PrologSourceAppendArray
+  person(alice).
+  person(bob).
+  person(carol).
+  person(dave).
+  person(erin).
+  person(frank).
+  person(grace).
+  person(heidi).
+##end
+
+call prolog..PrologSourceAppendArray person
+
+
+/* -----------------------------
+ * Relation: department(Department)
+ * -----------------------------
+ */
+##relation department WITH prolog..PrologSourceAppendArray
+  department(sales).
+  department(it).
+  department(hr).
+##end
+
+
+/* -----------------------------
+ * Relation:
+ * works_in(Person, Department)
+ * -----------------------------
+ */
+##relation works_in WITH prolog..PrologSourceAppendArray
+  works_in(alice,sales).
+  works_in(bob,sales).
+  works_in(carol,it).
+  works_in(dave,it).
+  works_in(erin,it).
+  works_in(frank,hr).
+  works_in(grace,hr).
+  works_in(heidi,sales).
+##end
+
+
+/* -----------------------------
+ * Relation: project(Project)
+ * -----------------------------
+ */
+##relation project WITH prolog..PrologSourceAppendArray
+  project(apollo).
+  project(zeus).
+  project(hera).
+##end
+
+
+/* -----------------------------
+ * Relation:
+ * project_department(Project, Department)
+ * -----------------------------
+ */
+##relation project_department WITH prolog..PrologSourceAppendArray
+  project_department(apollo,it).
+  project_department(zeus,sales).
+  project_department(hera,hr).
+##end
+
+
+/* -----------------------------
+ * Relation:
+ * works_on(Person, Project)
+ * -----------------------------
+ */
+##relation works_on WITH prolog..PrologSourceAppendArray
+  works_on(alice,zeus).
+  works_on(bob,zeus).
+  works_on(carol,apollo).
+  works_on(dave,apollo).
+  works_on(erin,apollo).
+  works_on(frank,hera).
+  works_on(grace,hera).
+  works_on(heidi,apollo).
+##end
+
+
+/* -----------------------------
+ * Rule 1: Colleagues
+ *
+ * Two people are colleagues if
+ * they work in the same department.
+ * A person is not their own colleague.
+ * -----------------------------
+ */
+##rule colleague WITH prolog..PrologSourceAppendArray
+  colleague(X,Y) :-
+    works_in(X,D),
+    works_in(Y,D),
+    X \= Y.
+##end
+
+
+/* -----------------------------
+ * Rule 2: Project colleagues
+ *
+ * Two people are project colleagues
+ * if they work on the same project.
+ * A person is not their own project
+ * colleague.
+ * -----------------------------
+ */
+##rule project_colleague WITH prolog..PrologSourceAppendArray
+  project_colleague(X,Y) :-
+    works_on(X,P),
+    works_on(Y,P),
+    X \= Y.
+##end
+
+
+/* -----------------------------
+ * Rule 3: Cross-department workers
+ *
+ * A person is a cross-department worker
+ * on a project if the person's department
+ * differs from the department to which
+ * the project belongs.
+ * -----------------------------
+ */
+##rule cross_department_worker WITH prolog..PrologSourceAppendArray
+  cross_department_worker(X,P) :-
+    works_on(X,P),
+    works_in(X,D1),
+    project_department(P,D2),
+    D1 \= D2.
+##end
+
+
+/* -----------------------------
+ * Rule 4: Well-connected people
+ *
+ * A person is well connected if they have
+ * at least one project colleague who works
+ * in a different department.
+ * -----------------------------
+ */
+##rule well_connected WITH prolog..PrologSourceAppendArray
+  well_connected(X) :-
+    project_colleague(X,Y),
+    works_in(X,D1),
+    works_in(Y,D2),
+    D1 \= D2.
+##end
+
+
+/*
+ * Parse and install the complete Prolog source accumulated by
+ * the preceding ##relation and ##rule blocks.
+ */
+call prolog..PrologConsultExecute
+
+
+/* ---------------------------------------------------------
+ * Report 1: Colleagues of Alice
+ * ---------------------------------------------------------
+ */
+i = .int
+n = prolog..PrologFindAll("colleague(alice, X)", "X")
+
+say
+say "=== Colleagues of Alice ==="
+say "found" n "colleagues:"
+do i = 1 to n
+  say "  " prolog..PrologFindAllNth(i)
+end
+
+
+/* ---------------------------------------------------------
+ * Report 2: Project colleagues of Heidi
+ * ---------------------------------------------------------
+ */
+n = prolog..PrologFindAll("project_colleague(heidi, X)", "X")
+
+say
+say "=== Project colleagues of Heidi ==="
+say "found" n "project colleagues:"
+do i = 1 to n
+  say "  " prolog..PrologFindAllNth(i)
+end
+
+
+/* ---------------------------------------------------------
+ * Report 3: Cross-department project workers
+ * ---------------------------------------------------------
+ */
+n = prolog..PrologFindAll("cross_department_worker(X, P)", "X")
+
+say
+say "=== Cross-department workers ==="
+say "found" n "workers:"
+do i = 1 to n
+  say "  " prolog..PrologFindAllNth(i)
+end
+
+
+/* ---------------------------------------------------------
+ * Report 4: Well-connected matches
+ *
+ * PrologFindAll returns solutions, not distinct values.
+ * A person may therefore occur more than once when the rule
+ * can be satisfied through different relationships.
+ * ---------------------------------------------------------
+ */
+n = prolog..PrologFindAll("well_connected(X)", "X")
+
+say
+say "=== Well-connected matches ==="
+say "found" n "matches:"
+do i = 1 to n
+  say "  " prolog..PrologFindAllNth(i)
+end
+
+
+/* ---------------------------------------------------------
+ * Report 5: People working in Sales
+ * ---------------------------------------------------------
+ */
+n = prolog..PrologFindAll("works_in(X, sales)", "X")
+
+say
+say "=== People working in Sales ==="
+say "found" n "people:"
+do i = 1 to n
+  say "  " prolog..PrologFindAllNth(i)
+end
+
+
+/* ---------------------------------------------------------
+ * Report 6: People working on Apollo
+ * ---------------------------------------------------------
+ */
+n = prolog..PrologFindAll("works_on(X, apollo)", "X")
+
+say
+say "=== People working on Apollo ==="
+say "found" n "people:"
+do i = 1 to n
+  say "  " prolog..PrologFindAllNth(i)
+end
+
+exit

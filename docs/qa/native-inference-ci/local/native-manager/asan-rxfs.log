@@ -1,0 +1,30 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260916-163925-ctest
+==> ctest
+    log: cmake-build-debugasan/asan-logs/20260916-163925-ctest/ctest.log
+==> ctest passed
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^rxfs_ --parallel 8
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1769: rxfs_rxtvm_noopt
+    Start 1767: rxfs_rxbvm_noopt
+    Start 1770: rxfs_rxtvm_opt
+    Start 1768: rxfs_rxbvm_opt
+1/4 Test #1768: rxfs_rxbvm_opt ...................   Passed    0.93 sec
+2/4 Test #1770: rxfs_rxtvm_opt ...................   Passed    0.94 sec
+3/4 Test #1767: rxfs_rxbvm_noopt .................   Passed    0.98 sec
+4/4 Test #1769: rxfs_rxtvm_noopt .................   Passed    0.98 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+comprehensive       =   3.84 sec*proc (4 tests)
+filesystem          =   3.84 sec*proc (4 tests)
+library             =   3.84 sec*proc (4 tests)
+linked_opt          =   1.87 sec*proc (2 tests)
+optimizer-parity    =   3.84 sec*proc (4 tests)
+plugins             =   3.84 sec*proc (4 tests)
+rxpa                =   3.84 sec*proc (4 tests)
+
+Total Test time (real) =   1.04 sec
+ASan run complete: cmake-build-debugasan/asan-logs/20260916-163925-ctest

@@ -1,0 +1,39 @@
+options levelg comments_dash
+namespace rxpa_objects_worker_test
+import concurrency
+import rxpa_objects
+
+worker_session: task = .int
+  arg initial = .int
+  if counts("calls") \= 0 | counts("live") \= 0 then return -1
+  instance = .counter.from(initial)
+  object = instance as .object
+  if <typeof>(object) \= ".rxpa_objects..box" | instance.add(1) \= initial + 1 then return -2
+  if counts("calls") \= 1 | counts("live") \= 1 then return -3
+  instance = .counter
+  object = .object
+  if counts("live") \= 0 then return -4
+  return counts("session")
+
+main: procedure = .int
+  controller = .box(100)
+  controller_session = counts("session")
+  pool = .taskpool.local(2, 4)
+  scope = .taskscope.collectall(pool, 60000)
+  do parallel using scope
+    first = worker_session(10)
+    second = worker_session(20)
+  end
+  call pool.close()
+  if first <= 0 | second <= 0 | first = second | first = controller_session | second = controller_session then do
+    say "FAIL: C native worker sessions" first second controller_session
+    return 1
+  end
+  if counts("calls") \= 1 | counts("live") \= 1 | controller.read() \= 100 then return 2
+  controller = .box
+  if counts("live") \= 0 then return 3
+  if counts("sessions_created") \= 3 | counts("sessions_destroyed") \= 2 then return 4
+  say "PASS: C native objects in isolated attached worker sessions"
+  return 0
+
+exit main()

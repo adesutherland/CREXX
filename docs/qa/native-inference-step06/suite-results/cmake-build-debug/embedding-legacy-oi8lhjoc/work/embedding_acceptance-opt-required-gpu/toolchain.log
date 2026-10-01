@@ -1,0 +1,19 @@
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc;--no-exe-import;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/embedding-legacy-oi8lhjoc/work/embedding_acceptance-opt-required-gpu/embedding;/Users/adrian/CLionProjects/CREXX/tests/native-inference/embedding_acceptance.crexx
+
+Warning in embedding_acceptance.crexx @ 164:6 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 161, column 6. Declare this binding explicitly if intentional., "i"
+1 warning(s) in source file
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/embedding-legacy-oi8lhjoc/work/embedding_acceptance-opt-required-gpu/embedding;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/embedding-legacy-oi8lhjoc/work/embedding_acceptance-opt-required-gpu/embedding
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/embedding-legacy-oi8lhjoc/work/embedding_acceptance-opt-required-gpu/embedding-linked;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/embedding-legacy-oi8lhjoc/work/embedding_acceptance-opt-required-gpu/embedding;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/embedding-legacy-oi8lhjoc/work/embedding_acceptance-opt-required-gpu/embedding-linked;-a;required-gpu;/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf;f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999
+PASS: rxllama persistent embedding acceptance required-gpu
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/embedding-legacy-oi8lhjoc/work/embedding_acceptance-opt-required-gpu/embedding-linked;-a;required-gpu;/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf;f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999
+PASS: rxllama persistent embedding acceptance required-gpu
+
+

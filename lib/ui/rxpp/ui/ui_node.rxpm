@@ -1,0 +1,3 @@
+##MACRO UI_NODE spec,text
+  .gen call view.add_spec(&spec, &text)
+##MEND

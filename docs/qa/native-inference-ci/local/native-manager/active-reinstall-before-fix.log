@@ -1,0 +1,21 @@
+test_active_reinstall_preserves_every_projected_file (test_llama_manager.NativeManagerTests.test_active_reinstall_preserves_every_projected_file) ... ERROR
+
+======================================================================
+ERROR: test_active_reinstall_preserves_every_projected_file (test_llama_manager.NativeManagerTests.test_active_reinstall_preserves_every_projected_file)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/scripts/tests/test_llama_manager.py", line 114, in test_active_reinstall_preserves_every_projected_file
+    self.assertEqual(installer.digest(self.root / name), expected, name)
+                     ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX/scripts/package-llama-installer.py", line 21, in digest
+    with path.open('rb') as stream:
+         ~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/llama native tests 7o0t0i2x/cREXX with spaces/bin/providers/extra-2.dll'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.243s
+
+FAILED (errors=1)

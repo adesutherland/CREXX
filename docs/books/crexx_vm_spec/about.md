@@ -1,7 +1,9 @@
 # About This Book
 
 This book documents the \crexx{} virtual machine, RXAS assembly language, and
-RXBIN bytecode format used by the Release 1 beta line.
+RXBIN bytecode format used by cRexx `1.0.0-beta.3`. See the
+[beta 3 release notes](../../releases/v1.0.0-beta.3.md) for the release scope
+and known limitations.
 
 The programming guide describes how to build and run programs. This book is
 for readers who need the lower-level model: RXAS authors, compiler and linker
@@ -14,7 +16,7 @@ compatibility layer.
 
 The main pipeline is:
 
-1. `rxc` compiles `.rexx` source to `.rxas` assembly.
+1. `rxc` compiles `.crexx` source to `.rxas` assembly.
 2. `rxas` assembles `.rxas` to `.rxbin` bytecode.
 3. `rxlink` optionally combines modules into a linked image with one shared
    constant pool.

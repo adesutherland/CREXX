@@ -1,0 +1,130 @@
+/* S5 wrapper memory control: one shared model and one/four private contexts. */
+options levelb floats_binary
+import rxfnsb
+import rxfnsg
+import rxllama
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL: rxllama" label
+  return 1
+
+elapsed: procedure = .int
+  arg started = .int
+  duration = time("us") - started
+  if duration < 0 then duration = duration + 86400000000
+  return duration
+
+ready_model: procedure = .int
+  arg model = .binary
+  started = time("us")
+  do while elapsed(started) < 600000000
+    state = ""
+    if rxllama..modelstate(model, state) <> 0 then return 1
+    if state = "ready" then return 0
+    if state <> "loading" then return 1
+  end
+  say "FAIL: model preparation deadline"
+  return 1
+
+ready_session: procedure = .int
+  arg session = .binary
+  started = time("us")
+  do while elapsed(started) < 600000000
+    state = ""
+    if rxllama..prepare(session, 512, state) <> 0 then return 1
+    if state = "ready" then return 0
+    if state = "failed" | state = "cancelled" then return 1
+  end
+  say "FAIL: session preparation deadline"
+  return 1
+
+complete_request: procedure = .int
+  arg request = .binary
+  started = time("us")
+  do while elapsed(started) < 600000000
+    state = ""
+    if rxllama..process(request, 512, state) <> 0 then return 1
+    if state = "complete" then return 0
+    if state <> "running" then return 1
+  end
+  say "FAIL: request deadline"
+  return 1
+
+one_request: procedure = .int
+  arg session = .binary, config = .binary, count = .int, expose texts = .string[], expose finishes = .string[], expose total = .int
+  request = .binary
+  if rxllama..requestopen(session, config, request) <> 0 then return 1
+  row = .int
+  do row = 1 to count
+    id = 0
+    texts[row] = ""
+    finishes[row] = ""
+    if rxllama..addprompt(request, "", "Name one animal.", id) <> 0 | id <> row then return 1
+  end
+  if rxllama..submit(request) <> 0 then return 1
+  total = 0
+  state = ""
+  text = ""
+  finish = ""
+  tokens = 0
+  started = time("us")
+  do forever
+    if rxllama..process(request, 128, state) <> 0 then return 1
+    do row = 1 to count
+      if rxllama..readtext(request, row, text, tokens, finish) <> 0 then return 1
+      texts[row] = texts[row] || text
+      finishes[row] = finish
+      total = total + tokens
+    end
+    if state = "complete" then leave
+    if state <> "running" | elapsed(started) > 600000000 then return 1
+  end
+  if total < 1 | total > count * 32 then return 1
+  do row = 1 to count
+    if texts[row] = "" then return 1
+    if finishes[row] <> "eos" & finishes[row] <> "output_limit" then return 1
+  end
+  return rxllama..close(request)
+
+main: procedure = .int
+  arg args = .string[]
+  if args[0] <> 4 then return 2
+  count = args[4] as .int
+  if count <> 1 & count <> 4 then return 2
+  config = .binary
+  runtime = .binary
+  model = .binary
+  if rxllama..configcreate(config) <> 0 then return 1
+  if rxllama..configtext(config, "hardware_mode", args[1]) <> 0 then return 1
+  if rxllama..runtimeopen(config, runtime) <> 0 then return 1
+  if rxllama..modelopen(runtime, args[2], args[3], "smollm2-360m-instruct", config, model) <> 0 then return 1
+  if ready_model(model) <> 0 then return 1
+  sessions = .binary[]
+  texts = .string[]
+  finishes = .string[]
+  total = 0
+  session = .binary
+  id = .int
+  do id = 1 to count
+    if rxllama..sessionopen(model, "generation", config, session) <> 0 then return 1
+    if ready_session(session) <> 0 then return 1
+    sessions[id] = session
+    do warm = 1 to 2
+      if one_request(session, config, 4, texts, finishes, total) <> 0 then return 1
+    end
+  end
+  if total <> 24 then return 1
+  do row = 1 to 4
+    if texts[row] <> "One animal is a cat." | finishes[row] <> "eos" then return 1
+  end
+  loads = 0
+  if rxllama..infoint(model, "load_count", loads) <> 0 | loads <> 1 then return 1
+  do id = 1 to count
+    if rxllama..close(sessions[id]) <> 0 then return 1
+  end
+  if rxllama..close(model) <> 0 | rxllama..close(runtime) <> 0 | rxllama..close(config) <> 0 then return 1
+  say "TOKENS=" || total
+  say "PASS: generation VM memory control" count
+  return 0

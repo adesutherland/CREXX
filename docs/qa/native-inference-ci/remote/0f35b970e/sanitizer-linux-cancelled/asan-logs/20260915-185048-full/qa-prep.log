@@ -1,0 +1,137 @@
+Command: cmake --build /home/runner/work/_temp/debugasan --target qa-prep --parallel 4
+ASAN_OPTIONS=detect_leaks=1
+
+[0/2] Re-checking globbed directories...
+[1/47] Generating source-mapped Text Inspector application with RXPP
+CRX0010I [19:41:35.376771] Pre-Compile started
+Input File:   /home/runner/work/CREXX/CREXX/examples/ui/text-inspector/text_inspector.rxpp
+Output File:  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector.crexx
+Macro Lib:    /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0100I [19:41:35.414008] Pre-Compile pass one
+CRX0110I [19:41:35.414101] System Path /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [19:41:35.414165] Input Path  /home/runner/work/CREXX/CREXX/examples/ui/text-inspector/
+CRX0110I [19:41:35.414224] Macro Path  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [19:41:35.414283] Build Path  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/
+CRX0120I [19:41:35.502113] Maclib loaded:      68 records
+CRX0130I [19:41:35.502234] Macros extracted:   35
+CRX0120I [19:41:35.587263] System Maclib loaded: 42 records
+CRX0130I [19:41:35.587417] Macros extracted:     29
+CRX0140I [19:41:35.606140] Rexx Source loaded: 210 records
+CRX0110I [19:41:35.660080] Macro Path  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [19:41:35.921212] Macros extracted:   0
+CRX0160I [19:41:35.960613] Macros arranged:    64
+CRX0200I [19:41:35.992412] Pre-Compile pass two
+CRX0171I Script macro ##ui_command selected from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/ui_command.rxpm
+CRX0171I Script macro ##ui_node selected from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/ui_node.rxpm
+CRX0300I [19:41:37.790376] Pre-Compiled REXX generated 
+CRX0310I [19:41:37.790508] Pre-Compiled REXX saved
+CRX0510I [19:41:37.823939] Library import names passed to /home/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector.inc
+CRX0500I [19:41:37.824047] Pre-Compile completed, 8 macro calls expanded, total source lines 600
+CRX0101I [19:41:37.824201] Elapsed Time 2.447592 seconds, 2447.592 milliseconds
+[2/47] Building optimized arraydump function example
+[3/47] Building optimized arrayformat function example
+[4/47] Bundling array-formatting function example
+[5/47] Generating decimal_gate1_common18_opt.rxbin
+[6/47] Building C object tests/rxpa/CMakeFiles/objects_rxbvm.dir/__/__/interpreter/rxvmmain.c.o
+[7/47] Building C object tests/rxpa/CMakeFiles/objects_rxtvm.dir/__/__/interpreter/rxvmmain.c.o
+[8/47] Compiling and assembling Text Inspector application
+[9/47] Building optimized array-formatting example program
+[10/47] cd /home/runner/work/_temp/debugasan/lib/plugins/llama && /usr/local/bin/cmake -DINPUT=/home/runner/work/_temp/debugasan/lib/plugins/llama/rxllama-package-Debug.cmake -P /home/runner/work/CREXX/CREXX/rxpa/WriteProviderPackage.cmake
+[11/47] Generating decimal_gate1_classic9_opt.rxbin
+[12/47] Generating Text Inspector TUI launcher with RXPP
+CRX0010I [19:41:44.148656] Pre-Compile started
+Input File:   /home/runner/work/CREXX/CREXX/examples/ui/text-inspector/text_inspector_tui.rxpp
+Output File:  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector_tui.crexx
+Macro Lib:    /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0100I [19:41:44.185606] Pre-Compile pass one
+CRX0110I [19:41:44.185720] System Path /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [19:41:44.185798] Input Path  /home/runner/work/CREXX/CREXX/examples/ui/text-inspector/
+CRX0110I [19:41:44.185867] Macro Path  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [19:41:44.185977] Build Path  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/
+CRX0120I [19:41:44.268289] Maclib loaded:      68 records
+CRX0130I [19:41:44.268411] Macros extracted:   35
+CRX0120I [19:41:44.345334] System Maclib loaded: 42 records
+CRX0130I [19:41:44.345477] Macros extracted:     29
+CRX0140I [19:41:44.347248] Rexx Source loaded: 7 records
+CRX0110I [19:41:44.359325] Macro Path  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [19:41:44.372409] Macros extracted:   0
+CRX0160I [19:41:44.410679] Macros arranged:    64
+CRX0200I [19:41:44.414739] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [19:41:44.552412] Pre-Compiled REXX generated 
+CRX0310I [19:41:44.552512] Pre-Compiled REXX saved
+CRX0510I [19:41:44.555181] Library import names passed to /home/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector_tui.inc
+CRX0500I [19:41:44.555250] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [19:41:44.555415] Elapsed Time 0.406924 seconds, 406.924 milliseconds
+[13/47] Generating generated/text_inspector_ansi.crexx
+CRX0010I [19:41:44.536614] Pre-Compile started
+Input File:   /home/runner/work/CREXX/CREXX/examples/ui/text-inspector/text_inspector_ansi.rxpp
+Output File:  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector_ansi.crexx
+Macro Lib:    /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0100I [19:41:44.569486] Pre-Compile pass one
+CRX0110I [19:41:44.569568] System Path /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [19:41:44.569627] Input Path  /home/runner/work/CREXX/CREXX/examples/ui/text-inspector/
+CRX0110I [19:41:44.569681] Macro Path  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [19:41:44.569735] Build Path  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/
+CRX0120I [19:41:44.652301] Maclib loaded:      68 records
+CRX0130I [19:41:44.652399] Macros extracted:   35
+CRX0120I [19:41:44.729290] System Maclib loaded: 42 records
+CRX0130I [19:41:44.729390] Macros extracted:     29
+CRX0140I [19:41:44.731135] Rexx Source loaded: 7 records
+CRX0110I [19:41:44.742258] Macro Path  /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [19:41:44.753349] Macros extracted:   0
+CRX0160I [19:41:44.791887] Macros arranged:    64
+CRX0200I [19:41:44.795937] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /home/runner/work/_temp/debugasan/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [19:41:44.935017] Pre-Compiled REXX generated 
+CRX0310I [19:41:44.935118] Pre-Compiled REXX saved
+CRX0510I [19:41:44.937939] Library import names passed to /home/runner/work/_temp/debugasan/examples/ui/text-inspector/generated/text_inspector_ansi.inc
+CRX0500I [19:41:44.938023] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [19:41:44.938181] Elapsed Time 0.401754 seconds, 401.754 milliseconds
+[14/47] Building optimized pprint compiler-exit example
+[15/47] Bundling standalone pprint compiler-exit example
+[16/47] Generating text_inspector_test_host.rxbin
+[17/47] Compiling ollama_generate.crexx ...
+[18/47] Compiling openai_generate.crexx ...
+[19/47] Compiling anthropic_generate.crexx ...
+[20/47] Compiling gemini_generate.crexx ...
+[21/47] Compiling llm_address_demo.crexx ...
+Warning in llm_address_demo.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file
+[22/47] Compiling llm_address_environment.crexx ...
+[23/47] Building program with standalone pprint exit example
+[24/47] Building the rxsqlite ADDRESS consumer demo ...
+[25/47] Building Text Inspector TUI launcher
+[26/47] Generating text_inspector_ansi.rxbin
+[27/47] Generating text_inspector_core_noopt.rxbin
+[28/47] Generating text_inspector_core_opt.rxbin
+[29/47] Generating text_inspector_tui_noopt.rxbin
+[30/47] Generating san002_concat_after_wide_decimal_rxbvm_noopt.rxbin
+[31/47] Generating text_inspector_tui_opt.rxbin
+[32/47] Generating san002_concat_after_wide_decimal_rxbvm_opt.rxbin
+[33/47] Generating san002_concat_after_wide_decimal_rxtvm_noopt.rxbin
+[34/47] Generating san002_concat_after_wide_decimal_rxtvm_opt.rxbin
+[35/47] Generating san002_wide_decimal_extract_rxbvm_noopt.rxbin
+[36/47] Generating san002_wide_decimal_extract_rxbvm_opt.rxbin
+[37/47] Generating decimal_gate1_common18_opt_rxas_noopt.rxbin
+[38/47] Generating san002_wide_decimal_extract_rxtvm_noopt.rxbin
+[39/47] Generating decimal_gate1_classic9_opt_rxas_noopt.rxbin
+[40/47] Generating decimal_gate1_common18_noopt.rxbin
+[41/47] Generating san002_wide_decimal_extract_rxtvm_opt.rxbin
+[42/47] Linking C executable tests/objects_rxbvm
+[43/47] Linking C executable tests/objects_rxtvm
+[44/47] Generating decimal_gate1_classic9_noopt.rxbin
+[45/47] Generating decimal_gate1_rexxcps_family_noopt.rxbin
+[46/47] Generating decimal_gate1_rexxcps_family_opt.rxbin

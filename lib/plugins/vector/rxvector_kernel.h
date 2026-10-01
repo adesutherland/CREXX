@@ -49,4 +49,9 @@ rxvector_status rxvector_topk_kernel(const rxvector_float_span *vectors,
                                      size_t requested,
                                      rxvector_hit *hits);
 
+/* Canonical f32le input; float32 storage with double cosine accumulation. */
+float rxvector_f32le_at(const unsigned char *data);
+rxvector_status rxvector_topk_f32le_kernel(const void *matrix, size_t rows,
+    size_t dimensions, const void *query, size_t requested, rxvector_hit *hits);
+
 #endif

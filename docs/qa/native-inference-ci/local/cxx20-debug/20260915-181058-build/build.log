@@ -1,0 +1,6 @@
+Command: cmake --build cmake-build-debug --target crexx-provider-package --parallel 4
+ASAN_OPTIONS=detect_leaks=1
+
+[0/2] Re-checking globbed directories...
+[1/3] Building CXX object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/provider_package.cpp.o
+[2/3] Linking CXX executable bin/crexx-provider-package

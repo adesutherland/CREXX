@@ -1,7 +1,8 @@
 # About This Book
 
-This programming guide explains how to use the cRexx Release 1 beta line
-toolchain in practice.
+This programming guide explains how to use the cRexx `1.0.0-beta.3` toolchain
+in practice. See the [beta 3 release notes](../../releases/v1.0.0-beta.3.md)
+for the release scope and known limitations.
 
 It focuses on the tools and workflows around Level B source:
 

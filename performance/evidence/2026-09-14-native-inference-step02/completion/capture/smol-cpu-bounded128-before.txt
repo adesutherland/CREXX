@@ -1,0 +1,49 @@
+Mon Sep 14 12:12:18 UTC 2026
+Darwin 25.6.0 arm64
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+13:12  up 16 days, 11:06, 2 users, load averages: 4.06 5.39 4.99
+  PID  %CPU COMM
+94406  23.4 qemu-system-aarch64
+32859   6.2 /Applications/ChatGPT.app/Contents/Resources/codex
+82234   3.4 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend
+82184   1.9 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend
+82145   1.8 /Applications/CLion.app/Contents/MacOS/clion
+42621   1.0 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+33852   1.0 /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+91552   0.8 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+  529   0.5 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd
+32798   0.5 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+  566   0.4 /usr/libexec/opendirectoryd

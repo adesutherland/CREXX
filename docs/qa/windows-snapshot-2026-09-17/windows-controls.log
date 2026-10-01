@@ -1,0 +1,27 @@
+test_module_shadowing_and_signed_unsigned_controls (test_windows_installer_signatures.WindowsSignatureTests.test_module_shadowing_and_signed_unsigned_controls) ... skipped 'Requires native Windows Authenticode'
+test_capture_and_payload_commit (test_windows_release_assets.PublicationTests.test_capture_and_payload_commit) ... ok
+test_cleanup_does_not_delete_newer_asset_with_same_name (test_windows_release_assets.PublicationTests.test_cleanup_does_not_delete_newer_asset_with_same_name) ... ok
+test_corrupt_upload_is_removed (test_windows_release_assets.PublicationTests.test_corrupt_upload_is_removed) ... ok
+test_dependency_source_cannot_be_overwritten (test_windows_release_assets.PublicationTests.test_dependency_source_cannot_be_overwritten) ... ok
+test_four_output_publication_checks_both_inputs (test_windows_release_assets.PublicationTests.test_four_output_publication_checks_both_inputs) ... ok
+test_lost_upload_response_cleans_unique_name (test_windows_release_assets.PublicationTests.test_lost_upload_response_cleans_unique_name) ... ok
+test_mixed_source_commits_rejected (test_windows_release_assets.PublicationTests.test_mixed_source_commits_rejected) ... ok
+test_plugin_identity_uses_its_manifest_without_buildinfo (test_windows_release_assets.PublicationTests.test_plugin_identity_uses_its_manifest_without_buildinfo) ... ok
+test_plugin_replaced_during_upload_aborts_all_outputs (test_windows_release_assets.PublicationTests.test_plugin_replaced_during_upload_aborts_all_outputs) ... ok
+test_publish_both_preserves_unsigned_assets (test_windows_release_assets.PublicationTests.test_publish_both_preserves_unsigned_assets) ... ok
+test_replaced_source_same_name_is_rejected (test_windows_release_assets.PublicationTests.test_replaced_source_same_name_is_rejected) ... ok
+test_source_cannot_be_overwritten (test_windows_release_assets.PublicationTests.test_source_cannot_be_overwritten) ... ok
+test_tag_moves_during_upload_removes_only_own_uploads (test_windows_release_assets.PublicationTests.test_tag_moves_during_upload_removes_only_own_uploads) ... ok
+test_signs_pe_plugins_and_fails_on_signature_error (test_windows_release_assets.SigningTests.test_signs_pe_plugins_and_fails_on_signature_error) ... ok
+test_corrupt_manager_archive_is_not_extracted (test_windows_snapshot_signing.SnapshotSigningTests.test_corrupt_manager_archive_is_not_extracted) ... ok
+test_default_pins_core_and_plugin_but_never_signed_derivatives (test_windows_snapshot_signing.SnapshotSigningTests.test_default_pins_core_and_plugin_but_never_signed_derivatives) ... ok
+test_manager_requires_matching_successful_build_and_digest (test_windows_snapshot_signing.SnapshotSigningTests.test_manager_requires_matching_successful_build_and_digest) ... ok
+test_no_plugin_fails_instead_of_silently_signing_only_core (test_windows_snapshot_signing.SnapshotSigningTests.test_no_plugin_fails_instead_of_silently_signing_only_core) ... ok
+test_signing_publishes_complete_verified_set_only (test_windows_snapshot_signing.SnapshotSigningTests.test_signing_publishes_complete_verified_set_only) ... Publishing signed core and llama ZIPs/setups for aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Done. Signed core and llama ZIPs/setups published; unsigned downloads retained.
+ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.260s
+
+OK (skipped=1)

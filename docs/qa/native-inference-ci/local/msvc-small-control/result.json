@@ -1,0 +1,7 @@
+{
+  "before_returncode": 1,
+  "after_returncode": 0,
+  "mechanism": "Windows SDK defines small as char; actual bridge TU reproduces before local variable rename",
+  "generation_header_sha256": "b21136a6dfc1690623f2ba4192fab64bb065ffa447fc4f7ddcb7ec03bfd428e6",
+  "scope": "Clang macro control; hosted MSVC target confirmation pending"
+}

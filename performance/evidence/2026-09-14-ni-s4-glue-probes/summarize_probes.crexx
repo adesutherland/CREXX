@@ -1,0 +1,146 @@
+/* NI-S4-P01: reduce retained diagnostic counters; no inference or tuning. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv.0 <> 4 then return 2
+ids = .string[]; workloads = .string[]; variants = .string[]
+warm = .float[]; metrics = .float[]; groups = .string[]
+rounds = .int[]
+metric_names = "admit_ns submit_ns setup_ns decode_ns normalize_ns copy_ns copies bytes requests"
+line = .string
+fields = .string[]
+index = .int
+metric = .int
+count = .int
+row = .string
+value = .float
+line_number = 0
+input = argv[1]
+do while lines(input)
+  line = linein(input)
+  line_number = line_number + 1
+  if line_number = 1 then iterate
+  fields = split_delimited(line, ",")
+  if fields.0 <> 20 then return 1
+  if fields[11] <> "recorded" then iterate
+  if fields[18] <> "pass" | fields[20] <> "us" then return 1
+  index = ids.0 + 1
+  ids[index] = fields[1]; workloads[index] = fields[3]; variants[index] = fields[7]
+  warm[index] = fields[19]; rounds[index] = fields[12]
+  key = fields[3] || "/" || fields[7]
+  if find_text(groups, key) = 0 then groups[groups.0 + 1] = key
+end
+call linein input
+input = argv[2]
+do while lines(input)
+  line = linein(input)
+  fields = split_delimited(line, ",")
+  if fields.0 <> 4 then iterate
+  index = find_text(ids, fields[1])
+  if index = 0 | fields[2] <> "stdout" then iterate
+  text = fields[4]
+  if left(text, 6) <> "PROBE_" then iterate
+  equal_at = pos("=", text)
+  if equal_at = 0 then return 1
+  name = substr(text, 7, equal_at - 7)
+  metric = wordpos(name, metric_names)
+  if metric = 0 then return 1
+  metrics[index * 16 + metric] = substr(text, equal_at + 1)
+end
+call linein input
+output = argv[3]
+if lineout(output, "workload,variant,round,request_us,admit_us,submit_us,setup_us,decode_us,normalize_us,copy_us,remainder_us,copies,bytes,requests") <> 0 then return 1
+do index = 1 to ids.0
+  count = metrics[index * 16 + 9] as .int
+  if count <> 30 | metrics[index * 16 + 7] <> count then return 1
+  row_count = 1
+  if right(workloads[index], 2) = "-8" then row_count = 8
+  if metrics[index * 16 + 8] <> count * row_count * 384 * 8 then return 1
+  sum = 0.0
+  row = workloads[index] || "," || variants[index] || "," || rounds[index] || "," || (warm[index] / count)
+  do metric = 1 to 6
+    value = metrics[index * 16 + metric] / (1000.0 * count)
+    sum = sum + value
+    row = row || "," || value
+  end
+  remainder = warm[index] / count - sum
+  if remainder < -1.0 then return 1
+  row = row || "," || remainder || "," || count || "," || metrics[index * 16 + 8] || "," || count
+  if lineout(output, row) <> 0 then return 1
+end
+call lineout output
+output = argv[4]
+if lineout(output, "group,samples,request_median_us,request_min_us,request_max_us,admit_median_us,submit_median_us,setup_median_us,decode_median_us,normalize_median_us,copy_median_us,remainder_median_us") <> 0 then return 1
+do group = 1 to groups.0
+  warm_values = .float[]
+  do index = 1 to ids.0
+    if workloads[index] || "/" || variants[index] = groups[group] then warm_values[warm_values.0 + 1] = warm[index] / 30.0
+  end
+  count = warm_values.0
+  row = groups[group] || "," || count || "," || median(warm_values)
+  call sort_floats warm_values
+  row = row || "," || warm_values[1] || "," || warm_values[count]
+  do metric = 1 to 7
+    phase_values = .float[]
+    do index = 1 to ids.0
+      if workloads[index] || "/" || variants[index] <> groups[group] then iterate
+      if metric <= 6 then value = metrics[index * 16 + metric] / 30000.0
+      else do
+        value = warm[index] / 30.0
+        do part = 1 to 6
+          value = value - metrics[index * 16 + part] / 30000.0
+        end
+      end
+      phase_values[phase_values.0 + 1] = value
+    end
+    row = row || "," || median(phase_values)
+  end
+  if lineout(output, row) <> 0 then return 1
+end
+call lineout output
+say "PASS: diagnostic phase attribution; no formal performance verdict"
+return 0
+
+find_text: procedure = .int
+  arg texts = .string[], wanted = .string
+  do i = 1 to texts.0
+    if texts[i] = wanted then return i
+  end
+  return 0
+
+median: procedure = .float
+  arg values = .float[]
+  call sort_floats values
+  count = values.0
+  middle = count <idiv> 2
+  if count <mod> 2 = 0 then return (values[middle] + values[middle + 1]) / 2.0
+  return values[middle + 1]
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values.0
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    found = pos(delimiter, text, start)
+    if found = 0 then do
+      fields[fields.0 + 1] = substr(text, start)
+      leave
+    end
+    fields[fields.0 + 1] = substr(text, start, found - start)
+    start = found + length(delimiter)
+  end
+  return fields

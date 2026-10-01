@@ -1,0 +1,32 @@
+[
+  {
+    "control": "valid",
+    "returncode": 0,
+    "expected": 0,
+    "passed": true
+  },
+  {
+    "control": "stateless-marked-session-affine",
+    "returncode": 1,
+    "expected": 1,
+    "passed": true
+  },
+  {
+    "control": "owner-marked-reentrant",
+    "returncode": 1,
+    "expected": 1,
+    "passed": true
+  },
+  {
+    "control": "missing-session-destroy",
+    "returncode": 1,
+    "expected": 1,
+    "passed": true
+  },
+  {
+    "control": "missing-host-factory",
+    "returncode": 1,
+    "expected": 1,
+    "passed": true
+  }
+]

@@ -1,0 +1,14 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1752: rxllama_bridge_both_cpu
+1/1 Test #1752: rxllama_bridge_both_cpu ..........   Passed   13.20 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+comprehensive        =  13.20 sec*proc (1 test)
+library              =  13.20 sec*proc (1 test)
+llama                =  13.20 sec*proc (1 test)
+model-provisioned    =  13.20 sec*proc (1 test)
+rxpa                 =  13.20 sec*proc (1 test)
+
+Total Test time (real) =  13.29 sec

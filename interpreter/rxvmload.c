@@ -27,7 +27,10 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <ctype.h>
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXPA_CATALOGUE_LOCK() ((void)0)
+#define RXPA_CATALOGUE_UNLOCK() ((void)0)
+#elif defined(_WIN32)
 #include <windows.h>
 #define RXPA_CATALOGUE_LOCK() AcquireSRWLockExclusive(&rxpa_catalogue_lock)
 #define RXPA_CATALOGUE_UNLOCK() ReleaseSRWLockExclusive(&rxpa_catalogue_lock)
@@ -53,6 +56,13 @@ void rxvm_addinterface(char* name, char* option, char* type);
 void rxvm_addimplements(char* name, char* interface_name);
 void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* args);
 char* rxvm_getstring(rxpa_attribute_value attributeValue);
+int rxvm_string_view(rxpa_attribute_value attribute, const char **data, size_t *length);
+int rxvm_object_set_type(rxpa_attribute_value destination, const char *class_name);
+int rxvm_string_set(rxpa_attribute_value destination, const char *data, size_t length);
+static const rxpa_host_services_v1 rxpa_host_services = {
+    sizeof(rxpa_host_services_v1), RXPA_HOST_SERVICES_ABI_V1, rxvm_string_view,
+    rxvm_object_set_type, rxvm_string_set
+};
 void rxvm_setstring(rxpa_attribute_value attributeValue, const char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
 rxinteger rxvm_getint(rxpa_attribute_value attributeValue);
@@ -169,13 +179,17 @@ typedef struct static_metadata_snapshot {
     const char *args;
 } static_metadata_snapshot;
 
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+/* Catalogue access is synchronous on the sole execution thread. */
+#elif defined(_WIN32)
 static SRWLOCK rxpa_catalogue_lock = SRWLOCK_INIT;
 #else
 static pthread_mutex_t rxpa_catalogue_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXPA_LOADER_THREAD_LOCAL
+#elif defined(_MSC_VER)
 #define RXPA_LOADER_THREAD_LOCAL __declspec(thread)
 #else
 #define RXPA_LOADER_THREAD_LOCAL __thread
@@ -322,7 +336,7 @@ static void rxvm_memory_report_if_requested(rxvm_memory_context *context) {
                 class_id ? "," : "", class_names[class_id],
                 stats.class_peak_live_allocations[class_id]);
     }
-    fputc('\n', stderr);
+    platform_text_putc('\n', stderr);
 #ifdef CREXX_VM_MEMORY_CENSUS
     {
         int first_histogram_entry = 1;
@@ -355,7 +369,7 @@ static void rxvm_memory_report_if_requested(rxvm_memory_context *context) {
                     first_histogram_entry ? "" : ",", upper, count);
             first_histogram_entry = 0;
         }
-        fputc('\n', stderr);
+        platform_text_putc('\n', stderr);
     }
 #endif
 }
@@ -491,7 +505,9 @@ void rxfremod(rxvm_context *context) {
         abort();
     }
 
+#ifndef CREXX_VM_SINGLE_THREADED
     rxvm_channel_context_destroy(context);
+#endif
 
     /* Remove cold coordinator references before procedure storage is freed. */
     rxpa_compatibility_context_destroy(&context->rxpa_compatibility);
@@ -499,8 +515,12 @@ void rxfremod(rxvm_context *context) {
     free_interface_factory_registry(context);
     free_interface_method_registry(context);
     rxvm_free_graph_bindings(context);
+#ifndef CREXX_VM_NO_SOCKETS
     rxvm_socket_free_registry(context);
+#endif
+#ifndef CREXX_VM_SINGLE_THREADED
     rxcrexxcmd_context_state_free(context);
+#endif
     context->active.say_exit = 0;
 
     /* Free Symbol Search Trees */
@@ -1928,7 +1948,9 @@ static int rxpa_context_create_session(
         return -1;
     }
     if (rxpa_context_find_session(context, manifest->plugin_id)) return 0;
-    session = manifest->session_create();
+    session = manifest->session_create_with_host
+            ? manifest->session_create_with_host(&rxpa_host_services)
+            : manifest->session_create();
     if (!session) return -1;
     instance = rxvm_load_memory_alloc(
             context->rxvm_context->worker.memory_worker, sizeof(*instance));
@@ -2273,7 +2295,7 @@ static void bind_rxpa_runtime_policy(rxvm_context *context,
     } else if (!rxpa_compatibility_bind_legacy(
                        &context->rxpa_compatibility,
                        &runtime->native_invoker,
-                       rxvm_callfunc_direct, rxvm_callfunc)) {
+                       rxvm_callfunc_legacy_direct, rxvm_callfunc)) {
         RX_PANIC_OOM("bind legacy rxpa procedure",
                      sizeof(runtime->native_invoker), runtime->name);
     }
@@ -2358,6 +2380,9 @@ static int validate_static_plugin_manifest_v2(
                          (manifest->session_destroy != NULL) +
                          (manifest->session_enter != NULL) +
                          (manifest->session_leave != NULL);
+    if (manifest->struct_size >= offsetof(rxpa_plugin_manifest_v2, session_create_with_host) +
+                                 sizeof(manifest->session_create_with_host) &&
+        manifest->session_create_with_host && session_hook_count != 4u) return 0;
     return session_hook_count == 0u || session_hook_count == 4u;
 }
 
@@ -2432,7 +2457,12 @@ void rxvm_register_static_plugin_manifest_v2(
     entry->valid = (unsigned char)valid;
     memset(&entry->manifest, 0, sizeof(entry->manifest));
     if (valid) {
-        entry->manifest = *manifest;
+        memcpy(&entry->manifest, manifest,
+               offsetof(rxpa_plugin_manifest_v2, session_leave) + sizeof(manifest->session_leave));
+        if (manifest->struct_size >= offsetof(rxpa_plugin_manifest_v2, session_create_with_host) +
+                                     sizeof(manifest->session_create_with_host))
+            entry->manifest.session_create_with_host = manifest->session_create_with_host;
+        entry->manifest.struct_size = sizeof(entry->manifest);
         entry->manifest.plugin_id = entry->plugin_id;
     }
     RXPA_CATALOGUE_UNLOCK();

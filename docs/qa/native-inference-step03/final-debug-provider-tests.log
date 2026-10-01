@@ -1,0 +1,28 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1734: rxllama_backend_probe_cycle
+1/8 Test #1734: rxllama_backend_probe_cycle ........   Passed    0.60 sec
+    Start 1735: rxllama_bridge_bge_cpu
+2/8 Test #1735: rxllama_bridge_bge_cpu .............   Passed    2.85 sec
+    Start 1736: rxllama_bridge_smol_cpu
+3/8 Test #1736: rxllama_bridge_smol_cpu ............   Passed   17.12 sec
+    Start 1737: rxllama_bridge_both_cpu
+4/8 Test #1737: rxllama_bridge_both_cpu ............   Passed    6.15 sec
+    Start 1738: rxllama_bridge_bge_required-gpu
+5/8 Test #1738: rxllama_bridge_bge_required-gpu ....   Passed    3.13 sec
+    Start 1739: rxllama_bridge_smol_required-gpu
+6/8 Test #1739: rxllama_bridge_smol_required-gpu ...   Passed   17.26 sec
+    Start 1740: rxllama_bridge_both_required-gpu
+7/8 Test #1740: rxllama_bridge_both_required-gpu ...   Passed    6.10 sec
+    Start 1741: rxllama_toolchain_lifecycle
+8/8 Test #1741: rxllama_toolchain_lifecycle ........   Passed    3.64 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+library              =  56.86 sec*proc (8 tests)
+llama                =  56.86 sec*proc (8 tests)
+model-provisioned    =  56.26 sec*proc (7 tests)
+regression           =   0.60 sec*proc (1 test)
+rxpa                 =  56.86 sec*proc (8 tests)
+
+Total Test time (real) =  56.90 sec

@@ -163,10 +163,13 @@ static void help() {
             "  --no-autoload   Do not emit packaged-RXBIN autoload hints\n"
             "  --no-exe-import Do not add the executable directory to binary roots\n"
             "  --import-resolution-report path  Write observe-only import selection JSON\n"
+            "  --project-dependencies path  Write a private project dependency snapshot\n"
+            "  --check-project-dependencies path  Check a snapshot with the same compile arguments\n"
             "  --diagnostics mode  Diagnostic rendering: localized or raw\n"
             "  --diagnostic-locale locale  Diagnostic locale such as en_GB or en_US\n"
             "  --no-localisation  Use raw diagnostic code/parameter rendering\n"
             "  -o output_stem  RXAS output stem or .rxas file\n"
+            "  -E encoding     Source/assembly text encoding (UTF8; native profiles add six pages)\n"
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
 #ifdef ENABLE_PARSER_MODE
@@ -239,6 +242,7 @@ void cntx_buf(Context *context, char* buff_start, size_t bytes) {
         rxfl_fre(context->importable_file_list);
         context->importable_file_list = 0;
     }
+    context->import_discovery_error = 0;
 }
 
 /* Free Context */
@@ -348,6 +352,8 @@ int rxcmain(int argc, char *argv[]) {
     char *exe_path = 0;
     char *combined_import_locations = 0;
     char *import_resolution_report_path = 0;
+    char *project_dependencies_path = 0;
+    int check_project_dependencies = 0;
     char c;
     int do_optimise = 1;
     int disable_exits = 0;
@@ -377,6 +383,13 @@ int rxcmain(int argc, char *argv[]) {
         if (strcmp(argv[i], "--help") == 0) {
             help();
             exit(0);
+        }
+
+        if (strcmp(argv[i], "-E") == 0 || strcmp(argv[i], "-e") == 0) {
+            i++;
+            if (i >= argc || platform_text_encoding(argv[i]) != 0)
+                error_and_exit(2, "Missing or unsupported text encoding after -E");
+            continue;
         }
 
 #ifdef ENABLE_PARSER_MODE
@@ -446,6 +459,15 @@ int rxcmain(int argc, char *argv[]) {
 
         if (strcmp(argv[i], "--no-exe-import") == 0) {
             add_executable_import = 0;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--project-dependencies") == 0 ||
+            strcmp(argv[i], "--check-project-dependencies") == 0) {
+            check_project_dependencies = strcmp(argv[i], "--check-project-dependencies") == 0;
+            i++;
+            if (i >= argc) error_and_exit(2, "Missing project dependency snapshot path");
+            project_dependencies_path = argv[i];
             continue;
         }
 
@@ -698,7 +720,10 @@ int rxcmain(int argc, char *argv[]) {
 
     buff_start = file2buf(context->file_pointer, &bytes);
     /* Close file */
-    fclose(context->file_pointer);
+    if (fclose(context->file_pointer) != 0) {
+        free(buff_start);
+        buff_start = 0;
+    }
     context->file_pointer = 0;
 
     if(buff_start == NULL) {
@@ -752,6 +777,13 @@ int rxcmain(int argc, char *argv[]) {
         }
         free(source_import_locations);
         source_import_locations = 0;
+    }
+
+    /* Dependency checks reuse discovery/header semantics without compiling or
+     * loading executable provider code. The controller owns the action key. */
+    if (check_project_dependencies) {
+        errors = rxcp_project_dependencies(context, project_dependencies_path, 1);
+        goto finish;
     }
 
     /* Load VM Plugins */
@@ -974,12 +1006,24 @@ int rxcmain(int argc, char *argv[]) {
         // pdot_tree(context->ast, "astgraph3", context->file_name);
     }
 #endif
-    if (debug_mode >= 2) fprintf(stderr, "Compiler Exiting - Success\n");
 
     finish:
 
     /* Close outfile */
-    if (outFile) fclose(outFile);
+    if (outFile) {
+        int write_failed = ferror(outFile);
+        if (fclose(outFile) != 0) write_failed = 1;
+        if (write_failed) {
+            fprintf(stderr, "Can't complete assembly output %s\n", output_file_name);
+            errors = 1;
+        }
+    }
+
+    if (!errors && !check_project_dependencies && project_dependencies_path &&
+        rxcp_project_dependencies(context, project_dependencies_path, 0) != 0) {
+        fprintf(stderr, "Can't write project dependency snapshot %s\n", project_dependencies_path);
+        errors = 1;
+    }
 
     if (rxcp_import_report_write(context) != 0) {
         fprintf(stderr, "Can't write import resolution report %s\n",
@@ -1002,5 +1046,6 @@ int rxcmain(int argc, char *argv[]) {
     if (allocated_output_file_name) free(allocated_output_file_name);
 
     if (errors) return(2);
+    if (debug_mode >= 2) fprintf(stderr, "Compiler Exiting - Success\n");
     return(0);
 }

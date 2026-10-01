@@ -1,0 +1,78 @@
+Test project /tmp/crexx-channel-release.1v4pFt/debug
+      Start 1907: ts_http_streaming_rxbvm_noopt
+      Start 1908: ts_http_streaming_rxbvm_opt
+      Start 1909: ts_http_streaming_rxtvm_noopt
+      Start 1910: ts_http_streaming_rxtvm_opt
+ 1/22 Test #1908: ts_http_streaming_rxbvm_opt .............   Passed    1.67 sec
+      Start 1839: testChannelRequestWait_rxbvm_noopt
+ 2/22 Test #1907: ts_http_streaming_rxbvm_noopt ...........   Passed    1.68 sec
+      Start 1840: testChannelRequestWait_rxbvm_opt
+ 3/22 Test #1910: ts_http_streaming_rxtvm_opt .............   Passed    1.68 sec
+      Start 1843: testChannelRequestWait_rxtvm_noopt
+ 4/22 Test #1909: ts_http_streaming_rxtvm_noopt ...........   Passed    1.68 sec
+      Start 1844: testChannelRequestWait_rxtvm_opt
+ 5/22 Test #1839: testChannelRequestWait_rxbvm_noopt ......   Passed    2.28 sec
+ 6/22 Test #1840: testChannelRequestWait_rxbvm_opt ........   Passed    2.27 sec
+ 7/22 Test #1844: testChannelRequestWait_rxtvm_opt ........   Passed    2.27 sec
+      Start 1807: testConcurrency_noopt
+      Start 1808: testConcurrency_opt
+      Start 1837: testChannelRequestRelease_rxbvm_noopt
+ 8/22 Test #1843: testChannelRequestWait_rxtvm_noopt ......   Passed    2.27 sec
+      Start 1838: testChannelRequestRelease_rxbvm_opt
+ 9/22 Test #1838: testChannelRequestRelease_rxbvm_opt .....   Passed    0.32 sec
+      Start 1842: testChannelRequestRelease_rxtvm_opt
+10/22 Test #1837: testChannelRequestRelease_rxbvm_noopt ...   Passed    0.32 sec
+      Start 1841: testChannelRequestRelease_rxtvm_noopt
+11/22 Test #1842: testChannelRequestRelease_rxtvm_opt .....   Passed    0.31 sec
+      Start 1833: testTaskContextEndpoint_rxbvm_noopt
+12/22 Test #1841: testChannelRequestRelease_rxtvm_noopt ...   Passed    0.31 sec
+      Start 1834: testTaskContextEndpoint_rxbvm_opt
+13/22 Test #1808: testConcurrency_opt .....................   Passed    0.67 sec
+      Start 1835: testTaskContextEndpoint_rxtvm_noopt
+14/22 Test #1833: testTaskContextEndpoint_rxbvm_noopt .....   Passed    0.42 sec
+      Start 1836: testTaskContextEndpoint_rxtvm_opt
+15/22 Test #1834: testTaskContextEndpoint_rxbvm_opt .......   Passed    0.42 sec
+16/22 Test #1835: testTaskContextEndpoint_rxtvm_noopt .....   Passed    0.42 sec
+17/22 Test #1836: testTaskContextEndpoint_rxtvm_opt .......   Passed    0.39 sec
+18/22 Test #1807: testConcurrency_noopt ...................   Passed    1.56 sec
+      Start 1899: ts_http_server_failures_rxbvm_noopt
+19/22 Test #1899: ts_http_server_failures_rxbvm_noopt .....   Passed    1.94 sec
+      Start 1901: ts_http_server_failures_rxtvm_noopt
+20/22 Test #1901: ts_http_server_failures_rxtvm_noopt .....   Passed    1.94 sec
+      Start 1902: ts_http_server_failures_rxtvm_opt
+21/22 Test #1902: ts_http_server_failures_rxtvm_opt .......   Passed    1.92 sec
+      Start 1900: ts_http_server_failures_rxbvm_opt
+22/22 Test #1900: ts_http_server_failures_rxbvm_opt .......   Passed    1.92 sec
+
+100% tests passed, 0 tests failed out of 22
+
+Label Time Summary:
+channel             =  10.35 sec*proc (8 tests)
+classlib            =  12.00 sec*proc (12 tests)
+comprehensive       =  28.64 sec*proc (22 tests)
+concurrency         =  28.64 sec*proc (22 tests)
+concurrency-sp03    =   2.23 sec*proc (2 tests)
+concurrency-sp04    =  10.75 sec*proc (8 tests)
+concurrency-sp05    =  12.97 sec*proc (10 tests)
+concurrency-sp07    =  14.42 sec*proc (8 tests)
+concurrency-sp08    =  25.74 sec*proc (14 tests)
+deadline            =   9.10 sec*proc (4 tests)
+endpoint            =  12.00 sec*proc (12 tests)
+f1g                 =   6.70 sec*proc (4 tests)
+failure             =   7.72 sec*proc (4 tests)
+gate_f              =   6.70 sec*proc (4 tests)
+http                =  14.42 sec*proc (8 tests)
+levelb              =  10.35 sec*proc (8 tests)
+levelg              =  16.07 sec*proc (12 tests)
+library             =  14.42 sec*proc (8 tests)
+lifecycle           =   1.25 sec*proc (4 tests)
+linked              =  19.23 sec*proc (16 tests)
+linked_opt          =  13.83 sec*proc (11 tests)
+optimizer-parity    =  28.64 sec*proc (22 tests)
+rxbvm               =  13.22 sec*proc (10 tests)
+rxtvm               =  13.19 sec*proc (10 tests)
+server              =   7.72 sec*proc (4 tests)
+streaming           =   6.70 sec*proc (4 tests)
+taskcontext         =   1.65 sec*proc (4 tests)
+
+Total Test time (real) =  13.28 sec

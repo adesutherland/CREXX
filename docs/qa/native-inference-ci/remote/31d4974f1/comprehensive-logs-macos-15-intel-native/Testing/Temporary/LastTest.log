@@ -1,0 +1,84 @@
+Start testing: Sep 16 08:35 UTC
+----------------------------------------------------------
+6/2526 Testing: crexx_contract_installed_consumer
+6/2526 Test: crexx_contract_installed_consumer
+Command: "/usr/local/bin/cmake" "-DCREXX_BUILD=/Users/runner/work/_temp/qualification" "-DCREXX_SOURCE=/Users/runner/work/CREXX/CREXX" "-DCONTRACT_TOOL_FILE_NAME=crexx-contract" "-DEXTERNAL_SOURCE=/Users/runner/work/CREXX/CREXX/contract/tests/external" "-DEXTERNAL_GOLDEN=/Users/runner/work/CREXX/CREXX/contract/tests/external/external_operation.rxcontract.json" "-DWORK=/Users/runner/work/_temp/qualification/contract/tests/installed-consumer" "-P" "/Users/runner/work/CREXX/CREXX/contract/tests/installed_consumer.cmake"
+Directory: /Users/runner/work/_temp/qualification/contract/tests
+"crexx_contract_installed_consumer" start time: Sep 16 08:35 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   6.53 sec
+----------------------------------------------------------
+Test Passed.
+"crexx_contract_installed_consumer" end time: Sep 16 08:35 UTC
+"crexx_contract_installed_consumer" time elapsed: 00:00:06
+----------------------------------------------------------
+
+2397/2526 Testing: rxpa_external_sdk_consumer
+2397/2526 Test: rxpa_external_sdk_consumer
+Command: "/usr/local/bin/cmake" "-DCREXX_BUILD_DIR=/Users/runner/work/_temp/qualification" "-DCREXX_VERSION=1.0.0-beta.3+nightly.g31d4974f1245" "-DCREXX_VERSION_CORE=1.0.0" "-DCREXX_VERSION_DISPLAY=crexx-1.0.0-beta.3+nightly.g31d4974f1245" "-DCREXX_SOURCE_DIR=/Users/runner/work/CREXX/CREXX" "-DCMAKE_GENERATOR_NAME=Ninja" "-DEXE_SUFFIX=" "-DSTATIC_SUFFIX=.a" "-DPACKAGE_RELATIVE_DIR=lib/cmake/CREXX" "-DCONSUMER_SOURCE_DIR=/Users/runner/work/CREXX/CREXX/tests/rxpa/external_sdk" "-DWORK_ROOT=/Users/runner/work/_temp/qualification/tests/rxpa/rxpa_external_sdk_consumer_ws" "-P" "/Users/runner/work/CREXX/CREXX/tests/rxpa/rxpa_external_sdk_consumer.cmake"
+Directory: /Users/runner/work/_temp/qualification/tests/rxpa
+"rxpa_external_sdk_consumer" start time: Sep 16 08:35 UTC
+Output:
+----------------------------------------------------------
+-- CRI-07 scratch SDK manifest: /Users/runner/work/_temp/qualification/tests/rxpa/rxpa_external_sdk_consumer_ws/artifact-manifest.txt
+<end of output>
+Test time =  33.47 sec
+----------------------------------------------------------
+Test Passed.
+"rxpa_external_sdk_consumer" end time: Sep 16 08:35 UTC
+"rxpa_external_sdk_consumer" time elapsed: 00:00:33
+----------------------------------------------------------
+
+2406/2526 Testing: rcc_provider_package_names
+2406/2526 Test: rcc_provider_package_names
+Command: "/usr/local/bin/cmake" "-DPROVIDER_DIR=/Users/runner/work/_temp/qualification/tests/rxpa/providers" "-DPROVIDER_ID=rx_rcc_provider" "-DSTATIC_SUFFIX=.a" "-P" "/Users/runner/work/CREXX/CREXX/tests/rxpa/check_provider_package_names.cmake"
+Directory: /Users/runner/work/_temp/qualification/tests/rxpa
+"rcc_provider_package_names" start time: Sep 16 08:35 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rcc_provider_package_names" end time: Sep 16 08:35 UTC
+"rcc_provider_package_names" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 16 08:35 UTC
+
+contract =   6.53 sec*proc
+
+crexx-rag =  33.47 sec*proc
+
+external-consumer =  40.00 sec*proc
+
+hash =  33.47 sec*proc
+
+install =  40.00 sec*proc
+
+native =  33.47 sec*proc
+
+package =  33.49 sec*proc
+
+packed =  33.47 sec*proc
+
+provider =   0.02 sec*proc
+
+qualification =  40.02 sec*proc
+
+rcc-5d =  33.47 sec*proc
+
+rcc-5e =  33.47 sec*proc
+
+rcc-5f =  33.47 sec*proc
+
+rxpa =  33.49 sec*proc
+
+sqlite =  33.47 sec*proc
+
+stats =  33.47 sec*proc
+
+vector =  33.47 sec*proc
+

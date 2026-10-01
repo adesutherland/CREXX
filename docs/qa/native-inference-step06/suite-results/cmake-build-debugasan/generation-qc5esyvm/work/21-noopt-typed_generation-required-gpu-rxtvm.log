@@ -1,0 +1,3 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/generation-qc5esyvm/work/noopt-typed_generation-linked', '-a', 'required-gpu', '/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf', '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201']
+rc=0
+PASS: typed llama generation

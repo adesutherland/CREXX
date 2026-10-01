@@ -9,7 +9,9 @@
 
 #include "rxvmintp.h"
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXVM_THREAD_LOCAL
+#elif defined(_MSC_VER)
 #define RXVM_THREAD_LOCAL __declspec(thread)
 #else
 #define RXVM_THREAD_LOCAL __thread

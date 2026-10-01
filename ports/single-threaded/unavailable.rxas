@@ -1,0 +1,144 @@
+/* Each unavailable channel instruction must enter the ordinary signal path. */
+.globals=0
+main() .locals=5
+    sigbr caught_open,"NOT_IMPLEMENTED"
+    chanopen r0,r1,r2,r3,r4
+    ret 41
+caught_open:
+    sigbr caught_start,"NOT_IMPLEMENTED"
+    chanstart r0,r1,r2,r3,r4
+    ret 42
+caught_start:
+    sigbr caught_wait,"NOT_IMPLEMENTED"
+    chanwait r0,r1,r2,r3
+    ret 43
+caught_wait:
+    sigbr caught_cancel,"NOT_IMPLEMENTED"
+    chancancel r0,r1,r2,r3
+    ret 44
+caught_cancel:
+    sigbr caught_close,"NOT_IMPLEMENTED"
+    chanclose r0,r1,r2
+    ret 45
+caught_close:
+    sigbr caught_release,"NOT_IMPLEMENTED"
+    chanrelease r0,r1,r2
+    ret 46
+caught_release:
+    sigbr caught_service_0,"NOT_IMPLEMENTED"
+    socknew r0
+    ret 50
+caught_service_0:
+    sigbr caught_service_1,"NOT_IMPLEMENTED"
+    sockclose r0,r1
+    ret 51
+caught_service_1:
+    sigbr caught_service_2,"NOT_IMPLEMENTED"
+    sockconnect r0,r1,r2
+    ret 52
+caught_service_2:
+    sigbr caught_service_3,"NOT_IMPLEMENTED"
+    sockbind r0,r1,r2
+    ret 53
+caught_service_3:
+    sigbr caught_service_4,"NOT_IMPLEMENTED"
+    socklisten r0,r1,r2
+    ret 54
+caught_service_4:
+    sigbr caught_service_5,"NOT_IMPLEMENTED"
+    sockaccept r0,r1
+    ret 55
+caught_service_5:
+    sigbr caught_service_6,"NOT_IMPLEMENTED"
+    sockshutdown r0,r1,r2
+    ret 56
+caught_service_6:
+    sigbr caught_service_7,"NOT_IMPLEMENTED"
+    socksend r0,r1,r2
+    ret 57
+caught_service_7:
+    sigbr caught_service_8,"NOT_IMPLEMENTED"
+    socksendb r0,r1,r2
+    ret 58
+caught_service_8:
+    sigbr caught_service_9,"NOT_IMPLEMENTED"
+    sockrecv r0,r1,r2
+    ret 59
+caught_service_9:
+    sigbr caught_service_10,"NOT_IMPLEMENTED"
+    sockrecvb r0,r1,r2
+    ret 60
+caught_service_10:
+    sigbr caught_service_11,"NOT_IMPLEMENTED"
+    sockpending r0,r1
+    ret 61
+caught_service_11:
+    sigbr caught_service_12,"NOT_IMPLEMENTED"
+    socktimeout r0,r1,r2
+    ret 62
+caught_service_12:
+    sigbr caught_service_13,"NOT_IMPLEMENTED"
+    sockblocking r0,r1,r2
+    ret 63
+caught_service_13:
+    sigbr caught_service_14,"NOT_IMPLEMENTED"
+    socknodelay r0,r1,r2
+    ret 64
+caught_service_14:
+    sigbr caught_service_15,"NOT_IMPLEMENTED"
+    sockkeepalive r0,r1,r2
+    ret 65
+caught_service_15:
+    sigbr caught_service_16,"NOT_IMPLEMENTED"
+    sockpeer r0,r1
+    ret 66
+caught_service_16:
+    sigbr caught_service_17,"NOT_IMPLEMENTED"
+    socklocal r0,r1
+    ret 67
+caught_service_17:
+    sigbr caught_service_18,"NOT_IMPLEMENTED"
+    sockstatus r0,r1
+    ret 68
+caught_service_18:
+    sigbr caught_service_19,"NOT_IMPLEMENTED"
+    sockerror r0,r1
+    ret 69
+caught_service_19:
+    sigbr caught_service_20,"NOT_IMPLEMENTED"
+    sockstarttls r0,r1,r2
+    ret 70
+caught_service_20:
+    sigbr caught_service_21,"NOT_IMPLEMENTED"
+    sockconnecttls r0,r1,r2
+    ret 71
+caught_service_21:
+    sigbr caught_service_22,"NOT_IMPLEMENTED"
+    time r0
+    ret 72
+caught_service_22:
+    sigbr caught_service_23,"NOT_IMPLEMENTED"
+    xtime r0,"Z"
+    ret 73
+caught_service_23:
+    sigbr caught_service_24,"NOT_IMPLEMENTED"
+    mtime r0
+    ret 74
+caught_service_24:
+    sigbr caught_seed_reg,"NOT_IMPLEMENTED"
+    load r1,-1
+    irand r0,r1
+    ret 90
+caught_seed_reg:
+    sigbr caught_seed_int,"NOT_IMPLEMENTED"
+    irand r0,-1
+    ret 91
+caught_seed_int:
+    irand r0,17
+    irand r1,17
+    ieq r2,r0,r1
+    brf failed_seed,r2
+    say "PASS: 33 unavailable operations caught; explicit random seed retained"
+    ret 0
+failed_seed:
+    ret 92

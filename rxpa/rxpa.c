@@ -28,11 +28,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef _WIN32
+#if defined(CREXX_VM_STATIC_ONLY)
+/* Dynamic library loading is unavailable. */
+#elif defined(_WIN32)
 #include <windows.h>
 #else
 #include <dlfcn.h> // Linux/OSX
+#ifndef CREXX_VM_SINGLE_THREADED
 #include <pthread.h>
+#endif
 #endif
 #include "rxpa.h"
 
@@ -51,7 +55,10 @@ typedef void (*initfuncs_type)(rxpa_initctxptr);
 #endif
 #endif
 
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXPA_LOADER_LOCK() ((void)0)
+#define RXPA_LOADER_UNLOCK() ((void)0)
+#elif defined(_WIN32)
 static SRWLOCK rxpa_loader_lock = SRWLOCK_INIT;
 #define RXPA_LOADER_LOCK() AcquireSRWLockExclusive(&rxpa_loader_lock)
 #define RXPA_LOADER_UNLOCK() ReleaseSRWLockExclusive(&rxpa_loader_lock)
@@ -65,7 +72,9 @@ static size_t rxpa_live_handles;
 
 static void rxpa_os_close(void *handle) {
     if (!handle) return;
-#ifdef _WIN32
+#ifdef CREXX_VM_STATIC_ONLY
+    abort(); /* A static provider never owns a dynamic handle. */
+#elif defined(_WIN32)
     FreeLibrary((HMODULE)handle);
 #elif defined(RXPA_KEEP_DSO_RESIDENT)
     (void)handle;
@@ -75,7 +84,9 @@ static void rxpa_os_close(void *handle) {
 }
 
 static void *rxpa_os_symbol(void *handle, const char *name) {
-#ifdef _WIN32
+#ifdef CREXX_VM_STATIC_ONLY
+    (void)handle; (void)name; return 0;
+#elif defined(_WIN32)
     return (void *)GetProcAddress((HMODULE)handle, name);
 #else
     return dlsym(handle, name);
@@ -127,11 +138,24 @@ static int rxpa_query_manifest_v2(void *handle,
                          (manifest->session_enter != NULL) +
                          (manifest->session_leave != NULL);
     if (session_hook_count != 0u && session_hook_count != 4u) return -1;
-    *manifest_copy = *manifest;
+    memset(manifest_copy, 0, sizeof(*manifest_copy));
+    memcpy(manifest_copy, manifest, minimum_size);
+    if (manifest->struct_size >= offsetof(rxpa_plugin_manifest_v2, session_create_with_host) +
+                                 sizeof(manifest->session_create_with_host)) {
+        if (manifest->session_create_with_host && session_hook_count != 4u) return -1;
+        manifest_copy->session_create_with_host = manifest->session_create_with_host;
+    }
+    manifest_copy->struct_size = sizeof(*manifest_copy);
     return 1;
 }
 
 int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
+#ifdef CREXX_VM_STATIC_ONLY
+    (void)dir; (void)file_name;
+    if (plugin) memset(plugin, 0, sizeof(*plugin));
+    fputs("RXPA: dynamic providers are not supported in this build\n", stderr);
+    return -1;
+#else
     char *full_file_name;
     int free_full_file_name = 0;
     void *handle = NULL;
@@ -235,6 +259,7 @@ int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
 
     if (free_full_file_name) free(full_file_name);
     return 0;
+#endif
 }
 
 uint32_t rxpa_loaded_plugin_procedure_capabilities(

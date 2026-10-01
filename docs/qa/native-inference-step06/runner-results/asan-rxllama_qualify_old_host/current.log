@@ -1,0 +1,18 @@
+Command: cmake --build cmake-build-debugasan --target rxllama_qualify_old_host --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[  0%] Built target rxpa
+[  0%] Building C object lib/plugins/llama/CMakeFiles/rxllama_text_old_host.dir/__/__/__/tests/native-inference/text_old_host.c.o
+[  8%] Built target ggml-base
+[  8%] Linking C executable tests/rxllama_text_old_host
+[ 25%] Built target ggml-metal
+[ 25%] Built target rxllama_text_old_host
+[ 33%] Built target ggml-cpu
+[ 33%] Built target ggml
+[100%] Built target llama
+[100%] Built target crexx_llama_bridge
+[100%] Built target llama_provider
+[100%] Built target llama_provider_static
+[100%] Built target llama_provider_runtime_package
+PASS: rxllama fails bounded on old hosts and missing text service
+[100%] Built target rxllama_qualify_old_host

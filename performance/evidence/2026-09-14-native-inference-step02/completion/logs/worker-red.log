@@ -1,0 +1,16 @@
+WAVE: project compile/assemble jobs=1
+START: project member provider_worker_acceptance
+FAILED: compile project member provider_worker_acceptance rc=2
+Error in provider_worker_acceptance.crexx @ 12:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..modelstate"
+Error in provider_worker_acceptance.crexx @ 13:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+Error in provider_worker_acceptance.crexx @ 22:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..configcreate"
+Error in provider_worker_acceptance.crexx @ 23:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..configtext"
+Error in provider_worker_acceptance.crexx @ 24:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..runtimeopen"
+Error in provider_worker_acceptance.crexx @ 25:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..modelopen"
+Error in provider_worker_acceptance.crexx @ 35:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..modelstate"
+Error in provider_worker_acceptance.crexx @ 38:8 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..modelcancel"
+Error in provider_worker_acceptance.crexx @ 42:8 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..modelstate"
+Error in provider_worker_acceptance.crexx @ 47:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+Error in provider_worker_acceptance.crexx @ 48:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+Error in provider_worker_acceptance.crexx @ 49:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+12 error(s) in source file

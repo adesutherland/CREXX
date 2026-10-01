@@ -1,0 +1,6 @@
+set(platform "Darwin")
+set(provider copy_control)
+set(arch "arm64")
+set(engine fixture)
+set(runtime_files "/tmp/crexx-package-copy-debug/a/libcopy_root_a.dylib" "/tmp/crexx-package-copy-debug/b/libcopy_root_b.dylib" "/tmp/crexx-package-copy-debug/a/libcopy-dependency.dylib")
+set(output "/tmp/crexx-package-copy-debug/proof/complete")

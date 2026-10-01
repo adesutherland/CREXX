@@ -1,0 +1,4 @@
+PREPARE_US=275797
+FIRST_US=1735
+WARM_US=3311 us
+PASS: NI-S4 fixed embedding work 1 2 load_count=1

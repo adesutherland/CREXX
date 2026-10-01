@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas', '-o', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/generation-closeout-us2i3r42/work/opt-persistent_generation', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/generation-closeout-us2i3r42/work/opt-persistent_generation']
+rc=0

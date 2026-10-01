@@ -1,0 +1,14 @@
+{
+  "name": "llama.rexx-user-test-31d4974f12454842902224d495e4aafd111c2134-windows-x64-cuda.zip",
+  "bytes": 729255300,
+  "sha256": "486ef63b2405daad28fb6c9c56e2ac3347d88721248987f48c0c2a7e51dc01a1",
+  "schema": 1,
+  "component": "llama.rexx",
+  "commit": "31d4974f12454842902224d495e4aafd111c2134",
+  "platform": "windows-x64",
+  "toolchain": "msvc",
+  "backend": "cuda",
+  "core_archive": "CREXX-user-test-31d4974f12454842902224d495e4aafd111c2134-windows-x64.zip",
+  "core_archive_sha256": "db0abab0aa31210ec9b3f47aeb31bc8b287d7e3b54f4c448062edafbf5d5b687",
+  "core_binaries_rebuilt": false
+}

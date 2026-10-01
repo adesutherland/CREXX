@@ -1,0 +1,5 @@
+WAVE: project compile/assemble jobs=1
+START: project member rag_address_environment
+BUILT: project member rag_address_environment
+BARRIER: link library
+PUBLISHED: library /Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/address-measured-qualified/rag_address_environment.rxbin

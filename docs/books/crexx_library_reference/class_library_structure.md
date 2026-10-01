@@ -5,7 +5,7 @@ for convoluted import statements which are hard to remember and take up a lot of
 
 |Namespace   |Domain   | Example Classes  |
 |---|---|---|
-|OS   | OS related functionality; things that are dependent or specific for the OS   |beep, wait, listdir,  |
+|System  | OS related functionality; things that are dependent or specific for the OS   |beep, wait, listdir,  |
 |Data | Collection classes and data interchange (I/O and formats)  | Sets, Maps, Lists, Stems, Arrays, json, xml, yaml, ODBC|
 |Time | Time, Date, Calender oriented functionality  | Time, Date, Calendar, ISO Date, Locale Calendars  |
 |Math | Mathematics functions (Trigonometry, Statistics, Conversions)  | sin, cos, mean, etc.  |

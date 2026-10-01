@@ -1,0 +1,14 @@
+{
+  "embeddings": {
+    "program": "/private/tmp/crexx-ni-s7.oheu5td2/llama-example-work/embeddings",
+    "sha256": "a64d94afbb45a21e0d9e1c1715e7c027935cdcbc232290cd23eab43b1797b3e4",
+    "model": "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+    "model_sha256": "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999"
+  },
+  "generation": {
+    "program": "/private/tmp/crexx-ni-s7.oheu5td2/llama-example-work/generation",
+    "sha256": "4f351122788e08d113720df87305e5a915d4fff58021bd5900c23bb24b989b66",
+    "model": "/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf",
+    "model_sha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201"
+  }
+}

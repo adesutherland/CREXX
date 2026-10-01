@@ -19,13 +19,10 @@ variants, the latter is going to gain importance, while the
 `CALL` statement will be fixed in its current functionality. For
 that reason, most examples will be in the function notation.
 
-The compiler needs to verify if it is possible to call the called
-code: it must be present in executable form, and it needs to have the right
-*signature*[^1]. The compiler will not automatically compile a callee
-of which the source can be located but the executable form is missing;
-existing systems based on interpreters will happily interrupt their
-work and tokenize another source file when called; the cRexx
-`rxc` compiler will not.
+The compiler needs the callee's *signature*[^1], which it can obtain from
+source or compiled metadata. Reading an imported source contract does not
+automatically produce or load that module's executable bytecode. At runtime,
+any call that remains in the compiled caller needs the library to be loaded.
 
 [^1]: with signature we mean the combination of parameter types and return type.
 
@@ -125,3 +122,83 @@ For ordinary project work this means:
 This split is deliberate: it keeps active source preferred during development
 and stops stale generated `.rxbin` files beside source files from silently
 satisfying imports.
+
+## Supplying the library at runtime
+
+Consider these two files. `libmod.crexx` exposes a function that calls a
+private helper:
+
+```rexx
+options levelb
+namespace libmod expose A
+
+A: procedure = .string
+  return B("fixed")
+
+B: procedure = .string
+  arg y = .string
+  return "hello from B with " || y
+```
+
+`usemod.crexx` imports that namespace:
+
+```rexx
+options levelb
+import libmod
+say libmod..A()
+exit 0
+```
+
+Running `crexx usemod.crexx` can compile successfully by reading
+`libmod.crexx`, yet fail with `FUNCTION_NOT_FOUND` for `libmod.a` because the
+library has not been supplied to the VM. A very small function might appear to
+work because optimization inlines it into the caller. That does not establish
+that the library was loaded, and adding a helper or disabling optimization can
+expose the missing dependency.
+
+For this two-source program, the ordinary solution is to list both files:
+
+```sh
+crexx usemod.crexx libmod.crexx
+```
+
+The command compiles both sources and runs them together, printing
+`hello from B with fixed`. No `-l` or `--program` option is needed. The shorter
+`crexx usemod libmod` form works with these `.crexx` filenames too.
+
+### Separately built libraries and larger projects
+
+As the project grows, you may choose to build reusable code separately and
+supply its exact runtime path:
+
+```sh
+rxc libmod.crexx
+rxas libmod.rxas
+crexx -l ./libmod.rxbin usemod.crexx
+```
+
+For repeated development, build one named linked program incrementally:
+
+```sh
+crexx --program combined usemod.crexx libmod.crexx
+rxvme combined.rxbin
+```
+
+These routes also print `hello from B with fixed`. `--program` builds without
+running; an unchanged repeat skips compilation, assembly and linking.
+`--library output sources...` offers the same incremental build support for a
+reusable linked library. Both modes retain explicit source membership. The
+ordinary compile-and-run command recompiles its listed sources unless
+`--nocompile` is selected.
+
+The `./` in `-l ./libmod.rxbin` selects the application-local library path;
+a bare `-l` library name is resolved relative to the tool installation.
+
+Packaged binary imports provide another route. When the compiler selects a
+`.rxbin` library through a binary root such as `-i .`, it records the exact
+package stem for runtime autoload. The VM can load that package from its module
+roots when an unresolved callable needs it. This does not search for or compile
+source files, and compiler `-s`/`-i` roots do not themselves add VM search roots.
+Merely leaving `libmod.rxbin` beside the source does not make it a compiler
+input: the binary must be visible through a binary import root. Use `-i .`
+when the current directory is an intended binary-library location.

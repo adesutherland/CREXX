@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/tmp/crexx-channel-release.1v4pFt/ticket_retention_candidate",
+    "bytes": 1497640,
+    "sha256": "95ac2202620201ae9af7dc63cc1be052c21e6c171e36245aa004567fff2603e7"
+  },
+  {
+    "path": "/tmp/crexx-channel-release.1v4pFt/ticket_released_candidate",
+    "bytes": 1497640,
+    "sha256": "8f462ab8ee4abb6233563b59685a720f1b8ec74be6b6199b2b88b1c5c89d451f"
+  },
+  {
+    "path": "/tmp/crexx-channel-release.1v4pFt/release_cycles.rxbin",
+    "bytes": 454801,
+    "sha256": "a9d17356f0c85c4dde802adeee2f3da528b91955db028622ffbb8b0240273a18"
+  },
+  {
+    "path": "/tmp/crexx-channel-release.1v4pFt/release/bin/rxvm",
+    "bytes": 1481544,
+    "sha256": "1a7f910cc22c2df02a641be6fd4c897bd5095abee980cd9e329ab9d479aa40ff"
+  },
+  {
+    "path": "/tmp/crexx-channel-release.1v4pFt/release/bin/classlib.rxbin",
+    "bytes": 429538,
+    "sha256": "7095cebe07cd6addd8c601fe60ab4a50f176f8feb495870b2d048cd75e457681"
+  },
+  {
+    "path": "/tmp/crexx-channel-release.1v4pFt/release/bin/rxfnsg.rxbin",
+    "bytes": 5604158,
+    "sha256": "41e9c9ac8adb58deebaed429a75ac50b5f0458c3187b0c6f3f48707b88856161"
+  }
+]

@@ -1,0 +1,8 @@
+Warning in ragcommand.crexx @ 216:5 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 158, column 5. Declare this binding explicitly if intentional., "token"
+Warning in ragcommand.crexx @ 223:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 160, column 5. Declare this binding explicitly if intentional., "name"
+Warning in ragcommand.crexx @ 223:18 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 160, column 16. Declare this binding explicitly if intentional., "value"
+Warning in ragcommand.crexx @ 223:30 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 160, column 28. Declare this binding explicitly if intentional., "inline_value"
+Warning in ragcommand.crexx @ 297:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 282, column 10. Declare this binding explicitly if intentional., "j"
+Warning in ragcommand.crexx @ 343:5 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 332, column 5. Declare this binding explicitly if intentional., "records"
+Warning in ragcommand.crexx @ 344:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 334, column 8. Declare this binding explicitly if intentional., "i"
+7 warning(s) in source file

@@ -1,0 +1,40 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start   20: source_import_private_dependency_provider
+1/7 Test   #20: source_import_private_dependency_provider ......   Passed   14.89 sec
+    Start   19: source_import_private_dependency_convergence
+2/7 Test   #19: source_import_private_dependency_convergence ...   Passed   11.24 sec
+    Start 1159: rxspawn_resource_inheritance
+    Start 1163: rxspawn_posix_launch_diagnostic
+    Start 1162: rxspawn_posix_termination
+    Start 2189: entry_alias_runtime_rxvm_opt
+3/7 Test #1162: rxspawn_posix_termination ......................   Passed    0.01 sec
+    Start 2188: entry_alias_runtime_rxvm_noopt
+4/7 Test #1159: rxspawn_resource_inheritance ...................   Passed    0.24 sec
+5/7 Test #1163: rxspawn_posix_launch_diagnostic ................   Passed    0.43 sec
+6/7 Test #2188: entry_alias_runtime_rxvm_noopt .................   Passed    0.63 sec
+7/7 Test #2189: entry_alias_runtime_rxvm_opt ...................   Passed    0.64 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+compiler            =  26.12 sec*proc (2 tests)
+comprehensive       =   1.72 sec*proc (4 tests)
+concurrency         =   0.25 sec*proc (2 tests)
+diagnostic          =   0.43 sec*proc (1 test)
+flow                =   1.27 sec*proc (2 tests)
+imports             =  26.12 sec*proc (2 tests)
+incremental         =  26.12 sec*proc (2 tests)
+inline              =  26.12 sec*proc (2 tests)
+interpreter         =   0.68 sec*proc (3 tests)
+linked_opt          =   0.64 sec*proc (1 test)
+optimizer           =   1.27 sec*proc (2 tests)
+optimizer-parity    =   1.27 sec*proc (2 tests)
+posix               =   0.44 sec*proc (2 tests)
+regression          =  26.12 sec*proc (2 tests)
+runtime             =   1.27 sec*proc (2 tests)
+rxas                =   1.27 sec*proc (2 tests)
+sanitizer           =   0.25 sec*proc (2 tests)
+smoke               =  26.36 sec*proc (3 tests)
+spawn               =   0.68 sec*proc (3 tests)
+
+Total Test time (real) =  26.81 sec

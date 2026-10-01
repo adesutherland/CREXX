@@ -1,0 +1,233 @@
+/* Standard dialogs are reusable Level G state/view objects. They never open a
+ * native window, block on input, or create a nested event loop. The executor
+ * retains the originating effect and correlates the dialog's one result.
+ */
+options levelg
+namespace ui_dialogs expose uidialog uiconfirm_dialog uifile_dialog
+import rxfnsb
+import rxfs
+import ui
+import ui_contract
+
+/** A modal interaction hosted by the existing driver loop. */
+uidialog: interface
+  /** @param event semantic input routed only to this dialog */
+  update: method = .void
+    arg event = .uimessage
+  /** @param columns available cells @param rows available cells */
+  resize: method = .void
+    arg columns = .int, rows = .int
+  /** @return logical view, without terminal control sequences */
+  view: method = .uiview
+  /** @return empty while active, ok or cancel when finished */
+  result: method = .string
+  /** @return executor-owned selected local path, never an application grant */
+  selection: method = .string
+
+/** First standard dialog: a message, default OK, and explicit Cancel. */
+uiconfirm_dialog: class implements .uidialog
+  _title = .string
+  _message = .string
+  _result = .string
+  /** @param title caption @param message question to ask */
+  *: factory
+    arg title = .string, message = .string
+    _title = title
+    _message = message
+    _result = ""
+    return
+  update: method = .void
+    arg event = .uimessage
+    if _result \= "" then return
+    body = event.body()
+    if event.name() = "widget.activated" then do
+      if body.text("node") = "dialog.ok" then _result = "ok"
+      if body.text("node") = "dialog.cancel" then _result = "cancel"
+    end
+    if event.name() = "ui.input.key" & body.text("key") = "Escape" then _result = "cancel"
+    return
+  resize: method = .void
+    arg columns = .int, rows = .int
+    return
+  view: method = .uiview
+    view = .uiview_impl(_title)
+    call view.add_label("dialog.message", _message, "root")
+    call view.add_line("dialog.rule")
+    call view.add_button("dialog.ok", "OK", "dialog.ok", "", "below")
+    call view.add_button("dialog.cancel", "Cancel", "dialog.cancel", "", "right", "dialog.ok")
+    return view
+  result: method = .string
+    return _result
+  selection: method = .string
+    return ""
+
+/** Open-one-file dialog. It owns directory/navigation/editing policy, not I/O
+ * authority in the application. No chdir: browsing never changes process cwd.
+ * Current filesystem-provider limits, including Windows path encoding, apply.
+ */
+uifile_dialog: class implements .uidialog
+  _title = .string
+  _directory = .string
+  _entries = .string[]
+  _filename = .string
+  _cursor = .int
+  _selected = .int
+  _top = .int
+  _visible = .int
+  _error = .string
+  _result = .string
+  _path = .string
+  _loaded = .int
+  /** @param title caption @param directory initial local directory */
+  *: factory
+    arg title = .string, directory = .string
+    _title = title
+    _directory = directory
+    _filename = ""
+    _cursor = 0
+    _selected = 0
+    _top = 1
+    _visible = 8
+    _error = ""
+    _result = ""
+    _path = ""
+    _loaded = 0
+    return
+
+  load_directory: method = .void
+    arg directory = .string
+    _loaded = 1
+    candidates = .string[]
+    count = rxfs..listdir(directory, candidates)
+    if count < 0 then do
+      _error = "Cannot read this directory"
+      return
+    end
+    /* First selector is bounded; do not silently omit an unselectable tail. */
+    if count > 4096 then do
+      _error = "Directory has more than 4096 entries; enter a filename"
+      call arraydrop candidates
+    end
+    else _error = ""
+    call arraysort candidates
+    _entries = candidates
+    _directory = directory
+    _selected = 0
+    _top = 1
+    _filename = ""
+    _cursor = 0
+    return
+
+  /** Resolve an entry without changing process-global directory state. */
+  resolve: method = .string
+    arg name = .string
+    if left(name, 1) = "/" | left(name, 1) = "\" then return name
+    if length(name) > 1 then if substr(name, 2, 1) = ":" then return name
+    separator = "/"
+    if right(_directory, 1) = "/" | right(_directory, 1) = "\" then separator = ""
+    return _directory || separator || name
+
+  choose: method = .void
+    if _filename = "" then do
+      _error = "Choose a file or enter its name"
+      return
+    end
+    path = resolve(_filename)
+    if rxfs..isdir(path) then call load_directory(path)
+    else if rxfs..isfile(path) then do
+      _path = path
+      _result = "ok"
+    end
+    else _error = "Not an existing regular file"
+    return
+
+  move_selection: method = .void
+    arg delta = .int
+    if _entries[0] = 0 then return
+    _selected = max(1, min(_entries[0], _selected + delta))
+    _filename = _entries[_selected]
+    _cursor = length(_filename)
+    if _selected < _top then _top = _selected
+    if _selected >= _top + _visible then _top = _selected - _visible + 1
+    return
+
+  update: method = .void
+    arg event = .uimessage
+    if _result \= "" then return
+    body = event.body()
+    name = event.name()
+    if name = "widget.activated" then do
+      node = body.text("node")
+      if node = "dialog.cancel" then _result = "cancel"
+      else if node = "dialog.open" then call choose()
+      else if node = "dialog.parent" then call load_directory(resolve(".."))
+      else if left(node, 11) = "dialog.item" then do
+        index = substr(node, 12) as .int
+        if index > 0 & index <= _entries[0] then do
+          _selected = index
+          _filename = _entries[index]
+          _cursor = length(_filename)
+          if rxfs..isdir(resolve(_filename)) then call choose()
+        end
+      end
+    end
+    if name = "ui.input.text" | name = "ui.input.pasted" then do
+      text = body.text("text")
+      /* Never allow pasted controls to become terminal commands or paths. */
+      if pos('0A'x, text) = 0 & pos('0D'x, text) = 0 & pos('1B'x, text) = 0 then do
+        if length(_filename) + length(text) <= 1024 then do
+          _filename = left(_filename, _cursor) || text || substr(_filename, _cursor + 1)
+          _cursor = _cursor + length(text)
+          _error = ""
+        end
+      end
+    end
+    if name = "ui.scrolled" then call move_selection(body.integer("y"))
+    if name = "ui.input.key" then do
+      key = body.text("key")
+      if key = "Escape" then _result = "cancel"
+      if key = "Enter" then call choose()
+      if key = "Up" then call move_selection(-1)
+      if key = "Down" then call move_selection(1)
+      if key = "PageUp" then call move_selection(-_visible)
+      if key = "PageDown" then call move_selection(_visible)
+      if key = "Left" then _cursor = max(0, _cursor - 1)
+      if key = "Right" then _cursor = min(length(_filename), _cursor + 1)
+      if key = "Home" then _cursor = 0
+      if key = "End" then _cursor = length(_filename)
+      if key = "Backspace" & _cursor > 0 then do
+        _filename = delstr(_filename, _cursor, 1)
+        _cursor = _cursor - 1
+      end
+      if key = "Delete" & _cursor < length(_filename) then _filename = delstr(_filename, _cursor + 1, 1)
+    end
+    return
+
+  resize: method = .void
+    arg columns = .int, rows = .int
+    if \_loaded then call load_directory(_directory)
+    _visible = max(1, min(12, rows - 10))
+    if _selected >= _top + _visible then _top = max(1, _selected - _visible + 1)
+    return
+
+  view: method = .uiview
+    if \_loaded then call load_directory(_directory)
+    view = .uiview_impl(_title)
+    call view.add_label("dialog.directory", "Directory: " || _directory, "root")
+    call view.add_button("dialog.parent", "Parent directory", "dialog.parent", "", "below")
+    do i = _top to min(_entries[0], _top + _visible - 1)
+      text = _entries[i]
+      if rxfs..isdir(resolve(text)) then text = text || "/"
+      if i = _selected then text = "> " || text
+      call view.add_button("dialog.item" || i, text, "dialog.item" || i, "", "below")
+    end
+    if _entries[0] = 0 then call view.add_label("dialog.empty", "(no entries)")
+    call view.add_input("dialog.filename", left(_filename, _cursor) || "|" || substr(_filename, _cursor + 1))
+    call view.add_label("dialog.error", _error)
+    call view.add_button("dialog.open", "Open", "dialog.open", "", "below")
+    call view.add_button("dialog.cancel", "Cancel", "dialog.cancel", "", "right", "dialog.open")
+    return view
+  result: method = .string
+    return _result
+  selection: method = .string
+    return _path

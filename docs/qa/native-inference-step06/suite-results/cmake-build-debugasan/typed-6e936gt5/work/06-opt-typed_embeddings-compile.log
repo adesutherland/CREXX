@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc', '--no-exe-import', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin', '-o', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/typed-6e936gt5/work/opt-typed_embeddings', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/typed_embeddings.crexx']
+rc=0

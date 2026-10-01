@@ -1,0 +1,42 @@
+/** Core-only application: plugin selection happens inside the application's handler. */
+options levelg
+import rxfnsb
+import _rxsysb
+import rxfnsg
+main: procedure = .int
+  arg args = .string[]
+  config = .llmconfig("llama", args[2])
+  call config.set_text("sha256", args[3])
+  call config.set_text("hardware_mode", "cpu")
+  call config.set_text("chat_template", "raw")
+  call config.set_int("output_tokens", 4)
+  caught = 0
+  do
+    client = .llm.open(config)
+    if args[1] <> "present" then do
+      say "FAIL: unavailable provider unexpectedly opened"
+      return 1
+    end
+    text = client.generate("Hello")
+    if client.status() <> 0 then do
+      say "FAIL: native generation" client.error()
+      return 2
+    end
+    saved = client.lastResult()
+    call client.close()
+    if saved.status() <> 0 then return 3
+  on signal notready as problem
+    if pos(args[1] || ": llama:", problem.message()) = 0 then do
+      say "FAIL: wrong provider exception" problem.message()
+      return 4
+    end
+    caught = 1
+  end
+  if args[1] <> "present" & caught <> 1 then return 5
+  if config.text("driver") <> "llama" then return 6
+  http = .llm("test-model")
+  body = http.buildBody("Hello")
+  if http.status() <> 0 | pos("Hello", body) = 0 then return 7
+  call http.close()
+  say "PASS: common package" args[1] "and HTTP remains usable"
+  return 0

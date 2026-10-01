@@ -1,0 +1,26 @@
+{
+  "hosted-codeql.log.gz": {
+    "compressed_sha256": "ecd9c392147bcecd91302abe6373b3dc6b36d15023e59b336b7957c967e83dde",
+    "uncompressed_sha256": "f8b038f9a6b9030ef329f3db585e4e0900556a9da57eafb4632870342dedc6c6"
+  },
+  "hosted-linux.log.gz": {
+    "compressed_sha256": "aa3db32ef60c36f6522b86ce827599318a7bab42033feee9354e95bb4ee4a3fd",
+    "uncompressed_sha256": "eee8c99a8a7419ce61e1dce2e38dc5a93f95b02e57b911de7e1fe3d4e82258a9"
+  },
+  "hosted-macos-arm64.log.gz": {
+    "compressed_sha256": "cc1da72dcdc3b0dc8eb1809406d7110c9f0e8dcac567b9a9e993c8335f9bab54",
+    "uncompressed_sha256": "f3cf1fd1d4479f1dcc878ccab13f2b3d8ee9301cbbd5dff888977db174b72ed7"
+  },
+  "hosted-macos-x64.log.gz": {
+    "compressed_sha256": "aa12abbc9db0b58af8ca169b164c9e6c7a6bc92a578dee39838a548a226f725c",
+    "uncompressed_sha256": "9ff0c19c3dd709636d7f088bb11dac0120d5dca00d3c642cdc79e8183dee314d"
+  },
+  "hosted-optimizer-parity.log.gz": {
+    "compressed_sha256": "d316762a735faa645ce15d7581837bf8040e3fe2849bf7699c672b9f04b162bd",
+    "uncompressed_sha256": "2da6ae9a4a3bcf88e256d5757c031f9b5f707d78364391664f970f7db01952a8"
+  },
+  "hosted-windows.log.gz": {
+    "compressed_sha256": "a8ea987f6b8639c5ae1affb3e5fcde5dc462d605a06f53be2adec5fcab234d55",
+    "uncompressed_sha256": "65baeb99bc611d01413d974283e1b7950c66ae712db59032a345f2d42b075001"
+  }
+}

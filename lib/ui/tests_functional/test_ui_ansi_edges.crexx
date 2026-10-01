@@ -1,0 +1,22 @@
+options levelg
+import ui_contract
+import ui_ansi
+import ui_driver_probe
+
+driver = .ansidriver()
+do mode = 1 to 4
+  journal = ""
+  session = .uisession("ansi-edge-" || mode, ui_ansi..capabilities())
+  rc = session.add_component("root", .host_edge_probe(mode, reference journal))
+  run_rc = driver.run(session)
+  if journal \= expected_edge_journal(mode) then do
+    say "FAIL: ANSI cleanup journal" mode journal
+    return 1
+  end
+  if mode = 2 then do
+    if run_rc \= 1 | driver.error() = "" then return 1
+  end
+  else if run_rc \= 0 then return 1
+end
+say "PASS: ANSI shared host edges"
+return 0

@@ -1,0 +1,13 @@
+argv=['cmake', '--install', '/Users/runner/work/_temp/qualification', '--prefix', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload', '--component', 'llama-docs']
+-- Install configuration: "Release"
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/README.md
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/installation.md
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/models.md
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/reference.md
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/qualification.md
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/examples
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/examples/shared_generation.crexx
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/examples/shared_embeddings.crexx
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/examples/persistent_generation.crexx
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/examples/persistent_embeddings.crexx
+-- Installing: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-ojt2s6y_/payload/share/crexx/llama/examples/README.md

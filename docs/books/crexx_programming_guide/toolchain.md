@@ -16,7 +16,16 @@ The common flow is:
    constant pool.
 5. `rxcpack` can package a linked image as C data for native executable builds.
 
-The `crexx` driver (see [the crexx tool](the-crexx-tool) on page \pageref{the-crexx-tool} wraps the usual compile, assemble, run, link, and package steps for day-to-day use. For more elaborate application systems, with separately compiled source modules and library use, a build system like Ninja or CMake[^cmake] is recommended.
+The `crexx` driver (see [the crexx tool](the-crexx-tool) on page
+\pageref{the-crexx-tool}) wraps the usual compile, assemble, run, link, and
+package steps for day-to-day use. For a program made from several sources,
+`crexx main.crexx support.crexx` compiles the listed files and runs them
+together. Imports do not add further source files to that build.
+
+For larger projects and repeated development, `crexx --program output sources...`
+and `crexx --library output sources...` provide incremental builds and named
+linked outputs. A build system like Ninja or CMake[^cmake] is appropriate when
+the project also owns native code, generators, installation or broader QA.
 
 [^cmake]: The native executables in the cRexx distribution are built with CMake for all Operating System / Instruction Set Architecture combinations.
 <!-- \begin{wrapfigure}{l}{0.7\textwidth} -->

@@ -782,6 +782,10 @@ size_t scp_noch(Scope *scope) {
 Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     char *c;
     Symbol *symbol = (Symbol*)malloc(sizeof(Symbol));
+    if (!symbol) RX_PANIC_OOM("allocate symbol", sizeof(Symbol), "sym_fn");
+
+    if (name_length == SIZE_MAX)
+        RX_PANIC_OOM("allocate symbol name", RX_OOM_UNKNOWN_SIZE, "sym_fn");
 
     /* Normalise stem variables by stripping the trailing dot */
     if (name_length > 0 && name[name_length - 1] == '.') {
@@ -804,6 +808,8 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->needs_default_initiation = 0;
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
+    if (!symbol->name)
+        RX_PANIC_OOM("allocate symbol name", name_length + 1, "sym_fn");
     memcpy(symbol->name, name, name_length);
     symbol->name[name_length] = 0;
     symbol->register_type = 'r';
@@ -926,6 +932,32 @@ Symbol *sym_rvfn_deep(ASTNode *root, char* name) {
     return 0;
 }
 
+/* Internal named factories/matches are single class symbols containing a
+ * literal dot. Resolve the existing member before looking up or adding locals;
+ * never interpret it as a namespace inside the default factory/match. */
+static Symbol *named_class_member_in_fqname(Scope *scope, const char *name,
+                                           const char **tail) {
+    size_t prefix, length;
+    const char *end;
+    char *member_name;
+    Symbol *result;
+    *tail = 0;
+    if (!scope || scope->type != SCOPE_CLASS) return 0;
+    if (!strncmp(name, "\xc2\xa7" "factory.", 10u)) prefix = 10u;
+    else if (!strncmp(name, "\xc2\xa7" "match.", 8u)) prefix = 8u;
+    else return 0;
+    end = strchr(name + prefix, '.');
+    length = end ? (size_t)(end - name) : strlen(name);
+    member_name = malloc(length + 1u);
+    if (!member_name) return 0;
+    memcpy(member_name, name, length);
+    member_name[length] = 0;
+    result = src_symbol((struct avl_tree_node *)scope->symbols_tree, member_name);
+    free(member_name);
+    if (result && end) *tail = end + 1;
+    return result;
+}
+
 /*
  * Resolve a Symbol via a fully qualified Name
  * the root parameter should the AST root
@@ -942,6 +974,15 @@ Symbol *sym_rfqn(ASTNode *root, const char* fqname) {
    if (!scope) return 0;
 
    while (*name) {
+       const char *member_tail = 0;
+       result = named_class_member_in_fqname(scope, name, &member_tail);
+       if (result) {
+           if (!member_tail) return result;
+           if (!result->defines_scope) return 0;
+           scope = result->defines_scope;
+           name = member_tail;
+           continue;
+       }
        for (c = name; 1; c++) {
            if (*c == '.') {
                /* Search namespace */
@@ -989,6 +1030,15 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
     if (!scope) return 0;
 
     while (*name) {
+        const char *member_tail = 0;
+        result = named_class_member_in_fqname(scope, name, &member_tail);
+        if (result) {
+            if (!member_tail) return result;
+            if (!result->defines_scope) return 0;
+            scope = result->defines_scope;
+            name = member_tail;
+            continue;
+        }
         for (c = name; 1; c++) {
             if (*c == '.') {
                 /* Search or add namespace */

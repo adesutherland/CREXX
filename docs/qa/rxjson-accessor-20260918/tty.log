@@ -1,0 +1,16 @@
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release
+    Start 1399: ts_linein_stdin_crexx_tty
+1/1 Test #1399: ts_linein_stdin_crexx_tty ........   Passed    0.58 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+classlib         =   0.58 sec*proc (1 test)
+comprehensive    =   0.58 sec*proc (1 test)
+driver           =   0.58 sec*proc (1 test)
+interpreter      =   0.58 sec*proc (1 test)
+job-control      =   0.58 sec*proc (1 test)
+stdin            =   0.58 sec*proc (1 test)
+tty              =   0.58 sec*proc (1 test)
+
+Total Test time (real) =   0.62 sec

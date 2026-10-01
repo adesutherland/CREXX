@@ -1,0 +1,20 @@
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+[451/459] Building C object interpreter/CMakeFiles/rxvme.dir/library.c.o
+[452/459] Linking C executable bin/rxvme
+[453/459] cREXX compile, assemble, link and package crexx ...
+[454/459] Building C object crexx_driver/CMakeFiles/crexx.dir/crexx.c.o
+[455/459] Linking C executable bin/crexx
+[456/459] cd /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/crexx_driver/tests && /opt/homebrew/bin/cmake -DCREXX=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/bin/crexx -DHELPER=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/bin/project_failure_helper -DWORKER=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/crexx_driver/crexx-build-worker/crexx_build_worker.rxbin -DWORK_ROOT=/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/crexx_driver/tests/issue701-diagnostics -DSOURCE=/Users/adrian/CLionProjects/CREXX-hotfix/bin/tests/rexx_src/project_worker_failures.crexx -P /Users/adrian/CLionProjects/CREXX-hotfix/bin/tests/project_worker_failures.cmake
+-- START: project member missing_output
+START: project member stamp_write
+FAILED: missing assembled project output /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/crexx_driver/tests/issue701-diagnostics/members/missing_output/missing_output.rxbin
+START: project member stamp_rename
+FAILED: write project stamp /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/crexx_driver/tests/issue701-diagnostics/members/stamp_write/action.sha256.tmp WRITEBINARY cannot open /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/crexx_driver/tests/issue701-diagnostics/members/stamp_write/action.sha256.tmp
+FAILED: rename project stamp /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/crexx_driver/tests/issue701-diagnostics/members/stamp_rename/action.sha256.tmp to /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debugasan/crexx_driver/tests/issue701-diagnostics/members/stamp_rename/action.sha256 rc=-8
+PASS: all three worker failure operations are reported
+
+-- worker diagnostic matrix elapsed: 14 seconds

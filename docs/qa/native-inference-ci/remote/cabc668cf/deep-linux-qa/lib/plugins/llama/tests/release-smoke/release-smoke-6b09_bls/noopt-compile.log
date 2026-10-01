@@ -1,0 +1,1 @@
+argv=['/tmp/crexx-release-smoke-cmyg_28t/payload/bin/rxc', '--no-exe-import', '-n', '-i', '/tmp/crexx-release-smoke-cmyg_28t/payload/bin', '-o', '/tmp/crexx-release-smoke-cmyg_28t/noopt', '/tmp/crexx-release-smoke-cmyg_28t/smoke.crexx']

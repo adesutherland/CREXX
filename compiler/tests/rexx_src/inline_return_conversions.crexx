@@ -1,0 +1,25 @@
+options levelb
+import rxfnsb
+namespace inline_return_conversions expose Wrap Count Canonical Counter
+
+Wrap: procedure = .string
+  arg text = .string
+  return Count(text)
+Count: procedure = .string
+  arg text = .string
+  if strip(text) = '' then return 0
+  return words(text)
+Canonical: procedure = .int
+  arg text = .string
+  return text
+Counter: class
+  total = .int
+  *: factory
+    total = 0
+    return
+  change: method = .int
+    arg text = .string
+    total = total + 1
+    return text
+  read: method = .int
+    return total

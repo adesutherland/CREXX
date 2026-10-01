@@ -51,6 +51,9 @@ which:
 
 2. **Source loading**
     - Reads the actual input Rexx file into `source[]`
+    - Registers `.rxpm` names from any `##loadMacro` directives before
+      expansion begins; only names and their source directories are recorded
+      at this stage
 
 3. **Early structural setup**
     - Neutralizes existing `options levelb`, `import rxfnsb`, etc.
@@ -59,6 +62,8 @@ which:
 4. **In-file macro extraction**
     - Runs `GetPreComp(rexxlines)` again on the real source
     - Registers `##DEFINE` macros
+    - Processes `##loadMacro path-to-macros` by scanning the directory for
+      `.rxpm` names and suppressing the directive from generated output
     - Sorts macro names by length to prevent partial matches
 
 ---
@@ -88,9 +93,147 @@ which:
 - Expands macros via `expandRecursive()`
 - Applies OO translation via `ooTranslate()`
 - Writes final output using `writeall(outbuf, outfile)`
-- Writes linker include via `linkerInfo(outfile, imported_funcs)`
+- Writes typed linker manifest records via
+  `linkerInfo(outfile, imported_funcs, external_modules, link_target)`
+
+### Script-macro search precedence
+
+Script-macro package names are registered during the initial source scan, but
+their `.rxpm` bodies are loaded only when the corresponding directive is first
+used. Search precedence is established in this order:
+
+1. the selected `maclib` directory
+2. `syspath`
+3. each `##loadMacro path-to-macros` directive, in source order
+
+If a later registration finds an existing name, it replaces that name's stored
+directory. Therefore the last matching `##loadMacro` wins. The debug messages
+`CRX0170I` and `CRX0171I` report registration/override and lazy file selection.
+
+RXPP accepts relative paths for `##INCLUDE`, `##USE`, and `##loadMacro`.
+They are resolved against the configured RXPP macro/system path and normalized
+across `/` and `\\` separators, including `.` and `..` components.
+
+The `##buildDir path` directive is consumed by the `crexx` driver for `.rxpp`
+inputs. It routes the generated `.crexx`, `.rxas`, and `.rxbin` artifacts to
+the requested directory, resolved relative to the driver's current working
+directory; the driver process working directory is unchanged. The directive
+must occur within the first 64 physical source lines.
+
+### Build metadata directives
+
+RXPP records three build-time directives in typed `.inc` manifest records.
+They are suppressed from the generated CREXX source:
+
+```rexx
+##BUILDDIR ../temp
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK CallCatalog_linked
+```
+
+`##EXTERNAL` declares an already-built RXBIN module that participates in the
+final stage of the `crexx.exe` build pipeline.
+
+Use the case-insensitive `&syslib/` prefix for RXBINs installed in RXPP's system binary
+directory:
+
+```rexx
+##EXTERNAL &syslib/library.rxbin
+##EXTERNAL &syslib/classlib.rxbin
+##EXTERNAL &syslib/rxfnsg.rxbin
+```
+
+RXPP replaces `&syslib/` with the full path returned by `env.LoadPath()` and
+stores that resolved path in the generated `.inc` manifest. `crexx.exe` then
+uses the manifest path directly. Ordinary external paths remain relative to
+the `.rxpp` source directory.
+
+RXPP also registers the following preprocessor variables before source
+expansion: `{date}`, `{time}`, `{syslib}`, `{syspath}`, `{macpath}`,
+`{inpath}`, `{buildpath}`, `{sourcefile}`, `{outputfile}`, `{platform}`, and
+`{rxpp_version}`. The compatibility variables `{rxpp_rexx}` and `{rxpp_date}`
+are also retained. `{rxpp_version}` and `{platform}` are derived from the
+runtime `rxvers` instruction, so they follow the executable running RXPP
+without a manually duplicated version constant. Braced references are
+replaced with their compile-time values. These are expansion values, not
+runtime variables; `cflags` and `printgen` are control variables initialized
+for preprocessing.
+
+`injectVariable` deliberately leaves ordinary `/* ... */` comments and RXPP
+directive lines unchanged. A line beginning with `/* RXPP:EXPAND */` opts into
+variable expansion; the marker is removed before replacement. The remainder
+must not begin with `/*`, so generated metadata uses a line comment such as
+`-- Created {date} at {time}`.
+
+A normal `.rxpp` build still follows the complete compile pipeline:
+
+```text
+source.rxpp
+    -> RXPP
+generated.crexx
+    -> RXC
+generated.rxas
+    -> RXAS
+generated.rxbin
+```
+
+When one or more `##EXTERNAL` directives are present and no `##LINK` directive
+is specified, `crexx.exe` starts the generated module with `rxvme` and appends
+the external modules to the runtime module list:
+
+```text
+RXVME generated.rxbin external1.rxbin external2.rxbin ...
+```
+
+`##LINK` changes only this final stage. The source is still preprocessed,
+compiled, and assembled normally. Instead of starting the generated RXBIN with
+`rxvme`, `crexx.exe` invokes `rxlink` using the generated RXBIN together with
+all declared external modules:
+
+```text
+RXLINK generated.rxbin external1.rxbin external2.rxbin ...
+    -> member.rxbin
+```
+
+The resulting linked RXBIN is not automatically executed.
+
+`##NORUN` takes no argument and records `norun|1` in the manifest. The driver
+still runs RXPP, RXC, and RXAS, but skips the final RXVME stage. It is
+equivalent to `--noexec` for that RXPP member. A `##LINK` recipe already stops
+after RXLINK.
+
+`##LINK` accepts one bare member name only. Paths, drive prefixes, and a
+`.rxbin` suffix are rejected. `##BUILDDIR` determines the output directory and
+`##LINK` determines the output member, so:
+
+```rexx
+##BUILDDIR ../temp
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK CallCatalog_linked
+```
+
+produces:
+
+```text
+../temp/CallCatalog_linked.rxbin
+```
+
+The directives may occur independently of one another, subject to their normal
+validation rules. Only one `##LINK` directive is allowed.
+
+The manifest record forms are:
+
+```text
+import|<compiler import>
+external|<external RXBIN module>
+link|<bare output member>
+norun|1
+```
+
+Compiler imports remain distinct from external runtime/link modules.
 
 ---
+
 
 ## 3. Core data structures (global)
 
@@ -161,7 +304,22 @@ Detected in `GetPreComp()` and dispatched via `CMD_*` handlers:
 - `##ARRAY` → `CMD_array`
 - `##GLOBAL` → `CMD_global`
 - `##STEM` → `CMD_stem`
-- `##DATA / ##INPUT / ##SYS*` → `CMD_data`
+- `##DATA / ##RELATION / ##INPUT / ##SYS*` → `CMD_data`
+- `##DALIAS` → `CMD_dalias`
+
+`##DATA name` creates a data array from the lines in the block. A callback may optionally be specified either directly as `##DATA name callback`, 
+or with an optional callback keyword, for example `##DATA name CALL callback`. 
+After the complete data array has been generated, RXPP invokes the callback once as `call callback`.
+
+`##RELATION name`, `##PROGRAM name`, `##RULE name` and `##LIBRARY name` are thin aliases for `##DATA name` and
+support the same optional callback forms. Their names have no semantic effect.
+
+`##DALIAS alias1 [, alias2 ...]` registers additional directive names for the
+`##DATA` handler. Registration is order-sensitive: an alias must be declared
+before its first use. The handler normalizes alias names case-insensitively and
+accepts comma- or blank-separated names. The aliases affect directive lookup,
+not the generated data-array name.
+
 
 Also rewrites convenience constructs:
 
@@ -222,12 +380,6 @@ This subsystem inserts new source lines dynamically and advances `lino` accordin
 - `RXPPPassTwo` – normalize conditionals; build IF/ENDIF links; prep OO
 - `RXPPPassThree` – expand and emit final output
 - `rxppinit` – initialize all global state
-
-### OO support
-
-- `oocreatedefs` – preprocess OOCREATE constructs
-- `oo_translate_tilde` – legacy `~` syntax support
-- `ooTranslate` – main OO call translator
 
 ### Conditional support
 
@@ -371,7 +523,7 @@ The precomp interface is therefore part of RXPP’s **compatibility contract**: 
 **End of RXPP internal documentation**
 
 
-## 7) Stability
+## 8. Stability
 
 RXPP is **functionally stable but architecturally fluid**.
 
@@ -383,7 +535,7 @@ RXPP is **functionally stable but architecturally fluid**.
 
 In short: RXPP should be considered **stable for development and experimentation**, but not yet frozen as a long-term compatibility contract. Internal procedures, especially those related to stem handling and parsing helpers, may still evolve as the design settles.
 
-## 8) Design principles
+## 9. Design principles
 
 RXPP is intentionally engineered as a **mutable, single-pass-at-a-time transformation pipeline**, rather than a classical compiler with immutable ASTs.
 
@@ -419,7 +571,7 @@ Key principles:
 - Insertions always happen *ahead* of the current line or at known anchors.
 - No pass relies on backtracking or speculative parsing.
 
-## 9) Known limitations and non-goals
+## 10. Known limitations and non-goals
 
 RXPP deliberately does **not** try to be a full Rexx compiler or parser.
 
@@ -438,7 +590,7 @@ Explicit non-goals:
 - Optimized code generation.
 - Rewriting RXPP into an AST-based compiler framework.
 
-## 10) Mental model for contributors
+## 11. Mental model for contributors
 
 To work safely and effectively on RXPP, it helps to adopt the right mental model.
 
@@ -482,7 +634,7 @@ To work safely and effectively on RXPP, it helps to adopt the right mental model
 
 Following these principles makes it possible to extend RXPP confidently without destabilizing the pipeline.
 
-## 11) Overview of remaining helper procedures
+## 12. Overview of remaining helper procedures
 
 The following procedures support RXPP internally and are generally not entry points for new features. They are grouped by responsibility and briefly described.
 

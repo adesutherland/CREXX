@@ -1,0 +1,1707 @@
+﻿2026-09-16T08:10:47.2831251Z Current runner version: '2.337.0'
+2026-09-16T08:10:47.2857100Z ##[group]Runner Image Provisioner
+2026-09-16T08:10:47.2858191Z Hosted Compute Agent
+2026-09-16T08:10:47.2858898Z Version: 20260828.587
+2026-09-16T08:10:47.2859756Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-16T08:10:47.2860651Z Build Date: 2026-08-28T16:44:25Z
+2026-09-16T08:10:47.2861424Z Worker ID: {472b963d-2965-4b72-b1cb-86d575c9f83e}
+2026-09-16T08:10:47.2862329Z Azure Region: westus
+2026-09-16T08:10:47.2863028Z ##[endgroup]
+2026-09-16T08:10:47.2864845Z ##[group]Operating System
+2026-09-16T08:10:47.2865633Z Ubuntu
+2026-09-16T08:10:47.2866387Z 24.04.5
+2026-09-16T08:10:47.2867024Z LTS
+2026-09-16T08:10:47.2867709Z ##[endgroup]
+2026-09-16T08:10:47.2868354Z ##[group]Runner Image
+2026-09-16T08:10:47.2869104Z Image: ubuntu-24.04
+2026-09-16T08:10:47.2869838Z Version: 20260907.300.1
+2026-09-16T08:10:47.2871236Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-16T08:10:47.2872899Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+2026-09-16T08:10:47.2874076Z ##[endgroup]
+2026-09-16T08:10:47.2875564Z ##[group]GITHUB_TOKEN Permissions
+2026-09-16T08:10:47.2877650Z Contents: read
+2026-09-16T08:10:47.2878456Z Metadata: read
+2026-09-16T08:10:47.2879152Z ##[endgroup]
+2026-09-16T08:10:47.2881343Z Secret source: Actions
+2026-09-16T08:10:47.2882531Z Cache mode: write
+2026-09-16T08:10:47.2883403Z Prepare workflow directory
+2026-09-16T08:10:47.3340004Z Prepare all required actions
+2026-09-16T08:10:47.3388981Z Getting action download info
+2026-09-16T08:10:47.7398419Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-09-16T08:10:47.8900761Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+2026-09-16T08:10:48.0118760Z Download action repository 'ilammy/msvc-dev-cmd@v1' (SHA:0b201ec74fa43914dc39ae48a89fd1d8cb592756)
+2026-09-16T08:10:48.2853922Z Download action repository 'actions/cache@v5' (SHA:caa296126883cff596d87d8935842f9db880ef25)
+2026-09-16T08:10:48.4673518Z Download action repository 'Mozilla-Actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba' (SHA:fc920bf0ec8de6ee65d409111f7ec508035751ba)
+2026-09-16T08:10:48.8268472Z Download action repository 'actions/download-artifact@v8' (SHA:3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c)
+2026-09-16T08:10:49.2240873Z Download action repository 'actions/upload-artifact@v7' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-09-16T08:10:49.4280542Z Complete job name: Plugin Linux x64 CUDA
+2026-09-16T08:10:49.5194915Z ##[group]Run actions/checkout@v5
+2026-09-16T08:10:49.5195693Z with:
+2026-09-16T08:10:49.5196004Z   submodules: recursive
+2026-09-16T08:10:49.5196360Z   ref: 31d4974f12454842902224d495e4aafd111c2134
+2026-09-16T08:10:49.5196770Z   repository: adesutherland/CREXX
+2026-09-16T08:10:49.5199760Z   token: ***
+2026-09-16T08:10:49.5200072Z   ssh-strict: true
+2026-09-16T08:10:49.5200378Z   ssh-user: git
+2026-09-16T08:10:49.5200713Z   persist-credentials: true
+2026-09-16T08:10:49.5201047Z   clean: true
+2026-09-16T08:10:49.5201374Z   sparse-checkout-cone-mode: true
+2026-09-16T08:10:49.5201738Z   fetch-depth: 1
+2026-09-16T08:10:49.5202031Z   fetch-tags: false
+2026-09-16T08:10:49.5202327Z   show-progress: true
+2026-09-16T08:10:49.5202629Z   lfs: false
+2026-09-16T08:10:49.5202924Z   set-safe-directory: true
+2026-09-16T08:10:49.5203269Z   allow-unsafe-pr-checkout: false
+2026-09-16T08:10:49.5203818Z env:
+2026-09-16T08:10:49.5204119Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:10:49.5204899Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:10:49.5205287Z ##[endgroup]
+2026-09-16T08:10:49.6196692Z Syncing repository: adesutherland/CREXX
+2026-09-16T08:10:49.6198197Z ##[group]Getting Git version info
+2026-09-16T08:10:49.6198694Z Working directory is '/home/runner/work/CREXX/CREXX'
+2026-09-16T08:10:49.6199385Z [command]/usr/bin/git version
+2026-09-16T08:10:49.6272361Z git version 2.55.0
+2026-09-16T08:10:49.6293624Z ##[endgroup]
+2026-09-16T08:10:49.6307987Z Temporarily overriding HOME='/home/runner/work/_temp/7e97d98c-b648-4338-855a-40d9665d5400' before making global git config changes
+2026-09-16T08:10:49.6309510Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-16T08:10:49.6313511Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/CREXX/CREXX
+2026-09-16T08:10:49.6359373Z Deleting the contents of '/home/runner/work/CREXX/CREXX'
+2026-09-16T08:10:49.6364221Z ##[group]Initializing the repository
+2026-09-16T08:10:49.6368700Z [command]/usr/bin/git init /home/runner/work/CREXX/CREXX
+2026-09-16T08:10:49.6475851Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-16T08:10:49.6477038Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-16T08:10:49.6478277Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-16T08:10:49.6479179Z hint: call:
+2026-09-16T08:10:49.6479709Z hint:
+2026-09-16T08:10:49.6480349Z hint: 	git config --global init.defaultBranch <name>
+2026-09-16T08:10:49.6481130Z hint:
+2026-09-16T08:10:49.6481923Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-16T08:10:49.6483139Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-16T08:10:49.6484112Z hint:
+2026-09-16T08:10:49.6484998Z hint: 	git branch -m <name>
+2026-09-16T08:10:49.6485623Z hint:
+2026-09-16T08:10:49.6486486Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-16T08:10:49.6487769Z Initialized empty Git repository in /home/runner/work/CREXX/CREXX/.git/
+2026-09-16T08:10:49.6493429Z [command]/usr/bin/git remote add origin https://github.com/adesutherland/CREXX
+2026-09-16T08:10:49.6569499Z ##[endgroup]
+2026-09-16T08:10:49.6570447Z ##[group]Disabling automatic garbage collection
+2026-09-16T08:10:49.6574135Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-16T08:10:49.6626669Z ##[endgroup]
+2026-09-16T08:10:49.6627272Z ##[group]Setting up auth
+2026-09-16T08:10:49.6627806Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-16T08:10:49.6640177Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-16T08:10:49.6969614Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-16T08:10:49.7002289Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-16T08:10:49.7218701Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-16T08:10:49.7249957Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-16T08:10:49.7467091Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-16T08:10:49.7500767Z ##[endgroup]
+2026-09-16T08:10:49.7501814Z ##[group]Fetching the repository
+2026-09-16T08:10:49.7509970Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 31d4974f12454842902224d495e4aafd111c2134
+2026-09-16T08:10:56.1252352Z From https://github.com/adesutherland/CREXX
+2026-09-16T08:10:56.1255767Z  * branch              31d4974f12454842902224d495e4aafd111c2134 -> FETCH_HEAD
+2026-09-16T08:10:56.1258543Z ##[endgroup]
+2026-09-16T08:10:56.1259107Z ##[group]Determining the checkout info
+2026-09-16T08:10:56.1261678Z ##[endgroup]
+2026-09-16T08:10:56.1270231Z [command]/usr/bin/git sparse-checkout disable
+2026-09-16T08:10:56.1320311Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-16T08:10:56.1347913Z ##[group]Checking out the ref
+2026-09-16T08:10:56.1352817Z [command]/usr/bin/git checkout --progress --force 31d4974f12454842902224d495e4aafd111c2134
+2026-09-16T08:10:57.1902982Z Updating files:  38% (14835/38879)
+2026-09-16T08:10:57.2405133Z Updating files:  39% (15163/38879)
+2026-09-16T08:10:57.2793692Z Updating files:  40% (15552/38879)
+2026-09-16T08:10:57.3607244Z Updating files:  41% (15941/38879)
+2026-09-16T08:10:57.3821799Z Updating files:  42% (16330/38879)
+2026-09-16T08:10:57.4122183Z Updating files:  43% (16718/38879)
+2026-09-16T08:10:57.4379583Z Updating files:  44% (17107/38879)
+2026-09-16T08:10:57.4605476Z Updating files:  45% (17496/38879)
+2026-09-16T08:10:57.4785672Z Updating files:  46% (17885/38879)
+2026-09-16T08:10:57.5203687Z Updating files:  47% (18274/38879)
+2026-09-16T08:10:57.5413545Z Updating files:  48% (18662/38879)
+2026-09-16T08:10:57.5672722Z Updating files:  49% (19051/38879)
+2026-09-16T08:10:57.5837110Z Updating files:  50% (19440/38879)
+2026-09-16T08:10:57.6028130Z Updating files:  51% (19829/38879)
+2026-09-16T08:10:57.6305901Z Updating files:  52% (20218/38879)
+2026-09-16T08:10:57.6632200Z Updating files:  53% (20606/38879)
+2026-09-16T08:10:57.6825129Z Updating files:  54% (20995/38879)
+2026-09-16T08:10:57.7021495Z Updating files:  55% (21384/38879)
+2026-09-16T08:10:57.7264667Z Updating files:  56% (21773/38879)
+2026-09-16T08:10:57.7415972Z Updating files:  57% (22162/38879)
+2026-09-16T08:10:57.7581036Z Updating files:  58% (22550/38879)
+2026-09-16T08:10:57.7741800Z Updating files:  59% (22939/38879)
+2026-09-16T08:10:57.7912532Z Updating files:  60% (23328/38879)
+2026-09-16T08:10:57.8104334Z Updating files:  61% (23717/38879)
+2026-09-16T08:10:57.8375710Z Updating files:  62% (24105/38879)
+2026-09-16T08:10:57.8547698Z Updating files:  63% (24494/38879)
+2026-09-16T08:10:57.8778180Z Updating files:  64% (24883/38879)
+2026-09-16T08:10:57.9057450Z Updating files:  65% (25272/38879)
+2026-09-16T08:10:58.0511623Z Updating files:  66% (25661/38879)
+2026-09-16T08:10:58.1985645Z Updating files:  67% (26049/38879)
+2026-09-16T08:10:58.2058428Z Updating files:  67% (26232/38879)
+2026-09-16T08:10:58.2177208Z Updating files:  68% (26438/38879)
+2026-09-16T08:10:58.2380795Z Updating files:  69% (26827/38879)
+2026-09-16T08:10:58.2584356Z Updating files:  70% (27216/38879)
+2026-09-16T08:10:58.2767923Z Updating files:  71% (27605/38879)
+2026-09-16T08:10:58.2948380Z Updating files:  72% (27993/38879)
+2026-09-16T08:10:58.3123932Z Updating files:  73% (28382/38879)
+2026-09-16T08:10:58.3394297Z Updating files:  74% (28771/38879)
+2026-09-16T08:10:58.3726931Z Updating files:  75% (29160/38879)
+2026-09-16T08:10:58.3929235Z Updating files:  76% (29549/38879)
+2026-09-16T08:10:58.4175827Z Updating files:  77% (29937/38879)
+2026-09-16T08:10:58.4476099Z Updating files:  78% (30326/38879)
+2026-09-16T08:10:58.4698586Z Updating files:  79% (30715/38879)
+2026-09-16T08:10:58.4999584Z Updating files:  80% (31104/38879)
+2026-09-16T08:10:58.5216245Z Updating files:  81% (31492/38879)
+2026-09-16T08:10:58.5572313Z Updating files:  82% (31881/38879)
+2026-09-16T08:10:58.5828788Z Updating files:  83% (32270/38879)
+2026-09-16T08:10:58.6034992Z Updating files:  84% (32659/38879)
+2026-09-16T08:10:58.6174629Z Updating files:  85% (33048/38879)
+2026-09-16T08:10:58.6343580Z Updating files:  86% (33436/38879)
+2026-09-16T08:10:58.6766365Z Updating files:  87% (33825/38879)
+2026-09-16T08:10:58.7079892Z Updating files:  88% (34214/38879)
+2026-09-16T08:10:58.7470581Z Updating files:  89% (34603/38879)
+2026-09-16T08:10:58.7696216Z Updating files:  90% (34992/38879)
+2026-09-16T08:10:58.7915355Z Updating files:  91% (35380/38879)
+2026-09-16T08:10:58.8067706Z Updating files:  92% (35769/38879)
+2026-09-16T08:10:58.8184522Z Updating files:  93% (36158/38879)
+2026-09-16T08:10:58.8326892Z Updating files:  94% (36547/38879)
+2026-09-16T08:10:58.8492037Z Updating files:  95% (36936/38879)
+2026-09-16T08:10:58.8806299Z Updating files:  96% (37324/38879)
+2026-09-16T08:10:58.9026767Z Updating files:  97% (37713/38879)
+2026-09-16T08:10:58.9206337Z Updating files:  98% (38102/38879)
+2026-09-16T08:10:58.9626713Z Updating files:  99% (38491/38879)
+2026-09-16T08:10:58.9627799Z Updating files: 100% (38879/38879)
+2026-09-16T08:10:58.9628225Z Updating files: 100% (38879/38879), done.
+2026-09-16T08:10:59.0055787Z Note: switching to '31d4974f12454842902224d495e4aafd111c2134'.
+2026-09-16T08:10:59.0056202Z 
+2026-09-16T08:10:59.0056489Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-16T08:10:59.0057118Z changes and commit them, and you can discard any commits you make in this
+2026-09-16T08:10:59.0057812Z state without impacting any branches by switching back to a branch.
+2026-09-16T08:10:59.0058252Z 
+2026-09-16T08:10:59.0058504Z If you want to create a new branch to retain commits you create, you may
+2026-09-16T08:10:59.0059094Z do so (now or later) by using -c with the switch command. Example:
+2026-09-16T08:10:59.0059420Z 
+2026-09-16T08:10:59.0059787Z   git switch -c <new-branch-name>
+2026-09-16T08:10:59.0060083Z 
+2026-09-16T08:10:59.0060253Z Or undo this operation with:
+2026-09-16T08:10:59.0060539Z 
+2026-09-16T08:10:59.0060695Z   git switch -
+2026-09-16T08:10:59.0060896Z 
+2026-09-16T08:10:59.0061255Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-16T08:10:59.0061764Z 
+2026-09-16T08:10:59.0062228Z HEAD is now at 31d4974f build(llama): qualify Intel CPU delivery and retain platform repair evidence
+2026-09-16T08:10:59.0131757Z ##[endgroup]
+2026-09-16T08:10:59.0132688Z ##[group]Setting up auth for fetching submodules
+2026-09-16T08:10:59.0138696Z [command]/usr/bin/git config --global http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-16T08:10:59.0184021Z [command]/usr/bin/git config --global --unset-all url.https://github.com/.insteadOf
+2026-09-16T08:10:59.0215069Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf git@github.com:
+2026-09-16T08:10:59.0255605Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf org-4367482@github.com:
+2026-09-16T08:10:59.0273177Z ##[endgroup]
+2026-09-16T08:10:59.0273649Z ##[group]Fetching submodules
+2026-09-16T08:10:59.0278355Z [command]/usr/bin/git submodule sync --recursive
+2026-09-16T08:10:59.0537766Z [command]/usr/bin/git -c protocol.version=2 submodule update --init --force --depth=1 --recursive
+2026-09-16T08:10:59.0808246Z [command]/usr/bin/git submodule foreach --recursive git config --local gc.auto 0
+2026-09-16T08:10:59.1086259Z ##[endgroup]
+2026-09-16T08:10:59.1087174Z ##[group]Persisting credentials for submodules
+2026-09-16T08:10:59.1089525Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'url\.https\:\/\/github\.com\/\.insteadOf' && git config --local --unset-all 'url.https://github.com/.insteadOf' || :"
+2026-09-16T08:10:59.1352293Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local 'http.https://github.com/.extraheader' 'AUTHORIZATION: basic ***' && git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-09-16T08:10:59.1608721Z [command]/usr/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'git@github.com:'
+2026-09-16T08:10:59.1865492Z [command]/usr/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'org-4367482@github.com:'
+2026-09-16T08:10:59.2114747Z ##[endgroup]
+2026-09-16T08:10:59.2157373Z [command]/usr/bin/git log -1 --format=%H
+2026-09-16T08:10:59.2179830Z 31d4974f12454842902224d495e4aafd111c2134
+2026-09-16T08:10:59.2441898Z ##[group]Run actions/setup-python@v6
+2026-09-16T08:10:59.2442234Z with:
+2026-09-16T08:10:59.2442471Z   python-version: 3.12
+2026-09-16T08:10:59.2442735Z   check-latest: false
+2026-09-16T08:10:59.2445667Z   token: ***
+2026-09-16T08:10:59.2445925Z   update-environment: true
+2026-09-16T08:10:59.2446198Z   allow-prereleases: false
+2026-09-16T08:10:59.2446463Z   freethreaded: false
+2026-09-16T08:10:59.2446703Z env:
+2026-09-16T08:10:59.2446917Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:10:59.2447188Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:10:59.2447670Z ##[endgroup]
+2026-09-16T08:10:59.3743286Z ##[group]Installed versions
+2026-09-16T08:10:59.4487440Z Successfully set up CPython (3.12.14)
+2026-09-16T08:10:59.4488350Z ##[endgroup]
+2026-09-16T08:10:59.5213505Z ##[group]Run actions/cache/restore@v5
+2026-09-16T08:10:59.5213869Z with:
+2026-09-16T08:10:59.5214144Z   path: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:10:59.5215020Z   key: crexx-cuda-Linux-f84d40f7f6e37406d5ce729515004f791f21a1b20a938f5aaa8747da160fd341
+2026-09-16T08:10:59.5215604Z   enableCrossOsArchive: false
+2026-09-16T08:10:59.5215921Z   fail-on-cache-miss: false
+2026-09-16T08:10:59.5216211Z   lookup-only: false
+2026-09-16T08:10:59.5216471Z env:
+2026-09-16T08:10:59.5216714Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:10:59.5217044Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:10:59.5217447Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:10:59.5217997Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:10:59.5218483Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:10:59.5218907Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:10:59.5219357Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:10:59.5219769Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:10:59.5220118Z ##[endgroup]
+2026-09-16T08:10:59.8971489Z Cache hit for: crexx-cuda-Linux-f84d40f7f6e37406d5ce729515004f791f21a1b20a938f5aaa8747da160fd341
+2026-09-16T08:11:01.1682860Z Received 0 of 1172276860 (0.0%), 0.0 MBs/sec
+2026-09-16T08:11:02.1939653Z Received 134217728 of 1172276860 (11.4%), 63.2 MBs/sec
+2026-09-16T08:11:03.1945698Z Received 264241152 of 1172276860 (22.5%), 83.3 MBs/sec
+2026-09-16T08:11:04.1965972Z Received 390070272 of 1172276860 (33.3%), 92.4 MBs/sec
+2026-09-16T08:11:05.1966214Z Received 515899392 of 1172276860 (44.0%), 97.9 MBs/sec
+2026-09-16T08:11:06.1958299Z Received 620756992 of 1172276860 (53.0%), 98.2 MBs/sec
+2026-09-16T08:11:07.1978422Z Received 708837376 of 1172276860 (60.5%), 96.2 MBs/sec
+2026-09-16T08:11:08.1979076Z Received 843055104 of 1172276860 (71.9%), 100.1 MBs/sec
+2026-09-16T08:11:09.1982045Z Received 981467136 of 1172276860 (83.7%), 103.7 MBs/sec
+2026-09-16T08:11:10.1991065Z Received 1103101952 of 1172276860 (94.1%), 104.9 MBs/sec
+2026-09-16T08:11:10.7105668Z Received 1172276860 of 1172276860 (100.0%), 106.0 MBs/sec
+2026-09-16T08:11:10.7108573Z Cache Size: ~1118 MB (1172276860 B)
+2026-09-16T08:11:10.7179476Z [command]/usr/bin/tar -xf /home/runner/work/_temp/e09afe55-e3cb-4103-9060-a6525edec5a2/cache.tzst -P -C /home/runner/work/CREXX/CREXX --use-compress-program unzstd
+2026-09-16T08:11:14.7900019Z Cache restored successfully
+2026-09-16T08:11:15.5394991Z Cache restored from key: crexx-cuda-Linux-f84d40f7f6e37406d5ce729515004f791f21a1b20a938f5aaa8747da160fd341
+2026-09-16T08:11:16.0842657Z ##[group]Run python scripts/ci-cuda-toolkit.py --root "/home/runner/work/_temp/crexx-cuda" --platform "linux-x86_64"
+2026-09-16T08:11:16.0843628Z [36;1mpython scripts/ci-cuda-toolkit.py --root "/home/runner/work/_temp/crexx-cuda" --platform "linux-x86_64"[0m
+2026-09-16T08:11:16.1930425Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:11:16.1930849Z env:
+2026-09-16T08:11:16.1931097Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:11:16.1931386Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:11:16.1931772Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:16.1932257Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:11:16.1932736Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:16.1933168Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:16.1933599Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:16.1934105Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:11:16.1934704Z ##[endgroup]
+2026-09-16T08:11:17.7916816Z CUDA SDK ready: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:17.8067354Z ##[group]Run Mozilla-Actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba
+2026-09-16T08:11:17.8067858Z with:
+2026-09-16T08:11:17.8068082Z   version: v0.16.0
+2026-09-16T08:11:17.8070822Z   token: ***
+2026-09-16T08:11:17.8071067Z   disable_annotations: false
+2026-09-16T08:11:17.8071332Z env:
+2026-09-16T08:11:17.8071560Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:11:17.8071841Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:11:17.8072206Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:17.8072695Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:11:17.8073171Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:17.8073597Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:17.8074022Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:17.8074605Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:11:17.8075063Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:17.8075457Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:17.8075944Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:11:17.8076393Z ##[endgroup]
+2026-09-16T08:11:17.8909458Z try to setup sccache version: v0.16.0
+2026-09-16T08:11:17.8922236Z sccache download from url: https://github.com/mozilla/sccache/releases/download/v0.16.0/sccache-v0.16.0-x86_64-unknown-linux-musl.tar.gz
+2026-09-16T08:11:18.6115701Z Correct checksum: aec995a83ad3dff3d14b6314e08858b7b73d35ca85a5bcf3d3a9ec07dee35588
+2026-09-16T08:11:18.6214733Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/50278a43-dcd6-4a55-b69f-78e198829cc2 -f /home/runner/work/_temp/e2602523-1acf-4d34-8910-bfdb2b23a5db
+2026-09-16T08:11:18.7794645Z sccache extracted to: /home/runner/work/_temp/50278a43-dcd6-4a55-b69f-78e198829cc2
+2026-09-16T08:11:18.7935097Z sccache cached to: /opt/hostedtoolcache/sccache/0.16.0/x64
+2026-09-16T08:11:18.8071603Z ##[group]Run actions/download-artifact@v8
+2026-09-16T08:11:18.8071960Z with:
+2026-09-16T08:11:18.8072325Z   name: user-test-31d4974f12454842902224d495e4aafd111c2134-CREXX-linux-x64
+2026-09-16T08:11:18.8072807Z   path: /home/runner/work/_temp/core-download
+2026-09-16T08:11:18.8073145Z   merge-multiple: false
+2026-09-16T08:11:18.8073426Z   repository: adesutherland/CREXX
+2026-09-16T08:11:18.8073720Z   run-id: 35071050120
+2026-09-16T08:11:18.8073976Z   skip-decompress: false
+2026-09-16T08:11:18.8074248Z   digest-mismatch: error
+2026-09-16T08:11:18.8074796Z env:
+2026-09-16T08:11:18.8075033Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:11:18.8075317Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:11:18.8075687Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:18.8076160Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:11:18.8076642Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:18.8077136Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:18.8077562Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:18.8077998Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:11:18.8078420Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:18.8078809Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:18.8079333Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:11:18.8079933Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:11:18.8080320Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:11:18.8080788Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:11:18.8144614Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:11:18.8144929Z ##[endgroup]
+2026-09-16T08:11:18.9503276Z Downloading single artifact
+2026-09-16T08:11:19.2297376Z Preparing to download the following artifacts:
+2026-09-16T08:11:19.2299058Z - user-test-31d4974f12454842902224d495e4aafd111c2134-CREXX-linux-x64 (ID: 10436686489, Size: 25155308, Expected Digest: sha256:5f67a4e08962b393bc9e9446f24a974416eb33d5d7668e8197a526ac70828123)
+2026-09-16T08:11:19.7422856Z Redirecting to blob download url: https://productionresultssa3.blob.core.windows.net/actions-results/dabaff43-10c6-4adf-8881-d7e4deecd8e4/workflow-job-run-210dc779-e872-5196-a4e9-2c9507161637/artifacts/641558fa557f4959177302893744af65fed54a5f47d8c74881098fdd7f4d9a94.zip
+2026-09-16T08:11:19.7424692Z Starting download of artifact to: /home/runner/work/_temp/core-download
+2026-09-16T08:11:20.0995337Z (node:2635) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-09-16T08:11:20.0996569Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-16T08:11:21.7708977Z SHA256 digest of downloaded artifact is 5f67a4e08962b393bc9e9446f24a974416eb33d5d7668e8197a526ac70828123
+2026-09-16T08:11:21.7710114Z Artifact download completed successfully.
+2026-09-16T08:11:21.7710751Z Total of 1 artifact(s) downloaded
+2026-09-16T08:11:21.7717651Z Download artifact has finished successfully
+2026-09-16T08:11:21.7829628Z ##[group]Run cmake -S tests/rxpa/provider-package-copy -G Ninja \
+2026-09-16T08:11:21.7830216Z [36;1mcmake -S tests/rxpa/provider-package-copy -G Ninja \[0m
+2026-09-16T08:11:21.7830768Z [36;1m  -B "/home/runner/work/_temp/package-scan" -DCMAKE_BUILD_TYPE=Release \[0m
+2026-09-16T08:11:21.7831224Z [36;1m  [0m
+2026-09-16T08:11:21.7831597Z [36;1mcmake --build "/home/runner/work/_temp/package-scan" --parallel 2[0m
+2026-09-16T08:11:21.7832196Z [36;1mctest --test-dir "/home/runner/work/_temp/package-scan" --output-on-failure[0m
+2026-09-16T08:11:21.7868616Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:11:21.7869007Z env:
+2026-09-16T08:11:21.7869245Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:11:21.7869539Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:11:21.7869914Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:21.7870402Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:11:21.7870908Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:21.7871338Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:21.7871765Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:21.7872207Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:11:21.7872629Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:21.7873014Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:21.7873501Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:11:21.7874041Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:11:21.7874719Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:11:21.7875179Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:11:21.7938789Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:11:21.7939102Z ##[endgroup]
+2026-09-16T08:11:24.9651476Z -- The C compiler identification is GNU 13.3.0
+2026-09-16T08:11:25.1413624Z -- Detecting C compiler ABI info
+2026-09-16T08:11:25.4371044Z -- Detecting C compiler ABI info - done
+2026-09-16T08:11:25.4533647Z -- Check for working C compiler: /usr/bin/cc - skipped
+2026-09-16T08:11:25.4609107Z -- Detecting C compile features
+2026-09-16T08:11:25.4616232Z -- Detecting C compile features - done
+2026-09-16T08:11:25.6906075Z -- Found Python3: /opt/hostedtoolcache/Python/3.12.14/x64/bin/python3.12 (found version "3.12.14") found components: Interpreter
+2026-09-16T08:11:25.6919922Z -- Configuring done (2.4s)
+2026-09-16T08:11:25.7082346Z -- Generating done (0.0s)
+2026-09-16T08:11:25.7086189Z -- Build files have been written to: /home/runner/work/_temp/package-scan
+2026-09-16T08:11:25.8226975Z [1/6] Building C object CMakeFiles/copy_dependency.dir/dependency.c.o
+2026-09-16T08:11:25.8229867Z [2/6] Building C object CMakeFiles/copy_root_a.dir/root.c.o
+2026-09-16T08:11:25.8340377Z [3/6] Linking C shared library a/libcopy-dependency.so
+2026-09-16T08:11:25.8363616Z [4/6] Building C object CMakeFiles/copy_root_b.dir/root.c.o
+2026-09-16T08:11:25.8451627Z [5/6] Linking C shared library a/libcopy_root_a.so
+2026-09-16T08:11:25.8489890Z [6/6] Linking C shared library b/libcopy_root_b.so
+2026-09-16T08:11:26.3437175Z Internal ctest changing into directory: /home/runner/work/_temp/package-scan
+2026-09-16T08:11:26.4458923Z Test project /home/runner/work/_temp/package-scan
+2026-09-16T08:11:26.5076294Z     Start 1: provider_package_copy
+2026-09-16T08:11:29.1175603Z 1/1 Test #1: provider_package_copy ............   Passed    2.60 sec
+2026-09-16T08:11:29.1288545Z 
+2026-09-16T08:11:29.1288837Z 100% tests passed, 0 tests failed out of 1
+2026-09-16T08:11:29.1289240Z 
+2026-09-16T08:11:29.1289430Z Total Test time (real) =   2.68 sec
+2026-09-16T08:11:29.1871336Z ##[group]Run cmake -S . -G Ninja -B "/home/runner/work/_temp/build" \
+2026-09-16T08:11:29.1871923Z [36;1mcmake -S . -G Ninja -B "/home/runner/work/_temp/build" \[0m
+2026-09-16T08:11:29.1872392Z [36;1m  -DCMAKE_BUILD_TYPE=Release -DENABLE_LLAMA=ON \[0m
+2026-09-16T08:11:29.1872800Z [36;1m  -DCREXX_VERSION_OVERRIDE="1.0.0-beta.3" \[0m
+2026-09-16T08:11:29.1873178Z [36;1m  -DCREXX_BUILD_CHANNEL="local" \[0m
+2026-09-16T08:11:29.1873560Z [36;1m  -DCREXX_BUILD_TIMESTAMP="20260916T075606Z" \[0m
+2026-09-16T08:11:29.1874031Z [36;1m  -DCREXX_BUILD_COMMIT="31d4974f12454842902224d495e4aafd111c2134" \[0m
+2026-09-16T08:11:29.1875169Z [36;1m  -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DCREXX_LLAMA_CUDA=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_CUDA_COMPILER_LAUNCHER=sccache[0m
+2026-09-16T08:11:29.1911331Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:11:29.1911710Z env:
+2026-09-16T08:11:29.1911987Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:11:29.1912285Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:11:29.1912668Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:29.1913151Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:11:29.1913631Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:29.1914064Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:29.1914684Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:29.1915136Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:11:29.1915560Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:29.1915951Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:29.1916450Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:11:29.1916991Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:11:29.1917399Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:11:29.1917854Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:11:29.1980842Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:11:29.1981147Z ##[endgroup]
+2026-09-16T08:11:29.3013990Z -- The C compiler identification is GNU 13.3.0
+2026-09-16T08:11:30.7068624Z -- The CXX compiler identification is GNU 13.3.0
+2026-09-16T08:11:30.7221935Z -- Detecting C compiler ABI info
+2026-09-16T08:11:30.7685243Z -- Detecting C compiler ABI info - done
+2026-09-16T08:11:30.7849780Z -- Check for working C compiler: /usr/bin/cc - skipped
+2026-09-16T08:11:30.7853532Z -- Detecting C compile features
+2026-09-16T08:11:30.7858716Z -- Detecting C compile features - done
+2026-09-16T08:11:30.8235717Z -- Detecting CXX compiler ABI info
+2026-09-16T08:11:30.9432392Z -- Detecting CXX compiler ABI info - done
+2026-09-16T08:11:30.9603380Z -- Check for working CXX compiler: /usr/bin/c++ - skipped
+2026-09-16T08:11:30.9607872Z -- Detecting CXX compile features
+2026-09-16T08:11:30.9615075Z -- Detecting CXX compile features - done
+2026-09-16T08:11:31.0092405Z -- CMake Version: 3.31.6
+2026-09-16T08:11:31.0093136Z -- CREXX Version: crexx-1.0.0-beta.3+local.g31d4974f1245
+2026-09-16T08:11:31.0093895Z -- CREXX Build Channel: local
+2026-09-16T08:11:31.0094743Z -- CREXX Build Timestamp: 20260916T075606Z
+2026-09-16T08:11:31.0095418Z -- CREXX Build Commit: 31d4974f1245
+2026-09-16T08:11:31.0096005Z -- CMake Generator: Ninja
+2026-09-16T08:11:31.0096912Z -- cREXX build resources: profile=portable, vm-compile=2, native-link=2, backend=Ninja pools
+2026-09-16T08:11:31.0428361Z -- Fetching DSL-Syntax-Highlighter develop from https://github.com/adesutherland/DSL-Syntax-Highlighter.git
+2026-09-16T08:11:32.1378825Z -- Performing Test cxxflag__W
+2026-09-16T08:11:32.1966577Z -- Performing Test cxxflag__W - Success
+2026-09-16T08:11:32.1974373Z -- Performing Test cxxflag__Wall
+2026-09-16T08:11:32.2559568Z -- Performing Test cxxflag__Wall - Success
+2026-09-16T08:11:32.2568464Z -- Performing Test cxxflag__Wextra
+2026-09-16T08:11:32.3149080Z -- Performing Test cxxflag__Wextra - Success
+2026-09-16T08:11:32.3157217Z -- Performing Test cxxflag__Weffc__
+2026-09-16T08:11:32.3736249Z -- Performing Test cxxflag__Weffc__ - Success
+2026-09-16T08:11:32.3745154Z -- Performing Test cxxflag__pedantic
+2026-09-16T08:11:32.4324198Z -- Performing Test cxxflag__pedantic - Success
+2026-09-16T08:11:32.4333280Z -- Performing Test cxxflag__Wformat_2
+2026-09-16T08:11:32.4913009Z -- Performing Test cxxflag__Wformat_2 - Success
+2026-09-16T08:11:32.4921188Z -- Performing Test cxxflag__Wredundant_decls
+2026-09-16T08:11:32.5499917Z -- Performing Test cxxflag__Wredundant_decls - Success
+2026-09-16T08:11:32.5508077Z -- Performing Test cxxflag__Wsuggest_attribute_format
+2026-09-16T08:11:32.6083406Z -- Performing Test cxxflag__Wsuggest_attribute_format - Success
+2026-09-16T08:11:32.6092008Z -- Performing Test cxxflag__Wconversion
+2026-09-16T08:11:32.6668802Z -- Performing Test cxxflag__Wconversion - Success
+2026-09-16T08:11:32.6677484Z -- Performing Test cxxflag__Wsign_conversion
+2026-09-16T08:11:32.7258209Z -- Performing Test cxxflag__Wsign_conversion - Success
+2026-09-16T08:11:32.7267075Z -- Performing Test cxxflag__Werror_return_type
+2026-09-16T08:11:32.7848755Z -- Performing Test cxxflag__Werror_return_type - Success
+2026-09-16T08:11:32.7857706Z -- Performing Test cxxflag__Weverything
+2026-09-16T08:11:32.8118027Z -- Performing Test cxxflag__Weverything - Failed
+2026-09-16T08:11:32.8126237Z -- Performing Test cxxflag__fdiagnostics_color_always
+2026-09-16T08:11:32.8783485Z -- Performing Test cxxflag__fdiagnostics_color_always - Success
+2026-09-16T08:11:32.8784309Z -- C compiler flags: 
+2026-09-16T08:11:32.8785505Z -- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wsuggest-attribute=format -Wconversion -Wsign-conversion -Werror=return-type -fdiagnostics-color=always 
+2026-09-16T08:11:32.8786452Z -- Linker flags for executables: 
+2026-09-16T08:11:32.8786819Z -- Linker flags for shared libs: 
+2026-09-16T08:11:32.8787166Z -- Release C compiler flags: -O3 -DNDEBUG
+2026-09-16T08:11:32.8787532Z -- Release C++ compiler flags: -O3 -DNDEBUG
+2026-09-16T08:11:32.8787894Z -- Release linker flags for executables: 
+2026-09-16T08:11:32.8788244Z -- Release linker flags for shared libs: 
+2026-09-16T08:11:33.1201617Z -- Looking for sys/types.h
+2026-09-16T08:11:33.3592498Z -- Looking for sys/types.h - found
+2026-09-16T08:11:33.3594075Z -- Looking for sys/stat.h
+2026-09-16T08:11:33.4215214Z -- Looking for sys/stat.h - found
+2026-09-16T08:11:33.4216994Z -- Looking for fcntl.h
+2026-09-16T08:11:33.4782294Z -- Looking for fcntl.h - found
+2026-09-16T08:11:33.4783994Z -- Looking for unistd.h
+2026-09-16T08:11:33.5431481Z -- Looking for unistd.h - found
+2026-09-16T08:11:33.5432719Z -- Looking for io.h
+2026-09-16T08:11:33.5762329Z -- Looking for io.h - not found
+2026-09-16T08:11:33.5767609Z -- Writing config.h
+2026-09-16T08:11:33.6077575Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-09-16T08:11:33.7889832Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+2026-09-16T08:11:33.7900136Z -- Found Threads: TRUE
+2026-09-16T08:11:34.0440661Z -- cREXX VM handler panel: profile-20
+2026-09-16T08:11:34.1338897Z -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")
+2026-09-16T08:11:34.1342746Z -- cREXX VM core socket TLS backend: OPENSSL
+2026-09-16T08:11:34.1347485Z -- cREXX product VM: rxvm -> rxtvm (GNU)
+2026-09-16T08:11:34.4617180Z -- Found CUDAToolkit: /home/runner/work/_temp/crexx-cuda/include (found version "12.9.86")
+2026-09-16T08:11:40.8039385Z CMAKE_BUILD_TYPE=Release
+2026-09-16T08:11:40.8039981Z -- llama.cpp version: 0.4.0
+2026-09-16T08:11:40.8054761Z -- Found Git: /usr/bin/git (found version "2.55.0")
+2026-09-16T08:11:40.8077409Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-16T08:11:40.8098449Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-16T08:11:40.8245845Z -- The ASM compiler identification is GNU
+2026-09-16T08:11:40.8268494Z -- Found assembler: /usr/bin/cc
+2026-09-16T08:11:40.8765671Z -- CMAKE_SYSTEM_PROCESSOR: x86_64
+2026-09-16T08:11:40.8766138Z -- GGML_SYSTEM_ARCH: x86
+2026-09-16T08:11:40.8788315Z -- Including CPU backend
+2026-09-16T08:11:40.8793402Z -- x86 detected
+2026-09-16T08:11:40.8796579Z -- Adding CPU backend variant ggml-cpu-x64:  
+2026-09-16T08:11:40.8801311Z -- x86 detected
+2026-09-16T08:11:40.8804632Z -- Adding CPU backend variant ggml-cpu-sse42: -msse4.2 GGML_SSE42
+2026-09-16T08:11:40.8809394Z -- x86 detected
+2026-09-16T08:11:40.8812617Z -- Adding CPU backend variant ggml-cpu-sandybridge: -msse4.2;-mavx GGML_SSE42;GGML_AVX
+2026-09-16T08:11:40.8817598Z -- x86 detected
+2026-09-16T08:11:40.8821016Z -- Adding CPU backend variant ggml-cpu-ivybridge: -msse4.2;-mf16c;-mavx GGML_SSE42;GGML_F16C;GGML_AVX
+2026-09-16T08:11:40.8825910Z -- x86 detected
+2026-09-16T08:11:40.8829435Z -- Adding CPU backend variant ggml-cpu-piledriver: -msse4.2;-mf16c;-mfma;-mavx GGML_SSE42;GGML_F16C;GGML_FMA;GGML_AVX
+2026-09-16T08:11:40.8834040Z -- x86 detected
+2026-09-16T08:11:40.8838119Z -- Adding CPU backend variant ggml-cpu-haswell: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2
+2026-09-16T08:11:40.8842562Z -- x86 detected
+2026-09-16T08:11:40.8847232Z -- Adding CPU backend variant ggml-cpu-skylakex: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512
+2026-09-16T08:11:40.8851610Z -- x86 detected
+2026-09-16T08:11:40.8855892Z -- Adding CPU backend variant ggml-cpu-cannonlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI
+2026-09-16T08:11:40.8859801Z -- x86 detected
+2026-09-16T08:11:40.8863607Z -- Adding CPU backend variant ggml-cpu-cascadelake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VNNI
+2026-09-16T08:11:40.8867779Z -- x86 detected
+2026-09-16T08:11:40.8871750Z -- Adding CPU backend variant ggml-cpu-icelake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI
+2026-09-16T08:11:40.8875830Z -- x86 detected
+2026-09-16T08:11:40.8879780Z -- Adding CPU backend variant ggml-cpu-cooperlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vnni;-mavx512bf16 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VNNI;GGML_AVX512_BF16
+2026-09-16T08:11:40.8883496Z -- x86 detected
+2026-09-16T08:11:40.8887771Z -- Adding CPU backend variant ggml-cpu-zen4: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni;-mavx512bf16 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI;GGML_AVX512_BF16
+2026-09-16T08:11:40.8891430Z -- x86 detected
+2026-09-16T08:11:40.8894989Z -- Adding CPU backend variant ggml-cpu-alderlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavxvnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX_VNNI
+2026-09-16T08:11:40.8899156Z -- x86 detected
+2026-09-16T08:11:40.8903572Z -- Adding CPU backend variant ggml-cpu-sapphirerapids: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni;-mavx512bf16;-mamx-tile;-mamx-int8 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI;GGML_AVX512_BF16;GGML_AMX_TILE;GGML_AMX_INT8
+2026-09-16T08:11:41.0388521Z -- CUDA Toolkit found
+2026-09-16T08:11:42.6378699Z -- The CUDA compiler identification is NVIDIA 12.9.86 with host compiler GNU 13.3.0
+2026-09-16T08:11:42.7429338Z -- Detecting CUDA compiler ABI info
+2026-09-16T08:11:45.8919604Z -- Detecting CUDA compiler ABI info - done
+2026-09-16T08:11:45.9846637Z -- Check for working CUDA compiler: /home/runner/work/_temp/crexx-cuda/bin/nvcc - skipped
+2026-09-16T08:11:45.9876547Z -- Detecting CUDA compile features
+2026-09-16T08:11:45.9882299Z -- Detecting CUDA compile features - done
+2026-09-16T08:11:46.0055841Z -- Using CMAKE_CUDA_ARCHITECTURES=50-virtual;61-virtual;70-virtual;75-virtual;80-virtual;86-real;89-real;90-virtual;120a-real;121a-real CMAKE_CUDA_ARCHITECTURES_NATIVE=No CUDA devices found.-real
+2026-09-16T08:11:46.0185081Z -- Could NOT find NCCL (missing: NCCL_LIBRARY NCCL_INCLUDE_DIR) 
+2026-09-16T08:11:46.0186572Z -- Warning: NCCL not found, performance for multiple CUDA GPUs will be suboptimal
+2026-09-16T08:11:46.0458079Z -- CUDA host compiler is GNU 13.3.0
+2026-09-16T08:11:46.0460768Z -- Including CUDA backend
+2026-09-16T08:11:46.0539804Z -- ggml version: 0.23.0
+2026-09-16T08:11:46.0540430Z -- ggml commit:  5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+2026-09-16T08:11:46.1936395Z -- Found Python3: /opt/hostedtoolcache/Python/3.12.14/x64/bin/python3.12 (found version "3.12.14") found components: Interpreter
+2026-09-16T08:11:46.3640467Z -- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+2026-09-16T08:11:46.3641342Z -- GTK Gui support is disabled, skipping subdirectory.
+2026-09-16T08:11:46.3656237Z -- ODBC support is disabled; building the mock-driver qualification target only.
+2026-09-16T08:11:47.1481457Z -- Configuring done (17.9s)
+2026-09-16T08:11:48.3025204Z -- Generating done (1.2s)
+2026-09-16T08:11:48.3037480Z -- Build files have been written to: /home/runner/work/_temp/build
+2026-09-16T08:11:48.3968356Z ##[group]Run cmake --build "/home/runner/work/_temp/build" --parallel 2 \
+2026-09-16T08:11:48.3969184Z [36;1mcmake --build "/home/runner/work/_temp/build" --parallel 2 \[0m
+2026-09-16T08:11:48.3970024Z [36;1m  --target llama_provider_runtime_package crexx-provider-package rxllama_release_engine_smoke \[0m
+2026-09-16T08:11:48.3970899Z [36;1m  rxllama_bridge_lifecycle rxllama_package_utf8_cxx17 rxllama_package_utf8_cxx20[0m
+2026-09-16T08:11:48.4007814Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:11:48.4008461Z env:
+2026-09-16T08:11:48.4008804Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:11:48.4009289Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:11:48.4009766Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:48.4010480Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:11:48.4011037Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:48.4011735Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:48.4012318Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:11:48.4012924Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:11:48.4013474Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:48.4014165Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:11:48.4015130Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:11:48.4015811Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:11:48.4016346Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:11:48.4016931Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:11:48.4080712Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:11:48.4081148Z ##[endgroup]
+2026-09-16T08:11:48.4721985Z [0/2] Re-checking globbed directories...
+2026-09-16T08:11:49.7596140Z [1/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+2026-09-16T08:11:50.0196818Z [2/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+2026-09-16T08:11:50.1325302Z [3/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+2026-09-16T08:11:50.3837718Z [4/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+2026-09-16T08:11:50.9283963Z [5/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+2026-09-16T08:11:50.9506008Z [6/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+2026-09-16T08:11:51.3726128Z [7/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+2026-09-16T08:11:51.7845893Z [8/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+2026-09-16T08:11:51.9028669Z [9/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+2026-09-16T08:11:51.9550148Z [10/617] Linking CXX shared library bin/providers/libcrexx-ggml-base.so.0.23.0
+2026-09-16T08:11:51.9575036Z [11/617] Creating library symlink bin/providers/libcrexx-ggml-base.so.0 bin/providers/libcrexx-ggml-base.so
+2026-09-16T08:11:52.2375601Z [12/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:11:52.3050519Z [13/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:11:52.5835294Z [14/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:11:52.7582090Z [15/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:11:52.9111265Z [16/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:11:53.0592567Z [17/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/quants.c.o
+2026-09-16T08:11:53.4259996Z [18/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:11:53.6071752Z [19/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:11:53.7312110Z [20/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:11:54.0768546Z [21/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:11:54.2953630Z [22/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:11:54.3845560Z [23/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:11:54.6521413Z [24/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:11:54.7898953Z [25/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:11:54.9420033Z [26/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:11:55.2112265Z [27/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:11:55.2896149Z [28/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:11:55.4736194Z [29/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:11:55.7911642Z [30/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:11:55.8755328Z [31/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:11:56.0347821Z [32/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:11:56.2751265Z [33/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/quants.c.o
+2026-09-16T08:11:56.3401007Z [34/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:11:56.5961264Z [35/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:11:56.6204850Z [36/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:11:56.8979175Z [37/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:11:56.9053048Z [38/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:11:57.2132026Z [39/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:11:57.2222373Z [40/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:11:57.5243538Z [41/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:11:57.6501044Z [42/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:11:57.7905821Z [43/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:11:57.9900157Z [44/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:11:58.0121676Z [45/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:11:58.2553714Z [46/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:11:58.3644876Z [47/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:11:58.6437590Z [48/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:11:58.6936411Z [49/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:11:58.9520173Z [50/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/quants.c.o
+2026-09-16T08:11:59.0403665Z [51/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:11:59.2312444Z [52/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:11:59.3467218Z [53/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:11:59.5653581Z [54/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:11:59.8141511Z [55/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:11:59.9518028Z [56/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:00.0922596Z [57/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:00.3719686Z [58/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:00.3755489Z [59/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:00.6352740Z [60/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:00.7067057Z [61/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:00.8555558Z [62/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:00.9881967Z [63/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:01.2300325Z [64/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:01.2652173Z [65/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:01.4617872Z [66/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:01.5127892Z [67/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:01.7278162Z [68/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:01.8488261Z [69/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:02.0593147Z [70/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:02.2495104Z [71/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:02.3375963Z [72/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:02.5261941Z [73/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:02.6095395Z [74/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:02.8798972Z [75/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:02.9073621Z [76/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:03.1437724Z [77/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:03.2326310Z [78/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:03.3427133Z [79/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:03.4851387Z [80/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:03.6455752Z [81/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:03.8059044Z [82/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:03.9138004Z [83/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:03.9853714Z [84/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:04.2193105Z [85/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:04.2729898Z [86/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:04.5138679Z [87/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:04.5581100Z [88/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:04.8038399Z [89/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:04.8285657Z [90/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:05.0720072Z [91/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:05.3239196Z [92/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:05.3526114Z [93/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:05.5886638Z [94/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:05.6250895Z [95/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:05.8095495Z [96/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:05.8825479Z [97/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:06.1133181Z [98/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:06.2645869Z [99/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:06.4119521Z [100/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:06.4614980Z [101/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:06.6924841Z [102/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:06.7134167Z [103/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:07.0035700Z [104/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:07.0053518Z [105/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:07.2852620Z [106/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:07.3712282Z [107/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:07.6179115Z [108/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:07.8072020Z [109/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:07.8882329Z [110/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:08.0659733Z [111/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:08.2090467Z [112/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:08.2750845Z [113/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:08.4960423Z [114/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:08.6061972Z [115/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:08.8035429Z [116/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:08.9048463Z [117/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:08.9942201Z [118/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:09.2135576Z [119/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:09.2955296Z [120/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:09.5098949Z [121/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:09.6044251Z [122/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:09.8036276Z [123/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:09.8600834Z [124/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:10.0736146Z [125/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:10.3016409Z [126/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:10.4878635Z [127/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:10.5835067Z [128/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:10.8182156Z [129/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:10.8395740Z [130/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:11.0755225Z [131/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:11.1173464Z [132/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:11.3671685Z [133/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:11.3928036Z [134/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:11.5404100Z [135/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:11.6671214Z [136/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:11.8195134Z [137/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:11.9819270Z [138/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:12.1382162Z [139/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:12.2356036Z [140/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:12.4989602Z [141/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:12.5309624Z [142/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:12.8051511Z [143/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:12.9281392Z [144/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:13.1171150Z [145/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:13.2121850Z [146/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:13.3863471Z [147/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:13.4795871Z [148/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:13.6985794Z [149/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:13.7681004Z [150/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:13.9335028Z [151/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:14.0652733Z [152/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:14.2275342Z [153/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:14.3295674Z [154/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:14.5623446Z [155/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:14.6175511Z [156/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:14.8528559Z [157/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:14.8943548Z [158/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:15.1300544Z [159/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:15.3334764Z [160/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:15.4505017Z [161/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:15.6212804Z [162/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:15.7311587Z [163/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:15.8296971Z [164/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:16.0722065Z [165/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:16.0965136Z [166/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:16.3686606Z [167/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:16.3744081Z [168/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:16.6007361Z [169/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:16.6180226Z [170/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:16.8715484Z [171/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:16.9442449Z [172/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:17.2164706Z [173/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:17.2364030Z [174/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:17.4950104Z [175/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:17.5985194Z [176/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:17.8963667Z [177/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:17.9235681Z [178/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:18.1825627Z [179/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:18.2541708Z [180/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:18.3861000Z [181/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:18.5389092Z [182/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:18.6787230Z [183/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:18.8364737Z [184/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:19.0203030Z [185/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:19.0924102Z [186/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:19.2594217Z [187/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:19.3660447Z [188/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:19.5993431Z [189/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:19.6765719Z [190/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:19.8682299Z [191/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:19.9655868Z [192/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:20.1799395Z [193/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:20.3859398Z [194/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:20.4514808Z [195/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:20.7121294Z [196/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:20.7391230Z [197/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:20.9339478Z [198/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:21.0137900Z [199/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:21.2193805Z [200/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:21.4332607Z [201/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:21.5105645Z [202/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:21.5969823Z [203/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:21.7597194Z [204/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:21.9054186Z [205/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:22.0918097Z [206/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:22.2282314Z [207/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:22.3608364Z [208/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:22.5066866Z [209/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:22.6497988Z [210/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:22.9298293Z [211/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:22.9435454Z [212/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:23.2162722Z [213/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:23.2428186Z [214/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:23.4186607Z [215/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:23.5287874Z [216/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:23.6972455Z [217/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:23.9388925Z [218/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:23.9721147Z [219/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:24.2216828Z [220/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:24.2293974Z [221/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:24.5168891Z [222/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:24.5246877Z [223/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:24.8066963Z [224/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:24.8160971Z [225/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:25.0980012Z [226/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:25.1794760Z [227/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:25.4937215Z [228/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:25.5210607Z [229/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:25.7319761Z [230/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:25.8656714Z [231/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:25.9666146Z [232/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:26.1395690Z [233/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/ggml-cpu.c.o
+2026-09-16T08:12:26.2380786Z [234/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/ggml-cpu.cpp.o
+2026-09-16T08:12:26.4653811Z [235/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/repack.cpp.o
+2026-09-16T08:12:26.5003740Z [236/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/iqp.cpp.o
+2026-09-16T08:12:26.6837407Z [237/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/hbm.cpp.o
+2026-09-16T08:12:26.7514911Z [238/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/quants.c.o
+2026-09-16T08:12:26.9447143Z [239/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/traits.cpp.o
+2026-09-16T08:12:27.0404147Z [240/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/amx/amx.cpp.o
+2026-09-16T08:12:27.2998029Z [241/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/amx/mmq.cpp.o
+2026-09-16T08:12:27.3160114Z [242/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/binary-ops.cpp.o
+2026-09-16T08:12:27.6076735Z [243/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/vec.cpp.o
+2026-09-16T08:12:27.6204075Z [244/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/unary-ops.cpp.o
+2026-09-16T08:12:27.8942685Z [245/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/llamafile/sgemm.cpp.o
+2026-09-16T08:12:28.1213390Z [246/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/ops.cpp.o
+2026-09-16T08:12:28.2103550Z [247/617] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/arch/x86/quants.c.o
+2026-09-16T08:12:28.4021370Z [248/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/arch/x86/repack.cpp.o
+2026-09-16T08:12:28.4284780Z [249/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+2026-09-16T08:12:36.9004110Z [250/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/add-id.cu.o
+2026-09-16T08:12:37.0716894Z [251/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/acc.cu.o
+2026-09-16T08:12:45.7635894Z [252/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/allreduce.cu.o
+2026-09-16T08:12:46.0545860Z [253/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/arange.cu.o
+2026-09-16T08:12:54.5285252Z [254/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/argmax.cu.o
+2026-09-16T08:13:17.5815827Z [255/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/binbcast.cu.o
+2026-09-16T08:13:19.4743946Z [256/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/argsort.cu.o
+2026-09-16T08:13:26.2645393Z [257/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/clamp.cu.o
+2026-09-16T08:13:28.0138172Z [258/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/col2im-1d.cu.o
+2026-09-16T08:13:35.5738294Z [259/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/concat.cu.o
+2026-09-16T08:13:36.4163768Z [260/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/conv-transpose-1d.cu.o
+2026-09-16T08:13:44.0096642Z [261/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/conv2d-dw.cu.o
+2026-09-16T08:13:45.0020578Z [262/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/conv2d-transpose.cu.o
+2026-09-16T08:13:52.4738925Z [263/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/conv2d.cu.o
+2026-09-16T08:13:55.1569520Z [264/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/convert.cu.o
+2026-09-16T08:14:00.8967860Z [265/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/count-equal.cu.o
+2026-09-16T08:14:05.3455588Z [266/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/cpy.cu.o
+2026-09-16T08:14:09.3868595Z [267/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/cross-entropy-loss.cu.o
+2026-09-16T08:14:17.7580757Z [268/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/diag.cu.o
+2026-09-16T08:14:23.1857679Z [269/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/cumsum.cu.o
+2026-09-16T08:14:26.1527374Z [270/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/diagmask.cu.o
+2026-09-16T08:14:31.9024601Z [271/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/dsv4-hc.cu.o
+2026-09-16T08:14:34.9468132Z [272/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/fattn-tile.cu.o
+2026-09-16T08:14:43.3998742Z [273/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/fill.cu.o
+2026-09-16T08:14:46.3509225Z [274/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/fattn.cu.o
+2026-09-16T08:14:51.9532583Z [275/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/fwht.cu.o
+2026-09-16T08:14:55.5376698Z [276/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/gated_delta_net.cu.o
+2026-09-16T08:15:04.9566970Z [277/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/getrows.cu.o
+2026-09-16T08:15:05.1056312Z [278/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/ggml-cuda.cu.o
+2026-09-16T08:15:13.6397427Z [279/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/gla.cu.o
+2026-09-16T08:15:14.2745469Z [280/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/im2col.cu.o
+2026-09-16T08:15:24.5485428Z [281/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/lightning-indexer.cu.o
+2026-09-16T08:15:31.9041856Z [282/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mean.cu.o
+2026-09-16T08:15:32.9116100Z [283/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmf.cu.o
+2026-09-16T08:15:40.7171966Z [284/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmid.cu.o
+2026-09-16T08:15:42.4425278Z [285/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmq.cu.o
+2026-09-16T08:16:14.3750919Z [286/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmvf.cu.o
+2026-09-16T08:16:23.3327740Z [287/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/moe-weighted-reduction.cu.o
+2026-09-16T08:16:32.6709711Z [288/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/norm.cu.o
+2026-09-16T08:16:38.1405843Z [289/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/mmvq.cu.o
+2026-09-16T08:16:41.0510993Z [290/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/opt-step-adamw.cu.o
+2026-09-16T08:16:46.5396076Z [291/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/opt-step-sgd.cu.o
+2026-09-16T08:16:49.6110542Z [292/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/out-prod.cu.o
+2026-09-16T08:16:54.7097654Z [293/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/pad.cu.o
+2026-09-16T08:16:57.8878205Z [294/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/pad_reflect_1d.cu.o
+2026-09-16T08:17:03.1116561Z [295/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/pool1d.cu.o
+2026-09-16T08:17:06.5445091Z [296/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/pool2d.cu.o
+2026-09-16T08:17:12.8308781Z [297/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/quantize.cu.o
+2026-09-16T08:17:14.8486176Z [298/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/roll.cu.o
+2026-09-16T08:17:22.9943235Z [299/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/rope.cu.o
+2026-09-16T08:17:23.2665462Z [300/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/scale.cu.o
+2026-09-16T08:17:31.4036375Z [301/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/set.cu.o
+2026-09-16T08:17:32.4495513Z [302/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/set-rows.cu.o
+2026-09-16T08:17:39.6845217Z [303/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/snake.cu.o
+2026-09-16T08:17:40.6244315Z [304/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/softcap.cu.o
+2026-09-16T08:17:51.1747578Z [305/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/softmax.cu.o
+2026-09-16T08:17:51.6860177Z [306/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/solve_tri.cu.o
+2026-09-16T08:18:01.2120938Z [307/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/ssm-conv.cu.o
+2026-09-16T08:18:10.7233378Z [308/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/ssm-scan.cu.o
+2026-09-16T08:18:18.6522701Z [309/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/sum.cu.o
+2026-09-16T08:18:19.0337630Z [310/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/sumrows.cu.o
+2026-09-16T08:18:29.3003148Z [311/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/topk-moe.cu.o
+2026-09-16T08:18:35.4200916Z [312/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/top-k.cu.o
+2026-09-16T08:18:37.9131041Z [313/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/tri.cu.o
+2026-09-16T08:18:43.6194887Z [314/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/tsembd.cu.o
+2026-09-16T08:18:47.3162857Z [315/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/unary.cu.o
+2026-09-16T08:18:52.0365546Z [316/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/upscale.cu.o
+2026-09-16T08:18:56.3878966Z [317/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/wkv.cu.o
+2026-09-16T08:19:10.8871049Z [318/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq112-dv112.cu.o
+2026-09-16T08:19:24.5876510Z [319/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq192-dv128.cu.o
+2026-09-16T08:19:25.8545311Z [320/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq128-dv128.cu.o
+2026-09-16T08:19:35.9935350Z [321/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq320-dv256.cu.o
+2026-09-16T08:19:50.3744048Z [322/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq40-dv40.cu.o
+2026-09-16T08:20:07.0317976Z [323/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq256-dv256.cu.o
+2026-09-16T08:20:14.7641539Z [324/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq512-dv512.cu.o
+2026-09-16T08:20:25.8048727Z [325/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq576-dv512.cu.o
+2026-09-16T08:20:30.7726673Z [326/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq64-dv64.cu.o
+2026-09-16T08:20:42.7286712Z [327/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq72-dv72.cu.o
+2026-09-16T08:20:47.7407888Z [328/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq80-dv80.cu.o
+2026-09-16T08:20:59.2610739Z [329/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_1-ncols2_16.cu.o
+2026-09-16T08:21:00.6069410Z [330/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-tile-instance-dkq96-dv96.cu.o
+2026-09-16T08:21:09.7992283Z [331/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_1-ncols2_32.cu.o
+2026-09-16T08:21:15.3687602Z [332/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_1-ncols2_8.cu.o
+2026-09-16T08:21:23.0888614Z [333/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_16-ncols2_1.cu.o
+2026-09-16T08:21:31.5117691Z [334/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_16-ncols2_2.cu.o
+2026-09-16T08:21:41.4031484Z [335/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_16-ncols2_4.cu.o
+2026-09-16T08:21:41.7207113Z [336/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_2-ncols2_16.cu.o
+2026-09-16T08:21:51.7064683Z [337/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_2-ncols2_32.cu.o
+2026-09-16T08:21:55.7812618Z [338/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_2-ncols2_4.cu.o
+2026-09-16T08:22:05.3980764Z [339/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_2-ncols2_8.cu.o
+2026-09-16T08:22:11.8575751Z [340/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_32-ncols2_1.cu.o
+2026-09-16T08:22:21.9490667Z [341/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_4-ncols2_16.cu.o
+2026-09-16T08:22:22.7195243Z [342/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_32-ncols2_2.cu.o
+2026-09-16T08:22:35.0280307Z [343/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_4-ncols2_2.cu.o
+2026-09-16T08:22:37.0638814Z [344/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_4-ncols2_4.cu.o
+2026-09-16T08:22:51.8565845Z [345/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_4-ncols2_8.cu.o
+2026-09-16T08:22:55.1696686Z [346/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_64-ncols2_1.cu.o
+2026-09-16T08:23:05.8411674Z [347/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_8-ncols2_1.cu.o
+2026-09-16T08:23:08.4451814Z [348/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_8-ncols2_2.cu.o
+2026-09-16T08:23:23.4226733Z [349/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_8-ncols2_4.cu.o
+2026-09-16T08:23:26.6531850Z [350/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-mma-f16-instance-ncols1_8-ncols2_8.cu.o
+2026-09-16T08:23:44.4984251Z [351/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq1_s.cu.o
+2026-09-16T08:23:48.7825858Z [352/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq2_s.cu.o
+2026-09-16T08:24:06.4979861Z [353/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq2_xs.cu.o
+2026-09-16T08:24:08.3506298Z [354/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq2_xxs.cu.o
+2026-09-16T08:24:26.7999886Z [355/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq3_s.cu.o
+2026-09-16T08:24:28.9972782Z [356/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq3_xxs.cu.o
+2026-09-16T08:24:46.1485404Z [357/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq4_nl.cu.o
+2026-09-16T08:24:48.1451922Z [358/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-iq4_xs.cu.o
+2026-09-16T08:25:05.6431452Z [359/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-mxfp4.cu.o
+2026-09-16T08:25:10.0101143Z [360/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-nvfp4.cu.o
+2026-09-16T08:25:24.7816140Z [361/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q1_0.cu.o
+2026-09-16T08:25:28.8009580Z [362/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q2_0.cu.o
+2026-09-16T08:25:50.8486163Z [363/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q3_k.cu.o
+2026-09-16T08:25:57.5466184Z [364/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q2_k.cu.o
+2026-09-16T08:26:11.1308556Z [365/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q4_0.cu.o
+2026-09-16T08:26:18.4748840Z [366/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q4_1.cu.o
+2026-09-16T08:26:33.4441468Z [367/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q4_k.cu.o
+2026-09-16T08:26:39.4882629Z [368/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q5_0.cu.o
+2026-09-16T08:26:55.1260059Z [369/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q5_1.cu.o
+2026-09-16T08:27:02.2576765Z [370/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q5_k.cu.o
+2026-09-16T08:27:17.9606200Z [371/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q6_k.cu.o
+2026-09-16T08:27:20.7306162Z [372/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmq-instance-q8_0.cu.o
+2026-09-16T08:27:29.4485532Z [373/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_1.cu.o
+2026-09-16T08:27:34.7207043Z [374/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_10.cu.o
+2026-09-16T08:27:42.7840571Z [375/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_11.cu.o
+2026-09-16T08:27:48.6680117Z [376/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_12.cu.o
+2026-09-16T08:27:56.5671152Z [377/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_13.cu.o
+2026-09-16T08:28:02.3441273Z [378/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_14.cu.o
+2026-09-16T08:28:10.2477795Z [379/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_15.cu.o
+2026-09-16T08:28:16.3510111Z [380/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_16.cu.o
+2026-09-16T08:28:22.0282822Z [381/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_2.cu.o
+2026-09-16T08:28:28.4695965Z [382/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_3.cu.o
+2026-09-16T08:28:34.3569309Z [383/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_4.cu.o
+2026-09-16T08:28:40.7306397Z [384/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_5.cu.o
+2026-09-16T08:28:46.8107472Z [385/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_6.cu.o
+2026-09-16T08:28:53.3485398Z [386/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_7.cu.o
+2026-09-16T08:28:59.7160644Z [387/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_8.cu.o
+2026-09-16T08:29:06.4306112Z [388/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/mmf-instance-ncols_9.cu.o
+2026-09-16T08:29:13.4179725Z [389/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-vec-instance-f16-f16.cu.o
+2026-09-16T08:29:21.1728298Z [390/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-vec-instance-q4_0-q4_0.cu.o
+2026-09-16T08:29:27.3846512Z [391/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-vec-instance-q8_0-q8_0.cu.o
+2026-09-16T08:29:27.6951254Z [392/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o
+2026-09-16T08:29:27.9595340Z [393/617] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o
+2026-09-16T08:29:28.0146438Z [394/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-x64.so
+2026-09-16T08:29:28.0707663Z [395/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-sse42.so
+2026-09-16T08:29:28.1243688Z [396/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-sandybridge.so
+2026-09-16T08:29:28.1794718Z [397/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-ivybridge.so
+2026-09-16T08:29:28.2339082Z [398/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-piledriver.so
+2026-09-16T08:29:28.2888190Z [399/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-haswell.so
+2026-09-16T08:29:28.3425855Z [400/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-skylakex.so
+2026-09-16T08:29:28.3960817Z [401/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-cannonlake.so
+2026-09-16T08:29:28.4513636Z [402/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-cascadelake.so
+2026-09-16T08:29:28.5062936Z [403/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-icelake.so
+2026-09-16T08:29:28.5612865Z [404/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-cooperlake.so
+2026-09-16T08:29:28.6163306Z [405/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-zen4.so
+2026-09-16T08:29:28.6688301Z [406/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-alderlake.so
+2026-09-16T08:29:28.7212104Z [407/617] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-sapphirerapids.so
+2026-09-16T08:29:29.0704823Z [408/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama.cpp.o
+2026-09-16T08:29:29.4334791Z [409/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-adapter.cpp.o
+2026-09-16T08:29:29.6463855Z [410/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-arch.cpp.o
+2026-09-16T08:29:29.9261381Z [411/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-batch.cpp.o
+2026-09-16T08:29:30.1667974Z [412/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-chat.cpp.o
+2026-09-16T08:29:30.4558782Z [413/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-context.cpp.o
+2026-09-16T08:29:30.6794694Z [414/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-cparams.cpp.o
+2026-09-16T08:29:31.0544120Z [415/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-grammar.cpp.o
+2026-09-16T08:29:31.3327168Z [416/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-graph.cpp.o
+2026-09-16T08:29:31.5671860Z [417/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-hparams.cpp.o
+2026-09-16T08:29:31.7868191Z [418/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-impl.cpp.o
+2026-09-16T08:29:32.0010957Z [419/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-io.cpp.o
+2026-09-16T08:29:32.3121972Z [420/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o
+2026-09-16T08:29:32.5776977Z [421/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-iswa.cpp.o
+2026-09-16T08:29:32.8774867Z [422/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-dsa.cpp.o
+2026-09-16T08:29:33.1563541Z [423/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-dsa-iswa.cpp.o
+2026-09-16T08:29:33.4157722Z [424/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-msa.cpp.o
+2026-09-16T08:29:33.6783286Z [425/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-dsv4.cpp.o
+2026-09-16T08:29:33.9339777Z [426/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory.cpp.o
+2026-09-16T08:29:34.0187435Z [427/617] Building CUDA object _deps/crexx_llama_source-build/ggml/src/ggml-cuda/CMakeFiles/ggml-cuda.dir/template-instances/fattn-vec-instance-bf16-bf16.cu.o
+2026-09-16T08:29:34.2001130Z [428/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory-hybrid.cpp.o
+2026-09-16T08:29:34.4387438Z [429/617] Linking CUDA shared module bin/providers/libcrexx-ggml-cuda.so
+2026-09-16T08:29:34.4828608Z [430/617] Linking CXX shared library bin/providers/libcrexx-ggml.so.0.23.0
+2026-09-16T08:29:34.4855983Z [431/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory-hybrid-iswa.cpp.o
+2026-09-16T08:29:34.4858424Z [432/617] Creating library symlink bin/providers/libcrexx-ggml.so.0 bin/providers/libcrexx-ggml.so
+2026-09-16T08:29:34.7559135Z [433/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory-hybrid-idx.cpp.o
+2026-09-16T08:29:34.7599541Z [434/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory-recurrent.cpp.o
+2026-09-16T08:29:35.0144778Z [435/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-mmap.cpp.o
+2026-09-16T08:29:35.0935811Z [436/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-model-loader.cpp.o
+2026-09-16T08:29:35.3008255Z [437/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-model-saver.cpp.o
+2026-09-16T08:29:35.4455811Z [438/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-model.cpp.o
+2026-09-16T08:29:35.6093149Z [439/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-quant.cpp.o
+2026-09-16T08:29:35.7410468Z [440/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-sampler.cpp.o
+2026-09-16T08:29:35.8863644Z [441/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-vocab.cpp.o
+2026-09-16T08:29:35.9456153Z [442/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/unicode-data.cpp.o
+2026-09-16T08:29:36.1315096Z [443/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/unicode.cpp.o
+2026-09-16T08:29:36.2120765Z [444/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/afmoe.cpp.o
+2026-09-16T08:29:36.4741556Z [445/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/apertus.cpp.o
+2026-09-16T08:29:36.5405370Z [446/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/arcee.cpp.o
+2026-09-16T08:29:36.7362023Z [447/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/arctic.cpp.o
+2026-09-16T08:29:36.8074857Z [448/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/arwkv7.cpp.o
+2026-09-16T08:29:36.9961217Z [449/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/baichuan.cpp.o
+2026-09-16T08:29:37.0906152Z [450/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bailingmoe.cpp.o
+2026-09-16T08:29:37.2936346Z [451/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bailingmoe2.cpp.o
+2026-09-16T08:29:37.3891264Z [452/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bailingmoe3.cpp.o
+2026-09-16T08:29:37.5481953Z [453/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bert.cpp.o
+2026-09-16T08:29:37.6868930Z [454/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bitnet.cpp.o
+2026-09-16T08:29:37.8010965Z [455/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bloom.cpp.o
+2026-09-16T08:29:38.0167937Z [456/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/chameleon.cpp.o
+2026-09-16T08:29:38.0880747Z [457/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/chatglm.cpp.o
+2026-09-16T08:29:38.2873607Z [458/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/clip.cpp.o
+2026-09-16T08:29:38.3836019Z [459/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/codeshell.cpp.o
+2026-09-16T08:29:38.5462500Z [460/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/cogvlm.cpp.o
+2026-09-16T08:29:38.7197173Z [461/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/cohere2.cpp.o
+2026-09-16T08:29:38.8085534Z [462/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/cohere2moe.cpp.o
+2026-09-16T08:29:38.9931492Z [463/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/command-r.cpp.o
+2026-09-16T08:29:39.0639882Z [464/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dbrx.cpp.o
+2026-09-16T08:29:39.2971360Z [465/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deci.cpp.o
+2026-09-16T08:29:39.3356027Z [466/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek.cpp.o
+2026-09-16T08:29:39.5722775Z [467/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek2.cpp.o
+2026-09-16T08:29:39.6497895Z [468/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek2ocr.cpp.o
+2026-09-16T08:29:39.8403765Z [469/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek32.cpp.o
+2026-09-16T08:29:39.9603159Z [470/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek4.cpp.o
+2026-09-16T08:29:40.0902606Z [471/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/delta-net-base.cpp.o
+2026-09-16T08:29:40.2248531Z [472/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dflash.cpp.o
+2026-09-16T08:29:40.3698662Z [473/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dots1.cpp.o
+2026-09-16T08:29:40.4920620Z [474/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dots3note.cpp.o
+2026-09-16T08:29:40.6183194Z [475/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dream.cpp.o
+2026-09-16T08:29:40.7500644Z [476/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/eagle3.cpp.o
+2026-09-16T08:29:40.8896817Z [477/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/ernie4-5-moe.cpp.o
+2026-09-16T08:29:41.0260291Z [478/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/ernie4-5.cpp.o
+2026-09-16T08:29:41.1449507Z [479/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/eurobert.cpp.o
+2026-09-16T08:29:41.3074936Z [480/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/exaone-moe.cpp.o
+2026-09-16T08:29:41.4108065Z [481/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/exaone.cpp.o
+2026-09-16T08:29:41.5583364Z [482/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/exaone4.cpp.o
+2026-09-16T08:29:41.6790426Z [483/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/falcon-h1.cpp.o
+2026-09-16T08:29:41.8290197Z [484/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/falcon.cpp.o
+2026-09-16T08:29:41.9472532Z [485/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma-embedding.cpp.o
+2026-09-16T08:29:42.0817268Z [486/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma.cpp.o
+2026-09-16T08:29:42.2413717Z [487/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma2.cpp.o
+2026-09-16T08:29:42.3390269Z [488/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma3.cpp.o
+2026-09-16T08:29:42.5145438Z [489/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma3n.cpp.o
+2026-09-16T08:29:42.5984872Z [490/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma4-assistant.cpp.o
+2026-09-16T08:29:42.7663772Z [491/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma4.cpp.o
+2026-09-16T08:29:42.8749895Z [492/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/glm-dsa.cpp.o
+2026-09-16T08:29:43.0427256Z [493/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/glm4-moe.cpp.o
+2026-09-16T08:29:43.1711986Z [494/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/glm4.cpp.o
+2026-09-16T08:29:43.3010238Z [495/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gpt2.cpp.o
+2026-09-16T08:29:43.4399422Z [496/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gptneox.cpp.o
+2026-09-16T08:29:43.5746312Z [497/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite-hybrid.cpp.o
+2026-09-16T08:29:43.7163009Z [498/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite-moe.cpp.o
+2026-09-16T08:29:43.8495891Z [499/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite-swa.cpp.o
+2026-09-16T08:29:43.9905271Z [500/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite-switch.cpp.o
+2026-09-16T08:29:44.1057829Z [501/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite.cpp.o
+2026-09-16T08:29:44.3046328Z [502/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/grok.cpp.o
+2026-09-16T08:29:44.3755656Z [503/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/grovemoe.cpp.o
+2026-09-16T08:29:44.6212273Z [504/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/hunyuan-dense.cpp.o
+2026-09-16T08:29:44.6460731Z [505/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/hunyuan-moe.cpp.o
+2026-09-16T08:29:44.8937527Z [506/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/hunyuan-vl.cpp.o
+2026-09-16T08:29:44.9135530Z [507/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/hy-v3.cpp.o
+2026-09-16T08:29:45.1504793Z [508/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/internlm2.cpp.o
+2026-09-16T08:29:45.1693165Z [509/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jais.cpp.o
+2026-09-16T08:29:45.4258904Z [510/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jamba.cpp.o
+2026-09-16T08:29:45.4465478Z [511/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jais2.cpp.o
+2026-09-16T08:29:45.6935520Z [512/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jina-bert-v2.cpp.o
+2026-09-16T08:29:45.7273794Z [513/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jina-bert-v3.cpp.o
+2026-09-16T08:29:45.9608652Z [514/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/kimi-k3.cpp.o
+2026-09-16T08:29:45.9825313Z [515/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/kimi-linear.cpp.o
+2026-09-16T08:29:46.2807997Z [516/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/laguna.cpp.o
+2026-09-16T08:29:46.2850777Z [517/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/lfm2.cpp.o
+2026-09-16T08:29:46.5422882Z [518/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llada-moe.cpp.o
+2026-09-16T08:29:46.5732346Z [519/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/lfm2moe.cpp.o
+2026-09-16T08:29:46.8159654Z [520/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llada.cpp.o
+2026-09-16T08:29:46.8311443Z [521/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llama-embed.cpp.o
+2026-09-16T08:29:47.1207607Z [522/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llama4.cpp.o
+2026-09-16T08:29:47.1626276Z [523/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llama.cpp.o
+2026-09-16T08:29:47.3849027Z [524/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/maincoder.cpp.o
+2026-09-16T08:29:47.4348347Z [525/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mamba-base.cpp.o
+2026-09-16T08:29:47.6422893Z [526/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mamba.cpp.o
+2026-09-16T08:29:47.6880823Z [527/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mamba2.cpp.o
+2026-09-16T08:29:47.9084989Z [528/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mellum.cpp.o
+2026-09-16T08:29:47.9483136Z [529/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mimo2.cpp.o
+2026-09-16T08:29:48.1948879Z [530/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minicpm.cpp.o
+2026-09-16T08:29:48.2236806Z [531/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minicpm3.cpp.o
+2026-09-16T08:29:48.4940169Z [532/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minimax-01.cpp.o
+2026-09-16T08:29:48.5754304Z [533/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minimax-m2.cpp.o
+2026-09-16T08:29:48.7611573Z [534/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minimax-m3.cpp.o
+2026-09-16T08:29:48.8321160Z [535/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mistral3.cpp.o
+2026-09-16T08:29:49.0407144Z [536/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mistral4.cpp.o
+2026-09-16T08:29:49.1186069Z [537/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/modern-bert.cpp.o
+2026-09-16T08:29:49.2957552Z [538/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mpt.cpp.o
+2026-09-16T08:29:49.3666254Z [539/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/muse-glimmer.cpp.o
+2026-09-16T08:29:49.5741121Z [540/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nanbeige.cpp.o
+2026-09-16T08:29:49.6380994Z [541/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nemotron-h-moe.cpp.o
+2026-09-16T08:29:49.8286481Z [542/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nemotron-h.cpp.o
+2026-09-16T08:29:49.9687514Z [543/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nemotron.cpp.o
+2026-09-16T08:29:50.1005375Z [544/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/neo-bert.cpp.o
+2026-09-16T08:29:50.3629146Z [545/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nomic-bert.cpp.o
+2026-09-16T08:29:50.3894785Z [546/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nomic-bert-moe.cpp.o
+2026-09-16T08:29:50.6218892Z [547/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/olmo.cpp.o
+2026-09-16T08:29:50.6440213Z [548/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/olmo2.cpp.o
+2026-09-16T08:29:50.8951328Z [549/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/olmoe.cpp.o
+2026-09-16T08:29:50.9043520Z [550/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/openai-moe.cpp.o
+2026-09-16T08:29:51.1782023Z [551/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/orion.cpp.o
+2026-09-16T08:29:51.2115813Z [552/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/openelm.cpp.o
+2026-09-16T08:29:51.4471784Z [553/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/paddleocr.cpp.o
+2026-09-16T08:29:51.5085558Z [554/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/pangu-embed.cpp.o
+2026-09-16T08:29:51.7315250Z [555/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/phi2.cpp.o
+2026-09-16T08:29:51.7824254Z [556/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/phi3.cpp.o
+2026-09-16T08:29:52.0346113Z [557/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/phimoe.cpp.o
+2026-09-16T08:29:52.0601097Z [558/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/plamo.cpp.o
+2026-09-16T08:29:52.3079988Z [559/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/plamo2.cpp.o
+2026-09-16T08:29:52.3342784Z [560/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/plamo3.cpp.o
+2026-09-16T08:29:52.5797290Z [561/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/plm.cpp.o
+2026-09-16T08:29:52.6035361Z [562/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/pockettts.cpp.o
+2026-09-16T08:29:52.8504210Z [563/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen.cpp.o
+2026-09-16T08:29:52.9084254Z [564/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen2.cpp.o
+2026-09-16T08:29:53.1338632Z [565/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen2moe.cpp.o
+2026-09-16T08:29:53.2197586Z [566/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen2vl.cpp.o
+2026-09-16T08:29:53.4720614Z [567/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3.cpp.o
+2026-09-16T08:29:53.5091644Z [568/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen35.cpp.o
+2026-09-16T08:29:53.7424881Z [569/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen35moe.cpp.o
+2026-09-16T08:29:53.7605660Z [570/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3moe.cpp.o
+2026-09-16T08:29:54.0045519Z [571/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3next.cpp.o
+2026-09-16T08:29:54.0297883Z [572/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3tts.cpp.o
+2026-09-16T08:29:54.2968927Z [573/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3vlmoe.cpp.o
+2026-09-16T08:29:54.3534917Z [574/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3vl.cpp.o
+2026-09-16T08:29:54.5724163Z [575/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen4exp.cpp.o
+2026-09-16T08:29:54.6721021Z [576/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/refact.cpp.o
+2026-09-16T08:29:54.8378934Z [577/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rnd1.cpp.o
+2026-09-16T08:29:54.9315609Z [578/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv6-base.cpp.o
+2026-09-16T08:29:55.0937842Z [579/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv6.cpp.o
+2026-09-16T08:29:55.1918948Z [580/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv6qwen2.cpp.o
+2026-09-16T08:29:55.3627599Z [581/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv7-base.cpp.o
+2026-09-16T08:29:55.4615558Z [582/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv7.cpp.o
+2026-09-16T08:29:55.6611602Z [583/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/seed-oss.cpp.o
+2026-09-16T08:29:55.7125166Z [584/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/smallthinker.cpp.o
+2026-09-16T08:29:55.9151801Z [585/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/smollm3.cpp.o
+2026-09-16T08:29:55.9745737Z [586/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/stablelm.cpp.o
+2026-09-16T08:29:56.2108524Z [587/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/starcoder.cpp.o
+2026-09-16T08:29:56.2924606Z [588/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/starcoder2.cpp.o
+2026-09-16T08:29:56.5177897Z [589/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/step35.cpp.o
+2026-09-16T08:29:56.5824104Z [590/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/t5.cpp.o
+2026-09-16T08:29:56.7859887Z [591/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/t5encoder.cpp.o
+2026-09-16T08:29:56.8585069Z [592/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/talkie.cpp.o
+2026-09-16T08:29:57.0936250Z [593/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/wavtokenizer-dec.cpp.o
+2026-09-16T08:29:57.1364827Z [594/617] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/xverse.cpp.o
+2026-09-16T08:29:57.3028368Z [595/617] Linking CXX shared library bin/providers/libcrexx-llama-engine.so.0.4.0
+2026-09-16T08:29:58.3295968Z [596/617] Building C object lib/plugins/llama/CMakeFiles/crexx_llama_bridge.dir/__/__/__/binutils/rxsha256.c.o
+2026-09-16T08:29:58.3320359Z [597/617] Creating library symlink bin/providers/libcrexx-llama-engine.so.0 bin/providers/libcrexx-llama-engine.so
+2026-09-16T08:29:58.5068314Z [598/617] Building C object lib/plugins/llama/CMakeFiles/llama_provider.dir/rxllama.c.o
+2026-09-16T08:29:58.6821894Z [599/617] Building C object lib/plugins/llama/CMakeFiles/llama_provider_static.dir/rxllama.c.o
+2026-09-16T08:29:59.0298305Z [600/617] Building CXX object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/provider_package.cpp.o
+2026-09-16T08:29:59.2011779Z [601/617] Building C object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/__/__/__/binutils/rxsha256.c.o
+2026-09-16T08:29:59.4396162Z [602/617] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_release_engine_smoke.dir/__/__/__/tests/native-inference/release_engine_smoke.cpp.o
+2026-09-16T08:29:59.7422071Z [603/617] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_package_utf8_cxx17.dir/__/__/__/tests/native-inference/package_utf8.cpp.o
+2026-09-16T08:30:00.0856265Z [604/617] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_package_utf8_cxx20.dir/__/__/__/tests/native-inference/package_utf8.cpp.o
+2026-09-16T08:30:00.0857240Z In file included from /home/runner/work/CREXX/CREXX/tests/native-inference/package_utf8.cpp:2:
+2026-09-16T08:30:00.0859103Z /home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp: In function ‘std::filesystem::__cxx11::path rxllama_package::relative(const std::filesystem::__cxx11::path&, const std::string&)’:
+2026-09-16T08:30:00.0861243Z /home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp:37:24: warning: ‘std::filesystem::__cxx11::path std::filesystem::__cxx11::u8path(const _Source&) [with _Source = std::__cxx11::basic_string<char>; _Require = path; _CharT = char]’ is deprecated: use 'path((const char8_t*)&*source)' instead [-Wdeprecated-declarations]
+2026-09-16T08:30:00.0862626Z    37 |     auto p = fs::u8path(name);
+2026-09-16T08:30:00.0862950Z       |              ~~~~~~~~~~^~~~~~
+2026-09-16T08:30:00.0863569Z In file included from /usr/include/c++/13/filesystem:49,
+2026-09-16T08:30:00.0865157Z                  from /home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp:3:
+2026-09-16T08:30:00.0866047Z /usr/include/c++/13/bits/fs_path.h:843:5: note: declared here
+2026-09-16T08:30:00.0875381Z   843 |     u8path(const _Source& __source)
+2026-09-16T08:30:00.0875925Z       |     ^~~~~~
+2026-09-16T08:30:00.0876843Z /home/runner/work/CREXX/CREXX/tests/native-inference/package_utf8.cpp: In function ‘int main()’:
+2026-09-16T08:30:00.0879813Z /home/runner/work/CREXX/CREXX/tests/native-inference/package_utf8.cpp:11:50: warning: ‘std::filesystem::__cxx11::path std::filesystem::__cxx11::u8path(const _Source&) [with _Source = std::__cxx11::basic_string<char>; _Require = path; _CharT = char]’ is deprecated: use 'path((const char8_t*)&*source)' instead [-Wdeprecated-declarations]
+2026-09-16T08:30:00.0881932Z    11 |         const auto path = std::filesystem::u8path(expected);
+2026-09-16T08:30:00.0882565Z       |                           ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+2026-09-16T08:30:00.0883185Z /usr/include/c++/13/bits/fs_path.h:843:5: note: declared here
+2026-09-16T08:30:00.0883825Z   843 |     u8path(const _Source& __source)
+2026-09-16T08:30:00.0884548Z       |     ^~~~~~
+2026-09-16T08:30:01.7835946Z [605/617] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_bridge_lifecycle.dir/__/__/__/tests/native-inference/bridge_lifecycle.cpp.o
+2026-09-16T08:30:01.8293014Z [606/617] Linking CXX executable bin/crexx-provider-package
+2026-09-16T08:30:01.8731533Z [607/617] Linking CXX executable lib/plugins/llama/tests/rxllama_package_utf8_cxx17
+2026-09-16T08:30:01.9160849Z [608/617] Linking CXX executable lib/plugins/llama/tests/rxllama_package_utf8_cxx20
+2026-09-16T08:30:04.3001750Z [609/617] Building CXX object lib/plugins/llama/CMakeFiles/crexx_llama_bridge.dir/bridge.cpp.o
+2026-09-16T08:30:04.3538624Z [610/617] Linking CXX shared library bin/providers/libcrexx-llama.so.1
+2026-09-16T08:30:04.3562267Z [611/617] Creating library symlink bin/providers/libcrexx-llama.so
+2026-09-16T08:30:04.3775639Z [612/617] Linking C shared module bin/rxllama.rxplugin
+2026-09-16T08:30:04.4341907Z [613/617] Linking CXX executable lib/plugins/llama/tests/rxllama_release_engine_smoke
+2026-09-16T08:30:04.4824968Z [614/617] Linking CXX executable lib/plugins/llama/tests/rxllama_bridge_lifecycle
+2026-09-16T08:30:14.3698647Z [615/617] Linking C static library bin/rxllama_static.a
+2026-09-16T08:30:19.5143545Z [616/617] cd /home/runner/work/_temp/build/lib/plugins/llama && /usr/local/bin/cmake -DINPUT=/home/runner/work/_temp/build/lib/plugins/llama/rxllama-package-Release.cmake -P /home/runner/work/CREXX/CREXX/rxpa/WriteProviderPackage.cmake
+2026-09-16T08:30:19.5145114Z CMake Warning at /home/runner/work/CREXX/CREXX/rxpa/WriteProviderPackage.cmake:39 (file):
+2026-09-16T08:30:19.5145678Z   Dependency libcudart.so.12 found in search directory:
+2026-09-16T08:30:19.5145967Z 
+2026-09-16T08:30:19.5146105Z     /home/runner/work/_temp/crexx-cuda/lib
+2026-09-16T08:30:19.5146321Z 
+2026-09-16T08:30:19.5146555Z   See file(GET_RUNTIME_DEPENDENCIES) documentation for more information.
+2026-09-16T08:30:19.5146878Z 
+2026-09-16T08:30:19.5146883Z 
+2026-09-16T08:30:19.5147166Z CMake Warning at /home/runner/work/CREXX/CREXX/rxpa/WriteProviderPackage.cmake:39 (file):
+2026-09-16T08:30:19.5147735Z   Dependency libcublas.so.12 found in search directory:
+2026-09-16T08:30:19.5147986Z 
+2026-09-16T08:30:19.5148115Z     /home/runner/work/_temp/crexx-cuda/lib
+2026-09-16T08:30:19.5148326Z 
+2026-09-16T08:30:19.5148537Z   See file(GET_RUNTIME_DEPENDENCIES) documentation for more information.
+2026-09-16T08:30:19.5148844Z 
+2026-09-16T08:30:19.5148848Z 
+2026-09-16T08:30:19.5198762Z ##[group]Run ctest --test-dir "/home/runner/work/_temp/build" --parallel 1 --output-on-failure \
+2026-09-16T08:30:19.5199546Z [36;1mctest --test-dir "/home/runner/work/_temp/build" --parallel 1 --output-on-failure \[0m
+2026-09-16T08:30:19.5200219Z [36;1m  -R '^rxllama_(backend_probe_cycle|package_windows_paths|package_utf8_cxx(17|20))$'[0m
+2026-09-16T08:30:19.5236648Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:30:19.5237026Z env:
+2026-09-16T08:30:19.5237266Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:30:19.5237555Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:30:19.5237928Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:19.5238412Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:30:19.5238879Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:19.5239299Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:19.5239750Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:19.5240180Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:30:19.5240583Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:30:19.5240969Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:30:19.5241467Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:30:19.5242027Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:30:19.5242426Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:30:19.5242869Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:30:19.5307069Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:30:19.5307373Z ##[endgroup]
+2026-09-16T08:30:19.5385025Z Internal ctest changing into directory: /home/runner/work/_temp/build
+2026-09-16T08:30:19.5387870Z Test project /home/runner/work/_temp/build
+2026-09-16T08:30:19.6337915Z     Start 1739: rxllama_package_windows_paths
+2026-09-16T08:30:19.6368827Z 1/4 Test #1739: rxllama_package_windows_paths ....   Passed    0.00 sec
+2026-09-16T08:30:19.6370070Z     Start 1740: rxllama_package_utf8_cxx17
+2026-09-16T08:30:19.6388345Z 2/4 Test #1740: rxllama_package_utf8_cxx17 .......   Passed    0.00 sec
+2026-09-16T08:30:19.6389179Z     Start 1741: rxllama_package_utf8_cxx20
+2026-09-16T08:30:19.6405432Z 3/4 Test #1741: rxllama_package_utf8_cxx20 .......   Passed    0.00 sec
+2026-09-16T08:30:19.6406224Z     Start 1742: rxllama_backend_probe_cycle
+2026-09-16T08:30:20.5375429Z 4/4 Test #1742: rxllama_backend_probe_cycle ......   Passed    0.90 sec
+2026-09-16T08:30:20.5378012Z 
+2026-09-16T08:30:20.5378402Z 100% tests passed, 0 tests failed out of 4
+2026-09-16T08:30:20.5378805Z 
+2026-09-16T08:30:20.5378990Z Label Time Summary:
+2026-09-16T08:30:20.5379360Z comprehensive    =   0.90 sec*proc (4 tests)
+2026-09-16T08:30:20.5379736Z correctness      =   0.01 sec*proc (3 tests)
+2026-09-16T08:30:20.5380103Z filesystem       =   0.01 sec*proc (3 tests)
+2026-09-16T08:30:20.5380453Z library          =   0.90 sec*proc (4 tests)
+2026-09-16T08:30:20.5380776Z llama            =   0.90 sec*proc (4 tests)
+2026-09-16T08:30:20.5381100Z regression       =   0.90 sec*proc (1 test)
+2026-09-16T08:30:20.5381427Z rxpa             =   0.90 sec*proc (4 tests)
+2026-09-16T08:30:20.5381637Z 
+2026-09-16T08:30:20.5381757Z Total Test time (real) =   1.00 sec
+2026-09-16T08:30:20.5422807Z ##[group]Run python scripts/package-llama-release.py --stage-only \
+2026-09-16T08:30:20.5423400Z [36;1mpython scripts/package-llama-release.py --stage-only \[0m
+2026-09-16T08:30:20.5424171Z [36;1m  --core-archive "/home/runner/work/_temp/core-download/CREXX-user-test-31d4974f12454842902224d495e4aafd111c2134-linux-x64.zip" \[0m
+2026-09-16T08:30:20.5425431Z [36;1m  --build "/home/runner/work/_temp/build" --output "/home/runner/work/_temp/plugin-package" \[0m
+2026-09-16T08:30:20.5426102Z [36;1m  --commit "31d4974f12454842902224d495e4aafd111c2134" --platform "linux-x64" \[0m
+2026-09-16T08:30:20.5426599Z [36;1m  --toolchain "gcc" --backend "cuda"[0m
+2026-09-16T08:30:20.5462286Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:30:20.5462668Z env:
+2026-09-16T08:30:20.5462904Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:30:20.5463198Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:30:20.5463581Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:20.5464075Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:30:20.5464831Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:20.5465262Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:20.5465698Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:20.5466133Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:30:20.5466539Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:30:20.5466922Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:30:20.5467411Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:30:20.5467941Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:30:20.5468327Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:30:20.5468770Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:30:20.5532300Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:30:20.5532617Z ##[endgroup]
+2026-09-16T08:30:22.2887215Z PLUGIN_PAYLOAD: /home/runner/work/_temp/plugin-package/plugin-stage/CREXX-linux-x64
+2026-09-16T08:30:22.3338545Z ##[group]Run mkdir -p "/home/runner/work/_temp/plugin-package/plugin-stage/CREXX-linux-x64/share/crexx/llama/cuda-licenses"
+2026-09-16T08:30:22.3340090Z [36;1mmkdir -p "/home/runner/work/_temp/plugin-package/plugin-stage/CREXX-linux-x64/share/crexx/llama/cuda-licenses"[0m
+2026-09-16T08:30:22.3341164Z [36;1mcp -R "/home/runner/work/_temp/crexx-cuda/licenses/." "/home/runner/work/_temp/plugin-package/plugin-stage/CREXX-linux-x64/share/crexx/llama/cuda-licenses/"[0m
+2026-09-16T08:30:22.3378608Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:30:22.3379026Z env:
+2026-09-16T08:30:22.3379256Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:30:22.3379543Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:30:22.3379917Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:22.3380391Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:30:22.3380881Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:22.3381337Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:22.3381789Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:22.3382223Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:30:22.3382629Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:30:22.3383006Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:30:22.3383493Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:30:22.3384022Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:30:22.3384652Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:30:22.3385113Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:30:22.3453166Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:30:22.3453476Z ##[endgroup]
+2026-09-16T08:30:22.4309830Z ##[group]Run python scripts/package-llama-release.py --finalize-only \
+2026-09-16T08:30:22.4310788Z [36;1mpython scripts/package-llama-release.py --finalize-only \[0m
+2026-09-16T08:30:22.4312141Z [36;1m  --core-archive "/home/runner/work/_temp/core-download/CREXX-user-test-31d4974f12454842902224d495e4aafd111c2134-linux-x64.zip" \[0m
+2026-09-16T08:30:22.4313703Z [36;1m  --build "/home/runner/work/_temp/build" --output "/home/runner/work/_temp/plugin-package" \[0m
+2026-09-16T08:30:22.4315082Z [36;1m  --commit "31d4974f12454842902224d495e4aafd111c2134" --platform "linux-x64" \[0m
+2026-09-16T08:30:22.4315939Z [36;1m  --toolchain "gcc" --backend "cuda"[0m
+2026-09-16T08:30:22.4363361Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:30:22.4363938Z env:
+2026-09-16T08:30:22.4364298Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:30:22.4364995Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:30:22.4365674Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:22.4366505Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:30:22.4367294Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:22.4368042Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:22.4368795Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:30:22.4369553Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:30:22.4370257Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:30:22.4370916Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:30:22.4371761Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:30:22.4372634Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:30:22.4373302Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:30:22.4374089Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:30:22.4505161Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:30:22.4505507Z ##[endgroup]
+2026-09-16T08:31:09.5883704Z PACKAGED: /home/runner/work/_temp/plugin-package/assets/llama.rexx-user-test-31d4974f12454842902224d495e4aafd111c2134-linux-x64-cuda.zip
+2026-09-16T08:31:09.5885607Z CONSUMER_PAYLOAD: /home/runner/work/_temp/plugin-package/combined/CREXX-linux-x64
+2026-09-16T08:31:09.6004084Z ##[group]Run python tests/native-inference/release_smoke.py --source . \
+2026-09-16T08:31:09.6005383Z [36;1mpython tests/native-inference/release_smoke.py --source . \[0m
+2026-09-16T08:31:09.6006190Z [36;1m  --build "/home/runner/work/_temp/build" \[0m
+2026-09-16T08:31:09.6007218Z [36;1m  --helper "/home/runner/work/_temp/build/lib/plugins/llama/tests/rxllama_release_engine_smoke" \[0m
+2026-09-16T08:31:09.6008486Z [36;1m  --payload "/home/runner/work/_temp/plugin-package/combined/CREXX-linux-x64" \[0m
+2026-09-16T08:31:09.6009592Z [36;1m  --backends "cpu,cuda" --output-root "/home/runner/work/_temp/release-smoke"[0m
+2026-09-16T08:31:09.6048018Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:31:09.6048417Z env:
+2026-09-16T08:31:09.6048664Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:31:09.6048963Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:31:09.6049359Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:09.6049875Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:31:09.6050357Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:09.6050790Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:09.6051228Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:09.6051665Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:31:09.6052088Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:31:09.6052488Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:31:09.6052984Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:31:09.6053522Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:31:09.6053908Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:31:09.6054630Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:31:09.6118258Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:31:09.6118785Z ##[endgroup]
+2026-09-16T08:31:09.6580615Z SMOKE_RECORD=/home/runner/work/_temp/release-smoke/release-smoke-4rv8xiqm
+2026-09-16T08:31:11.3419880Z PASS: engine
+2026-09-16T08:31:11.4568653Z PASS: altered-backend-rejected
+2026-09-16T08:31:11.4609867Z PASS: missing-manifest-rejected
+2026-09-16T08:31:11.9270407Z PASS: opt-compile
+2026-09-16T08:31:12.0417778Z PASS: opt-assemble
+2026-09-16T08:31:12.8583573Z PASS: opt-link
+2026-09-16T08:31:13.8752776Z PASS: opt-rxvm
+2026-09-16T08:31:14.9423500Z PASS: opt-rxbvm
+2026-09-16T08:31:15.4079511Z PASS: noopt-compile
+2026-09-16T08:31:15.4723713Z PASS: noopt-assemble
+2026-09-16T08:31:16.2889389Z PASS: noopt-link
+2026-09-16T08:31:17.3562893Z PASS: noopt-rxvm
+2026-09-16T08:31:18.4237687Z PASS: noopt-rxbvm
+2026-09-16T08:31:42.6025285Z PASS: native-build
+2026-09-16T08:31:43.6824228Z PASS: relocated-native
+2026-09-16T08:31:43.7517004Z ##[group]Run mkdir -p "/home/runner/work/_temp/compiler-cache"
+2026-09-16T08:31:43.7517549Z [36;1mmkdir -p "/home/runner/work/_temp/compiler-cache"[0m
+2026-09-16T08:31:43.7518069Z [36;1msccache --show-stats > "/home/runner/work/_temp/compiler-cache/stats.txt"[0m
+2026-09-16T08:31:43.7518764Z [36;1msccache --show-stats --stats-format=json > "/home/runner/work/_temp/compiler-cache/stats.json"[0m
+2026-09-16T08:31:43.7519382Z [36;1mcat "/home/runner/work/_temp/compiler-cache/stats.txt"[0m
+2026-09-16T08:31:43.7556005Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-16T08:31:43.7556391Z env:
+2026-09-16T08:31:43.7556628Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:31:43.7556920Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:31:43.7557297Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:43.7557783Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:31:43.7558286Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:43.7558902Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:43.7559334Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:43.7559767Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:31:43.7560184Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:31:43.7560576Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:31:43.7561065Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:31:43.7561594Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:31:43.7561983Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:31:43.7562421Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:31:43.7626282Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:31:43.7626584Z ##[endgroup]
+2026-09-16T08:31:43.7741604Z Compile requests                          585
+2026-09-16T08:31:43.7742311Z Compile requests executed                2873
+2026-09-16T08:31:43.7742962Z Cache hits                               2726
+2026-09-16T08:31:43.7743601Z Cache hits (C/C++)                        439
+2026-09-16T08:31:43.7744179Z Cache hits (CUBIN)                        571
+2026-09-16T08:31:43.7745112Z Cache hits (CUDA)                         143
+2026-09-16T08:31:43.7745735Z Cache hits (CUDA (Device code))           143
+2026-09-16T08:31:43.7746339Z Cache hits (PTX)                         1430
+2026-09-16T08:31:43.7746850Z Cache misses                                4
+2026-09-16T08:31:43.7747181Z Cache misses (C/C++)                        3
+2026-09-16T08:31:43.7747509Z Cache misses (CUBIN)                        1
+2026-09-16T08:31:43.7747941Z Cache hits rate                         99.85 %
+2026-09-16T08:31:43.7748536Z Cache hits rate (C/C++)                 99.32 %
+2026-09-16T08:31:43.7749143Z Cache hits rate (CUBIN)                 99.83 %
+2026-09-16T08:31:43.7749739Z Cache hits rate (CUDA)                 100.00 %
+2026-09-16T08:31:43.7750309Z Cache hits rate (CUDA (Device code))   100.00 %
+2026-09-16T08:31:43.7750940Z Cache hits rate (PTX)                  100.00 %
+2026-09-16T08:31:43.7751555Z Cache timeouts                              0
+2026-09-16T08:31:43.7752157Z Cache read errors                           0
+2026-09-16T08:31:43.7752770Z Forced recaches                             0
+2026-09-16T08:31:43.7753379Z Cache write errors                          1
+2026-09-16T08:31:43.7753970Z Cache errors                                0
+2026-09-16T08:31:43.7754870Z Compilations                              147
+2026-09-16T08:31:43.7755507Z Compilation failures                        0
+2026-09-16T08:31:43.7756169Z Non-cacheable compilations                143
+2026-09-16T08:31:43.7756808Z Non-cacheable calls                         0
+2026-09-16T08:31:43.7757442Z Non-compilation calls                       0
+2026-09-16T08:31:43.7758082Z Unsupported compiler calls                  0
+2026-09-16T08:31:43.7759035Z Average cache write                     0.600 s
+2026-09-16T08:31:43.7759782Z Average compiler                       11.155 s
+2026-09-16T08:31:43.7760447Z Average cache read hit                  0.189 s
+2026-09-16T08:31:43.7761110Z Failed distributed compilations             0
+2026-09-16T08:31:43.7762171Z Cache location                       ghac, name: 90541733aa72480a9e77ce99e66fc1cfabfa835d74c751408eb0351b7adcec6b, prefix: /sccache/
+2026-09-16T08:31:43.7762797Z Base directories                     (none)
+2026-09-16T08:31:43.7763132Z Version (client)                     0.16.0
+2026-09-16T08:31:43.7811359Z ##[group]Run actions/upload-artifact@v7
+2026-09-16T08:31:43.7811705Z with:
+2026-09-16T08:31:43.7812117Z   name: plugin-qa-llama.rexx-linux-x64-cuda-31d4974f12454842902224d495e4aafd111c2134
+2026-09-16T08:31:43.7814815Z   path: /home/runner/work/_temp/plugin-package/qa
+/home/runner/work/_temp/release-smoke
+/home/runner/work/_temp/build/Testing/Temporary
+/home/runner/work/_temp/build/CMakeCache.txt
+/home/runner/work/_temp/build/CMakeFiles/CMakeConfigureLog.yaml
+/home/runner/work/_temp/build/lib/plugins/llama/tests/release-smoke-msvc-runtime-files.txt
+/home/runner/work/_temp/compiler-cache
+/home/runner/work/_temp/package-scan/Testing/Temporary
+/home/runner/work/_temp/package-scan/proof/*.log
+/home/runner/work/_temp/package-scan/proof/*.cmake
+/home/runner/work/_temp/package-scan/proof/complete/*.json
+
+2026-09-16T08:31:43.7817260Z   retention-days: 14
+2026-09-16T08:31:43.7817531Z   if-no-files-found: warn
+2026-09-16T08:31:43.7817867Z   compression-level: 6
+2026-09-16T08:31:43.7818175Z   overwrite: false
+2026-09-16T08:31:43.7818430Z   include-hidden-files: false
+2026-09-16T08:31:43.7818707Z   archive: true
+2026-09-16T08:31:43.7818935Z env:
+2026-09-16T08:31:43.7819163Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:31:43.7819445Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:31:43.7819814Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:43.7820287Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:31:43.7820780Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:43.7821210Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:43.7821644Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:43.7822077Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:31:43.7822486Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:31:43.7822885Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:31:43.7823397Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:31:43.7823926Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:31:43.7824306Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:31:43.7825051Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:31:43.7888466Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:31:43.7888767Z ##[endgroup]
+2026-09-16T08:31:43.9415743Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-09-16T08:31:43.9419403Z The least common ancestor is /home/runner/work/_temp. This will be the root directory of the artifact
+2026-09-16T08:31:43.9420235Z With the provided path, there will be 31 files uploaded
+2026-09-16T08:31:43.9424178Z Artifact name is valid!
+2026-09-16T08:31:43.9424941Z Root directory input is valid!
+2026-09-16T08:31:44.3296564Z Uploading artifact: plugin-qa-llama.rexx-linux-x64-cuda-31d4974f12454842902224d495e4aafd111c2134.zip
+2026-09-16T08:31:44.3337246Z Beginning upload of artifact content to blob storage
+2026-09-16T08:31:44.8136738Z Uploaded bytes 44472
+2026-09-16T08:31:44.8916656Z Finished uploading artifact content to blob storage!
+2026-09-16T08:31:44.8917774Z SHA256 digest of uploaded artifact is 3ffaf98932ac5a886a7b29b457eb227e7ca5ccba83d12b7d8ac8941cad64d720
+2026-09-16T08:31:44.8918940Z Finalizing artifact upload
+2026-09-16T08:31:45.2950259Z Artifact plugin-qa-llama.rexx-linux-x64-cuda-31d4974f12454842902224d495e4aafd111c2134 successfully finalized. Artifact ID 10437306863
+2026-09-16T08:31:45.2952685Z Artifact plugin-qa-llama.rexx-linux-x64-cuda-31d4974f12454842902224d495e4aafd111c2134 has been successfully uploaded! Final size is 44472 bytes. Artifact ID is 10437306863
+2026-09-16T08:31:45.2955199Z Artifact download URL: https://github.com/adesutherland/CREXX/actions/runs/35071050120/artifacts/10437306863
+2026-09-16T08:31:45.3122586Z ##[group]Run actions/upload-artifact@v7
+2026-09-16T08:31:45.3123212Z with:
+2026-09-16T08:31:45.3123967Z   name: user-test-31d4974f12454842902224d495e4aafd111c2134-llama.rexx-linux-x64-cuda
+2026-09-16T08:31:45.3125329Z   path: /home/runner/work/_temp/plugin-package/assets/*.zip
+2026-09-16T08:31:45.3126068Z   if-no-files-found: error
+2026-09-16T08:31:45.3126595Z   retention-days: 14
+2026-09-16T08:31:45.3127176Z   compression-level: 6
+2026-09-16T08:31:45.3127660Z   overwrite: false
+2026-09-16T08:31:45.3128167Z   include-hidden-files: false
+2026-09-16T08:31:45.3129045Z   archive: true
+2026-09-16T08:31:45.3129498Z env:
+2026-09-16T08:31:45.3129942Z   SCCACHE_GHA_ENABLED: true
+2026-09-16T08:31:45.3130504Z   SCCACHE_IGNORE_SERVER_IO_ERROR: 1
+2026-09-16T08:31:45.3131332Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:45.3132328Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-16T08:31:45.3133298Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:45.3134136Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:45.3135099Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-16T08:31:45.3135648Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-16T08:31:45.3136141Z   CUDA_PATH: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:31:45.3136606Z   CUDAToolkit_ROOT: /home/runner/work/_temp/crexx-cuda
+2026-09-16T08:31:45.3137166Z   CREXX_LLAMA_CUDA_NOTICE: /home/runner/work/_temp/crexx-cuda/crexx-cuda-NOTICES.txt
+2026-09-16T08:31:45.3137773Z   SCCACHE_PATH: /opt/hostedtoolcache/sccache/0.16.0/x64/sccache
+2026-09-16T08:31:45.3138228Z   ACTIONS_CACHE_SERVICE_V2: on
+2026-09-16T08:31:45.3138742Z   ACTIONS_RESULTS_URL: https://results-receiver.actions.githubusercontent.com/
+2026-09-16T08:31:45.3203186Z   ACTIONS_RUNTIME_TOKEN: ***
+2026-09-16T08:31:45.3203563Z ##[endgroup]
+2026-09-16T08:31:45.4637848Z With the provided path, there will be 1 file uploaded
+2026-09-16T08:31:45.4642857Z Artifact name is valid!
+2026-09-16T08:31:45.4643378Z Root directory input is valid!
+2026-09-16T08:31:45.8476707Z Uploading artifact: user-test-31d4974f12454842902224d495e4aafd111c2134-llama.rexx-linux-x64-cuda.zip
+2026-09-16T08:31:45.8520486Z Beginning upload of artifact content to blob storage
+2026-09-16T08:31:47.1075653Z Uploaded bytes 8388608
+2026-09-16T08:31:47.4283547Z Uploaded bytes 16777216
+2026-09-16T08:31:47.4904639Z Uploaded bytes 25165824
+2026-09-16T08:31:47.6561248Z Uploaded bytes 33554432
+2026-09-16T08:31:47.7195520Z Uploaded bytes 41943040
+2026-09-16T08:31:47.8173968Z Uploaded bytes 50331648
+2026-09-16T08:31:47.9942463Z Uploaded bytes 58720256
+2026-09-16T08:31:48.2238806Z Uploaded bytes 67108864
+2026-09-16T08:31:48.4624183Z Uploaded bytes 75497472
+2026-09-16T08:31:48.6942872Z Uploaded bytes 83886080
+2026-09-16T08:31:48.9328099Z Uploaded bytes 92274688
+2026-09-16T08:31:49.2648858Z Uploaded bytes 100663296
+2026-09-16T08:31:49.4425739Z Uploaded bytes 109051904
+2026-09-16T08:31:49.6366920Z Uploaded bytes 117440512
+2026-09-16T08:31:49.8771646Z Uploaded bytes 125829120
+2026-09-16T08:31:50.1186637Z Uploaded bytes 134217728
+2026-09-16T08:31:50.3945658Z Uploaded bytes 142606336
+2026-09-16T08:31:50.6450846Z Uploaded bytes 150994944
+2026-09-16T08:31:50.9575996Z Uploaded bytes 159383552
+2026-09-16T08:31:51.1137086Z Uploaded bytes 167772160
+2026-09-16T08:31:51.3282377Z Uploaded bytes 176160768
+2026-09-16T08:31:51.6281446Z Uploaded bytes 184549376
+2026-09-16T08:31:51.8858132Z Uploaded bytes 192937984
+2026-09-16T08:31:52.1051150Z Uploaded bytes 201326592
+2026-09-16T08:31:52.4675824Z Uploaded bytes 209715200
+2026-09-16T08:31:52.5513169Z Uploaded bytes 218103808
+2026-09-16T08:31:52.8419416Z Uploaded bytes 226492416
+2026-09-16T08:31:53.1302806Z Uploaded bytes 234881024
+2026-09-16T08:31:53.3908728Z Uploaded bytes 243269632
+2026-09-16T08:31:53.4828958Z Uploaded bytes 251658240
+2026-09-16T08:31:53.7560339Z Uploaded bytes 260046848
+2026-09-16T08:31:54.0882845Z Uploaded bytes 268435456
+2026-09-16T08:31:54.2662433Z Uploaded bytes 276824064
+2026-09-16T08:31:54.5106729Z Uploaded bytes 285212672
+2026-09-16T08:31:54.7734783Z Uploaded bytes 293601280
+2026-09-16T08:31:55.0643201Z Uploaded bytes 301989888
+2026-09-16T08:31:55.3528125Z Uploaded bytes 310378496
+2026-09-16T08:31:55.5048204Z Uploaded bytes 318767104
+2026-09-16T08:31:55.8298392Z Uploaded bytes 327155712
+2026-09-16T08:31:56.0116940Z Uploaded bytes 335544320
+2026-09-16T08:31:56.2951098Z Uploaded bytes 343932928
+2026-09-16T08:31:56.5486343Z Uploaded bytes 352321536
+2026-09-16T08:31:56.8027002Z Uploaded bytes 360710144
+2026-09-16T08:31:57.1328551Z Uploaded bytes 369098752
+2026-09-16T08:31:57.3675405Z Uploaded bytes 377487360
+2026-09-16T08:31:57.6587167Z Uploaded bytes 385875968
+2026-09-16T08:31:57.8935866Z Uploaded bytes 394264576
+2026-09-16T08:31:58.1746973Z Uploaded bytes 402653184
+2026-09-16T08:31:58.4408020Z Uploaded bytes 411041792
+2026-09-16T08:31:58.7044285Z Uploaded bytes 419430400
+2026-09-16T08:31:58.9461549Z Uploaded bytes 427819008
+2026-09-16T08:31:59.1818846Z Uploaded bytes 436207616
+2026-09-16T08:31:59.4152993Z Uploaded bytes 444596224
+2026-09-16T08:31:59.6691689Z Uploaded bytes 452984832
+2026-09-16T08:31:59.9041948Z Uploaded bytes 461373440
+2026-09-16T08:32:00.1525512Z Uploaded bytes 469762048
+2026-09-16T08:32:00.3645485Z Uploaded bytes 478150656
+2026-09-16T08:32:00.6349982Z Uploaded bytes 486539264
+2026-09-16T08:32:00.9277294Z Uploaded bytes 494927872
+2026-09-16T08:32:01.0678946Z Uploaded bytes 503316480
+2026-09-16T08:32:01.3214969Z Uploaded bytes 511705088
+2026-09-16T08:32:01.6166823Z Uploaded bytes 520093696
+2026-09-16T08:32:01.8804983Z Uploaded bytes 528482304
+2026-09-16T08:32:02.1483373Z Uploaded bytes 536870912
+2026-09-16T08:32:02.2858620Z Uploaded bytes 545259520
+2026-09-16T08:32:02.6770436Z Uploaded bytes 553648128
+2026-09-16T08:32:02.7522393Z Uploaded bytes 562036736
+2026-09-16T08:32:03.0382242Z Uploaded bytes 570425344
+2026-09-16T08:32:03.2454153Z Uploaded bytes 578813952
+2026-09-16T08:32:03.4922798Z Uploaded bytes 587202560
+2026-09-16T08:32:03.7153783Z Uploaded bytes 595591168
+2026-09-16T08:32:03.9687252Z Uploaded bytes 603979776
+2026-09-16T08:32:04.2177903Z Uploaded bytes 612368384
+2026-09-16T08:32:04.4283250Z Uploaded bytes 620756992
+2026-09-16T08:32:04.6998264Z Uploaded bytes 629145600
+2026-09-16T08:32:04.9119465Z Uploaded bytes 637534208
+2026-09-16T08:32:05.1585646Z Uploaded bytes 645922816
+2026-09-16T08:32:05.4176361Z Uploaded bytes 654311424
+2026-09-16T08:32:05.6671029Z Uploaded bytes 662700032
+2026-09-16T08:32:06.0843863Z Uploaded bytes 671088640
+2026-09-16T08:32:06.1921872Z Uploaded bytes 679477248
+2026-09-16T08:32:06.3963235Z Uploaded bytes 687865856
+2026-09-16T08:32:06.6441645Z Uploaded bytes 696254464
+2026-09-16T08:32:06.8971490Z Uploaded bytes 704643072
+2026-09-16T08:32:07.1084944Z Uploaded bytes 713031680
+2026-09-16T08:32:07.4087889Z Uploaded bytes 721420288
+2026-09-16T08:32:07.6289327Z Uploaded bytes 729808896
+2026-09-16T08:32:07.8243275Z Uploaded bytes 738197504
+2026-09-16T08:32:08.1167871Z Uploaded bytes 746586112
+2026-09-16T08:32:08.3362600Z Uploaded bytes 754974720
+2026-09-16T08:32:08.5585077Z Uploaded bytes 759140152
+2026-09-16T08:32:08.6381543Z Finished uploading artifact content to blob storage!
+2026-09-16T08:32:08.6385284Z SHA256 digest of uploaded artifact is 03e99cccd3fbd7fbf0e8d811552bccfdb48606e09cd8792f247448884b86349d
+2026-09-16T08:32:08.6387858Z Finalizing artifact upload
+2026-09-16T08:32:09.0360939Z Artifact user-test-31d4974f12454842902224d495e4aafd111c2134-llama.rexx-linux-x64-cuda successfully finalized. Artifact ID 10436449951
+2026-09-16T08:32:09.0363154Z Artifact user-test-31d4974f12454842902224d495e4aafd111c2134-llama.rexx-linux-x64-cuda has been successfully uploaded! Final size is 759140152 bytes. Artifact ID is 10436449951
+2026-09-16T08:32:09.0367635Z Artifact download URL: https://github.com/adesutherland/CREXX/actions/runs/35071050120/artifacts/10436449951
+2026-09-16T08:32:09.0601599Z Post job cleanup.
+2026-09-16T08:32:09.1379607Z ##[group]Get human-readable stats
+2026-09-16T08:32:09.1397460Z [command]/opt/hostedtoolcache/sccache/0.16.0/x64/sccache --show-stats
+2026-09-16T08:32:09.1451764Z Compile requests                          585
+2026-09-16T08:32:09.1452221Z Compile requests executed                2873
+2026-09-16T08:32:09.1452602Z Cache hits                               2726
+2026-09-16T08:32:09.1452943Z Cache hits (C/C++)                        439
+2026-09-16T08:32:09.1453277Z Cache hits (CUBIN)                        571
+2026-09-16T08:32:09.1453605Z Cache hits (CUDA)                         143
+2026-09-16T08:32:09.1453937Z Cache hits (CUDA (Device code))           143
+2026-09-16T08:32:09.1454888Z Cache hits (PTX)                         1430
+2026-09-16T08:32:09.1455248Z Cache misses                                4
+2026-09-16T08:32:09.1455582Z Cache misses (C/C++)                        3
+2026-09-16T08:32:09.1455947Z Cache misses (CUBIN)                        1
+2026-09-16T08:32:09.1456293Z Cache hits rate                         99.85 %
+2026-09-16T08:32:09.1456642Z Cache hits rate (C/C++)                 99.32 %
+2026-09-16T08:32:09.1456981Z Cache hits rate (CUBIN)                 99.83 %
+2026-09-16T08:32:09.1457332Z Cache hits rate (CUDA)                 100.00 %
+2026-09-16T08:32:09.1457685Z Cache hits rate (CUDA (Device code))   100.00 %
+2026-09-16T08:32:09.1458059Z Cache hits rate (PTX)                  100.00 %
+2026-09-16T08:32:09.1458656Z Cache timeouts                              0
+2026-09-16T08:32:09.1459308Z Cache read errors                           0
+2026-09-16T08:32:09.1459683Z Forced recaches                             0
+2026-09-16T08:32:09.1460039Z Cache write errors                          1
+2026-09-16T08:32:09.1460379Z Cache errors                                0
+2026-09-16T08:32:09.1460710Z Compilations                              147
+2026-09-16T08:32:09.1461047Z Compilation failures                        0
+2026-09-16T08:32:09.1461401Z Non-cacheable compilations                143
+2026-09-16T08:32:09.1461743Z Non-cacheable calls                         0
+2026-09-16T08:32:09.1462087Z Non-compilation calls                       0
+2026-09-16T08:32:09.1462473Z Unsupported compiler calls                  0
+2026-09-16T08:32:09.1463142Z Average cache write                     0.600 s
+2026-09-16T08:32:09.1463700Z Average compiler                       11.155 s
+2026-09-16T08:32:09.1464063Z Average cache read hit                  0.189 s
+2026-09-16T08:32:09.1464753Z Failed distributed compilations             0
+2026-09-16T08:32:09.1465475Z Cache location                       ghac, name: 90541733aa72480a9e77ce99e66fc1cfabfa835d74c751408eb0351b7adcec6b, prefix: /sccache/
+2026-09-16T08:32:09.1466134Z Base directories                     (none)
+2026-09-16T08:32:09.1466475Z Version (client)                     0.16.0
+2026-09-16T08:32:09.1471697Z ##[endgroup]
+2026-09-16T08:32:09.1472161Z ##[group]Get JSON stats
+2026-09-16T08:32:09.1474283Z [command]/opt/hostedtoolcache/sccache/0.16.0/x64/sccache --show-stats --stats-format=json
+2026-09-16T08:32:09.1509510Z {"stats":{"compile_requests":585,"requests_unsupported_compiler":0,"requests_not_compile":0,"requests_not_cacheable":0,"requests_executed":2873,"cache_errors":{"counts":{},"adv_counts":{}},"cache_hits":{"counts":{"CUDA (Device code)":143,"CUDA":143,"C/C++":439,"CUBIN":571,"PTX":1430},"adv_counts":{"c [gcc]":48,"cuda [nvcc]":143,"ptx [cicc]":1430,"cubin [ptxas]":571,"cuda [cudafe++]":143,"c++ [gcc]":391}},"cache_misses":{"counts":{"C/C++":3,"CUBIN":1},"adv_counts":{"c [gcc]":1,"cubin [ptxas]":1,"c++ [gcc]":2}},"cache_timeouts":0,"cache_read_errors":0,"non_cacheable_compilations":143,"forced_recaches":0,"cache_write_errors":1,"cache_writes":3,"cache_write_duration":{"secs":1,"nanos":800730896},"cache_read_hit_duration":{"secs":517,"nanos":621909025},"compilations":147,"compiler_write_duration":{"secs":1639,"nanos":794292545},"compile_fails":0,"not_cached":{},"dist_compiles":{},"dist_errors":0,"multi_level":null},"cache_location":"ghac, name: 90541733aa72480a9e77ce99e66fc1cfabfa835d74c751408eb0351b7adcec6b, prefix: /sccache/","cache_size":null,"max_cache_size":null,"use_preprocessor_cache_mode":false,"version":"0.16.0","basedirs":[]}
+2026-09-16T08:32:09.1514649Z ##[endgroup]
+2026-09-16T08:32:09.1545205Z ##[notice]100% - 2726 hits, 4 misses, 0 errors
+2026-09-16T08:32:09.1553302Z 
+2026-09-16T08:32:09.1553498Z Full human-readable stats:
+2026-09-16T08:32:09.1553867Z Compile requests                          585
+2026-09-16T08:32:09.1554702Z Compile requests executed                2873
+2026-09-16T08:32:09.1555123Z Cache hits                               2726
+2026-09-16T08:32:09.1555604Z Cache hits (C/C++)                        439
+2026-09-16T08:32:09.1556197Z Cache hits (CUBIN)                        571
+2026-09-16T08:32:09.1556528Z Cache hits (CUDA)                         143
+2026-09-16T08:32:09.1556858Z Cache hits (CUDA (Device code))           143
+2026-09-16T08:32:09.1557199Z Cache hits (PTX)                         1430
+2026-09-16T08:32:09.1557540Z Cache misses                                4
+2026-09-16T08:32:09.1557869Z Cache misses (C/C++)                        3
+2026-09-16T08:32:09.1558194Z Cache misses (CUBIN)                        1
+2026-09-16T08:32:09.1558533Z Cache hits rate                         99.85 %
+2026-09-16T08:32:09.1558890Z Cache hits rate (C/C++)                 99.32 %
+2026-09-16T08:32:09.1559236Z Cache hits rate (CUBIN)                 99.83 %
+2026-09-16T08:32:09.1559574Z Cache hits rate (CUDA)                 100.00 %
+2026-09-16T08:32:09.1559927Z Cache hits rate (CUDA (Device code))   100.00 %
+2026-09-16T08:32:09.1560290Z Cache hits rate (PTX)                  100.00 %
+2026-09-16T08:32:09.1560645Z Cache timeouts                              0
+2026-09-16T08:32:09.1561038Z Cache read errors                           0
+2026-09-16T08:32:09.1561384Z Forced recaches                             0
+2026-09-16T08:32:09.1561727Z Cache write errors                          1
+2026-09-16T08:32:09.1562083Z Cache errors                                0
+2026-09-16T08:32:09.1562420Z Compilations                              147
+2026-09-16T08:32:09.1562761Z Compilation failures                        0
+2026-09-16T08:32:09.1563109Z Non-cacheable compilations                143
+2026-09-16T08:32:09.1563460Z Non-cacheable calls                         0
+2026-09-16T08:32:09.1563800Z Non-compilation calls                       0
+2026-09-16T08:32:09.1564145Z Unsupported compiler calls                  0
+2026-09-16T08:32:09.1564766Z Average cache write                     0.600 s
+2026-09-16T08:32:09.1565134Z Average compiler                       11.155 s
+2026-09-16T08:32:09.1565490Z Average cache read hit                  0.189 s
+2026-09-16T08:32:09.1565849Z Failed distributed compilations             0
+2026-09-16T08:32:09.1566489Z Cache location                       ghac, name: 90541733aa72480a9e77ce99e66fc1cfabfa835d74c751408eb0351b7adcec6b, prefix: /sccache/
+2026-09-16T08:32:09.1567121Z Base directories                     (none)
+2026-09-16T08:32:09.1567476Z Version (client)                     0.16.0
+2026-09-16T08:32:09.1567693Z 
+2026-09-16T08:32:09.1677724Z Post job cleanup.
+2026-09-16T08:32:09.3000929Z Post job cleanup.
+2026-09-16T08:32:09.3827930Z [command]/usr/bin/git version
+2026-09-16T08:32:09.3864891Z git version 2.55.0
+2026-09-16T08:32:09.3901873Z Temporarily overriding HOME='/home/runner/work/_temp/2b7a3a21-4ec1-4a39-bcbd-3d9b1df62f91' before making global git config changes
+2026-09-16T08:32:09.3902966Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-16T08:32:09.3908095Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/CREXX/CREXX
+2026-09-16T08:32:09.3944639Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-16T08:32:09.3980792Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-16T08:32:09.4248081Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-16T08:32:09.4274989Z http.https://github.com/.extraheader
+2026-09-16T08:32:09.4286882Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-16T08:32:09.4320115Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-16T08:32:09.4596381Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-16T08:32:09.4629943Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-16T08:32:09.5056263Z Cleaning up orphan processes
+2026-09-16T08:32:09.5428394Z Terminate orphan process: pid (3493) (sccache)

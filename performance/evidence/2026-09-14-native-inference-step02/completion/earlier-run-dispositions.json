@@ -1,0 +1,22 @@
+[
+  {
+    "path": "cmake-build-llama-debug/asan-logs/20260914-122507-ctest/ctest.log",
+    "sha256": "90219092c9fe99919ea15d782f7c4af8e786fce1946683d7655fb271b89ab04a",
+    "disposition": "Interrupted all-O0 tensor Debug; not passing evidence"
+  },
+  {
+    "path": "cmake-build-llama-debugasan/asan-logs/20260914-122059-ctest/ctest.log",
+    "sha256": "7c82d20b1efe09c0b8a2e44d33902d817f7187805800e9dcf46113378da8def9",
+    "disposition": "Interrupted all-O0 tensor ASan; not passing evidence"
+  },
+  {
+    "path": "cmake-build-llama-debugasan/asan-logs/20260914-123414-ctest/ctest.log",
+    "sha256": "4e0bc4ae0100369044c3c0ebff4fa4cccf0d9d411ff3468e5ecc79eac3999457",
+    "disposition": "Failed RSS guard only; S2-QA01 explains instrumented allocator reservation"
+  },
+  {
+    "path": "cmake-build-llama-debugasan/asan-logs/20260914-123823-ctest/ctest.log",
+    "sha256": "af0283b10202367c122023f1e6e66fd7f5e53c040d4a31a7449ddc6ad404ec44",
+    "disposition": "Focused RSS/live-allocation diagnostic retained in logs/asan-rss-diagnostic.log"
+  }
+]

@@ -1,0 +1,231 @@
+In file included from /Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:2:
+[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/package.hpp:37:18: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   37 |     [0;34mauto[0m p = fs::u8path(name);[0m
+      | [0;1;32m                 ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:11:40: [0m[0;1;35mwarning: [0m[1m'u8path<char *, 0>' is deprecated [-Wdeprecated-declarations][0m
+   11 |         [0;34mauto[0m source = fs::absolute(fs::u8path(argv[fingerprint ? [0;32m2[0m : [0;32m1[0m])); [0;34mauto[0m root = source.parent_path();[0m
+      | [0;1;32m                                       ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<char *, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:24:45: [0m[0;1;35mwarning: [0m[1m'u8path<char *, 0>' is deprecated [-Wdeprecated-declarations][0m
+   24 |         [0;34mauto[0m destination = fs::absolute(fs::u8path(argv[[0;32m2[0m])).parent_path();[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<char *, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:37:21: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   37 |             [0;34mif[0m (fs::u8path(name).filename() != fs::u8path(name)) [0;34mthrow[0m std::runtime_error([0;32m"runtime dependency must be an adjacent file"[0m);[0m
+      | [0;1;32m                    ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:37:52: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   37 |             [0;34mif[0m (fs::u8path(name).filename() != fs::u8path(name)) [0;34mthrow[0m std::runtime_error([0;32m"runtime dependency must be an adjacent file"[0m);[0m
+      | [0;1;32m                                                   ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:38:43: [0m[0;1;35mwarning: [0m[1m'u8path<std::string, 0>' is deprecated [-Wdeprecated-declarations][0m
+   38 |             [0;34mauto[0m dest = destination / fs::u8path(name);[0m
+      | [0;1;32m                                          ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h:73:23: [0m[0;1;36mnote: [0m'u8path<std::string, 0>' has been explicitly marked deprecated here[0m
+   73 | _LIBCPP_HIDE_FROM_ABI _LIBCPP_DEPRECATED_WITH_CHAR8_T path u8path([0;34mconst[0m _Source& __s) {[0m
+      | [0;1;32m                      ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:607:45: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED_WITH_CHAR8_T'[0m
+  607 | #    define _LIBCPP_DEPRECATED_WITH_CHAR8_T _LIBCPP_DEPRECATED[0m
+      | [0;1;32m                                            ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:554:49: [0m[0;1;36mnote: [0mexpanded from macro '_LIBCPP_DEPRECATED'[0m
+  554 | #      define _LIBCPP_DEPRECATED [0;34m__attribute__[0m((__deprecated__))[0m
+      | [0;1;32m                                                ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/provider_package.cpp:41:28: [0m[0;1;31merror: [0m[1minvalid operands to binary expression ('std::string' (aka 'basic_string<char>') and 'const value_type' (aka 'const nlohmann::basic_json<>'))[0m
+   41 |                 [0;34mif[0m (actual == entry.at([0;32m"sha256"[0m)) [0;34mcontinue[0m;[0m
+      | [0;1;32m                    ~~~~~~ ^  ~~~~~~~~~~~~~~~~~~
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__variant/monostate.h:28:45: [0m[0;1;36mnote: [0mcandidate function not viable: no known conversion from 'std::string' (aka 'basic_string<char>') to 'monostate' for 1st argument[0m
+   28 | _LIBCPP_HIDE_FROM_ABI [0;34minline[0m [0;34mconstexpr[0m [0;34mbool[0m [0;34moperator[0m==(monostate, monostate) [0;34mnoexcept[0m { [0;34mreturn[0m [0;32mtrue[0m; }[0m
+      | [0;1;32m                                            ^          ~~~~~~~~~
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_condition.h:95:35: [0m[0;1;36mnote: [0mcandidate function not viable: no known conversion from 'std::string' (aka 'basic_string<char>') to 'const error_condition' for 1st argument[0m
+   95 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m error_condition& __x, [0;34mconst[0m error_condition& __y) _NOEXCEPT {[0m
+      | [0;1;32m                                  ^          ~~~~~~~~~~~~~~~~~~~~~~~~~~
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h:91:35: [0m[0;1;36mnote: [0mcandidate function not viable: no known conversion from 'std::string' (aka 'basic_string<char>') to 'const error_code' for 1st argument[0m
+   91 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m error_code& __x, [0;34mconst[0m error_code& __y) _NOEXCEPT {[0m
+      | [0;1;32m                                  ^          ~~~~~~~~~~~~~~~~~~~~~
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h:95:35: [0m[0;1;36mnote: [0mcandidate function not viable: no known conversion from 'std::string' (aka 'basic_string<char>') to 'const error_code' for 1st argument[0m
+   95 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m error_code& __x, [0;34mconst[0m error_condition& __y) _NOEXCEPT {[0m
+      | [0;1;32m                                  ^          ~~~~~~~~~~~~~~~~~~~~~
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h:95:35: [0m[0;1;36mnote: [0mcandidate function (with reversed parameter order) not viable: no known conversion from 'std::string' (aka 'basic_string<char>') to 'const error_condition' for 1st argument[0m
+   95 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m error_code& __x, [0;34mconst[0m error_condition& __y) _NOEXCEPT {[0m
+      | [0;1;32m                                  ^          ~~~~~~~~~~~~~~~~~~~~~
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/id.h:78:35: [0m[0;1;36mnote: [0mcandidate function not viable: no known conversion from 'std::string' (aka 'basic_string<char>') to '__thread_id' for 1st argument[0m
+   78 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==(__thread_id __x, __thread_id __y) _NOEXCEPT {[0m
+      | [0;1;32m                                  ^          ~~~~~~~~~~~~~~~
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__utility/pair.h:459:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'pair' against 'std::basic_string'[0m
+  459 | [0;34moperator[0m==([0;34mconst[0m pair<_T1, _T2>& __x, [0;34mconst[0m pair<_U1, _U2>& __y)[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__utility/pair.h:459:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'pair' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ios/fpos.h:65:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'fpos' against 'std::basic_string'[0m
+   65 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m fpos<_StateT>& __x, [0;34mconst[0m fpos<_StateT>& __y) {[0m
+      | [0;1;32m                                  ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/reverse_iterator.h:208:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'reverse_iterator' against 'std::basic_string'[0m
+  208 | [0;34moperator[0m==([0;34mconst[0m reverse_iterator<_Iter1>& __x, [0;34mconst[0m reverse_iterator<_Iter2>& __y)[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/wrap_iter.h:124:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match '__wrap_iter' against 'std::basic_string'[0m
+  124 | [0;34moperator[0m==([0;34mconst[0m __wrap_iter<_Iter1>& __x, [0;34mconst[0m __wrap_iter<_Iter1>& __y) _NOEXCEPT {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/wrap_iter.h:130:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match '__wrap_iter' against 'std::basic_string'[0m
+  130 | [0;34moperator[0m==([0;34mconst[0m __wrap_iter<_Iter1>& __x, [0;34mconst[0m __wrap_iter<_Iter2>& __y) _NOEXCEPT {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/wrap_iter.h:130:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match '__wrap_iter' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/allocator.h:162:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'allocator' against 'std::basic_string'[0m
+  162 | [0;34moperator[0m==([0;34mconst[0m allocator<_Tp>&, [0;34mconst[0m allocator<_Up>&) _NOEXCEPT {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/allocator.h:162:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'allocator' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/tuple:1163:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'tuple' against 'std::basic_string'[0m
+ 1163 | [0;34moperator[0m==([0;34mconst[0m tuple<_Tp...>& __x, [0;34mconst[0m tuple<_Up...>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/tuple:1163:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'tuple' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string_view:734:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'basic_string_view' against 'std::basic_string'[0m
+  734 | [0;34moperator[0m==(basic_string_view<_CharT, _Traits> __lhs,[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string_view:734:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'basic_string_view' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/unique_ptr.h:637:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'unique_ptr' against 'std::basic_string'[0m
+  637 | [0;34moperator[0m==([0;34mconst[0m unique_ptr<_T1, _D1>& __x, [0;34mconst[0m unique_ptr<_T2, _D2>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/unique_ptr.h:637:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'unique_ptr' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/unique_ptr.h:683:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'unique_ptr' against 'std::basic_string'[0m
+  683 | [0;34moperator[0m==([0;34mconst[0m unique_ptr<_T1, _D1>& __x, nullptr_t) _NOEXCEPT {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/unique_ptr.h:683:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'unique_ptr' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/move_iterator.h:255:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'move_iterator' against 'std::basic_string'[0m
+  255 | [0;34moperator[0m==([0;34mconst[0m move_iterator<_Iter1>& __x, [0;34mconst[0m move_iterator<_Iter2>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/move_iterator.h:255:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'move_iterator' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/istream_iterator.h:89:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'istream_iterator' against 'std::basic_string'[0m
+   89 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m istream_iterator<_Tp, _CharT, _Traits, _Distance>& __x,[0m
+      | [0;1;32m                                  ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/istreambuf_iterator.h:97:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'istreambuf_iterator' against 'std::basic_string'[0m
+   97 | [0;34moperator[0m==([0;34mconst[0m istreambuf_iterator<_CharT, _Traits>& __a, [0;34mconst[0m istreambuf_iterator<_CharT, _Traits>& __b) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/variant:1451:38: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'variant' against 'std::basic_string'[0m
+ 1451 | _LIBCPP_HIDE_FROM_ABI [0;34mconstexpr[0m [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m variant<_Types...>& __lhs, [0;34mconst[0m variant<_Types...>& __rhs) {[0m
+      | [0;1;32m                                     ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/shared_ptr.h:1016:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'shared_ptr' against 'std::basic_string'[0m
+ 1016 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m shared_ptr<_Tp>& __x, [0;34mconst[0m shared_ptr<_Up>& __y) _NOEXCEPT {[0m
+      | [0;1;32m                                  ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/shared_ptr.h:1016:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'shared_ptr' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/shared_ptr.h:1062:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'shared_ptr' against 'std::basic_string'[0m
+ 1062 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m shared_ptr<_Tp>& __x, nullptr_t) _NOEXCEPT {[0m
+      | [0;1;32m                                  ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/shared_ptr.h:1062:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'shared_ptr' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:993:38: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'optional' against 'std::basic_string'[0m
+  993 | _LIBCPP_HIDE_FROM_ABI [0;34mconstexpr[0m [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m optional<_Tp>& __x, [0;34mconst[0m optional<_Up>& __y) {[0m
+      | [0;1;32m                                     ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:993:38: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'optional' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1079:38: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'optional' against 'std::basic_string'[0m
+ 1079 | _LIBCPP_HIDE_FROM_ABI [0;34mconstexpr[0m [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m optional<_Tp>& __x, nullopt_t) [0;34mnoexcept[0m {[0m
+      | [0;1;32m                                     ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1079:38: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'optional' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1156:38: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'optional' against 'std::basic_string'[0m
+ 1156 | _LIBCPP_HIDE_FROM_ABI [0;34mconstexpr[0m [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m optional<_Tp>& __x, [0;34mconst[0m _Up& __v) {[0m
+      | [0;1;32m                                     ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1156:38: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'optional' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1165:38: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'optional' against 'basic_json'[0m
+ 1165 | _LIBCPP_HIDE_FROM_ABI [0;34mconstexpr[0m [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m _Tp& __v, [0;34mconst[0m optional<_Up>& __x) {[0m
+      | [0;1;32m                                     ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional:1165:38: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'optional' against 'std::basic_string'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string:3569:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'basic_string' against 'basic_json'[0m
+ 3569 | [0;34moperator[0m==([0;34mconst[0m basic_string<_CharT, _Traits, _Allocator>& __lhs,[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string:3577:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'const _CharT *' against 'value_type' (aka 'nlohmann::basic_json<>')[0m
+ 3577 | [0;34moperator[0m==([0;34mconst[0m basic_string<_CharT, _Traits, _Allocator>& __lhs, [0;34mconst[0m _CharT* __rhs) _NOEXCEPT {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string:3577:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'basic_string' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/array:449:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'array' against 'std::basic_string'[0m
+  449 | [0;34moperator[0m==([0;34mconst[0m array<_Tp, _Size>& __x, [0;34mconst[0m array<_Tp, _Size>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/deque:2551:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'deque' against 'std::basic_string'[0m
+ 2551 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m deque<_Tp, _Allocator>& __x, [0;34mconst[0m deque<_Tp, _Allocator>& __y) {[0m
+      | [0;1;32m                                  ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/function.h:797:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'function' against 'std::basic_string'[0m
+  797 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m function<_Rp(_ArgTypes...)>& __f, nullptr_t) _NOEXCEPT {[0m
+      | [0;1;32m                                  ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/function.h:797:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'function' against 'basic_json'[0m
+[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/unordered_map:1720:28: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'unordered_map' against 'std::basic_string'[0m
+ 1720 | _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m unordered_map<_Key, _Tp, _Hash, _Pred, _Alloc>& __x,[0m
+      | [0;1;32m                           ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/unordered_map:2416:28: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'unordered_multimap' against 'std::basic_string'[0m
+ 2416 | _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m unordered_multimap<_Key, _Tp, _Hash, _Pred, _Alloc>& __x,[0m
+      | [0;1;32m                           ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__vector/comparison.h:27:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'vector' against 'std::basic_string'[0m
+   27 | [0;34moperator[0m==([0;34mconst[0m vector<_Tp, _Allocator>& __x, [0;34mconst[0m vector<_Tp, _Allocator>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/queue:470:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'queue' against 'std::basic_string'[0m
+  470 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m queue<_Tp, _Container>& __x, [0;34mconst[0m queue<_Tp, _Container>& __y) {[0m
+      | [0;1;32m                                  ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/stack:330:35: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'stack' against 'std::basic_string'[0m
+  330 | [0;34minline[0m _LIBCPP_HIDE_FROM_ABI [0;34mbool[0m [0;34moperator[0m==([0;34mconst[0m stack<_Tp, _Container>& __x, [0;34mconst[0m stack<_Tp, _Container>& __y) {[0m
+      | [0;1;32m                                  ^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/forward_list:1525:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'forward_list' against 'std::basic_string'[0m
+ 1525 | [0;34moperator[0m==([0;34mconst[0m forward_list<_Tp, _Alloc>& __x, [0;34mconst[0m forward_list<_Tp, _Alloc>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/map:1462:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'map' against 'std::basic_string'[0m
+ 1462 | [0;34moperator[0m==([0;34mconst[0m map<_Key, _Tp, _Compare, _Allocator>& __x, [0;34mconst[0m map<_Key, _Tp, _Compare, _Allocator>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/map:1971:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'multimap' against 'std::basic_string'[0m
+ 1971 | [0;34moperator[0m==([0;34mconst[0m multimap<_Key, _Tp, _Compare, _Allocator>& __x, [0;34mconst[0m multimap<_Key, _Tp, _Compare, _Allocator>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/valarray:3006:1: [0m[0;1;36mnote: [0mcandidate template ignored: requirement '__is_val_expr<std::string>::value' was not satisfied [with _Expr1 = std::string, _Expr2 = value_type][0m
+ 3006 | [0;34moperator[0m==([0;34mconst[0m _Expr1& __x, [0;34mconst[0m _Expr2& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/valarray:3015:1: [0m[0;1;36mnote: [0mcandidate template ignored: requirement '__is_val_expr<std::string>::value' was not satisfied [with _Expr = std::string][0m
+ 3015 | [0;34moperator[0m==([0;34mconst[0m _Expr& __x, [0;34mconst[0m [0;34mtypename[0m _Expr::value_type& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/valarray:3024:1: [0m[0;1;36mnote: [0mcandidate template ignored: requirement '__is_val_expr<nlohmann::basic_json<std::map, std::vector, std::string, bool, long long, unsigned long long, double, std::allocator, nlohmann::adl_serializer, std::vector<unsigned char, std::allocator<unsigned char>>, void>>::value' was not satisfied [with _Expr = value_type][0m
+ 3024 | [0;34moperator[0m==([0;34mconst[0m [0;34mtypename[0m _Expr::value_type& __x, [0;34mconst[0m _Expr& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/set:962:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'set' against 'std::basic_string'[0m
+  962 | [0;34moperator[0m==([0;34mconst[0m set<_Key, _Compare, _Allocator>& __x, [0;34mconst[0m set<_Key, _Compare, _Allocator>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/set:1429:1: [0m[0;1;36mnote: [0mcandidate template ignored: could not match 'multiset' against 'std::basic_string'[0m
+ 1429 | [0;34moperator[0m==([0;34mconst[0m multiset<_Key, _Compare, _Allocator>& __x, [0;34mconst[0m multiset<_Key, _Compare, _Allocator>& __y) {[0m
+      | [0;1;32m^
+[0m[1m/Users/adrian/CLionProjects/CREXX/cmake-build-debug/_deps/crexx_llama_source-src/vendor/nlohmann/json.hpp:23741:10: [0m[0;1;36mnote: [0mcandidate template ignored: constraints not satisfied [with ScalarType = std::string][0m
+ 23741 |     [0;34mbool[0m [0;34moperator[0m==(ScalarType rhs) [0;34mconst[0m [0;34mnoexcept[0m
+       | [0;1;32m         ^
+[0m[1m/Users/adrian/CLionProjects/CREXX/cmake-build-debug/_deps/crexx_llama_source-src/vendor/nlohmann/json.hpp:23740:14: [0m[0;1;36mnote: [0mbecause 'std::is_scalar_v<std::string>' evaluated to false[0m
+ 23740 |     [0;34mrequires[0m std::is_scalar_v<ScalarType>[0m
+       | [0;1;32m             ^
+[0m6 warnings and 1 error generated.

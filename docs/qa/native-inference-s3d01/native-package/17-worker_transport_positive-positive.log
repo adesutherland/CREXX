@@ -1,0 +1,4 @@
+argv=[PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-jshe71u3/installed Ω/bin/rxbvm'), '/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-jshe71u3/checks/worker_transport_positive-linked', '-a']
+cwd=/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-jshe71u3/installed Ω/bin
+rc=0
+PASS: native inference worker transport positive control

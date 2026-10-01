@@ -256,6 +256,12 @@ and sized UTF-8 names. Metadata begins with `prev:u32`, `next:u32`, and
 kind; every string, procedure, register-description, constant, source-file, or
 inline-payload reference is a pool-local ID.
 
+A procedure without a code address uses `UINT64_MAX` in its serialized start
+field and native `SIZE_MAX` after loading. This sentinel is independent of the
+writer's pointer size. Readers also accept the earlier `UINT32_MAX` spelling
+when the procedure's locals field is `-1` (an import); ordinary code addresses
+still undergo the target's size check.
+
 Graph facts begin `RXG7`, graph schema `1`; materialized indexes begin `RXI7`,
 index schema `1`. Facts own graph-local text, nodes, signatures, relationships,
 declarations, callables, dispatch rows, and providers. Indexes own the sorted
@@ -398,6 +404,9 @@ refine them to concrete types. Arity, reference/optional/variadic flags, and
 every known imported type must still match. The linked callable adopts the
 definition's complete descriptor and procedure reference. This refinement does
 not reconcile two definitions or two contradictory known import contracts.
+Compiler-generated source-import class stubs preserve each `expose` qualifier
+in their `META_FUNC` projection so this strict comparison sees the same
+reference contract that drove call generation.
 
 These headers and the `rxbin` archive are not an installed external SDK. The
 supported external metadata surface is the deterministic

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "provider": "rxllama",
+  "platform": "Darwin",
+  "arch": "arm64",
+  "engine": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+  "link_libraries": [
+    {
+      "path": "libcrexx-llama.dylib",
+      "sha256": "3034c7c92554d4ad27d4c94eb819f6b6a52978de576b3459d42ee2c2090b5abf"
+    }
+  ],
+  "runtime_files": [
+    {
+      "path": "libcrexx-llama.1.dylib",
+      "sha256": "3034c7c92554d4ad27d4c94eb819f6b6a52978de576b3459d42ee2c2090b5abf"
+    },
+    {
+      "path": "libcrexx-llama.dylib",
+      "sha256": "3034c7c92554d4ad27d4c94eb819f6b6a52978de576b3459d42ee2c2090b5abf"
+    },
+    {
+      "path": "libcrexx-llama-engine.0.4.0.dylib",
+      "sha256": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f"
+    },
+    {
+      "path": "libcrexx-llama-engine.dylib",
+      "sha256": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f"
+    },
+    {
+      "path": "libcrexx-llama-engine.0.dylib",
+      "sha256": "9e191c29ac2aeda145361a1b64f578e2ccfb16c9b6f65769764d6cefe363944f"
+    },
+    {
+      "path": "libcrexx-ggml.0.23.0.dylib",
+      "sha256": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf"
+    },
+    {
+      "path": "libcrexx-ggml.dylib",
+      "sha256": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf"
+    },
+    {
+      "path": "libcrexx-ggml.0.dylib",
+      "sha256": "0cf7688ab2ebfecc78a8577aa7e50dfd2d5558c58377361c021d2ab21b8867cf"
+    },
+    {
+      "path": "libcrexx-ggml-base.0.23.0.dylib",
+      "sha256": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909"
+    },
+    {
+      "path": "libcrexx-ggml-base.dylib",
+      "sha256": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909"
+    },
+    {
+      "path": "libcrexx-ggml-base.0.dylib",
+      "sha256": "2d735cba9001137564a5f559141f7c93252955c30b8ce5fd1118eacf67acf909"
+    },
+    {
+      "path": "libcrexx-ggml-cpu.so",
+      "sha256": "d734a4093cd4455ad84f0b537173d263546fc40ee7213ffe46655b267f5ab7cf"
+    },
+    {
+      "path": "libcrexx-ggml-metal.so",
+      "sha256": "87e3afbb1c3e5722d7c55b15ffba04e2d559ce9d065d7d66f4a031ec705e2873"
+    },
+    {
+      "path": "rxllama-NOTICES.txt",
+      "sha256": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7"
+    },
+    {
+      "path": "rxllama.runtime.json",
+      "sha256": "f61f62cda7042abb894f4411d329ea5f3cea8b573dcdfbfc41ac63a760053361"
+    }
+  ]
+}

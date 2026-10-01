@@ -1,0 +1,10 @@
+PASS: exact bytes/rows/tokens, 480+32/481+32 context, UTF-8 rejection, error finish and recovery cpu
+RSS_BEFORE=2006548480
+RSS_SINGLE_20=2006548480
+RSS_SINGLE_40=2006548480
+RSS_SINGLE_60=2006548480
+RSS_SINGLE_80=2006548480
+RSS_SINGLE_100=2006548480
+PASS: 100 singles and 20 four-row batches cpu rss_before=2006548480 rss_after=2006548480 max_growth=0
+MAX_ISOLATED_UNIT_MS=299.512
+FAIL: isolated warm unit exceeds 250 ms target

@@ -1,0 +1,58 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1708: rxstats_packedint_rejected
+1/5 Test #1708: rxstats_packedint_rejected .......   Passed    0.52 sec
+    Start 1709: rxstats_rxbvm_noopt
+2/5 Test #1709: rxstats_rxbvm_noopt ..............***Failed    0.75 sec
+FAIL: linearfit native/factory runtime identity
+PANIC: Cannot cast .object to .rxstats..linearfit (SIGNAL CONVERSION_ERROR)
+
+    Start 1710: rxstats_rxbvm_opt
+3/5 Test #1710: rxstats_rxbvm_opt ................***Failed    0.09 sec
+FAIL: linearfit native/factory runtime identity
+PANIC: Cannot cast .object to .rxstats..linearfit (SIGNAL CONVERSION_ERROR)
+CMake Error at /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:218 (message):
+  runner failed for rxstats_rxbvm_opt with exit code 6
+Call Stack (most recent call first):
+  rxstats_rxbvm_opt_linked_runtime.cmake:5 (crexx_link_and_run)
+
+
+
+    Start 1711: rxstats_rxtvm_noopt
+4/5 Test #1711: rxstats_rxtvm_noopt ..............***Failed    0.74 sec
+FAIL: linearfit native/factory runtime identity
+PANIC: Cannot cast .object to .rxstats..linearfit (SIGNAL CONVERSION_ERROR)
+
+    Start 1712: rxstats_rxtvm_opt
+5/5 Test #1712: rxstats_rxtvm_opt ................***Failed    0.09 sec
+FAIL: linearfit native/factory runtime identity
+PANIC: Cannot cast .object to .rxstats..linearfit (SIGNAL CONVERSION_ERROR)
+CMake Error at /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:218 (message):
+  runner failed for rxstats_rxtvm_opt with exit code 6
+Call Stack (most recent call first):
+  rxstats_rxtvm_opt_linked_runtime.cmake:5 (crexx_link_and_run)
+
+
+
+
+20% tests passed, 4 tests failed out of 5
+
+Label Time Summary:
+comprehensive       =   2.18 sec*proc (5 tests)
+library             =   2.18 sec*proc (5 tests)
+linked_opt          =   0.18 sec*proc (2 tests)
+math                =   2.18 sec*proc (5 tests)
+negative            =   0.52 sec*proc (1 test)
+optimizer-parity    =   1.67 sec*proc (4 tests)
+packed              =   2.18 sec*proc (5 tests)
+plugins             =   2.18 sec*proc (5 tests)
+rxpa                =   2.18 sec*proc (5 tests)
+stats               =   2.18 sec*proc (5 tests)
+
+Total Test time (real) =   2.22 sec
+
+The following tests FAILED:
+	1709 - rxstats_rxbvm_noopt (Failed)                      comprehensive library math optimizer-parity packed plugins rxpa stats
+	1710 - rxstats_rxbvm_opt (Failed)                        comprehensive library linked_opt math optimizer-parity packed plugins rxpa stats
+	1711 - rxstats_rxtvm_noopt (Failed)                      comprehensive library math optimizer-parity packed plugins rxpa stats
+	1712 - rxstats_rxtvm_opt (Failed)                        comprehensive library linked_opt math optimizer-parity packed plugins rxpa stats
+Errors while running CTest

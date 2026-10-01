@@ -1,0 +1,8 @@
+[0/2] Re-checking globbed directories...
+[1/8] Building C object interpreter/CMakeFiles/test_rxpa_concurrency.dir/tests/test_rxpa_concurrency.c.o
+[2/8] Building C object interpreter/CMakeFiles/test_rxpa_host_services.dir/tests/test_rxpa_host_services.c.o
+[3/8] Building C object interpreter/CMakeFiles/test_rxpa_worker_startup.dir/tests/test_rxpa_worker_startup.c.o
+[4/8] Linking C executable interpreter/test_rxpa_concurrency
+[5/8] Linking C executable interpreter/test_rxpa_host_services
+[6/8] Linking C executable interpreter/test_rxpa_worker_startup
+[7/8] cd /Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama && /opt/homebrew/bin/cmake -DINPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/rxllama-package-Debug.cmake -P /Users/adrian/CLionProjects/CREXX/rxpa/WriteProviderPackage.cmake

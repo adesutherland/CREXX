@@ -1,0 +1,20 @@
+mask=0 std_inheritable=1 inherited=0 rename=1 error=0
+mask=1 std_inheritable=1 inherited=0 rename=1 error=0
+mask=2 std_inheritable=1 inherited=0 rename=1 error=0
+mask=3 std_inheritable=1 inherited=0 rename=1 error=0
+mask=4 std_inheritable=1 inherited=0 rename=1 error=0
+mask=5 std_inheritable=1 inherited=0 rename=1 error=0
+mask=6 std_inheritable=1 inherited=0 rename=1 error=0
+mask=7 std_inheritable=1 inherited=0 rename=1 error=0
+mask=0 std_inheritable=0 inherited=0 rename=1 error=0
+mask=1 std_inheritable=0 inherited=0 rename=1 error=0
+mask=2 std_inheritable=0 inherited=0 rename=1 error=0
+mask=3 std_inheritable=0 inherited=0 rename=1 error=0
+mask=4 std_inheritable=0 inherited=0 rename=1 error=0
+mask=5 std_inheritable=0 inherited=0 rename=1 error=0
+mask=6 std_inheritable=0 inherited=0 rename=1 error=0
+mask=7 std_inheritable=0 inherited=0 rename=1 error=0
+Windows inheritance: 0 failures
+FAIL: initial append position
+FAIL: exclusive open preserves existing file
+FOPEN inheritance: 2 failures

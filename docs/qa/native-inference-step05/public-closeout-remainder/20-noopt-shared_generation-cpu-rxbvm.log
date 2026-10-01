@@ -1,0 +1,3 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm', '/tmp/ni-s5/public-closeout-remainder/noopt-shared_generation-linked', '-a', 'cpu', '/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf', '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201']
+rc=0
+PASS: four typed generation workers, 20 ordered batches each, shared weights/private outputs cpu

@@ -1,0 +1,30 @@
+[
+  {
+    "command": [
+      "cmake",
+      "-DRXC=/Users/adrian/.local/bin/rxc",
+      "-DRXAS=/Users/adrian/.local/bin/rxas",
+      "-DBIN=/Users/adrian/.local/bin",
+      "-DFIXTURE=/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/fixtures/issue699",
+      "-DWORK_ROOT=/tmp/issue699-baseline-convergence",
+      "-DKIND=convergence",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/source_import_private_dependency.cmake"
+    ],
+    "rc": 1
+  },
+  {
+    "command": [
+      "cmake",
+      "-DRXC=/Users/adrian/.local/bin/rxc",
+      "-DRXAS=/Users/adrian/.local/bin/rxas",
+      "-DBIN=/Users/adrian/.local/bin",
+      "-DFIXTURE=/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/fixtures/issue699",
+      "-DWORK_ROOT=/tmp/issue699-baseline-provider",
+      "-DKIND=provider",
+      "-P",
+      "/Users/adrian/CLionProjects/CREXX-hotfix/compiler/tests/source_import_private_dependency.cmake"
+    ],
+    "rc": 1
+  }
+]

@@ -1,0 +1,23 @@
+FAIL: unrelated file handle excluded
+FAIL: rename succeeds while sibling still alive
+FAIL: unrelated file handle excluded
+FAIL: rename succeeds while sibling still alive
+FAIL: unrelated file handle excluded
+FAIL: rename succeeds while sibling still alive
+FAIL: unrelated file handle excluded
+FAIL: rename succeeds while sibling still alive
+FAIL: unrelated file handle excluded
+FAIL: rename succeeds while sibling still alive
+FAIL: unrelated file handle excluded
+FAIL: rename succeeds while sibling still alive
+FAIL: unrelated file handle excluded
+FAIL: rename succeeds while sibling still alive
+mask=0 std_inheritable=1 inherited=1 rename=0 error=32
+mask=1 std_inheritable=1 inherited=1 rename=0 error=32
+mask=2 std_inheritable=1 inherited=1 rename=0 error=32
+mask=3 std_inheritable=1 inherited=1 rename=0 error=32
+mask=4 std_inheritable=1 inherited=1 rename=0 error=32
+mask=5 std_inheritable=1 inherited=1 rename=0 error=32
+mask=6 std_inheritable=1 inherited=1 rename=0 error=32
+mask=7 std_inheritable=1 inherited=0 rename=1 error=0
+Windows inheritance: 14 failures

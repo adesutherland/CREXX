@@ -1,0 +1,30 @@
+argv=['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/generation_toolchain.py', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan', '/Users/adrian/CLionProjects/CREXX', '/Users/adrian/Library/Caches/crexx/native-inference', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/generation-qc5esyvm/work', 'cpu,required-gpu']
+PASS: opt-typed_generation-compile
+PASS: opt-typed_generation-assemble
+PASS: opt-typed_generation-link
+PASS: opt-typed_generation-cpu-rxbvm
+PASS: opt-typed_generation-cpu-rxtvm
+PASS: opt-typed_generation-required-gpu-rxbvm
+PASS: opt-typed_generation-required-gpu-rxtvm
+PASS: opt-generation_overhead-compile
+PASS: opt-generation_overhead-assemble
+PASS: opt-generation_overhead-link
+PASS: opt-generation_overhead-cpu-rxbvm
+PASS: opt-generation_overhead-cpu-rxtvm
+PASS: opt-generation_overhead-required-gpu-rxbvm
+PASS: opt-generation_overhead-required-gpu-rxtvm
+PASS: noopt-typed_generation-compile
+PASS: noopt-typed_generation-assemble
+PASS: noopt-typed_generation-link
+PASS: noopt-typed_generation-cpu-rxbvm
+PASS: noopt-typed_generation-cpu-rxtvm
+PASS: noopt-typed_generation-required-gpu-rxbvm
+PASS: noopt-typed_generation-required-gpu-rxtvm
+PASS: noopt-generation_overhead-compile
+PASS: noopt-generation_overhead-assemble
+PASS: noopt-generation_overhead-link
+PASS: noopt-generation_overhead-cpu-rxbvm
+PASS: noopt-generation_overhead-cpu-rxtvm
+PASS: noopt-generation_overhead-required-gpu-rxbvm
+PASS: noopt-generation_overhead-required-gpu-rxtvm
+PASS: generation four-tool matrix 16 consumer executions

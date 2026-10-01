@@ -1,0 +1,43 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 1158: rxpa_worker_startup_attached
+ 1/14 Test #1158: rxpa_worker_startup_attached ............   Passed    0.29 sec
+      Start 1159: rxpa_worker_startup_callback
+ 2/14 Test #1159: rxpa_worker_startup_callback ............   Passed    0.01 sec
+      Start 1171: rxpa_static_catalogue_replay
+ 3/14 Test #1171: rxpa_static_catalogue_replay ............   Passed    0.29 sec
+      Start 1172: rxpa_static_session_lifecycle
+ 4/14 Test #1172: rxpa_static_session_lifecycle ...........   Passed    0.01 sec
+      Start 1173: rxpa_session_factory_failure_rollback
+ 5/14 Test #1173: rxpa_session_factory_failure_rollback ...   Passed    0.01 sec
+      Start 1174: rxpa_session_manifest_fail_closed
+ 6/14 Test #1174: rxpa_session_manifest_fail_closed .......   Passed    0.01 sec
+      Start 1175: rxpa_float_static_alias_binding
+ 7/14 Test #1175: rxpa_float_static_alias_binding .........   Passed    0.00 sec
+      Start 1176: rxpa_legacy_call_serialization
+ 8/14 Test #1176: rxpa_legacy_call_serialization ..........   Passed    0.00 sec
+      Start 1177: rxpa_process_reentrant_overlap
+ 9/14 Test #1177: rxpa_process_reentrant_overlap ..........   Passed    0.00 sec
+      Start 1178: rxpa_legacy_recursive_reentry
+10/14 Test #1178: rxpa_legacy_recursive_reentry ...........   Passed    0.00 sec
+      Start 1179: rxpa_branch_free_load_binding
+11/14 Test #1179: rxpa_branch_free_load_binding ...........   Passed    0.00 sec
+      Start 1180: rxpa_bound_legacy_serialization
+12/14 Test #1180: rxpa_bound_legacy_serialization .........   Passed    0.00 sec
+      Start 1181: rxpa_legacy_transition_quiescence
+13/14 Test #1181: rxpa_legacy_transition_quiescence .......   Passed    0.00 sec
+      Start 1182: rxpa_worker_startup_transition
+14/14 Test #1182: rxpa_worker_startup_transition ..........   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Label Time Summary:
+comprehensive       =   0.63 sec*proc (14 tests)
+concurrency         =   0.33 sec*proc (11 tests)
+concurrency-sp01    =   0.33 sec*proc (11 tests)
+interpreter         =   0.63 sec*proc (14 tests)
+plugins             =   0.63 sec*proc (14 tests)
+regression          =   0.30 sec*proc (3 tests)
+rxpa                =   0.63 sec*proc (14 tests)
+worker              =   0.63 sec*proc (14 tests)
+
+Total Test time (real) =   0.69 sec

@@ -1,0 +1,24 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 2404: rxpa_external_sdk_consumer
+1/1 Test #2404: rxpa_external_sdk_consumer .......   Passed   30.52 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+crexx-rag            =  30.52 sec*proc (1 test)
+external-consumer    =  30.52 sec*proc (1 test)
+hash                 =  30.52 sec*proc (1 test)
+install              =  30.52 sec*proc (1 test)
+native               =  30.52 sec*proc (1 test)
+package              =  30.52 sec*proc (1 test)
+packed               =  30.52 sec*proc (1 test)
+qualification        =  30.52 sec*proc (1 test)
+rcc-5d               =  30.52 sec*proc (1 test)
+rcc-5e               =  30.52 sec*proc (1 test)
+rcc-5f               =  30.52 sec*proc (1 test)
+rxpa                 =  30.52 sec*proc (1 test)
+sqlite               =  30.52 sec*proc (1 test)
+stats                =  30.52 sec*proc (1 test)
+vector               =  30.52 sec*proc (1 test)
+
+Total Test time (real) =  30.56 sec

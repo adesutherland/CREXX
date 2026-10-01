@@ -1,0 +1,13 @@
+QA01 lower failed at 562 calltype=0 class=null def=get: task = .rxfnsg..httpresponse
+  arg path=.string,headers=.httpheaders
+  post: task = .rxfnsg..httpresponse
+  arg path=.string,body=.string,headers=.httpheaders
+  _request: method = .rxfnsg..httpresponse
+  arg verb=.string,path=.string,body=.binary,headers=.httpheaders
+  post_stream: task = .rxfnsg..httpresponse
+  arg path=.string,body=.httpbody,headers=.httpheaders,response_capacity=.int
+  close: method = .void
+ deftype=0
+Error in minimal_http.crexx @ 9:14 - #RETURNS_VOID, "client.get(\"/failure\", .httpheaders.empty"
+Error in minimal_http.crexx @ 9:14 - #RETVAL_MISSING, "client.get(\"/failure\", .httpheaders.empty"
+2 error(s) in source file

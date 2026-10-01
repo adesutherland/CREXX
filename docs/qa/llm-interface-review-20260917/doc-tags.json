@@ -1,0 +1,68 @@
+{
+  "lib/rxfnsg/rexx/llm.crexx": {
+    "/**": {
+      "before": 5,
+      "after": 20
+    },
+    "@param": {
+      "before": 0,
+      "after": 2
+    },
+    "@parm": {
+      "before": 0,
+      "after": 0
+    },
+    "@return": {
+      "before": 0,
+      "after": 0
+    },
+    "@author": {
+      "before": 0,
+      "after": 0
+    }
+  },
+  "demos/llm/llm_address_environment.crexx": {
+    "/**": {
+      "before": 0,
+      "after": 0
+    },
+    "@param": {
+      "before": 0,
+      "after": 0
+    },
+    "@parm": {
+      "before": 0,
+      "after": 0
+    },
+    "@return": {
+      "before": 0,
+      "after": 0
+    },
+    "@author": {
+      "before": 0,
+      "after": 0
+    }
+  },
+  "lib/plugins/llama/typed.h": {
+    "/**": {
+      "before": 41,
+      "after": 41
+    },
+    "@param": {
+      "before": 30,
+      "after": 30
+    },
+    "@parm": {
+      "before": 0,
+      "after": 0
+    },
+    "@return": {
+      "before": 40,
+      "after": 40
+    },
+    "@author": {
+      "before": 0,
+      "after": 0
+    }
+  }
+}

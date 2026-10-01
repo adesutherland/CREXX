@@ -1,0 +1,62 @@
+{
+  "version": "12.9.1",
+  "source": "https://developer.download.nvidia.com/compute/cuda/redist/redistrib_12.9.1.json",
+  "components": {
+    "cuda_nvcc": {
+      "linux-x86_64": {
+        "relative_path": "cuda_nvcc/linux-x86_64/cuda_nvcc-linux-x86_64-12.9.86-archive.tar.xz",
+        "sha256": "7a1a5b652e5ef85c82b721d10672fc9a2dbaab44e9bd3c65a69517bf53998c35",
+        "md5": "ac1871c955070267e117bd985f6dbb36",
+        "size": "81100244"
+      },
+      "windows-x86_64": {
+        "relative_path": "cuda_nvcc/windows-x86_64/cuda_nvcc-windows-x86_64-12.9.86-archive.zip",
+        "sha256": "227b109663b5e57d2718bcabb24a4ba0d9d4e52d958e327dc476f7c28691be85",
+        "md5": "ff9b2942aaa3a1dfb487da6767bc689f",
+        "size": "126917884"
+      }
+    },
+    "cuda_cudart": {
+      "linux-x86_64": {
+        "relative_path": "cuda_cudart/linux-x86_64/cuda_cudart-linux-x86_64-12.9.79-archive.tar.xz",
+        "sha256": "1f6ad42d4f530b24bfa35894ccf6b7209d2354f59101fd62ec4a6192a184ce99",
+        "md5": "6153e2b6a43389e5be3d68b04c6488f5",
+        "size": "1514676"
+      },
+      "windows-x86_64": {
+        "relative_path": "cuda_cudart/windows-x86_64/cuda_cudart-windows-x86_64-12.9.79-archive.zip",
+        "sha256": "179e9c43b0735ffe67207b3da556eb5a0c50f3047961882b7657d3b822d34ef8",
+        "md5": "22e500ce68dc9e099ec18f57e1309808",
+        "size": "3521238"
+      }
+    },
+    "cuda_cccl": {
+      "linux-x86_64": {
+        "relative_path": "cuda_cccl/linux-x86_64/cuda_cccl-linux-x86_64-12.9.27-archive.tar.xz",
+        "sha256": "8b1a5095669e94f2f9afd7715533314d418179e9452be61e2fde4c82a3e542aa",
+        "md5": "59e3cb66aeb96423dcca73218c85bc02",
+        "size": "997888"
+      },
+      "windows-x86_64": {
+        "relative_path": "cuda_cccl/windows-x86_64/cuda_cccl-windows-x86_64-12.9.27-archive.zip",
+        "sha256": "17aaa7c6b8f94a417d8f3261780b7e34b9cbdfab7513bce86768623b06aa28b5",
+        "md5": "afdfa89a35951f67b5bd70c513f5ef09",
+        "size": "3127658"
+      }
+    },
+    "libcublas": {
+      "linux-x86_64": {
+        "relative_path": "libcublas/linux-x86_64/libcublas-linux-x86_64-12.9.1.4-archive.tar.xz",
+        "sha256": "546addc4a9d82b8f23aa9ba9274b6bc0429a63008a31c759884ac24880796057",
+        "md5": "9b07f0c3d94534e56e003c6016b9771c",
+        "size": "933611504"
+      },
+      "windows-x86_64": {
+        "relative_path": "libcublas/windows-x86_64/libcublas-windows-x86_64-12.9.1.4-archive.zip",
+        "sha256": "d534d98b0b453a98914dbf3adf47d7e84b55037abf02f87466439e1dcef581ed",
+        "md5": "3f092963b0767968fe6f02febc1b0cbf",
+        "size": "549755186"
+      }
+    }
+  }
+}

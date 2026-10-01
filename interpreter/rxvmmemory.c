@@ -30,13 +30,24 @@
 #include <sanitizer/asan_interface.h>
 #endif
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXVM_MEMORY_THREAD_LOCAL
+#elif defined(_MSC_VER)
 #define RXVM_MEMORY_THREAD_LOCAL __declspec(thread)
 #else
 #define RXVM_MEMORY_THREAD_LOCAL __thread
 #endif
 
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+/* No other execution thread or asynchronous callback exists in this build. */
+typedef unsigned char rxvm_memory_mutex;
+static void rxvm_memory_mutex_init(rxvm_memory_mutex *mutex) {
+    *mutex = 0;
+}
+static void rxvm_memory_mutex_destroy(rxvm_memory_mutex *mutex) { (void)mutex; }
+static void rxvm_memory_mutex_lock(rxvm_memory_mutex *mutex) { (void)mutex; }
+static void rxvm_memory_mutex_unlock(rxvm_memory_mutex *mutex) { (void)mutex; }
+#elif defined(_WIN32)
 #include <malloc.h>
 #include <windows.h>
 typedef CRITICAL_SECTION rxvm_memory_mutex;
@@ -115,6 +126,10 @@ struct rxvm_memory_slab {
     uint8_t class_id;
     uint8_t flags;
     uint32_t version_reserved;
+#if UINTPTR_MAX == UINT32_MAX
+    /* Preserve the fixed 64-byte slab header with five 32-bit pointers. */
+    uint32_t pointer_padding[5];
+#endif
 };
 
 typedef char rxvm_memory_slab_header_must_be_64_bytes[
@@ -123,9 +138,17 @@ typedef char rxvm_memory_slab_size_must_be_power_of_two[
         RXVM_MEMORY_SLAB_SIZE != 0u &&
         (RXVM_MEMORY_SLAB_SIZE & (RXVM_MEMORY_SLAB_SIZE - 1u)) == 0u ? 1 : -1];
 typedef char rxvm_memory_standard_size_must_be_power_of_two[
-        RXVM_MEMORY_MAX_STANDARD_SIZE != 0u &&
+        RXVM_MEMORY_MAX_STANDARD_SIZE >= RXVM_MEMORY_ALIGNMENT &&
+        RXVM_MEMORY_MAX_STANDARD_SIZE <= 16384u &&
         (RXVM_MEMORY_MAX_STANDARD_SIZE &
-         (RXVM_MEMORY_MAX_STANDARD_SIZE - 1u)) == 0u ? 1 : -1];
+        (RXVM_MEMORY_MAX_STANDARD_SIZE - 1u)) == 0u ? 1 : -1];
+typedef char rxvm_memory_standard_slot_must_fit_slab[
+        RXVM_MEMORY_SLAB_SIZE > RXVM_MEMORY_SLAB_HEADER_SIZE &&
+        RXVM_MEMORY_MAX_STANDARD_SIZE <=
+            RXVM_MEMORY_SLAB_SIZE - RXVM_MEMORY_SLAB_HEADER_SIZE ? 1 : -1];
+typedef char rxvm_memory_reference_slot_must_fit_slab[
+        sizeof(rxvm_reference_cell) <=
+            RXVM_MEMORY_SLAB_SIZE - RXVM_MEMORY_SLAB_HEADER_SIZE ? 1 : -1];
 typedef char rxvm_memory_smallest_slot_count_must_fit_header[
         (RXVM_MEMORY_SLAB_SIZE - RXVM_MEMORY_SLAB_HEADER_SIZE) /
         RXVM_MEMORY_ALIGNMENT <= UINT16_MAX ? 1 : -1];
@@ -227,7 +250,17 @@ static void rxvm_memory_asan_poison(void *pointer, size_t size) {
 }
 
 static void *rxvm_memory_system_slab_allocate(void) {
-#ifdef _WIN32
+#ifdef CREXX_VM_PORTABLE_ALLOC
+    /* ISO C allocation plus explicit power-of-two alignment. Keep the original
+     * pointer outside the slab so normal ownership and free remain unchanged. */
+    void *base = malloc(2u * RXVM_MEMORY_SLAB_SIZE - 1u + sizeof(void *));
+    uintptr_t aligned;
+    if (!base) return 0;
+    aligned = ((uintptr_t)base + sizeof(void *) + RXVM_MEMORY_SLAB_SIZE - 1u)
+              & ~(uintptr_t)(RXVM_MEMORY_SLAB_SIZE - 1u);
+    ((void **)aligned)[-1] = base;
+    return (void *)aligned;
+#elif defined(_WIN32)
     return _aligned_malloc(RXVM_MEMORY_SLAB_SIZE, RXVM_MEMORY_SLAB_SIZE);
 #else
     void *pointer = 0;
@@ -241,7 +274,9 @@ static void *rxvm_memory_system_slab_allocate(void) {
 
 static void rxvm_memory_system_slab_free(void *pointer) {
     rxvm_memory_asan_unpoison(pointer, RXVM_MEMORY_SLAB_SIZE);
-#ifdef _WIN32
+#ifdef CREXX_VM_PORTABLE_ALLOC
+    free(((void **)pointer)[-1]);
+#elif defined(_WIN32)
     _aligned_free(pointer);
 #else
     free(pointer);
@@ -290,6 +325,8 @@ static int rxvm_memory_byte_class(size_t size, uint8_t *class_id) {
     uint8_t index;
     size_t wanted = size ? size : 1u;
 
+    if (wanted > RXVM_MEMORY_MAX_STANDARD_SIZE) return 0;
+
     for (index = 0; index < RXVM_MEMORY_BYTE_CLASS_COUNT; index++) {
         if (wanted <= rxvm_memory_byte_sizes[index]) {
             *class_id = index;
@@ -308,7 +345,8 @@ static int rxvm_memory_value_class(size_t count, uint8_t *class_id) {
         capacity <<= 1u;
         index++;
     }
-    if (capacity < wanted) return 0;
+    if (capacity < wanted ||
+        capacity > RXVM_MEMORY_MAX_STANDARD_SIZE / sizeof(value)) return 0;
     *class_id = (uint8_t)(RXVM_MEMORY_BYTE_CLASS_COUNT + index);
     return 1;
 }

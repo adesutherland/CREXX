@@ -1,0 +1,977 @@
+Command: cmake --build /home/runner/work/_temp/debugasan --parallel 4
+ASAN_OPTIONS=detect_leaks=1
+
+[0/2] Re-checking globbed directories...
+[1/2499] Copying bootstrap src/options/parse_opts.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[2/2499] Copying bootstrap src/parse/conf_lexer.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[3/2499] Copying bootstrap src/parse/lexer.cc and src/parse/lexer.h, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[4/2499] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[5/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[6/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[7/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[8/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[9/2499] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[10/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[11/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[12/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[13/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[14/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[15/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[16/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[17/2499] Generating doc/re2c.1
+[18/2499] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[19/2499] Copying bootstrap src/msg/ver_to_vernum.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[20/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/comms.c.o
+[21/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/code_buffer.c.o
+[22/2499] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/parser.cc.o
+[23/2499] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/lexer.cc.o
+[24/2499] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/options/parse_opts.cc.o
+[25/2499] Building CXX object re2c/CMakeFiles/re2c_objects_autogen_ver_to_vernum.dir/src/msg/ver_to_vernum.cc.o
+[26/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/dslsyntax_log.c.o
+[27/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/dslsyntax_common.c.o
+[28/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/diff.c.o
+[29/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/serialization.c.o
+[30/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/thread_utils.c.o
+[31/2499] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_parser.cc.o
+[32/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/dslsyntax_parser.c.o
+[33/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_parser.dir/emergency_parse.c.o
+[34/2499] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[35/2499] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_lexer.cc.o
+[36/2499] Generating src/msg/help_re2c.cc
+[37/2499] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[38/2499] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[39/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/helpers.cc.o
+[40/2499] Building C object lemon/CMakeFiles/lemon.dir/lemon.c.o
+[41/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass3_fixup.cc.o
+[42/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/output.cc.o
+[43/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass1_analyze.cc.o
+[44/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/symtab.cc.o
+[45/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass2_generate.cc.o
+[46/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass4_render.cc.o
+[47/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/nfa/re_to_nfa.cc.o
+[48/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_cfg.cc.o
+[49/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_adfa.cc.o
+[50/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa.cc.o
+[51/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/adfa/adfa.cc.o
+[52/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa_tree.cc.o
+[53/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_interf.cc.o
+[54/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_nfa.cc.o
+[55/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/compact.cc.o
+[56/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/cfg.cc.o
+[57/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/dce.cc.o
+[58/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/opt.cc.o
+[59/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/freeze.cc.o
+[60/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/liveanal.cc.o
+[61/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/interfere.cc.o
+[62/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/normalize.cc.o
+[63/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/optimize.cc.o
+[64/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/varalloc.cc.o
+[65/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/rename.cc.o
+[66/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fallback_tags.cc.o
+[67/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/dead_rules.cc.o
+[68/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fillpoints.cc.o
+[69/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/determinization.cc.o
+[70/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/closure.cc.o
+[71/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/find_state.cc.o
+[72/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/minimization.cc.o
+[73/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/enc.cc.o
+[74/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tcmd.cc.o
+[75/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/ebcdic.cc.o
+[76/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tagver_table.cc.o
+[77/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/range_suffix.cc.o
+[78/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf16.cc.o
+[79/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf8.cc.o
+[80/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/msg.cc.o
+[81/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/unicode_casemap.cc.o
+[82/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/warn.cc.o
+[83/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/fixed_tags.cc.o
+[84/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/default_tags.cc.o
+[85/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/ast_to_re.cc.o
+[86/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/nullable.cc.o
+[87/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/regexp.cc.o
+[88/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/split_charset.cc.o
+[89/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_code.cc.o
+[90/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/control_flow.cc.o
+[91/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/maxpath.cc.o
+[92/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_data.cc.o
+[93/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/file_utils.cc.o
+[94/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/string_utils.cc.o
+[95/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/skeleton.cc.o
+[96/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/range.cc.o
+[97/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/input.cc.o
+[98/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/help_re2c.cc.o
+[99/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/ast.cc.o
+[100/2499] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[101/2499] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[102/2499] Building C object binutils/CMakeFiles/rxbin.dir/rxsha256.c.o
+[103/2499] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[104/2499] Building C object interpreter/CMakeFiles/rxvmmemory.dir/rxvmmemory.c.o
+[105/2499] Building CXX object re2c/CMakeFiles/re2c.dir/src/main.cc.o
+[106/2499] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[107/2499] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[108/2499] Building C object interpreter/CMakeFiles/rxvmref.dir/rxpacompat.c.o
+[109/2499] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[110/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[111/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[112/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[113/2499] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[114/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmworker.c.o
+[115/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprogram.c.o
+[116/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmexecutor.c.o
+[117/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel.c.o
+[118/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_process.c.o
+[119/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprocessprotocol.c.o
+[120/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprocessworker.c.o
+[121/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmbyteendpoint.c.o
+[122/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_byte.c.o
+[123/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_child.c.o
+[124/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmactive.c.o
+[125/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[126/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[127/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[128/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[129/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[130/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpacallmethod.c.o
+[131/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[132/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[133/2499] Linking C static library bin/libavl_tree.a
+[134/2499] Linking C static library _deps/dsl_syntax_highlighter-build/libdslsyntax_parser.a
+[135/2499] Linking C executable lemon/lemon
+[136/2499] Linking C static library bin/libplatform.a
+[137/2499] Linking C static library bin/librxbin.a
+[138/2499] Linking CXX executable re2c/re2c
+[139/2499] Linking C static library bin/librxvmmemory.a
+[140/2499] Linking C static library bin/libdecnumber.a
+[141/2499] Linking C static library bin/librxvmref.a
+[142/2499] Linking C static library bin/librxvmplugin.a
+[143/2499] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvmlib.c.o
+[144/2499] Create REXX ASSEMBLER Parser...
+[145/2499] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[146/2499] Linking C static library bin/rxvm_mc_decimal_manual.a
+[147/2499] Linking C static library bin/librxpa.a
+[148/2499] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvml.c.o
+[149/2499] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[150/2499] Building C object lib/plugins/hash/CMakeFiles/_hash.dir/rx_hash.c.o
+[151/2499] Building C object linker/CMakeFiles/rxlink.dir/rxlinkmain.c.o
+[152/2499] Building C object lib/plugins/keyaccess/CMakeFiles/_keyaccess.dir/keyaccess.c.o
+[153/2499] Building C object lib/plugins/fs/CMakeFiles/fs.dir/rxfs.c.o
+[154/2499] Building C object lib/plugins/id/CMakeFiles/id.dir/id.c.o
+[155/2499] Building C object lib/plugins/platform/CMakeFiles/_platform.dir/rxplatform.c.o
+[156/2499] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[157/2499] Linking C shared module bin/rx_hash.rxplugin
+[158/2499] Linking C executable bin/rxlink
+[159/2499] Linking C static library bin/librxpashim.a
+[160/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[161/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[162/2499] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[163/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[164/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[165/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[166/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[167/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+[168/2499] Linking C shared module bin/rx_keyaccess.rxplugin
+[169/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+[170/2499] Linking C shared module bin/rxid.rxplugin
+[171/2499] Linking C shared module bin/rxfs.rxplugin
+[172/2499] Linking C shared module bin/rxplatform.rxplugin
+[173/2499] Linking C static library bin/librxbvml.a
+[174/2499] Linking C executable bin/rxbvm
+[175/2499] Building C object cpacker/CMakeFiles/rxcpack.dir/rxcpack.c.o
+[176/2499] Building C object preprocessor/CMakeFiles/precomp.dir/precomp.c.o
+[177/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/ggml-cpu.cpp.o
+[178/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/ggml-cpu.c.o
+[179/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+[180/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/hbm.cpp.o
+[181/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/iqp.cpp.o
+[182/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/traits.cpp.o
+[183/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/quants.c.o
+[184/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/amx/amx.cpp.o
+[185/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/amx/mmq.cpp.o
+[186/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/binary-ops.cpp.o
+[187/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/vec.cpp.o
+[188/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/repack.cpp.o
+[189/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[190/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/unary-ops.cpp.o
+[191/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/arch/x86/quants.c.o
+[192/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/arch/x86/repack.cpp.o
+[193/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[194/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/ggml-cpu.cpp.o
+[195/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/ggml-cpu.c.o
+[196/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/iqp.cpp.o
+[197/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/hbm.cpp.o
+[198/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/quants.c.o
+[199/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/traits.cpp.o
+[200/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/amx/amx.cpp.o
+[201/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/amx/mmq.cpp.o
+[202/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/repack.cpp.o
+[203/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-x64.dir/ggml-cpu/ops.cpp.o
+[204/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/vec.cpp.o
+[205/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/binary-ops.cpp.o
+[206/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[207/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/arch/x86/quants.c.o
+[208/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/arch/x86/repack.cpp.o
+[209/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/unary-ops.cpp.o
+[210/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[211/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/ggml-cpu.cpp.o
+[212/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/ggml-cpu.c.o
+[213/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/iqp.cpp.o
+[214/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/hbm.cpp.o
+[215/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/quants.c.o
+[216/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/traits.cpp.o
+[217/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/amx/amx.cpp.o
+[218/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/amx/mmq.cpp.o
+[219/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/repack.cpp.o
+[220/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sse42.dir/ggml-cpu/ops.cpp.o
+[221/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/vec.cpp.o
+[222/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/binary-ops.cpp.o
+[223/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/unary-ops.cpp.o
+[224/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[225/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/arch/x86/quants.c.o
+[226/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[227/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/arch/x86/repack.cpp.o
+[228/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/ggml-cpu.c.o
+[229/2499] Create REXX ASSEMBLER Lexer...
+[230/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxastoke.c.o
+[231/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxaseror.c.o
+[232/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/ggml-cpu.cpp.o
+[233/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o
+[234/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxasscan.c.o
+[235/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_batch.c.o
+[236/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_pass.c.o
+[237/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_graph.c.o
+[238/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_analysis.c.o
+[239/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o
+[240/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_rewrite.c.o
+[241/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_signal.c.o
+[242/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_use.c.o
+[243/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o
+[244/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o
+[245/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[246/2499] Building C object assembler/CMakeFiles/rxaslib.dir/__/binutils/rxopmeta.c.o
+[247/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o
+[248/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o
+[249/2499] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o
+[250/2499] Building C object assembler/CMakeFiles/rxas.dir/rxasmain.c.o
+[251/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/hbm.cpp.o
+[252/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/quants.c.o
+[253/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/iqp.cpp.o
+[254/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/traits.cpp.o
+[255/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sandybridge.dir/ggml-cpu/ops.cpp.o
+[256/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/amx/amx.cpp.o
+[257/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/amx/mmq.cpp.o
+[258/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/repack.cpp.o
+[259/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/vec.cpp.o
+[260/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/binary-ops.cpp.o
+[261/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/unary-ops.cpp.o
+[262/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/arch/x86/quants.c.o
+[263/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[264/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/arch/x86/repack.cpp.o
+[265/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[266/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/ggml-cpu.c.o
+[267/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/ggml-cpu.cpp.o
+[268/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/hbm.cpp.o
+[269/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/quants.c.o
+[270/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/iqp.cpp.o
+[271/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/traits.cpp.o
+[272/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/amx/amx.cpp.o
+[273/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/amx/mmq.cpp.o
+[274/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/binary-ops.cpp.o
+[275/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/vec.cpp.o
+[276/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/repack.cpp.o
+[277/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-ivybridge.dir/ggml-cpu/ops.cpp.o
+[278/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/unary-ops.cpp.o
+[279/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/arch/x86/quants.c.o
+[280/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/arch/x86/repack.cpp.o
+[281/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[282/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/ggml-cpu.c.o
+[283/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/ggml-cpu.cpp.o
+[284/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[285/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/hbm.cpp.o
+[286/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/iqp.cpp.o
+[287/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/traits.cpp.o
+[288/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/quants.c.o
+[289/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/amx/amx.cpp.o
+[290/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/amx/mmq.cpp.o
+[291/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/binary-ops.cpp.o
+[292/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/repack.cpp.o
+[293/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/vec.cpp.o
+[294/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/unary-ops.cpp.o
+[295/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-piledriver.dir/ggml-cpu/ops.cpp.o
+[296/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/arch/x86/quants.c.o
+[297/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[298/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/ggml-cpu.c.o
+[299/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[300/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/ggml-cpu.cpp.o
+[301/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/arch/x86/repack.cpp.o
+[302/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/hbm.cpp.o
+[303/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/iqp.cpp.o
+[304/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/quants.c.o
+[305/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/traits.cpp.o
+[306/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/amx/amx.cpp.o
+[307/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/amx/mmq.cpp.o
+[308/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/binary-ops.cpp.o
+[309/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/vec.cpp.o
+[310/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-haswell.dir/ggml-cpu/ops.cpp.o
+[311/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/repack.cpp.o
+[312/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/unary-ops.cpp.o
+[313/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/arch/x86/quants.c.o
+[314/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[315/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/ggml-cpu.c.o
+[316/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/ggml-cpu.cpp.o
+[317/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[318/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/iqp.cpp.o
+[319/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/hbm.cpp.o
+[320/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/quants.c.o
+[321/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/traits.cpp.o
+[322/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/ops.cpp.o
+[323/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-skylakex.dir/ggml-cpu/arch/x86/repack.cpp.o
+[324/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/amx/amx.cpp.o
+[325/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/amx/mmq.cpp.o
+[326/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/repack.cpp.o
+[327/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/vec.cpp.o
+[328/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/binary-ops.cpp.o
+[329/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/arch/x86/quants.c.o
+[330/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/unary-ops.cpp.o
+[331/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[332/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/ggml-cpu.c.o
+[333/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/ggml-cpu.cpp.o
+[334/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[335/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/iqp.cpp.o
+[336/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/hbm.cpp.o
+[337/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/quants.c.o
+[338/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/ops.cpp.o
+[339/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/traits.cpp.o
+[340/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/amx/amx.cpp.o
+[341/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/amx/mmq.cpp.o
+[342/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cannonlake.dir/ggml-cpu/arch/x86/repack.cpp.o
+[343/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/repack.cpp.o
+[344/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/vec.cpp.o
+[345/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/binary-ops.cpp.o
+[346/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/arch/x86/quants.c.o
+[347/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/unary-ops.cpp.o
+[348/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[349/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/ggml-cpu.c.o
+[350/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/ggml-cpu.cpp.o
+[351/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[352/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/iqp.cpp.o
+[353/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/hbm.cpp.o
+[354/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/quants.c.o
+[355/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/ops.cpp.o
+[356/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/traits.cpp.o
+[357/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cascadelake.dir/ggml-cpu/arch/x86/repack.cpp.o
+[358/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/amx/amx.cpp.o
+[359/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/amx/mmq.cpp.o
+[360/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/repack.cpp.o
+[361/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/vec.cpp.o
+[362/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/binary-ops.cpp.o
+[363/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/arch/x86/quants.c.o
+[364/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/unary-ops.cpp.o
+[365/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[366/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/ggml-cpu.c.o
+[367/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/ggml-cpu.cpp.o
+[368/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[369/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/iqp.cpp.o
+[370/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/hbm.cpp.o
+[371/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/quants.c.o
+[372/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/traits.cpp.o
+[373/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/ops.cpp.o
+[374/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/amx/amx.cpp.o
+[375/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/amx/mmq.cpp.o
+[376/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-icelake.dir/ggml-cpu/arch/x86/repack.cpp.o
+[377/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/repack.cpp.o
+[378/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/vec.cpp.o
+[379/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/binary-ops.cpp.o
+[380/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/arch/x86/quants.c.o
+[381/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/unary-ops.cpp.o
+[382/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[383/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/ggml-cpu.c.o
+[384/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/ggml-cpu.cpp.o
+[385/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[386/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/iqp.cpp.o
+[387/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/hbm.cpp.o
+[388/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/quants.c.o
+[389/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/ops.cpp.o
+[390/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/traits.cpp.o
+[391/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/amx/amx.cpp.o
+[392/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/amx/mmq.cpp.o
+[393/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-cooperlake.dir/ggml-cpu/arch/x86/repack.cpp.o
+[394/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/vec.cpp.o
+[395/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/repack.cpp.o
+[396/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/binary-ops.cpp.o
+[397/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/arch/x86/quants.c.o
+[398/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/unary-ops.cpp.o
+[399/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[400/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/ggml-cpu.c.o
+[401/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/ggml-cpu.cpp.o
+[402/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[403/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/iqp.cpp.o
+[404/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/hbm.cpp.o
+[405/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/quants.c.o
+[406/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/traits.cpp.o
+[407/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/ops.cpp.o
+[408/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/amx/amx.cpp.o
+[409/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/amx/mmq.cpp.o
+[410/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-zen4.dir/ggml-cpu/arch/x86/repack.cpp.o
+[411/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/repack.cpp.o
+[412/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/vec.cpp.o
+[413/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/binary-ops.cpp.o
+[414/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/arch/x86/quants.c.o
+[415/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/unary-ops.cpp.o
+[416/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[417/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/ggml-cpu.c.o
+[418/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[419/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/ggml-cpu.cpp.o
+[420/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/arch/x86/repack.cpp.o
+[421/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/hbm.cpp.o
+[422/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/iqp.cpp.o
+[423/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/traits.cpp.o
+[424/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/quants.c.o
+[425/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/amx/amx.cpp.o
+[426/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-alderlake.dir/ggml-cpu/ops.cpp.o
+[427/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/binary-ops.cpp.o
+[428/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/repack.cpp.o
+[429/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/vec.cpp.o
+[430/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/unary-ops.cpp.o
+[431/2499] Building C object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/arch/x86/quants.c.o
+[432/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/llamafile/sgemm.cpp.o
+[433/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids-feats.dir/ggml-cpu/arch/x86/cpu-feats.cpp.o
+[434/2499] Linking C executable bin/rxcpack
+[435/2499] Linking C static library bin/librxaslib.a
+[436/2499] Create Options Parser...
+[437/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/ops.cpp.o
+[438/2499] Create REXX B Parser...
+[439/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/arch/x86/repack.cpp.o
+[440/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml-cpu-sapphirerapids.dir/ggml-cpu/amx/mmq.cpp.o
+[441/2499] Create Options Lexer...
+[442/2499] Create REXX C Parser...
+[443/2499] Linking CXX shared library bin/providers/libcrexx-ggml-base.so.0.23.0
+[444/2499] Linking C executable bin/rxas
+[445/2499] cREXX assemble _elapsed ...
+[446/2499] cREXX RXAS Library Archive ...
+[447/2499] Creating library symlink bin/providers/libcrexx-ggml-base.so.0 bin/providers/libcrexx-ggml-base.so
+[448/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmworker.c.o
+[449/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprogram.c.o
+[450/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmexecutor.c.o
+[451/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel.c.o
+[452/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_process.c.o
+[453/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprocessprotocol.c.o
+[454/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprocessworker.c.o
+[455/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmbyteendpoint.c.o
+[456/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_byte.c.o
+[457/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_child.c.o
+[458/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmactive.c.o
+[459/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmload.c.o
+[460/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o
+[461/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxspawn.c.o
+[462/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxcrexxcmd.c.o
+[463/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/exitfunc.c.o
+[464/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpacallmethod.c.o
+[465/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpafuncs.c.o
+[466/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvml/rxvm_run.c.o
+[467/2499] Building C object interpreter/CMakeFiles/rxvml.dir/rxvmlib.c.o
+[468/2499] Building C object interpreter/CMakeFiles/rxvml.dir/rxvml.c.o
+[469/2499] Building C object preprocessor/CMakeFiles/precomp_static.dir/precomp.c.o
+[470/2499] Linking C shared module bin/rxprecomp.rxplugin
+[471/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o
+[472/2499] Building CXX object _deps/crexx_llama_source-build/ggml/src/CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o
+[473/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-x64.so
+[474/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-sse42.so
+[475/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-sandybridge.so
+[476/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-ivybridge.so
+[477/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-piledriver.so
+[478/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-haswell.so
+[479/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-skylakex.so
+[480/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-cannonlake.so
+[481/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-cascadelake.so
+[482/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-icelake.so
+[483/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-cooperlake.so
+[484/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-zen4.so
+[485/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-alderlake.so
+[486/2499] Linking CXX shared module bin/providers/libcrexx-ggml-cpu-sapphirerapids.so
+[487/2499] Building C object lib/plugins/fs/CMakeFiles/fs_static.dir/rxfs.c.o
+[488/2499] Building C object lib/plugins/platform/CMakeFiles/_platform_static.dir/rxplatform.c.o
+[489/2499] Building C object interpreter/CMakeFiles/rxtvm.dir/rxvmmain.c.o
+[490/2499] Linking C static library bin/rxprecomp_static.a
+[491/2499] Stage rxpp macro support files ...
+[492/2499] Linking CXX shared library bin/providers/libcrexx-ggml.so.0.23.0
+[493/2499] Linking C static library bin/rxfs_static.a
+[494/2499] Linking C static library bin/rxplatform_static.a
+[495/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_dynamic.dir/mc_decimal.c.o
+[496/2499] Building C object lib/plugins/float/CMakeFiles/float.dir/rxfloat.c.o
+[497/2499] Building C object lib/plugins/float/CMakeFiles/float_static.dir/rxfloat.c.o
+[498/2499] Building C object lib/plugins/hash/CMakeFiles/_hash_static.dir/rx_hash.c.o
+[499/2499] Creating library symlink bin/providers/libcrexx-ggml.so.0 bin/providers/libcrexx-ggml.so
+[500/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama.cpp.o
+[501/2499] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmintp.c.o
+[502/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-arch.cpp.o
+[503/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-adapter.cpp.o
+[504/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-chat.cpp.o
+[505/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-batch.cpp.o
+[506/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-cparams.cpp.o
+[507/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-context.cpp.o
+[508/2499] Create REXX C Lexer...
+[509/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-hparams.cpp.o
+[510/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-impl.cpp.o
+[511/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-grammar.cpp.o
+[512/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-io.cpp.o
+[513/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-iswa.cpp.o
+[514/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-graph.cpp.o
+[515/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-dsa.cpp.o
+[516/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-dsa-iswa.cpp.o
+[517/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-msa.cpp.o
+[518/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o
+[519/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory.cpp.o
+[520/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory-hybrid.cpp.o
+[521/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory-hybrid-iswa.cpp.o
+[522/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-kv-cache-dsv4.cpp.o
+[523/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory-hybrid-idx.cpp.o
+[524/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-memory-recurrent.cpp.o
+[525/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-mmap.cpp.o
+[526/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-model-saver.cpp.o
+[527/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-quant.cpp.o
+[528/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-model-loader.cpp.o
+[529/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-model.cpp.o
+[530/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/unicode-data.cpp.o
+[531/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-vocab.cpp.o
+[532/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/afmoe.cpp.o
+[533/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/llama-sampler.cpp.o
+[534/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/apertus.cpp.o
+[535/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/arcee.cpp.o
+[536/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/arctic.cpp.o
+[537/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/arwkv7.cpp.o
+[538/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/baichuan.cpp.o
+[539/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bailingmoe.cpp.o
+[540/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/unicode.cpp.o
+[541/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bailingmoe2.cpp.o
+[542/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bert.cpp.o
+[543/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bailingmoe3.cpp.o
+[544/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bitnet.cpp.o
+[545/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/bloom.cpp.o
+[546/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/chatglm.cpp.o
+[547/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/chameleon.cpp.o
+[548/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/clip.cpp.o
+[549/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/codeshell.cpp.o
+[550/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/cogvlm.cpp.o
+[551/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/cohere2.cpp.o
+[552/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/command-r.cpp.o
+[553/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/cohere2moe.cpp.o
+[554/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dbrx.cpp.o
+[555/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deci.cpp.o
+[556/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek.cpp.o
+[557/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek2ocr.cpp.o
+[558/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek2.cpp.o
+[559/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek32.cpp.o
+[560/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/delta-net-base.cpp.o
+[561/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/deepseek4.cpp.o
+[562/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dflash.cpp.o
+[563/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dots1.cpp.o
+[564/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dots3note.cpp.o
+[565/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/dream.cpp.o
+[566/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/eagle3.cpp.o
+[567/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/ernie4-5-moe.cpp.o
+[568/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/ernie4-5.cpp.o
+[569/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/eurobert.cpp.o
+[570/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/exaone-moe.cpp.o
+[571/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/exaone.cpp.o
+[572/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/exaone4.cpp.o
+[573/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/falcon-h1.cpp.o
+[574/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/falcon.cpp.o
+[575/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma-embedding.cpp.o
+[576/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma.cpp.o
+[577/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma2.cpp.o
+[578/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma3.cpp.o
+[579/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma3n.cpp.o
+[580/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma4-assistant.cpp.o
+[581/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gemma4.cpp.o
+[582/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/glm-dsa.cpp.o
+[583/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/glm4-moe.cpp.o
+[584/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/glm4.cpp.o
+[585/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gpt2.cpp.o
+[586/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite-hybrid.cpp.o
+[587/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/gptneox.cpp.o
+[588/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite-moe.cpp.o
+[589/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite-swa.cpp.o
+[590/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite-switch.cpp.o
+[591/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/granite.cpp.o
+[592/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/grok.cpp.o
+[593/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/grovemoe.cpp.o
+[594/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/hunyuan-dense.cpp.o
+[595/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/hunyuan-moe.cpp.o
+[596/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/hunyuan-vl.cpp.o
+[597/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/hy-v3.cpp.o
+[598/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/internlm2.cpp.o
+[599/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jais.cpp.o
+[600/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jais2.cpp.o
+[601/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jamba.cpp.o
+[602/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jina-bert-v2.cpp.o
+[603/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/jina-bert-v3.cpp.o
+[604/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/kimi-k3.cpp.o
+[605/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/kimi-linear.cpp.o
+[606/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/laguna.cpp.o
+[607/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/lfm2.cpp.o
+[608/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/lfm2moe.cpp.o
+[609/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llada-moe.cpp.o
+[610/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llada.cpp.o
+[611/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llama-embed.cpp.o
+[612/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llama.cpp.o
+[613/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/llama4.cpp.o
+[614/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/maincoder.cpp.o
+[615/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mamba-base.cpp.o
+[616/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mamba.cpp.o
+[617/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mamba2.cpp.o
+[618/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mellum.cpp.o
+[619/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mimo2.cpp.o
+[620/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minicpm.cpp.o
+[621/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minicpm3.cpp.o
+[622/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minimax-01.cpp.o
+[623/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minimax-m2.cpp.o
+[624/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/minimax-m3.cpp.o
+[625/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mistral3.cpp.o
+[626/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mistral4.cpp.o
+[627/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/modern-bert.cpp.o
+[628/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/muse-glimmer.cpp.o
+[629/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/mpt.cpp.o
+[630/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nanbeige.cpp.o
+[631/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nemotron-h.cpp.o
+[632/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nemotron-h-moe.cpp.o
+[633/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nemotron.cpp.o
+[634/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nomic-bert-moe.cpp.o
+[635/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/neo-bert.cpp.o
+[636/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/nomic-bert.cpp.o
+[637/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/olmo.cpp.o
+[638/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/olmo2.cpp.o
+[639/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/olmoe.cpp.o
+[640/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/openai-moe.cpp.o
+[641/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/openelm.cpp.o
+[642/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/orion.cpp.o
+[643/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/paddleocr.cpp.o
+[644/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/pangu-embed.cpp.o
+[645/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/phi2.cpp.o
+[646/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/phi3.cpp.o
+[647/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/phimoe.cpp.o
+[648/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/plamo.cpp.o
+[649/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/plamo2.cpp.o
+[650/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/plamo3.cpp.o
+[651/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/plm.cpp.o
+[652/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/pockettts.cpp.o
+[653/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen.cpp.o
+[654/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen2.cpp.o
+[655/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen2moe.cpp.o
+[656/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen2vl.cpp.o
+[657/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3.cpp.o
+[658/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen35.cpp.o
+[659/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen35moe.cpp.o
+[660/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3moe.cpp.o
+[661/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3next.cpp.o
+[662/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3tts.cpp.o
+[663/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3vl.cpp.o
+[664/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen3vlmoe.cpp.o
+[665/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/refact.cpp.o
+[666/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rnd1.cpp.o
+[667/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/qwen4exp.cpp.o
+[668/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv6-base.cpp.o
+[669/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv6.cpp.o
+[670/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv6qwen2.cpp.o
+[671/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv7-base.cpp.o
+[672/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/seed-oss.cpp.o
+[673/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/rwkv7.cpp.o
+[674/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/smallthinker.cpp.o
+[675/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/smollm3.cpp.o
+[676/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/stablelm.cpp.o
+[677/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/starcoder.cpp.o
+[678/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/starcoder2.cpp.o
+[679/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/step35.cpp.o
+[680/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/t5.cpp.o
+[681/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/t5encoder.cpp.o
+[682/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/talkie.cpp.o
+[683/2499] Building C object lib/plugins/keyaccess/CMakeFiles/_keyaccess_static.dir/keyaccess.c.o
+[684/2499] Building C object lib/plugins/llist/CMakeFiles/_llist.dir/llist.c.o
+[685/2499] Building C object lib/plugins/llist/CMakeFiles/_llist_static.dir/llist.c.o
+[686/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/xverse.cpp.o
+[687/2499] Building CXX object _deps/crexx_llama_source-build/src/CMakeFiles/llama.dir/models/wavtokenizer-dec.cpp.o
+[688/2499] Building C object lib/plugins/treemap/CMakeFiles/_treemap.dir/treemap.c.o
+[689/2499] Linking C shared module bin/rxvm_mc_decimal.rxvmplugin
+[690/2499] Linking C shared module bin/rxfloat.rxplugin
+[691/2499] Building C object lib/plugins/treemap/CMakeFiles/_treemap_static.dir/treemap.c.o
+[692/2499] Building C object linker/CMakeFiles/rxlink_concat_files.dir/tests/concat_files.c.o
+[693/2499] Linking C executable bin/rxtvm
+[694/2499] Creating rxvm symlink to rxtvm
+[695/2499] Linking C static library bin/librxvml.a
+[696/2499] Linking C static library bin/rxfloat_static.a
+[697/2499] Linking C static library bin/rx_hash_static.a
+[698/2499] Building C object interpreter/CMakeFiles/_e5native.dir/tests/e5_native_return_plugin.c.o
+[699/2499] Linking C static library bin/rx_keyaccess_static.a
+[700/2499] cREXX RXLINK fixture tests_link_root ...
+[701/2499] cREXX RXLINK fixture tests_link_provider_a ...
+[702/2499] Linking C shared module bin/rx_llist.rxplugin
+[703/2499] cREXX RXLINK fixture tests_link_interface_root ...
+[704/2499] cREXX RXLINK fixture tests_link_interface_impl ...
+[705/2499] Linking C static library bin/rx_llist_static.a
+[706/2499] Linking C shared module bin/rx_treemap.rxplugin
+[707/2499] Linking C static library bin/rx_treemap_static.a
+[708/2499] Building C object lib/plugins/sqlite/CMakeFiles/sqlite.dir/rxsqlite.c.o
+[709/2499] Linking CXX shared library bin/providers/libcrexx-llama-engine.so.0.4.0
+[710/2499] Building C object lib/plugins/llama/CMakeFiles/crexx_llama_bridge.dir/__/__/__/binutils/rxsha256.c.o
+[711/2499] Creating library symlink bin/providers/libcrexx-llama-engine.so.0 bin/providers/libcrexx-llama-engine.so
+[712/2499] Building C object tests/rxpa/CMakeFiles/_cri17_attached.dir/cri17_attached_provider.c.o
+[713/2499] Building C object tests/rxpa/CMakeFiles/_cri17_attached_static.dir/cri17_attached_provider.c.o
+[714/2499] Linking C executable linker/rxlink_concat_files
+[715/2499] cREXX RXLINK success fixture ...
+[716/2499] cREXX RXLINK interface fixture ...
+[717/2499] Building C object disassembler/CMakeFiles/rxdas.dir/rxdamain.c.o
+[718/2499] Building C object disassembler/CMakeFiles/rxdas.dir/rxdadism.c.o
+[719/2499] Building C object interpreter/CMakeFiles/mutate_retired_process_opcode.dir/tests/mutate_retired_process_opcode.c.o
+[720/2499] Linking C shared module bin/rx_e5native.rxplugin
+[721/2499] Building C object lib/plugins/console/CMakeFiles/console.dir/rxconsole.c.o
+[722/2499] Building C object lib/plugins/console/CMakeFiles/console.dir/rxconsole_core.c.o
+[723/2499] Building C object lib/plugins/console/CMakeFiles/console.dir/rxconsole_decode.c.o
+[724/2499] Building C object lib/plugins/recv390/CMakeFiles/_recv390.dir/recv390.c.o
+[725/2499] Building C object lib/plugins/map/CMakeFiles/_map.dir/map.c.o
+[726/2499] Linking C shared module tests/rxpa/rx_cri17provider.rxplugin
+[727/2499] Linking C static library tests/rx_cri17provider_static.a
+[728/2499] Building C object tests/rxpa/CMakeFiles/_rxpa_callmethod_static.dir/rxpa_callmethod.c.o
+[729/2499] Building C object tests/rxpa/CMakeFiles/_rxpalink_decl.dir/rxpa_staticlink.c.o
+[730/2499] Building C object tests/rxpa/CMakeFiles/_testfuncs_static.dir/rxpa_functests.c.o
+[731/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_editor.dir/code_buffer.c.o
+[732/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_editor.dir/comms.c.o
+[733/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_editor.dir/dslsyntax_common.c.o
+[734/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_editor.dir/dslsyntax_log.c.o
+[735/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_editor.dir/serialization.c.o
+[736/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_editor.dir/diff.c.o
+[737/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_editor.dir/emergency_parse.c.o
+[738/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_editor.dir/thread_utils.c.o
+[739/2499] Building C object _deps/dsl_syntax_highlighter-build/CMakeFiles/dslsyntax_editor.dir/dslsyntax_editor.c.o
+[740/2499] Building C object compiler/exits/address/CMakeFiles/address_spawn_group_fixture.dir/address_spawn_group_fixture.c.o
+[741/2499] cREXX RXLINK inline-metadata fixture ...
+[742/2499] cREXX RXLINK stripped fixture ...
+[743/2499] cREXX RXLINK record-stream concat fixture ...
+[744/2499] Linking C executable bin/rxdas
+[745/2499] Building C object disassembler/CMakeFiles/mutate_graph_rxbin.dir/tests/mutate_graph_rxbin.c.o
+[746/2499] Building C object interpreter/CMakeFiles/rxvm_platform_notls_objects.dir/rxvmsock.c.o
+[747/2499] Building C object interpreter/CMakeFiles/crexxsaa.dir/crexxsaa.c.o
+[748/2499] Building C object interpreter/CMakeFiles/rxpa_host_fixture_modern.dir/tests/rxpa_host_service_fixture.c.o
+[749/2499] Building C object interpreter/CMakeFiles/rxpa_host_fixture_old.dir/tests/rxpa_host_service_fixture.c.o
+[750/2499] Building C object interpreter/CMakeFiles/mutate_jtable_rxbin.dir/tests/mutate_jtable_rxbin.c.o
+[751/2499] Linking C executable interpreter/mutate_retired_process_opcode
+[752/2499] Building C object interpreter/CMakeFiles/_e5native_static.dir/tests/e5_native_return_plugin.c.o
+[753/2499] cREXX RXAS Float Constant Pool Tests ...
+[754/2499] cREXX RXBIN 007 portable-format tests ...
+[755/2499] Assembling Gate F F1e process channel fixture ...
+[756/2499] Assembling PERF3-13 E5 sparse progress fixture ...
+[757/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal.dir/mc_decimal.c.o
+[758/2499] Building CXX object lib/plugins/llama/CMakeFiles/crexx_llama_bridge.dir/bridge.cpp.o
+[759/2499] Building C object interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_dynamic.dir/db_decimal.c.o
+[760/2499] Building C object lib/rxfnsb/tests_functional/CMakeFiles/address_argv_fixture.dir/address_argv_fixture.c.o
+[761/2499] Building C object lib/rxfnsb/tests_functional/CMakeFiles/address_spawn_transfer_fixture.dir/address_spawn_transfer_fixture.c.o
+[762/2499] Building C object interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_manual.dir/db_decimal.c.o
+[763/2499] Building C object lib/plugins/CMakeFiles/_rxpa_session_failure.dir/__/__/interpreter/tests/rxpa_session_failure_plugin.c.o
+[764/2499] Building C object lib/rxfnsb/tests_functional/CMakeFiles/linein_stdin_harness.dir/linein_stdin_harness.c.o
+[765/2499] Building C object lib/plugins/stats/CMakeFiles/stats.dir/rxstats.c.o
+[766/2499] Building C object lib/plugins/arrays/CMakeFiles/_arrays.dir/arrays.c.o
+[767/2499] Building C object lib/plugins/stats/CMakeFiles/stats_static.dir/rxstats.c.o
+[768/2499] Building C object lib/plugins/vector/CMakeFiles/vector.dir/rxvector.c.o
+[769/2499] Building C object lib/plugins/vector/CMakeFiles/vector_static.dir/rxvector.c.o
+[770/2499] Building C object lib/plugins/stack/CMakeFiles/_stack_static.dir/stack.c.o
+[771/2499] Building C object lib/plugins/stack/CMakeFiles/_stack.dir/stack.c.o
+[772/2499] Building C object lib/plugins/cipher/CMakeFiles/_cipher.dir/cipher.c.o
+[773/2499] Building C object lib/plugins/cipher/CMakeFiles/_cipher_static.dir/cipher.c.o
+[774/2499] Building C object lib/plugins/sqlite/CMakeFiles/sqlite_static.dir/rxsqlite.c.o
+[775/2499] Building C object lib/plugins/llama/CMakeFiles/llama_provider.dir/rxllama.c.o
+[776/2499] Building C object lib/plugins/llama/CMakeFiles/llama_provider_static.dir/rxllama.c.o
+[777/2499] Building C object lib/plugins/getpi/CMakeFiles/_getpi.dir/getpi.c.o
+[778/2499] Building C object lib/plugins/strings/CMakeFiles/_strings.dir/strings.c.o
+[779/2499] Linking C shared module bin/rxconsole.rxplugin
+[780/2499] Building C object lib/plugins/id/CMakeFiles/id_static.dir/id.c.o
+[781/2499] Building C object lib/plugins/console/CMakeFiles/console_static.dir/rxconsole.c.o
+[782/2499] Building C object lib/plugins/console/CMakeFiles/console_static.dir/rxconsole_core.c.o
+[783/2499] Linking CXX shared library bin/providers/libcrexx-llama.so.1
+[784/2499] Creating library symlink bin/providers/libcrexx-llama.so
+[785/2499] Linking C shared module bin/rx_recv390.rxplugin
+[786/2499] Building C object lib/plugins/console/CMakeFiles/console_static.dir/rxconsole_decode.c.o
+[787/2499] Linking C shared module bin/rx_map.rxplugin
+[788/2499] Building C object lib/plugins/rxtcp/CMakeFiles/_rxtcp.dir/rxtcp.c.o
+[789/2499] Building C object lib/plugins/odbc/CMakeFiles/_odbc_mock.dir/tests/mock_odbc.c.o
+[790/2499] Building C object lib/plugins/odbc/CMakeFiles/_odbc_mock.dir/odbc.c.o
+[791/2499] Building C object tests/native_signals/CMakeFiles/signal_tester.dir/sigtest-posix.c.o
+[792/2499] Building C object tests/rxpa/CMakeFiles/_rcc_provider.dir/rcc_provider.c.o
+[793/2499] Building C object tests/rxpa/CMakeFiles/_rcc_provider_static.dir/rcc_provider.c.o
+[794/2499] Linking C static library tests/rx_rxpa_callmethod_static.a
+[795/2499] Building C object tests/rxpa/CMakeFiles/_rxpa_objects.dir/rxpa_objects.c.o
+[796/2499] Building C object tests/rxpa/CMakeFiles/_rxpa_classdecl_static_decl.dir/rxpa_classdecl.c.o
+[797/2499] Building C object tests/rxpa/CMakeFiles/_rxpalink_static.dir/rxpa_staticlink.c.o
+[798/2499] Linking C static library tests/rx_rxpalink_decl.a
+[799/2499] Linking C static library tests/rx_testfuncs_static.a
+[800/2499] Building C object tests/rxpa/CMakeFiles/funcvm.dir/__/__/interpreter/rxvmmain.c.o
+[801/2499] Linking C static library _deps/dsl_syntax_highlighter-build/libdslsyntax_editor.a
+[802/2499] Building C object platform/CMakeFiles/platform_terminal_harness.dir/platform_terminal_harness.c.o
+[803/2499] Building C object binutils/CMakeFiles/test_rxsha256.dir/tests/test_rxsha256.c.o
+[804/2499] Building C object dslsyntax-tools/CMakeFiles/parser_tester.dir/parser_tester.c.o
+[805/2499] Building C object contract/CMakeFiles/crexx-contract.dir/contractmain.c.o
+[806/2499] Building C object binutils/CMakeFiles/test_rxgraph.dir/tests/test_rxgraph.c.o
+[807/2499] Building C object contract/CMakeFiles/crexx-contract.dir/contract_json.c.o
+[808/2499] Building C object contract/CMakeFiles/crexx-contract.dir/contract_model.c.o
+[809/2499] Building C object assembler/CMakeFiles/rxas_test_flatten.dir/rxas_test_flatten.c.o
+[810/2499] Building C object contract/CMakeFiles/crexx-contract.dir/contract_compat.c.o
+[811/2499] Building C object compiler/tests/CMakeFiles/mutate_rxbin_feature.dir/mutate_rxbin_feature.c.o
+[812/2499] Building C object compiler/tests/CMakeFiles/test_rxvml_utf_boundaries.dir/src/test_rxvml_utf_boundaries.c.o
+[813/2499] Linking C executable bin/address_spawn_group_fixture
+[814/2499] cREXX RXLINK fixture tests_link_provider_b ...
+[815/2499] cREXX RXLINK fixture tests_link_srcfproc_root ...
+[816/2499] cREXX RXLINK fixture tests_link_srcfproc_contract ...
+[817/2499] cREXX RXLINK fixture tests_link_srcmethod_root ...
+[818/2499] cREXX RXLINK fixture tests_link_srcmethod_provider ...
+[819/2499] Building C object compiler/tests/CMakeFiles/crexx_fake_editor.dir/src/fake_editor.c.o
+[820/2499] Linking C executable disassembler/mutate_graph_rxbin
+[821/2499] Building C object linker/CMakeFiles/test_linked_format.dir/tests/test_linked_format.c.o
+[822/2499] Building C object disassembler/CMakeFiles/test_disassembler_dump.dir/tests/test_disassembler_dump.c.o
+[823/2499] cREXX RXDAS roundtrip fixture tests_compact_format ...
+[824/2499] Building C object disassembler/CMakeFiles/test_disassembler_dump.dir/rxdadism.c.o
+[825/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmworker.c.o
+[826/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmprogram.c.o
+[827/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmexecutor.c.o
+[828/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmchannel.c.o
+[829/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmchannel_process.c.o
+[830/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmprocessprotocol.c.o
+[831/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmprocessworker.c.o
+[832/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmbyteendpoint.c.o
+[833/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmchannel_byte.c.o
+[834/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmchannel_child.c.o
+[835/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmactive.c.o
+[836/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmload.c.o
+[837/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/interrupt.c.o
+[838/2499] Building C object lib/plugins/sqlite/CMakeFiles/crexx_sqlite3_objects.dir/vendor/sqlite3.c.o
+[839/2499] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqmain.c.o
+[840/2499] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqfile.c.o
+[841/2499] Building C object interpreter/CMakeFiles/test_rxseqfile.dir/tests/test_rxseqfile.c.o
+[842/2499] Building C object interpreter/CMakeFiles/test_rxseqfile.dir/rxseqfile.c.o
+[843/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented.dir/rxvmmain.c.o
+[844/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented.dir/rxvmmain.c.o
+[845/2499] Building C object interpreter/CMakeFiles/test_rxcrexxcmd_flush.dir/tests/test_rxcrexxcmd_flush.c.o
+[846/2499] Building C object interpreter/CMakeFiles/test_rxspawn_posix_termination.dir/tests/test_rxspawn_posix_termination.c.o
+[847/2499] Building C object interpreter/CMakeFiles/test_rxspawn_diagnostics.dir/tests/test_rxspawn_diagnostics.c.o
+[848/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxspawn.c.o
+[849/2499] Linking C shared library bin/libcrexxsaa.so
+[850/2499] Linking C shared module bin/rxsqlite.rxplugin
+[851/2499] Building C object interpreter/CMakeFiles/crexxsaa_tool.dir/crexxsaa_tool.c.o
+[852/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxcrexxcmd.c.o
+[853/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/exitfunc.c.o
+[854/2499] Building C object interpreter/CMakeFiles/ts_regvalue_tester.dir/tests/ts_regvalue_tester.c.o
+[855/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxpacallmethod.c.o
+[856/2499] Building C object interpreter/CMakeFiles/test_rxvmstem.dir/tests/test_rxvmstem.c.o
+[857/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxpafuncs.c.o
+[858/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvml/rxvm_run.c.o
+[859/2499] Building C object interpreter/CMakeFiles/test_rxvmstem_allocator_family.dir/tests/test_rxvmstem_allocator_family.c.o
+[860/2499] Building C object interpreter/CMakeFiles/test_rxvmmemory.dir/tests/test_rxvmmemory.c.o
+[861/2499] Building C object interpreter/CMakeFiles/test_rxvmworker.dir/tests/test_rxvmworker.c.o
+[862/2499] Building C object interpreter/CMakeFiles/test_rxvmworker.dir/rxvmworker.c.o
+[863/2499] Building C object interpreter/CMakeFiles/test_rxvmchannel_registry.dir/tests/test_rxvmchannel_registry.c.o
+[864/2499] Building C object interpreter/CMakeFiles/test_rxvmbyteendpoint.dir/tests/test_rxvmbyteendpoint.c.o
+[865/2499] Building C object interpreter/CMakeFiles/test_rxvmchannel_byte.dir/tests/test_rxvmchannel_byte.c.o
+[866/2499] Building C object interpreter/CMakeFiles/test_rxvmchannel_lifetime.dir/tests/test_rxvmchannel_lifetime.c.o
+[867/2499] Building C object interpreter/CMakeFiles/test_rxvmactive.dir/tests/test_rxvmactive.c.o
+[868/2499] Building C object interpreter/CMakeFiles/test_rxvmplugin_context.dir/tests/test_rxvmplugin_context.c.o
+[869/2499] Building C object interpreter/CMakeFiles/test_rxpa_concurrency.dir/tests/test_rxpa_concurrency.c.o
+[870/2499] Building C object interpreter/CMakeFiles/test_rxpa_host_services.dir/tests/test_rxpa_host_services.c.o
+[871/2499] Linking C shared module interpreter/rxpa_host_fixture_modern.rxplugin
+[872/2499] Linking C shared module interpreter/rxpa_host_fixture_old.rxplugin
+[873/2499] Building C object interpreter/CMakeFiles/test_rxpa_worker_startup.dir/tests/test_rxpa_worker_startup.c.o
+[874/2499] Building C object interpreter/CMakeFiles/test_rxpa_odbc.dir/tests/test_rxpa_odbc.c.o
+[875/2499] Building C object interpreter/CMakeFiles/test_rxpa_odbc_old_host.dir/tests/test_rxpa_odbc_old_host.c.o
+[876/2499] Building C object interpreter/CMakeFiles/test_jtable_policy.dir/tests/test_jtable_policy.c.o
+[877/2499] Building C object interpreter/CMakeFiles/test_signal_mask.dir/tests/test_signal_mask.c.o
+[878/2499] Linking C executable interpreter/mutate_jtable_rxbin
+[879/2499] Building C object interpreter/CMakeFiles/test_rxpa_utf_validation.dir/tests/test_rxpa_utf_validation.c.o
+[880/2499] Building C object interpreter/CMakeFiles/test_rxpa_utf_validation.dir/rxpafuncs.c.o
+[881/2499] Building C object interpreter/CMakeFiles/test_rxpa_utf_validation.dir/rxvmactive.c.o
+[882/2499] Building C object interpreter/CMakeFiles/test_rxpa_utf_validation.dir/rxvmworker.c.o
+[883/2499] Linking C static library interpreter/rx_e5native_static.a
+[884/2499] Building C object interpreter/CMakeFiles/test_float_pool_format.dir/tests/test_float_pool_format.c.o
+[885/2499] Building C object interpreter/CMakeFiles/test_compact_format.dir/tests/test_compact_format.c.o
+[886/2499] Building C object interpreter/CMakeFiles/test_rxvmchannel_process.dir/tests/test_rxvmchannel_process.c.o
+[887/2499] Assembling retired process-opcode base fixture ...
+[888/2499] cREXX RXAS jump-table corruption base (linear) ...
+[889/2499] cREXX RXAS jump-table corruption base (openhash) ...
+[890/2499] cREXX RXAS jump-table corruption base (acph) ...
+[891/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber_test.dir/decnumber_test.c.o
+[892/2499] Linking C static library bin/rxvm_mc_decimal.a
+[893/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+[894/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_dyn_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+[895/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual_test_harness.dir/mc_decimal_sanity_harness_test.c.o
+[896/2499] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_full_tests.dir/mc_decimal_full_tests.c.o
+[897/2499] Linking C shared module bin/rxvm_db_decimal.rxvmplugin
+[898/2499] Linking C static library bin/rxvm_db_decimal_manual.a
+[899/2499] Building C object interpreter/rxvmplugin/rxvmplugins/db_decimal/CMakeFiles/db_decimal_tests.dir/db_decimal_tests.c.o
+[900/2499] Linking C executable bin/address_argv_fixture
+[901/2499] Linking C executable bin/address_spawn_transfer_fixture
+[902/2499] Linking C executable bin/linein_stdin_harness
+[903/2499] Building C object lib/rxfnsb/tests_functional/CMakeFiles/linein_tty_harness.dir/linein_tty_harness.c.o
+[904/2499] Linking C shared module bin/rx_rxpa_session_failure.rxplugin
+[905/2499] Linking C shared module bin/rx_arrays.rxplugin
+[906/2499] Linking C shared module bin/rxstats.rxplugin
+[907/2499] Linking C static library bin/rxstats_static.a
+[908/2499] Linking C shared module bin/rxvector.rxplugin
+[909/2499] Linking C static library bin/rxvector_static.a
+[910/2499] Linking C shared module bin/rx_stack.rxplugin
+[911/2499] Linking C static library bin/rx_stack_static.a
+[912/2499] Linking C shared module bin/rx_cipher.rxplugin
+[913/2499] Linking C static library bin/rx_cipher_static.a
+[914/2499] Linking C static library bin/rxsqlite_static.a
+[915/2499] Building C object lib/plugins/sqlite/CMakeFiles/rxsqlite_thread_test.dir/tests/rxsqlite_thread_test.c.o
+[916/2499] Linking C shared module bin/rxllama.rxplugin
+[917/2499] Linking C static library bin/rxllama_static.a
+[918/2499] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmintp.c.o
+[919/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmworker.c.o
+[920/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmprogram.c.o
+[921/2499] Building CXX object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/provider_package.cpp.o
+[922/2499] Building C object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/__/__/__/binutils/rxsha256.c.o
+[923/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmexecutor.c.o
+[924/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_release_engine_smoke.dir/__/__/__/tests/native-inference/release_engine_smoke.cpp.o
+[925/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmchannel.c.o
+[926/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmchannel_process.c.o
+[927/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmprocessprotocol.c.o
+[928/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmprocessworker.c.o
+[929/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmbyteendpoint.c.o
+[930/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmchannel_byte.c.o
+[931/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmchannel_child.c.o
+[932/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmactive.c.o
+[933/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_package_utf8_cxx17.dir/__/__/__/tests/native-inference/package_utf8.cpp.o
+[934/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmload.c.o
+[935/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/interrupt.c.o
+[936/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxspawn.c.o
+[937/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxcrexxcmd.c.o
+[938/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/exitfunc.c.o
+[939/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxpacallmethod.c.o
+[940/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_package_utf8_cxx20.dir/__/__/__/tests/native-inference/package_utf8.cpp.o
+In file included from /home/runner/work/CREXX/CREXX/tests/native-inference/package_utf8.cpp:2:
+/home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp: In function ‘std::filesystem::__cxx11::path rxllama_package::relative(const std::filesystem::__cxx11::path&, const std::string&)’:
+/home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp:37:24: warning: ‘std::filesystem::__cxx11::path std::filesystem::__cxx11::u8path(const _Source&) [with _Source = std::__cxx11::basic_string<char>; _Require = path; _CharT = char]’ is deprecated: use 'path((const char8_t*)&*source)' instead [-Wdeprecated-declarations]
+   37 |     auto p = fs::u8path(name);
+      |              ~~~~~~~~~~^~~~~~
+In file included from /usr/include/c++/13/filesystem:49,
+                 from /home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp:3:
+/usr/include/c++/13/bits/fs_path.h:843:5: note: declared here
+  843 |     u8path(const _Source& __source)
+      |     ^~~~~~
+/home/runner/work/CREXX/CREXX/tests/native-inference/package_utf8.cpp: In function ‘int main()’:
+/home/runner/work/CREXX/CREXX/tests/native-inference/package_utf8.cpp:11:50: warning: ‘std::filesystem::__cxx11::path std::filesystem::__cxx11::u8path(const _Source&) [with _Source = std::__cxx11::basic_string<char>; _Require = path; _CharT = char]’ is deprecated: use 'path((const char8_t*)&*source)' instead [-Wdeprecated-declarations]
+   11 |         const auto path = std::filesystem::u8path(expected);
+      |                           ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+/usr/include/c++/13/bits/fs_path.h:843:5: note: declared here
+  843 |     u8path(const _Source& __source)
+      |     ^~~~~~
+[941/2499] Building C object lib/plugins/llama/CMakeFiles/rxllama_text_old_host.dir/__/__/__/tests/native-inference/text_old_host.c.o
+[942/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxpafuncs.c.o
+[943/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvml/rxvm_run.c.o
+[944/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_embedding_reference.dir/__/__/__/tests/native-inference/embedding_reference_control.cpp.o
+[945/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o
+FAILED: [code=1] lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o 
+/usr/bin/c++ -DGGML_BACKEND_DL -DGGML_SHARED -DLLAMA_SHARED -I/home/runner/work/CREXX/CREXX/lib/plugins/llama -I/home/runner/work/_temp/debugasan/_deps/crexx_llama_source-src/src/../include -I/home/runner/work/_temp/debugasan/_deps/crexx_llama_source-src/ggml/src/../include -fsanitize=address -fno-omit-frame-pointer -g -MD -MT lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o -MF lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o.d -o lib/plugins/llama/CMakeFiles/rxllama_generation_bridge.dir/__/__/__/tests/native-inference/generation_bridge.cpp.o -c /home/runner/work/CREXX/CREXX/tests/native-inference/generation_bridge.cpp
+In file included from /home/runner/work/CREXX/CREXX/tests/native-inference/generation_bridge.cpp:47:
+/home/runner/work/CREXX/CREXX/tests/native-inference/generation_qualification.hpp:15:11: fatal error: sanitizer/allocator_interface.h: No such file or directory
+   15 | # include <sanitizer/allocator_interface.h>
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+[946/2499] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_embedding_bridge.dir/__/__/__/tests/native-inference/embedding_bridge.cpp.o
+[947/2499] Building C object interpreter/CMakeFiles/rxtvm_instrumented_core_objects.dir/rxvmintp.c.o
+[948/2499] Create REXX B Lexer...
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,18 @@
+options levelb
+import rxfnsb
+
+main: procedure = .int
+  constant NODE_LEFT = 0
+  constant NODE_RIGHT = 4
+  constant NODE_BALANCE = 8
+
+  node = .binary
+  call binresize node, 16
+
+  <at..u32>(NODE_LEFT) node = 12
+  <at..u32>(NODE_RIGHT) node = 44
+  <at..i8>(NODE_BALANCE) node = -1
+
+  left = <at..u32>(NODE_LEFT) node
+  balance = <at..i8>(NODE_BALANCE) node
+  return 0

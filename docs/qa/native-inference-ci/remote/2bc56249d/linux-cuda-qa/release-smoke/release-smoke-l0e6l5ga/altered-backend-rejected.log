@@ -1,0 +1,2 @@
+argv=['/tmp/crexx-release-smoke-qn7fctsx/engine/rxllama_release_engine_smoke', '/tmp/crexx-release-smoke-qn7fctsx/fixture.gguf']
+FAIL: no usable verified CPU backend variant
