@@ -271,10 +271,12 @@ page bounds and a malformed-context failure. The catalog argument selects
 the older listings files through `TEXINPUTS` for that real typesetting run.
 
 Real PDF generation needs the TeX tools, packages, fonts and chapter-command
-dependencies described in [BUILDING-DOCS.md](../BUILDING-DOCS.md). macOS execution
-does not qualify Linux/Windows. The inactive manual VM chapter's five stale
-example paths were repaired to existing `examples/binary_*.rxas` files; it is
-still excluded from the active book structure. The checked-in generated
+dependencies described in [BUILDING-DOCS.md](../BUILDING-DOCS.md). The initial
+free-font route has real macOS and hosted Ubuntu qualification; Windows PDF
+execution and original typography remain unqualified. The inactive manual VM
+chapter's five stale example paths were repaired to existing
+`examples/binary_*.rxas` files; it is still excluded from the active book
+structure. The checked-in generated
 instruction chapter remains a partial historical view of current opcodes.
 See the generation guide for authored inputs, generated material and output.
 

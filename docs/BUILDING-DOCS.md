@@ -188,11 +188,11 @@ printed. The active VM splice uses the current product `rxvme` with embedded
 core bytecode, and `byOpcode` matches
 [byOpcode.crexx](books/crexx_vm_spec/byOpcode.crexx).
 
-The native directory/file/process code has POSIX and Windows paths, but this
-generation was executed only on macOS. Case-sensitive Linux and Windows book
-builds and PDF layout under the selectable `original` font profile remain
-unqualified. A matching original font installation would also be needed to
-compare René's intended typography.
+The initial free-font route is qualified on macOS and case-sensitive Ubuntu
+Linux. Windows book generation and PDF layout under the selectable `original`
+font profile remain unqualified. A matching original font installation would
+also be needed to compare René's intended typography. The Linux qualification
+and publication evidence is recorded below and in the maintained plan.
 
 The original font choices, styles, publisher data and authored chapters remain
 in source. The generator applies these substitutions only to detached TeX
@@ -470,7 +470,7 @@ On GitHub runners it replaces the observed slow Azure HTTP archive mirror with
 Canonical's HTTPS archive; local developer mirror settings remain intact.
 Package/tool versions are retained with each build. This
 Linux distribution TeX installation differs from the qualified macOS TeX Live
-2026 installation; its first real four-book result needs independent review.
+2026 installation; its actual four-book output has passed independent review.
 Ubuntu's older `listings` catalogue lacks CMake. Detached output uses the
 upstream CMake definition bundled with the port only when no native handler
 exists; authored listings and newer installations' handlers remain intact.
@@ -521,11 +521,13 @@ develop commit, including its generation scripts. This is an overnight
 assurance requirement, not a reason to dispatch the entire Deep matrix for
 ordinary documentation edits.
 
-Current status: the actual Linux route produces all four books, including CMake
-listings, and independent source/listing/link checks pass. The help correction
-passes actual Linux review. The VM path requires the explicit separator breaks
-above: its URL-based workaround still clips at the book's enlarged body size.
-The next Linux output and matching snapshot assets still require verification.
-CI wiring and actual
-failed-document binary publication pass; the remaining checks are tracked in
+Current status: Ubuntu run `36941821058` at `b59410ce77ab` produces all four
+books (432/262/361/546 pages). Independent review verifies source preservation,
+all 1,422 listing snapshots, all 1,601 physical page bounds, 1,716 internal links
+including 39 footnotes, fonts and final logs. Actual help and VM path pages are
+readable after the detached repairs above. The matching
+[development snapshot](https://github.com/adesutherland/CREXX/releases/tag/dev-snapshot)
+publishes these four PDFs and provenance; GitHub digests and fresh downloaded
+bytes match the reviewed output. CI wiring and actual failed-document binary
+publication also pass. Exact qualification and readback evidence is tracked in
 [the authoritative plan](planning/document-generation.md#linux-ci-and-versioned-publication-follow-up--1-october-2026).
