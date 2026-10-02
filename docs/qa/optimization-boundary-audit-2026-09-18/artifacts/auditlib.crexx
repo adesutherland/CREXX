@@ -1,5 +1,0 @@
-options levelb
-namespace auditlib expose answer
-
-answer: procedure = .int
-  return 42

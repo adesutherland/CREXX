@@ -5,25 +5,25 @@ STEP-03 closure and its named STEP-06 sanitizer handoff are approved. This is
 uncommitted STEP-04 work on baseline `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`.
 No sanitizer build/test or performance measurement was run in this slice.
 
-- `pre-implementation-identity.json`: retained STEP-03 identity; all 27 source
+- [`pre-implementation-identity.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/pre-implementation-identity.json): retained STEP-03 identity; all 27 source
   hashes matched before STEP-04 code edits.
-- `embedding-before-implementation.log`: ordinary embedding acceptance fails
+- [`embedding-before-implementation.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/embedding-before-implementation.log): ordinary embedding acceptance fails
   with missing request operations before implementation (compiler exit 2).
-- `debug-build.log`, `debug-oracle-build.log`: normal Debug builds pass.
-- `debug-cpu.log`, `debug-metal.log`, corresponding `*-toolchain.log`: rxc, rxas,
+- [`debug-build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/debug-build.log), [`debug-oracle-build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/debug-oracle-build.log): normal Debug builds pass.
+- [`debug-cpu.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/debug-cpu.log), [`debug-metal.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/debug-metal.log), corresponding `*-toolchain.log`: rxc, rxas,
   rxlink and both rxbvm/rxtvm pass 100 repeated single requests, 20 eight-row
   batches, packed result shape/norm, invalid input, cancellation, active-request
   admission, session reuse and teardown. Each VM uses one loaded BGE model.
-- `debug-oracle-cpu.log`, `debug-oracle-metal.log`: fixed direct-library numeric
+- [`debug-oracle-cpu.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/debug-oracle-cpu.log), [`debug-oracle-metal.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/debug-oracle-metal.log): fixed direct-library numeric
   comparison passes for batching/order, query prefix, empty/Unicode inputs,
   512/513-token limits, same/different batch layout, private sessions and cleanup.
   These are integration correctness controls, not llama.cpp/model benchmarks.
-- `text-boundary-build.log`, `text-boundary-red.log`: permanent cREXX reproducer
+- [`text-boundary-build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/text-boundary-build.log), [`text-boundary-red.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/text-boundary-red.log): permanent cREXX reproducer
   builds and fails at runtime (exit 1). RXPA loses the true string length;
   an embedded U+0000 silently shortens a configuration value. The same seam is
   unsuitable for the approved complete embedding-text contract. No expected-fail
   registration or weakened assertion hides this failure.
-- `candidate-identity.json`: exact current provider/test/build-artifact hashes.
+- [`candidate-identity.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step04/candidate-identity.json): exact current provider/test/build-artifact hashes.
 
 [S4-D01](../../planning/native-inference-text-boundary-proposal.md) proposes a
 negotiated length-aware RXPA text service. No host/plugin-contract edit was made

@@ -27,7 +27,8 @@ Optional plugins are named
 `llama.rexx-v1.0.0-beta.3-<platform>-<backend>.zip`. For a development snapshot,
 use `dev-snapshot` in place of `v1.0.0-beta.3` in the installation examples.
 The release asset list records available installers, signing status and
-checksums; choose the files for your platform from that list.
+checksums; choose the files for your platform from that list. The separate
+experimental mainframe PoC archive is described below.
 
 ## Installed SDK snapshots
 
@@ -113,8 +114,9 @@ Add the extracted package `bin` directory to your user or system `PATH`, or run
 the tools by their full path.
 
 For beta 3, prefer `CREXX-v1.0.0-beta.3-windows-x64-signed-setup.exe` for
-installation or `CREXX-v1.0.0-beta.3-windows-x64-signed.zip` for portable use
-when present. The NSIS installer installs into
+installation or `CREXX-v1.0.0-beta.3-windows-x64-signed.zip` for portable use.
+Choose the matching signed `llama.rexx` Vulkan or CUDA ZIP/setup if needed.
+The NSIS installer installs into
 `C:\Program Files\CREXX`, sets `CREXX_HOME` and `REXX_HOME`, adds `bin` to the
 machine PATH, and registers an uninstaller. Open a new terminal after installing.
 
@@ -134,8 +136,20 @@ Each new snapshot replaces the automatic assets and removes the previous signed
 assets and legacy installers, so old code is not offered as the current build.
 Check the release's commit and installed `BUILDINFO`/`VERSION` for build identity.
 
-For versioned releases, prefer a signed Windows ZIP when it is present. The
-versioned-release ZIP signing helper may remove the corresponding unsigned ZIP.
+Beta 3 provides signed Windows ZIPs and installers; the unsigned Windows ZIPs
+have been removed. The release notes record the signed delivery hashes.
+
+## Experimental mainframe PoC packages
+
+Download [CREXX-v1.0.0-beta.3-mainframe.zip](https://github.com/adesutherland/CREXX/releases/download/v1.0.0-beta.3/CREXX-v1.0.0-beta.3-mainframe.zip)
+and its [SHA-256 file](https://github.com/adesutherland/CREXX/releases/download/v1.0.0-beta.3/CREXX-v1.0.0-beta.3-mainframe.zip.sha256).
+The ZIP contains six profiles: `cms24`, `cms31`, `tso24`, `tso31`,
+`tso64-any` and `tso64-high`. Check the archive checksum, then read its
+`INSTALL.md`, `README-OPERATIONS.md` and `README-QUALIFICATION.md` before
+transferring a package. CMS installation requires a record-aware VMFPLC2 tape;
+the operations guide includes a host-side preparation route from this ZIP.
+TSO profiles use their supplied XMIT members. These are bounded PoC builds for
+feedback; modern z/OS HIGH, CMS64 and MVS 3.8J remain unqualified.
 
 ## Linux
 

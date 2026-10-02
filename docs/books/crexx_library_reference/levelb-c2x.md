@@ -26,4 +26,4 @@ implementation scans once and appends each two-digit group directly rather than
 re-concatenating the growing result.
 
 The focused harness is `lib/rxfnsb/tests_functional/ts_c2x.crexx`. The separate
-Classic Level C contract is in [`lib/rxfnsc/c2x.md`](../../rxfnsc/c2x.md).
+Classic Level C contract is in [`lib/rxfnsc/c2x.md`](../../../lib/rxfnsc/c2x.md).

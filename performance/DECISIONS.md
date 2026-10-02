@@ -8,14 +8,13 @@ This file records accepted mechanisms, rejected experiments, lessons and
 explicit reopening triggers. It prevents a later performance review from
 repeating a closed experiment merely because its evidence is no longer in the
 immediate working set. Current measurements remain in `performance/RESULTS.md`;
-raw evidence remains in dated bundles.
+superseded raw evidence is available in Git history. Keep only selected current
+baselines and evidence required by unresolved qualification in HEAD.
 
 ## Consolidated Programme Decisions
 
 These are durable selection boundaries from the completed programmes, not
-current release or exact-head performance claims. The full dated activity and
-negative-result history remains in
-[`PERF3-PROGRAMME-LEDGER-2026-08-17.md`](PERF3-PROGRAMME-LEDGER-2026-08-17.md).
+current release or exact-head performance claims. Completed activity logs and superseded panels are available in Git history.
 
 | ID | Durable decision | Do not infer or repeat | Reopening trigger |
 | --- | --- | --- | --- |
@@ -72,20 +71,19 @@ direction **"Accept, retain and close"**. Retain the implementations introduced
 in `8ebdc5f26f4072e0493885d10ed34910e6815eb8`; KEYACCESS-01, KEYACCESS-02 and the
 PERF-CLOSEOUT-02 maintainer-review item are closed.
 
-- [KEYACCESS-01](KEYACCESS-01-WORKLIST.md): retain incremental maintenance of the
+- KEYACCESS-01: retain incremental maintenance of the
   existing hash index for write/delete lookup. The recorded Windows Release
   50,000-key insert workload improved from 379.952295 s to 2.028873 s, about
   187x. Preserve full-key collision checks, replacement offsets, transaction
   semantics and invalidation at rollback/compaction/reopen/reset boundaries.
-- [KEYACCESS-02](KEYACCESS-02-WORKLIST.md): retain `NOT_FOUND` as an ordinary
+- KEYACCESS-02: retain `NOT_FOUND` as an ordinary
   lookup result without per-miss error-log I/O. The recorded Windows Release
   negative-lookup workload at 500,000 active keys improved from 198.232571 s to
   10.640404 s, about 18.6x; the missing/present ratio fell from 17.97x to 0.95x.
   Preserve full-key verification and logging for actual parameter, I/O, memory
   and corruption failures.
 
-The worklists retain the original samples, comparison limits and recorded
-correctness evidence. This acceptance does not turn those Windows workloads
+Git history retains the original worklists, samples and correctness evidence. This acceptance does not turn those Windows workloads
 into a cross-platform or portfolio performance claim. Normal release-candidate
 qualification remains separate; no unchanged benchmark rerun is required by
 this decision. Reopen only for a reproduced correctness regression or a current
@@ -191,10 +189,8 @@ The following are not reopening triggers by themselves:
 - the absence of a production integration attempt for a candidate that failed
   its progression gate.
 
-### Evidence
+### Evidence retention
 
-- [Current-provider baseline](evidence/2026-08-18-decimal-01-gate1-current-provider/)
-- [D4 libmpdec screen and double-check](evidence/2026-08-18-decimal-01-libmpdec-screen/)
-- [D2/D3 calibration and Stage 3 verdict](evidence/2026-08-18-decimal-01-stage3-calibration/)
-- [DECIMAL-01 engineering plan](decimal/DECIMAL-01-ENGINEERING-PLAN.md)
-- [DECIMAL-01 worklist](decimal/DECIMAL-01-WORKLIST.md)
+The rejected candidate sources, calibration runs and temporary worklists are
+available in Git history. This decision and its reopening triggers remain in
+HEAD; no rejected decimal backend is part of the normal product build.

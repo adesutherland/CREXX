@@ -559,7 +559,7 @@ integration or alert closure. The separate approved sanitizer matrix
 unchanged in the read-only lab checkout at `dc2fad44`.
 
 **17:59 UTC review/status checkpoint:** the local
-[RXFS proposal](rxfs-path-operations-proposal-2026-09-28.md), `df72bd984`,
+[RXFS proposal](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/beta-3/rxfs-path-operations-proposal-2026-09-28.md), `df72bd984`,
 is complete as a proposal, not approved implementation. Coordinator review
 of the retained macOS substitution proof and primary Linux/Windows primitive
 documentation supports separating an opened-object copy repair from the
@@ -591,7 +591,7 @@ and all other outstanding criteria remain open. No repeat was dispatched.
 **Historical approval interpretation, corrected below:** after the copy proposal was clarified
 as a repair to the native `rxfs` provider rather than the `crexx` wrapper,
 Adrian replied “Approved”. Apply the
-[RXFS plan's](rxfs-path-operations-proposal-2026-09-28.md) copy-only
+[RXFS plan's](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/beta-3/rxfs-path-operations-proposal-2026-09-28.md) copy-only
 RXFS-STEP-02, RXFS-AC-02 and supporting characterization/review/QA criteria.
 Open the source once, validate the opened ordinary file and copy from that
 same object, retaining destination non-overwrite, final-link rejection,

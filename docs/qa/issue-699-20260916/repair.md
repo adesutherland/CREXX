@@ -40,7 +40,7 @@ The unmodified installed baseline (`17e844441`) fails the new tests with the
 original convergence and provider mismatch diagnostics. Each test's CMake return
 code is 1 because the harness correctly rejects the compiler failure; retained
 output gives the underlying compiler codes 255 and 2. These are ordinary
-compile-success regressions, unlike the historical `diagnose.py` script that
+compile-success regressions, unlike the historical [`diagnose.py`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-699-20260916/diagnose.py) script that
 intentionally asserts the defective baseline.
 
 The matrices were measured separately: normal Debug 10.35 s / 13.98 s and Apple
@@ -50,13 +50,13 @@ builds. Each declares `rxc`, `rxas`, `library` and `classlib` preparation target
 
 ## Qualification
 
-- Baseline failure: `repair-evidence/baseline-regressions.log.gz` and `baseline-regressions.json`.
+- Baseline failure: [`repair-evidence/baseline-regressions.log.gz`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-699-20260916/repair-evidence/baseline-regressions.log.gz) and `baseline-regressions.json`.
 - Core product: `cmake --build cmake-build-debug --target stage-product
   qa-prep-smoke --parallel 8`, pass; `repair-evidence/core-build.log.gz`.
 - Original downstream trigger: direct rebuilt Debug `rxc` against the retained
   reconstructed source graph and installed unchanged binary imports. Both
   `ragcommand` and `ragprocess` pass opt and noopt with `closefile` restored.
-  Exact commands, logs and assembly hashes: `repair-evidence/original-modules/`.
+  Exact commands, logs and assembly hashes: [`repair-evidence/original-modules/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-699-20260916/repair-evidence/original-modules).
 - Maintained sanitizer: `tools/asan-run.sh --phase build --build-target rxc
   --build-target rxas --build-jobs 8 --build-leaks off --no-live-tail`, then
   `tools/asan-run.sh --phase ctest --regex
@@ -66,7 +66,7 @@ builds. Each declares `rxc`, `rxas`, `library` and `classlib` preparation target
   Linux leak or full cross-platform sanitizer qualification. No finding arose.
 - Full normal correctness: `cmake --build cmake-build-debug --target
   qa-comprehensive --parallel 8` — **2,294/2,294 pass**, 792.65 s CTest time;
-  `repair-evidence/full-correctness.log.gz`.
+  [`repair-evidence/full-correctness.log.gz`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-699-20260916/repair-evidence/full-correctness.log.gz).
 - Hotfix publication and develop promotion: repair
   `f786b15d86a66b52c8ab1ce631054afc7a5937e8` pushed to hotfix and fast-forwarded
   to develop after local qualification completed.
@@ -76,7 +76,7 @@ builds. Each declares `rxc`, `rxas`, `library` and `classlib` preparation target
   both completed successfully. No manual deep or full
   sanitizer matrix dispatched.
 
-`repair-evidence/qualified-inputs.json` freezes the production/test inputs so
+[`repair-evidence/qualified-inputs.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/issue-699-20260916/repair-evidence/qualified-inputs.json) freezes the production/test inputs so
 documentation bookkeeping and history-only promotion can reuse valid evidence.
 The four hosted Release product/smoke/package jobs are green: Linux x64,
 Windows x64 (MinGW/MSYS2), macOS ARM64 and macOS x86_64. Linux Debug optimizer

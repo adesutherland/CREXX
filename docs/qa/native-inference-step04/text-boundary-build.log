@@ -1,5 +1,0 @@
-WAVE: project compile/assemble jobs=1
-START: project member embedding_text_boundary
-BUILT: project member embedding_text_boundary
-BARRIER: link program
-PUBLISHED: program /tmp/crexx-s4-text-boundary.rxbin

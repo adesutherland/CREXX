@@ -1,0 +1,52 @@
+# Book-only Pandoc label translations for rxpp.md local TOC links.
+# Keep authored GitHub anchors in Markdown; generated TeX uses these labels.
+# Update against Pandoc-generated heading labels when rxpp.md headings change.
+# GitHub anchor<TAB>Pandoc TeX label<TAB>selected heading title
+rxpp--crexx-build-system-documentation	rxpp-crexx-build-system-documentation	RXPP + CREXX Build System Documentation
+-what-is-rxpp	what-is-rxpp	🔧 What is RXPP?
+-what-rxpp-macros-do	what-rxpp-macros-do	💪 What RXPP Macros Do
+-macro-definition	macro-definition	✅ Macro Definition
+-command-style-macros-blank-separated-parameters	command-style-macros-blank-separated-parameters	🆕 Command-Style Macros (blank-separated parameters)
+-parameter-replacement-rules	parameter-replacement-rules	🔤 Parameter Replacement Rules
+-keyword-parameters-in-macros	keyword-parameters-in-macros	🆕 Keyword Parameters in Macros
+-macro-invocation	macro-invocation	🤖 Macro Invocation
+-macro-inclusion	macro-inclusion	📥 Macro Inclusion
+-how-it-works-internally	how-it-works-internally	📊 How It Works Internally
+1-registration	registration	1. Registration
+2-detection	detection	2. Detection
+3-substitution	substitution	3. Substitution
+4-variadic-macros	variadic-macros	4. Variadic Macros
+5-emission	emission	5. Emission
+-example	example	✨ Example
+-benefits	benefits	🚀 Benefits
+-common-use-cases	common-use-cases	📊 Common Use Cases
+-invocation-syntax	invocation-syntax	🧪 Invocation Syntax
+-sample-macros	sample-macros	📚 Sample Macros
+-rxpp-preprocessor-directives-	rxpp-preprocessor-directives	🔧 RXPP Preprocessor Directives (##)
+dalias-alias1--alias2-	dalias-alias1-alias2-...	##DALIAS alias1 [, alias2 ...]
+-pre-compilation-flow	pre-compilation-flow	🧭 Pre-Compilation Flow
+-behavior-notes	behavior-notes	⚙️ Behavior Notes
+-example-with-nesting	example-with-nesting	🧪 Example with Nesting
+rxpp--crexx-build-system-documentation-1	rxpp-crexx-build-system-documentation-1	RXPP + CREXX Build System Documentation
+-overview	overview-1	📦 Overview
+-usage-example	usage-example	🚀 Usage Example
+-inputoutput-example	inputoutput-example	📂 Input/Output Example
+-pipeline-flow-diagram	pipeline-flow-diagram	🧭 Pipeline Flow Diagram
+-troubleshooting-guide	troubleshooting-guide	🛠 Troubleshooting Guide
+-scripts-windows-batch-bat-and-linux-shell-sh	scripts-windows-batch-.bat-and-linux-shell-.sh	📁 Scripts: Windows Batch (.bat) and Linux Shell (.sh)
+rxcrexxbat	rxcrexx.bat	rxCREXX.bat
+rxcrexxsh	rxcrexx.sh	rxCREXX.sh
+rxflagsbat	rxflags.bat	rxflags.bat
+rxflagssh	rxflags.sh	rxflags.sh
+rxconfigbat	rxconfig.bat	rxconfig.bat
+rxconfigsh	rxconfig.sh	rxconfig.sh
+rxprecompbat	rxprecomp.bat	rxprecomp.bat
+rxprecompsh	rxprecomp.sh	rxprecomp.sh
+rxcompilebat	rxcompile.bat	rxcompile.bat
+rxcompilesh	rxcompile.sh	rxcompile.sh
+rxasmbat	rxasm.bat	rxasm.bat
+rxasmsh	rxasm.sh	rxasm.sh
+rxrunbat	rxrun.bat	rxrun.bat
+rxrunsh	rxrun.sh	rxrun.sh
+-pipeline-flow-diagram-1	pipeline-flow-diagram-1	🧭 Pipeline Flow Diagram
+-troubleshooting-guide-1	troubleshooting-guide-1	🛠 Troubleshooting Guide

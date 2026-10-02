@@ -1,6 +1,6 @@
 # cREXX Performance Roadmap
 
-Status: live performance companion, refreshed 2026-09-04; native-inference
+Status: live performance companion, consolidated 2026-09-30; native-inference
 qualification reconciled, KeyAccess verdicts accepted/closed, and Beta 6
 selected as the Performance Beta on 2026-09-18.
 
@@ -9,12 +9,10 @@ Project-wide priority and release ordering belongs in
 performance closeout, evidence-gated performance candidates, and their
 selection state. It is not a second product roadmap.
 
-The completed PERF3 activity and idea register is preserved in
-[`PERF3-PROGRAMME-LEDGER-2026-08-17.md`](PERF3-PROGRAMME-LEDGER-2026-08-17.md).
-Current measured results belong in [`RESULTS.md`](RESULTS.md), enduring
-measurement rules in
-[`PERFORMANCE-GOVERNANCE.md`](PERFORMANCE-GOVERNANCE.md), and accepted or
-rejected mechanism decisions in [`DECISIONS.md`](DECISIONS.md).
+Current measured results belong in [RESULTS.md](RESULTS.md), measurement
+rules in [PERFORMANCE-GOVERNANCE.md](PERFORMANCE-GOVERNANCE.md), and durable
+mechanism decisions in [DECISIONS.md](DECISIONS.md). Completed programme
+ledgers and superseded runs are available in Git history.
 
 ## Current Position
 
@@ -37,7 +35,7 @@ records **OPT-BOUNDARY-01, repaired and published to develop**: shared SSA queri
 now account for possible incoming argument/global aliases. The original probe
 returns `42` in both modes and 102 affected tests pass. Repair `f7a8b08c1` was
 published in the selected defect batch; its
-[execution record](../docs/release-1-plan.md#selected-defect-batch-execution--18-september)
+[execution record](../docs/qa/beta3-defect-batch-2026-09-18/README.md)
 tracks normal combined-head hosted checks. No no-alias calling restriction was introduced.
 Adrian accepted OPT-BOUNDARY-02's RXC-only imported-inline boundary and
 OPT-BOUNDARY-03's public status-bit contract. The audit owns those decisions
@@ -102,78 +100,18 @@ Beta 6; April provides exact-candidate verification and defect repair.
 
 ## Activity Register
 
-`NI-S5-P01`: authorized 2026-09-15 with [STEP-05](../docs/planning/native-inference-step-05.md).
-Measure bounded generation glue overhead against matched direct-library CPU/Metal
-controls. If the material Metal excess seen in embeddings recurs, determine its
-root cause with causal controls; another unexplained acceptance is not selected.
-Keep model/backend tuning outside scope, retain the first Release verdict gate,
-and preserve the full generation/batching/ownership requirements.
-The [first Release verdict](evidence/2026-09-15-ni-s5-first-release/README.md) is
-approved by Adrian on 15 September: CPU mean paired -0.00%/+2.66%, Metal
--16.82%/-2.52% for one/four rows, 104 correct processes and unchanged identities.
-No material positive Metal recurrence was observed; this does not explain or
-close the historical embedding observation. The mandatory first-verdict gate is accepted;
-[S5-05/06 ordinary closeout](../docs/qa/native-inference-step05/README.md) is
-complete. No timing panel was repeated or inference logic tuned.
-
-`NI-S4`: STEP-04 embedding implementation is authorized following approved
-STEP-03 closure. Adrian narrowed performance work to indicative figures and
-cREXX/llama integration overhead. Fixed model/backend controls may isolate glue
-cost; model-quality studies, upstream speed investigations and configuration
-sweeps are outside scope. The first Release decision remains bounded to this
-question; see [STEP-04](../docs/planning/native-inference-step-04.md). The
-[first Release verdict](evidence/2026-09-14-ni-s4-first-release/README.md) is now
-retained; Adrian has since accepted the verdict and follow-up below. CPU overhead
-is within variation;
-Metal triggers **NI-S4-P01**, +18.90%/+21.53% mean paired one/eight-row overhead
-with substantial variation. Adrian subsequently authorized
-[phase probes](evidence/2026-09-14-ni-s4-glue-probes/README.md). They show combined
-normalization/conversion/copy below 0.2% of request time and about 99% inside
-decode/synchronization, with one packed publication per request. His conditional
-acceptance of required conversion cost is recorded; it does not explain the
-original GPU difference. No conversion/copy or upstream repair is indicated.
-Adrian's subsequent [12-pair probes-disabled replay](evidence/2026-09-14-ni-s4-quiet-release/README.md)
-retains CPU means -0.52%/-0.87% and Metal +19.69%/+21.27%, with Metal paired
-medians +8.37%/+6.96%. The tripwire persists with substantial variation; the
-Metal difference between request medians is about 0.24 ms. No input changed for
-the replay and no outlier was removed. Adrian accepted this indicative overhead
-and variation on 2026-09-14. NI-S4-P01
-is dispositioned as an accepted observation with unresolved cause; it is not a
-repair or a 5% tripwire pass. S4-04 is accepted; functional S4-05 subsequently
-completed under the [STEP-04 closure](../docs/planning/native-inference-step-04.md).
-No further timing or upstream investigation is selected. The subsequent
-[SAN-009 closure](../docs/SANITIZER-WORKLIST.md#san-009--cpu-backend-probe-unloadreload-re-registers-apple-asan-globals)
-on 16 September records the required first-party sanitizer proof. STEP-06's
-remaining trained-model/device, resource-failure, sharing/drain and provenance
-acceptance stays open in the parent plan, owned by Codex under Adrian.
-
-`S3-D01`: Adrian approved the native worker startup deadlock repair on
-2026-09-14. The [bounded design and acceptance record](../docs/planning/native-inference-worker-transition-proposal.md)
-owns this correctness repair and its first ordinary Release native-call overhead
-check. The frozen candidate passes 14 focused Debug controls and native worker
-startup. Its 12-pair legacy-call result is +2.85% mean elapsed time (95% interval
-+1.45% to +4.24%); reentrant/session controls show no clear change. Adrian accepted
-this per-legacy-call cost on 2026-09-14. The expanded native four-worker BGE/Smol
-CPU/Metal package matrix and all 2,314 non-measurement Debug CTests now pass;
-source and measured Release identities are unchanged, so no timing was repeated.
-The 14 September sanitizer hold was subsequently lifted for STEP-06; its
-local Apple-ASan and hosted first-party Linux/Apple proof is retained in the
-[parent plan](../docs/planning/native-inference-backlog.md#16-september-sanitizer-disposition)
-and pipeline ledger. No broad performance programme is reopened and the
-accepted timing evidence is unchanged.
-
-`CHANNEL-LIFETIME-01`: explicit completed-request release and bounded bookkeeping.
-Adrian accepted the first Release verdict and 2.51 MiB retained-request RSS
-tradeoff on 2026-09-09. Documentation and full local Debug/Apple-ASan correctness
-qualification pass (2,298 checks each). Adrian accepted the later-platform handoff
-to Hotfix release QA and authorized develop publication/local install on 2026-09-09;
-see [the selected design and scope](../concurrency/CHANNEL-REQUEST-LIFETIME.md).
-This is a channel lifecycle defect repair, not a new broad performance stage.
+Native-inference qualification is owned by the
+[parent plan](../docs/planning/native-inference-backlog.md) and
+[pipeline plan](../docs/planning/native-inference-ci.md). Accepted embedding
+and generation overhead observations do not qualify untested devices or models.
+NI-S4-P01 remains an accepted observation with unresolved cause; no further
+upstream timing investigation is selected. Channel request lifetime is owned by
+[its current plan](../concurrency/CHANNEL-REQUEST-LIFETIME.md).
 
 | ID | Status | Work | Exit or decision |
 | --- | --- | --- | --- |
 | PERF-CLOSEOUT-01 | required beta 3 closeout | Resolve the remaining formal Linux QA-C obligation for the frozen Apple Stage 5 evidence, and run the named exact-SHA hosted gates for the 2026-09-30 beta 3 candidate. Do not relabel an unmatched newer run as the missing counterpart to the retained `81f159186` scorecard. | The retained scorecard has an explicit Linux disposition, and the exact beta 3 candidate has the required cross-platform evidence. |
-| PERF-CLOSEOUT-02 | closed 2026-09-18 | Adrian accepted both [`KEYACCESS-01`](KEYACCESS-01-WORKLIST.md) and [`KEYACCESS-02`](KEYACCESS-02-WORKLIST.md) first Release verdicts and directed that the implementations be retained and the work closed. Recorded Windows results are about 187x faster insertion and 18.6x faster negative lookup; full-key comparison and actual-error logging remain. | [Acceptance recorded](DECISIONS.md#keyaccess-decision-2026-09-18--accept-retain-and-close); no further verdict decision or rework pending. Normal release-candidate qualification is separate. |
+| PERF-CLOSEOUT-02 | closed 2026-09-18 | Adrian accepted both KEYACCESS-01 and KEYACCESS-02 first Release verdicts and directed that the implementations be retained and the work closed. Recorded Windows results are about 187x faster insertion and 18.6x faster negative lookup; full-key comparison and actual-error logging remain. | [Acceptance recorded](DECISIONS.md#keyaccess-decision-2026-09-18--accept-retain-and-close); no further verdict decision or rework pending. Normal release-candidate qualification is separate. |
 | PERF-BETA6-01 | phase selected 2026-09-18; mechanism selection pending | Use the functionally complete Beta 5 platform as the baseline for the February/March Performance Beta; evaluate the recorded candidates above through bounded design and first-Release-verdict gates. | R1-AC-04: accepted improvements and explicit reject/defer/regression decisions, with implementation frozen at 2027-03-31. |
 | PERF-RELEASE1-01 | planned release verification | After the 2027-03-31 optimization freeze, qualify the frozen portfolio and run the smallest decisive exact-candidate scorecard needed for Release 1. This is verification following the Performance Beta, not a further optimization programme. | The 2027-04-15 RC1 and 2027-05-01 Release 1 candidate have correctness-gated, platform-labelled throughput/lifecycle/RSS/artifact evidence and explicit dispositions for material regressions. |
 | PERF-REVIEW-01 | evidence-gated; no automatic change | Review CD, DeltaBlue, Towers, and Havlak only for a safe, general, material mechanism. Preserve workload equivalence and treat an inconclusive result as a retained finding. | Select one bounded mechanism with a first Release verdict, or defer the row without production change. |
@@ -236,47 +174,16 @@ are recorded here or appeared in the completed programme ledger:
   lifecycle proof. Review complete; no new experiment or general framework
   selected. Historical Q7 rejection is not a universal impossibility result.
 
-## Closed Programme Evidence
+## Retained baseline and decisions
 
-- PERF3 and the five-stage POSTPERF sequence are complete. Their activity
-  history, negative results, transfers, and evidence links are in the
-  [historical PERF3 ledger](PERF3-PROGRAMME-LEDGER-2026-08-17.md) and
-  [`POST-PERF3-WORKLIST.md`](POST-PERF3-WORKLIST.md).
-- Generic final/concrete scalar access, packed native numeric ownership, the
-  exact CPU `rxvector` provider, bounded late profitability, and the reusable
-  RXAS proof infrastructure have completed their governed verdicts. They are
-  current implementation evidence, not open roadmap stages.
-- The Apple Stage 5 scorecard is retained under
-  [`evidence/2026-08-18-performance-closeout-stage5/`](evidence/2026-08-18-performance-closeout-stage5/).
-  Its numbers describe that frozen candidate; release claims still require the
-  release/tag and named final-candidate gates.
+PERF3 and POSTPERF-01 through POSTPERF-05 are complete. Accepted mechanisms,
+negative decisions and reopening triggers are consolidated in
+[DECISIONS.md](DECISIONS.md). The
+[Stage 5 baseline](evidence/2026-08-18-performance-closeout-stage5/) retains
+its final samples and identities while the formal Linux QA-C criterion is open.
+It does not qualify a later release candidate.
 
-## Update Rules
-
-1. Add an idea here only when it is a plausible current or future selection;
-   give it a stable ID, hypothesis, affected surfaces, risks, evidence gate,
-   and disposition.
-2. Move durable accepted/rejected mechanism lessons to `DECISIONS.md`. Preserve
-   large closed activity histories in a dated ledger or worklist rather than
-   expanding this live file indefinitely.
-3. An item is `active` only after Adrian selects its bounded gate. Observation,
-   profiling, implementation, first verdict, acceptance, broad closeout, and
-   hosted/release qualification remain distinct states.
-4. Correctness and workload equivalence precede timing. A benchmark finding is
-   not by itself a correctness defect, release blocker, or product-change
-   authorization.
-5. Do not repeat completed broad testing when code and relevant build/test
-   inputs are unchanged. Exact-SHA hosted release gates remain separate.
-
-## RXC-PROJECT-01: compiler and project-build scaling
-
-Selected by Adrian on 2026-09-06; both bounded Release verdicts are accepted.
-The [worklist](RXC-PROJECT-SCALING-WORKLIST.md) records the measured declaration
-walk, binary forward-declaration and project-key mechanisms, their history and
-rejected alternatives. Normal optimization and strict import/callable validation
-are retained. The frozen application wave improves from 509.45 to 70.98 seconds;
-the separate ADDRESS library from 156.18 to 11.53 seconds. Dependency snapshots
-are automatic; real imported implementations still invalidate their consumers.
-macOS Debug/Release/Apple-ASan and scratch installed/offline checks are qualified
-for the local develop repair. Linux/Windows and release publication remain
-separate; this is not a new broad performance stage or portfolio claim.
+The normalization-certificate formal verdict remains visibly unresolved in
+[UNICODE-CERT-01](UNICODE-CERT-01-WORKLIST.md). Numeric runtime caching remains
+unselected under [VALUE-CACHE-01](VALUE-CACHE-01-WORKLIST.md); use current
+optimized residual-cost evidence before reopening it.

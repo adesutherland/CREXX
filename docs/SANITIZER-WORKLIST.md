@@ -116,7 +116,7 @@ no sanitizer suppression was used.
   come from the verified `76df02be3` release-layout archive; symbol inspection
   and unchanged file hashes confirm they were neither rebuilt nor instrumented.
   Build graphs, identities and maintained-runner logs are retained under
-  `docs/qa/native-inference-ci/remote/9152850e8/first-party-probe/`.
+  [`docs/qa/native-inference-ci/remote/9152850e8/first-party-probe/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-ci/remote/9152850e8/first-party-probe).
   The equivalent local ARM control passes with Apple's documented leak limit.
   The subsequent CI-F11 change only renames the helper's private co-residency
   variable; it does not change the probe entry point or bridge implementation.
@@ -151,7 +151,7 @@ no sanitizer suppression was used.
   target, in a separate output directory. The full local build/preparation and
   2,349/2,349 Apple-ASan CTests pass (CTest 2,278.82 s), with no sanitizer
   diagnostic in retained build, preparation or test logs. See
-  [full local result](qa/native-inference-step06/full-local/summary.json).
+  [full local result](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/full-local/summary.json).
   Supported Linux ASan/LSan remains outstanding.
   The item stays open.
 
@@ -171,7 +171,7 @@ no sanitizer suppression was used.
   with `ENABLE_LLAMA=ON`, the pinned archive and explicit test models. The first
   rxbvm lifecycle reports an ODR violation for `ggml_arm_arch_features` while
   the bridge probes the packaged CPU backend.
-- Retained [original report](qa/native-inference-step03/asan-odr-original.log).
+- Retained [original report](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step03/asan-odr-original.log).
   The scanner also copied the compiler's sanitizer runtime into the package.
   Excluding/removing that copy did **not** repair the reproducer. That initial
   hypothesis is not the cause established by the controlled experiment.
@@ -181,7 +181,7 @@ no sanitizer suppression was used.
   close behavior restored and passes when probe references remain resident.
   The controlled reversion changed only the Unix probe close operation, then
   restored the repaired source. See
-  [permanent regression before repair](qa/native-inference-step03/asan-probe-cycle-red.log).
+  [permanent regression before repair](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step03/asan-probe-cycle-red.log).
 - Repair: retain probe DSOs for process lifetime, skip an unnecessary feature
   probe when only one CPU variant is packaged, and follow pinned upstream's
   process-lifetime backend-DSO policy. No engine inference mathematics changed.
@@ -1347,7 +1347,7 @@ publication and the complete supported Linux gate passes on `e3de72939`.
 - Performance: Adrian accepted the profiling-off Release verdict on
   2026-08-21.  The retained 36-pair assembly result is neutral around zero,
   clears the 3% guard, preserves exact output and bytecode, and is recorded in
-  `performance/evidence/2026-08-21-san-001-ssa-release-verdict/`.
+  [`performance/evidence/2026-08-21-san-001-ssa-release-verdict/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-21-san-001-ssa-release-verdict).
 - Platform proof: the earlier complete Apple-ASan build and 2,310/2,310 CTest
   gate pass in `cmake-build-debugasan/asan-logs/20260821-112920-full`. The
   consolidated current RCC-5 build and 2,356/2,356 CTest gate also pass with no

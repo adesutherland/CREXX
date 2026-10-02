@@ -1,0 +1,31 @@
+% Installed only in a detached book build, after bashful is loaded.
+% bashful's plain \splice does not check child status. Run commands in
+% subshells so even an explicit `exit` is caught. Successful stderr diagnostics
+% are retained in the detached crexx-splice-warnings.log; only a failed child
+% forwards its diagnostics and marker to bashful, which raises a TeX error.
+\makeatletter
+% \captionof from a preceding listing leaves \@captype set. mdframed then
+% mistakes the next terminal block for a float and disables page splitting.
+\newenvironment{bookterminaloutput}{%
+  \begingroup\let\@captype\@undefined\begin{terminaloutput}%
+}{%
+  \end{terminaloutput}\endgroup%
+}
+\newcommand\BookRunChecked[1]{%
+  \bashIV{set -o pipefail; if ( #1 ) 2>.crexx-splice-diagnostics.tmp; then if test -s .crexx-splice-diagnostics.tmp; then cat .crexx-splice-diagnostics.tmp >> crexx-splice-warnings.log; fi; else cat .crexx-splice-diagnostics.tmp >&2; echo CREXX-SPLICE-FAILED >&2; exit 1; fi}%
+  \bashV{#1}%
+}
+\renewcommand\splice[1]{%
+  \BookRunChecked{#1}%
+  \expandFileName@BL{\BL@stdoutFile}%
+  \CatchFileDef{\BL@file@contents}{\BL@stdoutFile}{\relax}%
+  \ignorespaces\BL@file@contents\unskip
+}
+% Markdown terminal examples are literal output, including newlines and TeX
+% punctuation. The original \splice above remains available to authored TeX.
+\newcommand\spliceliteral[1]{%
+  \BookRunChecked{#1}%
+  \expandFileName@BL{\BL@stdoutFile}%
+  \VerbatimInput[breaklines=true,breakanywhere=true,breaksymbolleft={},breaksymbolright={},breakanywheresymbolpre={},breakanywheresymbolpost={},tabsize=8]{\BL@stdoutFile}%
+}
+\makeatother

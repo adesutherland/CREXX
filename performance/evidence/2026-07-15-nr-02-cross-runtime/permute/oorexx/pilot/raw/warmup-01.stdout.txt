@@ -1,2 +1,0 @@
-benchmark=awfy_permute repetitions=50 result=8660
-PASS: AWFY Permute Classic procedural port

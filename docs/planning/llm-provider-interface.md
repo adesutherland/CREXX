@@ -213,7 +213,7 @@ The existing `loadmodule()` plus late-bound native interface factories passes
 on both VMs with the plugin present and absent. The absent case reaches
 `ON SIGNAL NOTREADY` and then constructs/uses the HTTP client successfully.
 The consumer was compiled from interface-only declarations without importing
-the native plugin. See `../qa/llm-interface-review-20260917/late-native-proof.txt`.
+the native plugin. See [`../qa/llm-interface-review-20260917/late-native-proof.txt`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-interface-review-20260917/late-native-proof.txt).
 No new loader ABI or VM instruction is needed for that boundary.
 
 Concrete library spelling:

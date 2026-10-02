@@ -1,2 +1,0 @@
-benchmark=awfy_bounce repetitions=100 result=1331
-PASS: AWFY Bounce ooRexx object port

@@ -16,7 +16,7 @@ identifies the workflow source on master `48ebc1f61`.
 | Sanitizer QA | [35179649593](https://github.com/adesutherland/CREXX/actions/runs/35179649593) | Linux and ARM Mac fail the same assertion. Linux stops early; Mac runs all 2,345 tests. No ASan/LSan diagnostic in the downloaded artifacts. |
 
 Full workflow logs are retained compressed, with JSON job identities and the
-complete downloaded sanitizer artifacts. `debug-before.log` reproduces the
+complete downloaded sanitizer artifacts. [`debug-before.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-17/debug-before.log) reproduces the
 identical failure locally before editing:
 
 ```text
@@ -41,7 +41,7 @@ count explicitly.
 Focused commands (normal Debug first, then maintained Apple ASan):
 
 Debug passes 16/16 in 0.91 seconds; maintained Apple ASan passes the same
-16/16 in 2.58 seconds. Build/test logs and `local-inputs.json` retain the
+16/16 in 2.58 seconds. Build/test logs and [`local-inputs.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-17/local-inputs.json) retain the
 qualified input hashes. The panel includes all bundled plugin concurrency
 checks, session-load rollback and all four filesystem VM/optimization cells.
 
@@ -65,7 +65,7 @@ Three temporary copies of the production plugin are compiled as negative
 controls, leaving tracked production sources unchanged: returning reentrant
 policy for every procedure, returning session-affine policy for every procedure,
 and removing the session destructor. All fail the corresponding new assertion
-with exit 1. Exact mutations and diagnostics are in `negative-controls.log`.
+with exit 1. Exact mutations and diagnostics are in [`negative-controls.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-17/negative-controls.log).
 
 ## Hosted completion
 
@@ -88,7 +88,7 @@ Both sanitizer platforms pass the original filesystem test (Linux 0.03 s,
 Mac 0.09 s). Full CTest elapsed times are 4,698.61 s on Linux and 3,878.52 s
 on Mac. Linux build, QA preparation and CTest logs all record
 `ASAN_OPTIONS=detect_leaks=1`. The complete artifact scan finds no ASan/LSan
-diagnostic. `sanitizer-green-artifacts.tar.gz`, the compressed workflow log and
+diagnostic. [`sanitizer-green-artifacts.tar.gz`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-17/sanitizer-green-artifacts.tar.gz), the compressed workflow log and
 terminal JSON retain this evidence. SAN-QA-016 and all CI-F20 criteria/steps
 are closed. Final evidence-only bookkeeping is retained on
 `temp/overnight-qa-20260917`; develop remains at the green repaired commit.

@@ -120,7 +120,7 @@ commands, identities, the complete coverage ledger and failed controls with thei
 dispositions. The [parent disposition](native-inference-backlog.md#step-05-parent-acceptance-disposition--15-september-2026)
 adds these results to the unchanged OUT-01–05, CREXX-NI-01–07 and AC-01–14.
 
-Adrian accepted the [first Release verdict](../../performance/evidence/2026-09-15-ni-s5-first-release/README.md):
+Adrian accepted the [first Release verdict](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-15-ni-s5-first-release/README.md):
 104 passing processes, identical completed work, CPU one/four-row mean paired
 changes -0.00%/+2.66% and Metal -16.82%/-2.52%. No material positive Metal
 recurrence triggered a root-cause investigation. The host was not quiescent;

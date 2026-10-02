@@ -29,24 +29,24 @@ file set; test/example and human/agent documentation additions complete this pha
 | S5-AC-01 | CPU/Metal independent direct-library parity: exact sampled token IDs, full text, ordered rows and finish reasons; single/four-row requests, repeated prepared use. Minimum evidence in the accepted Release bundle, plus final minimum controls here. |
 | S5-AC-02 | Exact input byte/row/aggregate-token limits; 480 prompt + 32 output fits a 512-token sequence and 481 + 32 rejects before compute. Invalid UTF-8/state/row/capability/configuration, empty batch and output-token cap controls. Generated-byte overflow preserves a valid prefix, reports error and recovers. Split/invalid output scalar controls are model-independent. Generic host-service controls preserve embedded NUL, ownership, aliasing and old-table safety. |
 | S5-AC-03 | Debug and ordinary Release CPU/Metal: 100 singles + 20 four-row batches; 1/2/4 concurrent VM owners, each 20 batches, same allocation identity and private ordered outputs; co-resident BGE/Smol processing; zero retained RSS growth. Separate direct/bridge/cREXX one/four-context memory checks. Preparation close boundaries, building/prefill/active-decode cancellation and recovery. Existing model-load drain controls remain in broad CTest. |
-| S5-AC-04 | [First Release verdict](../../../performance/evidence/2026-09-15-ni-s5-first-release/README.md) accepted by Adrian: 104 correct processes. CPU mean paired differences -0.00%/+2.66%; Metal -16.82%/-2.52% for one/four rows. No material positive Metal recurrence; no model tuning, upstream repair or timing replay. |
+| S5-AC-04 | [First Release verdict](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-15-ni-s5-first-release/README.md) accepted by Adrian: 104 correct processes. CPU mean paired differences -0.00%/+2.66%; Metal -16.82%/-2.52% for one/four rows. No material positive Metal recurrence; no model tuning, upstream repair or timing replay. |
 | S5-AC-05 | All 24 additional Debug, 32 installed Release VM and 16 relocated native CPU/Metal executions pass, across both optimization modes. Eight native programs built. Raw commands and package hashes retained. |
 | S5-AC-06 | All 2,347 selected ordinary Debug CTests pass in one fresh broad run (911.92 seconds), after final QA preparation. Parent disposition and numbered criteria reconciled. Sanitizer and remaining platform/publication gates stay with STEP-06. |
 
-The full CTest result is retained in `full-debug.log`, detailed output in
-`LastTest.log.gz`, and selected test names/scheduling in `full-debug-selection.json`.
+The full CTest result is retained in [`full-debug.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step05/full-debug.log), detailed output in
+[`LastTest.log.gz`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step05/LastTest.log.gz), and selected test names/scheduling in [`full-debug-selection.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step05/full-debug-selection.json).
 No test was disabled. The accepted minimum sixteen public executions remain in
-the first Release bundle. `public-closeout-remainder/results.json` accounts for
+the first Release bundle. [`public-closeout-remainder/results.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step05/public-closeout-remainder/results.json) accounts for
 all 24 additional cases through nine retained passes, one unchanged isolated
-replay and fourteen remaining executions. `installed/counts.json` accounts for
+replay and fourteen remaining executions. [`installed/counts.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step05/installed/counts.json) accounts for
 all 32 VM / 16 native executions and eight native builds.
 
-`identity.json` records the baseline SHA, final working sources, host/build
+[`identity.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step05/identity.json) records the baseline SHA, final working sources, host/build
 configuration, tool/provider/image hashes and absence of product artifact drift.
 It also proves the only frozen production-code-file change since the accepted
 verdict is relocation of an unchanged RexxDoc block; the other changed file in
 that set is the README. Added native assertions were independently checked after
-the sustained run; unchanged sustained coverage was reused. `SHA256SUMS` protects
+the sustained run; unchanged sustained coverage was reused. [`SHA256SUMS`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step05/SHA256SUMS) protects
 the complete retained bundle.
 
 ## Memory and responsiveness

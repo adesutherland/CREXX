@@ -152,6 +152,6 @@ Java result fills it.
 - ordinary Release build: profiling disabled.
 
 The compact Stage 4 record is
-[`2026-08-18-performance-closeout-stage4`](../evidence/2026-08-18-performance-closeout-stage4/).
+[`2026-08-18-performance-closeout-stage4`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-18-performance-closeout-stage4).
 Stage 5 must build from the commit containing this manifest in a fresh source
 tree and record the exact commit and generated runtime identities.

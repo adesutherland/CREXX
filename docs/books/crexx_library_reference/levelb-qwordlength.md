@@ -7,7 +7,7 @@ absent word returns `0`; an invalid word number or unmatched quote signals
 
 The implementation reads the selected span length from the shared scanner and
 does not copy the word. There is no Level C BIF or class method named
-QWORDLENGTH. See [the shared quote-aware contract](quote-aware.md).
+QWORDLENGTH. See [the shared quote-aware contract](../../../lib/rxfnsb/rexx/quote-aware.md).
 
 `ts_qwordlength.crexx` covers quoted and unquoted lengths, Unicode whitespace,
 missing input, non-mutation, and signals in both Level B build modes.

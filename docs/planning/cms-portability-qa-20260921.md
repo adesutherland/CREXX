@@ -148,7 +148,7 @@ Review and focused QA completed on 21 September:
   recorded in the external `recovery/` verification and handoff manifest.
 
 All acceptance criteria for this host-QA integration scope are satisfied; the
-[qualification report](../qa/cms-portability-2026-09-21.md) records topic review,
+[qualification report](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/cms-portability-2026-09-21.md) records topic review,
 commands, results and the remaining Mainframe Lab/application/release gates.
 Private approval proposals are outside this repository. No new design or
 email-derived implementation was included. No push, release or message was sent.

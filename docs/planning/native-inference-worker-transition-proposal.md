@@ -29,9 +29,9 @@ library. The parent is counted as an active legacy-capable executor throughout
 worker's startup. The worker replays the static provider catalogue; registering
 the second legacy-capable VM waits in `rxpa_compatibility_bind_legacy()` for the
 parent to leave execution. Neither can proceed. The retained
-[native stack sample](../qa/native-inference-step03/native-worker-startup-sample.txt)
+[native stack sample](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step03/native-worker-startup-sample.txt)
 shows both ends; the
-[provider-free negative control](../qa/native-inference-step03/native-worker-positive-red.log)
+[provider-free negative control](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step03/native-worker-positive-red.log)
 records the independent timeout. Loading the dynamic controls from a complete
 installed bytecode search directory succeeds; a missing `classlib.rxbin` is a
 separate harness configuration error, not this deadlock.

@@ -335,6 +335,7 @@ RESULT
 ```
 
 ---
+
 ## Type Conversion Limits With EXPOSE
 
 RexxScript stores its internal variables as strings. This follows the traditional Rexx model.

@@ -253,7 +253,7 @@ Release build widths, RXBIN comparison and isolated stress. Sanitizer
 ASan passes 2358/2358 in 4122.91 s with no diagnostic. Apple LeakSanitizer
 is unavailable; the Linux run provides supported leak qualification.
 AC-09 through AC-12 and STEP-09 through STEP-12 are complete; SAN-QA-017 is
-closed. `docs/qa/overnight-2026-09-21/hosted/` retains terminal workflow
+closed. [`docs/qa/overnight-2026-09-21/hosted/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/overnight-2026-09-21/hosted) retains terminal workflow
 metadata, all comprehensive job logs, complete sanitizer build/preparation/test
 logs and `verdict.json`. Closing documentation changes no qualified code,
 test or build input; the retained results are reused without another broad run.

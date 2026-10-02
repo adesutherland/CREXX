@@ -6,7 +6,7 @@ Release refresh shows no regression; production-batch commit pending**
 Recorded: 2026-07-18
 Updated: 2026-07-20
 
-Source ledger: `performance/evidence/2026-07-17-nr-09-sequence-ledger-poc/retained-rxvm/sequence-ledger.csv`
+Source ledger: [`performance/evidence/2026-07-17-nr-09-sequence-ledger-poc/retained-rxvm/sequence-ledger.csv`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-07-17-nr-09-sequence-ledger-poc/retained-rxvm/sequence-ledger.csv)
 
 This register resolves all 76 selected stable identities from the retained
 RXSEQ decision view. Counts are bounded observations from revision-labelled
@@ -179,7 +179,7 @@ refresh, supported Apple ASan with no sanitizer diagnostic, an isolated
 and library. Apple ASan does not support leak detection on this host. The QA
 also added the three retained fused call forms to native cold signal-window
 restore. Evidence is under
-`performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/`
+[`performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout)
 and `finalrun01/`.
 
 

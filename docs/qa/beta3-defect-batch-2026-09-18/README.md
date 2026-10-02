@@ -9,10 +9,10 @@ reconciliation of #699. This is development work, not a beta release.
 
 - **OPT-BOUNDARY-01:** publish the incoming-storage alias correction and its
   eight-case optimized/unoptimized runtime fixture. The three qualified
-  source/test hashes in the [original manifest](../optimization-boundary-audit-2026-09-18/repair/manifest.json)
+  source/test hashes in the [original manifest](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/repair/manifest.json)
   still match. Reuse the retained **102/102** affected RXAS/flow/runtime results;
   the two permanent runtime variants also pass in this batch's focused panel.
-  The [repair record](../optimization-boundary-audit-2026-09-18/repair/README.md)
+  The [repair record](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/optimization-boundary-audit-2026-09-18/repair/README.md)
   describes exact-identity handling and preserved optimization controls.
 - **#700:** add `import rxfnsb` to the complete fixed-fields documentation
   example and state the prerequisite for the chapter's other `binresize` use.
@@ -37,7 +37,7 @@ reconciliation of #699. This is development work, not a beta release.
 
 ## Batch verification
 
-`core-build.log` records a successful incremental build of `rxc`, `rxas`,
+[`core-build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/beta3-defect-batch-2026-09-18/core-build.log) records a successful incremental build of `rxc`, `rxas`,
 `rxlink`, `rxvm` and the three focused spawn test executables:
 
 ```sh
@@ -45,11 +45,11 @@ cmake --build cmake-build-debug --target rxc rxas rxlink rxvm test_rxspawn_inher
 ctest --test-dir cmake-build-debug --parallel 4 --output-on-failure -R '^(rxspawn_|entry_alias_runtime_rxvm_|source_import_private_dependency_)'
 ```
 
-The focused panel passed **7/7**, 26.81 seconds (`focused.log`).
-`commands.json` records the exact documentation, strict compile and shell
-commands, with their outputs alongside. `fixed-fields.crexx` is the verbatim
+The focused panel passed **7/7**, 26.81 seconds ([`focused.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/beta3-defect-batch-2026-09-18/focused.log)).
+[`commands.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/beta3-defect-batch-2026-09-18/commands.json) records the exact documentation, strict compile and shell
+commands, with their outputs alongside. [`fixed-fields.crexx`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/beta3-defect-batch-2026-09-18/fixed-fields.crexx) is the verbatim
 corrected documentation block; the `before` copy omits only the import.
-`qualified-inputs.json` identifies the source/test inputs and current local
+[`qualified-inputs.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/beta3-defect-batch-2026-09-18/qualified-inputs.json) identifies the source/test inputs and current local
 tools. The alias record retains its own earlier tool hashes.
 
 For the relative-shell check, `shell-relative` is a temporary symlink to
@@ -71,7 +71,7 @@ plus local evidence `e99136a1d`.
   plugin/package jobs, and development-snapshot publication.
 - Linux Debug optimizer parity passed **778/778**, including both permanent
   alias runtime variants; CTest time was 279.56 seconds. The retained
-  [job log](publication/hosted-parity.log.gz) supplies the exact results.
+  [job log](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/beta3-defect-batch-2026-09-18/publication/hosted-parity.log.gz) supplies the exact results.
 - [CodeQL 35383124920](https://github.com/adesutherland/CREXX/actions/runs/35383124920)
   completed successfully for the same head.
 - [#699](https://github.com/adesutherland/CREXX/issues/699#issuecomment-5734783575),
@@ -79,7 +79,7 @@ plus local evidence `e99136a1d`.
   and [#702](https://github.com/adesutherland/CREXX/issues/702#issuecomment-5735362066)
   are closed with implementation and qualification evidence.
 
-The [publication receipt](publication/receipt.json) identifies terminal runs,
+The [publication receipt](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/beta3-defect-batch-2026-09-18/publication/receipt.json) identifies terminal runs,
 issue states and retained artifact hashes. The evidence-only closeout commit
 uses `[skip ci]`: production, test and build inputs are identical to the
 qualified code head. No duplicate suite or workflow is needed to record these

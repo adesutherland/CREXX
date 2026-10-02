@@ -3,7 +3,8 @@
 This document combines the functionality of the RXPP macro preprocessor and the full CREXX script processing pipeline, including both Windows batch and Linux shell versions.
 
 ---
-# Table of Contents`
+
+# Table of Contents
 
 - [RXPP + CREXX Build System Documentation](#rxpp--crexx-build-system-documentation)
 - [🔧 What is RXPP?](#-what-is-rxpp)
@@ -776,23 +777,23 @@ SYSIN.3 = "param3"
 SYSIN.0 = 3
 
 ##SYSUT1
-"C:\temp\my_tempfile.txt"
+`"C:\temp\my_tempfile.txt"`
 ##end
 
 ##SYSLIB
-"C:\temp\my_macro_lib.rexx"
-"C:\temp\general_macro_lib.rexx"
+`"C:\temp\my_macro_lib.rexx"`
+`"C:\temp\general_macro_lib.rexx"`
 ##end
 
 Resulting Stem Arrays:
 After preprocessing, the following stem variables will be populated:
 
 SYSUT1.0 = 1
-SYSUT1.1 = "C:\temp\my_tempfile.txt"
+SYSUT1.1 = `"C:\temp\my_tempfile.txt"`
 
 SYSLIB.0 = 2
-SYSLIB.1 = "C:\temp\my_macro_lib.rexx"
-SYSLIB.2 = "C:\temp\general_macro_lib.rexx"
+SYSLIB.1 = `"C:\temp\my_macro_lib.rexx"`
+SYSLIB.2 = `"C:\temp\general_macro_lib.rexx"`
 
 In this example:
 
@@ -805,6 +806,7 @@ These stem arrays can then be processed in your program as needed, similar to ho
 Use Case: Provides a concise method to define system input directly in the script, especially for batch-like workflows.
 
 ---
+
 ### `##CFLAG values`
 
 ##CFLAG — Sets the preprocessor variable from compiler flags or external input during the earliest configuration pass, before normal preprocessing begins.
@@ -1090,7 +1092,7 @@ Although newer RXPP features such as macros and section streams often provide a 
 This document illustrates the main routine of the pre-compilation process, showing when each buffer (`1buf`, `2buf`, `3buf`) and macros and variables are printed based on the `cflags` configuration.
 
 
-```
+```text
 ┌────────────────────────────────────┐
 │ call rxppinit infile               │
 │ → Initializes global variables     │
@@ -1186,6 +1188,7 @@ Silent debug
 
 
 ---
+
 ## RXPP + CREXX Build System Documentation
 
 

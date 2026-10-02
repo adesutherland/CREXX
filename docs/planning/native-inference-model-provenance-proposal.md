@@ -106,7 +106,7 @@ pooling, prefixes, normalization, context limits or sampling to make a test pass
 
 ## Candidate results for adoption review
 
-The [retained conversion/compatibility record](../qa/native-inference-step06/model-conversion/README.md)
+The [retained conversion/compatibility record](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/model-conversion/README.md)
 includes all input hashes, the 28-package wheel lock, exact converter commands,
 two matching outputs per model, GGUF inspection and the five passing controls.
 

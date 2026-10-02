@@ -119,8 +119,8 @@ fusion opcodes as PERF3 activities.
 
 ## Evidence
 
-- [`2026-08-17-perf3-closeout-fusion-registry`](evidence/2026-08-17-perf3-closeout-fusion-registry/)
-- [`PERF2-05 R2a verdict`](evidence/2026-07-26-perf2-05-r2a-first-release-verdict/)
-- [`PERF2-05 R1a verdict`](evidence/2026-07-26-perf2-05-r1a-first-release-verdict/)
-- [`PERF3-05 R3 analysis`](evidence/2026-08-09-perf3-05-r3-handler-codegen-analysis/)
-- [`PERF3-05 R5a placement profile`](evidence/2026-08-10-perf3-05-r5a-handler-placement-profiling/)
+- [`2026-08-17-perf3-closeout-fusion-registry`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-17-perf3-closeout-fusion-registry)
+- [`PERF2-05 R2a verdict`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-07-26-perf2-05-r2a-first-release-verdict)
+- [`PERF2-05 R1a verdict`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-07-26-perf2-05-r1a-first-release-verdict)
+- [`PERF3-05 R3 analysis`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-09-perf3-05-r3-handler-codegen-analysis)
+- [`PERF3-05 R5a placement profile`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-10-perf3-05-r5a-handler-placement-profiling)

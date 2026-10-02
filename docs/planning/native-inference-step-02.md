@@ -102,7 +102,7 @@ process elapsed time. Do not use ASan timing as the Release baseline.
 - Direct control source, build/reproduction instructions and exact workload
   limits are in [tests/native-inference](../../tests/native-inference/README.md).
   Retained outputs, logs and identities are in the
-  [evidence bundle](../../performance/evidence/2026-09-14-native-inference-step02/README.md).
+  [evidence bundle](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-native-inference-step02/README.md).
 - The historical SmolLM2 timing uses the existing Level B serial capture runner, two warmups
   and ten recorded samples per backend. CPU process time ranged from 23.16 to
   39.88 seconds, with host load rising from 2.88 to 9.53; Metal ranged from
@@ -120,7 +120,7 @@ process elapsed time. Do not use ASan timing as the Release baseline.
 
 ## Completion controls and S2-QA01
 
-The [completion evidence](../../performance/evidence/2026-09-14-native-inference-step02/completion/README.md)
+The [completion evidence](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-native-inference-step02/completion/README.md)
 extends the direct control with active CPU abort/Metal drain cancellation during
 embedding, prefill and decode, recovery, missing/bad-magic/truncated GGUF and
 empty native batch rejection. Two real models remain resident together with
@@ -197,7 +197,7 @@ cREXX worker yielding and concurrent admission are still provider work.
 
 Each cell passed two warmup and ten recorded complete-control processes. Values
 below are means in milliseconds from the Level B reducer; all raw samples and
-95% mean intervals remain in the [completion evidence](../../performance/evidence/2026-09-14-native-inference-step02/completion/README.md).
+95% mean intervals remain in the [completion evidence](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-native-inference-step02/completion/README.md).
 BGE batches have eight rows; generation batches have four. These are direct
 native controls, not plugin overhead or optimal-hardware verdicts.
 
@@ -292,7 +292,7 @@ single/four/eight-layout coordinate drift is `0.000765192` on CPU and
 `0.000727215`, with minimum cosine `0.999989540` for four-row batches;
 the eight-row minimum cosine is `0.999989430`. All pass their respective fixed
 version 2 limits. The tripwire corruption controls pass separately.
-See [version 2 evidence](../../performance/evidence/2026-09-14-native-inference-step02/v2/README.md).
+See [version 2 evidence](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-14-native-inference-step02/v2/README.md).
 
 ### Index compatibility and retrieval boundary
 

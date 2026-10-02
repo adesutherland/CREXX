@@ -32,5 +32,5 @@ without allocating a cleaned/right-aligned copy, and makes no selector call.
 
 Classic Level C X2D returns a Rexx whole number under caller numeric settings;
 that separate contract is documented in
-[`lib/rxfnsc/x2d.md`](../../rxfnsc/x2d.md). The focused native harness is
+[`lib/rxfnsc/x2d.md`](../../../lib/rxfnsc/x2d.md). The focused native harness is
 `lib/rxfnsb/tests_functional/ts_x2d.crexx`.

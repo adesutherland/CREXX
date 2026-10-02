@@ -51,17 +51,17 @@ No `rxbvm`, `rxtvm`, CTest, CMake or Ninja process remained after validation.
 
 ## Evidence map
 
-- `qa/build.log`: four-job current-tree build;
-- `qa/server-repeat-5.log`: five repetitions of every server VM/mode case;
-- `qa/concurrency-matrix.log`: maintained 183-test concurrency matrix;
-- `qa/tls-live.log`: live trusted-host and mismatch-host proof;
-- `qa/stress-repeat-20.log`: 20 unchanged stress repetitions;
-- `qa/syntax-highlighting-matrix.log`: isolated 72-test parser matrix;
-- `qa/full-ctest.log`: final 2,207-test complete regression sweep;
-- `qa/label-counts.txt`: concurrency umbrella and SP label counts;
-- `install/`: installed inventory and both-VM smoke;
-- `package/`: Debian build/smoke, payload inventory and ZIP/DEB digests; and
-- [`COMMANDS.md`](COMMANDS.md): replay commands and qualification boundary.
+- [`qa/build.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/qa/build.log): four-job current-tree build;
+- [`qa/server-repeat-5.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/qa/server-repeat-5.log): five repetitions of every server VM/mode case;
+- [`qa/concurrency-matrix.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/qa/concurrency-matrix.log): maintained 183-test concurrency matrix;
+- [`qa/tls-live.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/qa/tls-live.log): live trusted-host and mismatch-host proof;
+- [`qa/stress-repeat-20.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/qa/stress-repeat-20.log): 20 unchanged stress repetitions;
+- [`qa/syntax-highlighting-matrix.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/qa/syntax-highlighting-matrix.log): isolated 72-test parser matrix;
+- [`qa/full-ctest.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/qa/full-ctest.log): final 2,207-test complete regression sweep;
+- [`qa/label-counts.txt`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/qa/label-counts.txt): concurrency umbrella and SP label counts;
+- [`install/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/install): installed inventory and both-VM smoke;
+- [`package/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/package): Debian build/smoke, payload inventory and ZIP/DEB digests; and
+- [`COMMANDS.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/COMMANDS.md): replay commands and qualification boundary.
 
 The ZIP and Debian binaries are retained outside the repository. Their digests
-are committed in `package/packages.sha256`.
+are committed in [`package/packages.sha256`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/evidence/2026-08-17-linux-harness-repair/package/packages.sha256).

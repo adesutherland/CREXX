@@ -1,4 +1,0 @@
-PASS: embedding glue parity, boundaries, batching, private state and cleanup cpu
-PASS: embedding glue parity, boundaries, batching, private state and cleanup required-gpu
-FAIL: unavailable glue probe probe_admit_ns
-PASS: disabled probes reject diagnostic reads as expected

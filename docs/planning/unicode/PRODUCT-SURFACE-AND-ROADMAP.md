@@ -235,8 +235,8 @@ operations therefore stream, while the explicitly requested view retains its
 index.
 
 Raw evidence and host limitations are retained under
-`performance/evidence/2026-08-28-unicode-normalization-decisions/` and
-`performance/evidence/2026-08-29-unicode-grapheme-first-release-verdict/`.
+[`performance/evidence/2026-08-28-unicode-normalization-decisions/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-28-unicode-normalization-decisions) and
+[`performance/evidence/2026-08-29-unicode-grapheme-first-release-verdict/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-29-unicode-grapheme-first-release-verdict).
 
 ## Rejected baseline shapes
 

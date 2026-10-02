@@ -62,10 +62,10 @@ value must be in `0..255`.
 at `rOffset` into `rDst`. `rSrc` may be a binary register or a binary constant.
 The destination must already have the required length.
 
-\lstinputlisting[language=rxas]{bcopy.rxas}
+\lstinputlisting[language=rxas]{../../examples/binary_bcopy.rxas}
 
-<!--splice--rxas bcopy -->
-<!--splice--rxvme bcopy -->
+<!--splice--rxas ../../examples/binary_bcopy -->
+<!--splice--rxvme ../../examples/binary_bcopy -->
 
 ## `getbyte` and `setbyte`
 
@@ -96,10 +96,10 @@ float representation, which is binary64 for Release 1.
 They use the same little-endian storage widths as the matching read
 instructions.
 
-\lstinputlisting[language=rxas]{fixedwidth.rxas}
+\lstinputlisting[language=rxas]{../../examples/binary_fixed_width.rxas}
 
-<!--splice--rxas fixedwidth >null -->
-<!--splice--rxvme fixedwidth -->
+<!--splice--rxas ../../examples/binary_fixed_width >null -->
+<!--splice--rxvme ../../examples/binary_fixed_width -->
 
 ## `bcheckrange`
 
@@ -164,10 +164,10 @@ copy length. The VM scans that many codepoints, copies the exact bytes, sets the
 destination string byte length and codepoint count, and writes the safety NUL
 outside the logical value.
 
-\lstinputlisting[language=rxas]{textfields.rxas}
+\lstinputlisting[language=rxas]{../../examples/binary_text_fields.rxas}
 
-<!--splice--rxas textfields >null -->
-<!--splice--rxvme textfields -->
+<!--splice--rxas ../../examples/binary_text_fields >null -->
+<!--splice--rxvme ../../examples/binary_text_fields -->
 
 ## `bmove` and `bmemmove`
 
@@ -183,10 +183,10 @@ behave like C `memmove`.
 ```rxas <!--binarymove.rxas-->
 
 ```
-\lstinputlisting[language=rxas]{move.rxas}
+\lstinputlisting[language=rxas]{../../examples/binary_move.rxas}
 
-<!--splice--rxas move -->
-<!--splice--rxvme move -->
+<!--splice--rxas ../../examples/binary_move -->
+<!--splice--rxvme ../../examples/binary_move -->
 
 ## `bcmpb` and `bcmps`
 
@@ -206,7 +206,7 @@ temporary string is allocated.
 If the caller needs the offset after a compare, it must copy the offset into a
 scratch compare register first.
 
-\lstinputlisting[language=rxas]{compare.rxas}
+\lstinputlisting[language=rxas]{../../examples/binary_compare.rxas}
 
-<!--splice--rxas compare -->
-<!--splice--rxvme compare -->
+<!--splice--rxas ../../examples/binary_compare -->
+<!--splice--rxvme ../../examples/binary_compare -->

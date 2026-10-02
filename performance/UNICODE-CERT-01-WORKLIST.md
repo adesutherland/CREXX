@@ -197,7 +197,7 @@ uncertified cold values improved:
 
 The durable figures, comparison qualifications and raw build-tree evidence
 paths are recorded in
-`performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-28-normalization-certificate-informal.txt`.
+[`performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-28-normalization-certificate-informal.txt`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-28-normalization-certificate-informal.txt).
 
 This screen is sufficient for the normalization documentation checkpoint. It
 does not replace a requested formal clean-host, dual-VM or cross-platform

@@ -24,4 +24,4 @@ otherwise `INVALID_ARGUMENTS` is raised. Positions and table entries are
 codepoint based, not UTF-8 byte based.
 
 The Classic Level C profile-dependent contract is documented separately in
-[`lib/rxfnsc/translate.md`](../../rxfnsc/translate.md).
+[`lib/rxfnsc/translate.md`](../../../lib/rxfnsc/translate.md).

@@ -23,7 +23,7 @@ The rejection consumer extends the existing
 The generated fixture is the repository's `llama-dense.gguf`; this review does
 not claim that it supplies meaningful trained-model output.
 
-[Checks and inputs](checks.txt) retains compiler/runtime commands, outputs,
+[Checks and inputs](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-interface-review-20260917/checks.txt) retains compiler/runtime commands, outputs,
 consumer sources and source/binary/fixture hashes. These tests use the existing
 Debug toolchain and library artifacts; the review did not rebuild or qualify
 the whole checkout. Source inspection independently confirms the two profile

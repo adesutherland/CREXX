@@ -303,7 +303,7 @@ Level B supports:
 
 - `expr is .type` for boolean type tests
 - `expr as .type` for checked casts
-- `typeof(expr)` for concrete type introspection
+- `<typeof>(expr)` for concrete type introspection
 - `initialized(expr)` for testing whether an object value has completed factory
   initialization; non-object values are considered initialized
 

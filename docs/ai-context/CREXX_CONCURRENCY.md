@@ -626,7 +626,7 @@ When changing this subsystem:
 | Byte endpoint/child process providers | `interpreter/rxvmchannel_byte.c`, `interpreter/rxvmchannel_child.c` |
 | Human RXAS instruction reference | `docs/reference/rxas/instructions/09-io-sockets-processes-and-time.md` |
 | Live status and remaining work | `concurrency/WORKLIST.md` |
-| Historical decisions and evidence | `concurrency/history/`, `performance/evidence/` |
+| Historical decisions and evidence | [`concurrency/history/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/concurrency/history), `performance/evidence/` |
 
 Historical test names may retain internal development-stage labels. Those
 labels identify provenance only and must not leak into enduring feature names.

@@ -599,7 +599,7 @@ helps both the array/register and binary versions; a packed `.u32`/`.u8` binary
 layout improves the binary variant versus the first 64-bit-field cut. The
 current optimized `.int[]` AVL metadata remains the best overall shape for this
 workload. The measurements are retained in
-`docs/planning/beta-3/notes/string-avl-treemap-trial.md` as evidence for
+[`docs/planning/beta-3/notes/string-avl-treemap-trial.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/beta-3/notes/string-avl-treemap-trial.md) as evidence for
 binary-surface ergonomics and missing intrinsics, not as live classlib APIs.
 
 The focused `binary_fastpath_compare` benchmark isolates scalar binary-memory
@@ -611,7 +611,7 @@ fixed-width load/store loops with `memcpy`-based 1/2/4/8-byte helpers plus
 byte-swap only on known big-endian hosts. A temporary unsafe no-upper-bound
 experiment showed only modest gains, so Release 1 should keep strict checked
 binary access. See
-`docs/planning/beta-3/notes/binary-fastpath-research.md` for timings and user
+[`docs/planning/beta-3/notes/binary-fastpath-research.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/planning/beta-3/notes/binary-fastpath-research.md) for timings and user
 guidance.
 
 `lib/plugins/arrays` is deprecated and retained only as a legacy plugin smoke

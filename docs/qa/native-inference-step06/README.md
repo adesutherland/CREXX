@@ -37,8 +37,8 @@ indexed here. Initial scratch workspace:
 The maintained full run completed successfully on 15 September at 16:00 BST:
 full build, explicit QA preparation and **2,349/2,349 CTests**. The CTest stage
 took 2,278.82 seconds; the build/preparation/test invocation took approximately
-52 minutes. [Summary and exact command](full-local/summary.json),
-[CTest log](full-local/ctest.log), detailed `full-local/LastTest.log`, build and
+52 minutes. [Summary and exact command](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/full-local/summary.json),
+[CTest log](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/full-local/ctest.log), detailed [`full-local/LastTest.log`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/full-local/LastTest.log), build and
 preparation logs, runner options and selected build configuration are retained.
 A scan of all four logs found no address/leak/undefined-behavior sanitizer
 diagnostic. This establishes the macOS Apple-ASan result; it is not a supported
@@ -47,8 +47,8 @@ LeakSanitizer or other-platform pass.
 The current input comparison remains exact: 30 existing QA/example/build inputs
 changed from the initial STEP-06 snapshot, plus two new explicit qualification
 dispatch files. None of the 7,415 non-document input hashes changed during the
-final gate. `inputs-before.json.gz`, `inputs-after.json.gz` and
-`qa-input-diff.json` distinguish this work from the accepted implementation.
+final gate. [`inputs-before.json.gz`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/inputs-before.json.gz), [`inputs-after.json.gz`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/inputs-after.json.gz) and
+[`qa-input-diff.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/qa-input-diff.json) distinguish this work from the accepted implementation.
 The unchanged 2,347-test ordinary Debug result and accepted Release panels
 remain valid. No further local broad replay is required without a relevant
 input change or a newly reproduced concern.
@@ -97,7 +97,7 @@ Times describe isolated QA scheduling costs, not a product-performance verdict.
 The broad Apple-ASan selection contains 2,349 tests: the same 2,347 names from
 the retained normal run plus the two real SQLite-ODBC VM tests, enabled by this
 tree's `ENABLE_ODBC=ON` and available driver. The normal tree has ODBC disabled;
-no prior test name disappeared. See `test-selection-comparison.json`.
+no prior test name disappeared. See [`test-selection-comparison.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/test-selection-comparison.json).
 Generation controls retain 100 singles, 20 four-row batches, 1/2/4 simultaneous
 VM owners each doing 20 batches, identity/output isolation, cancellation,
 boundaries and co-resident BGE/Smol checks. ASan CPU live retention grew by
@@ -125,7 +125,7 @@ Current hosted core sanitizer/deep workflows do not enable the optional llama
 provider or provision models. Their normal platform gates remain necessary but
 cannot substitute for explicit native-inference platform evidence.
 The repository runner API currently reports zero registered self-hosted runners;
-this is recorded in [the inventory](github-runner-inventory.json), not evidence
+this is recorded in [the inventory](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/github-runner-inventory.json), not evidence
 that Adrian's machines do not exist. Direct host connection details are pending.
 
 ## Enforced offline delivery
@@ -139,12 +139,12 @@ distinguishes an effective network restriction from an unavailable network.
 No system network/firewall setting changed. Provider/library override variables
 are removed for the example children.
 
-[Commands/results](offline/results.json), [binary/model identities](offline/identities.json)
-and raw per-child logs are retained under `offline/`; the reproducible
-[driver](offline-check.py) uses the STEP-07 installed binaries. This closes the
+[Commands/results](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/offline/results.json), [binary/model identities](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/offline/identities.json)
+and raw per-child logs are retained under [`offline/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/offline); the reproducible
+[driver](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/offline-check.py) uses the STEP-07 installed binaries. This closes the
 local enforced-offline gap for these actual programs, not all OS/package cells.
 
-The [current input comparison](qa-input-diff.json) records QA dispatch/measurement
+The [current input comparison](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/qa-input-diff.json) records QA dispatch/measurement
 files, test/example hang guards and CMake test inclusion/scheduling properties.
 Product inference, RXPA, compiler/runtime logic and approved model pins are
 unchanged from the STEP-06 baseline. Reuse the full 2,347-test normal result and
@@ -156,7 +156,7 @@ panel is replayed.
 
 The new explicit `rxllama_qualify_old_host` entry point reproduced a normal
 Debug null callback crash in `text_old_host.c` during plugin initialization.
-The [backtrace](old-host-fixture/old-host-debug-backtrace.log) reaches
+The [backtrace](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/old-host-fixture/old-host-debug-backtrace.log) reaches
 `_initfuncs` at `rxllama.c:161`; the fixture supplied procedure registration but
 left class/interface/implementation/member registration callbacks null. Those
 callbacks already existed in the legacy initializer at baseline `c2cf28a4f`.
@@ -175,7 +175,7 @@ The first passing normal queue run shared a second-resolution runner directory
 with the next control. Its log was replaced, so the tiny unchanged old-host
 target was rerun alone at `20260915-135735-build` to retain an unambiguous pass.
 The replacement log and retention note are under
-`runner-results/debug-rxllama_qualify_old_host/`; the queue JSON still preserves
+[`runner-results/debug-rxllama_qualify_old_host/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/runner-results/debug-rxllama_qualify_old_host); the queue JSON still preserves
 the original successful invocation.
 
 ## S6-D01 candidate conversion
@@ -184,7 +184,7 @@ Adrian approved producing reproducible candidates. Both models now reproduce
 byte-for-byte and pass the five existing CPU/Metal compatibility controls in a
 separate scratch bridge with only their two hash substitutions. Full input,
 environment, artifact and compatibility records are in the
-[candidate evidence](model-conversion/README.md). Adrian then directed a QA focus
+[candidate evidence](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/model-conversion/README.md). Adrian then directed a QA focus
 without overcomplication. Current approved pins/downloads remain, and the
 proposed adoption/distribution work is not pursued.
 The original BGE/Smol model files have not been overwritten. No publication took
@@ -200,7 +200,7 @@ the VM/provider/library hashes match the earlier successful build-tree run.
 The prior raw-tree sharing cases took about 90–100 seconds; installed cases
 took 133–140 seconds. Host load was also elevated. These observations identify
 the deadline that failed, not a demonstrated inference or concurrency defect.
-Original/replay records are in `shared-generation-deadline/`.
+Original/replay records are in [`shared-generation-deadline/`](https://github.com/adesutherland/CREXX/tree/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/shared-generation-deadline).
 
 Adrian explicitly requested removal or wide backstops for hard deadlines because
 they undermine GitHub repeatability. The intended outcome is identical functional
@@ -237,7 +237,7 @@ The continuation now passes all thirty remaining installed/native executions,
 including the formerly failing installed threaded VM, CPU/Metal and both
 optimization modes. Combined with the eighteen retained prefix passes this
 completes all forty-eight generation package executions. See
-`package-generation-continuation/combined-coverage.json`. The smaller direct
+[`package-generation-continuation/combined-coverage.json`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/native-inference-step06/package-generation-continuation/combined-coverage.json). The smaller direct
 Debug/ASan repair controls are additional evidence, not counted in that total.
 
 Earlier successful cases met the previous stricter hang limits and remain useful

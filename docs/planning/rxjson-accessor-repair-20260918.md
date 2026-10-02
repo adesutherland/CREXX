@@ -76,7 +76,7 @@ run 35387480593 both completed successfully for that exact repair. All normal
 core platforms, optimizer parity and four selected plugin jobs passed. The
 concurrent develop advance to `47168a1f1` contains only documentation and retains
 the repair; hotfix was fast-forwarded to preserve it before this closeout.
-The [publication receipt](../qa/rxjson-accessor-20260918/publication.json) records
+The [publication receipt](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/rxjson-accessor-20260918/publication.json) records
 every job conclusion. Closeout is documentation only, so the qualified product,
 test and build inputs remain unchanged; no new broad testing is warranted.
 Evidence: Scottish `reports/bge-migration-20260918/retrieval-repair-20260918/`.

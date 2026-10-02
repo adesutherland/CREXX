@@ -107,7 +107,7 @@ Adrian approved accepting the retained-request memory tradeoff and proceeding
 with the remaining agreed QA/documentation. The observations remain bounded
 mechanism evidence; this approval does not supply unrun platform qualification.
 Raw logs, commands, source freeze, build provenance and interpretation are in
-the [retained evidence bundle](../performance/evidence/2026-09-09-channel-request-lifetime/README.md).
+the [retained evidence bundle](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/2026-09-09-channel-request-lifetime/README.md).
 Scratch builds and the full source freeze remain in
 `/tmp/crexx-channel-release.1v4pFt/`.
 

@@ -38,7 +38,7 @@ RexxCPS 2.2 and bundled NetRexx 2.1n remain unchanged; 2.2n, opaque-input,
 result-observation and trace diagnostics use distinct names. All portfolio
 ports preserve deterministic arguments/results and document every material
 language-required representation or operation substitution in
-`cross-runtime/README.md` and `performance/NR-02-WORKLIST.md`.
+`cross-runtime/README.md` and [`performance/NR-02-WORKLIST.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/NR-02-WORKLIST.md).
 
 For the formal common comparison, NetRexx uses `options nobinary decimal` and
 NetRexx `Rexx` numeric state; generated Java plus the default HotSpot JIT are

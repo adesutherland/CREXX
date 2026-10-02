@@ -210,10 +210,10 @@ the criteria that remain.
 For performance-programme work, read `performance/AGENTS.md` and
 `performance/ROADMAP.md` before changing benchmarks, profiling automation,
 compiler/assembler optimisations, VM execution paths, or recorded performance
-evidence. The dated programme charter remains
-`docs/planning/release-1/performance-programme-report-2026-07-15.md`; use the
-roadmap for live status and idea capture rather than editing historical findings
-into the charter.
+evidence. Use `performance/PERFORMANCE-GOVERNANCE.md` for measurement rules and
+`performance/DECISIONS.md` for durable accepted/rejected choices. Keep the
+consolidated plans and essential current evidence in HEAD; recover completed
+programme history and superseded runs from Git when needed.
 
 After an approved production performance edit, follow the mandatory first
 Release verdict in `performance/AGENTS.md` before doing broad closeout work.

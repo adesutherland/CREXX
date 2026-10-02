@@ -4,9 +4,9 @@ Local implementation of the PATH criteria in
 [the LLM interface plan](../../planning/llm-provider-interface.md#path-only-local-model-setup-18-september-2026).
 Adrian subsequently authorized publication and local installation on 18 September.
 The delivery extension is tracked in that plan. Base revision and exact
-source/test/build-definition hashes are retained in [inputs.json](inputs.json).
+source/test/build-definition hashes are retained in [inputs.json](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/inputs.json).
 Build configuration and provider binary hashes are in
-[build-inputs.json](build-inputs.json).
+[build-inputs.json](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/build-inputs.json).
 
 The common client now accepts a filename without an expected hash:
 
@@ -24,29 +24,29 @@ artifacts. Models remain immutable application-provisioned files while in use.
 
 ## Evidence
 
-- [Before-change regression](regression-before.log): the new path-only common
+- [Before-change regression](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/regression-before.log): the new path-only common
   consumer compiled, assembled and linked, then failed at preparation with
   `expected lowercase SHA-256` on the unchanged provider.
-- [Normal Debug common-driver suite](debug-common.log): passed in 94.25 seconds.
+- [Normal Debug common-driver suite](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/debug-common.log): passed in 94.25 seconds.
   This covers both VMs and optimization modes, automatic generation/embedding
   identity, repeated/batched generation, supplied-hash output parity, bad-hash
   diagnostics, explicit child closure, owned results, optional-provider errors
-  and deterministic HTTP fixtures. [Command manifest](debug-commands.json).
-- [Bridge rejection controls](debug-negative.log): wrong/malformed hash,
+  and deterministic HTTP fixtures. [Command manifest](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/debug-commands.json).
+- [Bridge rejection controls](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/debug-negative.log): wrong/malformed hash,
   missing file, incorrect reference-preset artifact, template, tokenizer,
   geometry and budget errors remain explicit. The generation/embedding bridge
   controls also compare the inferred SHA with the known fixture hash and verify
   shared allocation identity for inferred and explicitly pinned owners.
-- [Normal Debug lifecycle](debug-lifecycle.log): the existing two-model CPU
+- [Normal Debug lifecycle](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/debug-lifecycle.log): the existing two-model CPU
   ownership/sharing/lifecycle check passed in 13.20 seconds with the new bridge.
-- [Runnable example](example.log): the updated common generation example
+- [Runnable example](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/example.log): the updated common generation example
   passed through rxc, rxas, rxlink and rxvm with only driver, model filename and
   prompt. It used the existing local SmolLM2 Q8_0 artifact, with no hash or
   hardware/template override, and returned a complete sentence.
-- [Focused maintained Apple ASan verification](asan-checks.log): both tests
+- [Focused maintained Apple ASan verification](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/asan-checks.log): both tests
   passed, common drivers in 320.32 seconds and the two-model CPU lifecycle in
-  34.36 seconds. [Command manifest](asan-commands.json) and
-  [rejection controls](asan-negative.log) retain the detailed results.
+  34.36 seconds. [Command manifest](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/asan-commands.json) and
+  [rejection controls](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/docs/qa/llm-path-only-20260918/asan-negative.log) retain the detailed results.
 - Relative Markdown file links and `git diff --check` passed. Existing RexxDoc
   tag coverage was preserved: typed API 30 `@param` and 40 `@return` tags;
   common example one of each. Source/test/build input hashes were unchanged

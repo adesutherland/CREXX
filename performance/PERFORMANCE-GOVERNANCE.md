@@ -5,10 +5,9 @@ Status: approved standing policy
 Approved: 2026-07-20
 
 This document is the normative authority for performance measurement,
-aggregation, regression decisions and publication. The dated programme report
-defines the original `NR-*` charter; `ROADMAP.md` records live status;
-`evidence/benchmark-median-summary.md` indexes results. Neither is a substitute
-for this policy.
+aggregation, regression decisions and publication. [ROADMAP.md](ROADMAP.md) records current selection;
+[RESULTS.md](RESULTS.md) records the selected scorecard. Neither replaces
+this policy. Completed programme history is available in Git.
 
 ## Principles
 
@@ -315,10 +314,10 @@ existing historical bundles merely to apply this policy retrospectively.
 
 - `performance/AGENTS.md`: mandatory concise standing instructions.
 - `performance/README.md`: operational workflow and document/evidence index.
-- `performance/portfolio/cross-runtime-plan.md`: scope, comparability and
+- [`performance/portfolio/cross-runtime-plan.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/portfolio/cross-runtime-plan.md): scope, comparability and
   baseline-entry rules.
 - this document: normative measurement, aggregation, regression and claim
   policy.
 - `performance/templates/performance-scorecard.md`: publication structure.
-- `performance/evidence/benchmark-median-summary.md`: results index only.
+- [`performance/evidence/benchmark-median-summary.md`](https://github.com/adesutherland/CREXX/blob/108257c3d5ecfed961471fc79fa4c955dfd4eb7c/performance/evidence/benchmark-median-summary.md): results index only.
 - `performance/ROADMAP.md`: live status and dated decisions.

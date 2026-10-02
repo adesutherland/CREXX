@@ -1,0 +1,68 @@
+% Initial free-font fallback for active book codepoints absent from the current
+% TeX Gyre/JuliaMono face.
+% These are explicit rendering mappings; authored Markdown/TeX and source
+% listing snapshots remain unchanged. Unifont is monochrome.
+\usepackage{newunicodechar}
+\newfontfamily\BookFallbackBMP{unifont-18.0.01.otf}
+\newfontfamily\BookFallbackUpper{unifont_upper-18.0.01.otf}
+% Keep a glyph in the selected face when available. In particular, JuliaMono
+% has native box drawing; Unifont supplies only characters the face lacks.
+\newcommand\BookGlyphBMP[1]{\iffontchar\font"#1\char"#1\else{\BookFallbackBMP\char"#1}\fi}
+\newcommand\BookGlyphUpper[1]{\iffontchar\font"#1\char"#1\else{\BookFallbackUpper\char"#1}\fi}
+\newcommand\BookHighlightGlyph[1]{\iffontchar\font`#1\string#1\else{\BookFallbackBMP\string#1}\fi}
+\newcommand\BookHighlightGlyphUpper[1]{\iffontchar\font`#1\string#1\else{\BookFallbackUpper\string#1}\fi}
+\newcommand\BookHighlightInvisible[1]{}
+\newunicodechar{‍}{}
+\newunicodechar{⁺}{\BookGlyphBMP{207A}}
+\newunicodechar{ℝ}{\BookGlyphBMP{211D}}
+\newunicodechar{─}{\BookGlyphBMP{2500}}
+\newunicodechar{│}{\BookGlyphBMP{2502}}
+\newunicodechar{┌}{\BookGlyphBMP{250C}}
+\newunicodechar{┐}{\BookGlyphBMP{2510}}
+\newunicodechar{└}{\BookGlyphBMP{2514}}
+\newunicodechar{┘}{\BookGlyphBMP{2518}}
+\newunicodechar{├}{\BookGlyphBMP{251C}}
+\newunicodechar{┴}{\BookGlyphBMP{2534}}
+\newunicodechar{▶}{\BookGlyphBMP{25B6}}
+\newunicodechar{►}{\BookGlyphBMP{25BA}}
+\newunicodechar{▼}{\BookGlyphBMP{25BC}}
+\newunicodechar{☕}{\BookGlyphBMP{2615}}
+\newunicodechar{⚙}{\BookGlyphBMP{2699}}
+\newunicodechar{⚠}{\BookGlyphBMP{26A0}}
+\newunicodechar{✅}{\BookGlyphBMP{2705}}
+\newunicodechar{✍}{\BookGlyphBMP{270D}}
+\newunicodechar{✨}{\BookGlyphBMP{2728}}
+\newunicodechar{❌}{\BookGlyphBMP{274C}}
+\newunicodechar{　}{\BookGlyphBMP{3000}}
+\newunicodechar{日}{\BookGlyphBMP{65E5}}
+% U+FE0F selects emoji presentation; Unifont provides monochrome base glyphs.
+\newunicodechar{️}{}
+\newunicodechar{🆎}{\BookGlyphUpper{1F18E}}
+\newunicodechar{🆕}{\BookGlyphUpper{1F195}}
+\newunicodechar{👦}{\BookGlyphUpper{1F466}}
+\newunicodechar{👧}{\BookGlyphUpper{1F467}}
+\newunicodechar{👩}{\BookGlyphUpper{1F469}}
+\newunicodechar{💡}{\BookGlyphUpper{1F4A1}}
+\newunicodechar{💥}{\BookGlyphUpper{1F4A5}}
+\newunicodechar{💪}{\BookGlyphUpper{1F4AA}}
+\newunicodechar{💼}{\BookGlyphUpper{1F4BC}}
+\newunicodechar{📁}{\BookGlyphUpper{1F4C1}}
+\newunicodechar{📂}{\BookGlyphUpper{1F4C2}}
+\newunicodechar{📄}{\BookGlyphUpper{1F4C4}}
+\newunicodechar{📊}{\BookGlyphUpper{1F4CA}}
+\newunicodechar{📌}{\BookGlyphUpper{1F4CC}}
+\newunicodechar{📚}{\BookGlyphUpper{1F4DA}}
+\newunicodechar{📜}{\BookGlyphUpper{1F4DC}}
+\newunicodechar{📥}{\BookGlyphUpper{1F4E5}}
+\newunicodechar{📦}{\BookGlyphUpper{1F4E6}}
+\newunicodechar{🔁}{\BookGlyphUpper{1F501}}
+\newunicodechar{🔌}{\BookGlyphUpper{1F50C}}
+\newunicodechar{🔤}{\BookGlyphUpper{1F524}}
+\newunicodechar{🔥}{\BookGlyphUpper{1F525}}
+\newunicodechar{🔧}{\BookGlyphUpper{1F527}}
+\newunicodechar{🙂}{\BookGlyphUpper{1F642}}
+\newunicodechar{🚀}{\BookGlyphUpper{1F680}}
+\newunicodechar{🛠}{\BookGlyphUpper{1F6E0}}
+\newunicodechar{🤖}{\BookGlyphUpper{1F916}}
+\newunicodechar{🧪}{\BookGlyphUpper{1F9EA}}
+\newunicodechar{🧭}{\BookGlyphUpper{1F9ED}}

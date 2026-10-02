@@ -10,7 +10,7 @@ This chapter primarily describes the current general-exit model. The ongoing
 `ADDRESS` / REXXSAA work has also introduced a certified/system-exit model for
 core-team-curated exits that may own reserved keywords and use a richer
 compiler-facing planning contract. The working design record is
-[address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).
+[address_rexxsaa_working.md](../../../compiler/docs/address_rexxsaa_working.md).
 
 Typical uses:
 
@@ -75,7 +75,7 @@ Key distinctions in the current model:
   string-only `pre_process()` contract.
 
 Treat the working note as the design authority for the evolving model:
-[address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).
+[address_rexxsaa_working.md](../../../compiler/docs/address_rexxsaa_working.md).
 
 ## Example: Dumping variables and arrays
 
@@ -171,7 +171,7 @@ Planned direction:
   with richer typed planning data and broader address-environment contracts.
 
 See the working note for the proposal details:
-[address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).
+[address_rexxsaa_working.md](../../../compiler/docs/address_rexxsaa_working.md).
 
 Tips
 
