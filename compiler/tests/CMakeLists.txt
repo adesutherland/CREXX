@@ -5202,9 +5202,6 @@ add_levelc_unsupported_compile_test(levelc_slice4_omitted_call_unsupported
 add_levelc_unsupported_compile_test(levelc_slice5_compound_expose_unsupported
         rexx_src/levelc_slice5_compound_expose_unsupported.rexx)
 
-add_levelc_unsupported_compile_test(levelc_slice6_bare_stem_value_unsupported
-        rexx_src/levelc_slice6_bare_stem_value_unsupported.rexx)
-
 add_levelc_unsupported_compile_test(levelc_slice6_local_function_omitted_arg_unsupported
         rexx_src/levelc_slice6_local_function_omitted_arg_unsupported.rexx)
 
@@ -5330,6 +5327,10 @@ function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
+
+add_levelc_runtime_slice_test(levelc_bare_stem_read
+        rexx_src/levelc_bare_stem_read.rexx
+        "ITEMS.\n")
 
 function(add_levelc_lowered_tree_shape_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -5785,6 +5786,12 @@ add_levelc_runtime_slice_test(levelc_say_instruction
 add_levelc_runtime_slice_test(levelc_say_instruction_noopt
         rexx_src/levelc_say_instruction.rexx
         "a\n\n\nb\n\n\ncall=ok\n\ninside=1\nexpr=1\ncount=1\ninside=2\nexpr=2\ncount=2\nz\n" -n)
+add_levelc_runtime_slice_test(levelc_say_pool_reads
+        rexx_src/levelc_say_pool_reads.rexx
+        "missing=BAG.MiX.b\nsingle=single\nbound=multi\nstem=BAG.\nproc=multi\nlocal=BAG.\ncall=MULTI\ndropped-stem=BAG.\ndropped-compound=BAG.MiX.b\n")
+add_levelc_runtime_slice_test(levelc_say_pool_reads_noopt
+        rexx_src/levelc_say_pool_reads.rexx
+        "missing=BAG.MiX.b\nsingle=single\nbound=multi\nstem=BAG.\nproc=multi\nlocal=BAG.\ncall=MULTI\ndropped-stem=BAG.\ndropped-compound=BAG.MiX.b\n" -n)
 add_levelc_runtime_slice_test(levelc_slice42_abuttal
         rexx_src/levelc_slice42_abuttal.rexx
         "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n")
@@ -5958,7 +5965,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice5_stem_expose_tree_shape
         rexx_src/levelc_slice5_stem_expose.rexx
         "RexxVariablePool"
         "setStemValue"
-        "stemSymbolValue"
+        "symbolValue"
         "exposeStem"
         "__rxcp_levelc_tail"
         "asString")
@@ -6291,7 +6298,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice52_parse_static_tree_shape
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice53_drop_direct_tree_shape
         rexx_src/levelc_slice53_drop_direct.rexx
-        "stemSymbolValue"
+        "symbolValue"
         "dropStemTail"
         "dropStem"
         "__rxcp_levelc_tail_"
@@ -6299,8 +6306,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice53_drop_direct_tree_shape
 add_levelc_lowered_tree_shape_test(levelc_slice54_drop_indirect_tree_shape
         rexx_src/levelc_slice54_drop_indirect.rexx
         "dropIndirectList"
-        "symbolValue"
-        "stemSymbolValue")
+        "symbolValue")
 add_levelc_lowered_tree_shape_test(levelc_say_instruction_tree_shape
         rexx_src/levelc_say_instruction.rexx
         "SAY : .*\\(2:0\\)"
@@ -6309,6 +6315,12 @@ add_levelc_lowered_tree_shape_test(levelc_say_instruction_tree_shape
         "SAY : .*\\(12:0\\)"
         "SAY : .*\\(20:0\\)"
         "STRING : .*\\(20:0\\)")
+add_levelc_lowered_tree_shape_test(levelc_say_pool_reads_tree_shape
+        rexx_src/levelc_say_pool_reads.rexx
+        "SAY : .*\\(3:0\\)"
+        "SAY : .*\\(9:0\\)"
+        "SAY : .*\\(19:0\\)"
+        "symbolValue")
 add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
         rexx_src/levelc_slice42_abuttal.rexx
         "concat"

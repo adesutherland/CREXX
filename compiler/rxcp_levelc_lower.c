@@ -698,7 +698,6 @@ static ASTNode *levelc_name_string(Context *context, ASTNode *source_node) {
 static int levelc_variable_value_supported(ASTNode *node,
                                            const char **reason_out) {
     char *name;
-    LevelCVariableNameKind kind;
     int supported;
 
     name = levelc_upper_name(node);
@@ -707,23 +706,8 @@ static int levelc_variable_value_supported(ASTNode *node,
         return 0;
     }
 
-    kind = levelc_variable_name_kind(name);
-    supported = 0;
-    switch (kind) {
-        case LEVELC_VAR_NAME_SCALAR:
-            supported = 1;
-            break;
-        case LEVELC_VAR_NAME_COMPOUND:
-            supported = levelc_compound_tail_supported(name);
-            if (!supported && reason_out) *reason_out = "compound tail shape is outside slice";
-            break;
-        case LEVELC_VAR_NAME_STEM:
-            if (reason_out) *reason_out = "bare stem value is outside slice";
-            break;
-        default:
-            if (reason_out) *reason_out = "unsupported variable name shape";
-            break;
-    }
+    supported = levelc_variable_name_kind(name) != LEVELC_VAR_NAME_INVALID;
+    if (!supported && reason_out) *reason_out = "unsupported variable name shape";
 
     free(name);
     return supported;
@@ -1736,7 +1720,7 @@ static ASTNode *levelc_blank_rexxvalue(Context *context, ASTNode *source_node) {
     return levelc_rexxvalue_from_text(context, source_node, "");
 }
 
-static ASTNode *levelc_scalar_pool_value_by_name(Context *context,
+static ASTNode *levelc_symbol_pool_value_by_name(Context *context,
                                                  ASTNode *source_node,
                                                  const char *name) {
     ASTNode *args[1];
@@ -1767,7 +1751,7 @@ static ASTNode *levelc_compound_tail_expr(Context *context,
         return literal_tail;
     }
 
-    value = levelc_scalar_pool_value_by_name(context, source_node, tail);
+    value = levelc_symbol_pool_value_by_name(context, source_node, tail);
     free(tail);
     if (!value) return NULL;
 
@@ -1794,21 +1778,6 @@ static ASTNode *levelc_compound_stem_string(Context *context,
     return node;
 }
 
-static ASTNode *levelc_compound_pool_value_by_name(Context *context,
-                                                  ASTNode *source_node,
-                                                  const char *name,
-                                                  ASTNode *tail_expr) {
-    ASTNode *args[2];
-    ASTNode *receiver;
-
-    receiver = levelc_pool_ref(context, source_node, VAR_SYMBOL);
-    args[0] = levelc_compound_stem_string(context, source_node, name);
-    args[1] = tail_expr ? tail_expr : levelc_compound_tail_expr(context, source_node, name);
-    if (!receiver || !args[0] || !args[1]) return NULL;
-
-    return rxcp_remap_create_member_call(context, source_node, receiver, "stemSymbolValue", args, 2);
-}
-
 static ASTNode *levelc_pool_value(Context *context, ASTNode *source_node) {
     char *name;
     ASTNode *value;
@@ -1816,11 +1785,7 @@ static ASTNode *levelc_pool_value(Context *context, ASTNode *source_node) {
     name = levelc_upper_name(source_node);
     if (!name) return NULL;
 
-    if (levelc_variable_name_kind(name) == LEVELC_VAR_NAME_COMPOUND) {
-        value = levelc_compound_pool_value_by_name(context, source_node, name, NULL);
-    } else {
-        value = levelc_scalar_pool_value_by_name(context, source_node, name);
-    }
+    value = levelc_symbol_pool_value_by_name(context, source_node, name);
 
     free(name);
     return value;
@@ -3800,7 +3765,7 @@ static int levelc_lower_do(Context *context,
             if (!target_name) goto fail;
             while_value = NULL;
             if (to) {
-                current_value = levelc_scalar_pool_value_by_name(context, target, target_name);
+                current_value = levelc_symbol_pool_value_by_name(context, target, target_name);
                 step_prelude = rxcp_remap_create_instruction_builder(context, by ? by : to);
                 limit_args[0] = captured_to_ref ? captured_to_ref
                     : levelc_rexxvalue_from_literal(context, to->child);
@@ -3828,7 +3793,7 @@ static int levelc_lower_do(Context *context,
                     goto fail;
                 }
             }
-            current_value = levelc_scalar_pool_value_by_name(context, target, target_name);
+            current_value = levelc_symbol_pool_value_by_name(context, target, target_name);
             end_prelude = rxcp_remap_create_instruction_builder(context,
                                                                 by ? by : control_anchor);
             step_args[0] = by && end_prelude

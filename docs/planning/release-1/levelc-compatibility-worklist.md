@@ -1080,10 +1080,38 @@ parser's accepted forms. An unresolved dependency keeps the row open.
 
 `SAY` is the only active instruction. The parser has an expression child or
 no child (`compiler/rxcpcgmr.y`), plus recovery for an invalid close bracket.
-The lowerer already uses one canonical `SAY` builder; the pending no-child
+The lowerer uses one canonical `SAY` builder; the qualified no-child
 change supplies an empty string to that builder. The emitter uses the normal
 `SAY` opcode, and the VM routes output through its SAY exit callback. No new
 AST node or instruction-specific runtime helper is indicated by this review.
+
+Adrian approved the three architecture decisions on 2026-10-03: cREXX string
+lengths must carry through the SAY output route; BIF validation failure should
+raise a signal through one shared check, preserving Classic `SYNTAX` identity;
+and general variable reads belong to `RexxVariablePool`. Keep the existing
+legacy SAY callback API for hosts while adding a length-aware route, and keep
+assignment's pre-RHS tail capture separate from the read consolidation.
+
+The implementation sequence within active `LC-STEP-63` is:
+
+1. **LC-STEP-63A (LC-AC-57/58; complete):** route validated Level C variable
+   reads through pool `symbolValue`; remove the compiler-only stem/compound
+   read limit. Prove substitution, case, exposure, defaults, source anchors,
+   opt/no-opt, linked execution and the normal Level C suite; commit.
+2. **LC-STEP-63B (LC-AC-57; approved, depends on 63A):** carry an explicit
+   byte length from SAY operands to default and configured output. Add a
+   length-aware per-context callback without breaking the old ABI. Test
+   embedded NUL, legacy callback failure, host isolation, UTF8, error and
+   linked behavior; commit.
+3. **LC-STEP-63C (LC-AC-57/06; approved, depends on 63A):** use one direct-BIF
+   selection table and one shared result/error check. Deliver BIF failures as
+   a Classic `SYNTAX` signal distinct from command `ERROR`; preserve argument
+   presence, caller pool/configuration, RexxScript isolation and source
+   positions. Prove successful and failing BIFs, opt/no-opt and linked
+   execution; commit.
+4. **LC-STEP-63D (LC-AC-57/59; depends on 63A-C):** reconcile the remaining
+   parser/reference expression and host matrix, diagnostics, traces and
+   lifecycle, and close SAY only when the complete contract is evidenced.
 
 | SAY contract area | Current evidence | Closure state |
 | --- | --- | --- |
@@ -1091,8 +1119,8 @@ AST node or instruction-specific runtime helper is indicated by this review.
 | Expression evaluation once and output order | Exposed counter called inside SAY expression; its inner SAY precedes the outer line | Proved for this fixture; external/BIF effects remain open |
 | Invalid source forms | Grammar has explicit close-bracket recovery and general expression diagnostics | Open: reference/error matrix and source anchors |
 | Complete BIF, local and external function terms | Current guard admits only LENGTH, SUBSTR and bounded local calls; direct BIF inventory and host lookup are broader | Open: shared invocation, context, error and resolution foundation |
-| General variable value terms | Compiler read guard rejects bare stems and multi-component compound tails; shared pool `symbolValue` already resolves both | Open: pool-read consolidation and reference proof |
-| BYTE/UTF8 output, configured host route and failure | Embedded-NUL and BIF-error probes below; legacy SAY callback is terminated text | Open: output API decision, implementation and host/profile proof |
+| General variable value terms | All validated variable reads now use shared pool `symbolValue`; Regina, opt/no-opt, local exposure/CALL, linked and normal Level C checks pass | Pool-read consolidation proved; complete expression domain remains open |
+| BYTE/UTF8 output, configured host route and failure | Embedded-NUL and BIF-error probes below; legacy SAY callback is terminated text | Open: approved output design, implementation and host/profile proof |
 | Trace/condition lifecycle | Existing canonical SAY opcode and source anchors | Open: clause hooks, trapped errors and finalization |
 
 Open before closure:
@@ -1101,17 +1129,14 @@ Open before closure:
   shared expression/BIF path. The current Level C guard admits only bounded
   variable, literal, operator, local-call, LENGTH and SUBSTR forms; a valid
   expression must not fail solely because it appears in `SAY`.
-- **Confirmed variable-read limit, pending ownership approval:** Regina writes
-  `Q.x.y` and `Q.` for `a='x'; b='y'; say q.a.b; say q.`, while the compiler
-  rejects both SAY operand shapes as unsupported
-  (`/tmp/crexx-levelc-say-variable.0er3lh/` and isolated probes under
-  `/tmp/crexx-levelc-say-variable-isolate.16UXVW/`). The existing shared
-  `RexxVariablePool.symbolValue` resolves multi-component compound names and
-  bare stems without creating bindings. Proposed consolidation routes all
-  Level C variable *reads* through this method and removes the one-component
-  guard. Assignment keeps its separate pre-RHS tail capture until its own
-  instruction review. This is implementable; approval for the ownership
-  change is pending under `AGENTS.md`.
+- **Resolved compiler-only variable-read limit (LC-STEP-63A):** Regina writes
+  `Q.x.y` and `Q.` for `a='x'; b='y'; say q.a.b; say q.`, whereas the old
+  compiler rejected both SAY operands
+  (`/tmp/crexx-levelc-say-variable.0er3lh/`). All validated Level C variable
+  *reads* now use `RexxVariablePool.symbolValue`, including bare stems and
+  multi-component compounds. Assignment retains its distinct pre-RHS tail
+  capture until its own instruction review. The new pool-read fixture covers
+  substitution, case, unset/dropped values, exposure and a CALL argument.
 - **Confirmed call-error defect:** `options levelc; say substr('abc', 0);
   say 'after'` stops in Regina with `40.14` and no output, but the current
   Release compiler/VM prints an empty line and `after` with a success exit
@@ -1122,12 +1147,11 @@ Open before closure:
   pool/configuration and RexxScript isolation. This is required work, not an
   infeasible exception. A direct-entry compiler table plus one shared
   call-result check that delivers Classic `SYNTAX` separately from Classic
-  command `ERROR` is proposed. Approval is pending under `AGENTS.md`; no
-  architecture edit has begun.
+  command `ERROR` is approved by Adrian; implementation and proof remain open.
 - Prove configured default-output selection, errors, BYTE/UTF8 behavior and
   source/trace lifecycle through the host interface. Inspect the existing VM
   SAY callback boundary for byte-exact output before claiming this proof.
-- **Confirmed output defect, open architecture decision:** a BYTE profile
+- **Confirmed output defect, approved repair pending:** a BYTE profile
   probe `options levelc; say '410042'x` produced bytes `41 00 42 0a` with
   Regina but `41 0a` with the current Release `rxc`/`rxas`/`rxvm` path
   (`/tmp/crexx-levelc-say-nul.sdYMGN/`). `SAY_REG` and `SAY_STRING` have
@@ -1138,8 +1162,8 @@ Open before closure:
   and an internal byte-span output path, and require an explicit error rather
   than silent truncation when a legacy custom callback encounters embedded
   NUL. The default console path can use its existing length-taking writer.
-  Approval for this host API change is pending under `AGENTS.md`; no VM code
-  change has begun. Prove both callback routes, BYTE exactness, UTF8/error
+  Adrian approved carrying explicit lengths through this host path. Prove both
+  callback routes, BYTE exactness, UTF8/error
   behavior, main/local output ordering and linked execution after approval.
 - Keep the childless Regina, opt/no-opt, raw/canonical tree, normal Level C
   and linked results already obtained for unchanged code/test inputs. Add
@@ -1164,6 +1188,22 @@ SAY forms; the production boundary verifier checks parent/sibling ownership
 and residual Level C nodes. It does not prove every association or trace
 lifecycle. The embedded-NUL and BIF-error defects, complete function/BIF
 reachability, configured host output and failure lifecycle remain open.
+
+2026-10-03 LC-STEP-63A increment (SAY remains open): the compiler now sends
+every validated Level C variable read to `RexxVariablePool.symbolValue` and
+removes its duplicate single-tail/stem read path. The obsolete bare-stem
+negative case became a positive runtime fixture. The new
+`levelc_say_pool_reads.rexx` fixture matches Regina byte for byte through
+optimized, no-opt and linked `rxc`/`rxas`/`rxlink`/`rxvm` execution; its tree
+check retains source anchors. Release core product build passed
+(`/tmp/crexx-levelc-pool-build.3RQw1j`); focused SAY checks passed 6/6,
+shared pool runtime checks passed 2/2, and the normal Release Level C suite
+passed 293/293 (`/tmp/crexx-levelc-pool-suite-final.f6lPO8`). The first
+suite run had four expected test-oracle failures from the removed rejection
+and former `stemSymbolValue` tree assertions; all were updated to the new
+approved path and passed. Linked proof is under
+`/tmp/crexx-levelc-say-pool-linked.TNUFOd/`. No full SAY closure is claimed;
+output and BIF/condition work proceed under LC-STEP-63B/C.
 
 ## Findings
 
