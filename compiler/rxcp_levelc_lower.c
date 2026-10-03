@@ -1162,8 +1162,7 @@ static int levelc_do_supported(ASTNode *stmt,
         if (!levelc_repetition_supported(body, NULL, NULL, reason_out)) return 0;
         body = body->sibling;
         if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
-            if (!levelc_literal_repeat_count(stmt->child, NULL, reason_out) ||
-                !levelc_do_condition_supported(body, plan, reason_out)) return 0;
+            if (!levelc_do_condition_supported(body, plan, reason_out)) return 0;
             body = body->sibling;
         }
     } else if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
@@ -2737,10 +2736,8 @@ static int levelc_lower_do(Context *context,
 
         if (!plan) goto fail;
         if (repeat) {
-            if (condition_node) {
-                if (!levelc_literal_repeat_count(repeat, &count, reason_out)) goto fail;
-            } else if (!levelc_repetition_supported(repeat, &count, &forever,
-                                                    reason_out)) goto fail;
+            if (!levelc_repetition_supported(repeat, &count, &forever,
+                                             reason_out)) goto fail;
             body = repeat->sibling;
         }
         if (condition_node) {
