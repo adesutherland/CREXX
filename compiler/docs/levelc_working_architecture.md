@@ -120,7 +120,10 @@ any position when at least one direct scalar target remains. The existing
 `parseWordAndRest()` or `parseThreeWords()` result at that position is consumed
 without a pool write; the other targets are written in source order after
 the result array has been captured. Four-item templates with an internal dot
-and all-dot templates remain guarded.
+remain guarded. All-dot templates of one to three items consume the source
+without a pool write. The single-dot form uses a hidden canonical assignment
+so a VALUE expression still executes once; two- and three-dot forms use the
+existing split-result captures. Four-item all-dot templates remain guarded.
 
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and

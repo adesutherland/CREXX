@@ -37,6 +37,7 @@
 #define LEVELC_COMPOUND_TAIL_PREFIX "__rxcp_levelc_tail_"
 #define LEVELC_EXPR_RESULT_PREFIX "__rxcp_levelc_expr_"
 #define LEVELC_PARSE_FIELDS_PREFIX "__rxcp_levelc_parse_fields_"
+#define LEVELC_PARSE_DROP_PREFIX "__rxcp_levelc_parse_drop_"
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_START_VALUE_PREFIX "__rxcp_levelc_start_"
 #define LEVELC_TO_LIMIT_PREFIX "__rxcp_levelc_to_"
@@ -1392,7 +1393,6 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
     ASTNode *cursor;
     char *name;
     size_t target_count;
-    size_t scalar_count = 0;
     int upper = 0;
     int is_value = 0;
     int final_drop = 0;
@@ -1444,10 +1444,10 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
         } else if (!name || levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR) {
             free(name);
             goto unsupported;
-        } else scalar_count++;
+        }
         free(name);
     }
-    if (target_count < 1 || target_count > 4 || !scalar_count ||
+    if (target_count < 1 || target_count > 4 ||
         (target_count == 4 && (!final_drop || earlier_drop))) goto unsupported;
     if (source_out) *source_out = source;
     if (target_out) *target_out = target;
@@ -3005,6 +3005,25 @@ static int levelc_lower_direct_parse(Context *context,
                                                prelude, LEVELC_BIF_TRANSLATE_HELPER,
                                                value);
         if (!value) goto fail;
+    }
+
+    if (target_count == 1) {
+        char *target_name = levelc_upper_name(target);
+        int is_drop = target_name && strcmp(target_name, ".") == 0;
+        free(target_name);
+        if (is_drop) {
+            char *drop_name = rxcp_remap_create_generated_node_name(
+                LEVELC_PARSE_DROP_PREFIX, stmt);
+            ASTNode *capture = drop_name
+                ? rxcp_remap_create_named_assignment(context, stmt,
+                                                     drop_name, value)
+                : NULL;
+            free(drop_name);
+            if (!capture) goto fail;
+            add_ast(prelude, capture);
+            rxcp_remap_append_builder_children(instructions, prelude);
+            return 1;
+        }
     }
 
     if (target_count >= 2) {

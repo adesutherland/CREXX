@@ -455,6 +455,15 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   input, aliases/repeated targets, one-time VALUE evaluation, local scope,
   opt/no-opt, raw/canonical AST, normal Level C and linked execution. Four-item
   templates with internal dots and other template shapes remain guarded.
+- [x] **LC-AC-48 — all-dot direct PARSE templates:** one-, two- and
+  three-item `PARSE VAR`/`PARSE VALUE` templates consisting only of `.`
+  placeholders consume the source without any visible pool assignment.
+  A VALUE source expression executes exactly once, including when its result
+  is otherwise unused; optional UPPER and local procedure scope preserve the
+  same source evaluation boundary. Verify Regina side effects and unchanged
+  pool values, opt/no-opt, raw/canonical AST with no dot pool binding, focused
+  negatives, normal Level C and linked execution. Four-item all-dot and wider
+  templates remain guarded.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -796,6 +805,11 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     scalar writes. Compare reference behavior and source-anchored raw/canonical
     trees, run opt/no-opt, normal Level C, and linked checks, then commit
     separately.
+51. **LC-STEP-51 — complete (LC-AC-08/48; depends on STEP-50):** allow all-dot direct
+    templates of one to three items, with a hidden canonical capture for the
+    single-dot VALUE source and the existing shared split captures for two or
+    three dots. Emit no pool writes, retain source anchors, and prove
+    side-effect, scope, optimizer and linked parity before a separate commit.
 
 ## Findings
 
@@ -862,7 +876,7 @@ itself make its Classic shape executable.
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar controlled starts with TO, FOR, both or neither, captured dynamic start/TO/BY/FOR, and controlled WHILE/UNTIL, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, other controlled endpoints, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
-| `PARSE`, `PULL`, template/pattern/position nodes | Slice: one, two or three direct scalar targets, two-/three-item templates with dot placeholders and at least one scalar, or three scalars followed by final drop dot, in `PARSE VAR` and `PARSE VALUE`, with optional UPPER; shared `RexxValue` methods reuse `parsewords3`/`parsewords3d` and ordered pool writes | Other target counts, four-item internal/all-dot shapes, patterns, positions, comma templates, sources and errors remain open |
+| `PARSE`, `PULL`, template/pattern/position nodes | Slice: one, two or three direct scalar targets, one- to three-item dot placeholders, or three scalars followed by final drop dot, in `PARSE VAR` and `PARSE VALUE`, with optional UPPER; shared `RexxValue` methods reuse `parsewords3`/`parsewords3d` and ordered pool writes | Other target counts, four-item internal/all-dot shapes, patterns, positions, comma templates, sources and errors remain open |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
 | `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | Open: parser/front end only | Context changes, dynamic code, signal transfer, trace and error identity |
 
@@ -902,7 +916,7 @@ has been approved in this worklist.
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed direct ARG with Classic uppercase binding, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, wider PARSE templates, dynamic/external calls, full scope and return/exit lifecycle |
-| PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Slice: `VAR`/`VALUE` with one, two or three scalars, bounded two-/three-item dot placeholders, or three followed by final drop dot, and optional UPPER in `levelc_slice40_parse_single`/`levelc_slice46_parse_two`/`levelc_slice41_parse_three`/`levelc_slice47_parse_dot`/`levelc_slice48_parse_placeholders`; other forms remain front end only | Other source acquisition, target counts, four-item internal/all-dot shapes, patterns, positions, commas, configuration and errors |
+| PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Slice: `VAR`/`VALUE` with one, two or three scalars, one- to three-item dot placeholders, or three followed by final drop dot, and optional UPPER in `levelc_slice40_parse_single`/`levelc_slice46_parse_two`/`levelc_slice41_parse_three`/`levelc_slice47_parse_dot`/`levelc_slice48_parse_placeholders`/`levelc_slice49_parse_all_dots`; other forms remain front end only | Other source acquisition, target counts, four-item internal/all-dot shapes, patterns, positions, commas, configuration and errors |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
 | Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | Front end: selected parser forms | Trap lifecycle, delivery, messages and error identity |
 | Numeric | DIGITS, FORM, FUZZ, decimal arithmetic, rounding, logical conversion | Runtime: `RexxValue` foundation | Full context, limits, signal and optimized parity |
@@ -938,7 +952,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-LEAVE` | LEAVE instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-NOP` | NOP instruction | Bounded slice: standalone and nested NOP | Full source/TRACE and configuration proof open |
 | `SYN-CLASSIC-NUMERIC` | NUMERIC DIGITS/FORM/FUZZ | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-PARSE` | PARSE variants and templates | One-, two- and three-target `VAR`/`VALUE`, bounded dot placeholders, plus three targets and final drop dot, with optional UPPER execute; parser covers wider templates | Wider source/template execution and reference proof open |
+| `SYN-CLASSIC-PARSE` | PARSE variants and templates | One-, two- and three-target `VAR`/`VALUE`, one- to three-item dot placeholders, plus three targets and final drop dot, with optional UPPER execute; parser covers wider templates | Wider source/template execution and reference proof open |
 | `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded slice: scalar/stem PROCEDURE EXPOSE | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-PULL` | PULL instruction/templates | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
@@ -2069,13 +2083,29 @@ full compatibility proof.
   VALUE evaluation. The raw tree retains target dots; the canonical tree
   uses only split calls and scalar pool writes. The previous middle-dot
   negative fixture was removed after its now-supported shape passed in the
-  positive fixture. Four-item internal-dot and all-dot forms remain guarded.
+  positive fixture. Four-item internal-dot and four-item all-dot forms remain guarded.
   Release Level C passed 275/275, focused Release 14/14, and focused Debug
   14/14. Evidence: `/tmp/crexx-levelc-parse-placeholder-focused.UAmhb4`,
   `/tmp/crexx-levelc-parse-placeholder-final-release-suite.uHdOV3`,
   `/tmp/crexx-levelc-parse-placeholder-debug-tests.PNHONc`,
   `/tmp/crexx-levelc-parse-placeholder-tree.lWOHrY`, and
   `/tmp/crexx-levelc-parse-placeholder-linked.VmRJjp`.
+- One-, two- and three-item all-dot direct PARSE templates now consume their
+  source without writing the visible pool. A hidden canonical capture for
+  the single-dot form preserves one-time VALUE expression effects in both
+  optimizer modes; longer forms use the existing shared split-result capture.
+  Regina, optimized/no-opt and linked output agree for unchanged VAR sources,
+  repeated VALUE side effects, UPPER and local procedure scope. The raw tree
+  retains each dot target; the canonical tree has hidden captures but no dot
+  pool binding. The obsolete two-dot negative was replaced with a guarded
+  four-dot negative. Release Level C passed 278/278, focused Release 6/6,
+  and focused Debug 7/7. Evidence:
+  `/tmp/crexx-levelc-parse-all-dots-reference.rXJeiX`,
+  `/tmp/crexx-levelc-parse-all-dots-focused.yvfJDh`,
+  `/tmp/crexx-levelc-parse-all-dots-release-suite.CaCKT2`,
+  `/tmp/crexx-levelc-parse-all-dots-debug-tests.yHx2pQ`,
+  `/tmp/crexx-levelc-parse-all-dots-tree.Q551Qa`, and
+  `/tmp/crexx-levelc-parse-all-dots-linked.OfbdAz`.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.
