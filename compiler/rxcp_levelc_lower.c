@@ -962,6 +962,60 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
                                            LevelCLowerPlan *plan,
                                            const char **reason_out);
 
+static int levelc_select_statement_supported(ASTNode *stmt,
+                                             LevelCLowerPlan *plan,
+                                             int in_procedure,
+                                             const char **reason_out) {
+    ASTNode *list = stmt ? stmt->child : NULL;
+    ASTNode *clause;
+    int saw_when = 0;
+    int saw_otherwise = 0;
+
+    if (!list || list->node_type != INSTRUCTIONS || list->sibling) goto invalid;
+    clause = list->child;
+    while (clause) {
+        ASTNode *condition;
+        ASTNode *body;
+        if (clause->node_type == WHEN && !saw_otherwise) {
+            condition = clause->child;
+            body = condition ? condition->sibling : NULL;
+            if (!condition || !body || body->sibling) goto invalid;
+            if (!levelc_expr_supported(condition, plan, reason_out)) return 0;
+            if (in_procedure) {
+                if (body->node_type == LEVELC_ARG) goto invalid;
+                if (!levelc_proc_statement_supported(body, plan, reason_out)) return 0;
+            } else if (!levelc_main_statement_supported(body, plan, reason_out)) return 0;
+            saw_when = 1;
+        } else if (clause->node_type == OTHERWISE && saw_when && !saw_otherwise &&
+                   !clause->sibling) {
+            ASTNode *part = clause->child;
+            ASTNode *body_list = part && part->node_type == INSTRUCTIONS ? part :
+                                 part ? part->sibling : NULL;
+            if (!body_list || body_list->node_type != INSTRUCTIONS || body_list->sibling) goto invalid;
+            if (part != body_list) {
+                if (in_procedure) {
+                    if (part->node_type == LEVELC_ARG) goto invalid;
+                    if (!levelc_proc_statement_supported(part, plan, reason_out)) return 0;
+                } else if (!levelc_main_statement_supported(part, plan, reason_out)) return 0;
+            }
+            part = body_list->child;
+            while (part) {
+                if (in_procedure) {
+                    if (part->node_type == LEVELC_ARG) goto invalid;
+                    if (!levelc_proc_statement_supported(part, plan, reason_out)) return 0;
+                } else if (!levelc_main_statement_supported(part, plan, reason_out)) return 0;
+                part = part->sibling;
+            }
+            saw_otherwise = 1;
+        } else goto invalid;
+        clause = clause->sibling;
+    }
+    if (saw_when) return 1;
+invalid:
+    if (reason_out) *reason_out = "unsupported SELECT statement shape";
+    return 0;
+}
+
 static int levelc_scalar_drop_supported(ASTNode *stmt,
                                         const char **reason_out) {
     ASTNode *list = stmt ? stmt->child : NULL;
@@ -1056,6 +1110,7 @@ static int levelc_main_statement_supported(ASTNode *stmt,
     if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 0, reason_out);
+    if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 0, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
 
     if (stmt->node_type == CALL) {
@@ -1083,6 +1138,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 1, reason_out);
+    if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 1, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
     if (stmt->node_type == RETURN) {
         if (stmt->child) return levelc_expr_supported(stmt->child, plan, reason_out);
@@ -2389,6 +2445,13 @@ static int levelc_lower_simple_do(Context *context,
                                   LevelCProcedureSlice *procedure,
                                   int in_procedure,
                                   const char **reason_out);
+static int levelc_lower_select_statement(Context *context,
+                                         ASTNode *instructions,
+                                         ASTNode *stmt,
+                                         LevelCLowerPlan *plan,
+                                         LevelCProcedureSlice *procedure,
+                                         int in_procedure,
+                                         const char **reason_out);
 
 static int levelc_lower_nop(Context *context,
                             ASTNode *instructions,
@@ -2449,6 +2512,9 @@ static int levelc_lower_main_statement(Context *context,
     if (stmt->node_type == DO) {
         return levelc_lower_simple_do(context, instructions, stmt, plan, NULL, 0, reason_out);
     }
+    if (stmt->node_type == SELECT) {
+        return levelc_lower_select_statement(context, instructions, stmt, plan, NULL, 0, reason_out);
+    }
 
     prelude = rxcp_remap_create_instruction_builder(context, stmt);
     if (!prelude) {
@@ -2502,6 +2568,10 @@ static int levelc_lower_proc_statement(Context *context,
     if (stmt->node_type == DO) {
         return levelc_lower_simple_do(context, instructions, stmt, plan,
                                       procedure, 1, reason_out);
+    }
+    if (stmt->node_type == SELECT) {
+        return levelc_lower_select_statement(context, instructions, stmt, plan,
+                                             procedure, 1, reason_out);
     }
 
     prelude = rxcp_remap_create_instruction_builder(context, stmt);
@@ -2613,6 +2683,109 @@ static int levelc_lower_simple_do(Context *context,
 
 fail:
     if (reason_out) *reason_out = "failed to lower supported Level C DO";
+    return 0;
+}
+
+static int levelc_lower_select_body_statement(Context *context,
+                                               ASTNode *instructions,
+                                               ASTNode *statement,
+                                               LevelCLowerPlan *plan,
+                                               LevelCProcedureSlice *procedure,
+                                               int in_procedure,
+                                               const char **reason_out) {
+    if (in_procedure) {
+        return levelc_lower_proc_statement(context, instructions, statement,
+                                           plan, procedure, reason_out);
+    }
+    return levelc_lower_main_statement(context, instructions, statement, plan, reason_out);
+}
+
+static int levelc_lower_select_statement(Context *context,
+                                         ASTNode *instructions,
+                                         ASTNode *stmt,
+                                         LevelCLowerPlan *plan,
+                                         LevelCProcedureSlice *procedure,
+                                         int in_procedure,
+                                         const char **reason_out) {
+    ASTNode *clause;
+    ASTNode *otherwise = NULL;
+    ASTNode *fallback;
+    ASTNode **whens;
+    size_t count = 0;
+    size_t index = 0;
+
+    for (clause = stmt->child->child; clause; clause = clause->sibling) {
+        if (clause->node_type == WHEN) count++;
+        else otherwise = clause;
+    }
+    whens = calloc(count, sizeof(*whens));
+    if (!whens) goto fail;
+    for (clause = stmt->child->child; clause && clause->node_type == WHEN;
+         clause = clause->sibling) whens[index++] = clause;
+
+    fallback = rxcp_remap_create_instruction_builder(context, stmt);
+    if (!fallback) goto fail_free;
+    if (otherwise) {
+        ASTNode *part = otherwise->child;
+        ASTNode *list = part->node_type == INSTRUCTIONS ? part : part->sibling;
+        if (part != list &&
+            !levelc_lower_select_body_statement(context, fallback, part, plan,
+                                                 procedure, in_procedure, reason_out)) goto fail_free;
+        for (part = list->child; part; part = part->sibling) {
+            if (!levelc_lower_select_body_statement(context, fallback, part, plan,
+                                                    procedure, in_procedure, reason_out)) goto fail_free;
+        }
+    } else {
+        char line[32];
+        ASTNode *args[1];
+        ASTNode *call;
+        snprintf(line, sizeof(line), "%d", stmt->token ? stmt->token->line + 1 : 0);
+        args[0] = rxcp_remap_create_string_constant(context, stmt, line);
+        call = args[0] ? rxcp_remap_create_function_call(context, stmt,
+                                                        "rexxvalue_select_missing", args, 1) : NULL;
+        call = call ? rxcp_remap_create_call_statement(context, stmt, call) : NULL;
+        if (!call) goto fail_free;
+        add_ast(fallback, call);
+    }
+
+    while (index > 0) {
+        ASTNode *when = whens[--index];
+        ASTNode *condition_node = when->child;
+        ASTNode *body_node = condition_node->sibling;
+        ASTNode *prelude = rxcp_remap_create_instruction_builder(context, when);
+        ASTNode *then_instructions = rxcp_remap_create_instruction_builder(context, body_node);
+        ASTNode *next = rxcp_remap_create_instruction_builder(context, when);
+        ASTNode *condition;
+        ASTNode *then_block;
+        ASTNode *else_block;
+        ASTNode *lowered;
+
+        if (!prelude || !then_instructions || !next) goto fail_free;
+        condition = levelc_lower_expr(context, condition_node, plan, prelude);
+        condition = condition ? rxcp_remap_create_member_call(context, condition_node,
+                                                               condition, "logicalWhenValue", NULL, 0) : NULL;
+        if (!condition) goto fail_free;
+        if (!levelc_lower_select_body_statement(context, then_instructions, body_node,
+                                                plan, procedure, in_procedure, reason_out)) goto fail_free;
+        then_block = rxcp_remap_create_do_block(context, body_node, then_instructions);
+        else_block = rxcp_remap_create_do_block(context, when, fallback);
+        lowered = then_block && else_block
+            ? rxcp_remap_create_if_statement(context, when, condition, then_block, else_block)
+            : NULL;
+        if (!lowered) goto fail_free;
+        rxcp_remap_append_builder_children(next, prelude);
+        add_ast(next, lowered);
+        fallback = next;
+    }
+
+    rxcp_remap_append_builder_children(instructions, fallback);
+    free(whens);
+    return 1;
+
+fail_free:
+    free(whens);
+fail:
+    if (reason_out && !*reason_out) *reason_out = "failed to lower supported Level C SELECT";
     return 0;
 }
 

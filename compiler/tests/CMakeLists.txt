@@ -5496,6 +5496,13 @@ add_levelc_runtime_slice_test(levelc_slice10_scalar_drop_noopt
         rexx_src/levelc_slice10_scalar_drop.rexx
         "MISSING\nA\ntwo\nB C\nA\nA\nLOCAL\nSHARED\nSHARED\n" -n)
 
+add_levelc_runtime_slice_test(levelc_slice11_select
+        rexx_src/levelc_slice11_select.rexx
+        "first\n0\nsecond\nnested\n1\narm\nprocedure\n")
+add_levelc_runtime_slice_test(levelc_slice11_select_noopt
+        rexx_src/levelc_slice11_select.rexx
+        "first\n0\nsecond\nnested\n1\narm\nprocedure\n" -n)
+
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}
@@ -5515,6 +5522,10 @@ add_levelc_invalid_runtime_test(levelc_slice6_invalid_logical
         rexx_src/levelc_slice6_invalid_logical.rexx RXC-LC-34)
 add_levelc_invalid_runtime_test(levelc_slice7_if_invalid_logical
         rexx_src/levelc_slice7_if_invalid_logical.rexx RXC-LC-34.1)
+add_levelc_invalid_runtime_test(levelc_slice11_select_invalid_logical
+        rexx_src/levelc_slice11_select_invalid_logical.rexx RXC-LC-34.2)
+add_levelc_invalid_runtime_test(levelc_slice11_select_no_match
+        rexx_src/levelc_slice11_select_no_match.rexx RXC-LC-7.3)
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
@@ -5606,6 +5617,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice10_scalar_drop_tree_shape
         rexx_src/levelc_slice10_scalar_drop.rexx
         "symbolValue"
         "drop"
+        "RexxVariablePool")
+
+add_levelc_lowered_tree_shape_test(levelc_slice11_select_tree_shape
+        rexx_src/levelc_slice11_select.rexx
+        "logicalWhenValue"
+        "IF"
+        "DO"
         "RexxVariablePool")
 
 # Bridge Connectivity Test

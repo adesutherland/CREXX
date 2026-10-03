@@ -54,7 +54,7 @@ exists.
 | LC-REF-035 | Function-name ending-period `51.1` | source | Front end diagnostic proof open |
 | LC-REF-036 | Clause/label/null-clause program structure | source | Front end fixtures; runtime lifecycle open |
 | LC-REF-037 | IF/THEN/ELSE branch selection and nearest ELSE | both | Bounded slice 7; wider instruction arms open |
-| LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | both | Front end; execution and condition proof open |
+| LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | both | Bounded slice 11: ordered lazy branches, `34.2`, `7.3`; wider lifecycle proof open |
 | LC-REF-039 | Simple DO grouping and empty body | both | Bounded slice 8; broader clause lifecycle open |
 | LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | both | Front end; loop state, bounds and logical errors open |
 | LC-REF-041 | LEAVE/ITERATE nesting and named loop targets | both | Front end validation; execution open |

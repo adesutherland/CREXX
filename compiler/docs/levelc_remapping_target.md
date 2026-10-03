@@ -929,6 +929,13 @@ procedure pool, and uses `.RexxValue` return types only for routines with
 tails; expression-position local calls such as `x = f(a,b)` are supported when
 the callee has a value return.
 Rejected programs keep the existing unsupported Level C compilation diagnostic.
+The bounded `SELECT` slice accepts parser `SELECT > INSTRUCTIONS > WHEN`
+clauses with an optional final `OTHERWISE`. Reverse construction makes a
+nested canonical `IF` chain; each later condition and its generated prelude
+live inside the previous false arm, preserving lazy evaluation. The accepted
+shape includes supported nested statement arms and local procedures. The
+shared `RexxValue.logicalWhenValue()` supplies `34.2`; an unmatched chain
+without OTHERWISE calls `rexxvalue_select_missing(line)` for `7.3`.
 Accepted trees pass a production boundary walk before canonical validation:
 every child and sibling must have the expected parent, sibling chains must be
 acyclic, and no `LEVELC_*` instruction node may remain. The direct negative

@@ -62,6 +62,28 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 25 - Level C SELECT Structural Lowering
+
+### Intent and accepted shape
+
+The Classic parser emits `SELECT` with an `INSTRUCTIONS` child containing one
+or more `WHEN` clauses and an optional final `OTHERWISE`. Validate that shape
+and supported arm statements before rewriting. Build a canonical IF chain
+backwards so only the first true WHEN body executes and later condition
+preludes stay lazy. The shared RexxValue class checks exact WHEN logical
+values (`34.2`); the missing-OTHERWISE path reports `7.3` with the SELECT line.
+
+### Verification
+
+- The seven-line fixture matched Regina in optimized/no-opt and linked RXBIN
+  execution. Regina uses base error `7` for a missing OTHERWISE in this case;
+  the project's compliance reference specifies `7.3`.
+- Release build passed, focused SELECT tests 5/5 and selected Level C,
+  RexxValue and RexxScript correctness tests 127/127. Debug output showed
+  source-anchored generated conditions without AST validation errors. Retained
+  log paths and remaining obligations are in the
+  [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+
 ## Stage 24 - Level C AST Boundary And Structural Crosswalk
 
 ### Intent and accepted shape

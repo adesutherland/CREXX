@@ -74,6 +74,14 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   crosswalk, structural validation, nested target-tree probes, focused runtime
   equivalence and the normal compiler suite. Keep this criterion open until
   the structural shape families are closed; a first verifier is only a gate.
+- [x] **LC-AC-09 — bounded SELECT execution:** parsed `SELECT`/ordered `WHEN`
+  clauses and an optional `OTHERWISE` lower to a lazy canonical branch chain.
+  Only the selected arm executes; later conditions are skipped, nesting and
+  local procedures retain source order, a nonlogical `WHEN` reports `34.2`,
+  and an unmatched SELECT without OTHERWISE reports `7.3` with its source
+  line. Verify against the Classic reference for successful paths, optimized
+  and no-opt execution, negative runtime checks, lowered-tree inspection,
+  the normal correctness suite, and linked-image execution.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -138,7 +146,7 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     Level C-only nodes before canonical validation; exercise it on nested
     accepted shapes and retain debug tree evidence. Commit the verifier and
     crosswalk as one reviewable increment.
-11. **LC-STEP-11 (LC-AC-08/04; depends on STEP-10):** open the next Classic
+11. **LC-STEP-11 — complete (LC-AC-08/09/04; depends on STEP-10):** open the next Classic
     control-flow tree shape, starting with `SELECT/WHEN/OTHERWISE`, only after
     confirming its parsed AST and reference condition behavior. Prove branch
     order, nested arms, source anchors, opt/no-opt and missing-match behavior;
@@ -167,7 +175,7 @@ itself make its Classic shape executable.
 | `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and direct scalar DROP | Wider statement operands, stem/compound/indirect DROP and exit/return lifecycle remain open |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, lazy logical branches, bounded BIF/local calls | More expression shapes, exact evaluation order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
-| `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Open: parser emits the nested list; no accepted lowering yet | Next: ordered condition evaluation, single selected arm, missing match `7.3`, nested branches |
+| `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Open: only child-list-only `DO` is accepted | Loop header ownership, mutation/evaluation order, control transfer and scope |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
 | `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
@@ -181,7 +189,7 @@ negative unit test proves each rejection path; accepted nested fixtures and
 the `STAGE_LEVELC_LOWERED` debug probe cover generated output. This gate does
 not yet prove generated scope/symbol correctness, source anchors, evaluation
 order, or completeness of accepted structural families. Those remain open in
-`LC-AC-08` and are tackled in `LC-STEP-11/12` and later structural increments.
+`LC-AC-08` and are tackled through `LC-STEP-12` and later structural increments.
 
 ## Coverage matrix
 
@@ -207,7 +215,7 @@ has been approved in this worklist.
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
 | Control | controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Front end: parser/validation fixtures | Execution, exact loop semantics and errors |
-| Control | SELECT/WHEN/OTHERWISE | Front end: parser fixtures | Execution and condition errors |
+| Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
 | PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Front end: parser fixtures | Runtime source acquisition, template assignment, errors |
@@ -472,3 +480,32 @@ full compatibility proof.
 - `LC-AC-08` remains open: the verifier is a boundary invariant, while
   generated scope/symbols, evaluation order, source anchors and the remaining
   parser families still need implementation and evidence.
+
+### LC-STEP-11 — bounded SELECT/WHEN/OTHERWISE, 2026-10-03
+
+- Before-change, a simple SELECT printed `zero` in Regina and failed compiled
+  Level C as an unsupported main statement. The raw parsed tree is `SELECT >
+  INSTRUCTIONS > WHEN... [OTHERWISE]`; each WHEN has condition and body, while
+  OTHERWISE has an optional inline body plus an `INSTRUCTIONS` list. Retained
+  reproducer and AST logs:
+  `/tmp/crexx-levelc-select-before.npooyz`,
+  `/tmp/crexx-levelc-select-ast.HWxpA1`.
+- The lowerer validates that shape, builds nested canonical `IF` branches in
+  reverse order, and places each later condition inside the preceding ELSE
+  block. `RexxValue.logicalWhenValue()` reports `RXC-LC-34.2`; the unmatched
+  path reports `RXC-LC-7.3` with the SELECT source line. Regina reports base
+  error `7` for this unmatched case; the compliance reference specifies `7.3`
+  and is the current implementation target.
+- The seven-line nested fixture matched Regina with optimized/no-opt parity.
+  Release core and `rxfnsc` builds passed, five focused SELECT tests passed,
+  and the selected Level C, `RexxValue` and RexxScript correctness suite passed
+  127/127. A redirected debug probe showed source-anchored generated WHEN
+  conditions and no AST validation error. `rxlink` plus `rxvm` reproduced the
+  same seven lines. Retained logs:
+  `/tmp/crexx-levelc-select-final-build.7BDc9R`,
+  `/tmp/crexx-levelc-select-focused.X6HxHI`,
+  `/tmp/crexx-levelc-select-suite.xQepez`,
+  `/tmp/crexx-levelc-select-debug.jZHZB4`,
+  `/tmp/crexx-levelc-select-link.PrvySs`.
+- `LC-AC-08` and `LC-AC-04` remain open for the other structural and complete
+  compatibility obligations.

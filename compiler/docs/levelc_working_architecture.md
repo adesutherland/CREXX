@@ -73,12 +73,20 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
 
-The current executable Level C surface is ten bounded lowering slices; the
+The current executable Level C surface is eleven bounded lowering slices; the
 complete Classic contract remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
 the references and this architecture. A new syntax rule, compatibility
 exception, or change to these ownership boundaries still requires Adrian's
 explicit decision under `AGENTS.md`.
+
+The early AST closure path checks accepted lowered trees for parent/sibling
+ownership and residual Classic-only nodes before canonical validation. The
+first additional structural family is `SELECT`: guarded WHEN/OTHERWISE lists
+become nested canonical IF blocks, with each later condition contained in the
+earlier false arm. The shared `RexxValue` class supplies exact WHEN logical
+validation; a small exported runtime helper reports the Classic no-match
+identity. RexxScript's evaluator and sandbox contract remain separate.
 
 ## Historical design record
 
