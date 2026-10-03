@@ -56,7 +56,7 @@ exists.
 | LC-REF-037 | IF/THEN/ELSE branch selection and nearest ELSE | both | Bounded slice 7; wider instruction arms open |
 | LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | both | Bounded slice 11: ordered lazy branches, `34.2`, `7.3`; wider lifecycle proof open |
 | LC-REF-039 | Simple DO grouping and empty body | both | Bounded slice 8; broader clause lifecycle open |
-| LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | both | Bounded literal/dynamic direct and combined counts, FOREVER conditions and scalar literal-TO control with signed literal BY; wider count and controlled forms, state and errors open |
+| LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | both | Bounded literal/dynamic direct and combined counts, FOREVER conditions and scalar literal-TO control with signed literal BY and bounded literal FOR; wider count and controlled forms, state and errors open |
 | LC-REF-041 | LEAVE/ITERATE nesting and named loop targets | both | Bounded childless transfer slice 13 through generated blocks; named forms and wider loop lifecycle open |
 | LC-REF-042 | END-name matching and group-label branch restrictions | source | Front end diagnostics; complete reference matrix open |
 | LC-REF-043 | Expression terms, prefix, power and arithmetic precedence | both | Bounded expression slice; full numeric/error equivalence open |

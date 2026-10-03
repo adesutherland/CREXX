@@ -213,6 +213,17 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   execution, source-anchored canonical WHILE/UNTIL tree shape, focused
   normal/Debug tests and the relevant correctness suite. Dynamic BY, FOR,
   dynamic endpoints, named transfer and combined conditions remain open.
+- [x] **LC-AC-25 — bounded controlled TO with FOR:** parsed scalar
+  `DO name = non-negative integer TO non-negative integer [BY signed integer]
+  FOR non-negative integer` applies a signed 32-bit bounded FOR limit alongside the TO
+  direction check under one source loop, regardless of parsed modifier order.
+  A zero FOR count initializes the visible control variable and skips the
+  body; a positive limit advances the pool value after each body or ITERATE,
+  including the final count-limited body. Body mutation and LEAVE retain
+  Classic final values. Verify Regina output, opt/no-opt and linked execution,
+  canonical FOR plus WHILE/UNTIL tree shape, focused normal/Debug checks and
+  the relevant correctness suite. Dynamic FOR, FOR without TO, dynamic
+  controlled endpoints, named transfer and combined conditions remain open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -394,6 +405,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     the default BY-one behavior. Prove negative, positive and guarded zero
     steps, mutation, final values and ITERATE/LEAVE against Regina; keep
     dynamic BY/FOR and wider headers fail-closed, qualify and commit.
+28. **LC-STEP-28 — complete (LC-AC-08/25; depends on STEP-27):** recognize one bounded
+    literal FOR alongside the existing literal TO and optional literal BY,
+    in any parsed modifier order. Feed its count to the canonical REPEAT FOR
+    child while retaining the pool-backed WHILE entry and UNTIL end step.
+    Prove zero and positive counts, direction, final-value and transfer
+    timing against Regina. Keep dynamic FOR and FOR-without-TO fail-closed,
+    qualify and commit separately.
 
 ## Open findings
 
@@ -423,7 +441,7 @@ itself make its Classic shape executable.
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
-| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar literal-TO control with optional signed literal BY, plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Wider count values, named transfer, dynamic BY/FOR and dynamic/combined controlled headers, numeric errors and wider scope remain open |
+| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar literal-TO control with optional signed literal BY and bounded literal FOR, plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Wider count values, named transfer, dynamic BY/FOR and dynamic/combined controlled headers, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
 | `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
@@ -492,7 +510,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal-TO control with signed literal BY | Dynamic BY, FOR, dynamic controlled endpoints, wider count/numeric errors and configuration proof open |
+| `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal-TO control with signed literal BY and bounded literal FOR | Dynamic BY/FOR, FOR without TO, dynamic controlled endpoints, wider count/numeric errors and configuration proof open |
 | `SYN-CLASSIC-DROP` | DROP instruction | Bounded slice: direct scalar list | Stem, compound and indirect forms, full condition/profile proof open |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
@@ -1202,6 +1220,25 @@ full compatibility proof.
   `/tmp/crexx-levelc-by-debug-focused.2pMz1t`,
   `/tmp/crexx-levelc-by-tree.hgdhBa`, and
   `/tmp/crexx-levelc-by-link-log.HBlxiF`.
-- `LC-AC-08/04` remain open for dynamic BY, FOR, dynamic controlled
-  endpoints, controlled conditions, wider count values, named transfers and
-  other structural families. `LC-FIND-01` remains open.
+- A bounded literal FOR now joins a controlled TO header, with or without
+  literal BY, in any parsed modifier order. The pool assignment precedes
+  canonical REPEAT; FOR checks before WHILE, and the UNTIL end block advances
+  the visible control variable after every executed body, including the final
+  count-limited body and ITERATE. Regina output matched optimized/no-opt and
+  linked execution for zero count, BY direction, mutation, LEAVE/ITERATE and
+  local scope. Dynamic FOR and FOR without TO remain fail-closed. The
+  redirected tree probe showed source-anchored FOR > WHILE > UNTIL with the
+  BLOCK_EXPR pool step and no structural validation error. Release controlled
+  focused checks passed 15/15 and the selected correctness suite 203/203;
+  Debug structural/loop/shared-value checks passed 79/79. Evidence:
+  `/tmp/crexx-levelc-for-reference-output.SfXAWx`,
+  `/tmp/crexx-levelc-for-release-build.XvkBMA`,
+  `/tmp/crexx-levelc-for-focused.X9e0I0`,
+  `/tmp/crexx-levelc-for-release-suite.oK2LjO`,
+  `/tmp/crexx-levelc-for-debug-build.Fd8bOH`,
+  `/tmp/crexx-levelc-for-debug-focused.VbyWh3`,
+  `/tmp/crexx-levelc-for-tree.5Kfxxl`, and
+  `/tmp/crexx-levelc-for-link-log.GnUCkq`.
+- `LC-AC-08/04` remain open for dynamic BY/FOR, FOR without TO, dynamic
+  controlled endpoints, controlled conditions, wider count values, named
+  transfers and other structural families. `LC-FIND-01` remains open.

@@ -5205,6 +5205,10 @@ add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
 
 add_levelc_unsupported_compile_test(levelc_slice26_controlled_dynamic_by_unsupported
         rexx_src/levelc_slice26_controlled_dynamic_by_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice27_controlled_dynamic_for_unsupported
+        rexx_src/levelc_slice27_controlled_dynamic_for_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice27_controlled_for_without_to_unsupported
+        rexx_src/levelc_slice27_controlled_for_without_to_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice25_controlled_dynamic_to_unsupported
         rexx_src/levelc_slice25_controlled_dynamic_to_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice25_controlled_condition_unsupported
@@ -5607,6 +5611,12 @@ add_levelc_runtime_slice_test(levelc_slice26_controlled_by
 add_levelc_runtime_slice_test(levelc_slice26_controlled_by_noopt
         rexx_src/levelc_slice26_controlled_by.rexx
         "down 3\ndown 2\ndown 1\nafter-down 0\nup 1\nup 3\nafter-up 5\nchanged 3\nchanged 2\nchanged 1\nafter-changed 0\nzero 1\nafter-zero 1\nafter-bad-up 2\nafter-bad-down 1\nnested 2\nafter-nested 1\n" -n)
+add_levelc_runtime_slice_test(levelc_slice27_controlled_for
+        rexx_src/levelc_slice27_controlled_for.rexx
+        "simple 1\nsimple 2\nafter-simple 3\nstep 1\nstep 3\nafter-step 5\ndown 3\ndown 2\nafter-down 1\nafter-zero 1\nchanged 2\nchanged 3\nafter-changed 4\niter 1\niter 3\nafter-iter 4\nleft 1\nafter-left 2\n3\n")
+add_levelc_runtime_slice_test(levelc_slice27_controlled_for_noopt
+        rexx_src/levelc_slice27_controlled_for.rexx
+        "simple 1\nsimple 2\nafter-simple 3\nstep 1\nstep 3\nafter-step 5\ndown 3\ndown 2\nafter-down 1\nafter-zero 1\nchanged 2\nchanged 3\nafter-changed 4\niter 1\niter 3\nafter-iter 4\nleft 1\nafter-left 2\n3\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5888,6 +5898,17 @@ add_levelc_lowered_tree_shape_test(levelc_slice25_controlled_to_tree_shape
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice26_controlled_by_tree_shape
         rexx_src/levelc_slice26_controlled_by.rexx
+        "WHILE"
+        "controlToContinueBy"
+        "UNTIL"
+        "BLOCK_EXPR"
+        "LEAVE_WITH"
+        "controlStepBy"
+        "setValue"
+        "ITERATE")
+add_levelc_lowered_tree_shape_test(levelc_slice27_controlled_for_tree_shape
+        rexx_src/levelc_slice27_controlled_for.rexx
+        "FOR"
         "WHILE"
         "controlToContinueBy"
         "UNTIL"

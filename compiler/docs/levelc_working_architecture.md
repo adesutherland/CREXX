@@ -141,8 +141,13 @@ Both checks use shared RexxValue numeric methods; BY selects the upper or
 lower bound comparison by its sign and the end block adds that step. The
 default step is one. The hidden canonical loop
 assignment exists only to satisfy the emitter and does not replace the
-Classic control variable. Dynamic BY, FOR, dynamic endpoints and controlled headers
-combined with WHILE/UNTIL remain fail-closed.
+Classic control variable. Dynamic BY/FOR, FOR without TO, dynamic endpoints
+and controlled headers combined with WHILE/UNTIL remain fail-closed.
+A bounded literal FOR count can join the controlled TO header under the same
+REPEAT. Its canonical FOR child checks the limit before the WHILE entry check;
+the pool initialization remains before REPEAT. A zero count therefore skips
+the body, and the UNTIL end block still advances the pool value after the
+last count-limited body.
 Classic `&` and `|` now evaluate both operands in source order. The lowerer
 copies the left `RexxValue` before any right-hand setup statements, then calls
 shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier
