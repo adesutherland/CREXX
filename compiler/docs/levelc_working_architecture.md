@@ -118,10 +118,18 @@ supported WHILE or UNTIL condition. FOR and the condition share the same
 canonical REPEAT. A condition with setup uses the same BLOCK_EXPR builder as
 direct WHILE/UNTIL; a zero count skips both body and condition setup. WHILE
 checks at entry while UNTIL checks after the body, including the final
-count-limited body. Dynamic counts and controlled variables remain fail-closed.
+count-limited body. Dynamic counts combined with a condition and controlled
+variables remain fail-closed.
 `DO FOREVER WHILE` and `DO FOREVER UNTIL` reuse the same condition lowering
 and hidden loop target with no FOR child under their canonical REPEAT. This
 preserves zero-entry WHILE, post-body UNTIL, and source LEAVE/ITERATE binding.
+Direct `DO expression` accepts a supported dynamic count expression. The
+lowerer places its `RexxValue.repeatCountValue()` conversion under canonical
+FOR and wraps any count setup in BLOCK_EXPR, so the expression runs once at
+entry even if its source variables change in the body. This bounded slice
+accepts non-negative mathematical whole values up to signed 32-bit maximum;
+the contextual method reports `26.2` for invalid or out-of-range values.
+Wider count values and count-plus-condition expressions remain open.
 Classic `&` and `|` now evaluate both operands in source order. The lowerer
 copies the left `RexxValue` before any right-hand setup statements, then calls
 shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier
@@ -129,8 +137,8 @@ branch-based short-circuit tracer shape is historical and is no longer the
 Classic Level C target. Exact left/right operand errors use `34.5`/`34.6`.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission. The existing WHILE, BLOCK_EXPR and
-LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL, so
-this increment adds no new emitter shape.
+LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL
+and count setup, so these increments add no new emitter shape.
 
 ## Historical design record
 

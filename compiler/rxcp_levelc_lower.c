@@ -1099,6 +1099,9 @@ static int levelc_repetition_supported(ASTNode *repeat,
                                        int *count_out,
                                        int *forever_out,
                                        const char **reason_out) {
+    ASTNode *for_node = repeat ? repeat->child : NULL;
+    ASTNode *expression = for_node ? for_node->child : NULL;
+
     if (repeat && repeat->node_type == REPEAT && !repeat->child &&
         nodeis(repeat, "forever")) {
         if (count_out) *count_out = 0;
@@ -1106,7 +1109,13 @@ static int levelc_repetition_supported(ASTNode *repeat,
         return 1;
     }
     if (forever_out) *forever_out = 0;
-    return levelc_literal_repeat_count(repeat, count_out, reason_out);
+    if (levelc_literal_repeat_count(repeat, count_out, reason_out)) return 1;
+    if (!repeat || repeat->node_type != REPEAT || !for_node ||
+        for_node->node_type != FOR || for_node->sibling ||
+        !expression || expression->sibling) return 0;
+    if (count_out) *count_out = -1;
+    if (reason_out) *reason_out = NULL;
+    return 1;
 }
 
 static int levelc_do_condition_supported(ASTNode *condition,
@@ -1159,9 +1168,16 @@ static int levelc_do_supported(ASTNode *stmt,
     ASTNode *body_statement;
 
     if (body && body->node_type == REPEAT) {
-        if (!levelc_repetition_supported(body, NULL, NULL, reason_out)) return 0;
+        int count = 0;
+        ASTNode *repeat = body;
+        if (!levelc_repetition_supported(repeat, &count, NULL, reason_out)) return 0;
+        if (count < 0 && !levelc_expr_supported(repeat->child->child, plan, reason_out)) return 0;
         body = body->sibling;
         if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
+            if (count < 0) {
+                if (reason_out) *reason_out = "dynamic count with condition is outside slice";
+                return 0;
+            }
             if (!levelc_do_condition_supported(body, plan, reason_out)) return 0;
             body = body->sibling;
         }
@@ -2738,6 +2754,10 @@ static int levelc_lower_do(Context *context,
         if (repeat) {
             if (!levelc_repetition_supported(repeat, &count, &forever,
                                              reason_out)) goto fail;
+            if (count < 0 && condition_node) {
+                if (reason_out) *reason_out = "dynamic count with condition is outside slice";
+                goto fail;
+            }
             body = repeat->sibling;
         }
         if (condition_node) {
@@ -2750,15 +2770,34 @@ static int levelc_lower_do(Context *context,
                     context, condition_node, condition_value);
             if (!condition_value) goto fail;
             if (condition_prelude->child) {
-                condition_value = rxcp_remap_create_condition_block_expr(
+                condition_value = rxcp_remap_create_prelude_block_expr(
                         context, condition_node, condition_prelude, condition_value);
                 if (!condition_value) goto fail;
             }
             body = condition_node->sibling;
         }
         control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);
-        count_node = (!repeat || forever) ? NULL : rxcp_remap_create_integer_constant(
-                context, repeat->child->child, count, TP_INTEGER);
+        count_node = NULL;
+        if (repeat && !forever) {
+            if (count >= 0) {
+                count_node = rxcp_remap_create_integer_constant(
+                        context, repeat->child->child, count, TP_INTEGER);
+            } else {
+                ASTNode *count_source = repeat->child->child;
+                ASTNode *count_prelude = rxcp_remap_create_instruction_builder(
+                        context, count_source);
+                ASTNode *count_value = count_prelude
+                        ? levelc_lower_expr(context, count_source, plan, count_prelude)
+                        : NULL;
+                count_node = count_value ? rxcp_remap_create_member_call(
+                        context, count_source, count_value,
+                        "repeatCountValue", NULL, 0) : NULL;
+                if (count_node && count_prelude->child) {
+                    count_node = rxcp_remap_create_prelude_block_expr(
+                            context, count_source, count_prelude, count_node);
+                }
+            }
+        }
         lowered = rxcp_remap_create_controlled_do(
                 context, stmt, lowered_body, control_name, count_node,
                 condition_node, condition_value);

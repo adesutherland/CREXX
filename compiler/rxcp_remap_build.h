@@ -183,10 +183,10 @@ ASTNode *rxcp_remap_create_controlled_do(Context *context,
                                         ASTNode *count_or_null,
                                         ASTNode *condition_source_or_null,
                                         ASTNode *condition_value_or_null);
-ASTNode *rxcp_remap_create_condition_block_expr(Context *context,
-                                                ASTNode *source_node,
-                                                ASTNode *prelude,
-                                                ASTNode *condition_value);
+ASTNode *rxcp_remap_create_prelude_block_expr(Context *context,
+                                              ASTNode *source_node,
+                                              ASTNode *prelude,
+                                              ASTNode *result_value);
 ASTNode *rxcp_remap_create_if_statement(Context *context,
                                         ASTNode *source_node,
                                         ASTNode *condition,

@@ -168,6 +168,17 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   Verify bounded Regina output, opt/no-opt and linked execution, canonical
   REPEAT without FOR plus source-anchored condition tree, focused normal/Debug
   regressions and the relevant correctness suite.
+- [x] **LC-AC-21 — bounded dynamic repetition count:** parsed direct
+  `DO expression` evaluates a supported count expression once at loop entry,
+  then executes its body the resulting number of times, up to the currently
+  supported signed 32-bit whole-count limit. Zero skips the body, mutation of
+  source variables does not change the count, BIF/local-call side effects run
+  once, and childless LEAVE/ITERATE target the source loop. Invalid runtime
+  counts use contextual `26.2` without silent truncation. Verify Regina for
+  valid counts, opt/no-opt and linked execution, canonical FOR with a
+  source-anchored setup block when needed, focused RexxValue/normal/Debug
+  regressions and the relevant correctness suite. Dynamic count plus a
+  condition, controlled headers, and wider numeric bounds remain open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -319,6 +330,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     expressions and source-loop transfer binding. Prove zero-entry versus
     post-body semantics, ITERATE and LEAVE, remove the obsolete negative
     fixture, qualify and commit this structural increment.
+24. **LC-STEP-24 — complete (LC-AC-08/21; depends on STEP-23):** add a contextual
+    `RexxValue` whole-count conversion and permit supported direct repetition
+    expressions. Lower count setup under the canonical FOR as a BLOCK_EXPR so
+    it runs once, reuse the neutral builder and hidden source-loop binding,
+    and retain fail-closed guards on combined dynamic and controlled forms.
+    Prove valid whole spellings, zero, mutation, BIF side effects and `26.2`
+    boundaries against the references; qualify and commit separately.
 
 ## Open findings
 
@@ -348,7 +366,7 @@ itself make its Classic shape executable.
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
-| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal count, FOREVER, direct, count-limited and FOREVER WHILE/UNTIL including setup-bearing conditions, plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Dynamic count, named transfer, controlled headers, numeric errors and wider scope remain open |
+| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct counts, FOREVER, direct, count-limited and FOREVER WHILE/UNTIL including setup-bearing conditions, plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Dynamic count with condition, wider count values, named transfer, controlled headers, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
 | `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
@@ -386,7 +404,7 @@ has been approved in this worklist.
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
-| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal count, FOREVER, direct, count-limited and FOREVER WHILE/UNTIL including setup-bearing conditions, and childless LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Dynamic count, controlled variables, named transfer, exact numeric errors |
+| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct counts, FOREVER, direct, count-limited and FOREVER WHILE/UNTIL including setup-bearing conditions, and childless LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Dynamic count with condition, wider count values, controlled variables, named transfer, exact numeric errors |
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
@@ -417,7 +435,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, non-negative literal count and FOREVER | Dynamic/controlled/conditional forms, errors and configuration proof open |
+| `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct count, FOREVER and conditional headers | Controlled forms, wider count/numeric errors and configuration proof open |
 | `SYN-CLASSIC-DROP` | DROP instruction | Bounded slice: direct scalar list | Stem, compound and indirect forms, full condition/profile proof open |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
@@ -1023,3 +1041,47 @@ full compatibility proof.
 - `LC-AC-08/04` remain open for dynamic/controlled headers, named
   transfers, numeric errors and the other structural families. `LC-FIND-01`
   remains open independently.
+
+### LC-STEP-24 — bounded dynamic direct DO count, 2026-10-03
+
+- Direct `DO expression` now lowers supported count expressions through
+  `RexxValue.repeatCountValue()` into canonical FOR. Setup-bearing expressions
+  use the same neutral BLOCK_EXPR and LEAVE_WITH builder as conditions so
+  their setup runs once at loop entry. The bounded conversion uses whole
+  number validation and decimal materialization before integer conversion;
+  values outside signed 32-bit range report contextual `26.2`. Dynamic count
+  plus WHILE/UNTIL and controlled DO remain fail-closed. The former negative
+  literal compile fixture is now a `26.2` runtime regression.
+- A bounded Regina fixture matched optimized/no-opt output for scalar counts
+  held despite body mutation, zero entry, `2.0`/`2E0`, one local-call side
+  effect, BIF setup under FOR, childless LEAVE/ITERATE and procedure scope.
+  The first direct run exposed an unintended `CONVERSION_ERROR` for `2.0`
+  from `asInt()`; the decimal conversion repair passed before wider testing.
+  Invalid text, fraction, negative and over-range values report `26.2`,
+  including a large positive exponent. Regina reports Error 33 for a
+  negative repetition expression; this slice follows the repository's
+  standard `26.2` catalog pending full diagnostic reconciliation under
+  `LC-AC-04`.
+- Release focused tests passed 9/9 after the tree fixture gained a SUBSTR
+  count that actually emits setup. The selected normal
+  Level C/source-provenance/shared-runtime suite passed 183/183; the later
+  added large-exponent test passed separately 1/1 without changing product
+  code. Debug structural/loop and shared-value tests passed 59/59. Linked
+  RXBIN output matched Regina. The redirected tree probe showed a
+  source-anchored FOR > BLOCK_EXPR > LEAVE_WITH > repeatCountValue path for
+  SUBSTR, with no AST validation error. Evidence:
+  `/tmp/crexx-levelc-dynamic-count-reference-output-v2.ifBks8`,
+  `/tmp/crexx-levelc-dynamic-count-release-build.i3tNX6`,
+  `/tmp/crexx-levelc-dynamic-count-direct-log.7ys7ae` (initial failure),
+  `/tmp/crexx-levelc-dynamic-count-release-rebuild.cfDcwu`,
+  `/tmp/crexx-levelc-dynamic-count-direct-log-v3.fBdb6W`,
+  `/tmp/crexx-levelc-dynamic-count-focused-final.lT4NK1`,
+  `/tmp/crexx-levelc-dynamic-count-release-suite.4R6vgr`,
+  `/tmp/crexx-levelc-dynamic-count-exponent-focused.RinOfO`,
+  `/tmp/crexx-levelc-dynamic-count-debug-build.ZVUWtV`,
+  `/tmp/crexx-levelc-dynamic-count-debug-focused.ayKd6Z`,
+  `/tmp/crexx-levelc-dynamic-count-link.BbnPLj`, and
+  `/tmp/crexx-levelc-dynamic-count-tree.JvWOu8`.
+- `LC-AC-08/04` remain open for dynamic counts with conditions, wider count
+  values, controlled headers, named transfers and other structural families.
+  `LC-FIND-01` remains open.

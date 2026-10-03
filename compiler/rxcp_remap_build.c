@@ -842,16 +842,16 @@ ASTNode *rxcp_remap_create_controlled_do(Context *context,
     return node;
 }
 
-ASTNode *rxcp_remap_create_condition_block_expr(Context *context,
-                                                ASTNode *source_node,
-                                                ASTNode *prelude,
-                                                ASTNode *condition_value) {
+ASTNode *rxcp_remap_create_prelude_block_expr(Context *context,
+                                              ASTNode *source_node,
+                                              ASTNode *prelude,
+                                              ASTNode *result_value) {
     ASTNode *block;
     ASTNode *instructions;
     ASTNode *leave_with;
 
     if (!context || !source_node || !prelude || !prelude->child ||
-        !condition_value) return NULL;
+        !result_value) return NULL;
 
     block = ast_f(context, BLOCK_EXPR, source_node->token);
     instructions = ast_f(context, INSTRUCTIONS, source_node->token);
@@ -862,7 +862,7 @@ ASTNode *rxcp_remap_create_condition_block_expr(Context *context,
     rxcp_remap_anchor_synthetic(instructions, source_node);
     rxcp_remap_anchor_synthetic(leave_with, source_node);
     rxcp_remap_append_builder_children(instructions, prelude);
-    add_ast(leave_with, condition_value);
+    add_ast(leave_with, result_value);
     add_ast(instructions, leave_with);
     add_ast(block, instructions);
     return block;

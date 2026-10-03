@@ -630,6 +630,22 @@ RexxValue: class
     assembler signal "ERROR", message
     return 0
 
+  /** Validate a bounded Classic DO repetition count before the canonical FOR. */
+  repeatCountValue: method = .int
+    text = asString()
+    if datatype(text, "W") <> "1" then do
+      invalid_message = "RXC-LC-26.2: DO repetition count must be a non-negative whole number; found " || text
+      assembler signal "ERROR", invalid_message
+    end
+    whole = .decimal
+    whole = asDecimal()
+    if whole < 0 | whole > 2147483647 then do
+      range_message = "RXC-LC-26.2: DO repetition count is outside the supported range; found " || text
+      assembler signal "ERROR", range_message
+    end
+    count = whole as .int
+    return count
+
   logicalResult: method = .RexxValue
     return _rv_bool_value(_rv_logical_text(asString()))
 
