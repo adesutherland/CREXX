@@ -1,8 +1,8 @@
 # Level C Classic REXX Working Architecture
 
-Status: working draft; syntax-highlighting milestone implemented, early
-lowering tracer slices implemented
-Last updated: 2026-06-23
+Status: active Level C architecture design; the original parser design record
+is retained below for implementation history
+Last updated: 2026-10-03
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
@@ -13,6 +13,79 @@ milestone parses and validates Level C source, builds the user-facing source
 tree, emits diagnostics/highlighting, and stops before broad canonical lowering,
 optimization, assembly, or VM execution. A deliberately narrow set of
 runtime-backed lowering tracer slices is now enabled for ordinary compilation.
+
+## Current architecture and product boundary
+
+This is the architecture companion to the
+[Release 1 Level C compatibility worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+The [Release 1 plan](../../docs/release-1-plan.md) owns the completion target;
+the worklist owns feature status, acceptance criteria, and increment evidence.
+The compliance and BIF references own Classic semantics. Historical parser
+exploration later in this document does not override these current contracts.
+
+```text
+Classic source -> Level C scanner/glue/grammar -> source tree + guarded AST
+              -> Level C lowering -> canonical compiler AST
+              -> rxc -> rxas -> rxlink -> rxvm
+                                  |
+                                  v
+                      shared rxfnsc runtime
+       RexxValue + RexxStem + RexxVariablePool + Classic BIFs
+                                  ^
+                                  |
+RexxScript source -> separate sandbox evaluator and intrinsic allow-list
+```
+
+The Level C path uses `rxcpcscn.re`, `rxcpcpar.c`, and `rxcpcgmr.y` for Classic
+syntax and `rxcp_levelc_lower.c` for guarded conversion. The neutral
+`rxcp_remap_build.c` constructs canonical AST shapes; Classic policy stays in
+the Level C lowerer. Accepted shapes pass through the ordinary compiler and
+bytecode toolchain. Unsupported shapes fail closed. Source anchors from the
+authored program must survive lowering for diagnostics and tracing.
+
+`lib/rxfnsc` owns one shared Classic runtime foundation:
+
+- `RexxValue` owns scalar representations, conversion, numeric and logical
+  behavior. `RexxStem` owns stem values and tails.
+- `RexxVariablePool` owns Classic bindings, dropped state and exposure. Each
+  Level C activation uses its visible pool; a RexxScript evaluator creates a
+  distinct sandbox pool from the same class.
+- `RexxClassicBif*` modules own compatible BIF algorithms, argument validation,
+  and error construction. `RexxBifCallContext` carries `RexxValue` arguments,
+  argument-presence flags, caller pool, and Classic configuration. A BIF that
+  needs context must receive the correct pool and configuration from its caller.
+
+RexxScript remains a separate interpreted product. Its parser, statement
+semantics, intrinsic allow-list, captured output, and host-exposure policy are
+owned by `rexxscript/`. Its evaluator still keeps string-oriented expression
+state and variable arrays while mirroring variables into its sandbox
+`RexxVariablePool`. It materializes `RexxValue` arguments/results at the
+shared BIF boundary. Sharing these classes does not make RexxScript a Level C
+compiler or imply that every Classic instruction or BIF is available there.
+The caller's host CREXX pool is never passed implicitly into a RexxScript BIF.
+
+The intended direction is one implementation of each overlapping Classic BIF
+in `rxfnsc`, called by both products with product-specific dispatch and
+capability policy. Changes to shared value, pool, or BIF behavior need focused
+`rxfnsc` tests plus Level C and RexxScript integration checks when both paths
+use the changed contract. Compatibility differences belong in the caller's
+explicit adapter or configuration, not in duplicate BIF algorithms. The
+[RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
+its evaluator and sandbox boundary.
+
+The current executable Level C surface is nine bounded lowering slices; the
+complete Classic contract remains open in the worklist. No additional
+language-direction decision is needed to continue an increment that follows
+the references and this architecture. A new syntax rule, compatibility
+exception, or change to these ownership boundaries still requires Adrian's
+explicit decision under `AGENTS.md`.
+
+## Historical design record
+
+The numbered sections below capture the earlier parser and lowering design
+work. Prospective wording and open approval questions there describe their
+time of writing; use the current architecture above and the live worklist for
+present implementation state.
 
 For the implemented highlighter contract and the forward plan into canonical
 lowering, see `compiler/docs/levelc_syntax_highlighting.md`.

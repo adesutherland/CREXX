@@ -102,7 +102,10 @@ reason, user-visible behavior/diagnostic and documentation; distinguish it from
 completion by excluding unfinished features without that decision.
 The [Level C compatibility worklist](planning/release-1/levelc-compatibility-worklist.md)
 tracks the component inventory, incremental delivery criteria and evidence under
-this plan's `R1-AC-01/02` completion contract.
+this plan's `R1-AC-01/02` completion contract. Its
+[architecture design](../compiler/docs/levelc_working_architecture.md) records
+the shared `rxfnsc` value, variable-pool and BIF foundation with the separate
+RexxScript sandbox and evaluator.
 
 Existing interface dispatch is implemented; interface inheritance and overloads are not part of
 the current documented Level B surface. Listing polymorphism here does not

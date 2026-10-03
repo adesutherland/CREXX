@@ -2,6 +2,10 @@
 
 This guide describes the current RexxScript implementation and the rules for
 extending it during the Release 1 beta 3 work.
+The [Level C architecture design](../../compiler/docs/levelc_working_architecture.md)
+records the shared `rxfnsc` runtime boundary. Both products use its
+`RexxValue`, `RexxVariablePool`, and overlapping Classic BIF implementations;
+RexxScript retains its own string-oriented evaluator and sandbox policy.
 
 ## Source Layout
 

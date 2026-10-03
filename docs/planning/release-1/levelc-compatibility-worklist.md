@@ -19,6 +19,11 @@ Preserve Level B behavior and the separate RexxScript sandbox. An exclusion
 counts only after Adrian individually approves its reason, user-visible
 behavior, and documentation; unfinished work remains open.
 
+The [Level C architecture design](../../../compiler/docs/levelc_working_architecture.md)
+records the common `rxfnsc` value, variable-pool and BIF foundation with
+RexxScript. Adrian confirmed this shared foundation on 2026-10-03 while
+retaining the two products' distinct language and sandbox contracts.
+
 The first delivery increments are a coverage inventory, then executable
 `IF/THEN/ELSE`, then simple `DO ... END`. They do not complete the Beta 4
 contract. Later increments are selected from the open coverage rows rather
@@ -50,6 +55,13 @@ than redefining compatibility around the first slices.
   statements retain their order and unsupported statement shapes still fail
   closed. Verify against the Classic interpreter, focused optimized/no-opt
   runs, the relevant normal Level C suite, and linked-image execution.
+- [ ] **LC-AC-06 — shared runtime contract:** compiled Level C and RexxScript
+  use the same `rxfnsc` `RexxValue`, `RexxVariablePool`, and overlapping Classic
+  BIF implementations with their own caller contexts. Verify shared BIF
+  argument/error behavior from both products, RexxScript sandbox isolation,
+  Level C visible-pool behavior, and configuration/profile boundaries with
+  focused cross-consumer integration evidence. RexxScript's string-oriented
+  evaluator and allow-list remain product-specific.
 - [ ] **LC-AC-04 — full compatibility (R1-AC-02):** every required matrix row
   has executable behavior and documentation, or an individually approved
   exception with its diagnostic and user-visible limit. Verify reference
@@ -86,6 +98,14 @@ than redefining compatibility around the first slices.
    source-anchored `NOP` in main and procedure contexts, and compare a nested
    fixture with the Classic interpreter. Run focused opt/no-opt and normal
    Level C tests, verify the linked image, then commit this bounded increment.
+7. **LC-STEP-07 — complete (LC-AC-06):** reconcile the existing Level C and
+   RexxScript implementation with one current architecture design. Record the
+   shared value/pool/BIF ownership, both call paths, sandbox boundary, and
+   acceptance evidence in this worklist and the architecture document.
+8. **LC-STEP-08 (LC-AC-06; depends on STEP-07):** qualify overlapping BIFs and
+   pool operations in reviewable cross-consumer increments. Use the shared
+   `rxfnsc` implementation, test both adapters and isolation, and commit each
+   qualified increment. Keep any observed behavior gap visibly open.
 
 ## Coverage matrix
 
@@ -121,6 +141,7 @@ has been approved in this worklist.
 | Source/trace | TRACE, SOURCELINE, clause hooks, source preservation | Front end/runtime pieces | Visible source, tracing and clause lifecycle |
 | Host | commands, external routines, queues, streams, time/random, traps, API variable pools, initialization/termination | Runtime foundation only | Configuration adapters and supported-platform contract |
 | BIFs | each recognized Classic BIF | See individual rows below | Direct compiler calls, Classic argument/error/context equivalence |
+| Shared runtime | Level C and RexxScript value, pool and overlapping BIF contracts | Both import `rxfnsc`; RexxScript uses a sandbox pool and `RexxValue` BIF frames | Cross-consumer behavior, errors, isolation and profile evidence under `LC-AC-06` |
 
 ### Syntax and instruction inventory
 
@@ -318,3 +339,14 @@ full compatibility proof.
   lines. Retained log: `/tmp/crexx-levelc-nop-link.73Ab9Z`.
 - `NOP` source/TRACE lifecycle and full profile/platform qualification remain
   open under `LC-AC-04`; this is a bounded execution slice.
+
+### LC-STEP-07 — shared architecture reconciliation, 2026-10-03
+
+- The current Level C architecture design now identifies the guarded compiler
+  path, common `rxfnsc` value/pool/BIF modules, and separate RexxScript
+  evaluator and sandbox pool. This records Adrian's shared-foundation
+  direction without treating the two languages as identical.
+- The existing `RexxScriptEvaluator` uses `RexxVariablePool.setString()` for
+  sandbox variables and `RexxValue` frames for shared BIF calls; Level C
+  lowering uses the same library from compiled code. The required behavioral
+  and isolation proof remains open under `LC-AC-06` and `LC-STEP-08`.
