@@ -65,7 +65,7 @@ function(assert_runs image expected)
 endfunction()
 
 set(source "${SOURCE_DIR}/nr14_frozen_parse_contract.crexx")
-set(expected "alpha|beta|gamma tail\nalpha|beta|gamma tail\nalpha|beta|gamma\nab東京|cd\n333||\none|two|three|four|five|six|seven eight nine\none|two|three|four|five|six|seven|eight nine\nleft|middle|right\n345|6789|3456789\na|c|d\nsecond|third\n")
+set(expected "alpha|beta|gamma tail\nalpha|beta|gamma tail\nalpha|beta|gamma\nab東京|cd\n333||\none|two|three|four|five|six|seven eight nine\none|two|three|four|five|six|seven|eight nine\nleft|middle|right\n345|6789|3456789\ncd|ef|def\na|c|d\nsecond|third\n")
 
 run_checked("optimized rxc"
             "${RXC}" -i "${BIN_DIR}" -o "${WORK_DIR}/parse_opt" "${source}")
@@ -84,7 +84,7 @@ foreach(mode IN ITEMS parse_opt parse_noopt)
                        "${mode} exact parsewords3d form")
     assert_match_count(rxas_text "\n[ \t]+parsepos2 " 1
                        "${mode} exact parsepos2 form")
-    assert_match_count(rxas_text "\n[ \t]+parseplan " 4
+    assert_match_count(rxas_text "\n[ \t]+parseplan " 5
                        "${mode} generic prepared forms")
     assert_matches(rxas_text "50010800"
                    "${mode} prepared descriptor header")

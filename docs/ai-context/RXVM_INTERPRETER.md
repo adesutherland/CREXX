@@ -2167,6 +2167,11 @@ trailing or structurally inconsistent data with `INVALID_ARGUMENTS`; and raises
 `CONVERSION_ERROR` for an invalid dynamic numeric position. It uses Unicode
 code-point positions in UTF builds and has no load-time cache or private
 prepared representation.
+For a backward relative control without a literal-pattern anchor, the pending
+field is stored from its capture start while the next field begins at the
+moved cursor. A backward control using a literal-pattern anchor retains the
+pattern's capture start. These distinct cursor rules are covered by the
+compiled PARSE regression and frozen-plan linked-image contract.
 
 Compiler eligibility remains fail-closed: exact common forms use the direct
 instructions and every remaining supported exit form uses `parseplan`, including

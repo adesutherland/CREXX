@@ -72,6 +72,10 @@ back = 2
 parse var data =10 -(back) tail
 failures = failures + check("dynamic backward precontrol", tail = "pigs have wings")
 
+source = "abcdef"
+parse var source 3 x1 +2 x2 -1 x3
+failures = failures + check("backward control starts next field at moved cursor", x1 = "cd" & x2 = "ef" & x3 = "def")
+
 source = "5,abcdef"
 parse var source position "," =(position) tail
 failures = failures + check("completed numeric capture", position = "5" & tail = "cdef")

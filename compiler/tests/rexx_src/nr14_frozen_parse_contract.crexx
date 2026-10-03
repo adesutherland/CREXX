@@ -42,6 +42,10 @@ main: procedure = .int
   parse var source 3 numeric1 +3 numeric2 3 numeric3
   say numeric1 || "|" || numeric2 || "|" || numeric3
 
+  source = "abcdef"
+  parse var source 3 backward1 +2 backward2 -1 backward3
+  say backward1 || "|" || backward2 || "|" || backward3
+
   parse value "a,b,c,d" with drop1 ',' . ',' drop3 ',' drop4
   say drop1 || "|" || drop3 || "|" || drop4
 

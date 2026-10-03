@@ -883,8 +883,10 @@ static size_t rxvm_parse_plan_store_numeric(value *target,
     size_t movement = (size_t)item->movement;
     size_t position;
     size_t room;
+    int from_literal_anchor = (item->kind == 4 || item->kind == 5) &&
+                              *relative_anchor > 0u;
 
-    if ((item->kind == 4 || item->kind == 5) && *relative_anchor > 0u) {
+    if (from_literal_anchor) {
         cursor = *relative_anchor;
         *relative_anchor = 0u;
     }
@@ -903,7 +905,9 @@ static size_t rxvm_parse_plan_store_numeric(value *target,
     if (position <= capture_start) {
         rxvm_parse_plan_store_word(target, store, source, capture_start,
                                    item->kind == 5);
-        position = capture_start;
+        /* A backward control without a literal anchor starts the next field
+         * at the moved cursor. A literal anchor retains its capture start. */
+        if (item->kind != 5 || from_literal_anchor) position = capture_start;
     } else if (store) {
         rxvm_parse_plan_set_span(target, source, capture_start,
                                  position - capture_start);

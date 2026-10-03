@@ -507,6 +507,13 @@ direct word/dot templates before work resumes on positions and patterns.
   opt/no-opt, raw/canonical AST, Regina equivalence, the normal Level C suite
   and linked execution. Dynamic pattern/position operands, comma templates
   and other source forms remain open for subsequent steps.
+- [x] **LC-AC-52 — backward PARSE plan cursor repair:** a frozen `parseplan`
+  relative negative control leaves the next target at the moved cursor after
+  storing the preceding field, matching Regina and preserving the existing
+  Level B exit and Level C AST paths. Verify the minimal `3 a +2 b -1 c`
+  counterexample in both products, focused opt/no-opt VM and exit tests,
+  unchanged forward/absolute controls, the relevant normal correctness
+  suite, and linked execution. This repairs `LC-FIND-06`.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -877,9 +884,29 @@ direct word/dot templates before work resumes on positions and patterns.
     writes, compare with Regina for pattern/position interaction and Unicode,
     inspect raw/canonical ownership, run focused Debug/Release and the normal
     Level C suite, and retain linked-image evidence before committing.
+55. **LC-STEP-55 — complete (LC-AC-52; discovered during STEP-54):** retain the
+    Level B exit and Regina counterexample, repair the frozen VM plan's
+    backward cursor without changing the descriptor format, prove focused
+    opt/no-opt and normal correctness, then commit the shared runtime cause
+    separately from Level C mixed-template lowering.
 
 ## Findings
 
+- **LC-FIND-06 — resolved, frozen PARSE backward cursor:** Regina returns
+  `cd|ef|def` for `s='abcdef'; parse var s 3 a +2 b -1 c`, while the
+  existing certified Level B exit and VM `parseplan` return `cd|ef|ef`.
+  The pending field was stored correctly, but the VM clamped the cursor to
+  its capture start after the negative movement. The repair retains the moved
+  cursor without a literal anchor while preserving the separate literal-anchor
+  rule. Focused Level B regression, the existing literal-anchor reference
+  checks, Release and Debug PARSE suites (11/11 each), and the opt/no-opt,
+  linked, round-trip and concrete-VM frozen-plan contract pass. Evidence:
+  `/tmp/crexx-levelc-mixed-cases-UcSYCM/`,
+  `/tmp/crexx-parse-backward-exit-tSscyN/`,
+  `/tmp/crexx-parse-backward-normal-release2.ykorOK`,
+  `/tmp/crexx-parse-backward-normal-debug.XNPDtE`,
+  `/tmp/crexx-parse-backward-contract-release.HYVgQ4`, and
+  `/tmp/crexx-parse-backward-contract-debug.kEM5Bb`.
 - **LC-FIND-01 — resolved, empty source string literal:** the independent minimal
   `options levelc; say ''` source previously failed during lowering, although the parser
   accepts its STRING node. The parser uses a zero-length payload with an
