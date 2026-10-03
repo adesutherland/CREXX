@@ -664,6 +664,15 @@ RexxValue: class
     end
     return .RexxValue(text)
 
+  /** Validate a captured Classic DO control start before the visible pool set. */
+  controlStartValue: method = .RexxValue
+    text = asString()
+    if datatype(text, "N") <> "1" then do
+      message = "RXC-LC-41.6: DO control start value must be numeric; found " || text
+      assembler signal "ERROR", message
+    end
+    return .RexxValue(text)
+
   /** Validate a bounded Classic controlled DO FOR count at loop setup. */
   controlForCountValue: method = .int
     text = asString()

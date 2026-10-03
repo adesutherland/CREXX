@@ -5675,6 +5675,14 @@ add_levelc_runtime_slice_test(levelc_slice35_dynamic_for_noopt
         "for 10 1\nto 10 2\nby 10 3\nfirst-after 1 3\nby 10 1\nto 10 2\nfor 10 3\nsecond-after 1 3\nby 10 1\nto 10 2\nfor-two 10 3\nall 1 3\nall 2 3\nafter-all 3 3\ncounted 1 3\ncounted 2 1\ncounted 3 1\nafter-counted 4 1\ndecimal 1\ndecimal 2\nafter-decimal 3\nuntil 1\nuntil 2\nafter-until 2 9\nafter-zero 1 1 0\nafter-zero-end 1 1 0\nafter-outer 3\nlocal 1\nlocal 2\n3\n" -n)
 set_tests_properties(levelc_slice35_dynamic_for
         levelc_slice35_dynamic_for_noopt PROPERTIES TIMEOUT 60)
+add_levelc_runtime_slice_test(levelc_slice36_dynamic_start
+        rexx_src/levelc_slice36_dynamic_start.rexx
+        "start 10 1\nto 10 2\nby 10 3\nfor 10 4\nafter-zero 1 4\nchanged 2 2\nchanged 3 9\nafter-changed 4 9\nfractional -1.0\nfractional 0\nfractional 1\nafter-fractional 2 bad\nwhile 1\nwhile 2\nafter-while 3\nuntil 1\nuntil 2\nafter-until 2\nafter-outer 4\nlocal 1\nlocal 2\n3\n")
+add_levelc_runtime_slice_test(levelc_slice36_dynamic_start_noopt
+        rexx_src/levelc_slice36_dynamic_start.rexx
+        "start 10 1\nto 10 2\nby 10 3\nfor 10 4\nafter-zero 1 4\nchanged 2 2\nchanged 3 9\nafter-changed 4 9\nfractional -1.0\nfractional 0\nfractional 1\nafter-fractional 2 bad\nwhile 1\nwhile 2\nafter-while 3\nuntil 1\nuntil 2\nafter-until 2\nafter-outer 4\nlocal 1\nlocal 2\n3\n" -n)
+set_tests_properties(levelc_slice36_dynamic_start
+        levelc_slice36_dynamic_start_noopt PROPERTIES TIMEOUT 60)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5687,6 +5695,7 @@ function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
             -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}
             -DNAME=${NAME}
             -DEXPECTED_DIAGNOSTIC=${EXPECTED_DIAGNOSTIC}
+            -DEXPECTED_OUTPUT_ORDER=${ARGN}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_invalid_runtime.cmake)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
@@ -5759,6 +5768,14 @@ add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_fraction
         rexx_src/levelc_slice35_dynamic_for_fraction.rexx RXC-LC-26.3)
 add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_negative
         rexx_src/levelc_slice35_dynamic_for_negative.rexx RXC-LC-26.3)
+add_levelc_invalid_runtime_test(levelc_slice36_dynamic_start_invalid
+        rexx_src/levelc_slice36_dynamic_start_invalid.rexx RXC-LC-41.6)
+add_levelc_invalid_runtime_test(levelc_slice36_dynamic_start_invalid_after_clauses
+        rexx_src/levelc_slice36_dynamic_start_invalid_after_clauses.rexx
+        RXC-LC-41.6 "to 10|by 10|for 10")
+add_levelc_invalid_runtime_test(levelc_slice36_dynamic_start_clause_error
+        rexx_src/levelc_slice36_dynamic_start_clause_error.rexx
+        RXC-LC-41.4 "to 10")
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
@@ -6058,6 +6075,14 @@ add_levelc_lowered_tree_shape_test(levelc_slice35_dynamic_for_tree_shape
         "FOR"
         "__rxcp_levelc_to_"
         "__rxcp_levelc_by_"
+        "ITERATE")
+add_levelc_lowered_tree_shape_test(levelc_slice36_dynamic_start_tree_shape
+        rexx_src/levelc_slice36_dynamic_start.rexx
+        "__rxcp_levelc_start_"
+        "controlStartValue"
+        "__rxcp_levelc_to_"
+        "__rxcp_levelc_by_"
+        "__rxcp_levelc_for_"
         "ITERATE")
 
 # Bridge Connectivity Test

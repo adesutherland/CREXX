@@ -132,8 +132,8 @@ the condition and its setup as well as the body. This bounded slice
 accepts non-negative mathematical whole values up to signed 32-bit maximum;
 the contextual method reports `26.2` for invalid or out-of-range values.
 Wider count values and controlled header forms beyond these bounded slices
-remain open. Scalar controlled DO accepts a literal start with optional
-literal or supported-expression TO, bounded literal or supported-expression
+remain open. Scalar controlled DO accepts a literal or supported-expression
+start with optional literal or supported-expression TO, bounded literal or supported-expression
 FOR, and optional signed literal or supported-expression BY. Clause order
 does not change the loop guards; dynamic clause side effects retain written
 order. The visible Classic pool is initialized before one
@@ -144,8 +144,8 @@ An UNTIL end-check BLOCK_EXPR advances the current pool value by BY or the
 default one and returns false. It runs after ordinary bodies and ITERATE,
 including the final count-limited body, while LEAVE skips the advance. The
 hidden canonical loop assignment only satisfies the emitter and does not
-replace the Classic control variable. Dynamic start and unsupported
-expression shapes remain fail-closed. Without TO or FOR, the canonical
+replace the Classic control variable. Unsupported expression shapes remain
+fail-closed. Without TO or FOR, the canonical
 REPEAT has no synthetic count or entry guard; its pool-backed UNTIL end block
 still advances the visible variable after ordinary or ITERATE paths. Source
 LEAVE, WHILE and UNTIL provide the guarded exit paths. A supported dynamic TO
@@ -162,8 +162,14 @@ dynamic FOR expression joins the same written-order header setup, with
 shared `RexxValue.controlForCountValue()` enforcing bounded whole counts
 and contextual `26.3` before the visible control assignment. Its hidden
 canonical int feeds the REPEAT FOR child, so a zero count still validates
-all header expressions while skipping body and WHILE/UNTIL checks. Dynamic
-start and wider count values remain open.
+all header expressions while skipping body and WHILE/UNTIL checks. A dynamic
+start is evaluated first and copied into a hidden canonical `RexxValue`.
+The later TO/BY/FOR expressions still see the previous visible control value
+and keep their written-order validation. Only after those clauses does
+`RexxValue.controlStartValue()` validate contextual `41.6` and pass the
+captured value to the visible pool assignment. This order follows Regina's
+error and side-effect precedence without a new AST node. Wider count values
+remain open.
 For a supported controlled WHILE header, the same canonical REPEAT uses one
 WHILE entry node. Its FOR check runs first; when TO exists, a source-anchored
 BLOCK_EXPR branches on the TO guard before evaluating the Classic WHILE
