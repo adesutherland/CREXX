@@ -1109,7 +1109,14 @@ The implementation sequence within active `LC-STEP-63` is:
    presence, caller pool/configuration, RexxScript isolation and source
    positions. Prove successful and failing BIFs, opt/no-opt and linked
    execution; commit.
-4. **LC-STEP-63D (LC-AC-57/59; depends on 63A-C):** reconcile the remaining
+4. **LC-STEP-63T (LC-AC-57/59; proposed architecture gate, depends on 63C):**
+   make Classic conditions and labels part of one routine-activation control
+   flow, so a shared BIF `SYNTAX` signal can branch to `SIGNAL ON SYNTAX` with
+   correct label, pool, `SIGL` and return lifetimes. Do not implement this
+   architectural shift before Adrian approves the design below. Its
+   prerequisite work is part of SAY closure; whole SIGNAL and CALL
+   instructions retain their later open acceptance rows.
+5. **LC-STEP-63D (LC-AC-57/59; depends on 63A-C and 63T):** reconcile the remaining
    parser/reference expression and host matrix, diagnostics, traces and
    lifecycle, and close SAY only when the complete contract is evidenced.
 
@@ -1294,6 +1301,60 @@ VM panic and signal checks passed 8/8 in rxbvm/rxtvm
 (`/tmp/crexx-levelc-bif-location-vm.czY3Oe`), and the normal Release Level C
 suite passed 308/308 (`/tmp/crexx-levelc-bif-location-suite.sQMgiq`). Classic
 trap delivery and condition state remain open.
+
+### Pending architecture decision for LC-STEP-63T
+
+The active lowerer treats each top-level label as a separate generated Level B
+procedure. It requires `PROCEDURE` immediately after the label and a final
+`RETURN`, and the main slice must `EXIT` before those routines. That bounded
+shape supports current direct CALL and function tests, but a Classic `SIGNAL`
+branch must transfer within the *current invocation* to a label and discard
+crossed loop/control state. The VM `sigbr` handler can unwind to an installing
+frame and jump to a label in that frame; the current generated procedures have
+no such shared label space. A per-label call/trampoline workaround would have
+to emulate continuation, fallthrough and return state around the VM signal
+model. This is significant architectural work, not an infeasible feature.
+The Regina reference probes retained at
+`/tmp/crexx-levelc-signal-reference.RmaAab` show that `SIGNAL ON SYNTAX`
+catches `SUBSTR('abc',0)` as `40.14` with `SIGL` set to the causing clause;
+the branch suppresses later source, labels can fall through without
+`PROCEDURE`, a called label without `PROCEDURE` shares the caller pool, and a
+trap installed outside an exposed nested procedure sees its pool mutation.
+
+**Proposed direction, awaiting Adrian's approval:** lower one Classic routine
+invocation to one canonical VM frame with labeled basic blocks. Internal CALL
+enters that compiled routine at the requested label in a new invocation;
+`PROCEDURE` changes the invocation's visible pool when executed, not the
+existence of a label. `SIGNAL` and `SIGNAL ON/OFF` use the VM branch/handler
+path with a mapping from Classic `SYNTAX` to VM `CLASSIC_SYNTAX`. Condition
+state belongs to the routine activation; the program-wide
+`RexxClassicConfig` remains configuration, and the variable pool remains
+variable storage. Add canonical AST label/branch nodes only if a reviewed
+emitter route is simpler and more supportable than existing remap builders.
+Retain the current passing BIF, pool, SAY, optimizer and linked tests while
+replacing the bounded label model. This is a proposed ownership/control-flow
+change, not an approved implementation or a completed feature.
+
+Before any code edit, check the proposed route against these observable gates:
+
+- `LC-63T-01`: direct and trapped `SUBSTR` errors keep `40.14`, authored
+  source, and correct prior output; a trapped `SYNTAX` branch suppresses the
+  unhandled panic and reaches the named label once.
+- `LC-63T-02`: labels without `PROCEDURE`, normal fallthrough, `CALL`,
+  `RETURN`, `SIGNAL` and nested local calls retain Classic pool and control
+  lifetimes; `SIGL` and condition identity refer to the causing clause.
+- `LC-63T-03`: main/local, optimized/no-opt, AST ownership/source anchors,
+  linked execution, existing Release Level C correctness and RexxScript
+  isolation pass. Full `SIGNAL`/`CALL` instruction obligations remain open
+  until their separate reference matrices close.
+
+If approved, implement in this order: (1) prove label/fallthrough and
+invocation entry shape with a small Regina corpus; (2) add one reviewed
+canonical branch/label representation and refactor current local calls onto
+it; (3) attach VM Classic condition handlers and activation state; (4) prove
+the gates and remove the old label/`PROCEDURE`/`RETURN` guards. Commit and
+report at coherent architecture checkpoints; do not claim SAY closure from
+one trapped-error example.
 
 ## Findings
 

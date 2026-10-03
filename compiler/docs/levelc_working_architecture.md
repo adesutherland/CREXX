@@ -158,6 +158,17 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
 
+The active `SAY` review exposed a control-flow dependency: a shared BIF can
+raise VM `CLASSIC_SYNTAX`, but current Level C lowering turns every top-level
+label into a separate procedure with mandatory `PROCEDURE` and final `RETURN`.
+That bounded model cannot directly use the VM's same-frame `sigbr` target for
+a Classic `SIGNAL ON SYNTAX` branch. The proposed LC-STEP-63T change would
+give each Classic invocation one labeled VM frame, with condition state owned
+by the invocation and configuration and variable storage kept in their
+existing separate objects. Adrian's approval is pending; the full proposal,
+observable gates and implementation order are in the worklist. No trap or
+general label compatibility is claimed yet.
+
 The current executable Level C surface is a set of bounded lowering slices; the
 complete Classic contract remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
