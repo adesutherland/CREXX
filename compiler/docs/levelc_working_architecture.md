@@ -58,6 +58,11 @@ authored program must survive lowering for diagnostics and tracing.
   default reset, dropped-tail reads, and alias mutation. Each Level C
   activation uses its visible pool; a RexxScript evaluator creates a
   distinct sandbox pool from the same class.
+- The pool's `dropSymbol` operation resolves and drops one validated Classic
+  symbol, including a compound name's substituted tail. It is the shared
+  primitive for runtime subsidiary lists in parenthesized `DROP` references.
+  Regina-style invalid-word handling for those lists is recorded in the
+  worklist; list interpretation remains a separate lowering increment.
 - `RexxClassicBif*` modules own compatible BIF algorithms, argument validation,
   and error construction. `RexxBifCallContext` carries `RexxValue` arguments,
   argument-presence flags, caller pool, and Classic configuration. A BIF that

@@ -34,6 +34,11 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
 After the four-item PARSE probe, Adrian rejected target-count-specific
 lowering as the lasting design. `LC-AC-50` removes that arbitrary boundary for
 direct word/dot templates before work resumes on positions and patterns.
+The next variable-list increments put symbol resolution and indirect-list
+execution in the shared Classic pool. Level C will preserve source order and
+capture the value of a parenthesized reference at its position; the runtime
+will interpret that subsidiary list. This keeps variable semantics available
+to RexxScript without sharing the two products' statement parsers.
 
 ## Acceptance criteria
 
@@ -535,6 +540,21 @@ direct word/dot templates before work resumes on positions and patterns.
   `RexxVariablePool` implement these rules for both Level C and RexxScript.
   Verify minimal Regina counterexamples, focused runtime tests, optimized and
   no-opt execution, relevant cross-consumer regressions and linked delivery.
+- [x] **LC-AC-55 — shared one-symbol DROP operation:** for a validated Classic
+  variable symbol, the shared pool resolves a compound tail once against the
+  current visible bindings, then drops the resulting scalar, entire stem, or
+  one case-preserved tail. It preserves exposure and dropped-tail semantics.
+  Verify Regina examples, focused optimized/no-opt pool regressions, linked
+  execution and unchanged Level C/RexxScript consumers.
+- [ ] **LC-AC-56 — indirect DROP subsidiary lists:** a parenthesized `DROP`
+  reference reads its variable at that point in the authored list, splits its
+  value into subsidiary variable names and drops those names from left to
+  right through the shared pool, including scalar, stem and compound items.
+  Invalid words are ignored while later valid words still execute, following
+  Regina as Adrian selected on 2026-10-03. Direct items before and after the
+  reference retain their order. Verify source/canonical AST shape, Regina for
+  valid and invalid lists and scope, focused opt/no-opt, normal correctness
+  and linked execution.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -922,9 +942,25 @@ direct word/dot templates before work resumes on positions and patterns.
     Regina-based focused and linked proof. Retain parenthesized indirect lists
     as a separately guarded shape; run the normal Level C and RexxScript
     checks before committing.
+58. **LC-STEP-58 — complete (LC-AC-06/55; depends on STEP-56):** implement one validated
+    Classic symbol drop in `RexxVariablePool` using its existing name resolver
+    and scalar/stem/tail operations. Prove substitution and exposure with
+    focused pool tests, optimized/no-opt, linked execution and cross-consumer
+    checks, then commit the runtime primitive separately.
+59. **LC-STEP-59 (LC-AC-08/56; depends on STEP-57/58):** add shared subsidiary-list interpretation and lower the
+    parser's `VAR_REFERENCE` node to a canonical helper call in source order.
+    Ignore invalid subsidiary-list words as approved; verify that behavior,
+    reference behavior, raw/canonical trees,
+    opt/no-opt, normal Level C and linked execution before committing.
 
 ## Findings
 
+- **LC-FIND-08 — indirect DROP invalid words:** the
+  [IBM DROP reference](https://www.ibm.com/docs/SSGMCP_5.5.0/reference/rexx/drop.html)
+  requires valid variable names in a parenthesized subsidiary list. Local
+  Regina probes ignored invalid words such as `1bad`, `/` and `(b)` while
+  continuing to drop later valid names. Adrian selected the Regina behavior
+  on 2026-10-03 for Level C; `LC-AC-56` requires a permanent regression.
 - **LC-FIND-07 — resolved shared stem lifecycle:** Regina showed that a new
   stem assignment replaces prior tails, a dropped tail hides even a stem
   default until reassigned, and substituted tail text keeps its case. The
@@ -2383,3 +2419,21 @@ full compatibility proof.
   `/tmp/crexx-levelc-drop.qf1gA9/tree.log`,
   `/tmp/crexx-levelc-drop.qf1gA9/final-reference.out`, and
   `/tmp/crexx-levelc-drop.qf1gA9/linked-output.out`.
+
+### LC-STEP-58 — shared one-symbol DROP, 2026-10-03
+
+- `RexxVariablePool.dropSymbol` resolves one validated Classic symbol against
+  the visible pool and dispatches to the existing scalar, stem or single-tail
+  drop operation. The pool regression proves case-preserved substituted tails,
+  unaffected case-distinct tails, full stem/default removal and exposed scalar
+  and stem aliases. The helper accepts one symbol, leaving the separate
+  subsidiary-list parser and invalid-word policy to `LC-STEP-59`.
+- Release and Debug pool opt/no-opt tests passed 2/2 in each build; the Release
+  RexxScript runtime/compatibility tests passed 4/4, and the normal Release
+  Level C suite passed 285/285. The optimized pool test uses the linked image,
+  covering `rxc`, `rxas`, `rxlink` and `rxvm`. Evidence:
+  `/tmp/crexx-levelc-dropsymbol-release-build.log`,
+  `/tmp/crexx-levelc-dropsymbol-debug-build.log`,
+  `/tmp/crexx-levelc-dropsymbol-debug-focused.log`,
+  `/tmp/crexx-levelc-dropsymbol-release-focused.log`, and
+  `/tmp/crexx-levelc-dropsymbol-levelc-suite.log`.

@@ -626,6 +626,31 @@ RexxVariablePool: class
     else call alias.setStem(item_stem)
     return
 
+  /**
+   * Drop one validated Classic variable symbol through the visible pool.
+   *
+   * Compound tail substitution happens before choosing the binding to drop.
+   * A stem name drops its default and all tails; a compound name drops only
+   * its expanded, case-preserved tail. Exposed aliases are handled by the
+   * existing pool drop operations.
+   *
+   * @param name validated Classic variable-symbol spelling
+   */
+  dropSymbol: method = .void
+    arg name = .string
+    resolved = resolveSymbolName(name)
+    stem_end = pos(".", resolved)
+    if stem_end = 0 | stem_end = 1 then do
+      call drop(resolved)
+      return
+    end
+    if stem_end = length(resolved) then do
+      call dropStem(resolved)
+      return
+    end
+    call dropStemTail(substr(resolved, 1, stem_end), substr(resolved, stem_end + 1))
+    return
+
   isDropped: method = .boolean
     arg name = .string
     normalized = normalizeName(name)

@@ -79,6 +79,19 @@ call pool.setString("answer", "restored")
 errors = errors + check(\pool.isDropped("answer"), "set clears dropped scalar state")
 errors = errors + check(pool.value("answer").asString() = "restored", "scalar restored after drop")
 
+call pool.setStemString("items", "b", "lower-again")
+call pool.setStemString("items", "B", "upper-again")
+call pool.dropSymbol("items.key")
+errors = errors + check(pool.symbolValue("items.key").asString() = "ITEMS.b", "symbol drop substitutes lower-case tail")
+errors = errors + check(pool.stemSymbolValue("items", "B").asString() = "upper-again", "symbol drop preserves other case tail")
+call child.dropSymbol("local_items.B")
+errors = errors + check(pool.stemSymbolValue("items", "B").asString() = "ITEMS.B", "symbol drop follows exposed stem")
+call pool.setSymbolValue("items.", .RexxValue("default"))
+call pool.dropSymbol("items.")
+errors = errors + check(pool.symbolValue("items.A").asString() = "ITEMS.A", "symbol stem drop removes default and tails")
+call child.dropSymbol("local_answer")
+errors = errors + check(pool.symbolValue("answer").asString() = "ANSWER", "symbol scalar drop follows exposed alias")
+
 if errors = 0 then say "ok"
 return errors
 
