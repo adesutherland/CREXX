@@ -5205,6 +5205,8 @@ add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
 
 add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice40_parse_pattern_unsupported
+        rexx_src/levelc_slice40_parse_pattern_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
         rexx_src/levelc_slice10_indirect_drop_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_stem_drop_unsupported
@@ -5405,6 +5407,8 @@ add_levelc_runtime_slice_test(levelc_slice1_pool_say
 
 add_levelc_no_unused_generated_import_warning_test(levelc_generated_imports_no_unused_warning
         rexx_src/levelc_slice1_pool_say.rexx)
+add_levelc_no_unused_generated_import_warning_test(levelc_slice40_parse_upper_imports
+        rexx_src/levelc_slice40_parse_upper_import.rexx)
 
 add_levelc_runtime_slice_test(levelc_slice2_procedure_expose_target_shape
         rexx_src/levelc_slice2_procedure_expose_target_shape.crexx
@@ -5701,6 +5705,15 @@ add_levelc_runtime_slice_test(levelc_slice39_arg_upper
 add_levelc_runtime_slice_test(levelc_slice39_arg_upper_noopt
         rexx_src/levelc_slice39_arg_upper.rexx
         "inside ABC DEF aBc\nresult ABC/DEF\nafter aBc dEf\ninside A B C D aBc\nspaces A B/C D\nempty 0\n" -n)
+add_levelc_runtime_slice_test(levelc_slice40_parse_single
+        rexx_src/levelc_slice40_parse_single.rexx
+        "plain aBc dEf aBc dEf\nupper ABC DEF aBc dEf\nvalue aBc dEf! aBc dEf\nonce new 1\nself MIX ED\nsame MIX ED\nnested ABC DEF\nlocal MIX/mIx\n")
+add_levelc_runtime_slice_test(levelc_slice40_parse_single_noopt
+        rexx_src/levelc_slice40_parse_single.rexx
+        "plain aBc dEf aBc dEf\nupper ABC DEF aBc dEf\nvalue aBc dEf! aBc dEf\nonce new 1\nself MIX ED\nsame MIX ED\nnested ABC DEF\nlocal MIX/mIx\n" -n)
+add_levelc_runtime_slice_test(levelc_slice40_parse_upper_import
+        rexx_src/levelc_slice40_parse_upper_import.rexx
+        "MIX\n")
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -6123,6 +6136,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice39_arg_upper_tree_shape
         "setArguments"
         "setCallerPool"
         "setValue")
+add_levelc_lowered_tree_shape_test(levelc_slice40_parse_single_tree_shape
+        rexx_src/levelc_slice40_parse_single.rexx
+        "rexxclassicbif_translate"
+        "symbolValue"
+        "setValue"
+        "__rxcp_levelc_proc_LOCAL")
 
 # Bridge Connectivity Test
 add_custom_command(

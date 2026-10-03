@@ -40,6 +40,12 @@ int main(void) {
     second->node_type = LEVELC_DROP;
     expect_result(root, 0, "lowered tree retains a Level C-only node",
                   "residual Level C instruction should fail");
+    second->node_type = PARSE;
+    expect_result(root, 0, "lowered tree retains a Level C-only node",
+                  "residual Classic PARSE instruction should fail");
+    second->node_type = TEMPLATES;
+    expect_result(root, 0, "lowered tree retains a Level C-only node",
+                  "residual Classic template should fail");
     second->node_type = NOP;
 
     second->sibling = first;

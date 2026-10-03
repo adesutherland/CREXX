@@ -72,6 +72,27 @@ the callee pool. It adds the TRANSLATE import only for a programme with such
 bindings. This uses the current Level C BYTE default; delivery of an opt-in
 UTF8 call configuration remains an open compatibility obligation.
 
+The first executable `PARSE` template slice accepts a `VAR` scalar source or
+a `VALUE` expression with one direct scalar target, with optional `UPPER`.
+The parser keeps the outer comma-template list and inner template as separate
+`TEMPLATES` nodes. The lowerer validates both levels, evaluates the source
+before writing the target, and emits ordinary canonical pool reads and
+`setValue` calls. `UPPER` passes that source through the same shared Classic
+TRANSLATE frame used by `ARG`; its import is added only when a supported
+uppercase parse exists. The authored `PARSE` tree does not survive the
+canonical boundary. Multiple targets, patterns, positions, other source
+types and comma templates remain guarded pending their own AST and runtime
+proof. The current BYTE default and open UTF8 configuration obligation apply
+to this uppercase path too.
+
+This slice does not call the certified `compiler/exits/parse/Parse.crexx` exit.
+That exit consumes tokens and generates Level B replacement code, including
+direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;
+Level C already has a parsed template AST and writes through a separate
+Classic variable pool. Wider template work should assess reuse of those
+lower-level parse operations or descriptor semantics before adding another
+template algorithm, while preserving Level C AST ownership and pool writes.
+
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and
 capability policy. Changes to shared value, pool, or BIF behavior need focused
