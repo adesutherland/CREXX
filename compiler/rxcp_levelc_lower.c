@@ -1133,6 +1133,7 @@ unsupported:
 
 static int levelc_do_condition_supported(ASTNode *condition,
                                          LevelCLowerPlan *plan,
+                                         int allow_setup,
                                          const char **reason_out) {
     if (!condition ||
         (condition->node_type != WHILE && condition->node_type != UNTIL) ||
@@ -1141,7 +1142,7 @@ static int levelc_do_condition_supported(ASTNode *condition,
         return 0;
     }
     return levelc_expr_supported(condition->child, plan, reason_out) &&
-           levelc_loop_expr_setup_free(condition->child, reason_out);
+           (allow_setup || levelc_loop_expr_setup_free(condition->child, reason_out));
 }
 
 static ASTNode *levelc_nearest_source_repetitive_do(ASTNode *stmt) {
@@ -1186,11 +1187,13 @@ static int levelc_do_supported(ASTNode *stmt,
         body = body->sibling;
         if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
             if (!levelc_literal_repeat_count(stmt->child, NULL, reason_out) ||
-                !levelc_do_condition_supported(body, plan, reason_out)) return 0;
+                !levelc_do_condition_supported(body, plan, 0, reason_out)) return 0;
             body = body->sibling;
         }
     } else if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
-        if (!levelc_do_condition_supported(body, plan, reason_out)) return 0;
+        if (!levelc_do_condition_supported(body, plan,
+                                           body->node_type == WHILE,
+                                           reason_out)) return 0;
         body = body->sibling;
     }
     if (!body || body->node_type != INSTRUCTIONS || body->sibling) {
@@ -2772,13 +2775,18 @@ static int levelc_lower_do(Context *context,
             if (!condition_prelude) goto fail;
             condition_value = levelc_lower_expr(context, condition_node->child,
                                                 plan, condition_prelude);
-            if (condition_prelude->child) {
-                if (reason_out) *reason_out = "DO condition unexpectedly needs setup";
-                goto fail;
-            }
             condition_value = levelc_do_condition_logical_value(
                     context, condition_node, condition_value);
             if (!condition_value) goto fail;
+            if (condition_prelude->child) {
+                if (repeat || condition_node->node_type != WHILE) {
+                    if (reason_out) *reason_out = "DO condition unexpectedly needs setup";
+                    goto fail;
+                }
+                condition_value = rxcp_remap_create_condition_block_expr(
+                        context, condition_node, condition_prelude, condition_value);
+                if (!condition_value) goto fail;
+            }
             body = condition_node->sibling;
         }
         control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);

@@ -5207,8 +5207,6 @@ add_levelc_unsupported_compile_test(levelc_slice8_controlled_do_unsupported
         rexx_src/levelc_slice8_controlled_do_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice12_negative_do_unsupported
         rexx_src/levelc_slice12_negative_do_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice15_while_setup_unsupported
-        rexx_src/levelc_slice15_while_setup_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice16_until_setup_unsupported
         rexx_src/levelc_slice16_until_setup_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice17_combined_dynamic_unsupported
@@ -5567,6 +5565,12 @@ add_levelc_runtime_slice_test(levelc_slice19_logical_eager
 add_levelc_runtime_slice_test(levelc_slice19_logical_eager_noopt
         rexx_src/levelc_slice19_logical_eager.rexx
         "0\ncalls 1\n1\ncalls 2\n1\ncalls 3\n1\ncalls 4\n1\nflag 0\n1\nflag 0\n1\ncalls 6\n" -n)
+add_levelc_runtime_slice_test(levelc_slice18_while_setup
+        rexx_src/levelc_slice18_while_setup.rexx
+        "and 1\nand 2\nand 3\nafter-and 3\ntick-loop 1\ntick-loop 2\ncalls 3\nsubstr 2\nafter-substr 2\ntail 2\nafter-tail 2\nbody 1\nbody 3\nafter-body 4\n2\n")
+add_levelc_runtime_slice_test(levelc_slice18_while_setup_noopt
+        rexx_src/levelc_slice18_while_setup.rexx
+        "and 1\nand 2\nand 3\nafter-and 3\ntick-loop 1\ntick-loop 2\ncalls 3\nsubstr 2\nafter-substr 2\ntail 2\nafter-tail 2\nbody 1\nbody 3\nafter-body 4\n2\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5605,6 +5609,8 @@ add_levelc_invalid_runtime_test(levelc_slice19_logical_right_and_invalid
         rexx_src/levelc_slice19_logical_right_and_invalid.rexx RXC-LC-34.6)
 add_levelc_invalid_runtime_test(levelc_slice19_logical_right_or_invalid
         rexx_src/levelc_slice19_logical_right_or_invalid.rexx RXC-LC-34.6)
+add_levelc_invalid_runtime_test(levelc_slice18_while_setup_invalid_logical
+        rexx_src/levelc_slice18_while_setup_invalid_logical.rexx RXC-LC-34.3)
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
@@ -5756,6 +5762,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice19_logical_eager_tree_shape
         "logicalAnd"
         "logicalOr"
         "RexxVariablePool")
+add_levelc_lowered_tree_shape_test(levelc_slice18_while_setup_tree_shape
+        rexx_src/levelc_slice18_while_setup.rexx
+        "BLOCK_EXPR"
+        "LEAVE_WITH"
+        "logicalWhileValue"
+        "RexxBifCallContext"
+        "ITERATE")
 
 # Bridge Connectivity Test
 add_custom_command(

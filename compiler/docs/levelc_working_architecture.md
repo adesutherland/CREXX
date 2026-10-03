@@ -73,7 +73,7 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
 
-The current executable Level C surface is seventeen bounded lowering slices; the
+The current executable Level C surface is a set of bounded lowering slices; the
 complete Classic contract remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
 the references and this architecture. A new syntax rule, compatibility
@@ -102,16 +102,18 @@ open in the worklist.
 `DO FOREVER` is now the second accepted source repetition form. Its parser
 `REPEAT` node has no count child; the neutral controlled-DO builder omits FOR
 while retaining the hidden canonical control symbol used by LEAVE/ITERATE.
-The conditional loop slices accept source `DO WHILE` and `DO UNTIL` whose
-conditions lower without setup statements. The neutral builder places the
-canonical condition under REPEAT. WHILE checks at loop entry; UNTIL checks
-after the body, including on ITERATE. The same hidden control symbol carries
-source LEAVE/ITERATE across generated wrappers. Shared
+The conditional loop slices accept source `DO WHILE` and `DO UNTIL`. The
+neutral builder places the canonical condition under REPEAT. WHILE checks at
+loop entry; UNTIL checks after the body, including on ITERATE. Direct WHILE
+also accepts supported expressions that lower to setup statements. The lowerer
+places that setup and a final `LEAVE WITH` of the contextual logical value in
+the existing canonical `BLOCK_EXPR`, so the whole condition runs on every
+entry. A setup-free condition remains a direct expression. The same hidden
+control symbol carries source LEAVE/ITERATE across generated wrappers. Shared
 `RexxValue.logicalWhileValue()` and `logicalUntilValue()` enforce Classic
-`34.3` and `34.4` logical identities. Expressions needing per-iteration setup
-remain open. The lowerer asserts that no setup statements
-were emitted for an accepted condition so a future expression change cannot
-silently hoist a loop check.
+`34.3` and `34.4` logical identities. Direct UNTIL still requires a setup-free
+condition; the lowerer asserts that it emitted no setup statements rather
+than silently hoisting an end check.
 The first combined-header slice accepts a non-negative literal count followed
 by a setup-free WHILE or UNTIL condition. FOR and the condition share the same
 canonical REPEAT, preserving zero-count behavior and the appropriate entry or
@@ -123,8 +125,9 @@ shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier
 branch-based short-circuit tracer shape is historical and is no longer the
 Classic Level C target. Exact left/right operand errors use `34.5`/`34.6`.
 Adrian permits new AST node types when they simplify the supported compiler
-path through validation and emission; this slice uses the existing canonical
-WHILE node because it already expresses the required timing and loop flow.
+path through validation and emission. The existing WHILE, BLOCK_EXPR and
+LEAVE_WITH nodes express the required timing and scope for direct WHILE, so
+this increment adds no new emitter shape.
 
 ## Historical design record
 
