@@ -79,10 +79,12 @@ than redefining compatibility around the first slices.
 
 ## Coverage matrix
 
-Inventory pass 1: the 70 recognized BIF names have individual rows below.
-Non-BIF rows still group related features and must be split against the full
-reference before `LC-AC-01` can close. The references include configuration,
-error and host behavior beyond name recognition; those obligations remain open.
+Inventory pass 2: the 70 recognized BIF names and 36 existing syntax catalogue
+contracts have individual rows below. The
+[reference-obligation appendix](levelc-reference-obligations.md) adds 74
+finer non-BIF rows, including configuration, error and host behavior. Complete
+reference-to-row reconciliation and feature-level evidence remain open under
+`LC-AC-01`; the rows are a coverage map, not a conformance verdict.
 
 States are **slice** (bounded end-to-end execution), **front end** (parsed or
 diagnosed, not generally executable), **runtime** (standalone Classic helper,
@@ -108,6 +110,49 @@ has been approved in this worklist.
 | Source/trace | TRACE, SOURCELINE, clause hooks, source preservation | Front end/runtime pieces | Visible source, tracing and clause lifecycle |
 | Host | commands, external routines, queues, streams, time/random, traps, API variable pools, initialization/termination | Runtime foundation only | Configuration adapters and supported-platform contract |
 | BIFs | each recognized Classic BIF | See individual rows below | Direct compiler calls, Classic argument/error/context equivalence |
+
+### Syntax and instruction inventory
+
+These 36 contract names come from the existing [raw language catalogue](component-catalogue/raw-language-syntax.md). Each row is distinct from full compatibility; several raw catalogue names group multiple Classic variants and still need finer reference reconciliation under `LC-AC-01`.
+
+| Contract | Feature | Current evidence level | Remaining proof |
+| --- | --- | --- | --- |
+| `SYN-CLASSIC-OPTIONS` | Classic `OPTIONS` clauses and Level C selection | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-CLAUSES` | Semicolon/EOL clause model | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-CONTEXTUAL-KEYWORDS` | Instruction words usable as symbols outside instruction context | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-LABELS` | Labels and local routine names | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Bounded slice: stem exposure and simple compound access | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-ASSIGNMENT` | Simple and compound assignment | Bounded slice: scalar and simple compound assignment | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slice: simple DO only | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-DROP` | DROP instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-ITERATE` | ITERATE instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-LEAVE` | LEAVE instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-NOP` | NOP instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-NUMERIC` | NUMERIC DIGITS/FORM/FUZZ | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-PARSE` | PARSE variants and templates | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded slice: scalar/stem PROCEDURE EXPOSE | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-PULL` | PULL instruction/templates | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-QUEUE` | QUEUE instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-RETURN` | RETURN instruction | Bounded slice: value/void RETURN in local procedures | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-SAY` | SAY instruction | Bounded slice: supported SAY expressions | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-SELECT` | SELECT/WHEN/OTHERWISE | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-EXPRESSIONS` | Classic arithmetic, comparison, Boolean, and concatenation expressions | Bounded slice: documented operator family | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-BIF-CALL` | Recognised ANSI BIF calls | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-LOCAL-CALL` | Direct local function/procedure calls | Bounded slice: direct local function and procedure calls | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-DSLSH` | Source tree, diagnostics, and syntax-highlighting projection | Parser-mode milestone | Execution and full diagnostic conformance remain separate |
+| `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Bounded slice: eight proven slices | Remaining Classic forms, errors and configuration proof open |
 
 ### Individual BIF inventory
 
@@ -200,6 +245,10 @@ full compatibility proof.
   source recognition and module presence are deliberately not conformance
   claims. `LC-AC-01` remains open pending individual non-BIF rows and complete
   reference reconciliation.
+- A second inventory pass records 36 syntax contracts and 74 detailed
+  non-BIF reference obligations with explicit BYTE/UTF8/host/source scope.
+  Current implementation states remain conservative; the final crosswalk,
+  feature-level qualification and exception decisions remain open.
 
 ### LC-STEP-02 — bounded IF, 2026-10-03
 
