@@ -302,6 +302,56 @@ path through validation and emission. The existing WHILE, BLOCK_EXPR and
 LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL
 and count setup, so these increments add no new emitter shape.
 
+## 2026-10-03 implementation review: simplify before expansion
+
+This review covers the active Level C parser-to-canonical path, neutral AST
+builders, `rxfnsc` value/pool boundary, VM PARSE operation, and registered
+Level C tests. It is an architectural review of the active implementation,
+not a claim that every Classic behavior has been qualified. The
+[worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
+keeps the full compatibility obligation open.
+
+The shared pool, BIF context, neutral remap builders, VM `parseplan`, and
+post-lowering ownership check are useful foundations. The current code does
+not consist solely of one-off cases. However, the programme's case-sized
+increments have left duplicate paths and guards. More parser forms should
+not be added until these paths are assessed against the existing tests.
+
+| Finding | Evidence in the active path | Proposed simplification and proof |
+| --- | --- | --- |
+| LC-REV-01: statement dispatch is duplicated | `levelc_main_statement_supported` and `levelc_proc_statement_supported`, then `levelc_lower_main_statement` and `levelc_lower_proc_statement`, repeat most instruction cases | Use one statement validator and one lowerer with an explicit main/procedure context. Keep the genuinely different CALL, ARG, RETURN and EXIT rules visible. Prove identical nested behavior and diagnostics. |
+| LC-REV-02: variable semantics cross the compiler/runtime boundary in several ways | The lowerer classifies scalar/stem/compound names and constructs tail lookups; the pool also has `resolveSymbolName`, `symbolValue`, `setSymbolValue`, and `dropSymbol`. Direct DROP still chooses `drop`/`dropStem`/`dropStemTail` in C while indirect DROP uses the pool's generic operation | First test direct DROP through `dropSymbol` against the existing order, substitution, exposure and dropped-tail cases. Audit reads and assignment separately: a compound assignment may need its tail captured before a side-effecting right-hand expression, so blindly replacing its prelude with `setSymbolValue` would change semantics. Give each required capture one owner. |
+| LC-REV-03: PARSE has two result paths | Direct word templates call `RexxValue.parseWordTemplate`; mixed static templates serialize a descriptor for VM `parseplan`. Both paths capture results and emit ordered pool writes independently | Assess one template item representation and one VM/runtime execution path for all templates, including word-only cases. Retain the single source capture and ordered writes. Prove whitespace, dots, aliases, repeated targets, patterns, positions, BYTE/UTF8 and Level B exit parity before removing a path. Existing public runtime methods need a consumer/API check before removal. Dynamic operands and comma templates belong in this whole-instruction design. |
+| LC-REV-04: DO lowering has accumulated shape decisions | `levelc_do_supported` validates a header, while `levelc_lower_do` repeats positional AST interpretation and constructs captured header values, synthetic conditions, `BLOCK_EXPR` and hidden loop targets | Normalize the parsed header once into a checked loop description, then lower from that description. Compare the resulting canonical AST with a dedicated node/emitter route for the hard controlled forms. Choose the route with fewer invariants and less total code while preserving optimizer and source behavior. This is an architectural decision gate. |
+| LC-REV-05: BIF construction is generic but reachability is narrow | The shared argument-frame builder and `RexxBifCallContext` avoid per-BIF AST machinery; the compiler currently admits only a small BIF subset despite the larger runtime inventory. `rexxclassicbif_call` is documented as a deprecated compatibility dispatcher | Keep the common call frame and product-specific allow-lists. Use one compiler signature/context table to select direct BIF entry points after argument and error semantics are proved; do not add one compiler branch per BIF or expand the deprecated name dispatcher. |
+| LC-REV-06: functional tests are stronger than structural assertions | The Level C suite contains reference-oriented, opt/no-opt, negative and tree probes. The production verifier checks parent ownership, sibling cycles and residual source-only nodes. Many tree CTests assert only that named nodes occur in debug output | Preserve all existing cases. Before aggressive AST refactoring, add a small number of decisive assertions for association targets, source anchors, generated scope/symbol ownership and evaluation order at the riskiest trees. Keep runtime equivalence and linked-image proof. Do not multiply tests merely to mirror implementation details. |
+| LC-REV-07: plan/evidence drift | The worklist has separate completed criteria for PARSE target counts and DO header variants, while whole-instruction obligations remain open. Some reference-obligation rows still describe older bounded states | Treat those criteria as historical evidence. Reconcile the reference appendix and test manifest against the current code, then track future delivery by complete instruction. |
+
+The review proposes these changes; it does not approve a new AST node, remove
+an exported runtime method, or alter a language rule. Adrian's approval is
+required for an architectural shift under `AGENTS.md`. The agreed delivery
+unit is now a whole instruction at minimum, with one active instruction at a
+time. Individual examples remain regression cases. Each instruction receives
+a complete form/semantics review and path simplification before additions;
+its multi-commit implementation remains open until every required form and
+lifecycle obligation is proved or an exception is individually approved.
+"Infeasible" is reserved for a fundamental feature or capability whose
+delivery would require a serious compromise elsewhere. Significant work or
+missing infrastructure is not infeasibility. A genuine conflict is recorded
+with evidence, alternatives and proposed visible behavior; it is not an
+automatic exclusion or permission to advance the queue.
+
+The latest retained Level C run passed 290/290 CTests in 31.04 seconds of wall
+time (738.13 CPU-seconds across the parallel tests). The test count is useful
+coverage, but repeating the whole run after each case-sized edit compounds
+build and QA cost. The registered runtime tests compile with `rxc`, assemble
+with `rxas` and execute with `rxvm`; linked-image proof has been run separately
+for individual increments. Preserve that distinction in future receipts.
+For code commits, build the affected core product, run focused tests and the
+relevant normal correctness suite once for the qualified input revision;
+reserve full Level C sweeps for changes with broad lowering impact and
+instruction integration checkpoints. Do not re-run unchanged valid evidence.
+
 ## Historical design record
 
 The numbered sections below capture the earlier parser and lowering design

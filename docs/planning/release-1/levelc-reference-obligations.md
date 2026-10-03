@@ -84,7 +84,7 @@ exists.
 | LC-REF-065 | PROCEDURE pool creation and EXPOSE aliases | both | Bounded scalar/stem EXPOSE; dynamic list and lifecycle open |
 | LC-REF-066 | PUSH/QUEUE ordering and null-expression value | host | Front end; queue service open |
 | LC-REF-067 | RETURN function/subroutine/outermost lifecycle | both | Bounded local RETURN; invocation modes open |
-| LC-REF-068 | SAY default output and optional empty expression | host | Bounded SAY slice; configured output/empty form open |
+| LC-REF-068 | SAY default output and optional empty expression | host | Active whole-instruction review: expression output is bounded; a childless compiler change and Regina/opt/no-opt/linked case are tested but uncommitted. The VM has a SAY exit callback; configured output, error/lifecycle and complete expression integration remain open. |
 | LC-REF-069 | SIGNAL branch/trap modes and loop-state clearing | host | Front end; runtime state and conditions open |
 | LC-REF-070 | TRACE options, interactive mode, skip/inhibit and source/result tracing | host | Front end/runtime pieces; complete trace contract open |
 | LC-REF-071 | SYNTAX, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS | host | Open: Classic condition state and delivery |

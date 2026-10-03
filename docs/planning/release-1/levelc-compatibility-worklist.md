@@ -40,6 +40,30 @@ capture the value of a parenthesized reference at its position; the runtime
 will interpret that subsidiary list. This keeps variable semantics available
 to RexxScript without sharing the two products' statement parsers.
 
+On 2026-10-03 Adrian changed the delivery unit: future implementation is
+planned by **whole instruction at minimum**, with cross-cutting value,
+variable, expression, BIF and lifecycle foundations planned together where
+they serve several instructions. Fine-grained cases remain regression tests;
+they are not independent feature-completion claims. An instruction stays open
+until its valid forms, errors, nested contexts, source/evaluation order,
+configuration and relevant host lifecycle are proved or a specific exception
+is approved. A reviewable instruction may require several commits, but its
+acceptance contract is set before those commits. Historical bounded criteria
+below retain their evidence and IDs; their checkmarks do not close a whole
+instruction. The [implementation review](../../../compiler/docs/levelc_working_architecture.md#2026-10-03-implementation-review-simplify-before-expansion)
+records the simplification candidates and approval gates.
+The instruction queue below is strict: one active instruction at a time.
+Inventory its complete grammar/reference contract, review and simplify its
+implementation, finish the missing forms, qualify it, close it, then start
+the next row. Significant work, missing infrastructure or an awkward
+implementation is not infeasibility and stays in scope. Reserve an
+"infeasible" finding for a fundamental language feature or capability that
+cannot be delivered without a serious compromise elsewhere. Record the
+conflict, alternatives, affected behavior and evidence; the instruction
+remains open until Adrian decides and approves the specific disposition.
+Cross-cutting repairs are made when required by the active instruction and
+are verified against all affected consumers.
+
 ## Acceptance criteria
 
 - [ ] **LC-AC-01 — complete inventory (R1-AC-01):** every statement,
@@ -555,6 +579,32 @@ to RexxScript without sharing the two products' statement parsers.
   reference retain their order. Verify source/canonical AST shape, Regina for
   valid and invalid lists and scope, focused opt/no-opt, normal correctness
   and linked execution.
+- [ ] **LC-AC-57 — complete SAY instruction:** `SAY [expression]` evaluates an
+  expression once when supplied and writes its string value, or an empty line
+  when omitted, through the configured default output. Main, nested and local
+  procedure contexts preserve output order, source anchors and relevant
+  output/error lifecycle. Verify the grammar's expression and childless forms,
+  Regina output, side-effect order, opt/no-opt, AST, normal correctness,
+  linked delivery and configured host output. The already tested childless
+  fixture is one case in this instruction contract, not a separate slice.
+- [ ] **LC-AC-58 — simpler Level C implementation:** the active lowering has
+  one context-aware instruction dispatch, one reviewed variable-operation
+  ownership boundary, and one general PARSE execution path. DO header
+  validation and lowering share a checked representation; a dedicated AST
+  node is used only if its total validation/emitter cost is lower than the
+  canonical rewrite. Preserve evaluation order, source anchors, scopes,
+  loop associations, errors, opt/no-opt behavior and RexxScript isolation.
+  Verify a before/after code-path inventory, focused structural invariants,
+  retained functional corpus, linked execution and cross-consumer tests.
+  Specific architecture changes require Adrian's approval before code edits.
+- [ ] **LC-AC-59 — instruction-level delivery:** each `LC-I-*` row in the
+  instruction programme below is individually closed only after its complete
+  reference and parser-form matrix, diagnostics, interaction/lifecycle cases,
+  relevant BYTE/UTF8 and host evidence, optimized/no-opt parity, and full
+  toolchain proof are recorded, or a specific exception is approved. Preserve
+  each existing bounded test as regression evidence. Verify against the
+  compliance reference, parser grammar, reference-obligation appendix,
+  tests and exact candidate revision.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -952,6 +1002,106 @@ to RexxScript without sharing the two products' statement parsers.
     Ignore invalid subsidiary-list words as approved; verify that behavior,
     reference behavior, raw/canonical trees,
     opt/no-opt, normal Level C and linked execution before committing.
+60. **LC-STEP-60 (LC-AC-08/57; folded into STEP-63):** retain the tested
+    childless `SAY` change as an uncommitted case while the whole-instruction
+    plan is reviewed. Its Regina, opt/no-opt, tree, normal Level C and linked
+    evidence can be reused if code/test inputs remain unchanged. Complete the
+    full `SAY` contract under STEP-63; do not make this case a separate
+    feature-completion claim.
+
+61. **LC-STEP-61 — review complete (LC-AC-58/59):** inspect the active parser,
+    lowerer, remap builders, shared pool/value/BIFs, VM PARSE path, tests and
+    coverage records. Record specific duplication and safe foundations in the
+    architecture review; retain all prior criteria and evidence.
+62. **LC-STEP-62 (LC-AC-58/59; depends on STEP-61):** apply the same strict
+    review gate to each instruction before implementation: map all parsed
+    forms and reference obligations, identify duplicate paths and missing
+    semantics, select the simplest implementation, and identify decisive
+    existing or missing tests. Obtain approval before a particular language
+    or architecture decision. Refactor only the active instruction and any
+    required shared foundation in reviewable commits. Measure any new
+    aggregate CTest in isolated Debug and sanitizer builds before registering
+    it. Close the instruction with an evidence receipt. A fundamental conflict
+    requiring a serious compromise remains open while Adrian decides its
+    individually proposed disposition; ordinary implementation effort never
+    qualifies for that path.
+
+### Whole-instruction programme
+
+The following rows are the future semantic delivery units and implementation
+steps for `LC-AC-59`. All are **open** until their full instruction contract
+is evidenced; current bounded behavior is retained in the coverage matrix.
+Work through the rows in order, with only one active row; changing the order
+requires a recorded reason and must not turn a partial row into a closure.
+Each
+step includes parser-form inventory, reference cases, invalid forms,
+main/procedure/nested execution where legal, opt/no-opt, source/AST checks,
+relevant runtime and host/profile checks, and linked delivery. The relevant
+normal correctness suite runs once per coherent instruction checkpoint, with
+focused checks during its development. A structural change affecting all
+instructions calls for the full Level C suite at that checkpoint. Reuse
+unchanged evidence and leave overnight assurance to its scheduled lanes.
+
+| Unit | Step | Complete instruction obligation and principal dependency |
+| --- | --- | --- |
+| LC-I-01 SAY | LC-STEP-63 | `LC-AC-57`: expression and childless forms, output and lifecycle; include pending STEP-60 case. This is the first active review. |
+| LC-I-02 DROP | LC-STEP-64 | Direct and parenthesized lists, substitution, exposure, order and errors; shared pool boundary. Preserve Adrian's approved Regina invalid-word behavior. |
+| LC-I-03 assignment | LC-STEP-65 | All valid scalar, stem and compound targets and expression/evaluation order; shared pool boundary. |
+| LC-I-04 NOP | LC-STEP-66 | Childless instruction in every legal context and clause/trace lifecycle; existing bounded proof is the baseline. |
+| LC-I-05 OPTIONS | LC-STEP-67 | All processor option words, unknown-option policy and source/configuration behavior; programme initialization. |
+| LC-I-06 IF | LC-STEP-68 | Every legal instruction arm, nearest ELSE, condition/error and nesting behavior; shared statement dispatch. |
+| LC-I-07 SELECT | LC-STEP-69 | WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
+| LC-I-08 DO | LC-STEP-70 | Simple, counted, controlled, FOREVER, WHILE/UNTIL and legal combinations without arbitrary count limit; reviewed loop representation. |
+| LC-I-09 LEAVE | LC-STEP-71 | Unnamed/named targets, nesting, value/state and errors across all legal loops; DO. |
+| LC-I-10 ITERATE | LC-STEP-72 | Unnamed/named targets, end-step timing, nesting and errors across all legal loops; DO. |
+| LC-I-11 ARG | LC-STEP-73 | Direct argument acquisition and Classic upper/template behavior, omitted positions and invocation modes; routine context and shared parse semantics. |
+| LC-I-12 PROCEDURE | LC-STEP-74 | Pool creation and all direct/indirect EXPOSE forms with alias lifecycle; shared variable pool and routines. |
+| LC-I-13 CALL | LC-STEP-75 | Internal/BIF/external resolution, arguments, results and ON/OFF traps; BIF registry, routines and conditions. |
+| LC-I-14 RETURN | LC-STEP-76 | Value/void, function/subroutine/outermost rules and pool/result lifecycle; CALL and PROCEDURE. |
+| LC-I-15 EXIT | LC-STEP-77 | Optional value, fallthrough equivalence, completion and finalization; programme lifecycle. |
+| LC-I-16 PULL | LC-STEP-78 | Queue/default input, optional template and empty/error behavior; host queue and PARSE source service. |
+| LC-I-17 PUSH | LC-STEP-79 | Front-of-queue ordering, optional expression and null value; configured queue. |
+| LC-I-18 QUEUE | LC-STEP-80 | Back-of-queue ordering, optional expression and null value; configured queue. |
+| LC-I-19 PARSE | LC-STEP-81 | Every source type, UPPER, arbitrary target/template sequence, static/dynamic patterns and positions, comma templates and errors; one reviewed parse engine plus argument/input/source services. |
+| LC-I-20 ADDRESS | LC-STEP-82 | Select/swap/transient command and WITH redirection, RC and conditions; configured environment protocol. |
+| LC-I-21 implicit command | LC-STEP-83 | Command clause evaluation, host execution, results and conditions; ADDRESS. |
+| LC-I-22 NUMERIC | LC-STEP-84 | DIGITS/FORM/FUZZ defaults, validation, context lifetime and arithmetic effects; shared value semantics. |
+| LC-I-23 SIGNAL | LC-STEP-85 | Direct/VALUE branch and ON/OFF conditions, labels, loop-state clearing and delivery; condition lifecycle. |
+| LC-I-24 TRACE | LC-STEP-86 | Options, skip/inhibit, interactive and source/result/command tracing; clause hooks and host output. |
+| LC-I-25 INTERPRET | LC-STEP-87 | Dynamic source parsing, current context, HALT/SYNTAX/label rules and condition state; parser and lifecycle foundation. |
+
+Expression grammar, BIFs, variable semantics, source/character profiles,
+conditions and host adapters are cross-cutting foundations under
+`LC-AC-01/04/06/08`; they are not silently completed by an instruction row.
+Before closing any `LC-I-*`, reconcile its reference-obligation rows and the
+parser's accepted forms. An unresolved dependency keeps the row open.
+
+### Active review: LC-I-01 SAY
+
+`SAY` is the only active instruction. The parser has an expression child or
+no child (`compiler/rxcpcgmr.y`), plus recovery for an invalid close bracket.
+The lowerer already uses one canonical `SAY` builder; the pending no-child
+change supplies an empty string to that builder. The emitter uses the normal
+`SAY` opcode, and the VM routes output through its SAY exit callback. No new
+AST node or instruction-specific runtime helper is indicated by this review.
+
+Open before closure:
+
+- Reconcile every expression form admitted by the Classic grammar with the
+  shared expression/BIF path. The current Level C guard admits only bounded
+  variable, literal, operator, local-call, LENGTH and SUBSTR forms; a valid
+  expression must not fail solely because it appears in `SAY`.
+- Prove configured default-output selection, errors, BYTE/UTF8 behavior and
+  source/trace lifecycle through the host interface. Inspect the existing VM
+  SAY callback boundary for byte-exact output before claiming this proof.
+- Keep the childless Regina, opt/no-opt, raw/canonical tree, normal Level C
+  and linked results already obtained for unchanged code/test inputs. Add
+  only missing decisive cases for expression side effects, output routing and
+  diagnostics. Record exact evidence in the instruction receipt.
+
+These are open implementation/proof items, not infeasible exceptions. Do not
+start `LC-I-02 DROP` until `LC-I-01` closes or Adrian explicitly changes the
+queue after reviewing a specific blocker.
 
 ## Findings
 
