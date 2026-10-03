@@ -52,8 +52,11 @@ authored program must survive lowering for diagnostics and tracing.
   compound tail substitution and exposure. Its `stemSymbolValue` reads an
   unset or dropped tail without creating a binding; `dropStemTail` mutates one
   case-preserved tail and copies the updated stem back through a local or
-  exposed binding. Each
-  Level C activation uses its visible pool; a RexxScript evaluator creates a
+  exposed binding. Direct Level C `DROP` lists lower to ordered `drop`,
+  `dropStem`, or `dropStemTail` calls; the compiler evaluates each compound
+  tail once before its corresponding call. The pool and `RexxStem` implement
+  default reset, dropped-tail reads, and alias mutation. Each Level C
+  activation uses its visible pool; a RexxScript evaluator creates a
   distinct sandbox pool from the same class.
 - `RexxClassicBif*` modules own compatible BIF algorithms, argument validation,
   and error construction. `RexxBifCallContext` carries `RexxValue` arguments,
@@ -998,9 +1001,8 @@ The central rule for Level C lowering:
 Classic REXX variables are string values in a variable-pool model, not Level B
 typed locals.
 
-Canonical lowering should therefore introduce or reuse a variable-pool runtime
-surface. A future implementation might represent this as helper calls, a hidden
-runtime object, VM-native pool support, or some combination. The Level C
+Canonical lowering uses the shared `RexxVariablePool` runtime surface through
+hidden pool references and method calls. The Level C
 compiler must not silently map ordinary Classic variables to Level B locals
 unless the transformation preserves:
 

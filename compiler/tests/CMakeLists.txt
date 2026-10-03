@@ -5220,10 +5220,6 @@ add_levelc_unsupported_compile_test(levelc_slice40_parse_pattern_unsupported
         rexx_src/levelc_slice40_parse_pattern_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
         rexx_src/levelc_slice10_indirect_drop_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice10_stem_drop_unsupported
-        rexx_src/levelc_slice10_stem_drop_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice10_compound_drop_unsupported
-        rexx_src/levelc_slice10_compound_drop_unsupported.rexx)
 
 function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -5773,6 +5769,12 @@ add_levelc_runtime_slice_test(levelc_slice52_parse_static
 add_levelc_runtime_slice_test(levelc_slice52_parse_static_noopt
         rexx_src/levelc_slice52_parse_static.rexx
         "patterns=ab|cd|ef|\ndots=cd|ab,cd,ef|\nalldots=ab,cd,ef|\nedges=||end||\nmissing=ab,cd,ef||\nalias=ab|cd,ef|\nlong=w|x|y|z|q|r|\nabsolute=ab|cdef|\nrelative=abc|de|f|\nbackward=cd|ef|def|\nzero=abcdef|abcdef|\nfar=abcdef||\nspelling=ab|c|cdef|\nhex=a|b|\nbinary=a|b|\nquote=|,c|\ndoublequote=|,c|\nutf8=a|bc|\nleading=cd,ef|\ntrailing=ab|\nadjacent=ab|ef|\nstartabs=,cd,ef|\nadjpos=ab|d,ef|\nstartrel=ab,cd,ef|\nonce=m|n|1|\nupper=AB|CD|\nlocal=left|right|\n" -n)
+add_levelc_runtime_slice_test(levelc_slice53_drop_direct
+        rexx_src/levelc_slice53_drop_direct.rexx
+        "before=one|two|lower|\ntail=ITEMS.A|two|\nderived=ITEMS.b|two|\nrestore=again|\norder=NAME|ITEMS.NAME|again|\nstem=ITEMS.A|ITEMS.B|ITEMS.b|\nnumeric=ITEMS.1|\nlocal=ITEMS.A/inside|ITEMS.A|\nif=ITEMS.B|\ndo=ITEMS.B|\n")
+add_levelc_runtime_slice_test(levelc_slice53_drop_direct_noopt
+        rexx_src/levelc_slice53_drop_direct.rexx
+        "before=one|two|lower|\ntail=ITEMS.A|two|\nderived=ITEMS.b|two|\nrestore=again|\norder=NAME|ITEMS.NAME|again|\nstem=ITEMS.A|ITEMS.B|ITEMS.b|\nnumeric=ITEMS.1|\nlocal=ITEMS.A/inside|ITEMS.A|\nif=ITEMS.B|\ndo=ITEMS.B|\n" -n)
 add_levelc_runtime_slice_test(levelc_slice42_abuttal
         rexx_src/levelc_slice42_abuttal.rexx
         "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n")
@@ -5946,7 +5948,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice5_stem_expose_tree_shape
         rexx_src/levelc_slice5_stem_expose.rexx
         "RexxVariablePool"
         "setStemValue"
-        "stemValue"
+        "stemSymbolValue"
         "exposeStem"
         "__rxcp_levelc_tail"
         "asString")
@@ -6277,6 +6279,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice52_parse_static_tree_shape
         "__rxcp_levelc_parse_fields_"
         "setValue"
         "rexxclassicbif_translate")
+add_levelc_lowered_tree_shape_test(levelc_slice53_drop_direct_tree_shape
+        rexx_src/levelc_slice53_drop_direct.rexx
+        "stemSymbolValue"
+        "dropStemTail"
+        "dropStem"
+        "__rxcp_levelc_tail_"
+        "setStemValue")
 add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
         rexx_src/levelc_slice42_abuttal.rexx
         "concat"

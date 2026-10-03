@@ -514,7 +514,7 @@ direct word/dot templates before work resumes on positions and patterns.
   counterexample in both products, focused opt/no-opt VM and exit tests,
   unchanged forward/absolute controls, the relevant normal correctness
   suite, and linked execution. This repairs `LC-FIND-06`.
-- [ ] **LC-AC-53 — direct stem and compound DROP:** a direct Classic `DROP`
+- [x] **LC-AC-53 — direct stem and compound DROP:** a direct Classic `DROP`
   list accepts scalar, stem and supported compound symbols in authored order.
   Compound tail components are evaluated once against the visible pool,
   preserving substituted text case, before the selected tail is dropped; a
@@ -538,8 +538,9 @@ direct word/dot templates before work resumes on positions and patterns.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
-  and reassignment restores its value. Compound, stem and indirect `DROP`
-  forms remain fail-closed pending separate proof. Verify against the Classic
+  and reassignment restores its value. This initial scalar slice preceded
+  direct stem/compound support under `LC-AC-53`; indirect `DROP` remains open.
+  Verify against the Classic
   interpreter, optimized/no-opt and linked execution, runtime pool tests,
   and the relevant Level C and RexxScript correctness suites.
 - [ ] **LC-AC-04 — full compatibility (R1-AC-02):** every required matrix row
@@ -915,7 +916,7 @@ direct word/dot templates before work resumes on positions and patterns.
     and add pool operations for non-mutating compound reads and one-tail drops.
     Prove the discovered reference counterexamples and focused cross-consumer
     behavior, then commit this distinct runtime cause.
-57. **LC-STEP-57 (LC-AC-08/53; depends on STEP-56):** broaden the Level C
+57. **LC-STEP-57 — complete (LC-AC-08/53; depends on STEP-56):** broaden the Level C
     direct-list guard and lowerer to call shared scalar/stem/compound pool
     operations in source order, and replace obsolete negative fixtures with
     Regina-based focused and linked proof. Retain parenthesized indirect lists
@@ -929,7 +930,7 @@ direct word/dot templates before work resumes on positions and patterns.
   default until reassigned, and substituted tail text keeps its case. The
   shared `RexxStem`/`RexxVariablePool` model now records these states and
   writes back a mutated value-class stem through local or exposed bindings.
-  Compiled direct stem/compound `DROP` remains open under `LC-AC-53` and
+  Compiled direct stem/compound `DROP` was completed under `LC-AC-53` and
   `LC-STEP-57`.
 - **LC-FIND-06 — resolved, frozen PARSE backward cursor:** Regina returns
   `cd|ef|def` for `s='abcdef'; parse var s 3 a +2 b -1 c`, while the
@@ -1003,7 +1004,7 @@ itself make its Classic shape executable.
 | Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
-| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and direct scalar DROP | Wider statement operands, stem/compound/indirect DROP and exit/return lifecycle remain open |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and direct scalar/stem/supported-compound DROP | Wider statement operands, parenthesized indirect DROP and exit/return lifecycle remain open |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
@@ -1042,7 +1043,7 @@ has been approved in this worklist.
 | --- | --- | --- | --- |
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
 | Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions`, `levelc_slice19_logical_eager`, empty quoted strings in `levelc_slice37_empty_string`, and adjacent function calls in `levelc_slice38_adjacent_call` | Full numeric context, remaining operator order, boundary/error and platform equivalence |
-| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
+| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar/stem/supported-compound DROP | Parenthesized indirect DROP, full stem assignment, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
 | Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled DO with optional TO/FOR/BY, captured dynamic start/TO/BY/FOR and WHILE entry or UNTIL end checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, named transfer to wider loops, remaining numeric contexts and errors |
@@ -1077,7 +1078,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal start with optional captured TO/BY/FOR | Dynamic start, wider count/numeric errors and configuration proof open |
-| `SYN-CLASSIC-DROP` | DROP instruction | Bounded slice: direct scalar list | Stem, compound and indirect forms, full condition/profile proof open |
+| `SYN-CLASSIC-DROP` | DROP instruction | Bounded slice: ordered direct scalar/stem/supported-compound list | Parenthesized indirect forms, full condition/profile proof open |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |
@@ -2351,3 +2352,34 @@ full compatibility proof.
   `/tmp/crexx-levelc-stem-rexxscript-build.uJaVLM`,
   `/tmp/crexx-levelc-stem-rexxscript-tests.DT87if`, and
   `/tmp/crexx-levelc-stem-runtime-levelc-suite.1Kg8ty`.
+
+### LC-STEP-57 — direct stem and compound DROP, 2026-10-03
+
+- The direct `DROP` guard now accepts scalar, stem and supported single-tail
+  compound names in one ordered list. Each compound tail is materialized once
+  immediately before its corresponding pool call. Lowering emits canonical
+  `drop`, `dropStem` and `dropStemTail` calls; `RexxVariablePool` and
+  `RexxStem` retain the default, dropped-tail and exposed-alias rules. Direct
+  compound reads use the non-mutating `stemSymbolValue` method. Parenthesized
+  indirect references remain guarded.
+- The Regina fixture covers case-distinct derived tails, dropped reads,
+  reassignment, list order with an earlier scalar drop affecting a later tail,
+  full stem drop, numeric tails, exposed procedure scope and nested `IF`/`DO`.
+  The linked image produced byte-identical output. Raw/canonical tree probes
+  show source `LEVELC_DROP` nodes replaced by ordered helper calls with hidden
+  tail captures. Obsolete direct stem/compound negative fixtures were replaced
+  by optimized, no-opt and tree-shape regressions. An older tree-shape test was
+  updated from `stemValue` to the new non-mutating read method.
+- Release Level C passed 285/285 and focused Debug passed 5/5 after rebuilding
+  the Debug `rxfnsc` metadata. RexxScript 4/4 and focused pool opt/no-opt 2/2
+  evidence from `LC-STEP-56` remains valid because its runtime inputs did not
+  change in this compiler increment. The initial Release sweep found only the
+  outdated tree-shape expectation; the initial Debug run found an outdated
+  local `rxfnsc` build. Evidence: `/tmp/crexx-levelc-drop-final-build.log`,
+  `/tmp/crexx-levelc-drop-final-suite.log`,
+  `/tmp/crexx-levelc-drop-debug-build.log`,
+  `/tmp/crexx-levelc-drop-debug-runtime-build.log`,
+  `/tmp/crexx-levelc-drop-debug-final-focused.log`,
+  `/tmp/crexx-levelc-drop.qf1gA9/tree.log`,
+  `/tmp/crexx-levelc-drop.qf1gA9/final-reference.out`, and
+  `/tmp/crexx-levelc-drop.qf1gA9/linked-output.out`.

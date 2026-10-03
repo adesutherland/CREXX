@@ -1044,7 +1044,7 @@ invalid:
     return 0;
 }
 
-static int levelc_scalar_drop_supported(ASTNode *stmt,
+static int levelc_direct_drop_supported(ASTNode *stmt,
                                         const char **reason_out) {
     ASTNode *list = stmt ? stmt->child : NULL;
     ASTNode *target;
@@ -1057,17 +1057,20 @@ static int levelc_scalar_drop_supported(ASTNode *stmt,
     target = list->child;
     while (target) {
         char *name;
-        int scalar;
+        LevelCVariableNameKind kind;
+        int supported;
 
         if (target->node_type != VAR_TARGET || target->child) {
             if (reason_out) *reason_out = "indirect DROP is outside slice";
             return 0;
         }
         name = levelc_upper_name(target);
-        scalar = name && levelc_variable_name_kind(name) == LEVELC_VAR_NAME_SCALAR;
+        kind = levelc_variable_name_kind(name);
+        supported = kind == LEVELC_VAR_NAME_SCALAR || kind == LEVELC_VAR_NAME_STEM ||
+                    (kind == LEVELC_VAR_NAME_COMPOUND && levelc_compound_tail_supported(name));
         free(name);
-        if (!scalar) {
-            if (reason_out) *reason_out = "stem or compound DROP is outside slice";
+        if (!supported) {
+            if (reason_out) *reason_out = "unsupported direct DROP name";
             return 0;
         }
         target = target->sibling;
@@ -1486,7 +1489,7 @@ static int levelc_main_statement_supported(ASTNode *stmt,
     if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_transfer_supported(stmt, plan, reason_out);
-    if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
+    if (stmt->node_type == LEVELC_DROP) return levelc_direct_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 0, reason_out);
@@ -1518,7 +1521,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_transfer_supported(stmt, plan, reason_out);
-    if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
+    if (stmt->node_type == LEVELC_DROP) return levelc_direct_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 1, reason_out);
@@ -1800,7 +1803,7 @@ static ASTNode *levelc_compound_pool_value_by_name(Context *context,
     args[1] = tail_expr ? tail_expr : levelc_compound_tail_expr(context, source_node, name);
     if (!receiver || !args[0] || !args[1]) return NULL;
 
-    return rxcp_remap_create_member_call(context, source_node, receiver, "stemValue", args, 2);
+    return rxcp_remap_create_member_call(context, source_node, receiver, "stemSymbolValue", args, 2);
 }
 
 static ASTNode *levelc_pool_value(Context *context, ASTNode *source_node) {
@@ -2964,21 +2967,42 @@ static int levelc_lower_transfer(Context *context,
     return 1;
 }
 
-static int levelc_lower_scalar_drop(Context *context,
+static int levelc_lower_direct_drop(Context *context,
                                     ASTNode *instructions,
                                     ASTNode *stmt,
                                     const char **reason_out) {
     ASTNode *target = stmt->child->child;
 
     while (target) {
+        char *name = levelc_upper_name(target);
+        LevelCVariableNameKind kind = levelc_variable_name_kind(name);
+        ASTNode *prelude = NULL;
         ASTNode *receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
-        ASTNode *args[1] = {levelc_name_string(context, target)};
+        ASTNode *args[2] = {NULL, NULL};
         ASTNode *lowered;
+        const char *method;
+        size_t arg_count;
 
-        if (!receiver || !args[0]) goto fail;
+        if (kind == LEVELC_VAR_NAME_COMPOUND) {
+            prelude = rxcp_remap_create_instruction_builder(context, target);
+            args[0] = levelc_compound_stem_string(context, target, name);
+            args[1] = prelude
+                ? levelc_materialise_compound_tail(context, target, name, prelude)
+                : NULL;
+            method = "dropStemTail";
+            arg_count = 2;
+        } else {
+            args[0] = levelc_name_string(context, target);
+            method = kind == LEVELC_VAR_NAME_STEM ? "dropStem" : "drop";
+            arg_count = 1;
+        }
+        free(name);
+
+        if (!receiver || !args[0] || (arg_count == 2 && !args[1])) goto fail;
         lowered = rxcp_remap_create_member_call_statement(context, target,
-                                                            receiver, "drop", args, 1);
+                                                            receiver, method, args, arg_count);
         if (!lowered) goto fail;
+        if (prelude) rxcp_remap_append_builder_children(instructions, prelude);
         add_ast(instructions, lowered);
         target = target->sibling;
     }
@@ -3436,7 +3460,7 @@ static int levelc_lower_main_statement(Context *context,
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_lower_transfer(context, instructions, stmt, plan, reason_out);
     if (stmt->node_type == LEVELC_DROP) {
-        return levelc_lower_scalar_drop(context, instructions, stmt, reason_out);
+        return levelc_lower_direct_drop(context, instructions, stmt, reason_out);
     }
     if (stmt->node_type == PARSE)
         return levelc_lower_direct_parse(context, instructions, stmt, plan, reason_out);
@@ -3492,7 +3516,7 @@ static int levelc_lower_proc_statement(Context *context,
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_lower_transfer(context, instructions, stmt, plan, reason_out);
     if (stmt->node_type == LEVELC_DROP) {
-        return levelc_lower_scalar_drop(context, instructions, stmt, reason_out);
+        return levelc_lower_direct_drop(context, instructions, stmt, reason_out);
     }
     if (stmt->node_type == LEVELC_ARG) {
         return levelc_append_arg_bindings(context, instructions, procedure, reason_out);
