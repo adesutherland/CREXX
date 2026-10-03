@@ -1635,6 +1635,12 @@ the stamped address when present to print the module/address and, when
 `META_SOURCE_STEP` metadata is present, the closest preceding REXX source line.
 Linked images built with source stripping have only the module/address for this
 fallback context.
+The location is printed whether or not the signal carries a message. If the
+fault occurs in a called procedure, the report also prints the immediate
+caller's return site using the caller module's retained source metadata. This
+lets a runtime-library signal show the authored call site without copying
+source text into its payload. These lines diagnose an unhandled signal;
+handler delivery and signal identity are unchanged.
 
 VM signal codes 1 through 31 map to the non-sign `sig_atomic_t` mask bits 0
 through 30. `RXSIGNAL_MAX` is a sentinel and has no mask bit. All producers and

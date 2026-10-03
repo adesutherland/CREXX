@@ -2824,6 +2824,34 @@ static void print_runtime_panic_location(rxvm_context *context, rxinteger module
     }
 }
 
+static void print_runtime_panic_caller_location(rxvm_context *context,
+                                                 const stack_frame *frame) {
+    const stack_frame *caller;
+    module *mod;
+    uintptr_t base;
+    uintptr_t return_address;
+    size_t byte_offset;
+    size_t address;
+
+    if (!frame || !frame->parent || !frame->return_pc) return;
+    caller = frame->parent;
+    if (!caller->procedure || !caller->procedure->binarySpace) return;
+    mod = caller->procedure->binarySpace->module;
+    if (!mod || !mod->execution_image) return;
+
+    base = (uintptr_t)mod->execution_image;
+    return_address = (uintptr_t)frame->return_pc;
+    if (return_address <= base) return;
+    byte_offset = (size_t)(return_address - base);
+    if (byte_offset % sizeof(bin_code) != 0 ||
+        byte_offset / sizeof(bin_code) > mod->segment.inst_size) return;
+    address = byte_offset / sizeof(bin_code) - 1;
+
+    fprintf(stderr, "  called from:\n");
+    print_runtime_panic_location(context, (rxinteger)mod->module_number,
+                                 (rxinteger)address);
+}
+
 static char *build_runtime_factory_proc_name(const char *class_name,
                                              size_t class_name_length,
                                              const char *factory_name,
@@ -5297,6 +5325,7 @@ if (is_interrupt && temp_frame->is_interrupt_action) { \
                 fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(is_interrupt)); \
             } \
             print_runtime_panic_location(context, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt]); \
+            print_runtime_panic_caller_location(context, temp_frame); \
         } \
         value_zero(interrupt_action_value); \
         rc = (int)is_interrupt; \
@@ -6491,10 +6520,11 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                     fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(interrupt_object[last_interrupt]->string_length), interrupt_object[last_interrupt]->string_value, interrupt_to_string(last_interrupt));
                 } else {
                     fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(last_interrupt));
-                    print_runtime_panic_location(context,
-                                                 last_interrupted_module[last_interrupt],
-                                                 last_interrupted_address[last_interrupt]);
                 }
+                print_runtime_panic_location(context,
+                                             last_interrupted_module[last_interrupt],
+                                             last_interrupted_address[last_interrupt]);
+                print_runtime_panic_caller_location(context, current_frame);
             }
             rc = (int)last_interrupt;
             RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(last_interrupt,

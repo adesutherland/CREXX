@@ -1126,7 +1126,7 @@ marking the configuration part complete.
 | Childless and ordinary expressions in main, IF/DO and local procedures | `levelc_say_instruction.rexx`; Regina, opt/no-opt, linked output and source-anchored tree checks | Proved for these forms; complete expression domain remains open |
 | Expression evaluation once and output order | Exposed counter called inside SAY expression; its inner SAY precedes the outer line | Proved for this fixture; external/BIF effects remain open |
 | Invalid source forms | Grammar has explicit close-bracket recovery and general expression diagnostics | Open: reference/error matrix and source anchors |
-| Complete BIF, local and external function terms | A direct table reaches 57 of 70 recognised Classic BIF names plus LOWER/UPPER; a shared check raises distinct Classic SYNTAX. Nested, omitted, pool-mutating and local-procedure calls match Regina in focused proof. Activation-owned configuration reaches direct BIFs through internal functions and CALLs; seeded RANDOM lifecycle and pool isolation pass | Open: remaining BIF services, host-selected configuration, external resolution, trap/diagnostic lifecycle and full reference proof |
+| Complete BIF, local and external function terms | A direct table reaches 57 of 70 recognised Classic BIF names plus LOWER/UPPER; a shared check raises distinct Classic SYNTAX. Nested, omitted, pool-mutating and local-procedure calls match Regina in focused proof. Activation-owned configuration reaches direct BIFs through internal functions and CALLs; seeded RANDOM lifecycle and pool isolation pass. Unhandled errors now report the authored main or local call site | Open: remaining BIF services, host-selected configuration, external resolution, Classic trap lifecycle and full reference proof |
 | General variable value terms | All validated variable reads now use shared pool `symbolValue`; Regina, opt/no-opt, local exposure/CALL, linked and normal Level C checks pass | Pool-read consolidation proved; complete expression domain remains open |
 | BYTE/UTF8 output, configured host route and failure | Length-aware default and per-context output pass embedded-NUL, UTF-8 byte, legacy-error, context-isolation, opt/no-opt and linked checks | Byte route proved; broader host/profile, trace and condition lifecycle remain open |
 | Trace/condition lifecycle | Existing canonical SAY opcode and source anchors | Open: clause hooks, trapped errors and finalization |
@@ -1154,9 +1154,11 @@ Open before closure:
   `CLASSIC_SYNTAX` with the recorded `40.14` identity before the next SAY.
   This is distinct from the VM's existing `ERROR` signal. The generic
   argument frame retains omitted slots and the visible caller pool; the
-  compiler keeps the authored BIF source anchor. Configured context, full
-  Classic trap/diagnostic lifecycle and RexxScript equivalence beyond the
-  focused shared tests remain open; these are required work, not infeasible
+  compiler keeps the authored BIF source anchor. The VM panic path now reports
+  that authored site in main or local procedure code even when a shared helper
+  raises the signal. Host-selected configuration, full Classic trap lifecycle
+  and RexxScript equivalence beyond the focused shared tests remain open;
+  these are required work, not infeasible
   exceptions.
 - Prove the remaining configured host/profile selection and source/trace
   lifecycle. The byte route and callback failure path have focused proof,
@@ -1247,9 +1249,9 @@ checks passed 12/12 (`/tmp/crexx-levelc-bif-final-focused.eXd5pD`) plus
 RexxScript runtime 2/2; the Release core and `rxfnsc` build passed
 (`/tmp/crexx-levelc-bif-final-build.5X96R1`), and the normal Release Level C
 suite passed 303/303 (`/tmp/crexx-levelc-bif-qualified-suite.lSbDiB`).
-Host-selected character/numeric configuration, thirteen absent Classic BIF services,
-external function lookup, Classic traps and authored runtime diagnostic
-location remain open. No whole-instruction closure is claimed.
+Host-selected character/numeric configuration, thirteen absent Classic BIF
+services, external function lookup and Classic traps remain open. No
+whole-instruction closure is claimed.
 
 2026-10-03 LC-STEP-63C configuration increment (step and SAY remain open):
 compiler lowering creates one `RexxClassicConfig` per program activation,
@@ -1271,6 +1273,27 @@ current Park-Miller sequence differs from Regina for the same seed. This is
 an implementation difference in the algorithm, not a claimed exception to
 the state/range contract. Full RANDOM reference proof and host-selected
 configuration remain open.
+
+The LC-STEP-63C diagnostic plan was to make the VM's existing panic
+source reporter run for signals with a nonempty message and show the immediate
+call site from retained source metadata. It will prove that a failed Classic
+BIF identifies the authored SAY line in main and local procedure contexts,
+with opt/no-opt and linked execution. This is a general VM diagnostic repair;
+the signal identity and shared BIF check stay unchanged. Classic catch/trap
+state remains a separate, open lifecycle obligation.
+
+2026-10-03 LC-STEP-63C diagnostic increment (step and SAY remain open): the VM
+now prints panic source metadata for signals with or without payload text and
+the immediate caller's location when a callee raises an unhandled signal.
+Classic `SUBSTR` error fixtures report the authored `SAY` line in main and
+local procedures under optimized and no-opt builds; the linked local fixture
+preserves that location (`/tmp/crexx-levelc-bif-location-linked.S1nrHQ`).
+The shared BIF helper and VM signal identity did not change. Focused Level C
+checks passed 5/5 (`/tmp/crexx-levelc-bif-location-focused.MmyTsC`); existing
+VM panic and signal checks passed 8/8 in rxbvm/rxtvm
+(`/tmp/crexx-levelc-bif-location-vm.czY3Oe`), and the normal Release Level C
+suite passed 308/308 (`/tmp/crexx-levelc-bif-location-suite.sQMgiq`). Classic
+trap delivery and condition state remain open.
 
 ## Findings
 
