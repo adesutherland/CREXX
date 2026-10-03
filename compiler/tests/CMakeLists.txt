@@ -5203,8 +5203,6 @@ add_levelc_unsupported_compile_test(levelc_slice6_procedure_parse_unsupported
 add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
         rexx_src/levelc_slice7_if_unsupported_branch.rexx)
 
-add_levelc_unsupported_compile_test(levelc_slice27_controlled_dynamic_for_unsupported
-        rexx_src/levelc_slice27_controlled_dynamic_for_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
@@ -5669,6 +5667,14 @@ add_levelc_runtime_slice_test(levelc_call_window_loop_carried_noopt
         "first-after 1\nall 1\nall 2\nafter-all 3\n" -n)
 set_tests_properties(levelc_call_window_loop_carried
         levelc_call_window_loop_carried_noopt PROPERTIES TIMEOUT 60)
+add_levelc_runtime_slice_test(levelc_slice35_dynamic_for
+        rexx_src/levelc_slice35_dynamic_for.rexx
+        "for 10 1\nto 10 2\nby 10 3\nfirst-after 1 3\nby 10 1\nto 10 2\nfor 10 3\nsecond-after 1 3\nby 10 1\nto 10 2\nfor-two 10 3\nall 1 3\nall 2 3\nafter-all 3 3\ncounted 1 3\ncounted 2 1\ncounted 3 1\nafter-counted 4 1\ndecimal 1\ndecimal 2\nafter-decimal 3\nuntil 1\nuntil 2\nafter-until 2 9\nafter-zero 1 1 0\nafter-zero-end 1 1 0\nafter-outer 3\nlocal 1\nlocal 2\n3\n")
+add_levelc_runtime_slice_test(levelc_slice35_dynamic_for_noopt
+        rexx_src/levelc_slice35_dynamic_for.rexx
+        "for 10 1\nto 10 2\nby 10 3\nfirst-after 1 3\nby 10 1\nto 10 2\nfor 10 3\nsecond-after 1 3\nby 10 1\nto 10 2\nfor-two 10 3\nall 1 3\nall 2 3\nafter-all 3 3\ncounted 1 3\ncounted 2 1\ncounted 3 1\nafter-counted 4 1\ndecimal 1\ndecimal 2\nafter-decimal 3\nuntil 1\nuntil 2\nafter-until 2 9\nafter-zero 1 1 0\nafter-zero-end 1 1 0\nafter-outer 3\nlocal 1\nlocal 2\n3\n" -n)
+set_tests_properties(levelc_slice35_dynamic_for
+        levelc_slice35_dynamic_for_noopt PROPERTIES TIMEOUT 60)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5745,6 +5751,14 @@ add_levelc_invalid_runtime_test(levelc_slice33_dynamic_to_invalid
         rexx_src/levelc_slice33_dynamic_to_invalid.rexx RXC-LC-41.4)
 add_levelc_invalid_runtime_test(levelc_slice34_dynamic_by_invalid
         rexx_src/levelc_slice34_dynamic_by_invalid.rexx RXC-LC-41.5)
+add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_invalid
+        rexx_src/levelc_slice35_dynamic_for_invalid.rexx RXC-LC-26.3)
+add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_range
+        rexx_src/levelc_slice35_dynamic_for_range.rexx RXC-LC-26.3)
+add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_fraction
+        rexx_src/levelc_slice35_dynamic_for_fraction.rexx RXC-LC-26.3)
+add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_negative
+        rexx_src/levelc_slice35_dynamic_for_negative.rexx RXC-LC-26.3)
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
@@ -6036,6 +6050,14 @@ add_levelc_lowered_tree_shape_test(levelc_slice34_dynamic_by_tree_shape
         "controlByValue"
         "controlToContinueBy"
         "controlStepBy"
+        "ITERATE")
+add_levelc_lowered_tree_shape_test(levelc_slice35_dynamic_for_tree_shape
+        rexx_src/levelc_slice35_dynamic_for.rexx
+        "__rxcp_levelc_for_"
+        "controlForCountValue"
+        "FOR"
+        "__rxcp_levelc_to_"
+        "__rxcp_levelc_by_"
         "ITERATE")
 
 # Bridge Connectivity Test

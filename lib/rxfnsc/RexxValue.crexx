@@ -664,6 +664,22 @@ RexxValue: class
     end
     return .RexxValue(text)
 
+  /** Validate a bounded Classic controlled DO FOR count at loop setup. */
+  controlForCountValue: method = .int
+    text = asString()
+    if datatype(text, "W") <> "1" then do
+      invalid_message = "RXC-LC-26.3: DO FOR count must be a non-negative whole number; found " || text
+      assembler signal "ERROR", invalid_message
+    end
+    whole = .decimal
+    whole = asDecimal()
+    if whole < 0 | whole > 2147483647 then do
+      range_message = "RXC-LC-26.3: DO FOR count is outside the supported range; found " || text
+      assembler signal "ERROR", range_message
+    end
+    count = whole as .int
+    return count
+
   /** Check a Classic DO control variable against a fixed TO value. */
   controlToContinue: method = .boolean
     arg limit = .RexxValue

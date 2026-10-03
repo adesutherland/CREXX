@@ -39,6 +39,7 @@
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_TO_LIMIT_PREFIX "__rxcp_levelc_to_"
 #define LEVELC_BY_STEP_PREFIX "__rxcp_levelc_by_"
+#define LEVELC_FOR_COUNT_PREFIX "__rxcp_levelc_for_"
 #define LEVELC_BIF_LENGTH_HELPER "rexxclassicbif_length"
 #define LEVELC_BIF_DISPATCH_HELPER "rexxclassicbif_call"
 #define LEVELC_BIF_CONTEXT_CLASS "RexxBifCallContext"
@@ -1192,8 +1193,10 @@ static int levelc_controlled_header_supported(ASTNode *repeat,
                    (levelc_signed_integer_literal(clause->child) ||
                     levelc_expr_supported(clause->child, plan, reason_out))) {
             by = clause;
-        } else if (clause->node_type == FOR && !for_clause &&
-                   levelc_bounded_nonnegative_integer_literal(clause->child, NULL)) {
+        } else if (clause->node_type == FOR && !for_clause && clause->child &&
+                   !clause->child->sibling &&
+                   (levelc_bounded_nonnegative_integer_literal(clause->child, NULL) ||
+                    levelc_expr_supported(clause->child, plan, reason_out))) {
             for_clause = clause;
         } else goto unsupported;
         clause = clause->sibling;
@@ -1885,6 +1888,7 @@ static char *levelc_capture_control_clause(Context *context,
 
     if (!context || !clause || !header_setup) return NULL;
     name = rxcp_remap_create_generated_node_name(name_prefix, clause);
+    if (!name) return NULL;
     value = levelc_lower_expr(context, clause->child, plan, header_setup);
     checked = value
         ? rxcp_remap_create_member_call(context, clause, value,
@@ -3046,19 +3050,22 @@ static int levelc_lower_do(Context *context,
             ASTNode *captured_to_ref = NULL;
             ASTNode *captured_by_check_ref = NULL;
             ASTNode *captured_by_step_ref = NULL;
+            ASTNode *captured_for_ref = NULL;
             char *to_name = NULL;
             char *by_name = NULL;
+            char *for_name = NULL;
             char *target_name;
             ASTNode *limit_args[2];
             ASTNode *step_args[1];
             int for_count = 0;
+            int literal_for = 0;
 
             if (!levelc_controlled_header_supported(repeat, plan, &to, &by,
                                                        &for_clause, reason_out)) goto fail;
             control_anchor = to ? to : (for_clause ? for_clause : (by ? by : assign));
-            if (for_clause &&
-                !levelc_bounded_nonnegative_integer_literal(for_clause->child,
-                                                            &for_count)) goto fail;
+            if (for_clause)
+                literal_for = levelc_bounded_nonnegative_integer_literal(
+                        for_clause->child, &for_count);
             header_setup = rxcp_remap_create_instruction_builder(context, assign);
             if (!header_setup) goto fail;
             for (clause = assign->sibling; clause; clause = clause->sibling) {
@@ -3067,7 +3074,11 @@ static int levelc_lower_do(Context *context,
                     to_name = levelc_capture_control_clause(
                             context, clause, plan, header_setup,
                             LEVELC_TO_LIMIT_PREFIX, "controlToValue");
-                    if (!to_name) goto fail;
+                    if (!to_name) {
+                        free(by_name);
+                        free(for_name);
+                        goto fail;
+                    }
                 } else if (clause == by &&
                            !levelc_signed_integer_literal(clause->child)) {
                     by_name = levelc_capture_control_clause(
@@ -3075,6 +3086,16 @@ static int levelc_lower_do(Context *context,
                             LEVELC_BY_STEP_PREFIX, "controlByValue");
                     if (!by_name) {
                         free(to_name);
+                        free(for_name);
+                        goto fail;
+                    }
+                } else if (clause == for_clause && !literal_for) {
+                    for_name = levelc_capture_control_clause(
+                            context, clause, plan, header_setup,
+                            LEVELC_FOR_COUNT_PREFIX, "controlForCountValue");
+                    if (!for_name) {
+                        free(to_name);
+                        free(by_name);
                         goto fail;
                     }
                 }
@@ -3089,12 +3110,17 @@ static int levelc_lower_do(Context *context,
                 captured_by_step_ref = rxcp_remap_create_named_ref(
                         context, by, VAR_SYMBOL, by_name);
             }
+            if (for_name)
+                captured_for_ref = rxcp_remap_create_named_ref(
+                        context, for_clause, VAR_SYMBOL, for_name);
             free(to_name);
             free(by_name);
+            free(for_name);
             if ((to && !levelc_nonnegative_integer_literal(to->child) &&
                  !captured_to_ref) ||
                 (by && !levelc_signed_integer_literal(by->child) &&
-                 (!captured_by_step_ref || (to && !captured_by_check_ref)))) goto fail;
+                 (!captured_by_step_ref || (to && !captured_by_check_ref))) ||
+                (for_clause && !literal_for && !captured_for_ref)) goto fail;
             initial_prelude = rxcp_remap_create_instruction_builder(context, assign);
             initial_statement = initial_prelude
                 ? levelc_pool_set_statement(context, assign, plan, initial_prelude)
@@ -3179,8 +3205,10 @@ static int levelc_lower_do(Context *context,
             body = condition_node ? condition_node->sibling : repeat->sibling;
             control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);
             count_node = for_clause
-                ? rxcp_remap_create_integer_constant(context, for_clause->child,
-                                                     for_count, TP_INTEGER)
+                ? literal_for
+                    ? rxcp_remap_create_integer_constant(context, for_clause->child,
+                                                         for_count, TP_INTEGER)
+                    : captured_for_ref
                 : NULL;
             lowered = (!(to || (condition_node && condition_node->node_type == WHILE)) ||
                        (while_value && while_source)) && until_value &&
