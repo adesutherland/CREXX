@@ -5728,6 +5728,12 @@ add_levelc_runtime_slice_test(levelc_slice42_abuttal
 add_levelc_runtime_slice_test(levelc_slice42_abuttal_noopt
         rexx_src/levelc_slice42_abuttal.rexx
         "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n" -n)
+add_levelc_runtime_slice_test(levelc_slice43_decimal_fraction
+        rexx_src/levelc_slice43_decimal_fraction.rexx
+        "literal 1.5 1. .5\nvalue 1.5\narithmetic 3.5 1.5\nparse 1.5\nabutted [1.5]\n")
+add_levelc_runtime_slice_test(levelc_slice43_decimal_fraction_noopt
+        rexx_src/levelc_slice43_decimal_fraction.rexx
+        "literal 1.5 1. .5\nvalue 1.5\narithmetic 3.5 1.5\nparse 1.5\nabutted [1.5]\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -6167,6 +6173,11 @@ add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
         "concat"
         "spaceConcat"
         "rexxclassicbif_length")
+add_levelc_lowered_tree_shape_test(levelc_slice43_decimal_fraction_tree_shape
+        rexx_src/levelc_slice43_decimal_fraction.rexx
+        "STRING : .*1[.]5"
+        "RexxValue"
+        "add")
 
 # Bridge Connectivity Test
 add_custom_command(

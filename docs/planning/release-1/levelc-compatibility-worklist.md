@@ -400,6 +400,14 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   Verify minimal Regina counterexamples, raw and lowered AST, opt/no-opt,
   parser/highlighter checks, the normal Level C suite and linked execution.
   This closes `LC-FIND-04`; broader expression conformance remains open.
+- [x] **LC-AC-42 — decimal fraction source tokens:** Classic constants with
+  a decimal point and digits on at least one side (`1.5`, `1.`, `.5`) form one
+  source numeric AST operand and retain their exact spelling as a `RexxValue`.
+  They work in ordinary expressions, PARSE VALUE expressions and arithmetic;
+  fractional DO/FOR counts still raise their existing contextual errors.
+  Verify Regina output, raw/canonical tree, opt/no-opt, focused invalid-count
+  tests, the normal Level C suite and linked execution. Exponents and wider
+  constant-symbol spellings remain separate open lexical work.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -700,6 +708,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     grammar paths. Preserve the explicit operator and spaced cases, prove
     Regina and canonical runtime equivalence, then commit this parser/AST
     correction separately.
+45. **LC-STEP-45 — complete (LC-AC-08/42; depends on STEP-44):** scan bounded decimal
+    fraction forms as one existing numeric token and represent them with the
+    existing source `DECIMAL` AST node. Extend the Level C parser's operand
+    contexts and lower that node through the same shared `RexxValue` string
+    path as other Classic constants. Retain integer-only fast paths for DO/FOR
+    counts and prove contextual errors, tree shape and linked equivalence
+    before a separate commit.
 
 ## Findings
 
@@ -731,14 +746,16 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   `concat-regina.out` and `concat-crexx.out`. `LC-STEP-44` now selects
   `OP_CONCAT` for physically adjacent terms and `OP_SCONCAT` for spaced terms.
   The new fixture covers groups, calls, comment-only gaps and PARSE VALUE.
-- **LC-FIND-05 — open, decimal constants split at the dot:** the current
-  Level C scanner emits integer, dot and integer tokens for `1.5`; the
-  expression parser can lose the dot. Before `LC-STEP-44`, blank concatenation
+- **LC-FIND-05 — bounded repair, broader constant symbols open:** the former
+  Level C scanner emitted integer, dot and integer tokens for `1.5`; the
+  expression parser could lose the dot. Before `LC-STEP-44`, blank concatenation
   made the existing `DO ... FOR 1.5` invalid-value test pass; unrestricted
   abuttal briefly turned it into `15`. The parser now refuses to infer
-  abuttal across an omitted dot, preserving the invalid-value result. Proper
-  decimal constant tokenization and reference behavior remain separate work
-  under `LC-AC-04/08`. Reproducer:
+  abuttal across an omitted dot, preserving the invalid-value result.
+  `LC-STEP-45` now scans bounded decimal fraction forms into a single numeric
+  source token and lowers them through shared `RexxValue`, so `1.5` retains
+  its value and still fails the contextual FOR count check. Exponents and
+  wider constant symbols remain open under `LC-AC-04/08`. Reproducer:
   `compiler/tests/rexx_src/levelc_slice35_dynamic_for_fraction.rexx` and
   `/tmp/crexx-levelc-abuttal-fraction-tree.pGPSc7`.
 
@@ -1880,6 +1897,19 @@ full compatibility proof.
   `/tmp/crexx-levelc-abuttal-debug-tests.AN4Zv6`,
   `/tmp/crexx-levelc-abuttal-tree.oD0XbH`, and
   `/tmp/crexx-levelc-abuttal-linked.gCu88S`.
+- Decimal fraction constants now reach the raw tree as one source `DECIMAL`
+  node for `1.5`, `1.`, and `.5`; the canonical tree constructs a shared
+  `RexxValue` from the exact spelling. Regina output matches optimized,
+  no-opt and linked execution for literals, arithmetic, PARSE VALUE and
+  abutted expressions. Existing invalid fractional DO/FOR count diagnostics
+  remain green; `1.0` and `1.` whole-number FOR probes also match Regina.
+  Release Level C passed 255/255 and focused Debug 8/8. Evidence:
+  `/tmp/crexx-levelc-decimal-tree.yu3Qoo`,
+  `/tmp/crexx-levelc-decimal-final-suite.H6aH56`,
+  `/tmp/crexx-levelc-decimal-final-debug-build.8hQLB7`,
+  `/tmp/crexx-levelc-decimal-final-debug-tests.Sf2900`,
+  `/tmp/crexx-levelc-decimal-final-linked.wudGXo`, and
+  `/tmp/crexx-levelc-decimal-count.wVmu1e`.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.

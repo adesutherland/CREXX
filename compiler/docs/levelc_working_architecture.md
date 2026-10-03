@@ -242,9 +242,13 @@ Touching tokens, including a gap containing only nested comments, produce
 the existing `OP_CONCAT`; whitespace produces `OP_SCONCAT`. The chain check
 allows parentheses omitted from a grouped or call operand's AST but does not
 infer abuttal across other omitted punctuation. This matters for the current
-scanner's `1.5` split into integer, dot and integer tokens: the dot must not
-be silently lost while deciding abuttal. Decimal constant tokenization is
-still an open scanner/parser compatibility item.
+scanner's former `1.5` split into integer, dot and integer tokens: the dot
+must not be silently lost while deciding abuttal. The bounded decimal-fraction
+scanner slice now emits `1.5`, `1.`, and `.5` as one `TK_DECIMAL` token and
+one source `DECIMAL` AST node. Level C lowering turns that node into the
+original string spelling in a shared `RexxValue`, so Classic numeric methods
+and contextual DO/FOR whole-number checks remain authoritative. Exponent
+spellings and wider constant symbols still need separate lexical work.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission. The existing WHILE, BLOCK_EXPR and
 LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL

@@ -448,6 +448,7 @@ static int levelc_expr_supported(ASTNode *expr,
     switch (expr->node_type) {
         case STRING:
         case INTEGER:
+        case DECIMAL:
             return 1;
 
         case VAR_SYMBOL:
@@ -892,7 +893,7 @@ static int levelc_arg_statement_supported(ASTNode *stmt,
 static int levelc_call_tail_value_supported(ASTNode *node,
                                             const char **reason_out) {
     if (!node) return 0;
-    if (node->node_type == INTEGER) return 1;
+    if (node->node_type == INTEGER || node->node_type == DECIMAL) return 1;
     if (node->node_type == LITERAL) {
         return levelc_variable_value_supported(node, reason_out);
     }
@@ -2350,6 +2351,7 @@ static ASTNode *levelc_lower_expr(Context *context,
     switch (expr->node_type) {
         case STRING:
         case INTEGER:
+        case DECIMAL:
             return levelc_rexxvalue_from_literal(context, expr);
         case VAR_SYMBOL:
             return levelc_pool_value(context, expr);
@@ -2508,7 +2510,8 @@ static ASTNode *levelc_lower_call_tail_value(Context *context,
 
     if (!node) return NULL;
     if (node->node_type == LITERAL) return levelc_pool_value(context, node);
-    if (node->node_type == INTEGER) return levelc_rexxvalue_from_literal(context, node);
+    if (node->node_type == INTEGER || node->node_type == DECIMAL)
+        return levelc_rexxvalue_from_literal(context, node);
     return NULL;
 }
 

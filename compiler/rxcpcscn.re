@@ -72,6 +72,7 @@ regular:
   lcsymchr = lcfsymchr | digit | [.];
   lcsimple = lcfsymchr lcsymchr*;
   integer = digit+;
+  fraction = digit+ "." digit* | "." digit+;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
   badsqstr = ['] ((any\['\n\r])|(['][']))*;
@@ -121,6 +122,7 @@ regular:
     not { RET(TK_NOT); }
 
     lcsimple ob ":" { RET(TK_LABEL); }
+    fraction { RET(TK_DECIMAL); }
     integer { RET(TK_INTEGER); }
     str { RET(TK_STRING); }
     str [bBxX] / (any\(lcfsymchr | digit | [.])) { RET(TK_STRING); }
