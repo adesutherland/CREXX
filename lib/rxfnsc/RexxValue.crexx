@@ -349,6 +349,25 @@ RexxValue: class
     fields[2] = .RexxValue(rest)
     return fields
 
+  /**
+   * Split an implicit-word Classic template of any positive item count.
+   * Earlier items receive words; the final item receives the unparsed tail.
+   * @param item_count Number of scalar or dot template items
+   * @return One captured value per template item
+   */
+  parseWordTemplate: method = .RexxValue[]
+    arg item_count = .int
+    fields = .RexxValue[]
+    if item_count < 1 then return fields
+    remaining = .RexxValue(asString())
+    if item_count > 1 then do index = .int(1) to item_count - 1
+      pair = remaining.parseWordAndRest()
+      fields[index] = pair[1]
+      remaining = pair[2]
+    end
+    fields[item_count] = remaining
+    return fields
+
   asInt: method = .int
     temp = 0
     flags = cache_flags

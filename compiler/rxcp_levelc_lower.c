@@ -37,7 +37,6 @@
 #define LEVELC_COMPOUND_TAIL_PREFIX "__rxcp_levelc_tail_"
 #define LEVELC_EXPR_RESULT_PREFIX "__rxcp_levelc_expr_"
 #define LEVELC_PARSE_FIELDS_PREFIX "__rxcp_levelc_parse_fields_"
-#define LEVELC_PARSE_DROP_PREFIX "__rxcp_levelc_parse_drop_"
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_START_VALUE_PREFIX "__rxcp_levelc_start_"
 #define LEVELC_TO_LIMIT_PREFIX "__rxcp_levelc_to_"
@@ -1443,7 +1442,7 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
         }
         free(name);
     }
-    if (target_count < 1 || target_count > 4) goto unsupported;
+    if (target_count < 1 || target_count > INT_MAX) goto unsupported;
     if (source_out) *source_out = source;
     if (target_out) *target_out = target;
     if (target_count_out) *target_count_out = target_count;
@@ -3002,89 +3001,49 @@ static int levelc_lower_direct_parse(Context *context,
         if (!value) goto fail;
     }
 
-    if (target_count == 1) {
+    char *fields_name = rxcp_remap_create_generated_node_name(
+        LEVELC_PARSE_FIELDS_PREFIX, stmt);
+    ASTNode *fields_define = fields_name
+        ? rxcp_remap_create_array_define(context, stmt, fields_name,
+                                         LEVELC_REXX_VALUE_CLASS_TYPE)
+        : NULL;
+    ASTNode *count_arg = rxcp_remap_create_integer_constant(context, stmt,
+                                                              (int)target_count, TP_INTEGER);
+    ASTNode *split_args[1] = {count_arg};
+    ASTNode *split = count_arg
+        ? rxcp_remap_create_member_call(context, stmt, value,
+                                       "parseWordTemplate", split_args, 1)
+        : NULL;
+    ASTNode *capture = fields_name && split
+        ? rxcp_remap_create_named_assignment(context, stmt, fields_name, split)
+        : NULL;
+    if (!fields_define || !capture) {
+        free(fields_name);
+        goto fail;
+    }
+    add_ast(prelude, fields_define);
+    add_ast(prelude, capture);
+    rxcp_remap_append_builder_children(instructions, prelude);
+    for (index = 1; index <= target_count; index++, target = target->sibling) {
         char *target_name = levelc_upper_name(target);
         int is_drop = target_name && strcmp(target_name, ".") == 0;
         free(target_name);
-        if (is_drop) {
-            char *drop_name = rxcp_remap_create_generated_node_name(
-                LEVELC_PARSE_DROP_PREFIX, stmt);
-            ASTNode *capture = drop_name
-                ? rxcp_remap_create_named_assignment(context, stmt,
-                                                     drop_name, value)
-                : NULL;
-            free(drop_name);
-            if (!capture) goto fail;
-            add_ast(prelude, capture);
-            rxcp_remap_append_builder_children(instructions, prelude);
-            return 1;
-        }
-    }
-
-    if (target_count >= 2) {
-        ASTNode *last_target = target;
-        char *last_name;
-        int last_is_drop;
-        char *fields_name = rxcp_remap_create_generated_node_name(
-            LEVELC_PARSE_FIELDS_PREFIX, stmt);
-        ASTNode *fields_define = fields_name
-            ? rxcp_remap_create_array_define(context, stmt, fields_name,
-                                             LEVELC_REXX_VALUE_CLASS_TYPE)
+        if (is_drop) continue;
+        receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
+        args[0] = levelc_name_string(context, target);
+        args[1] = rxcp_remap_create_indexed_ref(context, target, VAR_SYMBOL,
+                                                fields_name, (int)index);
+        lowered = receiver && args[0] && args[1]
+            ? rxcp_remap_create_member_call_statement(context, target,
+                                                      receiver, "setValue", args, 2)
             : NULL;
-        for (index = 1; index < target_count; index++)
-            last_target = last_target->sibling;
-        last_name = levelc_upper_name(last_target);
-        last_is_drop = last_name && strcmp(last_name, ".") == 0;
-        free(last_name);
-        const char *split_method = target_count == 2 ? "parseWordAndRest"
-            : target_count == 3 ? "parseThreeWords"
-            : last_is_drop ? "parseThreeWordsDrop" : "parseFourWords";
-        ASTNode *split = rxcp_remap_create_member_call(context, stmt, value,
-                                                        split_method, NULL, 0);
-        ASTNode *capture = fields_name && split
-            ? rxcp_remap_create_named_assignment(context, stmt, fields_name, split)
-            : NULL;
-        if (!fields_define || !capture) {
+        if (!lowered) {
             free(fields_name);
             goto fail;
         }
-        add_ast(prelude, fields_define);
-        add_ast(prelude, capture);
-        rxcp_remap_append_builder_children(instructions, prelude);
-        for (index = 1; index <= (target_count == 4 && last_is_drop ? 3 : target_count);
-             index++, target = target->sibling) {
-            char *target_name = levelc_upper_name(target);
-            int is_drop = target_name && strcmp(target_name, ".") == 0;
-            free(target_name);
-            if (is_drop) continue;
-            receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
-            args[0] = levelc_name_string(context, target);
-            args[1] = rxcp_remap_create_indexed_ref(context, target, VAR_SYMBOL,
-                                                    fields_name, (int)index);
-            lowered = receiver && args[0] && args[1]
-                ? rxcp_remap_create_member_call_statement(context, target,
-                                                          receiver, "setValue", args, 2)
-                : NULL;
-            if (!lowered) {
-                free(fields_name);
-                goto fail;
-            }
-            add_ast(instructions, lowered);
-        }
-        free(fields_name);
-        return 1;
+        add_ast(instructions, lowered);
     }
-
-    receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
-    args[0] = levelc_name_string(context, target);
-    args[1] = value;
-    lowered = receiver && args[0]
-        ? rxcp_remap_create_member_call_statement(context, stmt, receiver,
-                                                  "setValue", args, 2)
-        : NULL;
-    if (!lowered) goto fail;
-    rxcp_remap_append_builder_children(instructions, prelude);
-    add_ast(instructions, lowered);
+    free(fields_name);
     return 1;
 
 fail:

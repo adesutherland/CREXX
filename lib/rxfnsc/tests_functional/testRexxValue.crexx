@@ -162,6 +162,19 @@ parse_fields = .RexxValue("").parseWordAndRest()
 errors = errors + check(parse_fields[1].asString() = "" &,
     parse_fields[2].asString() = "", "parse empty word and rest")
 
+parse_source = .RexxValue("  a  b   c  d e  ")
+parse_fields = parse_source.parseWordTemplate(5)
+errors = errors + check(parse_fields[1].asString() = "a" &,
+    parse_fields[2].asString() = "b" & parse_fields[3].asString() = "c" &,
+    parse_fields[4].asString() = "d" & parse_fields[5].asString() = "e  ", "parse generic five-item template")
+errors = errors + check(parse_source.asString() = "  a  b   c  d e  ", "parse generic source unchanged")
+parse_fields = .RexxValue("a b").parseWordTemplate(8)
+errors = errors + check(parse_fields[1].asString() = "a" &,
+    parse_fields[2].asString() = "b" & parse_fields[3].asString() = "" &,
+    parse_fields[4].asString() = "" & parse_fields[8].asString() = "", "parse generic short input")
+parse_fields = .RexxValue("a b").parseWordTemplate(1)
+errors = errors + check(parse_fields[1].asString() = "a b", "parse generic single item")
+
 b = .RexxValue.fromBinary("4142"x as .binary)
 errors = errors + check(b.cacheFlags() = RV_FLAG_BINARY, "binary factory flags")
 errors = errors + check(\b.hasText(), "binary not marked text")

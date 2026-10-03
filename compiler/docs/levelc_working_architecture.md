@@ -73,7 +73,7 @@ bindings. This uses the current Level C BYTE default; delivery of an opt-in
 UTF8 call configuration remains an open compatibility obligation.
 
 The executable `PARSE` slice accepts a `VAR` scalar source or a `VALUE`
-expression with one to four direct scalar or `.` template items, with optional
+expression with any nonempty direct scalar or `.` template, with optional
 `UPPER`. The parser keeps the outer comma-template list and inner template as
 separate `TEMPLATES` nodes. The lowerer validates both levels, evaluates and
 captures the source before any target write, and emits canonical pool reads,
@@ -83,18 +83,19 @@ shared Classic TRANSLATE frame used by `ARG`; its import is added only when a
 supported uppercase parse exists. The authored `PARSE` and template nodes do
 not survive the canonical boundary. No new AST or emitter node is required.
 
-| Template length | Shared split operation | Results |
-| --- | --- | --- |
-| One | Direct source value, or a hidden canonical capture for `.` | Whole source |
-| Two | `RexxValue.parseWordAndRest()` using `parsewords3` | First word; source after exactly one separator |
-| Three | `RexxValue.parseThreeWords()` using `parsewords3` | First two words; unparsed tail |
-| Four, final `.` | `RexxValue.parseThreeWordsDrop()` using `parsewords3d` | First three words; tail dropped |
-| Four, final scalar | `RexxValue.parseFourWords()` using `parsewords3` then `parseWordAndRest()` | First three words; unparsed tail |
+The lowerer counts the validated targets and calls
+`RexxValue.parseWordTemplate(count)` once. The shared method returns one
+`RexxValue` per item: the first `count-1` items receive words and the last
+receives the unparsed tail. It chains the existing `parsewords3`-based
+`parseWordAndRest()` primitive, with no compiler dispatch by item count.
+Lowering captures the entire result vector before visible pool writes,
+preserving source aliases and repeated target order. A dot skips only its
+pool write, including for an all-dot template. A `PARSE VALUE` source
+expression still executes once when all items are dots.
 
-The split methods return shared `RexxValue` arrays. Lowering captures each
-array before any scalar assignment, preserving source aliases and repeated
-target order. The single-dot hidden capture ensures a `PARSE VALUE` source
-expression executes once even though no target receives it.
+Pattern, position and comma templates need a structured template plan;
+the certified exit's frozen `parseplan` semantics are the reference for that
+broader design, with Level C's parsed AST and Classic pool boundary retained.
 
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including
@@ -102,7 +103,7 @@ direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;
 Level C already has a parsed template AST and writes through a separate
 Classic variable pool. Future pattern and position work should assess reuse
 of those lower-level operations or descriptor semantics while preserving
-Level C AST ownership and pool writes. Other source types, five-item and
+Level C AST ownership and pool writes. Other source types and
 longer templates, patterns, positions and comma templates remain guarded.
 The current default proof is BYTE; the broader binary/UTF8 configuration
 obligation remains open.

@@ -1,4 +1,4 @@
 options levelc
 do
-  parse var source first second third fourth fifth
+  parse var source first ',' second
 end
