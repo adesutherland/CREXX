@@ -5190,9 +5190,6 @@ add_levelc_unsupported_compile_test(levelc_compile_unsupported
 add_levelc_unsupported_compile_test(levelc_slice2_procedure_expose_unsupported
         rexx_src/levelc_slice2_procedure_expose_unsupported.rexx)
 
-add_levelc_unsupported_compile_test(levelc_slice3_unsupported_bif
-        rexx_src/levelc_slice3_unsupported_bif.rexx)
-
 add_levelc_unsupported_compile_test(levelc_slice4_procedure_arg_count_unsupported
         rexx_src/levelc_slice4_procedure_arg_count_unsupported.rexx)
 
@@ -5348,6 +5345,25 @@ function(add_levelc_runtime_bytes_test NAME SOURCE_FILE EXPECTED_HEX)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
 
+function(add_levelc_runtime_syntax_signal_test NAME SOURCE_FILE EXPECTED_CODE EXPECTED_OUTPUT)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+    string(APPEND SCRIPT_CONTENT
+           "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" RESULT_VARIABLE status ERROR_VARIABLE diagnostic)\n"
+           "if(NOT status EQUAL 0)\n  message(FATAL_ERROR \"rxc failed: ${RXAS_DIAG_DOLLAR}{diagnostic}\")\nendif()\n"
+           "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${NAME}.rxbin\" \"${NAME}\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" RESULT_VARIABLE status ERROR_VARIABLE diagnostic)\n"
+           "if(NOT status EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: ${RXAS_DIAG_DOLLAR}{diagnostic}\")\nendif()\n"
+           "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${NAME}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library\" \"${CMAKE_BINARY_DIR}/bin/classlib\" \"${CMAKE_BINARY_DIR}/bin/rxfnsc\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" OUTPUT_VARIABLE output ERROR_VARIABLE diagnostic RESULT_VARIABLE status)\n"
+           "if(status EQUAL 0 OR NOT diagnostic MATCHES \"CLASSIC_SYNTAX\" OR NOT diagnostic MATCHES \"RXC-LC-${EXPECTED_CODE}\" OR NOT output STREQUAL \"${EXPECTED_OUTPUT}\")\n"
+           "  message(FATAL_ERROR \"Expected Classic SYNTAX ${EXPECTED_CODE} and exact prior output; status=${RXAS_DIAG_DOLLAR}{status}, output=${RXAS_DIAG_DOLLAR}{output}, diagnostic=${RXAS_DIAG_DOLLAR}{diagnostic}\")\nendif()\n")
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+    add_test(NAME ${NAME} COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}")
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+endfunction()
+
 add_levelc_runtime_slice_test(levelc_bare_stem_read
         rexx_src/levelc_bare_stem_read.rexx
         "ITEMS.\n")
@@ -5357,6 +5373,22 @@ add_levelc_runtime_bytes_test(levelc_say_bytes
 add_levelc_runtime_bytes_test(levelc_say_bytes_noopt
         rexx_src/levelc_say_bytes.rexx
         "4100420ac3a90a0a" -n)
+add_levelc_runtime_syntax_signal_test(levelc_bif_missing_required
+        rexx_src/levelc_bif_missing_required.rexx "40.3" "")
+add_levelc_runtime_syntax_signal_test(levelc_bif_syntax_signal
+        rexx_src/levelc_bif_syntax_signal.rexx "40.14" "before\n")
+add_levelc_runtime_slice_test(levelc_bif_inventory
+        rexx_src/levelc_bif_inventory.rexx "inventory\n")
+add_levelc_runtime_slice_test(levelc_say_bif_family
+        rexx_src/levelc_say_bif_family.rexx
+        "length=2\nnested=3\nsubstr=bcd\nomitted=bc\npos=2\nword=blue\nvalue=MiXeD\nlocal=iXeD\nchange=MiXeD\nafter=next\nsymbol=VAR\nx2d=255\ncenter=-A-\nleft=ab..\nmin=2\nmax=4\n")
+add_levelc_runtime_slice_test(levelc_say_bif_family_noopt
+        rexx_src/levelc_say_bif_family.rexx
+        "length=2\nnested=3\nsubstr=bcd\nomitted=bc\npos=2\nword=blue\nvalue=MiXeD\nlocal=iXeD\nchange=MiXeD\nafter=next\nsymbol=VAR\nx2d=255\ncenter=-A-\nleft=ab..\nmin=2\nmax=4\n" -n)
+add_levelc_runtime_slice_test(levelc_bif_shadow
+        rexx_src/levelc_bif_shadow.rexx "local\n")
+add_levelc_runtime_slice_test(levelc_bif_shadow_noopt
+        rexx_src/levelc_bif_shadow.rexx "local\n" -n)
 
 function(add_levelc_lowered_tree_shape_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -5971,7 +6003,8 @@ add_levelc_lowered_tree_shape_test(levelc_slice4_bif_substr_tree_shape
         "RexxBifCallContext"
         "setArguments"
         "setCallerPool"
-        "rexxclassicbif_call"
+        "rexxclassicbifsubstr.rexxclassicbif_substr"
+        "rexxclassicbif_checked"
         "__rxcp_levelc_bif_args"
         "__rxcp_levelc_bif_exists"
         ".RexxValue"
@@ -6258,7 +6291,8 @@ add_levelc_lowered_tree_shape_test(levelc_slice37_empty_string_tree_shape
 add_levelc_lowered_tree_shape_test(levelc_slice38_adjacent_call_tree_shape
         rexx_src/levelc_slice38_adjacent_call.rexx
         "rexxclassicbif_length"
-        "rexxclassicbif_call"
+        "rexxclassicbifsubstr.rexxclassicbif_substr"
+        "rexxclassicbif_checked"
         "__rxcp_levelc_proc_ECHO"
         "spaceConcat")
 add_levelc_lowered_tree_shape_test(levelc_slice39_arg_upper_tree_shape
@@ -6347,6 +6381,11 @@ add_levelc_lowered_tree_shape_test(levelc_say_pool_reads_tree_shape
         "SAY : .*\\(9:0\\)"
         "SAY : .*\\(19:0\\)"
         "symbolValue")
+add_levelc_lowered_tree_shape_test(levelc_bif_syntax_signal_tree_shape
+        rexx_src/levelc_bif_syntax_signal.rexx
+        "SAY : .*\\(2:0\\)"
+        "rexxclassicbif_checked.*\\(2:4\\)"
+        "rexxclassicbifsubstr.rexxclassicbif_substr.*\\(2:4\\)")
 add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
         rexx_src/levelc_slice42_abuttal.rexx
         "concat"

@@ -1103,7 +1103,7 @@ The implementation sequence within active `LC-STEP-63` is:
    length-aware per-context callback without breaking the old ABI. Test
    embedded NUL, legacy callback failure, host isolation, UTF8, error and
    linked behavior; commit.
-3. **LC-STEP-63C (LC-AC-57/06; approved, depends on 63A):** use one direct-BIF
+3. **LC-STEP-63C (LC-AC-57/06; in progress, depends on 63A):** use one direct-BIF
    selection table and one shared result/error check. Deliver BIF failures as
    a Classic `SYNTAX` signal distinct from command `ERROR`; preserve argument
    presence, caller pool/configuration, RexxScript isolation and source
@@ -1118,7 +1118,7 @@ The implementation sequence within active `LC-STEP-63` is:
 | Childless and ordinary expressions in main, IF/DO and local procedures | `levelc_say_instruction.rexx`; Regina, opt/no-opt, linked output and source-anchored tree checks | Proved for these forms; complete expression domain remains open |
 | Expression evaluation once and output order | Exposed counter called inside SAY expression; its inner SAY precedes the outer line | Proved for this fixture; external/BIF effects remain open |
 | Invalid source forms | Grammar has explicit close-bracket recovery and general expression diagnostics | Open: reference/error matrix and source anchors |
-| Complete BIF, local and external function terms | Current guard admits only LENGTH, SUBSTR and bounded local calls; direct BIF inventory and host lookup are broader | Open: shared invocation, context, error and resolution foundation |
+| Complete BIF, local and external function terms | A direct table reaches 57 of 70 recognised Classic BIF names plus LOWER/UPPER; a shared check raises distinct Classic SYNTAX. Nested, omitted, pool-mutating and local-procedure calls match Regina in focused proof | Open: remaining BIF services, configured context, local/external resolution, trap/diagnostic lifecycle and full reference proof |
 | General variable value terms | All validated variable reads now use shared pool `symbolValue`; Regina, opt/no-opt, local exposure/CALL, linked and normal Level C checks pass | Pool-read consolidation proved; complete expression domain remains open |
 | BYTE/UTF8 output, configured host route and failure | Length-aware default and per-context output pass embedded-NUL, UTF-8 byte, legacy-error, context-isolation, opt/no-opt and linked checks | Byte route proved; broader host/profile, trace and condition lifecycle remain open |
 | Trace/condition lifecycle | Existing canonical SAY opcode and source anchors | Open: clause hooks, trapped errors and finalization |
@@ -1126,8 +1126,10 @@ The implementation sequence within active `LC-STEP-63` is:
 Open before closure:
 
 - Reconcile every expression form admitted by the Classic grammar with the
-  shared expression/BIF path. The current Level C guard admits only bounded
-  variable, literal, operator, local-call, LENGTH and SUBSTR forms; a valid
+  shared expression/BIF path. The direct table now reaches 57 of 70
+  recognised Classic BIF names plus LOWER/UPPER; thirteen recognised names
+  still need runtime services. Local omitted arguments, external functions,
+  configured state and reference error/trap behavior remain open. A valid
   expression must not fail solely because it appears in `SAY`.
 - **Resolved compiler-only variable-read limit (LC-STEP-63A):** Regina writes
   `Q.x.y` and `Q.` for `a='x'; b='y'; say q.a.b; say q.`, whereas the old
@@ -1137,17 +1139,17 @@ Open before closure:
   multi-component compounds. Assignment retains its distinct pre-RHS tail
   capture until its own instruction review. The new pool-read fixture covers
   substitution, case, unset/dropped values, exposure and a CALL argument.
-- **Confirmed call-error defect:** `options levelc; say substr('abc', 0);
-  say 'after'` stops in Regina with `40.14` and no output, but the current
-  Release compiler/VM prints an empty line and `after` with a success exit
-  (`/tmp/crexx-levelc-say-bif-error.AUp7Pt/`). The shared BIF context records
-  an error, while the current compiler call path consumes only its blank
-  return value. Complete one shared call-result/condition bridge before
-  widening BIF reachability; preserve source and argument positions, current
-  pool/configuration and RexxScript isolation. This is required work, not an
-  infeasible exception. A direct-entry compiler table plus one shared
-  call-result check that delivers Classic `SYNTAX` separately from Classic
-  command `ERROR` is approved by Adrian; implementation and proof remain open.
+- **Resolved blank-result continuation for direct BIFs (LC-STEP-63C in
+  progress):** the earlier `SAY SUBSTR('abc', 0)` probe printed a blank line
+  and continued (`/tmp/crexx-levelc-say-bif-error.AUp7Pt/`). Direct BIFs now
+  pass through one checked result boundary, which raises VM
+  `CLASSIC_SYNTAX` with the recorded `40.14` identity before the next SAY.
+  This is distinct from the VM's existing `ERROR` signal. The generic
+  argument frame retains omitted slots and the visible caller pool; the
+  compiler keeps the authored BIF source anchor. Configured context, full
+  Classic trap/diagnostic lifecycle and RexxScript equivalence beyond the
+  focused shared tests remain open; these are required work, not infeasible
+  exceptions.
 - Prove the remaining configured host/profile selection and source/trace
   lifecycle. The byte route and callback failure path have focused proof,
   but they do not complete the whole SAY condition/lifecycle contract.
@@ -1216,6 +1218,30 @@ isolation; Release core/host build passed
 Level C suite passed 296/296
 (`/tmp/crexx-levelc-say-bytes-suite.5sNM2F`). Complete BIF and SAY lifecycle
 work remains under LC-STEP-63C/D.
+
+2026-10-03 LC-STEP-63C checkpoint (step and SAY remain open): a single
+compiler table selects 59 direct Classic runtime entries, covering 57 of the
+70 recognized BIF names plus LOWER/UPPER. The generic argument frame now
+serves every selected BIF and retains omitted positions and the current
+activation pool. One shared `rexxclassicbif_checked` boundary raises VM
+`CLASSIC_SYNTAX` (code 28), separate from VM `ERROR` (code 3), when a direct
+BIF records a Classic error. The missing-required and invalid-start SUBSTR
+fixtures stop with `40.3` and `40.14` respectively; output after the failed
+call does not run. A 59-entry inventory compiles, assembles and runs its
+reachable path, and the running
+BIF-family fixture covers nested calls, omitted slots, pool mutation, a local
+procedure and local-name precedence against Regina in optimized and no-opt
+runs. Both successful and failing linked images pass, with the successful
+output byte-identical to Regina
+(`/tmp/crexx-levelc-bif-qualified-linked.wo9Jn9`). The canonical tree check
+retains the authored SAY/BIF source anchors. Focused compiler/BIF/RexxScript
+checks passed 12/12 (`/tmp/crexx-levelc-bif-final-focused.eXd5pD`) plus
+RexxScript runtime 2/2; the Release core and `rxfnsc` build passed
+(`/tmp/crexx-levelc-bif-final-build.5X96R1`), and the normal Release Level C
+suite passed 303/303 (`/tmp/crexx-levelc-bif-qualified-suite.lSbDiB`).
+Configured character/numeric state, thirteen absent Classic BIF services,
+external function lookup, Classic traps and authored runtime diagnostic
+location remain open. No whole-instruction closure is claimed.
 
 ## Findings
 
@@ -1399,7 +1425,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-EXPRESSIONS` | Classic arithmetic, comparison, Boolean, and concatenation expressions | Bounded slice: documented operator family | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-BIF-CALL` | Recognised ANSI BIF calls | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-BIF-CALL` | Recognised ANSI BIF calls | Direct compiler table for 57 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge | Remaining services, configured context and complete reference proof open |
 | `SYN-CLASSIC-LOCAL-CALL` | Direct local function/procedure calls | Bounded slice: direct local function and procedure calls | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DSLSH` | Source tree, diagnostics, and syntax-highlighting projection | Parser-mode milestone | Execution and full diagnostic conformance remain separate |
 | `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Bounded slice: ten proven slices | Remaining Classic forms, errors and configuration proof open |
@@ -1408,83 +1434,85 @@ These 36 contract names come from the existing [raw language catalogue](componen
 
 The source list is `component-catalogue/raw-levelc-bifs.md` (recognition
 only). A standalone `lib/rxfnsc/RexxClassicBif<Name>.crexx` module establishes
-a runtime entry, not compiler reachability or conformance. The two bounded
-compiler BIF shapes are `LENGTH` and `SUBSTR`; the legacy dispatcher is not a
-general Level C BIF implementation. Every BIF row below is still open for
-full compatibility proof.
+a runtime entry, not compiler reachability or conformance. The direct-entry
+compiler table reaches 57 of these 70 recognized Classic names, plus LOWER and
+UPPER. The legacy dispatcher is no longer on the Level C
+expression path. An unreachable-branch fixture links all 59 direct entries;
+selected running BIFs match Regina, but every BIF row remains open for complete
+argument, configured-context, signal and reference proof.
 
 | BIF | Current state | Evidence / next proof |
 | --- | --- | --- |
-| `ABBREV` | Runtime | [`RexxClassicBifAbbrev.crexx`](../../../lib/rxfnsc/RexxClassicBifAbbrev.crexx); compiler and reference proof open |
-| `ABS` | Runtime | [`RexxClassicBifAbs.crexx`](../../../lib/rxfnsc/RexxClassicBifAbs.crexx); compiler and reference proof open |
-| `ADDRESS` | Runtime | [`RexxClassicBifAddress.crexx`](../../../lib/rxfnsc/RexxClassicBifAddress.crexx); compiler and reference proof open |
+| `ABBREV` | Direct + runtime | [`RexxClassicBifAbbrev.crexx`](../../../lib/rxfnsc/RexxClassicBifAbbrev.crexx); full reference proof open |
+| `ABS` | Direct + runtime | [`RexxClassicBifAbs.crexx`](../../../lib/rxfnsc/RexxClassicBifAbs.crexx); full reference proof open |
+| `ADDRESS` | Direct + runtime | [`RexxClassicBifAddress.crexx`](../../../lib/rxfnsc/RexxClassicBifAddress.crexx); full reference proof open |
 | `ARG` | Open | No standalone Classic BIF module; implementation and proof open |
-| `B2X` | Runtime | [`RexxClassicBifB2x.crexx`](../../../lib/rxfnsc/RexxClassicBifB2x.crexx); compiler and reference proof open |
-| `BITAND` | Runtime | [`RexxClassicBifBitand.crexx`](../../../lib/rxfnsc/RexxClassicBifBitand.crexx); compiler and reference proof open |
-| `BITOR` | Runtime | [`RexxClassicBifBitor.crexx`](../../../lib/rxfnsc/RexxClassicBifBitor.crexx); compiler and reference proof open |
-| `BITXOR` | Runtime | [`RexxClassicBifBitxor.crexx`](../../../lib/rxfnsc/RexxClassicBifBitxor.crexx); compiler and reference proof open |
-| `C2D` | Runtime | [`RexxClassicBifC2d.crexx`](../../../lib/rxfnsc/RexxClassicBifC2d.crexx); compiler and reference proof open |
-| `C2X` | Runtime | [`RexxClassicBifC2x.crexx`](../../../lib/rxfnsc/RexxClassicBifC2x.crexx); compiler and reference proof open |
-| `CENTER` | Runtime | [`RexxClassicBifCenter.crexx`](../../../lib/rxfnsc/RexxClassicBifCenter.crexx); compiler and reference proof open |
-| `CENTRE` | Open | No standalone Classic BIF module; implementation and proof open |
-| `CHANGESTR` | Runtime | [`RexxClassicBifChangestr.crexx`](../../../lib/rxfnsc/RexxClassicBifChangestr.crexx); compiler and reference proof open |
+| `B2X` | Direct + runtime | [`RexxClassicBifB2x.crexx`](../../../lib/rxfnsc/RexxClassicBifB2x.crexx); full reference proof open |
+| `BITAND` | Direct + runtime | [`RexxClassicBifBitand.crexx`](../../../lib/rxfnsc/RexxClassicBifBitand.crexx); full reference proof open |
+| `BITOR` | Direct + runtime | [`RexxClassicBifBitor.crexx`](../../../lib/rxfnsc/RexxClassicBifBitor.crexx); full reference proof open |
+| `BITXOR` | Direct + runtime | [`RexxClassicBifBitxor.crexx`](../../../lib/rxfnsc/RexxClassicBifBitxor.crexx); full reference proof open |
+| `C2D` | Direct + runtime | [`RexxClassicBifC2d.crexx`](../../../lib/rxfnsc/RexxClassicBifC2d.crexx); full reference proof open |
+| `C2X` | Direct + runtime | [`RexxClassicBifC2x.crexx`](../../../lib/rxfnsc/RexxClassicBifC2x.crexx); full reference proof open |
+| `CENTER` | Direct + runtime | [`RexxClassicBifCenter.crexx`](../../../lib/rxfnsc/RexxClassicBifCenter.crexx); full reference proof open |
+| `CENTRE` | Direct + runtime | [`RexxClassicBifCenter.crexx`](../../../lib/rxfnsc/RexxClassicBifCenter.crexx); full reference proof open |
+| `CHANGESTR` | Direct + runtime | [`RexxClassicBifChangestr.crexx`](../../../lib/rxfnsc/RexxClassicBifChangestr.crexx); full reference proof open |
 | `CHARIN` | Open | No standalone Classic BIF module; implementation and proof open |
 | `CHAROUT` | Open | No standalone Classic BIF module; implementation and proof open |
 | `CHARS` | Open | No standalone Classic BIF module; implementation and proof open |
-| `COMPARE` | Runtime | [`RexxClassicBifCompare.crexx`](../../../lib/rxfnsc/RexxClassicBifCompare.crexx); compiler and reference proof open |
+| `COMPARE` | Direct + runtime | [`RexxClassicBifCompare.crexx`](../../../lib/rxfnsc/RexxClassicBifCompare.crexx); full reference proof open |
 | `CONDITION` | Open | No standalone Classic BIF module; implementation and proof open |
-| `COPIES` | Runtime | [`RexxClassicBifCopies.crexx`](../../../lib/rxfnsc/RexxClassicBifCopies.crexx); compiler and reference proof open |
-| `COUNTSTR` | Runtime | [`RexxClassicBifCountstr.crexx`](../../../lib/rxfnsc/RexxClassicBifCountstr.crexx); compiler and reference proof open |
-| `DATATYPE` | Runtime | [`RexxClassicBifDatatype.crexx`](../../../lib/rxfnsc/RexxClassicBifDatatype.crexx); compiler and reference proof open |
-| `DATE` | Runtime | [`RexxClassicBifDate.crexx`](../../../lib/rxfnsc/RexxClassicBifDate.crexx); compiler and reference proof open |
-| `DELSTR` | Runtime | [`RexxClassicBifDelstr.crexx`](../../../lib/rxfnsc/RexxClassicBifDelstr.crexx); compiler and reference proof open |
-| `DELWORD` | Runtime | [`RexxClassicBifDelword.crexx`](../../../lib/rxfnsc/RexxClassicBifDelword.crexx); compiler and reference proof open |
-| `DIGITS` | Open | No standalone Classic BIF module; implementation and proof open |
-| `D2C` | Runtime | [`RexxClassicBifD2c.crexx`](../../../lib/rxfnsc/RexxClassicBifD2c.crexx); compiler and reference proof open |
-| `D2X` | Runtime | [`RexxClassicBifD2x.crexx`](../../../lib/rxfnsc/RexxClassicBifD2x.crexx); compiler and reference proof open |
+| `COPIES` | Direct + runtime | [`RexxClassicBifCopies.crexx`](../../../lib/rxfnsc/RexxClassicBifCopies.crexx); full reference proof open |
+| `COUNTSTR` | Direct + runtime | [`RexxClassicBifCountstr.crexx`](../../../lib/rxfnsc/RexxClassicBifCountstr.crexx); full reference proof open |
+| `DATATYPE` | Direct + runtime | [`RexxClassicBifDatatype.crexx`](../../../lib/rxfnsc/RexxClassicBifDatatype.crexx); full reference proof open |
+| `DATE` | Direct + runtime | [`RexxClassicBifDate.crexx`](../../../lib/rxfnsc/RexxClassicBifDate.crexx); full reference proof open |
+| `DELSTR` | Direct + runtime | [`RexxClassicBifDelstr.crexx`](../../../lib/rxfnsc/RexxClassicBifDelstr.crexx); full reference proof open |
+| `DELWORD` | Direct + runtime | [`RexxClassicBifDelword.crexx`](../../../lib/rxfnsc/RexxClassicBifDelword.crexx); full reference proof open |
+| `DIGITS` | Direct + runtime | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); configured numeric context and reference proof open |
+| `D2C` | Direct + runtime | [`RexxClassicBifD2c.crexx`](../../../lib/rxfnsc/RexxClassicBifD2c.crexx); full reference proof open |
+| `D2X` | Direct + runtime | [`RexxClassicBifD2x.crexx`](../../../lib/rxfnsc/RexxClassicBifD2x.crexx); full reference proof open |
 | `ERRORTEXT` | Open | No standalone Classic BIF module; implementation and proof open |
-| `FORM` | Open | No standalone Classic BIF module; implementation and proof open |
-| `FORMAT` | Runtime | [`RexxClassicBifFormat.crexx`](../../../lib/rxfnsc/RexxClassicBifFormat.crexx); compiler and reference proof open |
-| `FUZZ` | Open | No standalone Classic BIF module; implementation and proof open |
-| `INSERT` | Runtime | [`RexxClassicBifInsert.crexx`](../../../lib/rxfnsc/RexxClassicBifInsert.crexx); compiler and reference proof open |
-| `LASTPOS` | Runtime | [`RexxClassicBifLastpos.crexx`](../../../lib/rxfnsc/RexxClassicBifLastpos.crexx); compiler and reference proof open |
-| `LEFT` | Runtime | [`RexxClassicBifLeft.crexx`](../../../lib/rxfnsc/RexxClassicBifLeft.crexx); compiler and reference proof open |
-| `LENGTH` | Slice + runtime | [`levelc_slice3_bif_length`](../../../compiler/tests/rexx_src/levelc_slice3_bif_length.rexx); other argument/context cases open |
+| `FORM` | Direct + runtime | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); configured numeric context and reference proof open |
+| `FORMAT` | Direct + runtime | [`RexxClassicBifFormat.crexx`](../../../lib/rxfnsc/RexxClassicBifFormat.crexx); full reference proof open |
+| `FUZZ` | Direct + runtime | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); configured numeric context and reference proof open |
+| `INSERT` | Direct + runtime | [`RexxClassicBifInsert.crexx`](../../../lib/rxfnsc/RexxClassicBifInsert.crexx); full reference proof open |
+| `LASTPOS` | Direct + runtime | [`RexxClassicBifLastpos.crexx`](../../../lib/rxfnsc/RexxClassicBifLastpos.crexx); full reference proof open |
+| `LEFT` | Direct + runtime | [`RexxClassicBifLeft.crexx`](../../../lib/rxfnsc/RexxClassicBifLeft.crexx); full reference proof open |
+| `LENGTH` | Direct + runtime | [`levelc_slice3_bif_length`](../../../compiler/tests/rexx_src/levelc_slice3_bif_length.rexx); direct table, signal and selected argument cases pass; full reference proof open |
 | `LINEIN` | Open | No standalone Classic BIF module; implementation and proof open |
 | `LINEOUT` | Open | No standalone Classic BIF module; implementation and proof open |
 | `LINES` | Open | No standalone Classic BIF module; implementation and proof open |
-| `MAX` | Runtime | [`RexxClassicBifMax.crexx`](../../../lib/rxfnsc/RexxClassicBifMax.crexx); compiler and reference proof open |
-| `MIN` | Runtime | [`RexxClassicBifMin.crexx`](../../../lib/rxfnsc/RexxClassicBifMin.crexx); compiler and reference proof open |
-| `OVERLAY` | Runtime | [`RexxClassicBifOverlay.crexx`](../../../lib/rxfnsc/RexxClassicBifOverlay.crexx); compiler and reference proof open |
-| `POS` | Runtime | [`RexxClassicBifPos.crexx`](../../../lib/rxfnsc/RexxClassicBifPos.crexx); compiler and reference proof open |
+| `MAX` | Direct + runtime | [`RexxClassicBifMax.crexx`](../../../lib/rxfnsc/RexxClassicBifMax.crexx); full reference proof open |
+| `MIN` | Direct + runtime | [`RexxClassicBifMin.crexx`](../../../lib/rxfnsc/RexxClassicBifMin.crexx); full reference proof open |
+| `OVERLAY` | Direct + runtime | [`RexxClassicBifOverlay.crexx`](../../../lib/rxfnsc/RexxClassicBifOverlay.crexx); full reference proof open |
+| `POS` | Direct + runtime | [`RexxClassicBifPos.crexx`](../../../lib/rxfnsc/RexxClassicBifPos.crexx); full reference proof open |
 | `QUALIFY` | Open | No standalone Classic BIF module; implementation and proof open |
 | `QUEUED` | Open | No standalone Classic BIF module; implementation and proof open |
-| `RANDOM` | Runtime | [`RexxClassicBifRandom.crexx`](../../../lib/rxfnsc/RexxClassicBifRandom.crexx); compiler and reference proof open |
-| `REVERSE` | Runtime | [`RexxClassicBifReverse.crexx`](../../../lib/rxfnsc/RexxClassicBifReverse.crexx); compiler and reference proof open |
-| `RIGHT` | Runtime | [`RexxClassicBifRight.crexx`](../../../lib/rxfnsc/RexxClassicBifRight.crexx); compiler and reference proof open |
-| `SIGN` | Runtime | [`RexxClassicBifSign.crexx`](../../../lib/rxfnsc/RexxClassicBifSign.crexx); compiler and reference proof open |
+| `RANDOM` | Direct + runtime | [`RexxClassicBifRandom.crexx`](../../../lib/rxfnsc/RexxClassicBifRandom.crexx); full reference proof open |
+| `REVERSE` | Direct + runtime | [`RexxClassicBifReverse.crexx`](../../../lib/rxfnsc/RexxClassicBifReverse.crexx); full reference proof open |
+| `RIGHT` | Direct + runtime | [`RexxClassicBifRight.crexx`](../../../lib/rxfnsc/RexxClassicBifRight.crexx); full reference proof open |
+| `SIGN` | Direct + runtime | [`RexxClassicBifSign.crexx`](../../../lib/rxfnsc/RexxClassicBifSign.crexx); full reference proof open |
 | `SOURCELINE` | Open | No standalone Classic BIF module; implementation and proof open |
-| `SPACE` | Runtime | [`RexxClassicBifSpace.crexx`](../../../lib/rxfnsc/RexxClassicBifSpace.crexx); compiler and reference proof open |
+| `SPACE` | Direct + runtime | [`RexxClassicBifSpace.crexx`](../../../lib/rxfnsc/RexxClassicBifSpace.crexx); full reference proof open |
 | `STREAM` | Open | No standalone Classic BIF module; implementation and proof open |
-| `STRIP` | Runtime | [`RexxClassicBifStrip.crexx`](../../../lib/rxfnsc/RexxClassicBifStrip.crexx); compiler and reference proof open |
-| `SUBSTR` | Slice + runtime | [`levelc_slice4_bif_substr`](../../../compiler/tests/rexx_src/levelc_slice4_bif_substr.rexx); other argument/context cases open |
-| `SUBWORD` | Runtime | [`RexxClassicBifSubword.crexx`](../../../lib/rxfnsc/RexxClassicBifSubword.crexx); compiler and reference proof open |
-| `SYMBOL` | Runtime | [`RexxClassicBifSymbol.crexx`](../../../lib/rxfnsc/RexxClassicBifSymbol.crexx); compiler and reference proof open |
-| `TIME` | Runtime | [`RexxClassicBifTime.crexx`](../../../lib/rxfnsc/RexxClassicBifTime.crexx); compiler and reference proof open |
-| `TRACE` | Runtime | [`RexxClassicBifTrace.crexx`](../../../lib/rxfnsc/RexxClassicBifTrace.crexx); compiler and reference proof open |
-| `TRANSLATE` | Runtime | [`RexxClassicBifTranslate.crexx`](../../../lib/rxfnsc/RexxClassicBifTranslate.crexx); compiler and reference proof open |
-| `TRUNC` | Runtime | [`RexxClassicBifTrunc.crexx`](../../../lib/rxfnsc/RexxClassicBifTrunc.crexx); compiler and reference proof open |
-| `VALUE` | Runtime | [`RexxClassicBifValue.crexx`](../../../lib/rxfnsc/RexxClassicBifValue.crexx); compiler and reference proof open |
-| `VERIFY` | Runtime | [`RexxClassicBifVerify.crexx`](../../../lib/rxfnsc/RexxClassicBifVerify.crexx); compiler and reference proof open |
-| `WORD` | Runtime | [`RexxClassicBifWord.crexx`](../../../lib/rxfnsc/RexxClassicBifWord.crexx); compiler and reference proof open |
-| `WORDINDEX` | Runtime | [`RexxClassicBifWordindex.crexx`](../../../lib/rxfnsc/RexxClassicBifWordindex.crexx); compiler and reference proof open |
-| `WORDLENGTH` | Runtime | [`RexxClassicBifWordlength.crexx`](../../../lib/rxfnsc/RexxClassicBifWordlength.crexx); compiler and reference proof open |
-| `WORDPOS` | Runtime | [`RexxClassicBifWordpos.crexx`](../../../lib/rxfnsc/RexxClassicBifWordpos.crexx); compiler and reference proof open |
-| `WORDS` | Runtime | [`RexxClassicBifWords.crexx`](../../../lib/rxfnsc/RexxClassicBifWords.crexx); compiler and reference proof open |
-| `XRANGE` | Runtime | [`RexxClassicBifXrange.crexx`](../../../lib/rxfnsc/RexxClassicBifXrange.crexx); compiler and reference proof open |
-| `X2B` | Runtime | [`RexxClassicBifX2b.crexx`](../../../lib/rxfnsc/RexxClassicBifX2b.crexx); compiler and reference proof open |
-| `X2C` | Runtime | [`RexxClassicBifX2c.crexx`](../../../lib/rxfnsc/RexxClassicBifX2c.crexx); compiler and reference proof open |
-| `X2D` | Runtime | [`RexxClassicBifX2d.crexx`](../../../lib/rxfnsc/RexxClassicBifX2d.crexx); compiler and reference proof open |
+| `STRIP` | Direct + runtime | [`RexxClassicBifStrip.crexx`](../../../lib/rxfnsc/RexxClassicBifStrip.crexx); full reference proof open |
+| `SUBSTR` | Direct + runtime | [`levelc_slice4_bif_substr`](../../../compiler/tests/rexx_src/levelc_slice4_bif_substr.rexx); direct table, signal and selected argument cases pass; full reference proof open |
+| `SUBWORD` | Direct + runtime | [`RexxClassicBifSubword.crexx`](../../../lib/rxfnsc/RexxClassicBifSubword.crexx); full reference proof open |
+| `SYMBOL` | Direct + runtime | [`RexxClassicBifSymbol.crexx`](../../../lib/rxfnsc/RexxClassicBifSymbol.crexx); full reference proof open |
+| `TIME` | Direct + runtime | [`RexxClassicBifTime.crexx`](../../../lib/rxfnsc/RexxClassicBifTime.crexx); full reference proof open |
+| `TRACE` | Direct + runtime | [`RexxClassicBifTrace.crexx`](../../../lib/rxfnsc/RexxClassicBifTrace.crexx); full reference proof open |
+| `TRANSLATE` | Direct + runtime | [`RexxClassicBifTranslate.crexx`](../../../lib/rxfnsc/RexxClassicBifTranslate.crexx); full reference proof open |
+| `TRUNC` | Direct + runtime | [`RexxClassicBifTrunc.crexx`](../../../lib/rxfnsc/RexxClassicBifTrunc.crexx); full reference proof open |
+| `VALUE` | Direct + runtime | [`RexxClassicBifValue.crexx`](../../../lib/rxfnsc/RexxClassicBifValue.crexx); full reference proof open |
+| `VERIFY` | Direct + runtime | [`RexxClassicBifVerify.crexx`](../../../lib/rxfnsc/RexxClassicBifVerify.crexx); full reference proof open |
+| `WORD` | Direct + runtime | [`RexxClassicBifWord.crexx`](../../../lib/rxfnsc/RexxClassicBifWord.crexx); full reference proof open |
+| `WORDINDEX` | Direct + runtime | [`RexxClassicBifWordindex.crexx`](../../../lib/rxfnsc/RexxClassicBifWordindex.crexx); full reference proof open |
+| `WORDLENGTH` | Direct + runtime | [`RexxClassicBifWordlength.crexx`](../../../lib/rxfnsc/RexxClassicBifWordlength.crexx); full reference proof open |
+| `WORDPOS` | Direct + runtime | [`RexxClassicBifWordpos.crexx`](../../../lib/rxfnsc/RexxClassicBifWordpos.crexx); full reference proof open |
+| `WORDS` | Direct + runtime | [`RexxClassicBifWords.crexx`](../../../lib/rxfnsc/RexxClassicBifWords.crexx); full reference proof open |
+| `XRANGE` | Direct + runtime | [`RexxClassicBifXrange.crexx`](../../../lib/rxfnsc/RexxClassicBifXrange.crexx); full reference proof open |
+| `X2B` | Direct + runtime | [`RexxClassicBifX2b.crexx`](../../../lib/rxfnsc/RexxClassicBifX2b.crexx); full reference proof open |
+| `X2C` | Direct + runtime | [`RexxClassicBifX2c.crexx`](../../../lib/rxfnsc/RexxClassicBifX2c.crexx); full reference proof open |
+| `X2D` | Direct + runtime | [`RexxClassicBifX2d.crexx`](../../../lib/rxfnsc/RexxClassicBifX2d.crexx); full reference proof open |
 
 ## Increment receipts
 

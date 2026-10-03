@@ -34,6 +34,13 @@ an embedded NUL raises `NOTREADY` before callback delivery, and an RXVML
 procedure call reports an unhandled signal as failure. Custom callbacks own
 their output policy. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md) for sequential stream and SDK limits.
 
+The VM reserves signal code 28 as `CLASSIC_SYNTAX` for compiled Level C BIF
+validation failures. It is distinct from VM `ERROR` (code 3); existing Level B
+`SYNTAX` source spelling still aliases `ERROR`. The shared Classic BIF result
+bridge raises code 28 with its recorded `RXC-LC-40.*` identity. Level C
+condition traps and authored runtime diagnostic location remain under the
+whole-instruction compatibility review.
+
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):

@@ -204,6 +204,7 @@ typedef enum rxsignal {
     SIGNAL_INVALID_ARGUMENTS = 7,    /* Triggered when invalid arguments are passed to a function or subroutine */
     SIGNAL_DIVISION_BY_ZERO = 5,     /* Triggered when the REXX program attempts to divide by zero */
     SIGNAL_UNICODE_ERROR = 9,        /* Triggered when an unicode error occurs */
+    SIGNAL_CLASSIC_SYNTAX = 28,      /* Classic REXX SYNTAX condition */
     SIGNAL_OTHER = 30                /* Triggered when an unknown error occurs */
 } rxsignal;
 

@@ -64,6 +64,7 @@
 #define RXSIGNAL_POSIX_CHLD           25 /* POSIX SIGCHLD (child process terminated) */
 #define RXSIGNAL_CHANNEL_ERROR        26 /* Gate F channel lifecycle or operation failure */
 #define RXSIGNAL_TASK_FAILURE         27 /* Gate F typed task result demand failure */
+#define RXSIGNAL_CLASSIC_SYNTAX       28 /* Classic REXX SYNTAX condition */
 
 #define RXSIGNAL_OTHER                30 /* Other Interrupt */
 #define RXSIGNAL_BREAKPOINT           31 /* Breakpoint (called after each instruction if enabled) */

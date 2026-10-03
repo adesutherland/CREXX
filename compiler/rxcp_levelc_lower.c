@@ -49,10 +49,9 @@
 #define LEVELC_TO_LIMIT_PREFIX "__rxcp_levelc_to_"
 #define LEVELC_BY_STEP_PREFIX "__rxcp_levelc_by_"
 #define LEVELC_FOR_COUNT_PREFIX "__rxcp_levelc_for_"
-#define LEVELC_BIF_LENGTH_HELPER "rexxclassicbif_length"
-#define LEVELC_BIF_DISPATCH_HELPER "rexxclassicbif_call"
 #define LEVELC_BIF_TRANSLATE_HELPER "rexxclassicbif_translate"
 #define LEVELC_BIF_CONTEXT_CLASS "RexxBifCallContext"
+#define LEVELC_BIF_CHECKED_HELPER "rexxclassicbif_checked"
 #define LEVELC_REXX_VALUE_CLASS "RexxValue"
 #define LEVELC_REXX_VALUE_CLASS_TYPE ".RexxValue"
 #define LEVELC_INT_CLASS_TYPE ".int"
@@ -75,12 +74,86 @@ typedef struct LevelCLoopBinding {
 } LevelCLoopBinding;
 
 typedef struct {
+    const char *name;
+    const char *module;
+    const char *entry;
+} LevelCBifEntry;
+
+#define LEVELC_DIRECT_BIF(name, module, entry) \
+    {name, module, module "." entry}
+static const LevelCBifEntry levelc_direct_bifs[] = {
+    LEVELC_DIRECT_BIF("ABBREV", "rexxclassicbifabbrev", "rexxclassicbif_abbrev"),
+    LEVELC_DIRECT_BIF("ABS", "rexxclassicbifabs", "rexxclassicbif_abs"),
+    LEVELC_DIRECT_BIF("ADDRESS", "rexxclassicbifaddress", "rexxclassicbif_address"),
+    LEVELC_DIRECT_BIF("B2X", "rexxclassicbifb2x", "rexxclassicbif_b2x"),
+    {"BITAND", NULL, "rexxclassicbifs.rexxclassicbif_bitand"},
+    {"BITOR", NULL, "rexxclassicbifs.rexxclassicbif_bitor"},
+    {"BITXOR", NULL, "rexxclassicbifs.rexxclassicbif_bitxor"},
+    LEVELC_DIRECT_BIF("C2D", "rexxclassicbifc2d", "rexxclassicbif_c2d"),
+    LEVELC_DIRECT_BIF("C2X", "rexxclassicbifc2x", "rexxclassicbif_c2x"),
+    LEVELC_DIRECT_BIF("CENTER", "rexxclassicbifcenter", "rexxclassicbif_center"),
+    LEVELC_DIRECT_BIF("CENTRE", "rexxclassicbifcenter", "rexxclassicbif_centre"),
+    LEVELC_DIRECT_BIF("CHANGESTR", "rexxclassicbifchangestr", "rexxclassicbif_changestr"),
+    LEVELC_DIRECT_BIF("COMPARE", "rexxclassicbifcompare", "rexxclassicbif_compare"),
+    LEVELC_DIRECT_BIF("COPIES", "rexxclassicbifcopies", "rexxclassicbif_copies"),
+    LEVELC_DIRECT_BIF("COUNTSTR", "rexxclassicbifcountstr", "rexxclassicbif_countstr"),
+    LEVELC_DIRECT_BIF("D2C", "rexxclassicbifd2c", "rexxclassicbif_d2c"),
+    LEVELC_DIRECT_BIF("D2X", "rexxclassicbifd2x", "rexxclassicbif_d2x"),
+    LEVELC_DIRECT_BIF("DATATYPE", "rexxclassicbifdatatype", "rexxclassicbif_datatype"),
+    LEVELC_DIRECT_BIF("DATE", "rexxclassicbifdate", "rexxclassicbif_date"),
+    LEVELC_DIRECT_BIF("DELSTR", "rexxclassicbifdelstr", "rexxclassicbif_delstr"),
+    LEVELC_DIRECT_BIF("DELWORD", "rexxclassicbifdelword", "rexxclassicbif_delword"),
+    LEVELC_DIRECT_BIF("DIGITS", "rexxclassicbifnumeric", "rexxclassicbif_digits"),
+    LEVELC_DIRECT_BIF("FORM", "rexxclassicbifnumeric", "rexxclassicbif_form"),
+    LEVELC_DIRECT_BIF("FORMAT", "rexxclassicbifformat", "rexxclassicbif_format"),
+    LEVELC_DIRECT_BIF("FUZZ", "rexxclassicbifnumeric", "rexxclassicbif_fuzz"),
+    LEVELC_DIRECT_BIF("INSERT", "rexxclassicbifinsert", "rexxclassicbif_insert"),
+    LEVELC_DIRECT_BIF("LASTPOS", "rexxclassicbiflastpos", "rexxclassicbif_lastpos"),
+    LEVELC_DIRECT_BIF("LEFT", "rexxclassicbifleft", "rexxclassicbif_left"),
+    LEVELC_DIRECT_BIF("LENGTH", "rexxclassicbiflength", "rexxclassicbif_length"),
+    {"LOWER", NULL, "rexxclassicbifs.rexxclassicbif_lower"},
+    LEVELC_DIRECT_BIF("MAX", "rexxclassicbifmax", "rexxclassicbif_max"),
+    LEVELC_DIRECT_BIF("MIN", "rexxclassicbifmin", "rexxclassicbif_min"),
+    LEVELC_DIRECT_BIF("OVERLAY", "rexxclassicbifoverlay", "rexxclassicbif_overlay"),
+    LEVELC_DIRECT_BIF("POS", "rexxclassicbifpos", "rexxclassicbif_pos"),
+    LEVELC_DIRECT_BIF("RANDOM", "rexxclassicbifrandom", "rexxclassicbif_random"),
+    LEVELC_DIRECT_BIF("REVERSE", "rexxclassicbifreverse", "rexxclassicbif_reverse"),
+    LEVELC_DIRECT_BIF("RIGHT", "rexxclassicbifright", "rexxclassicbif_right"),
+    LEVELC_DIRECT_BIF("SIGN", "rexxclassicbifsign", "rexxclassicbif_sign"),
+    LEVELC_DIRECT_BIF("SPACE", "rexxclassicbifspace", "rexxclassicbif_space"),
+    LEVELC_DIRECT_BIF("STRIP", "rexxclassicbifstrip", "rexxclassicbif_strip"),
+    LEVELC_DIRECT_BIF("SUBSTR", "rexxclassicbifsubstr", "rexxclassicbif_substr"),
+    LEVELC_DIRECT_BIF("SUBWORD", "rexxclassicbifsubword", "rexxclassicbif_subword"),
+    LEVELC_DIRECT_BIF("SYMBOL", "rexxclassicbifsymbol", "rexxclassicbif_symbol"),
+    LEVELC_DIRECT_BIF("TIME", "rexxclassicbiftime", "rexxclassicbif_time"),
+    LEVELC_DIRECT_BIF("TRACE", "rexxclassicbiftrace", "rexxclassicbif_trace"),
+    LEVELC_DIRECT_BIF("TRANSLATE", "rexxclassicbiftranslate", "rexxclassicbif_translate"),
+    LEVELC_DIRECT_BIF("TRUNC", "rexxclassicbiftrunc", "rexxclassicbif_trunc"),
+    {"UPPER", NULL, "rexxclassicbifs.rexxclassicbif_upper"},
+    LEVELC_DIRECT_BIF("VALUE", "rexxclassicbifvalue", "rexxclassicbif_value"),
+    LEVELC_DIRECT_BIF("VERIFY", "rexxclassicbifverify", "rexxclassicbif_verify"),
+    LEVELC_DIRECT_BIF("WORD", "rexxclassicbifword", "rexxclassicbif_word"),
+    LEVELC_DIRECT_BIF("WORDINDEX", "rexxclassicbifwordindex", "rexxclassicbif_wordindex"),
+    LEVELC_DIRECT_BIF("WORDLENGTH", "rexxclassicbifwordlength", "rexxclassicbif_wordlength"),
+    LEVELC_DIRECT_BIF("WORDPOS", "rexxclassicbifwordpos", "rexxclassicbif_wordpos"),
+    LEVELC_DIRECT_BIF("WORDS", "rexxclassicbifwords", "rexxclassicbif_words"),
+    LEVELC_DIRECT_BIF("X2B", "rexxclassicbifx2b", "rexxclassicbif_x2b"),
+    LEVELC_DIRECT_BIF("X2C", "rexxclassicbifx2c", "rexxclassicbif_x2c"),
+    LEVELC_DIRECT_BIF("X2D", "rexxclassicbifx2d", "rexxclassicbif_x2d"),
+    LEVELC_DIRECT_BIF("XRANGE", "rexxclassicbifxrange", "rexxclassicbif_xrange")
+};
+#undef LEVELC_DIRECT_BIF
+#define LEVELC_DIRECT_BIF_COUNT (sizeof(levelc_direct_bifs) / sizeof(levelc_direct_bifs[0]))
+_Static_assert(LEVELC_DIRECT_BIF_COUNT <= 64, "Level C BIF use mask is too small");
+
+typedef struct {
     ASTNode *instructions;
     ASTNode *main_first;
     ASTNode *main_end;
     LevelCProcedureSlice *procedures;
     size_t procedure_count;
     LevelCLoopBinding *active_loop;
+    uint64_t used_direct_bifs;
 } LevelCLowerPlan;
 
 typedef enum {
@@ -329,72 +402,43 @@ static int levelc_argument_exists(ASTNode *arg) {
     return arg && arg->node_type != NOVAL;
 }
 
-static int levelc_function_name_is(ASTNode *expr, const char *expected_name) {
-    char *name;
-    int matched;
+static const LevelCBifEntry *levelc_find_direct_bif(const char *name,
+                                                    size_t *index_out) {
+    size_t index;
+    if (!name) return NULL;
+    for (index = 0; index < LEVELC_DIRECT_BIF_COUNT; index++) {
+        if (strcmp(name, levelc_direct_bifs[index].name) == 0) {
+            if (index_out) *index_out = index;
+            return &levelc_direct_bifs[index];
+        }
+    }
+    return NULL;
+}
 
-    if (!expr || expr->node_type != FUNCTION || !expected_name) return 0;
+static int levelc_direct_bif_supported(ASTNode *expr,
+                                      LevelCLowerPlan *plan,
+                                      const char **reason_out) {
+    ASTNode *arg;
+    char *name;
+    const LevelCBifEntry *bif;
+    size_t bif_index;
 
     name = levelc_upper_name(expr);
-    matched = name && strcmp(name, expected_name) == 0;
+    bif = levelc_find_direct_bif(name, &bif_index);
     if (name) free(name);
-    return matched;
-}
-
-static int levelc_length_function_supported(ASTNode *expr,
-                                            LevelCLowerPlan *plan,
-                                            const char **reason_out) {
-    ASTNode *arg;
-
-    (void)plan;
-
-    if (!levelc_function_name_is(expr, "LENGTH")) {
+    if (!bif) {
         if (reason_out) *reason_out = "unsupported Level C function call";
         return 0;
     }
-
     arg = expr->child;
-    if (!arg || arg->node_type == NOVAL || arg->sibling) {
-        if (reason_out) *reason_out = "unsupported LENGTH argument shape";
-        return 0;
-    }
-
-    return levelc_expr_supported(arg, plan, reason_out);
-}
-
-static int levelc_substr_function_supported(ASTNode *expr,
-                                            LevelCLowerPlan *plan,
-                                            const char **reason_out) {
-    ASTNode *arg;
-    size_t index;
-    size_t arg_count;
-
-    if (!levelc_function_name_is(expr, "SUBSTR")) {
-        if (reason_out) *reason_out = "unsupported Level C function call";
-        return 0;
-    }
-
-    arg_count = levelc_function_argument_count(expr);
-    if (arg_count < 2 || arg_count > 4) {
-        if (reason_out) *reason_out = "unsupported SUBSTR argument count";
-        return 0;
-    }
-
-    arg = expr->child;
-    index = 1;
     while (arg) {
-        if ((index == 1 || index == 2) && !levelc_argument_exists(arg)) {
-            if (reason_out) *reason_out = "missing required SUBSTR argument";
-            return 0;
-        }
         if (levelc_argument_exists(arg) &&
             !levelc_expr_supported(arg, plan, reason_out)) {
             return 0;
         }
         arg = arg->sibling;
-        index++;
     }
-
+    if (plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
     return 1;
 }
 
@@ -474,9 +518,13 @@ static int levelc_expr_supported(ASTNode *expr,
                    levelc_expr_supported(right, plan, reason_out);
 
         case FUNCTION:
-            return levelc_length_function_supported(expr, plan, reason_out) ||
-                   levelc_substr_function_supported(expr, plan, reason_out) ||
-                   levelc_local_function_supported(expr, plan, reason_out);
+            {
+                char *name = levelc_upper_name(expr);
+                int is_local = name && plan && levelc_find_procedure(plan, name);
+                if (name) free(name);
+                if (is_local) return levelc_local_function_supported(expr, plan, reason_out);
+                return levelc_direct_bif_supported(expr, plan, reason_out);
+            }
 
         default:
             method = levelc_binary_operator_method(expr->node_type);
@@ -2065,6 +2113,8 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     ASTNode *member_args[2];
     ASTNode *call_args[1];
     ASTNode *function_args[1];
+    ASTNode *checked_args[2];
+    ASTNode *direct_call;
     ASTNode *arg;
     size_t arg_count;
     size_t index;
@@ -2179,14 +2229,25 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
             rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name));
     if (!function_args[0]) goto fail;
 
+    direct_call = rxcp_remap_create_function_call(context,
+                                                  expr,
+                                                  callee_name,
+                                                  function_args,
+                                                  1);
+    checked_args[0] = rxcp_remap_create_reference_expr(
+            context, expr,
+            rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name));
+    checked_args[1] = direct_call;
+    if (!direct_call || !checked_args[0]) goto fail;
+
     free(args_name);
     free(exists_name);
     free(context_name);
     return rxcp_remap_create_function_call(context,
                                            expr,
-                                           callee_name,
-                                           function_args,
-                                           1);
+                                           LEVELC_BIF_CHECKED_HELPER,
+                                           checked_args,
+                                           2);
 
 fail:
     free(args_name);
@@ -2268,33 +2329,22 @@ static ASTNode *levelc_lower_function_call(Context *context,
                                            LevelCLowerPlan *plan,
                                            ASTNode *prelude) {
     char *name;
-    ASTNode *args[1];
-    ASTNode *call;
+    const LevelCBifEntry *bif;
+    LevelCProcedureSlice *procedure;
 
     if (!context || !expr || expr->node_type != FUNCTION) return NULL;
 
     name = levelc_upper_name(expr);
     if (!name) return NULL;
 
-    if (strcmp(name, "LENGTH") == 0 && expr->child && !expr->child->sibling) {
-        args[0] = levelc_lower_expr(context, expr->child, plan, prelude);
+    procedure = plan ? levelc_find_procedure(plan, name) : NULL;
+    bif = procedure ? NULL : levelc_find_direct_bif(name, NULL);
+    if (bif) {
+        ASTNode *call = levelc_lower_bif_dispatch_call(context, expr, name, plan,
+                                                       prelude, bif->entry, NULL);
         free(name);
-        if (!args[0]) return NULL;
-
-        call = rxcp_remap_create_function_call(context,
-                                               expr,
-                                               LEVELC_BIF_LENGTH_HELPER,
-                                               args,
-                                               1);
         return call;
     }
-
-    if (strcmp(name, "SUBSTR") == 0) {
-        free(name);
-        return levelc_lower_bif_dispatch_call(context, expr, "SUBSTR", plan,
-                                              prelude, LEVELC_BIF_DISPATCH_HELPER, NULL);
-    }
-
     free(name);
     return levelc_lower_local_function_call(context, expr, plan, prelude);
 }
@@ -2746,7 +2796,8 @@ static int levelc_append_procedure_exposes(Context *context,
 
 static ASTNode *levelc_build_options(Context *context,
                                      ASTNode *anchor_node,
-                                     int needs_translate) {
+                                     int needs_translate,
+                                     const LevelCLowerPlan *plan) {
     ASTNode *options;
     ASTNode *levelb;
     ASTNode *comments_dash;
@@ -2755,6 +2806,7 @@ static ASTNode *levelc_build_options(Context *context,
     ASTNode *import_pool;
     ASTNode *import_bifs;
     ASTNode *import_translate;
+    size_t i;
 
     options = ast_f(context, REXX_OPTIONS, anchor_node ? anchor_node->token : NULL);
     if (!options) return NULL;
@@ -2781,6 +2833,25 @@ static ASTNode *levelc_build_options(Context *context,
     add_ast(options, import_pool);
     add_ast(options, import_bifs);
     if (import_translate) add_ast(options, import_translate);
+    for (i = 0; plan && i < LEVELC_DIRECT_BIF_COUNT; i++) {
+        const char *module;
+        ASTNode *import;
+        size_t previous;
+        if (!(plan->used_direct_bifs & (UINT64_C(1) << i))) continue;
+        module = levelc_direct_bifs[i].module;
+        if (!module || (needs_translate &&
+                        strcmp(module, "rexxclassicbiftranslate") == 0)) continue;
+        for (previous = 0; previous < i; previous++) {
+            if ((plan->used_direct_bifs & (UINT64_C(1) << previous)) &&
+                levelc_direct_bifs[previous].module &&
+                strcmp(levelc_direct_bifs[previous].module, module) == 0) break;
+        }
+        if (previous < i) continue;
+        import = rxcp_remap_create_generated_import(
+                context, anchor_node ? anchor_node : options, module);
+        if (!import) return NULL;
+        add_ast(options, import);
+    }
     return options;
 }
 
@@ -4071,7 +4142,7 @@ static int levelc_rewrite_program(Context *context,
         if (plan->procedures[i].arg_statement && plan->procedures[i].arg_count > 0)
             needs_translate = 1;
     }
-    options = levelc_build_options(context, anchor, needs_translate);
+    options = levelc_build_options(context, anchor, needs_translate, plan);
     instructions = rxcp_remap_create_instruction_builder(context, anchor);
     if (!options || !instructions) {
         if (reason_out) *reason_out = "failed to create Level C lowered program shell";

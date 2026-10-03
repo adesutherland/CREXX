@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_bitand rexxclassicbif_bitor rexxclassicbif_bitxor bitand bitor bitxor rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_subword rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
+namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_checked rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_bitand rexxclassicbif_bitor rexxclassicbif_bitxor bitand bitor bitxor rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_subword rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
 import rexxvalue
 import rexxpool
 import rexxclassicconfig
@@ -197,6 +197,28 @@ RexxBifCallContext: class
 
   errorMessage: method = .string
     return error_message
+
+/**
+ * Deliver a validated direct BIF result to a Level C caller.
+ *
+ * The shared BIF implementations set the context error and return a blank
+ * value. RexxScript can inspect that context in its sandbox; compiled Level C
+ * uses this single boundary to raise its distinct Classic SYNTAX condition.
+ *
+ * @param context_ref the BIF call context used for the direct entry
+ * @param result the value returned by that entry
+ * @return result when no Classic BIF error occurred
+ * @signal CLASSIC_SYNTAX the context recorded a Classic BIF error
+ */
+rexxclassicbif_checked: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext, result = .RexxValue
+  context = dereference context_ref
+  if context.hasError() then do
+    detail = context.errorMessage()
+    if detail = "" then detail = context.errorCode()
+    assembler signal "CLASSIC_SYNTAX", detail
+  end
+  return result
 
 /**
  * Dispatch one Classic-compatible BIF call for existing compiler output.
