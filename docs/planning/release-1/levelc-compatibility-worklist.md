@@ -1091,6 +1091,7 @@ AST node or instruction-specific runtime helper is indicated by this review.
 | Expression evaluation once and output order | Exposed counter called inside SAY expression; its inner SAY precedes the outer line | Proved for this fixture; external/BIF effects remain open |
 | Invalid source forms | Grammar has explicit close-bracket recovery and general expression diagnostics | Open: reference/error matrix and source anchors |
 | Complete BIF, local and external function terms | Current guard admits only LENGTH, SUBSTR and bounded local calls; direct BIF inventory and host lookup are broader | Open: shared invocation, context, error and resolution foundation |
+| General variable value terms | Compiler read guard rejects bare stems and multi-component compound tails; shared pool `symbolValue` already resolves both | Open: pool-read consolidation and reference proof |
 | BYTE/UTF8 output, configured host route and failure | Embedded-NUL and BIF-error probes below; legacy SAY callback is terminated text | Open: output API decision, implementation and host/profile proof |
 | Trace/condition lifecycle | Existing canonical SAY opcode and source anchors | Open: clause hooks, trapped errors and finalization |
 
@@ -1100,6 +1101,17 @@ Open before closure:
   shared expression/BIF path. The current Level C guard admits only bounded
   variable, literal, operator, local-call, LENGTH and SUBSTR forms; a valid
   expression must not fail solely because it appears in `SAY`.
+- **Confirmed variable-read limit, pending ownership approval:** Regina writes
+  `Q.x.y` and `Q.` for `a='x'; b='y'; say q.a.b; say q.`, while the compiler
+  rejects both SAY operand shapes as unsupported
+  (`/tmp/crexx-levelc-say-variable.0er3lh/` and isolated probes under
+  `/tmp/crexx-levelc-say-variable-isolate.16UXVW/`). The existing shared
+  `RexxVariablePool.symbolValue` resolves multi-component compound names and
+  bare stems without creating bindings. Proposed consolidation routes all
+  Level C variable *reads* through this method and removes the one-component
+  guard. Assignment keeps its separate pre-RHS tail capture until its own
+  instruction review. This is implementable; approval for the ownership
+  change is pending under `AGENTS.md`.
 - **Confirmed call-error defect:** `options levelc; say substr('abc', 0);
   say 'after'` stops in Regina with `40.14` and no output, but the current
   Release compiler/VM prints an empty line and `after` with a success exit
