@@ -794,32 +794,34 @@ ASTNode *rxcp_remap_create_do_with_count(Context *context,
     return node;
 }
 
-ASTNode *rxcp_remap_create_controlled_do_with_count(Context *context,
-                                                   ASTNode *source_node,
-                                                   ASTNode *instructions,
-                                                   const char *control_name,
-                                                   ASTNode *count) {
+ASTNode *rxcp_remap_create_controlled_do(Context *context,
+                                        ASTNode *source_node,
+                                        ASTNode *instructions,
+                                        const char *control_name,
+                                        ASTNode *count_or_null) {
     ASTNode *node;
     ASTNode *repeat;
     ASTNode *initial;
     ASTNode *for_node;
 
-    if (!context || !source_node || !instructions || !control_name || !count) return NULL;
+    if (!context || !source_node || !instructions || !control_name) return NULL;
 
     node = ast_f(context, DO, source_node->token);
     repeat = ast_ft(context, REPEAT);
     initial = rxcp_remap_create_named_assignment(
             context, source_node, control_name,
             rxcp_remap_create_integer_constant(context, source_node, 1, TP_INTEGER));
-    for_node = ast_ft(context, FOR);
-    if (!node || !repeat || !initial || !for_node) return NULL;
+    for_node = count_or_null ? ast_ft(context, FOR) : NULL;
+    if (!node || !repeat || !initial || (count_or_null && !for_node)) return NULL;
 
     rxcp_remap_anchor_synthetic(node, source_node);
     rxcp_remap_anchor_synthetic(repeat, source_node);
-    rxcp_remap_anchor_synthetic(for_node, source_node);
-    add_ast(for_node, count);
+    if (for_node) {
+        rxcp_remap_anchor_synthetic(for_node, source_node);
+        add_ast(for_node, count_or_null);
+    }
     add_ast(repeat, initial);
-    add_ast(repeat, for_node);
+    if (for_node) add_ast(repeat, for_node);
     add_ast(node, repeat);
     add_ast(node, instructions);
     return node;

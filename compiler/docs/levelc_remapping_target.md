@@ -938,10 +938,12 @@ shared `RexxValue.logicalWhenValue()` supplies `34.2`; an unmatched chain
 without OTHERWISE calls `rexxvalue_select_missing(line)` for `7.3`.
 The bounded counted-DO slice recognizes the parser's
 `DO > REPEAT > FOR > INTEGER` header and materializes a fresh canonical
-`DO > REPEAT > FOR > INTEGER` tree through
-`rxcp_remap_create_do_with_count()`. The existing one-shot block builder
-delegates to the same neutral constructor with count one. Dynamic and
-control-variable headers remain rejected pending their numeric and pool rules.
+`DO > REPEAT > FOR > INTEGER` tree through the neutral controlled-DO builder,
+which supplies the hidden control symbol needed by later transfer nodes. The
+existing one-shot block builder retains its neutral counted constructor with
+count one. The bounded `DO FOREVER` slice uses the same controlled builder
+without a FOR child. Dynamic and control-variable headers remain rejected
+pending their numeric and pool rules.
 Childless source LEAVE/ITERATE inside an accepted counted loop must not bind to
 the generated one-shot DO blocks used by IF, SELECT and simple DO lowering.
 The bounded transfer slice therefore gives each source counted loop a hidden

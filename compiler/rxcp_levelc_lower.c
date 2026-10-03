@@ -1096,6 +1096,20 @@ unsupported:
     return 0;
 }
 
+static int levelc_repetition_supported(ASTNode *repeat,
+                                       int *count_out,
+                                       int *forever_out,
+                                       const char **reason_out) {
+    if (repeat && repeat->node_type == REPEAT && !repeat->child &&
+        nodeis(repeat, "forever")) {
+        if (count_out) *count_out = 0;
+        if (forever_out) *forever_out = 1;
+        return 1;
+    }
+    if (forever_out) *forever_out = 0;
+    return levelc_literal_repeat_count(repeat, count_out, reason_out);
+}
+
 static ASTNode *levelc_nearest_source_repetitive_do(ASTNode *stmt) {
     ASTNode *ancestor;
 
@@ -1115,7 +1129,7 @@ static int levelc_transfer_supported(ASTNode *stmt,
         return 0;
     }
     target = levelc_nearest_source_repetitive_do(stmt);
-    if (target) return levelc_literal_repeat_count(target->child, NULL, reason_out);
+    if (target) return levelc_repetition_supported(target->child, NULL, NULL, reason_out);
     if (reason_out) *reason_out = "LEAVE/ITERATE requires a supported repetitive DO";
     return 0;
 }
@@ -1128,7 +1142,7 @@ static int levelc_do_supported(ASTNode *stmt,
     ASTNode *body_statement;
 
     if (body && body->node_type == REPEAT) {
-        if (!levelc_literal_repeat_count(body, NULL, reason_out)) return 0;
+        if (!levelc_repetition_supported(body, NULL, NULL, reason_out)) return 0;
         body = body->sibling;
     }
     if (!body || body->node_type != INSTRUCTIONS || body->sibling) {
@@ -2782,19 +2796,21 @@ static int levelc_lower_do(Context *context,
     char *control_name = NULL;
     int loop_active = 0;
     int count = 1;
+    int forever = 0;
 
     if (!lowered_body) goto fail;
     if (repeat) {
         ASTNode *count_node;
 
-        if (!plan || !levelc_literal_repeat_count(repeat, &count, reason_out)) goto fail;
+        if (!plan || !levelc_repetition_supported(repeat, &count, &forever,
+                                                   reason_out)) goto fail;
         body = repeat->sibling;
         control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);
-        count_node = rxcp_remap_create_integer_constant(
+        count_node = forever ? NULL : rxcp_remap_create_integer_constant(
                 context, repeat->child->child, count, TP_INTEGER);
-        lowered = rxcp_remap_create_controlled_do_with_count(
+        lowered = rxcp_remap_create_controlled_do(
                 context, stmt, lowered_body, control_name, count_node);
-        if (!control_name || !count_node || !lowered) goto fail;
+        if (!control_name || (!forever && !count_node) || !lowered) goto fail;
         binding.source_do = stmt;
         binding.control_name = control_name;
         binding.previous = previous;

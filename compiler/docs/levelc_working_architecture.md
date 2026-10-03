@@ -73,7 +73,7 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
 
-The current executable Level C surface is thirteen bounded lowering slices; the
+The current executable Level C surface is fourteen bounded lowering slices; the
 complete Classic contract remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
 the references and this architecture. A new syntax rule, compatibility
@@ -98,6 +98,9 @@ uses the existing loop-association pass, which can search past generated
 one-shot DO wrappers for a matching controlled loop. The ordinary `ast_do()`
 rule remains unchanged. Named Classic transfers and broader loop forms remain
 open in the worklist.
+`DO FOREVER` is now the second accepted source repetition form. Its parser
+`REPEAT` node has no count child; the neutral controlled-DO builder omits FOR
+while retaining the hidden canonical control symbol used by LEAVE/ITERATE.
 
 ## Historical design record
 

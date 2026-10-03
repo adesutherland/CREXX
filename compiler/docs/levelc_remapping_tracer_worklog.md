@@ -62,6 +62,25 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 28 - DO FOREVER Structural Slice
+
+### Intent and accepted shape
+
+The parser emits `DO > REPEAT("forever") > INSTRUCTIONS` with no count child.
+Accept only that header, create a canonical controlled loop without FOR, and
+reuse the source-to-hidden-control binding so childless LEAVE/ITERATE cross
+generated wrappers. Extra header conditions and other repetition families
+remain closed.
+
+### Verification
+
+- A guarded eight-line fixture matched Regina through optimized/no-opt and
+  linked execution, including nested groups and a procedure.
+- Focused Release tests 7/7, normal Level C/source-provenance 131/131 and
+  focused Debug 8/8 passed; a redirected tree probe retained source anchors
+  without AST validation errors. Retained logs and open obligations are in
+  the [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+
 ## Stage 27 - Loop Transfer Across Generated Blocks
 
 ### Intent and accepted shape

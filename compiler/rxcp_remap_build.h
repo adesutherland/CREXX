@@ -176,11 +176,11 @@ ASTNode *rxcp_remap_create_do_with_count(Context *context,
                                         ASTNode *source_node,
                                         ASTNode *instructions,
                                         ASTNode *count);
-ASTNode *rxcp_remap_create_controlled_do_with_count(Context *context,
-                                                   ASTNode *source_node,
-                                                   ASTNode *instructions,
-                                                   const char *control_name,
-                                                   ASTNode *count);
+ASTNode *rxcp_remap_create_controlled_do(Context *context,
+                                        ASTNode *source_node,
+                                        ASTNode *instructions,
+                                        const char *control_name,
+                                        ASTNode *count_or_null);
 ASTNode *rxcp_remap_create_if_statement(Context *context,
                                         ASTNode *source_node,
                                         ASTNode *condition,

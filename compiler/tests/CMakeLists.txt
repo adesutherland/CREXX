@@ -5523,6 +5523,13 @@ add_levelc_runtime_slice_test(levelc_slice13_loop_transfer_noopt
         rexx_src/levelc_slice13_loop_transfer.rexx
         "leave 1\nafter-leave 2\niterate 3\nafter-select-leave\nafter-select-iterate\nouter\nouter\n2\n" -n)
 
+add_levelc_runtime_slice_test(levelc_slice14_forever
+        rexx_src/levelc_slice14_forever.rexx
+        "1\n3\ncount 4\nafter-simple\nafter-select\nouter\nouter\n3\n")
+add_levelc_runtime_slice_test(levelc_slice14_forever_noopt
+        rexx_src/levelc_slice14_forever.rexx
+        "1\n3\ncount 4\nafter-simple\nafter-select\nouter\nouter\n3\n" -n)
+
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}
@@ -5659,6 +5666,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice13_loop_transfer_tree_shape
         "LEAVE"
         "ITERATE"
         "IF")
+
+add_levelc_lowered_tree_shape_test(levelc_slice14_forever_tree_shape
+        rexx_src/levelc_slice14_forever.rexx
+        "__rxcp_levelc_loop_"
+        "LEAVE"
+        "ITERATE"
+        "DO")
 
 # Bridge Connectivity Test
 add_custom_command(
