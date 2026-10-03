@@ -172,6 +172,10 @@ void rxcp_remap_append_builder_children(ASTNode *instructions,
 ASTNode *rxcp_remap_create_do_block(Context *context,
                                     ASTNode *source_node,
                                     ASTNode *instructions);
+ASTNode *rxcp_remap_create_do_with_count(Context *context,
+                                        ASTNode *source_node,
+                                        ASTNode *instructions,
+                                        ASTNode *count);
 ASTNode *rxcp_remap_create_if_statement(Context *context,
                                         ASTNode *source_node,
                                         ASTNode *condition,

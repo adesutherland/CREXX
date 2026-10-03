@@ -5205,6 +5205,8 @@ add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
 
 add_levelc_unsupported_compile_test(levelc_slice8_controlled_do_unsupported
         rexx_src/levelc_slice8_controlled_do_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice12_negative_do_unsupported
+        rexx_src/levelc_slice12_negative_do_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
@@ -5503,6 +5505,13 @@ add_levelc_runtime_slice_test(levelc_slice11_select_noopt
         rexx_src/levelc_slice11_select.rexx
         "first\n0\nsecond\nnested\n1\narm\nprocedure\n" -n)
 
+add_levelc_runtime_slice_test(levelc_slice12_counted_do
+        rexx_src/levelc_slice12_counted_do.rexx
+        "before\nouter\ninner\ninner\nouter\ninner\ninner\nafter\nif\nif\n3\n")
+add_levelc_runtime_slice_test(levelc_slice12_counted_do_noopt
+        rexx_src/levelc_slice12_counted_do.rexx
+        "before\nouter\ninner\ninner\nouter\ninner\ninner\nafter\nif\nif\n3\n" -n)
+
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}
@@ -5624,6 +5633,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice11_select_tree_shape
         "logicalWhenValue"
         "IF"
         "DO"
+        "RexxVariablePool")
+
+add_levelc_lowered_tree_shape_test(levelc_slice12_counted_do_tree_shape
+        rexx_src/levelc_slice12_counted_do.rexx
+        "DO"
+        "REPEAT"
+        "FOR"
         "RexxVariablePool")
 
 # Bridge Connectivity Test

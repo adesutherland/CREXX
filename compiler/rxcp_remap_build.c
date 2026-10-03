@@ -762,18 +762,27 @@ void rxcp_remap_append_builder_children(ASTNode *instructions,
 ASTNode *rxcp_remap_create_do_block(Context *context,
                                     ASTNode *source_node,
                                     ASTNode *instructions) {
-    ASTNode *node;
-    ASTNode *repeat;
-    ASTNode *for_node;
     ASTNode *count;
 
     if (!context || !source_node || !instructions) return NULL;
+    count = rxcp_remap_create_integer_constant(context, source_node, 1, TP_INTEGER);
+    return rxcp_remap_create_do_with_count(context, source_node, instructions, count);
+}
+
+ASTNode *rxcp_remap_create_do_with_count(Context *context,
+                                        ASTNode *source_node,
+                                        ASTNode *instructions,
+                                        ASTNode *count) {
+    ASTNode *node;
+    ASTNode *repeat;
+    ASTNode *for_node;
+
+    if (!context || !source_node || !instructions || !count) return NULL;
 
     node = ast_f(context, DO, source_node->token);
     repeat = ast_ft(context, REPEAT);
     for_node = ast_ft(context, FOR);
-    count = rxcp_remap_create_integer_constant(context, source_node, 1, TP_INTEGER);
-    if (!node || !repeat || !for_node || !count) return NULL;
+    if (!node || !repeat || !for_node) return NULL;
 
     rxcp_remap_anchor_synthetic(node, source_node);
     rxcp_remap_anchor_synthetic(repeat, source_node);

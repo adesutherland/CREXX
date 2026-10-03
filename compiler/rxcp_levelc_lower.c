@@ -17,6 +17,8 @@
  */
 
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1047,13 +1049,56 @@ static int levelc_scalar_drop_supported(ASTNode *stmt,
     return 1;
 }
 
-static int levelc_simple_do_supported(ASTNode *stmt,
-                                      LevelCLowerPlan *plan,
-                                      int in_procedure,
-                                      const char **reason_out) {
+static int levelc_literal_repeat_count(ASTNode *repeat,
+                                       int *count_out,
+                                       const char **reason_out) {
+    ASTNode *for_node = repeat ? repeat->child : NULL;
+    ASTNode *literal = for_node ? for_node->child : NULL;
+    char *text;
+    char *end;
+    long value;
+    size_t i;
+
+    if (!repeat || repeat->node_type != REPEAT || !for_node ||
+        for_node->node_type != FOR || for_node->sibling || !literal ||
+        literal->node_type != INTEGER || literal->child || literal->sibling) goto unsupported;
+    text = levelc_node_text_copy(literal);
+    if (!text || !text[0]) {
+        free(text);
+        goto unsupported;
+    }
+    for (i = 0; text[i]; i++) {
+        if (!isdigit((unsigned char)text[i])) {
+            free(text);
+            goto unsupported;
+        }
+    }
+    errno = 0;
+    value = strtol(text, &end, 10);
+    if (errno == ERANGE || *end || value > INT_MAX) {
+        free(text);
+        goto unsupported;
+    }
+    free(text);
+    if (count_out) *count_out = (int)value;
+    return 1;
+
+unsupported:
+    if (reason_out) *reason_out = "unsupported DO repetition header";
+    return 0;
+}
+
+static int levelc_do_supported(ASTNode *stmt,
+                              LevelCLowerPlan *plan,
+                              int in_procedure,
+                              const char **reason_out) {
     ASTNode *body = stmt ? stmt->child : NULL;
     ASTNode *body_statement;
 
+    if (body && body->node_type == REPEAT) {
+        if (!levelc_literal_repeat_count(body, NULL, reason_out)) return 0;
+        body = body->sibling;
+    }
     if (!body || body->node_type != INSTRUCTIONS || body->sibling) {
         if (reason_out) *reason_out = "unsupported DO header";
         return 0;
@@ -1109,7 +1154,7 @@ static int levelc_main_statement_supported(ASTNode *stmt,
     if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 0, reason_out);
-    if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 0, reason_out);
+    if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 0, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
 
@@ -1137,7 +1182,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 1, reason_out);
-    if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 1, reason_out);
+    if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 1, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
     if (stmt->node_type == RETURN) {
@@ -2438,13 +2483,13 @@ static int levelc_lower_if_statement(Context *context,
                                     LevelCProcedureSlice *procedure,
                                     int in_procedure,
                                     const char **reason_out);
-static int levelc_lower_simple_do(Context *context,
-                                  ASTNode *instructions,
-                                  ASTNode *stmt,
-                                  LevelCLowerPlan *plan,
-                                  LevelCProcedureSlice *procedure,
-                                  int in_procedure,
-                                  const char **reason_out);
+static int levelc_lower_do(Context *context,
+                           ASTNode *instructions,
+                           ASTNode *stmt,
+                           LevelCLowerPlan *plan,
+                           LevelCProcedureSlice *procedure,
+                           int in_procedure,
+                           const char **reason_out);
 static int levelc_lower_select_statement(Context *context,
                                          ASTNode *instructions,
                                          ASTNode *stmt,
@@ -2510,7 +2555,7 @@ static int levelc_lower_main_statement(Context *context,
         return levelc_lower_if_statement(context, instructions, stmt, plan, NULL, 0, reason_out);
     }
     if (stmt->node_type == DO) {
-        return levelc_lower_simple_do(context, instructions, stmt, plan, NULL, 0, reason_out);
+        return levelc_lower_do(context, instructions, stmt, plan, NULL, 0, reason_out);
     }
     if (stmt->node_type == SELECT) {
         return levelc_lower_select_statement(context, instructions, stmt, plan, NULL, 0, reason_out);
@@ -2566,8 +2611,8 @@ static int levelc_lower_proc_statement(Context *context,
                                         procedure, 1, reason_out);
     }
     if (stmt->node_type == DO) {
-        return levelc_lower_simple_do(context, instructions, stmt, plan,
-                                      procedure, 1, reason_out);
+        return levelc_lower_do(context, instructions, stmt, plan,
+                               procedure, 1, reason_out);
     }
     if (stmt->node_type == SELECT) {
         return levelc_lower_select_statement(context, instructions, stmt, plan,
@@ -2654,19 +2699,26 @@ fail:
     return 0;
 }
 
-static int levelc_lower_simple_do(Context *context,
-                                  ASTNode *instructions,
-                                  ASTNode *stmt,
-                                  LevelCLowerPlan *plan,
-                                  LevelCProcedureSlice *procedure,
-                                  int in_procedure,
-                                  const char **reason_out) {
+static int levelc_lower_do(Context *context,
+                           ASTNode *instructions,
+                           ASTNode *stmt,
+                           LevelCLowerPlan *plan,
+                           LevelCProcedureSlice *procedure,
+                           int in_procedure,
+                           const char **reason_out) {
     ASTNode *body = stmt->child;
-    ASTNode *body_statement = body->child;
+    ASTNode *repeat = body && body->node_type == REPEAT ? body : NULL;
+    ASTNode *body_statement;
     ASTNode *lowered_body = rxcp_remap_create_instruction_builder(context, stmt);
     ASTNode *lowered;
+    int count = 1;
 
     if (!lowered_body) goto fail;
+    if (repeat) {
+        if (!levelc_literal_repeat_count(repeat, &count, reason_out)) return 0;
+        body = repeat->sibling;
+    }
+    body_statement = body->child;
     while (body_statement) {
         if (in_procedure) {
             if (!levelc_lower_proc_statement(context, lowered_body, body_statement,
@@ -2676,7 +2728,14 @@ static int levelc_lower_simple_do(Context *context,
         body_statement = body_statement->sibling;
     }
 
-    lowered = rxcp_remap_create_do_block(context, stmt, lowered_body);
+    if (repeat) {
+        ASTNode *count_node = rxcp_remap_create_integer_constant(
+                context, repeat->child->child, count, TP_INTEGER);
+        lowered = rxcp_remap_create_do_with_count(context, stmt, lowered_body,
+                                                  count_node);
+    } else {
+        lowered = rxcp_remap_create_do_block(context, stmt, lowered_body);
+    }
     if (!lowered) goto fail;
     add_ast(instructions, lowered);
     return 1;

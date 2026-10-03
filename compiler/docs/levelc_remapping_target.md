@@ -936,6 +936,12 @@ live inside the previous false arm, preserving lazy evaluation. The accepted
 shape includes supported nested statement arms and local procedures. The
 shared `RexxValue.logicalWhenValue()` supplies `34.2`; an unmatched chain
 without OTHERWISE calls `rexxvalue_select_missing(line)` for `7.3`.
+The bounded counted-DO slice recognizes the parser's
+`DO > REPEAT > FOR > INTEGER` header and materializes a fresh canonical
+`DO > REPEAT > FOR > INTEGER` tree through
+`rxcp_remap_create_do_with_count()`. The existing one-shot block builder
+delegates to the same neutral constructor with count one. Dynamic and
+control-variable headers remain rejected pending their numeric and pool rules.
 Accepted trees pass a production boundary walk before canonical validation:
 every child and sibling must have the expected parent, sibling chains must be
 acyclic, and no `LEVELC_*` instruction node may remain. The direct negative

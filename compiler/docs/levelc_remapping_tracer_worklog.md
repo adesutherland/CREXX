@@ -62,6 +62,27 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 26 - Literal Counted DO Tree
+
+### Intent and accepted shape
+
+Admit the parser's `DO > REPEAT > FOR > INTEGER` form only for a non-negative
+decimal literal count representable by the canonical integer builder. A new
+neutral remap constructor takes a fresh count node and produces the same
+counted-DO tree used by the existing one-shot block builder. Guarded body
+statements lower recursively; dynamic counts, controlled variables,
+WHILE/UNTIL and LEAVE/ITERATE stay closed.
+
+### Verification
+
+- The zero/nested/IF/procedure fixture matched Regina in opt/no-opt and linked
+  execution. Focused tests 5/5 and the normal Level C plus source-provenance
+  suite 124/124 passed. The generated debug tree retained source anchors and
+  passed structural validation. A focused Debug build and final Debug tests
+  6/6 passed after building the new boundary-test executable in that tree.
+  Log paths and open obligations are in the
+  [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+
 ## Stage 25 - Level C SELECT Structural Lowering
 
 ### Intent and accepted shape

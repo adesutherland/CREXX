@@ -82,6 +82,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   line. Verify against the Classic reference for successful paths, optimized
   and no-opt execution, negative runtime checks, lowered-tree inspection,
   the normal correctness suite, and linked-image execution.
+- [x] **LC-AC-10 — literal counted DO slice:** a parsed `DO` with one
+  non-negative integer literal repetition count executes its supported body
+  exactly that many times, including zero and nested groups, with opt/no-opt
+  parity and valid lowered ownership/source anchors. Dynamic counts, controlled
+  variables, conditions, `LEAVE` and `ITERATE` remain open. Verify against
+  Regina, a targeted AST probe, focused execution and the normal Level C
+  suite, then commit this increment separately.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -157,6 +164,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     Close `LC-AC-08` only after the full parser-node crosswalk and structural
     invariants are evidenced; a runtime or host dependency remains an open
     criterion rather than an implicit exclusion.
+13. **LC-STEP-13 — complete (LC-AC-08/10; depends on STEP-11):** admit the parser's
+    `DO > REPEAT > FOR > INTEGER` form only for a proven non-negative literal
+    count representable in the canonical integer builder. Reuse a neutral
+    counted-DO builder, validate body statements recursively, keep other
+    repetition headers fail-closed, compare zero/nested counts with Regina,
+    and qualify opt/no-opt, tree shape, linked execution and the normal suite.
+    This is one bounded part of STEP-12, not closure of all loop forms.
 
 ## AST structural crosswalk and closure order
 
@@ -176,7 +190,7 @@ itself make its Classic shape executable.
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, lazy logical branches, bounded BIF/local calls | More expression shapes, exact evaluation order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
-| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Open: only child-list-only `DO` is accepted | Loop header ownership, mutation/evaluation order, control transfer and scope |
+| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: `DO > REPEAT > FOR > INTEGER` literal count; other headers remain open | Dynamic count, numeric errors, mutation/evaluation order, control transfer and scope |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
 | `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
@@ -214,7 +228,7 @@ has been approved in this worklist.
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
-| Control | controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Front end: parser/validation fixtures | Execution, exact loop semantics and errors |
+| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: non-negative integer literal count, zero/nested/procedure/IF-arm cases | Dynamic count, controlled variables, conditions, transfer, exact numeric errors |
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
@@ -245,7 +259,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slice: simple DO only | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO and non-negative literal count | Dynamic/controlled/conditional/forever forms, errors and configuration proof open |
 | `SYN-CLASSIC-DROP` | DROP instruction | Bounded slice: direct scalar list | Stem, compound and indirect forms, full condition/profile proof open |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
@@ -509,3 +523,33 @@ full compatibility proof.
   `/tmp/crexx-levelc-select-link.PrvySs`.
 - `LC-AC-08` and `LC-AC-04` remain open for the other structural and complete
   compatibility obligations.
+
+### LC-STEP-13 — literal counted DO, 2026-10-03
+
+- Before-change, Regina executed `DO 2` twice while compiled Level C rejected
+  the parser's `DO > REPEAT > FOR > INTEGER` header. The reproducer and raw
+  AST are retained at `/tmp/crexx-levelc-count-before.CVPYiy`.
+- A neutral counted-DO builder now receives a fresh canonical count node.
+  The Level C guard accepts only a non-negative decimal integer literal
+  representable by the current `.int` builder, with no extra repetition or
+  condition sibling. All other loop headers remain fail-closed; the prior
+  unsupported fixture now covers a control-variable loop.
+- The eleven-line zero/nested/IF/procedure fixture matched Regina in optimized
+  and no-opt runs. Release build passed, focused tests 5/5, normal Level C and
+  source-provenance suite 124/124, and linked RXBIN execution reproduced the
+  eleven lines. Debug tree output showed source-anchored generated loops and
+  no AST validation failure. Retained logs:
+  `/tmp/crexx-levelc-count-build.913mV7`,
+  `/tmp/crexx-levelc-count-focused.OBuaIY`,
+  `/tmp/crexx-levelc-count-suite.zVJrGT`,
+  `/tmp/crexx-levelc-count-debug.uso2v0`,
+  `/tmp/crexx-levelc-count-link.6iwRyj`.
+- Dynamic repetition counts, controlled loops, WHILE/UNTIL, LEAVE/ITERATE and
+  their exact runtime errors remain open under `LC-AC-08/04`.
+- A focused Debug build passed. The first Debug CTest attempt had one `Not
+  Run` because `test_levelc_tree_boundary` had not been built in that tree;
+  after building it, the focused Debug set passed 6/6. Logs:
+  `/tmp/crexx-levelc-count-debug-build.wX76xJ`,
+  `/tmp/crexx-levelc-count-debug-focused.9ijG98`,
+  `/tmp/crexx-levelc-count-debug-unit-build.QGU5mL`,
+  `/tmp/crexx-levelc-count-debug-focused-final.VkqpEj`.
