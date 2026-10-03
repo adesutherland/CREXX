@@ -87,18 +87,19 @@ become nested canonical IF blocks, with each later condition contained in the
 earlier false arm. The shared `RexxValue` class supplies exact WHEN logical
 validation; a small exported runtime helper reports the Classic no-match
 identity. RexxScript's evaluator and sandbox contract remain separate.
-The next loop slice accepts only `DO > REPEAT > FOR > INTEGER` with a
+The initial loop slice accepted `DO > REPEAT > FOR > INTEGER` with a
 non-negative literal count representable by the canonical integer builder.
-The neutral remap builder creates a fresh counted loop tree; dynamic counts,
-controlled loops, setup-bearing conditions and named loop transfers are still
-open.
+Later bounded slices extend this tree to dynamic counts, controlled loops,
+setup-bearing conditions and named controlled-loop transfers.
 Childless LEAVE/ITERATE now have a bounded path through those generated blocks:
 each accepted source counted loop gets a hidden canonical control symbol, and
 its source transfers become named canonical transfers to that symbol. This
 uses the existing loop-association pass, which can search past generated
 one-shot DO wrappers for a matching controlled loop. The ordinary `ast_do()`
-rule remains unchanged. Named Classic transfers and broader loop forms remain
-open in the worklist.
+rule remains unchanged. Named Classic transfers now resolve an active source
+controlled variable to that loop's hidden canonical symbol, including an
+outer target across nested generated blocks. Other loop forms remain open in
+the worklist.
 `DO FOREVER` is now the second accepted source repetition form. Its parser
 `REPEAT` node has no count child; the neutral controlled-DO builder omits FOR
 while retaining the hidden canonical control symbol used by LEAVE/ITERATE.

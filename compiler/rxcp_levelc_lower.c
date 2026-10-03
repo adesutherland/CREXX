@@ -1231,12 +1231,47 @@ static ASTNode *levelc_nearest_source_repetitive_do(ASTNode *stmt) {
     return NULL;
 }
 
+static ASTNode *levelc_named_source_repetitive_do(ASTNode *stmt) {
+    ASTNode *ancestor;
+    char *requested_name;
+
+    if (!stmt || !stmt->child || stmt->child->node_type != VAR_SYMBOL ||
+        stmt->child->child || stmt->child->sibling) return NULL;
+    requested_name = levelc_upper_name(stmt->child);
+    if (!requested_name) return NULL;
+    for (ancestor = stmt->parent; ancestor; ancestor = ancestor->parent) {
+        ASTNode *repeat = ancestor->node_type == DO ? ancestor->child : NULL;
+        ASTNode *assign = repeat && repeat->node_type == REPEAT ? repeat->child : NULL;
+        ASTNode *control = assign && assign->node_type == ASSIGN ? assign->child : NULL;
+        char *control_name;
+        int matches;
+
+        if (!control || control->node_type != VAR_TARGET) continue;
+        control_name = levelc_upper_name(control);
+        matches = control_name && strcmp(requested_name, control_name) == 0;
+        free(control_name);
+        if (matches) {
+            free(requested_name);
+            return ancestor;
+        }
+    }
+    free(requested_name);
+    return NULL;
+}
+
 static int levelc_transfer_supported(ASTNode *stmt,
                                      const char **reason_out) {
     ASTNode *target;
 
-    if (!stmt || stmt->child) {
-        if (reason_out) *reason_out = "named LEAVE/ITERATE is outside slice";
+    if (!stmt) {
+        if (reason_out) *reason_out = "unsupported LEAVE/ITERATE shape";
+        return 0;
+    }
+    if (stmt->child) {
+        target = levelc_named_source_repetitive_do(stmt);
+        if (target && levelc_controlled_literal_header_supported(
+                target->child, NULL, NULL, NULL, reason_out)) return 1;
+        if (reason_out && !*reason_out) *reason_out = "named LEAVE/ITERATE requires a supported controlled DO";
         return 0;
     }
     target = levelc_nearest_source_repetitive_do(stmt);
@@ -2608,8 +2643,12 @@ static int levelc_lower_transfer(Context *context,
     LevelCLoopBinding *binding = plan ? plan->active_loop : NULL;
     ASTNode *lowered;
     ASTNode *target;
+    ASTNode *source_target = stmt->child
+        ? levelc_named_source_repetitive_do(stmt)
+        : levelc_nearest_source_repetitive_do(stmt);
 
-    if (!binding || binding->source_do != levelc_nearest_source_repetitive_do(stmt)) {
+    while (binding && binding->source_do != source_target) binding = binding->previous;
+    if (!source_target || !binding) {
         if (reason_out) *reason_out = "LEAVE/ITERATE lost its source loop binding";
         return 0;
     }

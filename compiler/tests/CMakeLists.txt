@@ -5275,6 +5275,12 @@ add_levelc_invalid_compile_test(levelc_compile_invalid_select_missing_when
 add_levelc_invalid_compile_test(levelc_slice13_named_leave_invalid
         rexx_src/levelc_slice13_named_leave_invalid.rexx
         "RXC-LC-28\\.3")
+add_levelc_invalid_compile_test(levelc_slice29_named_leave_invalid
+        rexx_src/levelc_slice29_named_leave_invalid.rexx
+        "RXC-LC-28\\.3")
+add_levelc_invalid_compile_test(levelc_slice29_named_iterate_invalid
+        rexx_src/levelc_slice29_named_iterate_invalid.rexx
+        "RXC-LC-28\\.4")
 
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -5623,6 +5629,12 @@ add_levelc_runtime_slice_test(levelc_slice28_controlled_for_only
 add_levelc_runtime_slice_test(levelc_slice28_controlled_for_only_noopt
         rexx_src/levelc_slice28_controlled_for_only.rexx
         "plain 1\nplain 2\nafter-plain 3\ndown 3\ndown 2\nafter-down 1\nup 1\nup 3\nafter-up 5\nafter-zero 1\nchanged 2\nchanged 3\nafter-changed 4\niter 1\niter 3\nafter-iter 4\nleft 1\nafter-left 2\n3\n" -n)
+add_levelc_runtime_slice_test(levelc_slice29_named_transfer
+        rexx_src/levelc_slice29_named_transfer.rexx
+        "outer-iter 1 1\nouter-iter 2 1\nouter-iter 3 1\nafter-outer-iter 4 2\nouter-leave 1 1\nafter-outer-leave 1 2\ninner-iter 1 2\ninner-iter 1 3\ninner-iter 2 2\ninner-iter 2 3\nafter-inner-iter 3 4\nafter-select 2\n3\n")
+add_levelc_runtime_slice_test(levelc_slice29_named_transfer_noopt
+        rexx_src/levelc_slice29_named_transfer.rexx
+        "outer-iter 1 1\nouter-iter 2 1\nouter-iter 3 1\nafter-outer-iter 4 2\nouter-leave 1 1\nafter-outer-leave 1 2\ninner-iter 1 2\ninner-iter 1 3\ninner-iter 2 2\ninner-iter 2 3\nafter-inner-iter 3 4\nafter-select 2\n3\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5932,6 +5944,15 @@ add_levelc_lowered_tree_shape_test(levelc_slice28_controlled_for_only_tree_shape
         "controlStepBy"
         "setValue"
         "ITERATE")
+add_levelc_lowered_tree_shape_test(levelc_slice29_named_transfer_tree_shape
+        rexx_src/levelc_slice29_named_transfer.rexx
+        "ITERATE"
+        "LEAVE"
+        "__rxcp_levelc_loop_"
+        "FOR"
+        "WHILE"
+        "UNTIL"
+        "BLOCK_EXPR")
 
 # Bridge Connectivity Test
 add_custom_command(
