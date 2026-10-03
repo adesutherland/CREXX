@@ -53,6 +53,7 @@
 #include "rxcp_highlight_controller.h"
 #include "rxcp_val.h"
 #include "rxcpbgmr.h"
+#include "rxcpcsym.h"
 #include "rxcp_exit.h"
 #include "utf.h"
 
@@ -102,6 +103,7 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_NAMESPACE:
         case TK_OPTIONS: return LEXER_PREPROCESSOR;
         case TK_STRING: return LEXER_STRING_LITERAL;
+        case TK_LEVELC_CONST_SYMBOL: return LEXER_STRING_LITERAL;
         case TK_DECIMAL:
         case TK_INTEGER:
         case TK_FLOAT: return LEXER_NUMBER_LITERAL;

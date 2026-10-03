@@ -407,7 +407,7 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   fractional DO/FOR counts still raise their existing contextual errors.
   Verify Regina output, raw/canonical tree, opt/no-opt, focused invalid-count
   tests, the normal Level C suite and linked execution. Exponents are covered
-  by `LC-AC-43`; wider constant-symbol spellings remain open lexical work.
+  by `LC-AC-43`; digit-starting constant symbols are covered by `LC-AC-44`.
 - [x] **LC-AC-43 — exponent numeric source tokens:** valid Classic numeric
   exponent forms with integer, trailing-dot or fractional mantissas and an
   optional exponent sign form one numeric source operand. Their displayed
@@ -415,7 +415,16 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   the same value, and whole-number DO/FOR checks retain contextual behavior.
   Verify Regina and a failing baseline, raw/canonical tree, opt/no-opt,
   focused count errors, the normal Level C suite and linked execution.
-  Non-numeric constant symbols remain open under `LC-AC-04/08`.
+  Digit-starting nonnumeric constants are covered by `LC-AC-44`;
+  leading-period symbols remain open under `LC-AC-04/08`.
+- [x] **LC-AC-44 — digit-starting constant symbols:** nonnumeric Classic
+  constants beginning with a digit, including letter and repeated-period
+  forms, remain one source `CONST_SYMBOL` operand. Their value is the uppercase
+  source spelling, independent of the variable pool; expressions, PARSE VALUE
+  and adjacent concatenation preserve it. Numeric constants retain the
+  `INTEGER`/`DECIMAL` path, and leading-period symbols remain separate work.
+  Verify Regina, raw/canonical tree, opt/no-opt, parser/highlighter checks,
+  the normal Level C suite and linked execution.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -729,6 +738,12 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     to Classic uppercase when constructing the shared `RexxValue` string.
     Check direct expressions, arithmetic, PARSE VALUE, count validation,
     canonical lowering and linked output before a separate commit.
+47. **LC-STEP-47 — complete (LC-AC-08/44; depends on STEP-46):** scan digit-starting
+    constant symbols after complete numeric forms, map them to the existing
+    `CONST_SYMBOL` AST node and lowercase-to-uppercase Classic literal path,
+    and retain numeric and invalid-assignment classification. Prove the raw
+    symbol and canonical shared-value tree, Regina parity, parser/highlighter
+    behavior and linked output before a separate commit.
 
 ## Findings
 
@@ -760,7 +775,7 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   `concat-regina.out` and `concat-crexx.out`. `LC-STEP-44` now selects
   `OP_CONCAT` for physically adjacent terms and `OP_SCONCAT` for spaced terms.
   The new fixture covers groups, calls, comment-only gaps and PARSE VALUE.
-- **LC-FIND-05 — numeric repair complete, broader constant symbols open:** the former
+- **LC-FIND-05 — digit-start repair complete, leading-period symbols open:** the former
   Level C scanner emitted integer, dot and integer tokens for `1.5`; the
   expression parser could lose the dot. Before `LC-STEP-44`, blank concatenation
   made the existing `DO ... FOR 1.5` invalid-value test pass; unrestricted
@@ -769,7 +784,9 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   `LC-STEP-45/46` now scan decimal fraction and valid exponent forms into a
   single numeric source token and lower them through shared `RexxValue`, so
   `1.5` retains its value and still fails the contextual FOR count check.
-  Wider non-numeric constant symbols remain open under `LC-AC-04/08`. Reproducer:
+  `LC-STEP-47` now scans digit-starting nonnumeric constant symbols as one
+  source operand. Leading-period symbols and processor-state meanings remain
+  open under `LC-AC-04/08`. Reproducer:
   `compiler/tests/rexx_src/levelc_slice35_dynamic_for_fraction.rexx` and
   `/tmp/crexx-levelc-abuttal-fraction-tree.pGPSc7`.
 
@@ -1938,6 +1955,20 @@ full compatibility proof.
   `/tmp/crexx-levelc-exponent-debug-build.3r0pwZ`,
   `/tmp/crexx-levelc-exponent-debug-tests.nEbinY`, and
   `/tmp/crexx-levelc-exponent-linked.M8newV`.
+- Digit-starting nonnumeric constant symbols now scan as one Level C-only
+  raw token and one source `CONST_SYMBOL` node. The canonical tree creates
+  uppercase shared `RexxValue` strings, independent of similarly named pool
+  variables. Regina, optimized/no-opt and linked output match for letters,
+  repeated periods, exponent-looking nonnumbers, PARSE VALUE and abuttal.
+  The nonnumeric FOR count still reports `26.3`. The dedicated highlighter
+  check classifies these as constants; Release Level C passed 264/264 and
+  focused Debug passed 9/9. Evidence:
+  `/tmp/crexx-levelc-constant-reference.FiKTwC`,
+  `/tmp/crexx-levelc-constsym-tree.xkWjAO`,
+  `/tmp/crexx-levelc-constsym-release-suite.P87UU4`,
+  `/tmp/crexx-levelc-constsym-debug-build.MOE5TW`,
+  `/tmp/crexx-levelc-constsym-debug-tests.6wtAsS`, and
+  `/tmp/crexx-levelc-constsym-linked.jx6fO9`.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.

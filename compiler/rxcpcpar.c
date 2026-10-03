@@ -88,6 +88,7 @@ static int levelc_parser_token_for_raw(Token *token, int token_type) {
         case TK_LABEL: return CTK_LABEL;
         case TK_INTEGER: return CTK_INTEGER;
         case TK_DECIMAL: return CTK_DECIMAL;
+        case TK_LEVELC_CONST_SYMBOL: return CTK_CONST_SYMBOL;
         case TK_STRING: return CTK_STRING;
         case TK_DOT: return CTK_DOT;
         case TK_EQUAL: return CTK_EQUAL;
@@ -591,7 +592,8 @@ int rexcpars(Context *context) {
             }
         }
         else if (clause_start &&
-                 (token_type == TK_INTEGER || token_type == TK_DECIMAL) &&
+                 (token_type == TK_INTEGER || token_type == TK_DECIMAL ||
+                  token_type == TK_LEVELC_CONST_SYMBOL) &&
                  peek_token->token_type == TK_EQUAL) {
             parser_token = CTK_BAD_ASSIGN_NUMBER;
         }

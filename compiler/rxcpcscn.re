@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rxcpbgmr.h"
+#include "rxcpcsym.h"
 #include "rxcpmain.h"
 #include "rxcp_util.h"
 
@@ -75,6 +76,7 @@ regular:
   fraction = digit+ "." digit* | "." digit+;
   exponent = [eE] [+-]? digit+;
   numeric_exp = (integer | fraction) exponent;
+  constsym = digit (lcfsymchr | digit | ".")+;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
   badsqstr = ['] ((any\['\n\r])|(['][']))*;
@@ -127,6 +129,7 @@ regular:
     numeric_exp { RET(TK_DECIMAL); }
     fraction { RET(TK_DECIMAL); }
     integer { RET(TK_INTEGER); }
+    constsym { RET(TK_LEVELC_CONST_SYMBOL); }
     str { RET(TK_STRING); }
     str [bBxX] / (any\(lcfsymchr | digit | [.])) { RET(TK_STRING); }
     badsqstr { RET(TK_UNKNOWN); }

@@ -458,7 +458,7 @@ static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expressio
 }
 
 %token CTK_UNKNOWN CTK_BAD_STRING CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_MISSING_EXPR CTK_MISSING_RPAREN.
-%token CTK_VAR_SYMBOL CTK_COMMAND_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_BAD_ASSIGN_NUMBER CTK_LABEL CTK_INTEGER CTK_DECIMAL CTK_STRING.
+%token CTK_VAR_SYMBOL CTK_COMMAND_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_BAD_ASSIGN_NUMBER CTK_LABEL CTK_INTEGER CTK_DECIMAL CTK_CONST_SYMBOL CTK_STRING.
 %token CTK_EQUAL CTK_ADDRESS CTK_ARG CTK_CALL CTK_DROP CTK_EXIT CTK_INTERPRET CTK_NOP CTK_NUMERIC.
 %token CTK_OPTIONS CTK_PARSE CTK_PROCEDURE CTK_PULL CTK_PUSH CTK_QUEUE CTK_RETURN CTK_SAY CTK_SIGNAL CTK_TRACE.
 %token CTK_IF CTK_THEN CTK_ELSE CTK_SELECT CTK_WHEN CTK_OTHERWISE CTK_DO CTK_END.
@@ -480,7 +480,7 @@ static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expressio
 %nonassoc CTK_OTHERWISE.
 %nonassoc CTK_DO.
 %nonassoc CTK_ELSE.
-%left CTK_STRING CTK_INTEGER CTK_DECIMAL CTK_VAR_SYMBOL.
+%left CTK_STRING CTK_INTEGER CTK_DECIMAL CTK_CONST_SYMBOL CTK_VAR_SYMBOL.
 %left CTK_OPEN_BRACKET.
 
 %type bad_expression_start {Token*}
@@ -1658,6 +1658,7 @@ bad_form_option_start(T) ::= bad_instruction_tail_start(S). { T = S; }
 
 bad_variable_ref_start(T) ::= CTK_INTEGER(S). { T = S; }
 bad_variable_ref_start(T) ::= CTK_DECIMAL(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_CONST_SYMBOL(S). { T = S; }
 bad_variable_ref_start(T) ::= CTK_STRING(S). { T = S; }
 bad_variable_ref_start(T) ::= CTK_DOT(S). { T = S; }
 bad_variable_ref_start(T) ::= CTK_CLOSE_BRACKET(S). { T = S; }
@@ -1690,6 +1691,7 @@ bad_variable_ref_start(T) ::= CTK_XOR(S). { T = S; }
 
 bad_name_target_start(T) ::= CTK_INTEGER(S). { T = S; }
 bad_name_target_start(T) ::= CTK_DECIMAL(S). { T = S; }
+bad_name_target_start(T) ::= CTK_CONST_SYMBOL(S). { T = S; }
 bad_name_target_start(T) ::= CTK_DOT(S). { T = S; }
 bad_name_target_start(T) ::= CTK_OPEN_BRACKET(S). { T = S; }
 bad_name_target_start(T) ::= CTK_CLOSE_BRACKET(S). { T = S; }
@@ -1722,6 +1724,7 @@ bad_name_target_start(T) ::= CTK_XOR(S). { T = S; }
 
 bad_instruction_tail_start(T) ::= CTK_INTEGER(S). { T = S; }
 bad_instruction_tail_start(T) ::= CTK_DECIMAL(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_CONST_SYMBOL(S). { T = S; }
 bad_instruction_tail_start(T) ::= CTK_STRING(S). { T = S; }
 bad_instruction_tail_start(T) ::= CTK_DOT(S). { T = S; }
 bad_instruction_tail_start(T) ::= CTK_OPEN_BRACKET(S). { T = S; }
@@ -1777,6 +1780,11 @@ simple_tail_atom(A) ::= CTK_INTEGER(T).
 simple_tail_atom(A) ::= CTK_DECIMAL(T).
 {
     A = ast_f(context, DECIMAL, T);
+}
+
+simple_tail_atom(A) ::= CTK_CONST_SYMBOL(T).
+{
+    A = ast_f(context, CONST_SYMBOL, T);
 }
 
 simple_tail_atom(A) ::= CTK_STRING(T).
@@ -2578,6 +2586,11 @@ command_primary_expr(T) ::= CTK_DECIMAL(S).
     T = ast_f(context, DECIMAL, S);
 }
 
+command_primary_expr(T) ::= CTK_CONST_SYMBOL(S).
+{
+    T = ast_f(context, CONST_SYMBOL, S);
+}
+
 command_primary_expr(T) ::= CTK_STRING(S).
 {
     T = ast_fstr(context, S);
@@ -3056,6 +3069,11 @@ primary_expr(T) ::= CTK_DECIMAL(S).
     T = ast_f(context, DECIMAL, S);
 }
 
+primary_expr(T) ::= CTK_CONST_SYMBOL(S).
+{
+    T = ast_f(context, CONST_SYMBOL, S);
+}
+
 primary_expr(T) ::= CTK_STRING(S).
 {
     T = ast_fstr(context, S);
@@ -3269,6 +3287,11 @@ primary_expr_c(T) ::= CTK_INTEGER(S).
 primary_expr_c(T) ::= CTK_DECIMAL(S).
 {
     T = ast_f(context, DECIMAL, S);
+}
+
+primary_expr_c(T) ::= CTK_CONST_SYMBOL(S).
+{
+    T = ast_f(context, CONST_SYMBOL, S);
 }
 
 primary_expr_c(T) ::= CTK_STRING(S).

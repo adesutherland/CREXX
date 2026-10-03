@@ -33,6 +33,7 @@
 #include <ctype.h>
 #include "rxcp_util.h"
 #include "rxcp_token.h"
+#include "rxcpcsym.h"
 #include "rxcpbgmr.h"
 #include "rxcp_ast.h"
 #include "rxcp_sym.h"
@@ -790,6 +791,7 @@ const char* token_to_string(int token_id) {
         case TK_INTEGER: return "TK_INTEGER";
         case TK_FLOAT: return "TK_FLOAT";
         case TK_DECIMAL: return "TK_DECIMAL";
+        case TK_LEVELC_CONST_SYMBOL: return "TK_LEVELC_CONST_SYMBOL";
         case TK_STRING: return "TK_STRING";
         case TK_PLUS: return "TK_PLUS";
         case TK_MINUS: return "TK_MINUS";

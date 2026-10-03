@@ -4647,6 +4647,17 @@ if (ENABLE_PARSER_MODE)
     set_tests_properties(syntaxhighlight_levelc_labels_literals PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_constant_symbols
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_slice45_constant_symbols.rexx
+            MUST_MATCH
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=5, sev=48, text=\"1.2.3\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=4, sev=48, text=\"1e2x\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_constant_symbols PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_levelc_then_boundary
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_then_boundary.rexx
             MUST_MATCH
@@ -5740,6 +5751,12 @@ add_levelc_runtime_slice_test(levelc_slice44_exponent
 add_levelc_runtime_slice_test(levelc_slice44_exponent_noopt
         rexx_src/levelc_slice44_exponent.rexx
         "literal 1E2 1E+2 1E-2 1.5E2 1.E2 .5E+1\nmath 101 1.01\nparse 1E2\nabutted [1E2]\nwhole 1\n" -n)
+add_levelc_runtime_slice_test(levelc_slice45_constant_symbols
+        rexx_src/levelc_slice45_constant_symbols.rexx
+        "literal 1X 1E 1.2.3 1A.B 123ABC 1E2X\npool 1X 1E\nabutted [1X]\nparse 1A.B\n")
+add_levelc_runtime_slice_test(levelc_slice45_constant_symbols_noopt
+        rexx_src/levelc_slice45_constant_symbols.rexx
+        "literal 1X 1E 1.2.3 1A.B 123ABC 1E2X\npool 1X 1E\nabutted [1X]\nparse 1A.B\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5825,6 +5842,8 @@ add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_fraction
         rexx_src/levelc_slice35_dynamic_for_fraction.rexx RXC-LC-26.3)
 add_levelc_invalid_runtime_test(levelc_slice44_exponent_for_fraction
         rexx_src/levelc_slice44_exponent_for_fraction.rexx RXC-LC-26.3)
+add_levelc_invalid_runtime_test(levelc_slice45_constant_for_invalid
+        rexx_src/levelc_slice45_constant_for_invalid.rexx RXC-LC-26.3)
 add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_negative
         rexx_src/levelc_slice35_dynamic_for_negative.rexx RXC-LC-26.3)
 add_levelc_invalid_runtime_test(levelc_slice36_dynamic_start_invalid
@@ -6191,6 +6210,11 @@ add_levelc_lowered_tree_shape_test(levelc_slice44_exponent_tree_shape
         "STRING : .*1E2"
         "RexxValue"
         "add")
+add_levelc_lowered_tree_shape_test(levelc_slice45_constant_symbols_tree_shape
+        rexx_src/levelc_slice45_constant_symbols.rexx
+        "STRING : .*1X"
+        "RexxValue"
+        "concat")
 
 # Bridge Connectivity Test
 add_custom_command(

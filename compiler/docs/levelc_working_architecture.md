@@ -251,8 +251,13 @@ and contextual DO/FOR whole-number checks remain authoritative. Valid
 exponent forms with integer or fractional mantissas also use that source
 node; the lowerer uppercases their `E` when constructing the Classic value,
 matching the reference display while retaining the numeric spelling in the
-raw tree. Wider non-numeric constant symbols still need separate lexical
-work.
+raw tree. Digit-starting nonnumeric constant symbols now take the existing
+`CONST_SYMBOL` source AST path, including mixed letters and repeated periods.
+Their literal value is uppercased before the shared `RexxValue` factory; they
+never read the variable pool. The scanner gives complete numeric spellings
+priority and emits a Level C-only raw token for the remaining digit-starting
+symbols, which the parser and highlighter classify as a constant. Leading-
+period symbols remain an open lexical and processor-state case.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission. The existing WHILE, BLOCK_EXPR and
 LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL

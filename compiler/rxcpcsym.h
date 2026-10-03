@@ -55,7 +55,8 @@ enum {
     TK_LEVELC_STEM,
     TK_LEVELC_NORMAL,
     TK_LEVELC_APPEND,
-    TK_LEVELC_REPLACE
+    TK_LEVELC_REPLACE,
+    TK_LEVELC_CONST_SYMBOL
 };
 
 char *rxcp_levelc_upper_symbol_from_token(Token *token, int strip_label_colon);

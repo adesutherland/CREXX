@@ -449,6 +449,7 @@ static int levelc_expr_supported(ASTNode *expr,
         case STRING:
         case INTEGER:
         case DECIMAL:
+        case CONST_SYMBOL:
             return 1;
 
         case VAR_SYMBOL:
@@ -893,7 +894,8 @@ static int levelc_arg_statement_supported(ASTNode *stmt,
 static int levelc_call_tail_value_supported(ASTNode *node,
                                             const char **reason_out) {
     if (!node) return 0;
-    if (node->node_type == INTEGER || node->node_type == DECIMAL) return 1;
+    if (node->node_type == INTEGER || node->node_type == DECIMAL ||
+        node->node_type == CONST_SYMBOL) return 1;
     if (node->node_type == LITERAL) {
         return levelc_variable_value_supported(node, reason_out);
     }
@@ -1688,9 +1690,11 @@ static ASTNode *levelc_rexxvalue_from_literal(Context *context, ASTNode *source_
 
     text = levelc_node_text_copy(source_node);
     if (!text) return NULL;
-    if (source_node->node_type == DECIMAL) {
+    if (source_node->node_type == DECIMAL || source_node->node_type == CONST_SYMBOL) {
         for (cursor = text; *cursor; cursor++) {
-            if (*cursor == 'e') *cursor = 'E';
+            if (source_node->node_type == CONST_SYMBOL)
+                *cursor = (char)toupper((unsigned char)*cursor);
+            else if (*cursor == 'e') *cursor = 'E';
         }
     }
     result = levelc_rexxvalue_from_text(context, source_node, text);
@@ -2358,6 +2362,7 @@ static ASTNode *levelc_lower_expr(Context *context,
         case STRING:
         case INTEGER:
         case DECIMAL:
+        case CONST_SYMBOL:
             return levelc_rexxvalue_from_literal(context, expr);
         case VAR_SYMBOL:
             return levelc_pool_value(context, expr);
@@ -2516,7 +2521,8 @@ static ASTNode *levelc_lower_call_tail_value(Context *context,
 
     if (!node) return NULL;
     if (node->node_type == LITERAL) return levelc_pool_value(context, node);
-    if (node->node_type == INTEGER || node->node_type == DECIMAL)
+    if (node->node_type == INTEGER || node->node_type == DECIMAL ||
+        node->node_type == CONST_SYMBOL)
         return levelc_rexxvalue_from_literal(context, node);
     return NULL;
 }
