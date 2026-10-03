@@ -5779,6 +5779,12 @@ add_levelc_runtime_slice_test(levelc_slice54_drop_indirect
 add_levelc_runtime_slice_test(levelc_slice54_drop_indirect_noopt
         rexx_src/levelc_slice54_drop_indirect.rexx
         "pair=A|B|a b|\ninvalid=A|B|\ncompound=ITEMS.b|ITEMS.B|\norder=KEY|ITEMS.KEY|\nretained=lower2|upper2|\nstem=ITEMS.b|ITEMS.B|\nouter=NAMES|held|\nreference=A|\nlocal=ITEMS.B|ITEMS.B|\nif=A|\ndo=A|\n" -n)
+add_levelc_runtime_slice_test(levelc_say_instruction
+        rexx_src/levelc_say_instruction.rexx
+        "a\n\n\nb\n\n\ncall=ok\n\ninside=1\nexpr=1\ncount=1\ninside=2\nexpr=2\ncount=2\nz\n")
+add_levelc_runtime_slice_test(levelc_say_instruction_noopt
+        rexx_src/levelc_say_instruction.rexx
+        "a\n\n\nb\n\n\ncall=ok\n\ninside=1\nexpr=1\ncount=1\ninside=2\nexpr=2\ncount=2\nz\n" -n)
 add_levelc_runtime_slice_test(levelc_slice42_abuttal
         rexx_src/levelc_slice42_abuttal.rexx
         "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n")
@@ -6295,6 +6301,10 @@ add_levelc_lowered_tree_shape_test(levelc_slice54_drop_indirect_tree_shape
         "dropIndirectList"
         "symbolValue"
         "stemSymbolValue")
+add_levelc_lowered_tree_shape_test(levelc_say_instruction_tree_shape
+        rexx_src/levelc_say_instruction.rexx
+        "SAY"
+        "STRING")
 add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
         rexx_src/levelc_slice42_abuttal.rexx
         "concat"

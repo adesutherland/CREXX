@@ -1002,12 +1002,12 @@ are verified against all affected consumers.
     Ignore invalid subsidiary-list words as approved; verify that behavior,
     reference behavior, raw/canonical trees,
     opt/no-opt, normal Level C and linked execution before committing.
-60. **LC-STEP-60 (LC-AC-08/57; folded into STEP-63):** retain the tested
-    childless `SAY` change as an uncommitted case while the whole-instruction
-    plan is reviewed. Its Regina, opt/no-opt, tree, normal Level C and linked
-    evidence can be reused if code/test inputs remain unchanged. Complete the
-    full `SAY` contract under STEP-63; do not make this case a separate
-    feature-completion claim.
+60. **LC-STEP-60 — checkpoint complete (LC-AC-08/57; folded into STEP-63):**
+    incorporate childless `SAY` into an instruction-level fixture covering
+    expression side effects, output order, nested execution and local routines.
+    Regina, opt/no-opt, tree, normal Level C and linked evidence are recorded
+    under the active review below. The full `SAY` contract remains open under
+    STEP-63; this checkpoint is not a feature-completion claim.
 
 61. **LC-STEP-61 — review complete (LC-AC-58/59):** inspect the active parser,
     lowerer, remap builders, shared pool/value/BIFs, VM PARSE path, tests and
@@ -1116,6 +1116,20 @@ Open before closure:
 These are open implementation/proof items, not infeasible exceptions. Do not
 start `LC-I-02 DROP` until `LC-I-01` closes or Adrian explicitly changes the
 queue after reviewing a specific blocker.
+
+2026-10-03 STEP-63 checkpoint (SAY remains open): the single
+`levelc_say_instruction.rexx` fixture covers expression and childless forms
+in main, IF/DO and local procedures, plus an exposed counter mutated by a
+function called in a SAY expression. Regina output matches Release optimized,
+no-opt and linked RXBIN byte for byte. The focused CTests passed 3/3, and the
+normal Release Level C suite passed 290/290 in 27 seconds
+(`/tmp/crexx-levelc-say-suite.Wt01LA`). The linked proof retained compile,
+assembly, link and VM outputs under
+`/tmp/crexx-levelc-say-instruction.vkHmqr`. The earlier raw/canonical tree
+checks remain applicable to the childless form; the current tree CTest confirms
+the canonical SAY/string path but does not prove every association or source
+anchor. The embedded-NUL defect, complete function/BIF reachability,
+configured host output and failure lifecycle remain open.
 
 ## Findings
 

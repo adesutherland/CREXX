@@ -526,6 +526,7 @@ static int levelc_pool_statement_supported(ASTNode *stmt,
     }
 
     if (stmt->node_type == SAY) {
+        if (!stmt->child) return 1;
         if (!levelc_has_single_child(stmt)) {
             if (reason_out) *reason_out = "unsupported SAY shape";
             return 0;
@@ -2476,15 +2477,18 @@ static ASTNode *levelc_say_statement(Context *context,
     ASTNode *as_string;
     ASTNode *say;
 
-    lowered_expr = levelc_lower_expr(context, say_node->child, plan, prelude);
-    if (!lowered_expr) return NULL;
-
-    as_string = rxcp_remap_create_member_call(context,
-                                             say_node,
-                                             lowered_expr,
-                                             "asString",
-                                             NULL,
-                                             0);
+    if (say_node->child) {
+        lowered_expr = levelc_lower_expr(context, say_node->child, plan, prelude);
+        if (!lowered_expr) return NULL;
+        as_string = rxcp_remap_create_member_call(context,
+                                                 say_node,
+                                                 lowered_expr,
+                                                 "asString",
+                                                 NULL,
+                                                 0);
+    } else {
+        as_string = rxcp_remap_create_string_constant(context, say_node, "");
+    }
     if (!as_string) return NULL;
 
     say = ast_f(context, SAY, say_node->token);
