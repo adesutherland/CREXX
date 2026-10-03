@@ -5218,12 +5218,8 @@ add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice40_parse_pattern_unsupported
         rexx_src/levelc_slice40_parse_pattern_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice41_parse_four_unsupported
-        rexx_src/levelc_slice41_parse_four_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice48_parse_four_internal_dot_unsupported
-        rexx_src/levelc_slice48_parse_four_internal_dot_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice49_parse_four_all_dots_unsupported
-        rexx_src/levelc_slice49_parse_four_all_dots_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice50_parse_five_unsupported
+        rexx_src/levelc_slice50_parse_five_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
         rexx_src/levelc_slice10_indirect_drop_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_stem_drop_unsupported
@@ -5761,6 +5757,12 @@ add_levelc_runtime_slice_test(levelc_slice49_parse_all_dots
 add_levelc_runtime_slice_test(levelc_slice49_parse_all_dots_noopt
         rexx_src/levelc_slice49_parse_all_dots.rexx
         "one=  a  b c |0\ntwo=  a  b c |0\nthree=  a  b c |0\nvalue1=1\nvalue2=2\nvalue3=3\nlocal=done|4\n" -n)
+add_levelc_runtime_slice_test(levelc_slice50_parse_four
+        rexx_src/levelc_slice50_parse_four.rexx
+        "four=a|b|c| d e  |\ninternal=a|c| d e  |\nmultiple=b| d e  |\nfinal= d e  |\nfinaldrop=a|c|\nalldrop=  a  b   c  d e  |\nshort=a|b|c||\nalias=left|right|third|tail more|\nrepeat=z q|\nvalue=m|n|o|p q|1\nupper=A|C|D E |\nlocal=a|b|c|d e |\n")
+add_levelc_runtime_slice_test(levelc_slice50_parse_four_noopt
+        rexx_src/levelc_slice50_parse_four.rexx
+        "four=a|b|c| d e  |\ninternal=a|c| d e  |\nmultiple=b| d e  |\nfinal= d e  |\nfinaldrop=a|c|\nalldrop=  a  b   c  d e  |\nshort=a|b|c||\nalias=left|right|third|tail more|\nrepeat=z q|\nvalue=m|n|o|p q|1\nupper=A|C|D E |\nlocal=a|b|c|d e |\n" -n)
 add_levelc_runtime_slice_test(levelc_slice42_abuttal
         rexx_src/levelc_slice42_abuttal.rexx
         "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n")
@@ -6248,6 +6250,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice49_parse_all_dots_tree_shape
         "parseWordAndRest"
         "parseThreeWords"
         "__rxcp_levelc_parse_fields_"
+        "rexxclassicbif_translate")
+add_levelc_lowered_tree_shape_test(levelc_slice50_parse_four_tree_shape
+        rexx_src/levelc_slice50_parse_four.rexx
+        "parseFourWords"
+        "parseThreeWordsDrop"
+        "__rxcp_levelc_parse_fields_"
+        "setValue"
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
         rexx_src/levelc_slice42_abuttal.rexx

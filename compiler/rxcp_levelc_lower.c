@@ -1395,8 +1395,6 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
     size_t target_count;
     int upper = 0;
     int is_value = 0;
-    int final_drop = 0;
-    int earlier_drop = 0;
 
     if (!stmt || stmt->node_type != PARSE) return 0;
     source = stmt->child;
@@ -1438,17 +1436,14 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
         if (cursor->node_type != TARGET || cursor->child) goto unsupported;
         name = levelc_upper_name(cursor);
         target_count++;
-        if (name && strcmp(name, ".") == 0) {
-            if (target_count == 4 && !cursor->sibling) final_drop = 1;
-            else earlier_drop = 1;
-        } else if (!name || levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR) {
+        if (!name || (strcmp(name, ".") != 0 &&
+                      levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR)) {
             free(name);
             goto unsupported;
         }
         free(name);
     }
-    if (target_count < 1 || target_count > 4 ||
-        (target_count == 4 && (!final_drop || earlier_drop))) goto unsupported;
+    if (target_count < 1 || target_count > 4) goto unsupported;
     if (source_out) *source_out = source;
     if (target_out) *target_out = target;
     if (target_count_out) *target_count_out = target_count;
@@ -3027,14 +3022,23 @@ static int levelc_lower_direct_parse(Context *context,
     }
 
     if (target_count >= 2) {
+        ASTNode *last_target = target;
+        char *last_name;
+        int last_is_drop;
         char *fields_name = rxcp_remap_create_generated_node_name(
             LEVELC_PARSE_FIELDS_PREFIX, stmt);
         ASTNode *fields_define = fields_name
             ? rxcp_remap_create_array_define(context, stmt, fields_name,
                                              LEVELC_REXX_VALUE_CLASS_TYPE)
             : NULL;
+        for (index = 1; index < target_count; index++)
+            last_target = last_target->sibling;
+        last_name = levelc_upper_name(last_target);
+        last_is_drop = last_name && strcmp(last_name, ".") == 0;
+        free(last_name);
         const char *split_method = target_count == 2 ? "parseWordAndRest"
-            : target_count == 3 ? "parseThreeWords" : "parseThreeWordsDrop";
+            : target_count == 3 ? "parseThreeWords"
+            : last_is_drop ? "parseThreeWordsDrop" : "parseFourWords";
         ASTNode *split = rxcp_remap_create_member_call(context, stmt, value,
                                                         split_method, NULL, 0);
         ASTNode *capture = fields_name && split
@@ -3047,7 +3051,7 @@ static int levelc_lower_direct_parse(Context *context,
         add_ast(prelude, fields_define);
         add_ast(prelude, capture);
         rxcp_remap_append_builder_children(instructions, prelude);
-        for (index = 1; index <= (target_count == 4 ? 3 : target_count);
+        for (index = 1; index <= (target_count == 4 && last_is_drop ? 3 : target_count);
              index++, target = target->sibling) {
             char *target_name = levelc_upper_name(target);
             int is_drop = target_name && strcmp(target_name, ".") == 0;

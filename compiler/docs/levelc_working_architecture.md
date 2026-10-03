@@ -72,58 +72,40 @@ the callee pool. It adds the TRANSLATE import only for a programme with such
 bindings. This uses the current Level C BYTE default; delivery of an opt-in
 UTF8 call configuration remains an open compatibility obligation.
 
-The first executable `PARSE` template slice accepts a `VAR` scalar source or
-a `VALUE` expression with one direct scalar target, with optional `UPPER`.
-The parser keeps the outer comma-template list and inner template as separate
-`TEMPLATES` nodes. The lowerer validates both levels, evaluates the source
-before writing the target, and emits ordinary canonical pool reads and
-`setValue` calls. `UPPER` passes that source through the same shared Classic
-TRANSLATE frame used by `ARG`; its import is added only when a supported
-uppercase parse exists. The authored `PARSE` tree does not survive the
-canonical boundary. Pattern and position templates, other source
-types and comma templates remain guarded pending their own AST and runtime
-proof. The current BYTE default and open UTF8 configuration obligation apply
-to this uppercase path too.
+The executable `PARSE` slice accepts a `VAR` scalar source or a `VALUE`
+expression with one to four direct scalar or `.` template items, with optional
+`UPPER`. The parser keeps the outer comma-template list and inner template as
+separate `TEMPLATES` nodes. The lowerer validates both levels, evaluates and
+captures the source before any target write, and emits canonical pool reads,
+result captures and ordered `setValue` calls. A dot consumes its corresponding
+word or tail without a pool write. `UPPER` passes the source through the same
+shared Classic TRANSLATE frame used by `ARG`; its import is added only when a
+supported uppercase parse exists. The authored `PARSE` and template nodes do
+not survive the canonical boundary. No new AST or emitter node is required.
 
-This slice does not call the certified `compiler/exits/parse/Parse.crexx` exit.
+| Template length | Shared split operation | Results |
+| --- | --- | --- |
+| One | Direct source value, or a hidden canonical capture for `.` | Whole source |
+| Two | `RexxValue.parseWordAndRest()` using `parsewords3` | First word; source after exactly one separator |
+| Three | `RexxValue.parseThreeWords()` using `parsewords3` | First two words; unparsed tail |
+| Four, final `.` | `RexxValue.parseThreeWordsDrop()` using `parsewords3d` | First three words; tail dropped |
+| Four, final scalar | `RexxValue.parseFourWords()` using `parsewords3` then `parseWordAndRest()` | First three words; unparsed tail |
+
+The split methods return shared `RexxValue` arrays. Lowering captures each
+array before any scalar assignment, preserving source aliases and repeated
+target order. The single-dot hidden capture ensures a `PARSE VALUE` source
+expression executes once even though no target receives it.
+
+This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including
 direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;
 Level C already has a parsed template AST and writes through a separate
-Classic variable pool. Wider template work should assess reuse of those
-lower-level parse operations or descriptor semantics before adding another
-template algorithm, while preserving Level C AST ownership and pool writes.
-The next bounded template form uses that reuse path: `RexxValue.parseThreeWords()`
-wraps the existing `parsewords3` VM instruction and returns two words plus the
-unparsed tail as three `RexxValue` results. Level C captures that array before
-any target write and assigns the three direct scalar targets in source order.
-An optional UPPER still transforms the source through shared TRANSLATE first.
-The parser's nested template nodes are validated and removed by lowering;
-no new AST or emitter node is required. The current default proof is BYTE;
-the broader configuration and remaining template forms stay open.
-The two-target implicit-word form uses the same validated template shape and
-ordered pool writes. Shared `RexxValue.parseWordAndRest()` calls the existing
-`parsewords3` primitive for the first word, then derives the remaining source
-after exactly one separator. This retains extra blanks before later words,
-which the second-word result of `parsewords3` alone would discard. Both
-results are captured before any target assignment, so source aliases and
-repeated targets follow the reference write order. The broader binary/UTF8
-configuration proof remains open.
-The four-item template `first second third .` is the next bounded shape.
-Shared `RexxValue.parseThreeWordsDrop()` wraps the existing `parsewords3d`
-VM instruction and returns the first three words. The final dot discards the
-remaining source and never becomes a pool target. Level C validates that dot
-only in the final position, captures all three results before ordered pool
-writes, and uses the same optional shared TRANSLATE step. This still lowers
-through existing canonical array and call nodes; other dot placements remain
-guarded at that step. Two- and three-item templates now also accept `.` at
-any position when at least one direct scalar target remains. The existing
-`parseWordAndRest()` or `parseThreeWords()` result at that position is consumed
-without a pool write; the other targets are written in source order after
-the result array has been captured. Four-item templates with an internal dot
-remain guarded. All-dot templates of one to three items consume the source
-without a pool write. The single-dot form uses a hidden canonical assignment
-so a VALUE expression still executes once; two- and three-dot forms use the
-existing split-result captures. Four-item all-dot templates remain guarded.
+Classic variable pool. Future pattern and position work should assess reuse
+of those lower-level operations or descriptor semantics while preserving
+Level C AST ownership and pool writes. Other source types, five-item and
+longer templates, patterns, positions and comma templates remain guarded.
+The current default proof is BYTE; the broader binary/UTF8 configuration
+obligation remains open.
 
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and

@@ -294,6 +294,25 @@ RexxValue: class
     return fields
 
   /**
+   * Split three Classic blank-delimited words and retain the remaining tail.
+   * @return Four values: first, second, third, and unparsed tail
+   */
+  parseFourWords: method = .RexxValue[]
+    source = asString()
+    first = .string
+    second = .string
+    tail = .string
+    assembler parsewords3 first,second,tail,source
+    remaining = .RexxValue(tail)
+    last_fields = remaining.parseWordAndRest()
+    fields = .RexxValue[]
+    fields[1] = .RexxValue(first)
+    fields[2] = .RexxValue(second)
+    fields[3] = last_fields[1]
+    fields[4] = last_fields[2]
+    return fields
+
+  /**
    * Split three Classic blank-delimited words, dropping the remaining source.
    * @return Three values: first, second, and third word
    */
