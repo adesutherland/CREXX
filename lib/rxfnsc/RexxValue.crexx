@@ -614,6 +614,14 @@ RexxValue: class
     assembler signal "ERROR", message
     return 0
 
+  logicalWhileValue: method = .boolean
+    text = asString()
+    if text == "0" then return 0
+    if text == "1" then return 1
+    message = "RXC-LC-34.3: WHILE condition must be exactly 0 or 1; found " || text
+    assembler signal "ERROR", message
+    return 0
+
   logicalResult: method = .RexxValue
     return _rv_bool_value(_rv_logical_text(asString()))
 

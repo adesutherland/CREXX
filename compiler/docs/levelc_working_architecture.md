@@ -73,7 +73,7 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
 
-The current executable Level C surface is fourteen bounded lowering slices; the
+The current executable Level C surface is fifteen bounded lowering slices; the
 complete Classic contract remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
 the references and this architecture. A new syntax rule, compatibility
@@ -90,7 +90,8 @@ identity. RexxScript's evaluator and sandbox contract remain separate.
 The next loop slice accepts only `DO > REPEAT > FOR > INTEGER` with a
 non-negative literal count representable by the canonical integer builder.
 The neutral remap builder creates a fresh counted loop tree; dynamic counts,
-controlled loops, conditions and named loop transfers are still open.
+controlled loops, setup-bearing conditions and named loop transfers are still
+open.
 Childless LEAVE/ITERATE now have a bounded path through those generated blocks:
 each accepted source counted loop gets a hidden canonical control symbol, and
 its source transfers become named canonical transfers to that symbol. This
@@ -101,6 +102,17 @@ open in the worklist.
 `DO FOREVER` is now the second accepted source repetition form. Its parser
 `REPEAT` node has no count child; the neutral controlled-DO builder omits FOR
 while retaining the hidden canonical control symbol used by LEAVE/ITERATE.
+The first conditional loop slice accepts a source `DO WHILE` whose condition
+lowers without setup statements. The neutral builder places canonical WHILE
+under REPEAT so its value is tested at each loop entry, and the same hidden
+control symbol carries source LEAVE/ITERATE across generated wrappers. Shared
+`RexxValue.logicalWhileValue()` enforces the Classic `34.3` logical identity.
+Expressions needing per-iteration setup, UNTIL and combined headers remain
+open. The lowerer asserts that no setup statements were emitted for an accepted
+condition so a future expression change cannot silently hoist a loop check.
+Adrian permits new AST node types when they simplify the supported compiler
+path through validation and emission; this slice uses the existing canonical
+WHILE node because it already expresses the required timing and loop flow.
 
 ## Historical design record
 

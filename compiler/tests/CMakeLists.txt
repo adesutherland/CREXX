@@ -5207,6 +5207,8 @@ add_levelc_unsupported_compile_test(levelc_slice8_controlled_do_unsupported
         rexx_src/levelc_slice8_controlled_do_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice12_negative_do_unsupported
         rexx_src/levelc_slice12_negative_do_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice15_while_setup_unsupported
+        rexx_src/levelc_slice15_while_setup_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
@@ -5530,6 +5532,13 @@ add_levelc_runtime_slice_test(levelc_slice14_forever_noopt
         rexx_src/levelc_slice14_forever.rexx
         "1\n3\ncount 4\nafter-simple\nafter-select\nouter\nouter\n3\n" -n)
 
+add_levelc_runtime_slice_test(levelc_slice15_while
+        rexx_src/levelc_slice15_while.rexx
+        "zero\ncount 1\ncount 2\ncount 3\nbody 1\nbody 3\nafter 4\ninner 1\ninner 2\nouter\ninner 1\ninner 2\nouter\n2\n")
+add_levelc_runtime_slice_test(levelc_slice15_while_noopt
+        rexx_src/levelc_slice15_while.rexx
+        "zero\ncount 1\ncount 2\ncount 3\nbody 1\nbody 3\nafter 4\ninner 1\ninner 2\nouter\ninner 1\ninner 2\nouter\n2\n" -n)
+
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}
@@ -5553,6 +5562,8 @@ add_levelc_invalid_runtime_test(levelc_slice11_select_invalid_logical
         rexx_src/levelc_slice11_select_invalid_logical.rexx RXC-LC-34.2)
 add_levelc_invalid_runtime_test(levelc_slice11_select_no_match
         rexx_src/levelc_slice11_select_no_match.rexx RXC-LC-7.3)
+add_levelc_invalid_runtime_test(levelc_slice15_while_invalid_logical
+        rexx_src/levelc_slice15_while_invalid_logical.rexx RXC-LC-34.3)
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
@@ -5673,6 +5684,14 @@ add_levelc_lowered_tree_shape_test(levelc_slice14_forever_tree_shape
         "LEAVE"
         "ITERATE"
         "DO")
+
+add_levelc_lowered_tree_shape_test(levelc_slice15_while_tree_shape
+        rexx_src/levelc_slice15_while.rexx
+        "__rxcp_levelc_loop_"
+        "WHILE"
+        "logicalWhileValue"
+        "LEAVE"
+        "ITERATE")
 
 # Bridge Connectivity Test
 add_custom_command(

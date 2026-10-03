@@ -9,9 +9,8 @@
  *
  * The active tracer slices deliberately accept only proven shapes: direct
  * scalar and compound pool reads/writes, string and integer literals, proven
- * expression operators, SAY, NOP, direct scalar DROP, nested IF and simple DO
- * blocks, and local
- * PROCEDURE EXPOSE over direct scalar or stem names.
+ * expression operators, SAY, NOP, direct scalar DROP, nested IF, SELECT and
+ * bounded DO forms, and local PROCEDURE EXPOSE over direct scalar or stem names.
  * Everything else reports an unsupported-shape diagnostic until its lowering
  * and runtime contract are implemented.
  */
@@ -1110,12 +1109,47 @@ static int levelc_repetition_supported(ASTNode *repeat,
     return levelc_literal_repeat_count(repeat, count_out, reason_out);
 }
 
+static int levelc_loop_expr_setup_free(ASTNode *expr,
+                                       const char **reason_out) {
+    ASTNode *child;
+
+    if (expr->node_type == FUNCTION ||
+        levelc_is_short_circuit_operator(expr->node_type)) goto unsupported;
+    if (expr->node_type == VAR_SYMBOL) {
+        char *name = levelc_upper_name(expr);
+        int scalar = name && levelc_variable_name_kind(name) == LEVELC_VAR_NAME_SCALAR;
+        free(name);
+        if (!scalar) goto unsupported;
+    }
+    for (child = expr->child; child; child = child->sibling) {
+        if (!levelc_loop_expr_setup_free(child, reason_out)) return 0;
+    }
+    return 1;
+
+unsupported:
+    if (reason_out) *reason_out = "DO condition needs per-iteration setup outside slice";
+    return 0;
+}
+
+static int levelc_while_supported(ASTNode *condition,
+                                  LevelCLowerPlan *plan,
+                                  const char **reason_out) {
+    if (!condition || condition->node_type != WHILE ||
+        !levelc_has_single_child(condition)) {
+        if (reason_out) *reason_out = "unsupported DO condition header";
+        return 0;
+    }
+    return levelc_expr_supported(condition->child, plan, reason_out) &&
+           levelc_loop_expr_setup_free(condition->child, reason_out);
+}
+
 static ASTNode *levelc_nearest_source_repetitive_do(ASTNode *stmt) {
     ASTNode *ancestor;
 
     for (ancestor = stmt ? stmt->parent : NULL; ancestor; ancestor = ancestor->parent) {
         if (ancestor->node_type == DO && ancestor->child &&
-            ancestor->child->node_type == REPEAT) return ancestor;
+            (ancestor->child->node_type == REPEAT ||
+             ancestor->child->node_type == WHILE)) return ancestor;
     }
     return NULL;
 }
@@ -1129,7 +1163,10 @@ static int levelc_transfer_supported(ASTNode *stmt,
         return 0;
     }
     target = levelc_nearest_source_repetitive_do(stmt);
-    if (target) return levelc_repetition_supported(target->child, NULL, NULL, reason_out);
+    if (target) {
+        if (target->child->node_type == WHILE) return 1;
+        return levelc_repetition_supported(target->child, NULL, NULL, reason_out);
+    }
     if (reason_out) *reason_out = "LEAVE/ITERATE requires a supported repetitive DO";
     return 0;
 }
@@ -1143,6 +1180,9 @@ static int levelc_do_supported(ASTNode *stmt,
 
     if (body && body->node_type == REPEAT) {
         if (!levelc_repetition_supported(body, NULL, NULL, reason_out)) return 0;
+        body = body->sibling;
+    } else if (body && body->node_type == WHILE) {
+        if (!levelc_while_supported(body, plan, reason_out)) return 0;
         body = body->sibling;
     }
     if (!body || body->node_type != INSTRUCTIONS || body->sibling) {
@@ -1608,6 +1648,18 @@ static ASTNode *levelc_if_logical_value(Context *context,
                                          source_node,
                                          value,
                                          "logicalIfValue",
+                                         NULL,
+                                         0);
+}
+
+static ASTNode *levelc_while_logical_value(Context *context,
+                                           ASTNode *source_node,
+                                           ASTNode *value) {
+    if (!value) return NULL;
+    return rxcp_remap_create_member_call(context,
+                                         source_node,
+                                         value,
+                                         "logicalWhileValue",
                                          NULL,
                                          0);
 }
@@ -2788,6 +2840,7 @@ static int levelc_lower_do(Context *context,
                            const char **reason_out) {
     ASTNode *body = stmt->child;
     ASTNode *repeat = body && body->node_type == REPEAT ? body : NULL;
+    ASTNode *while_node = body && body->node_type == WHILE ? body : NULL;
     ASTNode *body_statement;
     ASTNode *lowered_body = rxcp_remap_create_instruction_builder(context, stmt);
     ASTNode *lowered = NULL;
@@ -2799,18 +2852,37 @@ static int levelc_lower_do(Context *context,
     int forever = 0;
 
     if (!lowered_body) goto fail;
-    if (repeat) {
+    if (repeat || while_node) {
         ASTNode *count_node;
+        ASTNode *condition_value = NULL;
 
-        if (!plan || !levelc_repetition_supported(repeat, &count, &forever,
-                                                   reason_out)) goto fail;
-        body = repeat->sibling;
+        if (!plan) goto fail;
+        if (repeat) {
+            if (!levelc_repetition_supported(repeat, &count, &forever,
+                                             reason_out)) goto fail;
+            body = repeat->sibling;
+        } else {
+            ASTNode *condition_prelude = rxcp_remap_create_instruction_builder(
+                    context, while_node);
+            if (!condition_prelude) goto fail;
+            condition_value = levelc_lower_expr(context, while_node->child,
+                                                plan, condition_prelude);
+            if (condition_prelude->child) {
+                if (reason_out) *reason_out = "DO WHILE condition unexpectedly needs setup";
+                goto fail;
+            }
+            condition_value = levelc_while_logical_value(context, while_node,
+                                                          condition_value);
+            if (!condition_value) goto fail;
+            body = while_node->sibling;
+        }
         control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);
-        count_node = forever ? NULL : rxcp_remap_create_integer_constant(
+        count_node = (!repeat || forever) ? NULL : rxcp_remap_create_integer_constant(
                 context, repeat->child->child, count, TP_INTEGER);
         lowered = rxcp_remap_create_controlled_do(
-                context, stmt, lowered_body, control_name, count_node);
-        if (!control_name || (!forever && !count_node) || !lowered) goto fail;
+                context, stmt, lowered_body, control_name, count_node,
+                while_node, condition_value);
+        if (!control_name || (repeat && !forever && !count_node) || !lowered) goto fail;
         binding.source_do = stmt;
         binding.control_name = control_name;
         binding.previous = previous;
@@ -2828,7 +2900,7 @@ static int levelc_lower_do(Context *context,
         body_statement = body_statement->sibling;
     }
 
-    if (!repeat) {
+    if (!repeat && !while_node) {
         lowered = rxcp_remap_create_do_block(context, stmt, lowered_body);
     }
     if (!lowered) goto fail;
