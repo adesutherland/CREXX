@@ -62,6 +62,24 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 22 - Level C NOP Execution Slice
+
+### Intent and accepted shape
+
+The Classic grammar already emits a childless `NOP` node. Admit only that
+shape during main/procedure validation and create a fresh, source-anchored
+canonical `NOP` in the lowered instruction list. This permits a no-op inside
+the existing bounded `IF` and simple `DO` forms without changing their
+control flow or opening another statement family.
+
+### Verification
+
+- Regina and the compiled fixture each produced `before`, `middle`, `after`.
+- Release toolchain build passed, focused optimized/no-opt tests 2/2, and the
+  Level C suite 105/105. The linked RXBIN produced the same output through
+  `rxvm`. Log paths and open compatibility obligations are in the
+  [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+
 ## Stage 21 - Level C Simple DO Lowering Slice
 
 ### Intent and accepted shape

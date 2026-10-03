@@ -9,7 +9,7 @@
  *
  * The active tracer slices deliberately accept only proven shapes: direct
  * scalar and compound pool reads/writes, string and integer literals, proven
- * expression operators, SAY, nested IF and simple DO blocks, and local
+ * expression operators, SAY, NOP, nested IF and simple DO blocks, and local
  * PROCEDURE EXPOSE over direct scalar or stem names.
  * Everything else reports an unsupported-shape diagnostic until its lowering
  * and runtime contract are implemented.
@@ -964,6 +964,7 @@ static int levelc_main_statement_supported(ASTNode *stmt,
                                            const char **reason_out) {
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS) return 1;
+    if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 0, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
@@ -989,6 +990,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
                                            const char **reason_out) {
     if (!stmt) return 1;
     if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, NULL, reason_out);
+    if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 1, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
@@ -2298,6 +2300,21 @@ static int levelc_lower_simple_do(Context *context,
                                   int in_procedure,
                                   const char **reason_out);
 
+static int levelc_lower_nop(Context *context,
+                            ASTNode *instructions,
+                            ASTNode *stmt,
+                            const char **reason_out) {
+    ASTNode *lowered = ast_f(context, NOP, stmt->token);
+
+    if (!lowered) {
+        if (reason_out) *reason_out = "failed to lower Level C NOP";
+        return 0;
+    }
+    rxcp_remap_anchor_synthetic(lowered, stmt);
+    add_ast(instructions, lowered);
+    return 1;
+}
+
 static int levelc_lower_main_statement(Context *context,
                                        ASTNode *instructions,
                                        ASTNode *stmt,
@@ -2307,6 +2324,7 @@ static int levelc_lower_main_statement(Context *context,
     ASTNode *lowered;
 
     if (!stmt) return 1;
+    if (stmt->node_type == NOP) return levelc_lower_nop(context, instructions, stmt, reason_out);
     if (stmt->node_type == IF) {
         return levelc_lower_if_statement(context, instructions, stmt, plan, NULL, 0, reason_out);
     }
@@ -2352,6 +2370,7 @@ static int levelc_lower_proc_statement(Context *context,
     ASTNode *lowered;
 
     if (!stmt) return 1;
+    if (stmt->node_type == NOP) return levelc_lower_nop(context, instructions, stmt, reason_out);
     if (stmt->node_type == LEVELC_ARG) {
         return levelc_append_arg_bindings(context, instructions, procedure, reason_out);
     }

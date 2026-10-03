@@ -45,6 +45,11 @@ than redefining compatibility around the first slices.
   semantics are separately proved. Verify with Classic reference comparisons,
   positive and negative CTests, opt/no-opt, lowered-tree inspection, and the
   full toolchain.
+- [x] **LC-AC-05 — NOP execution:** a childless Classic `NOP` has no visible
+  effect in main, local procedures, and supported `IF`/`DO` bodies; adjacent
+  statements retain their order and unsupported statement shapes still fail
+  closed. Verify against the Classic interpreter, focused optimized/no-opt
+  runs, the relevant normal Level C suite, and linked-image execution.
 - [ ] **LC-AC-04 — full compatibility (R1-AC-02):** every required matrix row
   has executable behavior and documentation, or an individually approved
   exception with its diagnostic and user-visible limit. Verify reference
@@ -76,12 +81,17 @@ than redefining compatibility around the first slices.
    correctness, supported-platform, package and release evidence; update
    user and compiler documentation. This is a release gate, not a substitute
    for normal focused development checks.
+6. **LC-STEP-06 — complete (LC-AC-05; depends on STEP-03):** recognize only the childless
+   Classic `NOP` AST in the supported statement validator, emit a canonical
+   source-anchored `NOP` in main and procedure contexts, and compare a nested
+   fixture with the Classic interpreter. Run focused opt/no-opt and normal
+   Level C tests, verify the linked image, then commit this bounded increment.
 
 ## Coverage matrix
 
 Inventory pass 2: the 70 recognized BIF names and 36 existing syntax catalogue
 contracts have individual rows below. The
-[reference-obligation appendix](levelc-reference-obligations.md) adds 74
+[reference-obligation appendix](levelc-reference-obligations.md) adds 75
 finer non-BIF rows, including configuration, error and host behavior. Complete
 reference-to-row reconciliation and feature-level evidence remain open under
 `LC-AC-01`; the rows are a coverage map, not a conformance verdict.
@@ -101,7 +111,8 @@ has been approved in this worklist.
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
 | Control | controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Front end: parser/validation fixtures | Execution, exact loop semantics and errors |
-| Control | SELECT/WHEN/OTHERWISE, NOP | Front end: parser fixtures | Execution and condition errors |
+| Control | SELECT/WHEN/OTHERWISE | Front end: parser fixtures | Execution and condition errors |
+| Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
 | PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Front end: parser fixtures | Runtime source acquisition, template assignment, errors |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
@@ -136,7 +147,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ITERATE` | ITERATE instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-LEAVE` | LEAVE instruction | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-NOP` | NOP instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-NOP` | NOP instruction | Bounded slice: standalone and nested NOP | Full source/TRACE and configuration proof open |
 | `SYN-CLASSIC-NUMERIC` | NUMERIC DIGITS/FORM/FUZZ | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PARSE` | PARSE variants and templates | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded slice: scalar/stem PROCEDURE EXPOSE | Remaining Classic forms, errors and configuration proof open |
@@ -152,7 +163,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-BIF-CALL` | Recognised ANSI BIF calls | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-LOCAL-CALL` | Direct local function/procedure calls | Bounded slice: direct local function and procedure calls | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DSLSH` | Source tree, diagnostics, and syntax-highlighting projection | Parser-mode milestone | Execution and full diagnostic conformance remain separate |
-| `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Bounded slice: eight proven slices | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Bounded slice: nine proven slices | Remaining Classic forms, errors and configuration proof open |
 
 ### Individual BIF inventory
 
@@ -291,3 +302,19 @@ full compatibility proof.
 - Controlled/repetitive `DO`, `WHILE`/`UNTIL`, `LEAVE`/`ITERATE` and their
   state/condition behavior remain open. `LC-AC-01/04` and `R1-AC-01/02`
   remain open; this increment does not establish full Classic compatibility.
+
+### LC-STEP-06 — childless NOP, 2026-10-03
+
+- Regina and the optimized/no-opt compiled fixture each produced `before`,
+  `middle`, `after`. The fixture places `NOP` in main, a local procedure,
+  both selected `IF` arms and nested `DO` bodies; adjacent statements retain
+  their order.
+- Release toolchain build passed; focused slice-9 tests passed 2/2 and the
+  normal Level C suite passed 105/105. Retained logs:
+  `/tmp/crexx-levelc-nop-build.bO3BoM`,
+  `/tmp/crexx-levelc-nop-tests.iKKtAb`,
+  `/tmp/crexx-levelc-nop-suite.HEoZ0w`.
+- `rxlink` of the optimized RXBIN ran through `rxvm` with the same three
+  lines. Retained log: `/tmp/crexx-levelc-nop-link.73Ab9Z`.
+- `NOP` source/TRACE lifecycle and full profile/platform qualification remain
+  open under `LC-AC-04`; this is a bounded execution slice.

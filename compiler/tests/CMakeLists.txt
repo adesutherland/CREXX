@@ -5476,6 +5476,13 @@ add_levelc_runtime_slice_test(levelc_slice8_do_nested_noopt
         rexx_src/levelc_slice8_do_nested.rexx
         "before\nnested\n2\n2\narm\n3\n" -n)
 
+add_levelc_runtime_slice_test(levelc_slice9_nop
+        rexx_src/levelc_slice9_nop.rexx
+        "before\nmiddle\nafter\n")
+add_levelc_runtime_slice_test(levelc_slice9_nop_noopt
+        rexx_src/levelc_slice9_nop.rexx
+        "before\nmiddle\nafter\n" -n)
+
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}

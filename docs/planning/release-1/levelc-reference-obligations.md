@@ -91,3 +91,4 @@ exists.
 | LC-REF-072 | Message catalog, .MN, source/line traceback and trap handling | host | Open: Classic diagnostic/condition bridge |
 | LC-REF-073 | Immediate SIGNAL ON, delayed CALL ON and HALT buffering | host | Open: clause/lifecycle behavior |
 | LC-REF-074 | CONDITION BIF state fields | host | BIF name recognized; condition state integration open |
+| LC-REF-075 | NOP as a statement with no visible effect | both | Bounded slice 9 in main/procedure and IF/DO bodies; source/TRACE and profile proof open |
