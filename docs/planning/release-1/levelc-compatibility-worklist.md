@@ -1091,6 +1091,16 @@ Open before closure:
   shared expression/BIF path. The current Level C guard admits only bounded
   variable, literal, operator, local-call, LENGTH and SUBSTR forms; a valid
   expression must not fail solely because it appears in `SAY`.
+- **Confirmed call-error defect:** `options levelc; say substr('abc', 0);
+  say 'after'` stops in Regina with `40.14` and no output, but the current
+  Release compiler/VM prints an empty line and `after` with a success exit
+  (`/tmp/crexx-levelc-say-bif-error.AUp7Pt/`). The shared BIF context records
+  an error, while the current compiler call path consumes only its blank
+  return value. Complete one shared call-result/condition bridge before
+  widening BIF reachability; preserve source and argument positions, current
+  pool/configuration and RexxScript isolation. This is required work, not an
+  infeasible exception. The bridge design and condition delivery need review
+  before architecture edits.
 - Prove configured default-output selection, errors, BYTE/UTF8 behavior and
   source/trace lifecycle through the host interface. Inspect the existing VM
   SAY callback boundary for byte-exact output before claiming this proof.
@@ -1125,11 +1135,12 @@ no-opt and linked RXBIN byte for byte. The focused CTests passed 3/3, and the
 normal Release Level C suite passed 290/290 in 27 seconds
 (`/tmp/crexx-levelc-say-suite.Wt01LA`). The linked proof retained compile,
 assembly, link and VM outputs under
-`/tmp/crexx-levelc-say-instruction.vkHmqr`. The earlier raw/canonical tree
-checks remain applicable to the childless form; the current tree CTest confirms
-the canonical SAY/string path but does not prove every association or source
-anchor. The embedded-NUL defect, complete function/BIF reachability,
-configured host output and failure lifecycle remain open.
+`/tmp/crexx-levelc-say-instruction.vkHmqr`. The tree CTest also checks
+source anchors for the main childless, nested, expression and local procedure
+SAY forms; the production boundary verifier checks parent/sibling ownership
+and residual Level C nodes. It does not prove every association or trace
+lifecycle. The embedded-NUL and BIF-error defects, complete function/BIF
+reachability, configured host output and failure lifecycle remain open.
 
 ## Findings
 

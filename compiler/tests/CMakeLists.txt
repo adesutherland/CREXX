@@ -6303,8 +6303,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice54_drop_indirect_tree_shape
         "stemSymbolValue")
 add_levelc_lowered_tree_shape_test(levelc_say_instruction_tree_shape
         rexx_src/levelc_say_instruction.rexx
-        "SAY"
-        "STRING")
+        "SAY : .*\\(2:0\\)"
+        "STRING : .*\\(2:0\\)"
+        "SAY : .*\\(3:10\\)"
+        "SAY : .*\\(12:0\\)"
+        "SAY : .*\\(20:0\\)"
+        "STRING : .*\\(20:0\\)")
 add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
         rexx_src/levelc_slice42_abuttal.rexx
         "concat"
