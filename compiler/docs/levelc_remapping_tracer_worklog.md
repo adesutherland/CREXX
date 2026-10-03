@@ -6,6 +6,10 @@ This file records the steps, issues, and resolutions needed to replay the
 tracer from clean code if the branch is rolled back. Keep entries factual and
 ordered by implementation step.
 
+The Stage 19 short-circuit `&`/`|` lowering below is historical. Classic
+logical operators evaluate both operands; the current eager Level C rewrite
+and its evidence are recorded in the Release 1 Level C compatibility worklist.
+
 ## 2026-06-21: Inlining-First Tracer Start
 
 ### Goal

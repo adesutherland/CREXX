@@ -996,7 +996,7 @@ Those mechanics are now shared as remap-builder commands:
 `rxcp_remap_append_builder_children()`,
 `rxcp_remap_create_named_assignment()`, and
 `rxcp_remap_create_member_call_statement()`. The Level C mapper uses them for
-short-circuit preludes, BIF dispatcher setup, compound-tail temporaries, pool
+eager logical operand capture, BIF dispatcher setup, compound-tail temporaries, pool
 writes, procedure exposes, ARG binding, and program/statement prelude shells.
 These names are intentionally command-like so a later table-driven or DSL-like
 mapper can call the same operations without learning the raw AST shape.

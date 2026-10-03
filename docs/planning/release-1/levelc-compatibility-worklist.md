@@ -125,6 +125,14 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   and setup-free conditions. Verify Regina, optimized/no-opt and linked
   execution, source-anchored tree shape, focused normal/Debug regressions and
   the relevant correctness suite.
+- [x] **LC-AC-16 — eager Classic logical operands:** Level C `&` and `|`
+  evaluate their left and right operands once each, in source order, even
+  when the left result determines the Boolean answer. Side effects and
+  contextual invalid-value identities `34.5`/`34.6` are preserved; existing
+  Boolean results and opt/no-opt output remain stable. Verify a Regina
+  side-effect reproducer, left/right operand errors, nested expressions,
+  shared RexxValue behavior, linked execution and the relevant normal/Debug
+  suites. Keep unrelated operator and condition families open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -242,6 +250,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     transfer paths with bounded Classic reference fixtures. Keep dynamic
     counts, controlled variables and setup-bearing expressions fail-closed.
     Qualify and commit this combined-header increment separately.
+19. **LC-STEP-19 — complete (LC-AC-08/16; depends on STEP-18):** replace the Level C
+    branch materialisation of `&`/`|` with left-to-right eager lowering.
+    Capture the left `RexxValue` before any right setup statements, then
+    evaluate the right once and call shared contextual logical methods.
+    Prove side effects and `34.5`/`34.6` against Classic references, preserve
+    source anchors and scope, run focused/normal/linked/Debug evidence, then
+    commit this semantic repair separately from the condition-block work.
 
 ## AST structural crosswalk and closure order
 
@@ -258,7 +273,7 @@ itself make its Classic shape executable.
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
 | `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and direct scalar DROP | Wider statement operands, stem/compound/indirect DROP and exit/return lifecycle remain open |
-| `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, lazy logical branches, bounded BIF/local calls | More expression shapes, exact evaluation order, numeric context and missing-argument behavior remain open |
+| `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal count, FOREVER, setup-free WHILE/UNTIL and literal count with a setup-free condition, plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Dynamic count, named transfer, controlled headers, FOREVER with condition, setup-bearing conditions, numeric errors and wider scope remain open |
@@ -295,7 +310,7 @@ has been approved in this worklist.
 | Area | Feature | Current state and evidence | Remaining proof |
 | --- | --- | --- | --- |
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
-| Expressions | precedence, arithmetic, comparisons, concatenation, prefix, short-circuit logic | Slice: `levelc_slice6_expressions` | Full numeric context, boundary/error and platform equivalence |
+| Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions` and `levelc_slice19_logical_eager` | Full numeric context, remaining operator order, boundary/error and platform equivalence |
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
@@ -780,3 +795,39 @@ full compatibility proof.
   `/tmp/crexx-levelc-combined-tree.ISdWvo`.
 - `LC-AC-08/04` remain open for dynamic/controlled and setup-bearing loop
   headers, named transfers and the other structural families.
+
+### LC-STEP-19 — eager Classic logical operands, 2026-10-03
+
+- A local Regina side-effect reproducer and the
+  [official ooRexx reference](https://www.oorexx.org/docs/pdf/rexxref.pdf)
+  confirm that Classic `&` evaluates both operands; `|` follows the same
+  source-order binary-operator rule. The prior branch materialisation skipped
+  the right operand when the left determined the result. This was a separate
+  pre-existing expression defect found while probing WHILE condition setup.
+- The Level C lowerer now captures a copy of the left `RexxValue` before
+  lowering right setup statements, then calls shared `logicalAnd()` or
+  `logicalOr()` with the right value. The methods enforce contextual
+  `34.5`/`34.6`. The old expression fixture's side-effect expectations and
+  manual Level B target were corrected to the Classic reference; its first
+  unchanged run failed in exactly those old expectations before correction.
+  The block-expression WHILE work was held in a local stash and remains a
+  distinct increment.
+- Regina and optimized/no-opt compiled output matched for both operators,
+  nested expressions, right-side calls on determining left values and a
+  right-side mutation of the left variable. Release focused tests passed 9/9
+  after the expected fixture correction; the selected normal
+  Level C/source-provenance/shared-runtime suite passed 163/163. Debug focused
+  tests passed 16/16. Linked RXBIN output matched Regina. The redirected
+  tree probe showed source-anchored left snapshots and `logicalAnd`/
+  `logicalOr` calls with no AST validation diagnostic. Logs:
+  `/tmp/crexx-levelc-logical-eager-reference-output.72prLS`,
+  `/tmp/crexx-levelc-logical-old-reference-output.QJx8aL`,
+  `/tmp/crexx-levelc-logical-eager-release-build.WrFSVV`,
+  `/tmp/crexx-levelc-logical-eager-focused.MFAkwl`,
+  `/tmp/crexx-levelc-logical-eager-focused-final.7LpcTC`,
+  `/tmp/crexx-levelc-logical-eager-suite.sdJEh8`,
+  `/tmp/crexx-levelc-logical-eager-debug-build.BVglbq`,
+  `/tmp/crexx-levelc-logical-eager-debug-focused.Zshigu`,
+  `/tmp/crexx-levelc-logical-eager-link-log.VXRbv9`, and
+  `/tmp/crexx-levelc-logical-eager-tree.9P77iG`.
+- `LC-AC-08/04` remain open for the other expression and structural families.

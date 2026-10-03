@@ -406,6 +406,13 @@ Logical values are exact strings `0` or `1`. `IF`, `WHEN`, `WHILE`, `UNTIL`,
 logical operators, and prefix logical not report `34.*` when given any other
 value.
 
+Classic binary logical `&` and `|` evaluate both operands from left to right.
+The right operand is evaluated even when the left operand already determines
+the Boolean result. This is confirmed by Regina and the
+[official ooRexx reference](https://www.oorexx.org/docs/pdf/rexxref.pdf),
+which distinguishes the eager logical operator from a short-circuit list
+conditional. Operand errors use `34.5` for the left and `34.6` for the right.
+
 Normal comparison compares numerically if both operands are numeric; otherwise
 it strips leading/trailing blanks, pads shorter strings with blanks, and uses
 configuration comparison. Strict comparison is character-by-character with no

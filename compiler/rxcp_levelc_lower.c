@@ -284,7 +284,7 @@ static const char *levelc_unary_operator_method(NodeType node_type) {
     }
 }
 
-static int levelc_is_short_circuit_operator(NodeType node_type) {
+static int levelc_is_classic_logical_binary(NodeType node_type) {
     return node_type == OP_AND || node_type == OP_OR;
 }
 
@@ -1114,7 +1114,7 @@ static int levelc_loop_expr_setup_free(ASTNode *expr,
     ASTNode *child;
 
     if (expr->node_type == FUNCTION ||
-        levelc_is_short_circuit_operator(expr->node_type)) goto unsupported;
+        levelc_is_classic_logical_binary(expr->node_type)) goto unsupported;
     if (expr->node_type == VAR_SYMBOL) {
         char *name = levelc_upper_name(expr);
         int scalar = name && levelc_variable_name_kind(name) == LEVELC_VAR_NAME_SCALAR;
@@ -1618,36 +1618,6 @@ static ASTNode *levelc_lower_unary_method(Context *context,
     return rxcp_remap_create_member_call(context, expr, receiver, method_name, NULL, 0);
 }
 
-static ASTNode *levelc_rexxvalue_bool(Context *context,
-                                      ASTNode *source_node,
-                                      int value) {
-    ASTNode *args[1];
-
-    args[0] = rxcp_remap_create_integer_constant(context,
-                                                 source_node,
-                                                 value ? 1 : 0,
-                                                 TP_INTEGER);
-    if (!args[0]) return NULL;
-
-    return rxcp_remap_create_factory_call(context,
-                                          source_node,
-                                          LEVELC_REXX_VALUE_CLASS,
-                                          args,
-                                          1);
-}
-
-static ASTNode *levelc_logical_value(Context *context,
-                                     ASTNode *source_node,
-                                     ASTNode *value) {
-    if (!value) return NULL;
-    return rxcp_remap_create_member_call(context,
-                                         source_node,
-                                         value,
-                                         "logicalValue",
-                                         NULL,
-                                         0);
-}
-
 static ASTNode *levelc_if_logical_value(Context *context,
                                         ASTNode *source_node,
                                         ASTNode *value) {
@@ -1674,131 +1644,50 @@ static ASTNode *levelc_do_condition_logical_value(Context *context,
                                          0);
 }
 
-static ASTNode *levelc_logical_result(Context *context,
-                                      ASTNode *source_node,
-                                      ASTNode *value) {
-    if (!value) return NULL;
-    return rxcp_remap_create_member_call(context,
-                                         source_node,
-                                         value,
-                                         "logicalResult",
-                                         NULL,
-                                         0);
-}
-
-static ASTNode *levelc_instruction_block(Context *context,
-                                         ASTNode *source_node,
-                                         ASTNode *prelude,
-                                         ASTNode *statement) {
-    ASTNode *instructions;
-
-    if (!context || !source_node || !statement) return NULL;
-
-    instructions = rxcp_remap_create_instruction_builder(context, source_node);
-    if (!instructions) return NULL;
-
-    if (prelude) rxcp_remap_append_builder_children(instructions, prelude);
-    add_ast(instructions, statement);
-    return rxcp_remap_create_do_block(context, source_node, instructions);
-}
-
-static ASTNode *levelc_short_circuit_result_assignment(Context *context,
-                                                       ASTNode *source_node,
-                                                       const char *result_name,
-                                                       ASTNode *rhs) {
-    if (!result_name || !rhs) return NULL;
-    return rxcp_remap_create_named_assignment(context, source_node, result_name, rhs);
-}
-
-static ASTNode *levelc_lower_short_circuit(Context *context,
-                                           ASTNode *expr,
-                                           LevelCLowerPlan *plan,
-                                           ASTNode *prelude) {
-    char *result_name;
+static ASTNode *levelc_lower_classic_logical_binary(Context *context,
+                                                    ASTNode *expr,
+                                                    LevelCLowerPlan *plan,
+                                                    ASTNode *prelude) {
+    char *left_name;
     ASTNode *left;
-    ASTNode *right_prelude;
+    ASTNode *left_copy;
+    ASTNode *left_assignment;
+    ASTNode *left_ref;
     ASTNode *right;
-    ASTNode *condition;
-    ASTNode *initial_assignment;
-    ASTNode *then_assignment;
-    ASTNode *else_assignment;
-    ASTNode *then_block;
-    ASTNode *else_block;
-    ASTNode *if_statement;
-    ASTNode *result_ref;
+    ASTNode *args[1];
+    ASTNode *result;
 
-    if (!context || !expr || !prelude || !levelc_is_short_circuit_operator(expr->node_type)) {
-        return NULL;
-    }
+    if (!context || !expr || !prelude ||
+        !levelc_is_classic_logical_binary(expr->node_type)) return NULL;
 
-    result_name = rxcp_remap_create_generated_node_name(LEVELC_EXPR_RESULT_PREFIX, expr);
-    if (!result_name) return NULL;
+    left_name = rxcp_remap_create_generated_node_name(LEVELC_EXPR_RESULT_PREFIX, expr);
+    if (!left_name) return NULL;
 
     left = levelc_lower_expr(context, expr->child, plan, prelude);
-    condition = levelc_logical_value(context, expr, left);
-    if (!left || !condition) goto fail;
+    left_copy = levelc_copy_rexxvalue(context, expr->child, left);
+    left_assignment = left_copy
+        ? rxcp_remap_create_named_assignment(context, expr, left_name, left_copy)
+        : NULL;
+    if (!left_assignment) goto fail;
+    add_ast(prelude, left_assignment);
 
-    initial_assignment = levelc_short_circuit_result_assignment(
-            context,
-            expr,
-            result_name,
-            levelc_rexxvalue_bool(context, expr, 0));
-    if (!initial_assignment) goto fail;
-    add_ast(prelude, initial_assignment);
+    right = levelc_lower_expr(context, expr->child->sibling, plan, prelude);
+    left_ref = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, left_name);
+    if (!right || !left_ref) goto fail;
 
-    right_prelude = rxcp_remap_create_instruction_builder(context, expr->child->sibling);
-    if (!right_prelude) goto fail;
-
-    right = levelc_lower_expr(context, expr->child->sibling, plan, right_prelude);
-    right = levelc_logical_result(context, expr->child->sibling, right);
-    if (!right) goto fail;
-
-    if (expr->node_type == OP_AND) {
-        then_assignment = levelc_short_circuit_result_assignment(context,
-                                                                 expr,
-                                                                 result_name,
-                                                                 right);
-        else_assignment = levelc_short_circuit_result_assignment(
-                context,
-                expr,
-                result_name,
-                levelc_rexxvalue_bool(context, expr, 0));
-    } else {
-        then_assignment = levelc_short_circuit_result_assignment(
-                context,
-                expr,
-                result_name,
-                levelc_rexxvalue_bool(context, expr, 1));
-        else_assignment = levelc_short_circuit_result_assignment(context,
-                                                                 expr,
-                                                                 result_name,
-                                                                 right);
-    }
-    if (!then_assignment || !else_assignment) goto fail;
-
-    if (expr->node_type == OP_AND) {
-        then_block = levelc_instruction_block(context, expr, right_prelude, then_assignment);
-        else_block = levelc_instruction_block(context, expr, NULL, else_assignment);
-    } else {
-        then_block = levelc_instruction_block(context, expr, NULL, then_assignment);
-        else_block = levelc_instruction_block(context, expr, right_prelude, else_assignment);
-    }
-    if (!then_block || !else_block) goto fail;
-
-    if_statement = rxcp_remap_create_if_statement(context,
-                                                  expr,
-                                                  condition,
-                                                  then_block,
-                                                  else_block);
-    if (!if_statement) goto fail;
-    add_ast(prelude, if_statement);
-
-    result_ref = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, result_name);
-    free(result_name);
-    return result_ref;
+    args[0] = right;
+    result = rxcp_remap_create_member_call(context,
+                                          expr,
+                                          left_ref,
+                                          expr->node_type == OP_AND
+                                              ? "logicalAnd" : "logicalOr",
+                                          args,
+                                          1);
+    free(left_name);
+    return result;
 
 fail:
-    free(result_name);
+    free(left_name);
     return NULL;
 }
 
@@ -2109,8 +1998,8 @@ static ASTNode *levelc_lower_expr(Context *context,
         case FUNCTION:
             return levelc_lower_function_call(context, expr, plan, prelude);
         default:
-            if (levelc_is_short_circuit_operator(expr->node_type)) {
-                return levelc_lower_short_circuit(context, expr, plan, prelude);
+            if (levelc_is_classic_logical_binary(expr->node_type)) {
+                return levelc_lower_classic_logical_binary(context, expr, plan, prelude);
             }
             method = levelc_binary_operator_method(expr->node_type);
             if (method) {

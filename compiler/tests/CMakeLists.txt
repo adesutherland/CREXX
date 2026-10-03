@@ -5460,11 +5460,11 @@ add_levelc_runtime_slice_test(levelc_slice5_stem_expose
 
 add_levelc_runtime_slice_test(levelc_slice6_expressions_target_shape
         rexx_src/levelc_slice6_expressions_target_shape.crexx
-        "11\n5\n24\n4\n2\n2\n8\n-5\n6\nab c\n1\n1\n0\n1\n0\n1\n1\n0\n0\n1\n0\n1\n1\n1\n1\n3\n")
+        "11\n5\n24\n4\n2\n2\n8\n-5\n6\nab c\n1\n1\n0\n1\n0\n1\n1\n0\n1\n1\n2\n1\n3\n1\n1\n3\n")
 
 add_levelc_runtime_slice_test(levelc_slice6_expressions
         rexx_src/levelc_slice6_expressions.rexx
-        "11\n5\n24\n4\n2\n2\n8\n-5\n6\nab c\n1\n1\n0\n1\n0\n1\n1\n0\n0\n1\n0\n1\n1\n1\n1\n3\n")
+        "11\n5\n24\n4\n2\n2\n8\n-5\n6\nab c\n1\n1\n0\n1\n0\n1\n1\n0\n1\n1\n2\n1\n3\n1\n1\n3\n")
 
 add_levelc_runtime_slice_test(levelc_slice7_if_else_target_shape
         rexx_src/levelc_slice7_if_else_target_shape.crexx
@@ -5561,6 +5561,13 @@ add_levelc_runtime_slice_test(levelc_slice17_combined_do_noopt
         rexx_src/levelc_slice17_combined_do.rexx
         "while 1\nwhile 2\nwhile 3\nafter-while 3\nzero-while\nuntil 2\nuntil 3\nafter-until 3\nzero-until\nafter-iterate 1\nafter-leave\n2\n" -n)
 
+add_levelc_runtime_slice_test(levelc_slice19_logical_eager
+        rexx_src/levelc_slice19_logical_eager.rexx
+        "0\ncalls 1\n1\ncalls 2\n1\ncalls 3\n1\ncalls 4\n1\nflag 0\n1\nflag 0\n1\ncalls 6\n")
+add_levelc_runtime_slice_test(levelc_slice19_logical_eager_noopt
+        rexx_src/levelc_slice19_logical_eager.rexx
+        "0\ncalls 1\n1\ncalls 2\n1\ncalls 3\n1\ncalls 4\n1\nflag 0\n1\nflag 0\n1\ncalls 6\n" -n)
+
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}
@@ -5592,6 +5599,12 @@ add_levelc_invalid_runtime_test(levelc_slice17_combined_while_invalid_logical
         rexx_src/levelc_slice17_combined_while_invalid_logical.rexx RXC-LC-34.3)
 add_levelc_invalid_runtime_test(levelc_slice17_combined_until_invalid_logical
         rexx_src/levelc_slice17_combined_until_invalid_logical.rexx RXC-LC-34.4)
+add_levelc_invalid_runtime_test(levelc_slice19_logical_left_invalid
+        rexx_src/levelc_slice19_logical_left_invalid.rexx RXC-LC-34.5)
+add_levelc_invalid_runtime_test(levelc_slice19_logical_right_and_invalid
+        rexx_src/levelc_slice19_logical_right_and_invalid.rexx RXC-LC-34.6)
+add_levelc_invalid_runtime_test(levelc_slice19_logical_right_or_invalid
+        rexx_src/levelc_slice19_logical_right_or_invalid.rexx RXC-LC-34.6)
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
@@ -5660,9 +5673,8 @@ add_levelc_lowered_tree_shape_test(levelc_slice6_expressions_tree_shape
         "strictCompareEqual"
         "logicalNot"
         "logicalXor"
-        "logicalValue"
-        "logicalResult"
-        "IF"
+        "logicalAnd"
+        "logicalOr"
         "RexxBifCallContext")
 
 add_levelc_lowered_tree_shape_test(levelc_slice7_if_else_tree_shape
@@ -5737,6 +5749,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice17_combined_do_tree_shape
         "UNTIL"
         "LEAVE"
         "ITERATE")
+
+add_levelc_lowered_tree_shape_test(levelc_slice19_logical_eager_tree_shape
+        rexx_src/levelc_slice19_logical_eager.rexx
+        "__rxcp_levelc_expr_"
+        "logicalAnd"
+        "logicalOr"
+        "RexxVariablePool")
 
 # Bridge Connectivity Test
 add_custom_command(

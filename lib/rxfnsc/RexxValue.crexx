@@ -636,6 +636,18 @@ RexxValue: class
   logicalNot: method = .RexxValue
     return _rv_bool_value(\_rv_logical_text(asString()))
 
+  logicalAnd: method = .RexxValue
+    arg other = .RexxValue
+    left_bool = _rv_logical_left_text(asString(), "&")
+    right_bool = _rv_logical_right_text(other.asString(), "&")
+    return _rv_bool_value(left_bool & right_bool)
+
+  logicalOr: method = .RexxValue
+    arg other = .RexxValue
+    left_bool = _rv_logical_left_text(asString(), "|")
+    right_bool = _rv_logical_right_text(other.asString(), "|")
+    return _rv_bool_value(left_bool | right_bool)
+
   logicalXor: method = .RexxValue
     arg other = .RexxValue
     left_bool = _rv_logical_text(asString())
@@ -719,6 +731,22 @@ _rv_logical_text: procedure = .boolean
   if text == "0" then return 0
   if text == "1" then return 1
   message = "RXC-LC-34: Logical value must be exactly 0 or 1; found " || text
+  assembler signal "ERROR", message
+  return 0
+
+_rv_logical_left_text: procedure = .boolean
+  arg text = .string, op_name = .string
+  if text == "0" then return 0
+  if text == "1" then return 1
+  message = "RXC-LC-34.5: Left operand of logical " || op_name || " must be exactly 0 or 1; found " || text
+  assembler signal "ERROR", message
+  return 0
+
+_rv_logical_right_text: procedure = .boolean
+  arg text = .string, op_name = .string
+  if text == "0" then return 0
+  if text == "1" then return 1
+  message = "RXC-LC-34.6: Right operand of logical " || op_name || " must be exactly 0 or 1; found " || text
   assembler signal "ERROR", message
   return 0
 

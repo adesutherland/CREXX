@@ -117,6 +117,11 @@ by a setup-free WHILE or UNTIL condition. FOR and the condition share the same
 canonical REPEAT, preserving zero-count behavior and the appropriate entry or
 end check. Dynamic counts, FOREVER with a condition, controlled variables and
 setup-bearing combined conditions remain fail-closed.
+Classic `&` and `|` now evaluate both operands in source order. The lowerer
+copies the left `RexxValue` before any right-hand setup statements, then calls
+shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier
+branch-based short-circuit tracer shape is historical and is no longer the
+Classic Level C target. Exact left/right operand errors use `34.5`/`34.6`.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission; this slice uses the existing canonical
 WHILE node because it already expresses the required timing and loop flow.
