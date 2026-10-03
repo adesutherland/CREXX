@@ -100,6 +100,9 @@ coverage inventory. Each exception needs Adrian's explicit disposition, its
 reason, user-visible behavior/diagnostic and documentation; distinguish it from
 "not implemented yet", which remains an open completion blocker. Do not obtain
 completion by excluding unfinished features without that decision.
+The [Level C compatibility worklist](planning/release-1/levelc-compatibility-worklist.md)
+tracks the component inventory, incremental delivery criteria and evidence under
+this plan's `R1-AC-01/02` completion contract.
 
 Existing interface dispatch is implemented; interface inheritance and overloads are not part of
 the current documented Level B surface. Listing polymorphism here does not
