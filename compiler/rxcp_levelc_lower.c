@@ -1304,8 +1304,10 @@ static int levelc_do_supported(ASTNode *stmt,
         body = body->sibling;
         if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
             if (repeat->child && repeat->child->node_type == ASSIGN) {
-                if (reason_out) *reason_out = "controlled DO with condition is outside slice";
-                return 0;
+                if (body->node_type != WHILE) {
+                    if (reason_out) *reason_out = "controlled DO UNTIL is outside slice";
+                    return 0;
+                }
             }
             if (!levelc_do_condition_supported(body, plan, reason_out)) return 0;
             body = body->sibling;
@@ -1763,6 +1765,61 @@ static ASTNode *levelc_do_condition_logical_value(Context *context,
                                              : "logicalUntilValue",
                                          NULL,
                                          0);
+}
+
+static ASTNode *levelc_controlled_while_entry(Context *context,
+                                               ASTNode *condition_node,
+                                               LevelCLowerPlan *plan,
+                                               ASTNode *to_guard) {
+    ASTNode *prelude = rxcp_remap_create_instruction_builder(context, condition_node);
+    ASTNode *condition_value = prelude
+        ? levelc_lower_expr(context, condition_node->child, plan, prelude) : NULL;
+    ASTNode *then_instructions;
+    ASTNode *else_instructions;
+    ASTNode *block_instructions;
+    ASTNode *true_leave;
+    ASTNode *false_leave;
+    ASTNode *then_block;
+    ASTNode *else_block;
+    ASTNode *branch;
+    ASTNode *block;
+
+    condition_value = levelc_do_condition_logical_value(context, condition_node,
+                                                        condition_value);
+    if (!condition_value) return NULL;
+    if (!to_guard) {
+        return prelude->child
+            ? rxcp_remap_create_prelude_block_expr(context, condition_node,
+                                                   prelude, condition_value)
+            : condition_value;
+    }
+
+    then_instructions = rxcp_remap_create_instruction_builder(context, condition_node);
+    else_instructions = rxcp_remap_create_instruction_builder(context, condition_node);
+    block_instructions = rxcp_remap_create_instruction_builder(context, condition_node);
+    true_leave = ast_f(context, LEAVE_WITH, condition_node->token);
+    false_leave = ast_f(context, LEAVE_WITH, condition_node->token);
+    block = ast_f(context, BLOCK_EXPR, condition_node->token);
+    if (!then_instructions || !else_instructions || !block_instructions ||
+        !true_leave || !false_leave || !block) return NULL;
+    rxcp_remap_anchor_synthetic(true_leave, condition_node);
+    rxcp_remap_anchor_synthetic(false_leave, condition_node);
+    rxcp_remap_anchor_synthetic(block, condition_node);
+    rxcp_remap_append_builder_children(then_instructions, prelude);
+    add_ast(true_leave, condition_value);
+    add_ast(then_instructions, true_leave);
+    add_ast(false_leave, rxcp_remap_create_integer_constant(context, condition_node,
+                                                             0, TP_BOOLEAN));
+    add_ast(else_instructions, false_leave);
+    then_block = rxcp_remap_create_do_block(context, condition_node, then_instructions);
+    else_block = rxcp_remap_create_do_block(context, condition_node, else_instructions);
+    branch = then_block && else_block
+        ? rxcp_remap_create_if_statement(context, condition_node, to_guard,
+                                         then_block, else_block) : NULL;
+    if (!branch) return NULL;
+    add_ast(block_instructions, branch);
+    add_ast(block, block_instructions);
+    return block;
 }
 
 static ASTNode *levelc_lower_classic_logical_binary(Context *context,
@@ -2912,7 +2969,7 @@ static int levelc_lower_do(Context *context,
 
             if (!levelc_controlled_literal_header_supported(repeat, &to, &by,
                                                        &for_clause, reason_out) ||
-                condition_node) goto fail;
+                (condition_node && condition_node->node_type != WHILE)) goto fail;
             control_anchor = to ? to : for_clause;
             if (for_clause &&
                 !levelc_bounded_nonnegative_integer_literal(for_clause->child,
@@ -2942,6 +2999,15 @@ static int levelc_lower_do(Context *context,
                                                        : "controlToContinue",
                                                     limit_args, by ? 2 : 1)
                     : NULL;
+            }
+            if (condition_node) {
+                while_value = levelc_controlled_while_entry(context,
+                                                             condition_node,
+                                                             plan, while_value);
+                if (!while_value) {
+                    free(target_name);
+                    goto fail;
+                }
             }
             current_value = levelc_scalar_pool_value_by_name(context, target, target_name);
             end_prelude = rxcp_remap_create_instruction_builder(context,
@@ -2973,17 +3039,19 @@ static int levelc_lower_do(Context *context,
                     rxcp_remap_create_integer_constant(context, control_anchor,
                                                        0, TP_BOOLEAN))
                 : NULL;
-            while_source = to ? ast_f(context, WHILE, to->token) : NULL;
+            while_source = condition_node ? condition_node
+                : to ? ast_f(context, WHILE, to->token) : NULL;
             until_source = ast_f(context, UNTIL, control_anchor->token);
-            if (while_source) rxcp_remap_anchor_synthetic(while_source, to);
+            if (while_source && to && !condition_node)
+                rxcp_remap_anchor_synthetic(while_source, to);
             if (until_source) rxcp_remap_anchor_synthetic(until_source, control_anchor);
-            body = repeat->sibling;
+            body = condition_node ? condition_node->sibling : repeat->sibling;
             control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);
             count_node = for_clause
                 ? rxcp_remap_create_integer_constant(context, for_clause->child,
                                                      for_count, TP_INTEGER)
                 : NULL;
-            lowered = (!to || (while_value && while_source)) && until_value &&
+            lowered = (!(to || condition_node) || (while_value && while_source)) && until_value &&
                       until_source && control_name &&
                       (!for_clause || count_node)
                 ? rxcp_remap_create_controlled_do(
@@ -2997,7 +3065,7 @@ static int levelc_lower_do(Context *context,
                                              reason_out)) goto fail;
             body = repeat->sibling;
         }
-        if (condition_node) {
+        if (condition_node && !controlled) {
             ASTNode *condition_prelude = rxcp_remap_create_instruction_builder(
                     context, condition_node);
             if (!condition_prelude) goto fail;
