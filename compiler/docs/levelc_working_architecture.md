@@ -130,24 +130,19 @@ entry even if its source variables change in the body. A zero count skips
 the condition and its setup as well as the body. This bounded slice
 accepts non-negative mathematical whole values up to signed 32-bit maximum;
 the contextual method reports `26.2` for invalid or out-of-range values.
-Wider count values and controlled header forms beyond bounded TO remain open.
-The bounded controlled-header slice accepts scalar `DO name = integer TO
-integer` with an optional signed literal BY in either TO/BY order. It
-initializes the visible Classic pool before a canonical REPEAT.
-The REPEAT uses a WHILE entry check against the current pool value and an
-UNTIL end-check BLOCK_EXPR that advances that pool value by one and returns
-false. The end block also runs on ITERATE, while LEAVE skips the advance.
-Both checks use shared RexxValue numeric methods; BY selects the upper or
-lower bound comparison by its sign and the end block adds that step. The
-default step is one. The hidden canonical loop
-assignment exists only to satisfy the emitter and does not replace the
-Classic control variable. Dynamic BY/FOR, FOR without TO, dynamic endpoints
-and controlled headers combined with WHILE/UNTIL remain fail-closed.
-A bounded literal FOR count can join the controlled TO header under the same
-REPEAT. Its canonical FOR child checks the limit before the WHILE entry check;
-the pool initialization remains before REPEAT. A zero count therefore skips
-the body, and the UNTIL end block still advances the pool value after the
-last count-limited body.
+Wider count values and controlled header forms beyond these bounded slices
+remain open. Scalar controlled DO accepts a literal start with literal TO,
+bounded literal FOR, or both, and an optional signed literal BY. Clause order
+does not affect lowering. The visible Classic pool is initialized before one
+canonical REPEAT. TO adds a WHILE entry check against the current pool value;
+BY selects the upper or lower bound comparison by its sign. FOR adds its
+canonical count check before WHILE, if present, so zero count skips the body.
+An UNTIL end-check BLOCK_EXPR advances the current pool value by BY or the
+default one and returns false. It runs after ordinary bodies and ITERATE,
+including the final count-limited body, while LEAVE skips the advance. The
+hidden canonical loop assignment only satisfies the emitter and does not
+replace the Classic control variable. Dynamic BY/FOR, dynamic endpoints,
+unbounded controlled DO and controlled WHILE/UNTIL remain fail-closed.
 Classic `&` and `|` now evaluate both operands in source order. The lowerer
 copies the left `RexxValue` before any right-hand setup statements, then calls
 shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier

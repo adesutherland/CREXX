@@ -1,4 +1,4 @@
 options levelc
-do i = 1 for 2
+do i = 1
   say 'unsupported'
 end i
