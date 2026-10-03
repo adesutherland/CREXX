@@ -118,18 +118,19 @@ supported WHILE or UNTIL condition. FOR and the condition share the same
 canonical REPEAT. A condition with setup uses the same BLOCK_EXPR builder as
 direct WHILE/UNTIL; a zero count skips both body and condition setup. WHILE
 checks at entry while UNTIL checks after the body, including the final
-count-limited body. Dynamic counts combined with a condition and controlled
-variables remain fail-closed.
+count-limited body. Controlled variables remain fail-closed.
 `DO FOREVER WHILE` and `DO FOREVER UNTIL` reuse the same condition lowering
 and hidden loop target with no FOR child under their canonical REPEAT. This
 preserves zero-entry WHILE, post-body UNTIL, and source LEAVE/ITERATE binding.
-Direct `DO expression` accepts a supported dynamic count expression. The
+Direct and WHILE/UNTIL combined `DO expression` headers accept a supported
+dynamic count expression. The
 lowerer places its `RexxValue.repeatCountValue()` conversion under canonical
 FOR and wraps any count setup in BLOCK_EXPR, so the expression runs once at
-entry even if its source variables change in the body. This bounded slice
+entry even if its source variables change in the body. A zero count skips
+the condition and its setup as well as the body. This bounded slice
 accepts non-negative mathematical whole values up to signed 32-bit maximum;
 the contextual method reports `26.2` for invalid or out-of-range values.
-Wider count values and count-plus-condition expressions remain open.
+Wider count values and controlled headers remain open.
 Classic `&` and `|` now evaluate both operands in source order. The lowerer
 copies the left `RexxValue` before any right-hand setup statements, then calls
 shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier

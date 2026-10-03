@@ -1174,10 +1174,6 @@ static int levelc_do_supported(ASTNode *stmt,
         if (count < 0 && !levelc_expr_supported(repeat->child->child, plan, reason_out)) return 0;
         body = body->sibling;
         if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
-            if (count < 0) {
-                if (reason_out) *reason_out = "dynamic count with condition is outside slice";
-                return 0;
-            }
             if (!levelc_do_condition_supported(body, plan, reason_out)) return 0;
             body = body->sibling;
         }
@@ -2754,10 +2750,6 @@ static int levelc_lower_do(Context *context,
         if (repeat) {
             if (!levelc_repetition_supported(repeat, &count, &forever,
                                              reason_out)) goto fail;
-            if (count < 0 && condition_node) {
-                if (reason_out) *reason_out = "dynamic count with condition is outside slice";
-                goto fail;
-            }
             body = repeat->sibling;
         }
         if (condition_node) {
