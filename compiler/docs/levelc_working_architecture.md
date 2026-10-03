@@ -73,7 +73,7 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
 
-The current executable Level C surface is sixteen bounded lowering slices; the
+The current executable Level C surface is seventeen bounded lowering slices; the
 complete Classic contract remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
 the references and this architecture. A new syntax rule, compatibility
@@ -109,9 +109,14 @@ after the body, including on ITERATE. The same hidden control symbol carries
 source LEAVE/ITERATE across generated wrappers. Shared
 `RexxValue.logicalWhileValue()` and `logicalUntilValue()` enforce Classic
 `34.3` and `34.4` logical identities. Expressions needing per-iteration setup
-and combined headers remain open. The lowerer asserts that no setup statements
+remain open. The lowerer asserts that no setup statements
 were emitted for an accepted condition so a future expression change cannot
 silently hoist a loop check.
+The first combined-header slice accepts a non-negative literal count followed
+by a setup-free WHILE or UNTIL condition. FOR and the condition share the same
+canonical REPEAT, preserving zero-count behavior and the appropriate entry or
+end check. Dynamic counts, FOREVER with a condition, controlled variables and
+setup-bearing combined conditions remain fail-closed.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission; this slice uses the existing canonical
 WHILE node because it already expresses the required timing and loop flow.

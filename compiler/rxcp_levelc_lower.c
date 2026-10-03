@@ -1184,6 +1184,11 @@ static int levelc_do_supported(ASTNode *stmt,
     if (body && body->node_type == REPEAT) {
         if (!levelc_repetition_supported(body, NULL, NULL, reason_out)) return 0;
         body = body->sibling;
+        if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
+            if (!levelc_literal_repeat_count(stmt->child, NULL, reason_out) ||
+                !levelc_do_condition_supported(body, plan, reason_out)) return 0;
+            body = body->sibling;
+        }
     } else if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
         if (!levelc_do_condition_supported(body, plan, reason_out)) return 0;
         body = body->sibling;
@@ -2845,8 +2850,10 @@ static int levelc_lower_do(Context *context,
                            const char **reason_out) {
     ASTNode *body = stmt->child;
     ASTNode *repeat = body && body->node_type == REPEAT ? body : NULL;
-    ASTNode *condition_node = body &&
-        (body->node_type == WHILE || body->node_type == UNTIL) ? body : NULL;
+    ASTNode *possible_condition = repeat ? repeat->sibling : body;
+    ASTNode *condition_node = possible_condition &&
+        (possible_condition->node_type == WHILE ||
+         possible_condition->node_type == UNTIL) ? possible_condition : NULL;
     ASTNode *body_statement;
     ASTNode *lowered_body = rxcp_remap_create_instruction_builder(context, stmt);
     ASTNode *lowered = NULL;
@@ -2864,10 +2871,13 @@ static int levelc_lower_do(Context *context,
 
         if (!plan) goto fail;
         if (repeat) {
-            if (!levelc_repetition_supported(repeat, &count, &forever,
-                                             reason_out)) goto fail;
+            if (condition_node) {
+                if (!levelc_literal_repeat_count(repeat, &count, reason_out)) goto fail;
+            } else if (!levelc_repetition_supported(repeat, &count, &forever,
+                                                    reason_out)) goto fail;
             body = repeat->sibling;
-        } else {
+        }
+        if (condition_node) {
             ASTNode *condition_prelude = rxcp_remap_create_instruction_builder(
                     context, condition_node);
             if (!condition_prelude) goto fail;
