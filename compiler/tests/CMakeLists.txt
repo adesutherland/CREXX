@@ -5200,6 +5200,9 @@ add_levelc_unsupported_compile_test(levelc_slice6_local_function_omitted_arg_uns
 add_levelc_unsupported_compile_test(levelc_slice6_procedure_parse_unsupported
         rexx_src/levelc_slice6_procedure_parse_unsupported.rexx)
 
+add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
+        rexx_src/levelc_slice7_if_unsupported_branch.rexx)
+
 function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
@@ -5256,7 +5259,7 @@ function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
 
     string(APPEND SCRIPT_CONTENT
            "execute_process(\n"
-           "    COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
+           "    COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${ARGN} -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
            "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
            "    OUTPUT_VARIABLE rxc_out\n"
            "    ERROR_VARIABLE rxc_err\n"
@@ -5436,6 +5439,42 @@ add_levelc_runtime_slice_test(levelc_slice6_expressions
         rexx_src/levelc_slice6_expressions.rexx
         "11\n5\n24\n4\n2\n2\n8\n-5\n6\nab c\n1\n1\n0\n1\n0\n1\n1\n0\n0\n1\n0\n1\n1\n1\n1\n3\n")
 
+add_levelc_runtime_slice_test(levelc_slice7_if_else_target_shape
+        rexx_src/levelc_slice7_if_else_target_shape.crexx
+        "yes\nno\n")
+add_levelc_runtime_slice_test(levelc_slice7_if_else
+        rexx_src/levelc_slice7_if_else.rexx
+        "yes\nno\n")
+add_levelc_runtime_slice_test(levelc_slice7_if_else_noopt
+        rexx_src/levelc_slice7_if_else.rexx
+        "yes\nno\n" -n)
+add_levelc_runtime_slice_test(levelc_slice7_if_nested
+        rexx_src/levelc_slice7_if_nested.rexx
+        "true\nfalse\nnested\nafter\nonce\n1\n1\n")
+add_levelc_runtime_slice_test(levelc_slice7_if_nested_noopt
+        rexx_src/levelc_slice7_if_nested.rexx
+        "true\nfalse\nnested\nafter\nonce\n1\n1\n" -n)
+
+function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
+    add_test(NAME ${NAME}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}
+            -DNAME=${NAME}
+            -DEXPECTED_DIAGNOSTIC=${EXPECTED_DIAGNOSTIC}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_invalid_runtime.cmake)
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+endfunction()
+
+add_levelc_invalid_runtime_test(levelc_slice6_invalid_logical
+        rexx_src/levelc_slice6_invalid_logical.rexx RXC-LC-34)
+add_levelc_invalid_runtime_test(levelc_slice7_if_invalid_logical
+        rexx_src/levelc_slice7_if_invalid_logical.rexx RXC-LC-34.1)
+
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
         "PROCEDURE"
@@ -5507,6 +5546,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice6_expressions_tree_shape
         "logicalResult"
         "IF"
         "RexxBifCallContext")
+
+add_levelc_lowered_tree_shape_test(levelc_slice7_if_else_tree_shape
+        rexx_src/levelc_slice7_if_else.rexx
+        "logicalIfValue"
+        "IF"
+        "DO"
+        "RexxVariablePool")
 
 # Bridge Connectivity Test
 add_custom_command(

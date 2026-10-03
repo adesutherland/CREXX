@@ -598,6 +598,14 @@ RexxValue: class
   logicalValue: method = .boolean
     return _rv_logical_text(asString())
 
+  logicalIfValue: method = .boolean
+    text = asString()
+    if text == "0" then return 0
+    if text == "1" then return 1
+    message = "RXC-LC-34.1: IF condition must be exactly 0 or 1; found " || text
+    assembler signal "ERROR", message
+    return 0
+
   logicalResult: method = .RexxValue
     return _rv_bool_value(_rv_logical_text(asString()))
 
@@ -678,9 +686,11 @@ _rv_bool_value: procedure = .RexxValue
 
 _rv_logical_text: procedure = .boolean
   arg text = .string
-  if text = "0" then return 0
-  if text = "1" then return 1
-  return text as .boolean
+  if text == "0" then return 0
+  if text == "1" then return 1
+  message = "RXC-LC-34: Logical value must be exactly 0 or 1; found " || text
+  assembler signal "ERROR", message
+  return 0
 
 _rv_is_number_text: procedure = .boolean
   arg value = .string

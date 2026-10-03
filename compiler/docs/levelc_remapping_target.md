@@ -26,11 +26,14 @@ model cannot describe the current inliner, it is not strong enough for Level C.
 
 ## Current Situation
 
-Level C currently has a Classic REXX scanner/glue/grammar path used for syntax
-highlighting and parser diagnostics. Normal `rxc` compilation of
-`OPTIONS LEVELC` stops before code generation. The Level C parser builds AST
-nodes for Classic-only constructs such as `LEVELC_*` instructions and also
-uses canonical nodes where the Classic and Level B forms are already close.
+Level C has a Classic REXX scanner/glue/grammar path for syntax highlighting
+and parser diagnostics. Normal `rxc` compilation also accepts bounded,
+runtime-backed slices through canonical AST lowering. After scalar, expression,
+BIF, procedure and stem slices, `IF/THEN/ELSE` is the first accepted source
+control-flow shape. Other Level C program shapes stop with an unsupported-shape
+diagnostic before code generation. The parser builds AST nodes for Classic-only
+constructs such as `LEVELC_*` instructions and uses canonical nodes where the
+Classic and Level B forms are already close.
 
 The Level C runtime foundation exists in `lib/rxfnsc`:
 

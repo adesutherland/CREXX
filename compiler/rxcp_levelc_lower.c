@@ -9,8 +9,8 @@
  *
  * The active tracer slices deliberately accept only proven shapes: direct
  * scalar and compound pool reads/writes, string and integer literals, proven
- * expression operators, SAY, and local PROCEDURE EXPOSE over direct scalar or
- * stem names.
+ * expression operators, SAY, nested IF branches, and local PROCEDURE EXPOSE
+ * over direct scalar or stem names.
  * Everything else reports an unsupported-shape diagnostic until its lowering
  * and runtime contract are implemented.
  */
@@ -900,9 +900,43 @@ static int levelc_call_statement_supported(ASTNode *stmt,
 
 static int levelc_main_statement_supported(ASTNode *stmt,
                                            LevelCLowerPlan *plan,
+                                           const char **reason_out);
+static int levelc_proc_statement_supported(ASTNode *stmt,
+                                           LevelCLowerPlan *plan,
+                                           const char **reason_out);
+
+static int levelc_if_statement_supported(ASTNode *stmt,
+                                         LevelCLowerPlan *plan,
+                                         int in_procedure,
+                                         const char **reason_out) {
+    ASTNode *condition = stmt ? stmt->child : NULL;
+    ASTNode *then_statement = condition ? condition->sibling : NULL;
+    ASTNode *else_statement = then_statement ? then_statement->sibling : NULL;
+
+    if (!condition || !then_statement || (else_statement && else_statement->sibling)) {
+        if (reason_out) *reason_out = "unsupported IF statement shape";
+        return 0;
+    }
+    if (!levelc_expr_supported(condition, plan, reason_out)) return 0;
+    if (in_procedure && (then_statement->node_type == LEVELC_ARG ||
+                         (else_statement && else_statement->node_type == LEVELC_ARG))) {
+        if (reason_out) *reason_out = "ARG must be first in procedure slice";
+        return 0;
+    }
+    if (in_procedure) {
+        if (!levelc_proc_statement_supported(then_statement, plan, reason_out)) return 0;
+        return !else_statement || levelc_proc_statement_supported(else_statement, plan, reason_out);
+    }
+    if (!levelc_main_statement_supported(then_statement, plan, reason_out)) return 0;
+    return !else_statement || levelc_main_statement_supported(else_statement, plan, reason_out);
+}
+
+static int levelc_main_statement_supported(ASTNode *stmt,
+                                           LevelCLowerPlan *plan,
                                            const char **reason_out) {
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS) return 1;
+    if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 0, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
 
     if (stmt->node_type == CALL) {
@@ -926,6 +960,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
                                            const char **reason_out) {
     if (!stmt) return 1;
     if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, NULL, reason_out);
+    if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 1, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
     if (stmt->node_type == RETURN) {
         if (stmt->child) return levelc_expr_supported(stmt->child, plan, reason_out);
@@ -1288,6 +1323,18 @@ static ASTNode *levelc_logical_value(Context *context,
                                          source_node,
                                          value,
                                          "logicalValue",
+                                         NULL,
+                                         0);
+}
+
+static ASTNode *levelc_if_logical_value(Context *context,
+                                        ASTNode *source_node,
+                                        ASTNode *value) {
+    if (!value) return NULL;
+    return rxcp_remap_create_member_call(context,
+                                         source_node,
+                                         value,
+                                         "logicalIfValue",
                                          NULL,
                                          0);
 }
@@ -2206,6 +2253,14 @@ static ASTNode *levelc_proc_return_statement(Context *context,
     return return_stmt;
 }
 
+static int levelc_lower_if_statement(Context *context,
+                                    ASTNode *instructions,
+                                    ASTNode *stmt,
+                                    LevelCLowerPlan *plan,
+                                    LevelCProcedureSlice *procedure,
+                                    int in_procedure,
+                                    const char **reason_out);
+
 static int levelc_lower_main_statement(Context *context,
                                        ASTNode *instructions,
                                        ASTNode *stmt,
@@ -2215,6 +2270,9 @@ static int levelc_lower_main_statement(Context *context,
     ASTNode *lowered;
 
     if (!stmt) return 1;
+    if (stmt->node_type == IF) {
+        return levelc_lower_if_statement(context, instructions, stmt, plan, NULL, 0, reason_out);
+    }
 
     prelude = rxcp_remap_create_instruction_builder(context, stmt);
     if (!prelude) {
@@ -2257,6 +2315,10 @@ static int levelc_lower_proc_statement(Context *context,
     if (stmt->node_type == LEVELC_ARG) {
         return levelc_append_arg_bindings(context, instructions, procedure, reason_out);
     }
+    if (stmt->node_type == IF) {
+        return levelc_lower_if_statement(context, instructions, stmt, plan,
+                                        procedure, 1, reason_out);
+    }
 
     prelude = rxcp_remap_create_instruction_builder(context, stmt);
     if (!prelude) {
@@ -2282,6 +2344,60 @@ static int levelc_lower_proc_statement(Context *context,
     rxcp_remap_append_builder_children(instructions, prelude);
     add_ast(instructions, lowered);
     return 1;
+}
+
+static int levelc_lower_if_statement(Context *context,
+                                    ASTNode *instructions,
+                                    ASTNode *stmt,
+                                    LevelCLowerPlan *plan,
+                                    LevelCProcedureSlice *procedure,
+                                    int in_procedure,
+                                    const char **reason_out) {
+    ASTNode *condition_node = stmt->child;
+    ASTNode *then_node = condition_node->sibling;
+    ASTNode *else_node = then_node->sibling;
+    ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
+    ASTNode *then_instructions = rxcp_remap_create_instruction_builder(context, then_node);
+    ASTNode *else_instructions = else_node
+        ? rxcp_remap_create_instruction_builder(context, else_node) : NULL;
+    ASTNode *condition;
+    ASTNode *then_block;
+    ASTNode *else_block = NULL;
+    ASTNode *lowered;
+
+    if (!prelude || !then_instructions || (else_node && !else_instructions)) goto fail;
+    condition = levelc_lower_expr(context, condition_node, plan, prelude);
+    condition = levelc_if_logical_value(context, condition_node, condition);
+    if (!condition) goto fail;
+
+    if (in_procedure) {
+        if (!levelc_lower_proc_statement(context, then_instructions, then_node,
+                                        plan, procedure, reason_out)) return 0;
+    } else if (!levelc_lower_main_statement(context, then_instructions, then_node,
+                                            plan, reason_out)) return 0;
+    then_block = rxcp_remap_create_do_block(context, then_node, then_instructions);
+    if (!then_block) goto fail;
+
+    if (else_node) {
+        if (in_procedure) {
+            if (!levelc_lower_proc_statement(context, else_instructions, else_node,
+                                            plan, procedure, reason_out)) return 0;
+        } else if (!levelc_lower_main_statement(context, else_instructions, else_node,
+                                                plan, reason_out)) return 0;
+        else_block = rxcp_remap_create_do_block(context, else_node, else_instructions);
+        if (!else_block) goto fail;
+    }
+
+    lowered = rxcp_remap_create_if_statement(context, stmt, condition,
+                                             then_block, else_block);
+    if (!lowered) goto fail;
+    rxcp_remap_append_builder_children(instructions, prelude);
+    add_ast(instructions, lowered);
+    return 1;
+
+fail:
+    if (reason_out) *reason_out = "failed to lower supported Level C IF";
+    return 0;
 }
 
 static int levelc_rewrite_program(Context *context,

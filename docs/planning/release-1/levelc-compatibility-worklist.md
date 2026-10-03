@@ -32,7 +32,7 @@ than redefining compatibility around the first slices.
   references has a row with implementation state, evidence or open work, and
   a platform/configuration boundary. Proposed exceptions remain open until
   individually approved. Verify by reference-to-matrix reconciliation.
-- [ ] **LC-AC-02 — IF execution:** supported `IF expression THEN instruction
+- [x] **LC-AC-02 — IF execution:** supported `IF expression THEN instruction
   [ELSE instruction]` evaluates the condition once, selects the correct arm,
   binds `ELSE` correctly in nested forms, and enforces Classic exact logical
   values. Unsupported branch statements still fail closed. Verify with
@@ -60,7 +60,7 @@ than redefining compatibility around the first slices.
    and registered tests into the matrix below. Link this worklist from the
    Release 1 plan. Commit this inventory increment. Detailed compatibility
    choices and exceptions require Adrian's decision.
-2. **LC-STEP-02 (LC-AC-02):** create a small Classic `IF` reproducer and
+2. **LC-STEP-02 — complete (LC-AC-02):** create a small Classic `IF` reproducer and
    target-shape baseline; implement guarded AST lowering using the existing
    remap builder, preserving one condition evaluation and source anchors.
    Add focused positives, negatives, and reference/opt/no-opt/toolchain
@@ -96,7 +96,7 @@ has been approved in this worklist.
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
 | Expressions | precedence, arithmetic, comparisons, concatenation, prefix, short-circuit logic | Slice: `levelc_slice6_expressions` | Full numeric context, boundary/error and platform equivalence |
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write and scalar/stem EXPOSE | Remaining stem value, DROP, indirect/external/API operations and aliasing |
-| Control | IF/THEN/ELSE | Front end: parser fixtures; lowerer rejects | LC-STEP-02 |
+| Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Front end: parser fixtures; lowerer rejects | LC-STEP-03 |
 | Control | controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Front end: parser/validation fixtures | Execution, exact loop semantics and errors |
 | Control | SELECT/WHEN/OTHERWISE, NOP | Front end: parser fixtures | Execution and condition errors |
@@ -190,3 +190,36 @@ full compatibility proof.
 | `X2B` | Runtime | [`RexxClassicBifX2b.crexx`](../../../lib/rxfnsc/RexxClassicBifX2b.crexx); compiler and reference proof open |
 | `X2C` | Runtime | [`RexxClassicBifX2c.crexx`](../../../lib/rxfnsc/RexxClassicBifX2c.crexx); compiler and reference proof open |
 | `X2D` | Runtime | [`RexxClassicBifX2d.crexx`](../../../lib/rxfnsc/RexxClassicBifX2d.crexx); compiler and reference proof open |
+
+## Increment receipts
+
+### LC-STEP-01 — initial inventory, 2026-10-03
+
+- First-pass category matrix and all 70 recognized BIF names recorded in
+  commit `941a8469c`. Fifty-three BIF names have standalone Classic modules;
+  source recognition and module presence are deliberately not conformance
+  claims. `LC-AC-01` remains open pending individual non-BIF rows and complete
+  reference reconciliation.
+
+### LC-STEP-02 — bounded IF, 2026-10-03
+
+- Regina reference run of `levelc_slice7_if_nested.rexx` produced
+  `true`, `false`, `nested`, `after`, `once`, `1`, `1` in order. `IF 2`
+  produced `34.1`; the compiled path now rejects it with `RXC-LC-34.1`.
+- Release: 8/8 initial slice-7 focused tests, 94/94 Level C tests, 2/2
+  `testRexxValue` opt/no-opt; the subsequently added generic logical-value
+  negative test passed 1/1 on unchanged code. Retained logs:
+  `/tmp/crexx-levelc-if-ctest.JsMsZT`,
+  `/tmp/crexx-levelc-if-suite.24iyqv`,
+  `/tmp/crexx-levelc-if-final-tests.k7ROaa`.
+- Debug: 95/95 Level C tests and 2/2 `testRexxValue` opt/no-opt on the same
+  source change. Retained log: `/tmp/crexx-levelc-if-final-tests.k7ROaa`.
+- Release `rxlink` of the compiled nested fixture ran through `rxvm` and
+  produced the same seven output lines. Retained log:
+  `/tmp/crexx-levelc-if-link.Y5Cdut`.
+- `RexxValue` now rejects values other than strict `0`/`1` for the shared
+  logical helper. The `IF` path reports `34.1`; contextual `34.5/34.6`
+  identities for logical-operator operands remain open in the full matrix.
+  Regina accepts some padded/leading-zero spellings that the extracted Classic
+  reference treats as invalid; those interpreter-specific cases are not used
+  as conformance evidence for this slice.

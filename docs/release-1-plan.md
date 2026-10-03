@@ -194,9 +194,8 @@ an expired weekly schedule does not satisfy them.
   inheritance, overloads or generics. This serves R1-AC-01/02.
 - [ ] **WEEK-AC-04 — first Beta 4 increment:** select and, after its normal
   implementation-plan gate, complete one bounded Level C control-flow slice.
-  IF/THEN/ELSE followed by a simple DO form is the recommended starting point
-  because the current execution lowerer still rejects those source statements
-  and the AST remap framework already has relevant builders. Retain Classic
+  Bounded IF/THEN/ELSE is implemented; simple DO remains the next form.
+  The AST remap framework has relevant builders. Retain Classic
   reference equivalence, nesting/negative controls, optimized/no-opt and
   toolchain execution evidence. Do not claim this slice completes Level C.
 - [ ] **WEEK-AC-05 — useful parallel asset:** select one existing-capability

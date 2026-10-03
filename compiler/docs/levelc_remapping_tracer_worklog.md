@@ -62,6 +62,38 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 20 - Level C IF/THEN/ELSE Lowering Slice
+
+### Intent and accepted shape
+
+Open the first Classic source control-flow shape after the expression slice.
+The lowerer accepts an `IF` whose condition is already a supported Level C
+expression and whose arms are individually supported statements. This includes
+nested `IF`, both branches, an omitted `ELSE`, and supported statements inside
+local procedures. Grouped source `DO`, `SELECT`, and unsupported arm statements
+still fail closed. The control-flow shape is a one-shot canonical `DO` block
+for each arm, using the existing remap builders and retaining source anchors.
+
+`RexxValue.logicalIfValue()` enforces the Classic exact `0`/`1` condition and
+reports `RXC-LC-34.1` on another value. This exposed a prior shared-helper gap:
+`logicalValue()` accepted `2` as true through Level B `.boolean` conversion.
+The shared helper now rejects non-`0`/`1` strings as well. Contextual logical
+operator subcodes `34.5/34.6` remain a separate open compatibility row.
+
+### Verification
+
+- Regina and the compiled nested fixture have matching seven-line output;
+  the condition side effect runs once, a skipped arm stays unevaluated, and
+  nested `ELSE` binds as parsed.
+- Release Level C suite 94/94, plus the new generic logical-value negative
+  test 1/1; `testRexxValue` opt/no-opt 2/2. Debug Level C suite 95/95 and
+  `testRexxValue` opt/no-opt 2/2.
+- The bounded IF fixture passes optimized and `-n` compiler runs, a canonical
+  lowered-tree check, a Classic `34.1` negative, and an unsupported-arm
+  negative. A linked image produced by `rxlink` ran through `rxvm` with the
+  same output. Log paths and the remaining inventory work are in the
+  [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+
 ## Stage 19 - Level C Full Expression Lowering Slice
 
 ### Intent

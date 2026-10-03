@@ -1,0 +1,19 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+import rexxclassicbifs
+
+__rxcp_levelc_pool = .RexxVariablePool()
+call __rxcp_levelc_pool.setValue("FLAG", .RexxValue("1"))
+if __rxcp_levelc_pool.value("FLAG").logicalIfValue() then do
+  say .RexxValue("yes").asString()
+end
+else do
+  say .RexxValue("bad").asString()
+end
+if .RexxValue("0").logicalIfValue() then do
+  say .RexxValue("bad").asString()
+end
+else do
+  say .RexxValue("no").asString()
+end
