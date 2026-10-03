@@ -1191,7 +1191,6 @@ static int levelc_controlled_literal_header_supported(ASTNode *repeat,
         } else goto unsupported;
         clause = clause->sibling;
     }
-    if (!to && !for_clause) goto unsupported;
     name = levelc_upper_name(target);
     scalar = name && levelc_variable_name_kind(name) == LEVELC_VAR_NAME_SCALAR;
     free(name);
@@ -3012,7 +3011,7 @@ static int levelc_lower_do(Context *context,
 
             if (!levelc_controlled_literal_header_supported(repeat, &to, &by,
                                                        &for_clause, reason_out)) goto fail;
-            control_anchor = to ? to : for_clause;
+            control_anchor = to ? to : for_clause ? for_clause : by ? by : assign;
             if (for_clause &&
                 !levelc_bounded_nonnegative_integer_literal(for_clause->child,
                                                             &for_count)) goto fail;

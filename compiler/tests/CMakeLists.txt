@@ -5207,8 +5207,6 @@ add_levelc_unsupported_compile_test(levelc_slice26_controlled_dynamic_by_unsuppo
         rexx_src/levelc_slice26_controlled_dynamic_by_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice27_controlled_dynamic_for_unsupported
         rexx_src/levelc_slice27_controlled_dynamic_for_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice28_controlled_unbounded_unsupported
-        rexx_src/levelc_slice28_controlled_unbounded_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice25_controlled_dynamic_to_unsupported
         rexx_src/levelc_slice25_controlled_dynamic_to_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
@@ -5645,6 +5643,14 @@ add_levelc_runtime_slice_test(levelc_slice31_controlled_until
 add_levelc_runtime_slice_test(levelc_slice31_controlled_until_noopt
         rexx_src/levelc_slice31_controlled_until.rexx
         "to 1 0\nto 2 1\nafter-to 2 2\nafter-zero-to 3 0\nafter-zero-for 1 0\nfor 1 0\nfor 3 1\nafter-for 3 2\ncounted 1 0\ncounted 2 1\nafter-counted 3 2\ndown 2 1\nafter-down 2 2\nafter-left 1 0\nboth 1 0\nboth 2 1\nafter-both 2 2\nlocal 1 0\n1\n" -n)
+add_levelc_runtime_slice_test(levelc_slice32_unbounded_control
+        rexx_src/levelc_slice32_unbounded_control.rexx
+        "plain 1\nplain 2\nafter-plain 3\nnext 3\nnext 5\nafter-next 7\ndown 3\ndown 2\ndown 1\nafter-down 0\nchanged 3\nchanged 4\nafter-changed 5\nwhile 1 1\nwhile 2 2\nafter-while 3 3\nuntil 1 0\nuntil 2 1\nafter-until 2 2\n2\n")
+add_levelc_runtime_slice_test(levelc_slice32_unbounded_control_noopt
+        rexx_src/levelc_slice32_unbounded_control.rexx
+        "plain 1\nplain 2\nafter-plain 3\nnext 3\nnext 5\nafter-next 7\ndown 3\ndown 2\ndown 1\nafter-down 0\nchanged 3\nchanged 4\nafter-changed 5\nwhile 1 1\nwhile 2 2\nafter-while 3 3\nuntil 1 0\nuntil 2 1\nafter-until 2 2\n2\n" -n)
+set_tests_properties(levelc_slice32_unbounded_control
+        levelc_slice32_unbounded_control_noopt PROPERTIES TIMEOUT 60)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5986,6 +5992,15 @@ add_levelc_lowered_tree_shape_test(levelc_slice31_controlled_until_tree_shape
         "LEAVE_WITH"
         "logicalUntilValue"
         "controlStepBy")
+add_levelc_lowered_tree_shape_test(levelc_slice32_unbounded_control_tree_shape
+        rexx_src/levelc_slice32_unbounded_control.rexx
+        "REPEAT"
+        "UNTIL"
+        "BLOCK_EXPR"
+        "LEAVE_WITH"
+        "controlStepBy"
+        "logicalUntilValue"
+        "ITERATE")
 
 # Bridge Connectivity Test
 add_custom_command(

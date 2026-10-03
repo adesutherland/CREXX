@@ -133,7 +133,7 @@ accepts non-negative mathematical whole values up to signed 32-bit maximum;
 the contextual method reports `26.2` for invalid or out-of-range values.
 Wider count values and controlled header forms beyond these bounded slices
 remain open. Scalar controlled DO accepts a literal start with literal TO,
-bounded literal FOR, or both, and an optional signed literal BY. Clause order
+bounded literal FOR, both, or neither, and an optional signed literal BY. Clause order
 does not affect lowering. The visible Classic pool is initialized before one
 canonical REPEAT. TO adds a WHILE entry check against the current pool value;
 BY selects the upper or lower bound comparison by its sign. FOR adds its
@@ -143,7 +143,10 @@ default one and returns false. It runs after ordinary bodies and ITERATE,
 including the final count-limited body, while LEAVE skips the advance. The
 hidden canonical loop assignment only satisfies the emitter and does not
 replace the Classic control variable. Dynamic BY/FOR, dynamic endpoints,
-unbounded controlled DO and dynamic controlled clauses remain fail-closed.
+dynamic controlled clauses remain fail-closed. Without TO or FOR, the canonical
+REPEAT has no synthetic count or entry guard; its pool-backed UNTIL end block
+still advances the visible variable after ordinary or ITERATE paths. Source
+LEAVE, WHILE and UNTIL provide the guarded exit paths.
 For a supported controlled WHILE header, the same canonical REPEAT uses one
 WHILE entry node. Its FOR check runs first; when TO exists, a source-anchored
 BLOCK_EXPR branches on the TO guard before evaluating the Classic WHILE
