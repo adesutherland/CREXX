@@ -5211,8 +5211,6 @@ add_levelc_unsupported_compile_test(levelc_slice17_combined_dynamic_unsupported
         rexx_src/levelc_slice17_combined_dynamic_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice17_combined_forever_unsupported
         rexx_src/levelc_slice17_combined_forever_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice17_combined_setup_unsupported
-        rexx_src/levelc_slice17_combined_setup_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
@@ -5575,6 +5573,12 @@ add_levelc_runtime_slice_test(levelc_slice20_until_setup
 add_levelc_runtime_slice_test(levelc_slice20_until_setup_noopt
         rexx_src/levelc_slice20_until_setup.rexx
         "once\nfirst-calls 1\ntick-body 2\ncalls 3\nsubstr 1\nsubstr 2\nafter-substr 2\ntail 1\ntail 2\nafter-tail 2\nbody 2\nafter-body 3\n2\n" -n)
+add_levelc_runtime_slice_test(levelc_slice21_combined_setup
+        rexx_src/levelc_slice21_combined_setup.rexx
+        "zero-while-calls 0\nzero-until-calls 0\nwhile 1\nwhile 2\nafter-while 2 3\ncount-while 1\ncount-while 2\nafter-count-while 2 5\nuntil 2\nafter-until 2 7\ncount-until 1\ncount-until 2\nafter-count-until 2 9\nsubstr 1\nsubstr 2\nafter-substr 2\nbody 2\nafter-body 3 11\n2\n")
+add_levelc_runtime_slice_test(levelc_slice21_combined_setup_noopt
+        rexx_src/levelc_slice21_combined_setup.rexx
+        "zero-while-calls 0\nzero-until-calls 0\nwhile 1\nwhile 2\nafter-while 2 3\ncount-while 1\ncount-while 2\nafter-count-while 2 5\nuntil 2\nafter-until 2 7\ncount-until 1\ncount-until 2\nafter-count-until 2 9\nsubstr 1\nsubstr 2\nafter-substr 2\nbody 2\nafter-body 3 11\n2\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5617,6 +5621,10 @@ add_levelc_invalid_runtime_test(levelc_slice18_while_setup_invalid_logical
         rexx_src/levelc_slice18_while_setup_invalid_logical.rexx RXC-LC-34.3)
 add_levelc_invalid_runtime_test(levelc_slice20_until_setup_invalid_logical
         rexx_src/levelc_slice20_until_setup_invalid_logical.rexx RXC-LC-34.4)
+add_levelc_invalid_runtime_test(levelc_slice21_combined_while_invalid_logical
+        rexx_src/levelc_slice21_combined_while_invalid_logical.rexx RXC-LC-34.3)
+add_levelc_invalid_runtime_test(levelc_slice21_combined_until_invalid_logical
+        rexx_src/levelc_slice21_combined_until_invalid_logical.rexx RXC-LC-34.4)
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
@@ -5781,6 +5789,15 @@ add_levelc_lowered_tree_shape_test(levelc_slice20_until_setup_tree_shape
         "BLOCK_EXPR"
         "LEAVE_WITH"
         "logicalUntilValue"
+        "RexxBifCallContext"
+        "ITERATE")
+add_levelc_lowered_tree_shape_test(levelc_slice21_combined_setup_tree_shape
+        rexx_src/levelc_slice21_combined_setup.rexx
+        "FOR"
+        "WHILE"
+        "UNTIL"
+        "BLOCK_EXPR"
+        "LEAVE_WITH"
         "RexxBifCallContext"
         "ITERATE")
 

@@ -113,12 +113,13 @@ expression. The same hidden
 control symbol carries source LEAVE/ITERATE across generated wrappers. Shared
 `RexxValue.logicalWhileValue()` and `logicalUntilValue()` enforce Classic
 `34.3` and `34.4` logical identities.
-The first combined-header slice accepts a non-negative literal count followed
-by a setup-free WHILE or UNTIL condition. FOR and the condition share the same
-canonical REPEAT, preserving zero-count behavior and the appropriate entry or
-end check. Dynamic counts, FOREVER with a condition, controlled variables and
-setup-bearing combined conditions remain fail-closed, with an assertion that
-their accepted setup-free conditions emit no setup statements.
+The combined-header slice accepts a non-negative literal count followed by a
+supported WHILE or UNTIL condition. FOR and the condition share the same
+canonical REPEAT. A condition with setup uses the same BLOCK_EXPR builder as
+direct WHILE/UNTIL; a zero count skips both body and condition setup. WHILE
+checks at entry while UNTIL checks after the body, including the final
+count-limited body. Dynamic counts, FOREVER with a condition and controlled
+variables remain fail-closed.
 Classic `&` and `|` now evaluate both operands in source order. The lowerer
 copies the left `RexxValue` before any right-hand setup statements, then calls
 shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier
