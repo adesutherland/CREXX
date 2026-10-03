@@ -800,17 +800,22 @@ ASTNode *rxcp_remap_create_controlled_do(Context *context,
                                         const char *control_name,
                                         ASTNode *count_or_null,
                                         ASTNode *condition_source_or_null,
-                                        ASTNode *condition_value_or_null) {
+                                        ASTNode *condition_value_or_null,
+                                        ASTNode *end_condition_source_or_null,
+                                        ASTNode *end_condition_value_or_null) {
     ASTNode *node;
     ASTNode *repeat;
     ASTNode *initial;
     ASTNode *for_node;
     ASTNode *condition_node;
+    ASTNode *end_condition_node;
 
     if (!context || !source_node || !instructions || !control_name ||
         (condition_source_or_null && condition_source_or_null->node_type != WHILE &&
          condition_source_or_null->node_type != UNTIL) ||
-        (!!condition_source_or_null != !!condition_value_or_null)) return NULL;
+        (!!condition_source_or_null != !!condition_value_or_null) ||
+        (end_condition_source_or_null && end_condition_source_or_null->node_type != UNTIL) ||
+        (!!end_condition_source_or_null != !!end_condition_value_or_null)) return NULL;
 
     node = ast_f(context, DO, source_node->token);
     repeat = ast_ft(context, REPEAT);
@@ -821,8 +826,11 @@ ASTNode *rxcp_remap_create_controlled_do(Context *context,
     condition_node = condition_source_or_null
         ? ast_f(context, condition_source_or_null->node_type,
                 condition_source_or_null->token) : NULL;
+    end_condition_node = end_condition_source_or_null
+        ? ast_f(context, UNTIL, end_condition_source_or_null->token) : NULL;
     if (!node || !repeat || !initial || (count_or_null && !for_node) ||
-        (condition_source_or_null && !condition_node)) return NULL;
+        (condition_source_or_null && !condition_node) ||
+        (end_condition_source_or_null && !end_condition_node)) return NULL;
 
     rxcp_remap_anchor_synthetic(node, source_node);
     rxcp_remap_anchor_synthetic(repeat, source_node);
@@ -834,9 +842,14 @@ ASTNode *rxcp_remap_create_controlled_do(Context *context,
         rxcp_remap_anchor_synthetic(condition_node, condition_source_or_null);
         add_ast(condition_node, condition_value_or_null);
     }
+    if (end_condition_node) {
+        rxcp_remap_anchor_synthetic(end_condition_node, end_condition_source_or_null);
+        add_ast(end_condition_node, end_condition_value_or_null);
+    }
     add_ast(repeat, initial);
     if (for_node) add_ast(repeat, for_node);
     if (condition_node) add_ast(repeat, condition_node);
+    if (end_condition_node) add_ast(repeat, end_condition_node);
     add_ast(node, repeat);
     add_ast(node, instructions);
     return node;

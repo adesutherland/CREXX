@@ -5205,6 +5205,10 @@ add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
 
 add_levelc_unsupported_compile_test(levelc_slice8_controlled_do_unsupported
         rexx_src/levelc_slice8_controlled_do_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice25_controlled_dynamic_to_unsupported
+        rexx_src/levelc_slice25_controlled_dynamic_to_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice25_controlled_condition_unsupported
+        rexx_src/levelc_slice25_controlled_condition_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
@@ -5591,6 +5595,12 @@ add_levelc_runtime_slice_test(levelc_slice24_dynamic_combined
 add_levelc_runtime_slice_test(levelc_slice24_dynamic_combined_noopt
         rexx_src/levelc_slice24_dynamic_combined.rexx
         "after-zero 0\nwhile 1\nwhile 2\nafter-while 2 0 3\nlimited-while 1\nlimited-while 2\nafter-limited-while 2 5\nuntil 2\nafter-until 2 7\nlimited-until 1\nlimited-until 2\nafter-limited-until 2 9\nsubstr 1\nsubstr 2\nafter-substr 2\ncall 1\ncall 2\nafter-call 2 1 11\nbody 2\nafter-body 3 13\n2\n" -n)
+add_levelc_runtime_slice_test(levelc_slice25_controlled_to
+        rexx_src/levelc_slice25_controlled_to.rexx
+        "basic 1\nbasic 2\nbasic 3\nafter-basic 4\nafter-zero 3\nchanged 2\nchanged 3\nchanged 4\nafter-changed 5\niter 1\niter 3\nafter-iter 4\nleft 1\nafter-left 2\nnested 1 2\nnested 2 2\nafter-nested 3 3\n3\n")
+add_levelc_runtime_slice_test(levelc_slice25_controlled_to_noopt
+        rexx_src/levelc_slice25_controlled_to.rexx
+        "basic 1\nbasic 2\nbasic 3\nafter-basic 4\nafter-zero 3\nchanged 2\nchanged 3\nchanged 4\nafter-changed 5\niter 1\niter 3\nafter-iter 4\nleft 1\nafter-left 2\nnested 1 2\nnested 2 2\nafter-nested 3 3\n3\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5657,6 +5667,8 @@ add_levelc_invalid_runtime_test(levelc_slice24_dynamic_combined_invalid_while
         rexx_src/levelc_slice24_dynamic_combined_invalid_while.rexx RXC-LC-34.3)
 add_levelc_invalid_runtime_test(levelc_slice24_dynamic_combined_invalid_until
         rexx_src/levelc_slice24_dynamic_combined_invalid_until.rexx RXC-LC-34.4)
+add_levelc_invalid_runtime_test(levelc_slice25_controlled_to_invalid_value
+        rexx_src/levelc_slice25_controlled_to_invalid_value.rexx RXC-LC-41.6)
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
@@ -5857,6 +5869,16 @@ add_levelc_lowered_tree_shape_test(levelc_slice24_dynamic_combined_tree_shape
         "BLOCK_EXPR"
         "LEAVE_WITH"
         "RexxBifCallContext"
+        "ITERATE")
+add_levelc_lowered_tree_shape_test(levelc_slice25_controlled_to_tree_shape
+        rexx_src/levelc_slice25_controlled_to.rexx
+        "WHILE"
+        "controlToContinue"
+        "UNTIL"
+        "BLOCK_EXPR"
+        "LEAVE_WITH"
+        "controlStepByOne"
+        "setValue"
         "ITERATE")
 
 # Bridge Connectivity Test

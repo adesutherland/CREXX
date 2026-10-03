@@ -182,7 +182,9 @@ ASTNode *rxcp_remap_create_controlled_do(Context *context,
                                         const char *control_name,
                                         ASTNode *count_or_null,
                                         ASTNode *condition_source_or_null,
-                                        ASTNode *condition_value_or_null);
+                                        ASTNode *condition_value_or_null,
+                                        ASTNode *end_condition_source_or_null,
+                                        ASTNode *end_condition_value_or_null);
 ASTNode *rxcp_remap_create_prelude_block_expr(Context *context,
                                               ASTNode *source_node,
                                               ASTNode *prelude,

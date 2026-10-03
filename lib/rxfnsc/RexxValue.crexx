@@ -646,6 +646,31 @@ RexxValue: class
     count = whole as .int
     return count
 
+  /** Check a Classic DO control variable against a fixed TO value. */
+  controlToContinue: method = .boolean
+    arg limit = .RexxValue
+    text = asString()
+    if datatype(text, "N") <> "1" then do
+      control_message = "RXC-LC-41.6: DO control variable must be numeric; found " || text
+      assembler signal "ERROR", control_message
+    end
+    limit_text = limit.asString()
+    if datatype(limit_text, "N") <> "1" then do
+      limit_message = "RXC-LC-41.4: DO TO value must be numeric; found " || limit_text
+      assembler signal "ERROR", limit_message
+    end
+    comparison = compareLessOrEqual(limit)
+    return comparison.logicalValue()
+
+  /** Advance the current Classic DO control variable through pool semantics. */
+  controlStepByOne: method = .RexxValue
+    text = asString()
+    if datatype(text, "N") <> "1" then do
+      step_message = "RXC-LC-41.6: DO control variable must be numeric; found " || text
+      assembler signal "ERROR", step_message
+    end
+    return add(.RexxValue.fromInt(1))
+
   logicalResult: method = .RexxValue
     return _rv_bool_value(_rv_logical_text(asString()))
 

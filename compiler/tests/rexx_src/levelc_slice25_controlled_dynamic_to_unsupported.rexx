@@ -1,4 +1,5 @@
 options levelc
-do i = 1 to 2 by 1
+limit = 2
+do i = 1 to limit
   say 'unsupported'
-end
+end i
