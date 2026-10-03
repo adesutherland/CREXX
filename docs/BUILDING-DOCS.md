@@ -72,8 +72,8 @@ font choices. Both profiles add `fvextra` to the detached preamble for lexical
 listings; neither edits the source preamble. Native commands pass paths with
 spaces as single arguments. Capture stdout and
 stderr to a temporary log. Each publication/chapter/tool is identified there,
-and a failed external tool stops the pipeline. The build requires a newly
-produced PDF header; inspect the PDF and complete log before publication.
+and a failed external tool stops the pipeline. The CI document gate requires
+four non-empty PDF files.
 The outer wrapper does not copy to CLOUDDRIVE, upload or open a viewer.
 
 ### Issue #712 and the original route
@@ -452,11 +452,11 @@ publication is separate from the book-generation route in issue #712.
 pushes, pull requests and future versioned tags. It checks out the exact source
 SHA selected by version metadata and builds the actual embedded `rxvme` plus the
 required compiler, assembler, linker, VM and helper tools. Generation and lexical
-highlighting remain the repository's cREXX scripts; shell/Python helpers install
-CI dependencies, launch the route and validate the complete PDF asset set.
+highlighting remain the repository's cREXX scripts; shell helpers install
+CI dependencies, launch the route and check the four output files.
 
 Ubuntu 24.04 supplies XeLaTeX and the selected TeX Live packages, Biber,
-makeindex, xdvipdfmx, Inkscape, Ghostscript and Poppler. Pandoc 3.11, JuliaMono
+makeindex, xdvipdfmx, Inkscape and Ghostscript. Pandoc 3.11, JuliaMono
 0.63.2 and GNU Unifont 18.0.01 downloads have pinned SHA-256 checksums in
 [install-doc-tools-linux.sh](../scripts/install-doc-tools-linux.sh); downloaded
 archives are cached. Ubuntu additionally needs the explicit
@@ -494,16 +494,12 @@ workflow's explicit `display_version`, not an older compiler's cached Git
 suffix. Existing calls without the sixth argument preserve the authored date
 and version-splice behavior. The CLI guide documents accepted version tokens.
 
-The job validates all four PDFs, cover/publication-data stamps, final typesetting
-logs, all extracted listing snapshots against authored Markdown, and unchanged
-source hashes. Only a complete successful set is uploaded as
+The job checks that the four expected PDFs are non-empty before uploading
 `documentation-release-asset`. The PDFs are `CREXX-TAG-language-reference.pdf`,
 `CREXX-TAG-programming-guide.pdf`, `CREXX-TAG-vm-specification.pdf` and
 `CREXX-TAG-library-reference.pdf`. `TAG` is `dev-snapshot` or the actual versioned
-tag (including its `v`). `CREXX-TAG-docs.json` records source commit/version,
-font profile, tool versions, page counts and PDF SHA-256 hashes. PRs retain the
-assets in Actions without publishing a release. Logs, prepared TeX and literal
-listing snapshots are retained as `linux-documentation-evidence` for 14 days.
+tag (including its `v`). PRs retain the assets in Actions without publishing
+a release. Build logs are retained as `linux-documentation-evidence` for 14 days.
 No generated PDFs or historical CI runs enter HEAD.
 
 As approved by Adrian, ordinary binary publication proceeds if document

@@ -21,7 +21,7 @@ on:
         default: false
     outputs:
       docs_ready:
-        description: All four versioned PDFs were validated and uploaded.
+        description: All four versioned PDFs were non-empty and uploaded.
         value: ${{ jobs.books.outputs.docs_ready }}
 
 permissions:
@@ -40,11 +40,6 @@ jobs:
         with:
           ref: ${{ inputs.commit }}
           submodules: recursive
-
-      - name: Python for PDF validation
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
 
       - name: Cache pinned converter and font downloads
         uses: actions/cache@v5
@@ -72,7 +67,6 @@ jobs:
           fi
           export PATH="${RUNNER_TEMP}/doc-tools/bin:$PATH"
           export TEXMFHOME="${RUNNER_TEMP}/doc-tools/texmf"
-          python -m pip install pypdf==6.1.1 > "${RUNNER_TEMP}/doc-bootstrap-logs/python.log" 2>&1
           if [ -z "$DOCUMENT_VERSION" ]; then
             source_version="$(tr -d '[:space:]' < VERSION)"
             separator=+
@@ -111,7 +105,6 @@ jobs:
           path: |
             ${{ runner.temp }}/doc-bootstrap-logs
             ${{ runner.temp }}/docs/logs
-            ${{ runner.temp }}/docs/source-before.json
             ${{ runner.temp }}/docs/books/docs/books/*/tex/book/*.log
             ${{ runner.temp }}/docs/books/docs/books/*/tex/book/*.blg
             ${{ runner.temp }}/docs/books/docs/books/*/tex/book/*.ilg

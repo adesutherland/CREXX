@@ -123,9 +123,6 @@ jobs:
       - name: Check split package and shared runtime guards
         run: python3 -B -m unittest discover -s scripts/tests -p 'test_split_release.py' -v
 
-      - name: Check document publication policy and asset identity
-        run: python3 -B -m unittest discover -s scripts/tests -p 'test_doc_publication.py' -v
-
   documents:
     name: Build Linux books
     needs: version
@@ -1569,7 +1566,7 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'CREXX-*.zip' -o -name 'llama.rexx-*.zip' -o -name 'CREXX-*.pkg' -o -name 'llama.rexx-*.pkg' -o -name 'CREXX-*.pdf' -o -name 'CREXX-*-docs.json' \) \
+            \( -name 'CREXX-*.zip' -o -name 'llama.rexx-*.zip' -o -name 'CREXX-*.pkg' -o -name 'llama.rexx-*.pkg' -o -name 'CREXX-*.pdf' \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           zip_count="$(find "$asset_dir" -name '*.zip' -type f | wc -l | tr -d ' ')"
@@ -1605,11 +1602,10 @@ jobs:
 
           docs_ready=false
           if [ "${{ needs.documents.outputs.docs_ready }}" = true ] && \
-             python3 scripts/check-doc-assets.py verify "$asset_dir" "$GITHUB_REF_NAME" \
-               "${{ needs.version.outputs.commit }}" "${{ needs.version.outputs.display_version }}"; then
+             bash scripts/check-doc-pdfs.sh "$asset_dir" "$GITHUB_REF_NAME"; then
             docs_ready=true
           else
-            rm -f "$asset_dir/"*.pdf "$asset_dir/"*-docs.json
+            rm -f "$asset_dir/"*.pdf
             echo "::warning::Document assets unavailable; publishing qualified binaries without PDFs."
           fi
           echo "docs_ready=$docs_ready" >> "$GITHUB_OUTPUT"
@@ -1654,8 +1650,7 @@ jobs:
           fi
 
           if [ "${{ steps.asset_collection.outputs.docs_ready }}" = true ]; then
-            # shellcheck disable=SC2016 # Markdown backticks are literal.
-            printf '\nFour versioned book PDFs and their `CREXX-%s-docs.json` provenance manifest are attached.\n' "$tag" >> "$release_notes"
+            printf '\nFour versioned book PDFs are attached.\n' >> "$release_notes"
           else
             printf '\nNo complete matching document asset set is available for this revision; no book PDFs are attached. See the workflow document evidence.\n' >> "$release_notes"
           fi
@@ -1745,7 +1740,7 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'llama.rexx-dev-snapshot-*.pkg' -o -name 'llama.rexx-dev-snapshot-*-unsigned-setup.exe' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' -o -name 'CREXX-dev-snapshot-*.pdf' -o -name 'CREXX-dev-snapshot-docs.json' -o -name "CREXX-sdk-${GITHUB_SHA}-*.zip" \) \
+            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'llama.rexx-dev-snapshot-*.pkg' -o -name 'llama.rexx-dev-snapshot-*-unsigned-setup.exe' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' -o -name 'CREXX-dev-snapshot-*.pdf' -o -name "CREXX-sdk-${GITHUB_SHA}-*.zip" \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
@@ -1767,18 +1762,16 @@ jobs:
 
           docs_ready=false
           if [ "${{ needs.documents.outputs.docs_ready }}" = true ] && \
-             python3 scripts/check-doc-assets.py verify "$asset_dir" dev-snapshot \
-               "$GITHUB_SHA" "${{ needs.version.outputs.display_version }}"; then
+             bash scripts/check-doc-pdfs.sh "$asset_dir" dev-snapshot; then
             docs_ready=true
             expected_assets+=(
               CREXX-dev-snapshot-language-reference.pdf
               CREXX-dev-snapshot-programming-guide.pdf
               CREXX-dev-snapshot-vm-specification.pdf
               CREXX-dev-snapshot-library-reference.pdf
-              CREXX-dev-snapshot-docs.json
             )
           else
-            rm -f "$asset_dir/"*.pdf "$asset_dir/"*-docs.json
+            rm -f "$asset_dir/"*.pdf
             echo "::warning::Document assets unavailable; publishing qualified binaries without PDFs."
           fi
 
@@ -1845,7 +1838,7 @@ jobs:
             echo "Optional signed core and llama Vulkan ZIPs and setup executables are added together when the maintainer runs \`scripts/sign-windows-dev-snapshot.sh\`. Payloads, embedded uninstallers and setups are signed. Unsigned downloads remain available. Previous signed assets and legacy installers are removed whenever the snapshot is refreshed."
             echo
             if [ "${{ steps.asset_collection.outputs.docs_ready }}" = true ]; then
-              echo "Four book PDFs built on Linux have the version above on their covers. See \`CREXX-dev-snapshot-docs.json\` for source identity, tools, page counts and PDF hashes."
+              echo "Four non-empty book PDFs built on Linux are attached for this commit."
             else
               echo "Document PDFs are unavailable for this commit. No matching book PDFs are attached; see the workflow's linux-documentation-evidence artifact. Previous snapshot PDFs have been removed."
             fi

@@ -592,3 +592,64 @@ initial-font/historical-instruction-content handover limitations.
   library implementations match the release-channel tools used by the books.
   Differences are documentation links and removed disabled experimental
   benchmark options. No release body or tag changed.
+
+## Narrow document-gate repair — 3 October 2026
+
+### Vision and intended outcomes
+
+Restore the scheduled Deep Build QA book job after René's `hidelinks` preamble
+edit. Preserve that edit and his adjacent style changes. Keep the current
+four-book generator and the distinct Deep-required/ordinary-optional failure
+policies. The active document CI route uses no Python; its PDF acceptance check
+is only that all four expected output files exist and are non-empty. This
+maintainer-approved simplification supersedes the earlier ongoing CI checks
+for PDF text, pages, hashes, listings and manifest identity in DG-AC-09–11;
+their historical qualification receipts remain historical evidence. Product
+QA and unrelated Python-based package tooling are outside this change.
+
+### Acceptance criteria
+
+13. **DG-AC-13 — passed locally: René's preamble builds.** Both cREXX staged-preamble
+    checks accept and retain `\\usepackage[hidelinks]{hyperref}` while preserving
+    the existing package-order adjustment. Inspect the staged preamble and a
+    focused generator run; the authored preamble and style file do not change.
+14. **DG-AC-14 — local checks passed; hosted output open: simple document gate.** The active document workflow,
+    wrapper and document-specific publication path invoke no Python. A successful
+    generation yields exactly the four named, non-empty PDFs. Missing or empty
+    output prevents document publication. No PDF content, header, page, hash or
+    manifest check is required. Inspect the workflow and exercise the four-file
+    check with empty and non-empty fixtures.
+15. **DG-AC-15 — open: existing failure policy survives.** Deep Build QA fails
+    when its required document job fails; ordinary binary publication can proceed
+    without document assets, and stale snapshot PDFs are removed. Inspect the
+    workflow conditions and use normal hosted publication evidence. The scheduled
+    workflow on `master` must use the same narrow document-job change.
+
+### Implementation steps
+
+10. **DG-STEP-10 — complete (AC-13).** Fast-forward the existing `develop` checkout,
+    retain unrelated untracked files, and adapt only the generator's staged
+    `hyperref` recognition/reordering to preserve René's option.
+11. **DG-STEP-11 — implemented; hosted output open; depends on STEP-10 (AC-14).** Remove document-path
+    Python setup, helpers and detailed PDF validation. Collect four expected
+    PDFs with a shell non-empty-file check; simplify optional publication to
+    that same check and remove claims about a new provenance manifest.
+12. **DG-STEP-12 — in progress; depends on STEP-11 (AC-14/15).** Run the smallest
+    focused generation and four-file checks, publish the bounded `develop`
+    change, then apply the matching reusable workflow change to `master` under
+    Adrian's explicit approval for this narrow scheduled-gate exception. Check
+    automatic workflow outcomes; do not dispatch the overnight matrix solely
+    for this repair.
+
+### Focused local evidence
+
+- The `develop` checkout fast-forwarded to René's merge
+  `2a6a209713997b1c1a8c1cd199619e3b2a80a920`. Its authored
+  `preamble.tex` and `crexxalmanac.sty` are unchanged by this repair.
+- The changed cREXX generator compiled, assembled and linked with the existing
+  Release product tools. A one-book `prepare` run passed and its staged
+  preamble retained `\usepackage[hidelinks]{hyperref}` after package reordering.
+- `bash scripts/check-doc-pdfs.sh` passed with four non-empty fixture files and
+  rejected an empty one. `bash -n`, `actionlint` for both edited workflows,
+  and `git diff --check` passed. Full hosted four-PDF generation and scheduled
+  Deep QA remain open.

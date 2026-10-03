@@ -20,7 +20,7 @@ sudo env DEBIAN_FRONTEND=noninteractive apt-get "${apt_network[@]}" install -y -
   build-essential cmake ninja-build libssl-dev pkg-config curl ca-certificates \
   texlive-xetex texlive-latex-extra texlive-fonts-recommended texlive-pstricks \
   texlive-bibtex-extra texlive-font-utils texlive-lang-english texlive-science biber \
-  fonts-texgyre inkscape ghostscript poppler-utils
+  fonts-texgyre inkscape ghostscript
 sudo mktexlsr
 kpsewhich siunitx.sty || { echo "Missing required TeX package: siunitx.sty (Ubuntu texlive-science)" >&2; exit 1; }
 

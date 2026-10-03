@@ -688,6 +688,8 @@ preparetypesetting: procedure = .int
   /* setspace replaces the footnote text macro, and longtable delays table
      footnotes. Hyperref must load after both to install their PDF anchors. */
   hyperref = '5c'x || 'usepackage{hyperref}'
+  if countstr(hyperref, original) = 0 then,
+    hyperref = '5c'x || 'usepackage[hidelinks]{hyperref}'
   setspace = '5c'x || 'usepackage{setspace}'
   longtable = '5c'x || 'usepackage{longtable}'
   if countstr(hyperref, original) <> 1 | countstr(setspace, original) <> 1 |,
@@ -958,10 +960,6 @@ builddocument: procedure = .int
   if run_tool(argv) <> 0 then return 1
   if file_kind(pdf) <> 'file' then do
     say 'No PDF produced:' pdf
-    return 1
-  end
-  if bincompare(binsubstr(readbinary(pdf), 1, 5), '%PDF-' as .binary) <> 0 then do
-    say 'Invalid PDF header:' pdf
     return 1
   end
   return 0

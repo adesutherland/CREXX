@@ -194,7 +194,8 @@ stamp_version: procedure = .int
   bytes = .binary
   path = output || '/docs/books/boilerplate/preamble.tex'
   original = readbinary(path) as .string
-  if countstr('\usepackage{hyperref}', original) <> 1 then do
+  if countstr('\usepackage{hyperref}', original) +,
+    countstr('\usepackage[hidelinks]{hyperref}', original) <> 1 then do
     say 'Version stamp cannot locate staged preamble:' path
     return 1
   end

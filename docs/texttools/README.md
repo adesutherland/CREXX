@@ -109,8 +109,8 @@ main TeX file. Its explicit build-only options preserve the original behavior:
 The outer wrapper never requests these options. They are not needed for
 generation. The port stops on nonzero Pandoc, XeLaTeX, makeindex, Biber or
 xdvipdfmx results, rejected index entries, or unconverged outlines and
-cross-references. It requires a freshly produced PDF header. A header check
-does not validate PDF content or layout; inspect the complete log and PDF.
+cross-references. The CI document gate checks only that each generated PDF
+file is non-empty.
 
 ## Source mapping
 

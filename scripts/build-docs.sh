@@ -16,14 +16,12 @@ mkdir -p "$work/logs" "$work/port/imports"
 work=$(cd "$work" && pwd)
 cd "$repo"
 test "$(git rev-parse HEAD)" = "$commit"
-python3 scripts/check-doc-assets.py snapshot "$repo" "$work/source-before.json"
 
 {
   uname -srm
   for tool in pandoc xelatex biber makeindex xdvipdfmx inkscape gs cmake; do
     "$tool" --version 2>&1 | head -n 5 || true
   done
-  python3 --version
   if command -v dpkg-query >/dev/null; then
     dpkg-query -W 'texlive*' biber inkscape ghostscript
   fi
@@ -52,4 +50,16 @@ port="$work/port"
 } > "$work/logs/port-build.log" 2>&1
 "$product/rxvm" "$port/generate-books-linked.rxbin" -a \
   build "$repo" "$work/books" all initial "$version" > "$work/logs/books.log" 2>&1
-python3 scripts/check-doc-assets.py collect "$repo" "$work" "$version" "$asset_tag" "$commit"
+asset_dir="$work/release-assets"
+mkdir -p "$asset_dir"
+for entry in \
+  crexx_language_reference:language-reference \
+  crexx_programming_guide:programming-guide \
+  crexx_vm_spec:vm-specification \
+  crexx_library_reference:library-reference; do
+  book=${entry%%:*}
+  name=${entry#*:}
+  cp "$work/books/docs/books/$book/tex/book/$book.pdf" \
+    "$asset_dir/CREXX-$asset_tag-$name.pdf"
+done
+bash scripts/check-doc-pdfs.sh "$asset_dir" "$asset_tag"
