@@ -942,6 +942,15 @@ The bounded counted-DO slice recognizes the parser's
 `rxcp_remap_create_do_with_count()`. The existing one-shot block builder
 delegates to the same neutral constructor with count one. Dynamic and
 control-variable headers remain rejected pending their numeric and pool rules.
+Childless source LEAVE/ITERATE inside an accepted counted loop must not bind to
+the generated one-shot DO blocks used by IF, SELECT and simple DO lowering.
+The bounded transfer slice therefore gives each source counted loop a hidden
+canonical control symbol and lowers each transfer as a named canonical node
+pointing to that symbol. The ordinary association pass searches enclosing DO
+nodes for that control symbol, so it crosses generated wrappers without a
+change to global `ast_do()` behavior. The source-to-generated loop binding is
+held only during recursive lowering; unsupported named source transfers remain
+fail-closed.
 Accepted trees pass a production boundary walk before canonical validation:
 every child and sibling must have the expected parent, sibling chains must be
 acyclic, and no `LEVELC_*` instruction node may remain. The direct negative

@@ -5266,6 +5266,10 @@ add_levelc_invalid_compile_test(levelc_compile_invalid_select_missing_when
         rexx_src/levelc_select_missing_when.rexx
         "RXC-LC-7\\.1")
 
+add_levelc_invalid_compile_test(levelc_slice13_named_leave_invalid
+        rexx_src/levelc_slice13_named_leave_invalid.rexx
+        "RXC-LC-28\\.3")
+
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
@@ -5512,6 +5516,13 @@ add_levelc_runtime_slice_test(levelc_slice12_counted_do_noopt
         rexx_src/levelc_slice12_counted_do.rexx
         "before\nouter\ninner\ninner\nouter\ninner\ninner\nafter\nif\nif\n3\n" -n)
 
+add_levelc_runtime_slice_test(levelc_slice13_loop_transfer
+        rexx_src/levelc_slice13_loop_transfer.rexx
+        "leave 1\nafter-leave 2\niterate 3\nafter-select-leave\nafter-select-iterate\nouter\nouter\n2\n")
+add_levelc_runtime_slice_test(levelc_slice13_loop_transfer_noopt
+        rexx_src/levelc_slice13_loop_transfer.rexx
+        "leave 1\nafter-leave 2\niterate 3\nafter-select-leave\nafter-select-iterate\nouter\nouter\n2\n" -n)
+
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}
@@ -5641,6 +5652,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice12_counted_do_tree_shape
         "REPEAT"
         "FOR"
         "RexxVariablePool")
+
+add_levelc_lowered_tree_shape_test(levelc_slice13_loop_transfer_tree_shape
+        rexx_src/levelc_slice13_loop_transfer.rexx
+        "__rxcp_levelc_loop_"
+        "LEAVE"
+        "ITERATE"
+        "IF")
 
 # Bridge Connectivity Test
 add_custom_command(

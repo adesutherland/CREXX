@@ -62,6 +62,29 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 27 - Loop Transfer Across Generated Blocks
+
+### Intent and accepted shape
+
+A bare Classic LEAVE/ITERATE inside a source counted loop can be intercepted
+by the one-shot DO wrappers generated for IF/SELECT/simple groups. A retained
+Regina-versus-canonical counterexample demonstrates the wrong target. For the
+bounded literal-count slice, create a hidden canonical control symbol on each
+source counted loop, keep a lowering-time binding stack, and emit childless
+source transfers as named canonical transfers. The existing association pass
+then finds the intended loop past generated wrappers without changing
+`ast_do()`. Named Classic transfers remain open.
+
+### Verification
+
+- The eight-line nested transfer fixture matched Regina in opt/no-opt and
+  linked execution; generated nodes retained source anchors in a redirected
+  debug tree probe.
+- Release focused tests 6/6 plus named-transfer diagnostic, normal Level C and
+  source-provenance suite 128/128, and Debug focused tests 8/8 passed. Retained
+  logs and remaining obligations are in the
+  [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+
 ## Stage 26 - Literal Counted DO Tree
 
 ### Intent and accepted shape

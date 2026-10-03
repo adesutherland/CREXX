@@ -73,7 +73,7 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
 
-The current executable Level C surface is twelve bounded lowering slices; the
+The current executable Level C surface is thirteen bounded lowering slices; the
 complete Classic contract remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
 the references and this architecture. A new syntax rule, compatibility
@@ -90,7 +90,14 @@ identity. RexxScript's evaluator and sandbox contract remain separate.
 The next loop slice accepts only `DO > REPEAT > FOR > INTEGER` with a
 non-negative literal count representable by the canonical integer builder.
 The neutral remap builder creates a fresh counted loop tree; dynamic counts,
-controlled loops, conditions and loop transfers are still open.
+controlled loops, conditions and named loop transfers are still open.
+Childless LEAVE/ITERATE now have a bounded path through those generated blocks:
+each accepted source counted loop gets a hidden canonical control symbol, and
+its source transfers become named canonical transfers to that symbol. This
+uses the existing loop-association pass, which can search past generated
+one-shot DO wrappers for a matching controlled loop. The ordinary `ast_do()`
+rule remains unchanged. Named Classic transfers and broader loop forms remain
+open in the worklist.
 
 ## Historical design record
 

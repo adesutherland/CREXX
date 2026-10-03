@@ -49,8 +49,8 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   execution.
 - [x] **LC-AC-03 — simple DO execution:** supported `DO ... END` executes its
   body once with correct statement order and nested `IF`/`DO` behavior;
-  controlled/repetitive forms, `LEAVE`, and `ITERATE` remain open until their
-  semantics are separately proved. Verify with Classic reference comparisons,
+  broader controlled/repetitive forms and named transfers remain open until
+  their semantics are separately proved. Verify with Classic reference comparisons,
   positive and negative CTests, opt/no-opt, lowered-tree inspection, and the
   full toolchain.
 - [x] **LC-AC-05 — NOP execution:** a childless Classic `NOP` has no visible
@@ -89,6 +89,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   variables, conditions, `LEAVE` and `ITERATE` remain open. Verify against
   Regina, a targeted AST probe, focused execution and the normal Level C
   suite, then commit this increment separately.
+- [x] **LC-AC-11 — loop transfer through generated AST blocks:** childless
+  `LEAVE` and `ITERATE` in a supported literal counted `DO` target the nearest
+  source repetitive loop even when nested in Classic simple DO, IF or SELECT
+  structures. Generated branch/group wrappers must not capture those
+  transfers; named transfer forms remain open. Verify a Regina-versus-canonical
+  counterexample, nested opt/no-opt behavior, target-tree association, normal
+  compiler regressions and linked execution.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -171,6 +178,14 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     repetition headers fail-closed, compare zero/nested counts with Regina,
     and qualify opt/no-opt, tree shape, linked execution and the normal suite.
     This is one bounded part of STEP-12, not closure of all loop forms.
+14. **LC-STEP-14 — complete (LC-AC-08/11; depends on STEP-13):** reproduce the source-loop
+    versus generated-wrapper association hazard. Map each accepted source
+    counted loop to a hidden canonical control symbol, and lower childless
+    LEAVE/ITERATE to named canonical transfers targeting that symbol through
+    the existing association machinery. Validate source nesting before
+    lowering, preserve source anchors and loop state, reject named/unsupported
+    transfer shapes, and qualify focused/normal/linked execution. Keep global
+    `ast_do()` semantics unchanged.
 
 ## AST structural crosswalk and closure order
 
@@ -190,7 +205,7 @@ itself make its Classic shape executable.
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, lazy logical branches, bounded BIF/local calls | More expression shapes, exact evaluation order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
-| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: `DO > REPEAT > FOR > INTEGER` literal count; other headers remain open | Dynamic count, numeric errors, mutation/evaluation order, control transfer and scope |
+| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal count plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Dynamic count, named transfer, controlled headers, conditions, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
 | `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
@@ -228,7 +243,7 @@ has been approved in this worklist.
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
-| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: non-negative integer literal count, zero/nested/procedure/IF-arm cases | Dynamic count, controlled variables, conditions, transfer, exact numeric errors |
+| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal count and childless LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Dynamic count, controlled variables, conditions, named transfer, exact numeric errors |
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
@@ -553,3 +568,32 @@ full compatibility proof.
   `/tmp/crexx-levelc-count-debug-focused.9ijG98`,
   `/tmp/crexx-levelc-count-debug-unit-build.QGU5mL`,
   `/tmp/crexx-levelc-count-debug-focused-final.VkqpEj`.
+
+### LC-STEP-14 — loop transfer across generated blocks, 2026-10-03
+
+- The retained counterexample shows Regina leaving the source counted loop
+  once, while an equivalent canonical tree with a bare `LEAVE` inside a
+  generated `DO 1` branch only leaves that inner wrapper and continues the
+  outer loop. This is the AST association risk Adrian prioritized. Reproducer:
+  `/tmp/crexx-levelc-loop-association.Ecw4Bg`.
+- Accepted literal counted loops now use a hidden canonical control symbol.
+  Source childless `LEAVE` and `ITERATE` lower to named transfers to that
+  symbol; existing canonical validation resolves the correct enclosing loop
+  through generated wrappers. `ast_do()` and global association semantics are
+  unchanged. Named Classic transfers remain outside this slice.
+- The eight-line fixture matched Regina in optimized/no-opt and linked runs,
+  covering IF, SELECT, nested simple/counted DO and a local procedure. A
+  redirected tree probe showed source-anchored transfers and hidden typed
+  control symbols without AST validation errors. Release build passed,
+  focused transfer/count tests 6/6 plus a named-transfer diagnostic test,
+  the selected normal Level C/source-provenance suite 128/128, and Debug
+  focused tests 8/8. Retained logs:
+  `/tmp/crexx-levelc-transfer-build.M5xxeb`,
+  `/tmp/crexx-levelc-transfer-focused.518e63`,
+  `/tmp/crexx-levelc-transfer-suite.BI7lhP`,
+  `/tmp/crexx-levelc-transfer-debug-tree.3bjoKi`,
+  `/tmp/crexx-levelc-transfer-link.RQWxpa`,
+  `/tmp/crexx-levelc-transfer-debug-build.xUyrVm`,
+  `/tmp/crexx-levelc-transfer-debug-focused.3t20z1`.
+- `LC-AC-08/04` remain open for the other structural and full compatibility
+  obligations; dynamic/controlled loops and named transfers are still open.

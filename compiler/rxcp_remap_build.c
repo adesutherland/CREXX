@@ -794,6 +794,37 @@ ASTNode *rxcp_remap_create_do_with_count(Context *context,
     return node;
 }
 
+ASTNode *rxcp_remap_create_controlled_do_with_count(Context *context,
+                                                   ASTNode *source_node,
+                                                   ASTNode *instructions,
+                                                   const char *control_name,
+                                                   ASTNode *count) {
+    ASTNode *node;
+    ASTNode *repeat;
+    ASTNode *initial;
+    ASTNode *for_node;
+
+    if (!context || !source_node || !instructions || !control_name || !count) return NULL;
+
+    node = ast_f(context, DO, source_node->token);
+    repeat = ast_ft(context, REPEAT);
+    initial = rxcp_remap_create_named_assignment(
+            context, source_node, control_name,
+            rxcp_remap_create_integer_constant(context, source_node, 1, TP_INTEGER));
+    for_node = ast_ft(context, FOR);
+    if (!node || !repeat || !initial || !for_node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    rxcp_remap_anchor_synthetic(repeat, source_node);
+    rxcp_remap_anchor_synthetic(for_node, source_node);
+    add_ast(for_node, count);
+    add_ast(repeat, initial);
+    add_ast(repeat, for_node);
+    add_ast(node, repeat);
+    add_ast(node, instructions);
+    return node;
+}
+
 ASTNode *rxcp_remap_create_if_statement(Context *context,
                                         ASTNode *source_node,
                                         ASTNode *condition,

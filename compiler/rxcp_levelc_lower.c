@@ -37,6 +37,7 @@
 #define LEVELC_BIF_CONTEXT_PREFIX "__rxcp_levelc_bif_context_"
 #define LEVELC_COMPOUND_TAIL_PREFIX "__rxcp_levelc_tail_"
 #define LEVELC_EXPR_RESULT_PREFIX "__rxcp_levelc_expr_"
+#define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_BIF_LENGTH_HELPER "rexxclassicbif_length"
 #define LEVELC_BIF_DISPATCH_HELPER "rexxclassicbif_call"
 #define LEVELC_BIF_CONTEXT_CLASS "RexxBifCallContext"
@@ -55,12 +56,19 @@ typedef struct {
     int returns_value;
 } LevelCProcedureSlice;
 
+typedef struct LevelCLoopBinding {
+    ASTNode *source_do;
+    const char *control_name;
+    struct LevelCLoopBinding *previous;
+} LevelCLoopBinding;
+
 typedef struct {
     ASTNode *instructions;
     ASTNode *main_first;
     ASTNode *main_end;
     LevelCProcedureSlice *procedures;
     size_t procedure_count;
+    LevelCLoopBinding *active_loop;
 } LevelCLowerPlan;
 
 typedef enum {
@@ -1088,6 +1096,30 @@ unsupported:
     return 0;
 }
 
+static ASTNode *levelc_nearest_source_repetitive_do(ASTNode *stmt) {
+    ASTNode *ancestor;
+
+    for (ancestor = stmt ? stmt->parent : NULL; ancestor; ancestor = ancestor->parent) {
+        if (ancestor->node_type == DO && ancestor->child &&
+            ancestor->child->node_type == REPEAT) return ancestor;
+    }
+    return NULL;
+}
+
+static int levelc_transfer_supported(ASTNode *stmt,
+                                     const char **reason_out) {
+    ASTNode *target;
+
+    if (!stmt || stmt->child) {
+        if (reason_out) *reason_out = "named LEAVE/ITERATE is outside slice";
+        return 0;
+    }
+    target = levelc_nearest_source_repetitive_do(stmt);
+    if (target) return levelc_literal_repeat_count(target->child, NULL, reason_out);
+    if (reason_out) *reason_out = "LEAVE/ITERATE requires a supported repetitive DO";
+    return 0;
+}
+
 static int levelc_do_supported(ASTNode *stmt,
                               LevelCLowerPlan *plan,
                               int in_procedure,
@@ -1152,6 +1184,8 @@ static int levelc_main_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS) return 1;
     if (stmt->node_type == NOP) return stmt->child == NULL;
+    if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
+        return levelc_transfer_supported(stmt, reason_out);
     if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 0, reason_out);
@@ -1180,6 +1214,8 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, NULL, reason_out);
     if (stmt->node_type == NOP) return stmt->child == NULL;
+    if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
+        return levelc_transfer_supported(stmt, reason_out);
     if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 1, reason_out);
@@ -2513,6 +2549,32 @@ static int levelc_lower_nop(Context *context,
     return 1;
 }
 
+static int levelc_lower_transfer(Context *context,
+                                ASTNode *instructions,
+                                ASTNode *stmt,
+                                LevelCLowerPlan *plan,
+                                const char **reason_out) {
+    LevelCLoopBinding *binding = plan ? plan->active_loop : NULL;
+    ASTNode *lowered;
+    ASTNode *target;
+
+    if (!binding || binding->source_do != levelc_nearest_source_repetitive_do(stmt)) {
+        if (reason_out) *reason_out = "LEAVE/ITERATE lost its source loop binding";
+        return 0;
+    }
+    lowered = ast_f(context, stmt->node_type, stmt->token);
+    target = rxcp_remap_create_named_ref(context, stmt, VAR_SYMBOL,
+                                         binding->control_name);
+    if (!lowered || !target) {
+        if (reason_out) *reason_out = "failed to lower Level C loop transfer";
+        return 0;
+    }
+    rxcp_remap_anchor_synthetic(lowered, stmt);
+    add_ast(lowered, target);
+    add_ast(instructions, lowered);
+    return 1;
+}
+
 static int levelc_lower_scalar_drop(Context *context,
                                     ASTNode *instructions,
                                     ASTNode *stmt,
@@ -2548,6 +2610,8 @@ static int levelc_lower_main_statement(Context *context,
 
     if (!stmt) return 1;
     if (stmt->node_type == NOP) return levelc_lower_nop(context, instructions, stmt, reason_out);
+    if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
+        return levelc_lower_transfer(context, instructions, stmt, plan, reason_out);
     if (stmt->node_type == LEVELC_DROP) {
         return levelc_lower_scalar_drop(context, instructions, stmt, reason_out);
     }
@@ -2600,6 +2664,8 @@ static int levelc_lower_proc_statement(Context *context,
 
     if (!stmt) return 1;
     if (stmt->node_type == NOP) return levelc_lower_nop(context, instructions, stmt, reason_out);
+    if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
+        return levelc_lower_transfer(context, instructions, stmt, plan, reason_out);
     if (stmt->node_type == LEVELC_DROP) {
         return levelc_lower_scalar_drop(context, instructions, stmt, reason_out);
     }
@@ -2710,38 +2776,55 @@ static int levelc_lower_do(Context *context,
     ASTNode *repeat = body && body->node_type == REPEAT ? body : NULL;
     ASTNode *body_statement;
     ASTNode *lowered_body = rxcp_remap_create_instruction_builder(context, stmt);
-    ASTNode *lowered;
+    ASTNode *lowered = NULL;
+    LevelCLoopBinding binding;
+    LevelCLoopBinding *previous = plan ? plan->active_loop : NULL;
+    char *control_name = NULL;
+    int loop_active = 0;
     int count = 1;
 
     if (!lowered_body) goto fail;
     if (repeat) {
-        if (!levelc_literal_repeat_count(repeat, &count, reason_out)) return 0;
+        ASTNode *count_node;
+
+        if (!plan || !levelc_literal_repeat_count(repeat, &count, reason_out)) goto fail;
         body = repeat->sibling;
+        control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);
+        count_node = rxcp_remap_create_integer_constant(
+                context, repeat->child->child, count, TP_INTEGER);
+        lowered = rxcp_remap_create_controlled_do_with_count(
+                context, stmt, lowered_body, control_name, count_node);
+        if (!control_name || !count_node || !lowered) goto fail;
+        binding.source_do = stmt;
+        binding.control_name = control_name;
+        binding.previous = previous;
+        plan->active_loop = &binding;
+        loop_active = 1;
     }
+    if (!body) goto fail;
     body_statement = body->child;
     while (body_statement) {
         if (in_procedure) {
             if (!levelc_lower_proc_statement(context, lowered_body, body_statement,
-                                            plan, procedure, reason_out)) return 0;
+                                            plan, procedure, reason_out)) goto fail;
         } else if (!levelc_lower_main_statement(context, lowered_body, body_statement,
-                                                plan, reason_out)) return 0;
+                                                plan, reason_out)) goto fail;
         body_statement = body_statement->sibling;
     }
 
-    if (repeat) {
-        ASTNode *count_node = rxcp_remap_create_integer_constant(
-                context, repeat->child->child, count, TP_INTEGER);
-        lowered = rxcp_remap_create_do_with_count(context, stmt, lowered_body,
-                                                  count_node);
-    } else {
+    if (!repeat) {
         lowered = rxcp_remap_create_do_block(context, stmt, lowered_body);
     }
     if (!lowered) goto fail;
+    if (loop_active) plan->active_loop = previous;
     add_ast(instructions, lowered);
+    free(control_name);
     return 1;
 
 fail:
-    if (reason_out) *reason_out = "failed to lower supported Level C DO";
+    if (loop_active) plan->active_loop = previous;
+    free(control_name);
+    if (reason_out && !*reason_out) *reason_out = "failed to lower supported Level C DO";
     return 0;
 }
 
