@@ -655,6 +655,15 @@ RexxValue: class
     end
     return .RexxValue(text)
 
+  /** Validate and capture a Classic DO BY step at loop setup. */
+  controlByValue: method = .RexxValue
+    text = asString()
+    if datatype(text, "N") <> "1" then do
+      message = "RXC-LC-41.5: DO BY value must be numeric; found " || text
+      assembler signal "ERROR", message
+    end
+    return .RexxValue(text)
+
   /** Check a Classic DO control variable against a fixed TO value. */
   controlToContinue: method = .boolean
     arg limit = .RexxValue

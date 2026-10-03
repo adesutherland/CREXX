@@ -151,7 +151,12 @@ expression is evaluated once before the new visible control value is assigned,
 so it can observe the prior pool value. Shared `RexxValue.controlToValue()`
 checks `41.4` at setup and returns a copy stored in a hidden canonical local;
 the WHILE TO check reads that local on every entry. This also runs when FOR
-is zero. Dynamic start, BY and FOR remain open.
+is zero. A supported dynamic BY expression follows the same capture path:
+the parser's TO/BY clause list is walked in written order before assigning
+the new control value, and `RexxValue.controlByValue()` validates `41.5`
+and copies the step. Both the TO direction check and the UNTIL pool advance
+read that hidden step, so body mutation cannot change it. Dynamic start and
+FOR remain open.
 For a supported controlled WHILE header, the same canonical REPEAT uses one
 WHILE entry node. Its FOR check runs first; when TO exists, a source-anchored
 BLOCK_EXPR branches on the TO guard before evaluating the Classic WHILE

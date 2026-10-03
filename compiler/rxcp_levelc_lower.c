@@ -38,6 +38,7 @@
 #define LEVELC_EXPR_RESULT_PREFIX "__rxcp_levelc_expr_"
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_TO_LIMIT_PREFIX "__rxcp_levelc_to_"
+#define LEVELC_BY_STEP_PREFIX "__rxcp_levelc_by_"
 #define LEVELC_BIF_LENGTH_HELPER "rexxclassicbif_length"
 #define LEVELC_BIF_DISPATCH_HELPER "rexxclassicbif_call"
 #define LEVELC_BIF_CONTEXT_CLASS "RexxBifCallContext"
@@ -1186,8 +1187,10 @@ static int levelc_controlled_header_supported(ASTNode *repeat,
             (levelc_nonnegative_integer_literal(clause->child) ||
              levelc_expr_supported(clause->child, plan, reason_out))) {
             to = clause;
-        } else if (clause->node_type == BY && !by &&
-                   levelc_signed_integer_literal(clause->child)) {
+        } else if (clause->node_type == BY && !by && clause->child &&
+                   !clause->child->sibling &&
+                   (levelc_signed_integer_literal(clause->child) ||
+                    levelc_expr_supported(clause->child, plan, reason_out))) {
             by = clause;
         } else if (clause->node_type == FOR && !for_clause &&
                    levelc_bounded_nonnegative_integer_literal(clause->child, NULL)) {
@@ -1867,6 +1870,35 @@ static ASTNode *levelc_controlled_until_end(Context *context,
     add_ast(end_instructions, branch);
     add_ast(block, end_instructions);
     return block;
+}
+
+static char *levelc_capture_control_clause(Context *context,
+                                            ASTNode *clause,
+                                            LevelCLowerPlan *plan,
+                                            ASTNode *header_setup,
+                                            const char *name_prefix,
+                                            const char *validation_method) {
+    char *name;
+    ASTNode *value;
+    ASTNode *checked;
+    ASTNode *capture;
+
+    if (!context || !clause || !header_setup) return NULL;
+    name = rxcp_remap_create_generated_node_name(name_prefix, clause);
+    value = levelc_lower_expr(context, clause->child, plan, header_setup);
+    checked = value
+        ? rxcp_remap_create_member_call(context, clause, value,
+                                        validation_method, NULL, 0)
+        : NULL;
+    capture = checked && name
+        ? rxcp_remap_create_named_assignment(context, clause, name, checked)
+        : NULL;
+    if (!capture) {
+        free(name);
+        return NULL;
+    }
+    add_ast(header_setup, capture);
+    return name;
 }
 
 static ASTNode *levelc_lower_classic_logical_binary(Context *context,
@@ -2976,7 +3008,7 @@ static int levelc_lower_do(Context *context,
     ASTNode *lowered_body = rxcp_remap_create_instruction_builder(context, stmt);
     ASTNode *lowered = NULL;
     ASTNode *initial_statement = NULL;
-    ASTNode *to_setup = NULL;
+    ASTNode *header_setup = NULL;
     LevelCLoopBinding binding;
     LevelCLoopBinding *previous = plan ? plan->active_loop : NULL;
     char *control_name = NULL;
@@ -3010,6 +3042,12 @@ static int levelc_lower_do(Context *context,
             ASTNode *pool_receiver;
             ASTNode *set_args[2];
             ASTNode *set_statement;
+            ASTNode *clause;
+            ASTNode *captured_to_ref = NULL;
+            ASTNode *captured_by_check_ref = NULL;
+            ASTNode *captured_by_step_ref = NULL;
+            char *to_name = NULL;
+            char *by_name = NULL;
             char *target_name;
             ASTNode *limit_args[2];
             ASTNode *step_args[1];
@@ -3017,10 +3055,46 @@ static int levelc_lower_do(Context *context,
 
             if (!levelc_controlled_header_supported(repeat, plan, &to, &by,
                                                        &for_clause, reason_out)) goto fail;
-            control_anchor = to ? to : for_clause ? for_clause : by ? by : assign;
+            control_anchor = to ? to : (for_clause ? for_clause : (by ? by : assign));
             if (for_clause &&
                 !levelc_bounded_nonnegative_integer_literal(for_clause->child,
                                                             &for_count)) goto fail;
+            header_setup = rxcp_remap_create_instruction_builder(context, assign);
+            if (!header_setup) goto fail;
+            for (clause = assign->sibling; clause; clause = clause->sibling) {
+                if (clause == to &&
+                    !levelc_nonnegative_integer_literal(clause->child)) {
+                    to_name = levelc_capture_control_clause(
+                            context, clause, plan, header_setup,
+                            LEVELC_TO_LIMIT_PREFIX, "controlToValue");
+                    if (!to_name) goto fail;
+                } else if (clause == by &&
+                           !levelc_signed_integer_literal(clause->child)) {
+                    by_name = levelc_capture_control_clause(
+                            context, clause, plan, header_setup,
+                            LEVELC_BY_STEP_PREFIX, "controlByValue");
+                    if (!by_name) {
+                        free(to_name);
+                        goto fail;
+                    }
+                }
+            }
+            if (to_name)
+                captured_to_ref = rxcp_remap_create_named_ref(
+                        context, to, VAR_SYMBOL, to_name);
+            if (by_name) {
+                if (to)
+                    captured_by_check_ref = rxcp_remap_create_named_ref(
+                            context, by, VAR_SYMBOL, by_name);
+                captured_by_step_ref = rxcp_remap_create_named_ref(
+                        context, by, VAR_SYMBOL, by_name);
+            }
+            free(to_name);
+            free(by_name);
+            if ((to && !levelc_nonnegative_integer_literal(to->child) &&
+                 !captured_to_ref) ||
+                (by && !levelc_signed_integer_literal(by->child) &&
+                 (!captured_by_step_ref || (to && !captured_by_check_ref)))) goto fail;
             initial_prelude = rxcp_remap_create_instruction_builder(context, assign);
             initial_statement = initial_prelude
                 ? levelc_pool_set_statement(context, assign, plan, initial_prelude)
@@ -3032,35 +3106,11 @@ static int levelc_lower_do(Context *context,
             if (to) {
                 current_value = levelc_scalar_pool_value_by_name(context, target, target_name);
                 step_prelude = rxcp_remap_create_instruction_builder(context, by ? by : to);
-                if (levelc_nonnegative_integer_literal(to->child)) {
-                    limit_args[0] = levelc_rexxvalue_from_literal(context, to->child);
-                } else {
-                    char *limit_name = rxcp_remap_create_generated_node_name(
-                            LEVELC_TO_LIMIT_PREFIX, to);
-                    ASTNode *limit_value;
-                    ASTNode *checked_value;
-                    ASTNode *capture;
-                    to_setup = rxcp_remap_create_instruction_builder(context, to);
-                    limit_value = to_setup
-                        ? levelc_lower_expr(context, to->child, plan, to_setup)
-                        : NULL;
-                    checked_value = limit_value
-                        ? rxcp_remap_create_member_call(context, to, limit_value,
-                                                        "controlToValue", NULL, 0)
-                        : NULL;
-                    capture = checked_value && limit_name
-                        ? rxcp_remap_create_named_assignment(context, to,
-                                                             limit_name, checked_value)
-                        : NULL;
-                    limit_args[0] = capture
-                        ? rxcp_remap_create_named_ref(context, to, VAR_SYMBOL,
-                                                      limit_name)
-                        : NULL;
-                    if (to_setup && capture) add_ast(to_setup, capture);
-                    free(limit_name);
-                }
+                limit_args[0] = captured_to_ref ? captured_to_ref
+                    : levelc_rexxvalue_from_literal(context, to->child);
                 limit_args[1] = by && step_prelude
-                    ? levelc_lower_expr(context, by->child, plan, step_prelude)
+                    ? captured_by_check_ref ? captured_by_check_ref
+                        : levelc_lower_expr(context, by->child, plan, step_prelude)
                     : NULL;
                 if (!step_prelude || step_prelude->child || (by && !limit_args[1])) {
                     free(target_name);
@@ -3086,7 +3136,8 @@ static int levelc_lower_do(Context *context,
             end_prelude = rxcp_remap_create_instruction_builder(context,
                                                                 by ? by : control_anchor);
             step_args[0] = by && end_prelude
-                ? levelc_lower_expr(context, by->child, plan, end_prelude)
+                ? captured_by_step_ref ? captured_by_step_ref
+                    : levelc_lower_expr(context, by->child, plan, end_prelude)
                 : NULL;
             if (!end_prelude || end_prelude->child || (by && !step_args[0])) {
                 free(target_name);
@@ -3212,7 +3263,7 @@ static int levelc_lower_do(Context *context,
     }
     if (!lowered) goto fail;
     if (loop_active) plan->active_loop = previous;
-    if (to_setup) rxcp_remap_append_builder_children(instructions, to_setup);
+    if (header_setup) rxcp_remap_append_builder_children(instructions, header_setup);
     if (initial_statement) add_ast(instructions, initial_statement);
     add_ast(instructions, lowered);
     free(control_name);
