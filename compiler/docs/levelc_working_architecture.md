@@ -247,8 +247,12 @@ must not be silently lost while deciding abuttal. The bounded decimal-fraction
 scanner slice now emits `1.5`, `1.`, and `.5` as one `TK_DECIMAL` token and
 one source `DECIMAL` AST node. Level C lowering turns that node into the
 original string spelling in a shared `RexxValue`, so Classic numeric methods
-and contextual DO/FOR whole-number checks remain authoritative. Exponent
-spellings and wider constant symbols still need separate lexical work.
+and contextual DO/FOR whole-number checks remain authoritative. Valid
+exponent forms with integer or fractional mantissas also use that source
+node; the lowerer uppercases their `E` when constructing the Classic value,
+matching the reference display while retaining the numeric spelling in the
+raw tree. Wider non-numeric constant symbols still need separate lexical
+work.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission. The existing WHILE, BLOCK_EXPR and
 LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL

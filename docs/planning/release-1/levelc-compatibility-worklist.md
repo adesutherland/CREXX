@@ -406,8 +406,16 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   They work in ordinary expressions, PARSE VALUE expressions and arithmetic;
   fractional DO/FOR counts still raise their existing contextual errors.
   Verify Regina output, raw/canonical tree, opt/no-opt, focused invalid-count
-  tests, the normal Level C suite and linked execution. Exponents and wider
-  constant-symbol spellings remain separate open lexical work.
+  tests, the normal Level C suite and linked execution. Exponents are covered
+  by `LC-AC-43`; wider constant-symbol spellings remain open lexical work.
+- [x] **LC-AC-43 — exponent numeric source tokens:** valid Classic numeric
+  exponent forms with integer, trailing-dot or fractional mantissas and an
+  optional exponent sign form one numeric source operand. Their displayed
+  constant spelling uses uppercase `E`; arithmetic and PARSE VALUE consume
+  the same value, and whole-number DO/FOR checks retain contextual behavior.
+  Verify Regina and a failing baseline, raw/canonical tree, opt/no-opt,
+  focused count errors, the normal Level C suite and linked execution.
+  Non-numeric constant symbols remain open under `LC-AC-04/08`.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -715,6 +723,12 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     path as other Classic constants. Retain integer-only fast paths for DO/FOR
     counts and prove contextual errors, tree shape and linked equivalence
     before a separate commit.
+46. **LC-STEP-46 — complete (LC-AC-08/43; depends on STEP-45):** extend the numeric
+    scanner pattern to exponent forms with required exponent digits, emit the
+    existing `DECIMAL` source AST node, and normalize only the exponent letter
+    to Classic uppercase when constructing the shared `RexxValue` string.
+    Check direct expressions, arithmetic, PARSE VALUE, count validation,
+    canonical lowering and linked output before a separate commit.
 
 ## Findings
 
@@ -746,16 +760,16 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   `concat-regina.out` and `concat-crexx.out`. `LC-STEP-44` now selects
   `OP_CONCAT` for physically adjacent terms and `OP_SCONCAT` for spaced terms.
   The new fixture covers groups, calls, comment-only gaps and PARSE VALUE.
-- **LC-FIND-05 — bounded repair, broader constant symbols open:** the former
+- **LC-FIND-05 — numeric repair complete, broader constant symbols open:** the former
   Level C scanner emitted integer, dot and integer tokens for `1.5`; the
   expression parser could lose the dot. Before `LC-STEP-44`, blank concatenation
   made the existing `DO ... FOR 1.5` invalid-value test pass; unrestricted
   abuttal briefly turned it into `15`. The parser now refuses to infer
   abuttal across an omitted dot, preserving the invalid-value result.
-  `LC-STEP-45` now scans bounded decimal fraction forms into a single numeric
-  source token and lowers them through shared `RexxValue`, so `1.5` retains
-  its value and still fails the contextual FOR count check. Exponents and
-  wider constant symbols remain open under `LC-AC-04/08`. Reproducer:
+  `LC-STEP-45/46` now scan decimal fraction and valid exponent forms into a
+  single numeric source token and lower them through shared `RexxValue`, so
+  `1.5` retains its value and still fails the contextual FOR count check.
+  Wider non-numeric constant symbols remain open under `LC-AC-04/08`. Reproducer:
   `compiler/tests/rexx_src/levelc_slice35_dynamic_for_fraction.rexx` and
   `/tmp/crexx-levelc-abuttal-fraction-tree.pGPSc7`.
 
@@ -1910,6 +1924,20 @@ full compatibility proof.
   `/tmp/crexx-levelc-decimal-final-debug-tests.Sf2900`,
   `/tmp/crexx-levelc-decimal-final-linked.wudGXo`, and
   `/tmp/crexx-levelc-decimal-count.wVmu1e`.
+- Exponent numeric constants with integer, trailing-dot and fractional
+  mantissas now form one source `DECIMAL` node, with uppercase `E` in the
+  lowered Classic value. The failing baseline raised a decimal conversion
+  panic; the new opt/no-opt fixture matches Regina for source spelling,
+  arithmetic, PARSE VALUE, abuttal and a whole-number FOR. A fractional
+  exponent FOR still raises contextual `26.3`. Release Level C passed
+  259/259, focused Debug 8/8, and linked output matches byte for byte.
+  Evidence: `/tmp/crexx-levelc-exponent-baseline.UweCIf`,
+  `/tmp/crexx-levelc-exponent-count-reference.Xcpebt`,
+  `/tmp/crexx-levelc-exponent-tree.pBzsPS`,
+  `/tmp/crexx-levelc-exponent-release-suite.2ogRVg`,
+  `/tmp/crexx-levelc-exponent-debug-build.3r0pwZ`,
+  `/tmp/crexx-levelc-exponent-debug-tests.nEbinY`, and
+  `/tmp/crexx-levelc-exponent-linked.M8newV`.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.

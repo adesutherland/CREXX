@@ -1679,6 +1679,7 @@ static ASTNode *levelc_rexxvalue_from_text(Context *context,
 
 static ASTNode *levelc_rexxvalue_from_literal(Context *context, ASTNode *source_node) {
     char *text;
+    char *cursor;
     ASTNode *result;
 
     if (source_node && source_node->node_type == STRING &&
@@ -1687,6 +1688,11 @@ static ASTNode *levelc_rexxvalue_from_literal(Context *context, ASTNode *source_
 
     text = levelc_node_text_copy(source_node);
     if (!text) return NULL;
+    if (source_node->node_type == DECIMAL) {
+        for (cursor = text; *cursor; cursor++) {
+            if (*cursor == 'e') *cursor = 'E';
+        }
+    }
     result = levelc_rexxvalue_from_text(context, source_node, text);
     free(text);
     return result;

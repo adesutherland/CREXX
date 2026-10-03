@@ -73,6 +73,8 @@ regular:
   lcsimple = lcfsymchr lcsymchr*;
   integer = digit+;
   fraction = digit+ "." digit* | "." digit+;
+  exponent = [eE] [+-]? digit+;
+  numeric_exp = (integer | fraction) exponent;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
   badsqstr = ['] ((any\['\n\r])|(['][']))*;
@@ -122,6 +124,7 @@ regular:
     not { RET(TK_NOT); }
 
     lcsimple ob ":" { RET(TK_LABEL); }
+    numeric_exp { RET(TK_DECIMAL); }
     fraction { RET(TK_DECIMAL); }
     integer { RET(TK_INTEGER); }
     str { RET(TK_STRING); }

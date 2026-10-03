@@ -5734,6 +5734,12 @@ add_levelc_runtime_slice_test(levelc_slice43_decimal_fraction
 add_levelc_runtime_slice_test(levelc_slice43_decimal_fraction_noopt
         rexx_src/levelc_slice43_decimal_fraction.rexx
         "literal 1.5 1. .5\nvalue 1.5\narithmetic 3.5 1.5\nparse 1.5\nabutted [1.5]\n" -n)
+add_levelc_runtime_slice_test(levelc_slice44_exponent
+        rexx_src/levelc_slice44_exponent.rexx
+        "literal 1E2 1E+2 1E-2 1.5E2 1.E2 .5E+1\nmath 101 1.01\nparse 1E2\nabutted [1E2]\nwhole 1\n")
+add_levelc_runtime_slice_test(levelc_slice44_exponent_noopt
+        rexx_src/levelc_slice44_exponent.rexx
+        "literal 1E2 1E+2 1E-2 1.5E2 1.E2 .5E+1\nmath 101 1.01\nparse 1E2\nabutted [1E2]\nwhole 1\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5817,6 +5823,8 @@ add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_range
         rexx_src/levelc_slice35_dynamic_for_range.rexx RXC-LC-26.3)
 add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_fraction
         rexx_src/levelc_slice35_dynamic_for_fraction.rexx RXC-LC-26.3)
+add_levelc_invalid_runtime_test(levelc_slice44_exponent_for_fraction
+        rexx_src/levelc_slice44_exponent_for_fraction.rexx RXC-LC-26.3)
 add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_negative
         rexx_src/levelc_slice35_dynamic_for_negative.rexx RXC-LC-26.3)
 add_levelc_invalid_runtime_test(levelc_slice36_dynamic_start_invalid
@@ -6176,6 +6184,11 @@ add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
 add_levelc_lowered_tree_shape_test(levelc_slice43_decimal_fraction_tree_shape
         rexx_src/levelc_slice43_decimal_fraction.rexx
         "STRING : .*1[.]5"
+        "RexxValue"
+        "add")
+add_levelc_lowered_tree_shape_test(levelc_slice44_exponent_tree_shape
+        rexx_src/levelc_slice44_exponent.rexx
+        "STRING : .*1E2"
         "RexxValue"
         "add")
 
