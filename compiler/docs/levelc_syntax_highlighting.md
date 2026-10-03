@@ -30,8 +30,10 @@ string/integer `RexxValue` literals, the current expression operator family,
 short-circuit `&` / `|`, `SAY`, selected Classic BIF call frames, local `CALL`,
 fixed `ARG`, value/void `RETURN`, and scalar/stem `PROCEDURE EXPOSE` shapes.
 The bounded control-flow slice also lowers `IF/THEN/ELSE` with a supported
-statement in each arm and exact logical-value validation. Grouped `DO`,
-`SELECT`, and other control forms still fail closed until individually proved.
+statement in each arm and exact logical-value validation. Simple `DO ... END`
+groups lower as one-shot blocks, including nesting and empty groups. Controlled
+and repetitive `DO`, `SELECT`, and other control forms still fail closed until
+individually proved.
 Unsupported Level C compile inputs still fail with the existing unsupported
 diagnostic.
 

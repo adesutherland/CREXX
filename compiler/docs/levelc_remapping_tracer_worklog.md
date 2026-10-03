@@ -62,6 +62,31 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 21 - Level C Simple DO Lowering Slice
+
+### Intent and accepted shape
+
+The Classic parser represents a simple group as `DO -> INSTRUCTIONS`, without
+a repetition header. The lowerer now accepts only that shape and validates
+every body statement recursively against the existing bounded main/procedure
+rules. It materialises the group with the shared canonical one-shot `DO 1`
+builder. Empty groups, nested groups, and groups on either side of an accepted
+`IF` retain their order and source anchors. Header-bearing repeat/control
+forms and unsupported body statements reject before rewriting.
+
+The initial fixture failed compilation before this stage with `unsupported
+main statement`. Regina and the compiled fixture now agree on its output.
+The nested fixture also proves an exposed pool update inside a procedure block.
+
+### Verification
+
+- Release focused slice-8 tests 8/8 and Level C suite 103/103; Debug Level C
+  suite 103/103. The focused tests include opt/no-opt execution, target-shape
+  and lowered-tree checks, and two unsupported-shape negatives.
+- The six-line nested fixture matched Regina, and its linked RXBIN ran through
+  `rxvm` with the same output. Log paths and remaining compatibility rows are
+  in the [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+
 ## Stage 20 - Level C IF/THEN/ELSE Lowering Slice
 
 ### Intent and accepted shape

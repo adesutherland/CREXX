@@ -1,0 +1,12 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+import rexxclassicbifs
+
+__rxcp_levelc_pool = .RexxVariablePool()
+say .RexxValue("before").asString()
+do 1
+  say .RexxValue("one").asString()
+  say .RexxValue("two").asString()
+end
+say .RexxValue("after").asString()

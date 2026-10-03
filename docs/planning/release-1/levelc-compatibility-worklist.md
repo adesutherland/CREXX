@@ -39,7 +39,7 @@ than redefining compatibility around the first slices.
   Classic reference output/error comparisons, positive and negative CTests,
   opt/no-opt runs, lowered-tree inspection, and `rxc`/`rxas`/`rxlink`/`rxvm`
   execution.
-- [ ] **LC-AC-03 — simple DO execution:** supported `DO ... END` executes its
+- [x] **LC-AC-03 — simple DO execution:** supported `DO ... END` executes its
   body once with correct statement order and nested `IF`/`DO` behavior;
   controlled/repetitive forms, `LEAVE`, and `ITERATE` remain open until their
   semantics are separately proved. Verify with Classic reference comparisons,
@@ -65,7 +65,7 @@ than redefining compatibility around the first slices.
    remap builder, preserving one condition evaluation and source anchors.
    Add focused positives, negatives, and reference/opt/no-opt/toolchain
    evidence. Commit only when the normal correctness gate passes.
-3. **LC-STEP-03 (LC-AC-03; depends on STEP-02):** add the simple `DO` shape
+3. **LC-STEP-03 — complete (LC-AC-03; depends on STEP-02):** add the simple `DO` shape
    and nested cases, retain fail-closed gates for loop variants, qualify as
    above, then commit separately.
 4. **LC-STEP-04 (LC-AC-01/04; depends on the approved matrix):** select and
@@ -97,7 +97,7 @@ has been approved in this worklist.
 | Expressions | precedence, arithmetic, comparisons, concatenation, prefix, short-circuit logic | Slice: `levelc_slice6_expressions` | Full numeric context, boundary/error and platform equivalence |
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write and scalar/stem EXPOSE | Remaining stem value, DROP, indirect/external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
-| Control | simple DO/END | Front end: parser fixtures; lowerer rejects | LC-STEP-03 |
+| Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
 | Control | controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Front end: parser/validation fixtures | Execution, exact loop semantics and errors |
 | Control | SELECT/WHEN/OTHERWISE, NOP | Front end: parser fixtures | Execution and condition errors |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
@@ -223,3 +223,22 @@ full compatibility proof.
   Regina accepts some padded/leading-zero spellings that the extracted Classic
   reference treats as invalid; those interpreter-specific cases are not used
   as conformance evidence for this slice.
+
+### LC-STEP-03 — simple DO, 2026-10-03
+
+- Regina and the compiled nested fixture both produced `before`, `nested`,
+  `2`, `2`, `arm`, `3` in order. The fixture covers body order, nesting,
+  `DO` in an `IF` arm, `IF` in a `DO` body, an empty group, and a local
+  procedure group. The canonical target is a one-shot `DO 1` block.
+- Release 8/8 focused slice-8 tests and 103/103 Level C suite; Debug 103/103
+  Level C suite. The focused cases include opt/no-opt, tree shape, a counted
+  `DO` rejection and an unsupported-body rejection. Retained logs:
+  `/tmp/crexx-levelc-do-focused.OA1FOA`,
+  `/tmp/crexx-levelc-do-release-suite.XnH4dK`,
+  `/tmp/crexx-levelc-do-debug-suite.Pju44v`.
+- Release `rxlink` of the compiled nested fixture ran through `rxvm` with
+  the same six output lines. Retained log:
+  `/tmp/crexx-levelc-do-link.gYjrFs`.
+- Controlled/repetitive `DO`, `WHILE`/`UNTIL`, `LEAVE`/`ITERATE` and their
+  state/condition behavior remain open. `LC-AC-01/04` and `R1-AC-01/02`
+  remain open; this increment does not establish full Classic compatibility.

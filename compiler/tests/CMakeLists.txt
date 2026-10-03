@@ -5203,6 +5203,11 @@ add_levelc_unsupported_compile_test(levelc_slice6_procedure_parse_unsupported
 add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
         rexx_src/levelc_slice7_if_unsupported_branch.rexx)
 
+add_levelc_unsupported_compile_test(levelc_slice8_controlled_do_unsupported
+        rexx_src/levelc_slice8_controlled_do_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
+        rexx_src/levelc_slice8_body_unsupported.rexx)
+
 function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
@@ -5455,6 +5460,22 @@ add_levelc_runtime_slice_test(levelc_slice7_if_nested_noopt
         rexx_src/levelc_slice7_if_nested.rexx
         "true\nfalse\nnested\nafter\nonce\n1\n1\n" -n)
 
+add_levelc_runtime_slice_test(levelc_slice8_do_block_target_shape
+        rexx_src/levelc_slice8_do_block_target_shape.crexx
+        "before\none\ntwo\nafter\n")
+add_levelc_runtime_slice_test(levelc_slice8_do_block
+        rexx_src/levelc_slice8_do_block.rexx
+        "before\none\ntwo\nafter\n")
+add_levelc_runtime_slice_test(levelc_slice8_do_block_noopt
+        rexx_src/levelc_slice8_do_block.rexx
+        "before\none\ntwo\nafter\n" -n)
+add_levelc_runtime_slice_test(levelc_slice8_do_nested
+        rexx_src/levelc_slice8_do_nested.rexx
+        "before\nnested\n2\n2\narm\n3\n")
+add_levelc_runtime_slice_test(levelc_slice8_do_nested_noopt
+        rexx_src/levelc_slice8_do_nested.rexx
+        "before\nnested\n2\n2\narm\n3\n" -n)
+
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}
@@ -5553,6 +5574,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice7_if_else_tree_shape
         "IF"
         "DO"
         "RexxVariablePool")
+
+add_levelc_lowered_tree_shape_test(levelc_slice8_do_block_tree_shape
+        rexx_src/levelc_slice8_do_block.rexx
+        "DO"
+        "REPEAT"
+        "FOR"
+        "RexxValue")
 
 # Bridge Connectivity Test
 add_custom_command(

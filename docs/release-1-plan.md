@@ -192,12 +192,11 @@ an expired weekly schedule does not satisfy them.
   record missing rows and proposed exceptions separately. Define the requested
   polymorphism delta beyond the existing interface dispatch before designing
   inheritance, overloads or generics. This serves R1-AC-01/02.
-- [ ] **WEEK-AC-04 — first Beta 4 increment:** select and, after its normal
+- [x] **WEEK-AC-04 — first Beta 4 increment:** select and, after its normal
   implementation-plan gate, complete one bounded Level C control-flow slice.
-  Bounded IF/THEN/ELSE is implemented; simple DO remains the next form.
-  The AST remap framework has relevant builders. Retain Classic
-  reference equivalence, nesting/negative controls, optimized/no-opt and
-  toolchain execution evidence. Do not claim this slice completes Level C.
+  Bounded IF/THEN/ELSE and simple DO are implemented and qualified with
+  Classic reference, nesting/negative controls, optimized/no-opt and
+  toolchain execution evidence. This slice does not complete Level C.
 - [ ] **WEEK-AC-05 — useful parallel asset:** select one existing-capability
   LLM/tool workflow and retain a reproducible setup/demo with expected results
   and optional-provider requirements. Reuse the current common LLM API where
@@ -208,8 +207,10 @@ an expired weekly schedule does not satisfy them.
    packaging/signing and exact-candidate evidence in the formal candidate plan.
 2. **WEEK-STEP-02 — open where unmet** (AC-02/03): finish required product
    definitions and the complete Level C gap/exception and polymorphism matrices.
-3. **WEEK-STEP-03 — open** (AC-03/04): select the bounded control-flow increment
-   after the normal implementation-plan gate; use develop after the beta 3 cut.
+3. **WEEK-STEP-03 — control-flow increment complete; matrix open** (AC-03/04):
+   select the bounded control-flow increment after the normal implementation
+   plan gate; use develop after the beta 3 cut. Its evidence is in the Level C
+   compatibility worklist; the wider AC-03 matrix remains open.
 4. **WEEK-STEP-04 — open** (AC-05): select and qualify the useful existing-capability
    application workflow, feeding concrete defects back into the appropriate track.
 5. **WEEK-STEP-05 — ongoing where unmet** (AC-02): reconcile the named candidate,

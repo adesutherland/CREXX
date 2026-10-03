@@ -9,8 +9,8 @@
  *
  * The active tracer slices deliberately accept only proven shapes: direct
  * scalar and compound pool reads/writes, string and integer literals, proven
- * expression operators, SAY, nested IF branches, and local PROCEDURE EXPOSE
- * over direct scalar or stem names.
+ * expression operators, SAY, nested IF and simple DO blocks, and local
+ * PROCEDURE EXPOSE over direct scalar or stem names.
  * Everything else reports an unsupported-shape diagnostic until its lowering
  * and runtime contract are implemented.
  */
@@ -905,6 +905,34 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
                                            LevelCLowerPlan *plan,
                                            const char **reason_out);
 
+static int levelc_simple_do_supported(ASTNode *stmt,
+                                      LevelCLowerPlan *plan,
+                                      int in_procedure,
+                                      const char **reason_out) {
+    ASTNode *body = stmt ? stmt->child : NULL;
+    ASTNode *body_statement;
+
+    if (!body || body->node_type != INSTRUCTIONS || body->sibling) {
+        if (reason_out) *reason_out = "unsupported DO header";
+        return 0;
+    }
+
+    body_statement = body->child;
+    while (body_statement) {
+        if (in_procedure) {
+            if (body_statement->node_type == LEVELC_ARG) {
+                if (reason_out) *reason_out = "ARG must be first in procedure slice";
+                return 0;
+            }
+            if (!levelc_proc_statement_supported(body_statement, plan, reason_out)) return 0;
+        } else if (!levelc_main_statement_supported(body_statement, plan, reason_out)) {
+            return 0;
+        }
+        body_statement = body_statement->sibling;
+    }
+    return 1;
+}
+
 static int levelc_if_statement_supported(ASTNode *stmt,
                                          LevelCLowerPlan *plan,
                                          int in_procedure,
@@ -937,6 +965,7 @@ static int levelc_main_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS) return 1;
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 0, reason_out);
+    if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 0, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
 
     if (stmt->node_type == CALL) {
@@ -961,6 +990,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, NULL, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 1, reason_out);
+    if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 1, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
     if (stmt->node_type == RETURN) {
         if (stmt->child) return levelc_expr_supported(stmt->child, plan, reason_out);
@@ -2260,6 +2290,13 @@ static int levelc_lower_if_statement(Context *context,
                                     LevelCProcedureSlice *procedure,
                                     int in_procedure,
                                     const char **reason_out);
+static int levelc_lower_simple_do(Context *context,
+                                  ASTNode *instructions,
+                                  ASTNode *stmt,
+                                  LevelCLowerPlan *plan,
+                                  LevelCProcedureSlice *procedure,
+                                  int in_procedure,
+                                  const char **reason_out);
 
 static int levelc_lower_main_statement(Context *context,
                                        ASTNode *instructions,
@@ -2272,6 +2309,9 @@ static int levelc_lower_main_statement(Context *context,
     if (!stmt) return 1;
     if (stmt->node_type == IF) {
         return levelc_lower_if_statement(context, instructions, stmt, plan, NULL, 0, reason_out);
+    }
+    if (stmt->node_type == DO) {
+        return levelc_lower_simple_do(context, instructions, stmt, plan, NULL, 0, reason_out);
     }
 
     prelude = rxcp_remap_create_instruction_builder(context, stmt);
@@ -2318,6 +2358,10 @@ static int levelc_lower_proc_statement(Context *context,
     if (stmt->node_type == IF) {
         return levelc_lower_if_statement(context, instructions, stmt, plan,
                                         procedure, 1, reason_out);
+    }
+    if (stmt->node_type == DO) {
+        return levelc_lower_simple_do(context, instructions, stmt, plan,
+                                      procedure, 1, reason_out);
     }
 
     prelude = rxcp_remap_create_instruction_builder(context, stmt);
@@ -2397,6 +2441,38 @@ static int levelc_lower_if_statement(Context *context,
 
 fail:
     if (reason_out) *reason_out = "failed to lower supported Level C IF";
+    return 0;
+}
+
+static int levelc_lower_simple_do(Context *context,
+                                  ASTNode *instructions,
+                                  ASTNode *stmt,
+                                  LevelCLowerPlan *plan,
+                                  LevelCProcedureSlice *procedure,
+                                  int in_procedure,
+                                  const char **reason_out) {
+    ASTNode *body = stmt->child;
+    ASTNode *body_statement = body->child;
+    ASTNode *lowered_body = rxcp_remap_create_instruction_builder(context, stmt);
+    ASTNode *lowered;
+
+    if (!lowered_body) goto fail;
+    while (body_statement) {
+        if (in_procedure) {
+            if (!levelc_lower_proc_statement(context, lowered_body, body_statement,
+                                            plan, procedure, reason_out)) return 0;
+        } else if (!levelc_lower_main_statement(context, lowered_body, body_statement,
+                                                plan, reason_out)) return 0;
+        body_statement = body_statement->sibling;
+    }
+
+    lowered = rxcp_remap_create_do_block(context, stmt, lowered_body);
+    if (!lowered) goto fail;
+    add_ast(instructions, lowered);
+    return 1;
+
+fail:
+    if (reason_out) *reason_out = "failed to lower supported Level C DO";
     return 0;
 }
 
