@@ -391,6 +391,15 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   patterns remain guarded. Verify Regina across leading/repeated/trailing
   blanks, short input, aliases, opt/no-opt, canonical tree, shared-method
   behavior and linked execution, then commit separately.
+- [x] **LC-AC-41 — abutted expression concatenation:** when adjacent Classic
+  expression terms touch in the source, the parser emits abuttal `OP_CONCAT`
+  rather than blank `OP_SCONCAT`, including literal/symbol chains and
+  parenthesized or call terms whose punctuation is outside their operand AST.
+  Comment-only gaps act as abuttal, while spaced terms remain `OP_SCONCAT`;
+  explicit `||` retains its existing path.
+  Verify minimal Regina counterexamples, raw and lowered AST, opt/no-opt,
+  parser/highlighter checks, the normal Level C suite and linked execution.
+  This closes `LC-FIND-04`; broader expression conformance remains open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -683,6 +692,14 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     method and write each result through the visible pool in authored order.
     Reuse shared TRANSLATE for optional UPPER. Prove reference, shared runtime,
     canonical AST, opt/no-opt and linked behavior before the separate commit.
+44. **LC-STEP-44 — complete (LC-AC-08/41; depends on STEP-43):** infer the missing
+    concatenation operator from the physical token span between the last
+    represented token of the left AST and the first represented token of the
+    right AST. Include intervening parentheses and call punctuation in the
+    touch check, and apply it to the three Level C implicit-concatenation
+    grammar paths. Preserve the explicit operator and spaced cases, prove
+    Regina and canonical runtime equivalence, then commit this parser/AST
+    correction separately.
 
 ## Findings
 
@@ -706,13 +723,24 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   shared TRANSLATE before binding the callee pool target. Reproducer output:
   `/tmp/crexx-levelc-adjacent-call-regina-output.qX60V2` and
   `/tmp/crexx-levelc-adjacent-call-toolchain.17jBQE`.
-- **LC-FIND-04 — open, abutted expression terms gain spaces:** the independent
+- **LC-FIND-04 — resolved, abutted expression terms gained spaces:** the independent
   minimal `options levelc; item='a'; say '['item']'` prints `[ a ]`, while
   Regina prints `[a]`. This is the expression/parser adjacency path, separate
   from the three-target PARSE split. Its reproducer is
   `/tmp/crexx-levelc-parse-three-probe.OKSy14/concat.rexx` with paired
-  `concat-regina.out` and `concat-crexx.out`. `LC-AC-08/04` retain it; a
-  later parser/AST increment must preserve abutted concatenation.
+  `concat-regina.out` and `concat-crexx.out`. `LC-STEP-44` now selects
+  `OP_CONCAT` for physically adjacent terms and `OP_SCONCAT` for spaced terms.
+  The new fixture covers groups, calls, comment-only gaps and PARSE VALUE.
+- **LC-FIND-05 — open, decimal constants split at the dot:** the current
+  Level C scanner emits integer, dot and integer tokens for `1.5`; the
+  expression parser can lose the dot. Before `LC-STEP-44`, blank concatenation
+  made the existing `DO ... FOR 1.5` invalid-value test pass; unrestricted
+  abuttal briefly turned it into `15`. The parser now refuses to infer
+  abuttal across an omitted dot, preserving the invalid-value result. Proper
+  decimal constant tokenization and reference behavior remain separate work
+  under `LC-AC-04/08`. Reproducer:
+  `compiler/tests/rexx_src/levelc_slice35_dynamic_for_fraction.rexx` and
+  `/tmp/crexx-levelc-abuttal-fraction-tree.pGPSc7`.
 
 ## AST structural crosswalk and closure order
 
@@ -1839,6 +1867,19 @@ full compatibility proof.
   `/tmp/crexx-levelc-parse-three-fixture.46Rrly/regina.out`,
   `/tmp/crexx-levelc-parse-three-fixture.46Rrly/linked.out`, and
   `/tmp/crexx-levelc-parse-three-linked.xPkP8j`.
+- Adjacent Classic terms now select the existing `OP_CONCAT` AST node; spaced
+  terms retain `OP_SCONCAT`. The parser checks token gaps across group and
+  call punctuation and comment-only gaps, while refusing to infer abuttal
+  across an omitted dot. The raw tree shows both implicit nodes and the
+  explicit `||` node; the lowered tree uses the canonical expression path.
+  Regina and linked RXBIN output match byte for byte, including PARSE VALUE
+  expressions. Release Level C passed 252/252, Debug focused 8/8, and the
+  decimal FOR rejection remained green. Evidence:
+  `/tmp/crexx-levelc-abuttal-release-suite.ClLyo4`,
+  `/tmp/crexx-levelc-abuttal-debug-build.hrdpMk`,
+  `/tmp/crexx-levelc-abuttal-debug-tests.AN4Zv6`,
+  `/tmp/crexx-levelc-abuttal-tree.oD0XbH`, and
+  `/tmp/crexx-levelc-abuttal-linked.gCu88S`.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.

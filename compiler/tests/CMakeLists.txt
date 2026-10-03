@@ -5722,6 +5722,12 @@ add_levelc_runtime_slice_test(levelc_slice41_parse_three
 add_levelc_runtime_slice_test(levelc_slice41_parse_three_noopt
         rexx_src/levelc_slice41_parse_three.rexx
         "a|b|  c  |  a  b   c  \na||\n  c  |\nleft|right|tail here\nx|y|z  q|1\nA|B|  C |\nlocal a|b|  c \n" -n)
+add_levelc_runtime_slice_test(levelc_slice42_abuttal
+        rexx_src/levelc_slice42_abuttal.rexx
+        "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n")
+add_levelc_runtime_slice_test(levelc_slice42_abuttal_noopt
+        rexx_src/levelc_slice42_abuttal.rexx
+        "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -6156,6 +6162,11 @@ add_levelc_lowered_tree_shape_test(levelc_slice41_parse_three_tree_shape
         "__rxcp_levelc_parse_fields_"
         "setValue"
         "rexxclassicbif_translate")
+add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
+        rexx_src/levelc_slice42_abuttal.rexx
+        "concat"
+        "spaceConcat"
+        "rexxclassicbif_length")
 
 # Bridge Connectivity Test
 add_custom_command(

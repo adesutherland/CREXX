@@ -29,8 +29,10 @@
 %include {
 #include <assert.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "rxcpbgmr.h"
 #include "rxcpmain.h"
 
 static char *levelc_diag_token_text(Token *token) {
@@ -50,6 +52,92 @@ static char *levelc_diag_line_text(Token *token) {
 static int levelc_tokens_touch(Token *left, Token *right) {
     return left && right && left->line == right->line &&
            left->column + left->length == right->column;
+}
+
+static int levelc_tokens_touch_ignoring_comments(Context *context,
+                                                 Token *left,
+                                                 Token *right) {
+    const char *cursor;
+    const char *end;
+    uintptr_t source_start, source_end, left_start, right_start;
+
+    if (levelc_tokens_touch(left, right)) return 1;
+    if (!context || !left || !right || left->line != right->line ||
+        !context->buff_start || !context->buff_end ||
+        !left->token_string || !right->token_string || left->length < 0) return 0;
+    source_start = (uintptr_t)context->buff_start;
+    source_end = (uintptr_t)context->buff_end;
+    left_start = (uintptr_t)left->token_string;
+    right_start = (uintptr_t)right->token_string;
+    if (left_start < source_start || left_start > source_end ||
+        right_start < source_start || right_start > source_end ||
+        (uintptr_t)left->length > source_end - left_start ||
+        left_start + (uintptr_t)left->length >= right_start) return 0;
+    cursor = left->token_string + left->length;
+    end = right->token_string;
+
+    while (cursor < end) {
+        int depth = 0;
+        if (end - cursor < 2 || cursor[0] != '/' || cursor[1] != '*') return 0;
+        cursor += 2;
+        depth = 1;
+        while (cursor < end && depth > 0) {
+            if (end - cursor >= 2 && cursor[0] == '/' && cursor[1] == '*') {
+                depth++;
+                cursor += 2;
+            } else if (end - cursor >= 2 && cursor[0] == '*' && cursor[1] == '/') {
+                depth--;
+                cursor += 2;
+            } else cursor++;
+        }
+        if (depth != 0) return 0;
+    }
+    return 1;
+}
+
+static Token *levelc_expression_edge_token(ASTNode *node, int last) {
+    ASTNode *child;
+    Token *edge;
+
+    if (!node) return NULL;
+    edge = node->token;
+    for (child = node->child; child; child = child->sibling) {
+        Token *candidate = levelc_expression_edge_token(child, last);
+        if (candidate && (!edge ||
+            (last ? candidate->token_number > edge->token_number
+                  : candidate->token_number < edge->token_number)))
+            edge = candidate;
+    }
+    return edge;
+}
+
+static ASTNode *levelc_implicit_concat(Context *context, ASTNode *left, ASTNode *right) {
+    Token *start = levelc_expression_edge_token(left, 1);
+    Token *cursor = start;
+    Token *end = levelc_expression_edge_token(right, 0);
+    int abutted = cursor && end && cursor->token_number < end->token_number;
+    ASTNode *node;
+
+    while (abutted && cursor != end) {
+        if (cursor != start &&
+            cursor->token_type != TK_OPEN_BRACKET &&
+            cursor->token_type != TK_CLOSE_BRACKET) {
+            abutted = 0;
+            break;
+        }
+        if (!cursor->token_next ||
+            !levelc_tokens_touch_ignoring_comments(context, cursor, cursor->token_next)) {
+            abutted = 0;
+            break;
+        }
+        cursor = cursor->token_next;
+        if (cursor->token_number > end->token_number) abutted = 0;
+    }
+
+    node = ast_ft(context, abutted ? OP_CONCAT : OP_SCONCAT);
+    add_ast(node, left);
+    add_ast(node, right);
+    return node;
 }
 
 static ASTNode *levelc_continuation_call_or_concat(Context *context,
@@ -2691,9 +2779,7 @@ command_concat_expr(E) ::= command_concat_expr(L) CTK_CONCAT(T) missing_expressi
 
 command_concat_expr(E) ::= command_concat_expr(L) addition_c(R).
 {
-    E = ast_ft(context, OP_SCONCAT);
-    add_ast(E, L);
-    add_ast(E, R);
+    E = levelc_implicit_concat(context, L, R);
 }
 
 command_comparison(E) ::= command_concat_expr(P).
@@ -3268,9 +3354,7 @@ concat_expr_c(E) ::= concat_expr_c(L) CTK_CONCAT(T) addition_c(R).
 
 concat_expr_c(E) ::= concat_expr_c(L) addition_c(R).
 {
-    E = ast_ft(context, OP_SCONCAT);
-    add_ast(E, L);
-    add_ast(E, R);
+    E = levelc_implicit_concat(context, L, R);
 }
 
 comparison_c(E) ::= concat_expr_c(P).
@@ -3422,9 +3506,7 @@ concat_expr(E) ::= concat_expr(L) CTK_CONCAT(T) missing_expression_rhs.
 
 concat_expr(E) ::= concat_expr(L) addition_c(R).
 {
-    E = ast_ft(context, OP_SCONCAT);
-    add_ast(E, L);
-    add_ast(E, R);
+    E = levelc_implicit_concat(context, L, R);
 }
 
 comparison(E) ::= concat_expr(P).

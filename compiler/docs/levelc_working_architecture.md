@@ -236,6 +236,15 @@ positions to distinguish adjacent `name(`, emitted as the existing source
 `FUNCTION` node, from `name (` with a blank, emitted as a symbol followed by
 a parenthesized value under `OP_SCONCAT`. Both then use the existing canonical
 expression and call lowering; no emitter-specific node is added.
+For all three implicit-concatenation grammar paths, the parser now examines
+the physical source gaps along the token chain between the AST operands.
+Touching tokens, including a gap containing only nested comments, produce
+the existing `OP_CONCAT`; whitespace produces `OP_SCONCAT`. The chain check
+allows parentheses omitted from a grouped or call operand's AST but does not
+infer abuttal across other omitted punctuation. This matters for the current
+scanner's `1.5` split into integer, dot and integer tokens: the dot must not
+be silently lost while deciding abuttal. Decimal constant tokenization is
+still an open scanner/parser compatibility item.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission. The existing WHILE, BLOCK_EXPR and
 LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL
