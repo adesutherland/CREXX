@@ -10,6 +10,7 @@
 #include "rxcp_ctx.h"
 
 const char *rxcp_levelc_compile_unsupported_message(void);
+int rxcp_levelc_verify_lowered_tree(ASTNode *root, const char **reason_out);
 int rxcp_levelc_lower_to_canonical(Context *context, const char **reason_out);
 
 #endif

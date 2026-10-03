@@ -62,6 +62,27 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 24 - Level C AST Boundary And Structural Crosswalk
+
+### Intent and accepted shape
+
+Adrian prioritized AST tree manipulation closure before broad BIF and host
+expansion. The existing Level C worklist now records a parser-to-lowering
+crosswalk and orders `SELECT/WHEN/OTHERWISE` next. A production boundary walk
+after accepted lowering rejects missing roots, sibling cycles, inconsistent
+parent ownership and residual `LEVELC_*` instructions before canonical passes.
+It is a guard, not a claim that every Classic structural family is complete.
+
+### Verification
+
+- Release `rxc` and the new direct boundary unit test built successfully;
+  the unit test exercises valid, malformed and restored trees.
+- Nested Level C tree-shape tests passed 8/8, and the selected Level C suite
+  passed 111/111 before the unit-test wiring; a `STAGE_LEVELC_LOWERED` debug
+  probe showed no AST validation error. The updated final tree was rechecked
+  with the direct unit test and selected suite. Retained log paths are in the
+  [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+
 ## Stage 23 - Level C Scalar Pool Read And DROP Slice
 
 ### Intent and accepted shape

@@ -28,6 +28,9 @@ The first delivery increments are a coverage inventory, then executable
 `IF/THEN/ELSE`, then simple `DO ... END`. They do not complete the Beta 4
 contract. Later increments are selected from the open coverage rows rather
 than redefining compatibility around the first slices.
+Adrian prioritized closing the high-risk AST tree-manipulation path early on
+2026-10-03. Structural lowering and its invariant evidence now precede broad
+BIF and host-service expansion; the full compatibility contract is unchanged.
 
 ## Acceptance criteria
 
@@ -62,6 +65,15 @@ than redefining compatibility around the first slices.
   Level C visible-pool behavior, and configuration/profile boundaries with
   focused cross-consumer integration evidence. RexxScript's string-oriented
   evaluator and allow-list remain product-specific.
+- [ ] **LC-AC-08 — AST lowering closure:** every parsed Level C instruction,
+  expression and program-structure shape is explicitly mapped to canonical
+  lowering, a source-level diagnostic, or a visibly open feature row. Accepted
+  rewrites preserve parent/sibling ownership, generated scope and symbol
+  validity, evaluation order, source anchors, and opt/no-opt behavior, with no
+  Level C-only nodes surviving the lowering boundary. Verify with a parser-node
+  crosswalk, structural validation, nested target-tree probes, focused runtime
+  equivalence and the normal compiler suite. Keep this criterion open until
+  the structural shape families are closed; a first verifier is only a gate.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -112,13 +124,64 @@ than redefining compatibility around the first slices.
 8. **LC-STEP-08 (LC-AC-06; depends on STEP-07):** qualify overlapping BIFs and
    pool operations in reviewable cross-consumer increments. Use the shared
    `rxfnsc` implementation, test both adapters and isolation, and commit each
-   qualified increment. Keep any observed behavior gap visibly open.
+   qualified increment. Keep any observed behavior gap visibly open. Prioritize
+   AST closure steps before broad BIF or host expansion.
 9. **LC-STEP-09 — complete (LC-AC-07; serves LC-AC-06; depends on STEP-07):** retain the
    Regina and compiled reproducer for an unset scalar read; use the shared
    pool's `symbolValue()` for scalar reads and lower guarded direct scalar
    `DROP` through that pool. Compare main/procedure/IF/DO cases and unsupported
    forms with the Classic reference, then run focused and normal regressions
    before committing this separate increment.
+10. **LC-STEP-10 — complete (LC-AC-08; depends on STEP-09):** inventory parser-emitted
+    structural node families and their lowering disposition. Add a production
+    boundary check that rejects invalid parent/sibling ownership or surviving
+    Level C-only nodes before canonical validation; exercise it on nested
+    accepted shapes and retain debug tree evidence. Commit the verifier and
+    crosswalk as one reviewable increment.
+11. **LC-STEP-11 (LC-AC-08/04; depends on STEP-10):** open the next Classic
+    control-flow tree shape, starting with `SELECT/WHEN/OTHERWISE`, only after
+    confirming its parsed AST and reference condition behavior. Prove branch
+    order, nested arms, source anchors, opt/no-opt and missing-match behavior;
+    keep unproved forms fail-closed. Commit separately.
+12. **LC-STEP-12 (LC-AC-08/04; depends on STEP-11):** continue structural
+    families such as repetitive/controlled `DO`, `LEAVE`/`ITERATE`, routine
+    boundaries, PARSE templates and condition branches in risk-sized commits.
+    Close `LC-AC-08` only after the full parser-node crosswalk and structural
+    invariants are evidenced; a runtime or host dependency remains an open
+    criterion rather than an implicit exclusion.
+
+## AST structural crosswalk and closure order
+
+This crosswalk is grounded in `compiler/rxcpcgmr.y`'s `program`,
+`instruction`, `simple_instruction`, control-flow, and expression productions,
+the `NodeType` catalogue, and the guards in `rxcp_levelc_lower.c`. **Slice**
+means an accepted subset with executable evidence; **open** means the parser
+may emit the shape but the lowerer rejects it, or runtime proof is incomplete.
+Parser recovery `ERROR`/`WARNING` nodes remain source diagnostics and never
+enter accepted lowering. A generic node name shared with Level B does not by
+itself make its Classic shape executable.
+
+| Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
+| --- | --- | --- |
+| Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and direct scalar DROP | Wider statement operands, stem/compound/indirect DROP and exit/return lifecycle remain open |
+| `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, lazy logical branches, bounded BIF/local calls | More expression shapes, exact evaluation order, numeric context and missing-argument behavior remain open |
+| `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
+| `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Open: parser emits the nested list; no accepted lowering yet | Next: ordered condition evaluation, single selected arm, missing match `7.3`, nested branches |
+| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Open: only child-list-only `DO` is accepted | Loop header ownership, mutation/evaluation order, control transfer and scope |
+| `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
+| `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
+| `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
+| `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | Open: parser/front end only | Context changes, dynamic code, signal transfer, trace and error identity |
+
+The production post-lowering boundary verifier walks every accepted node,
+rejects a missing root, sibling cycle, mismatched parent pointer, or surviving
+`LEVELC_*` instruction node before normal canonical validation. Its direct
+negative unit test proves each rejection path; accepted nested fixtures and
+the `STAGE_LEVELC_LOWERED` debug probe cover generated output. This gate does
+not yet prove generated scope/symbol correctness, source anchors, evaluation
+order, or completeness of accepted structural families. Those remain open in
+`LC-AC-08` and are tackled in `LC-STEP-11/12` and later structural increments.
 
 ## Coverage matrix
 
@@ -386,3 +449,26 @@ full compatibility proof.
 - Compound/stem reads and `DROP` variants, NOVALUE trap delivery, BYTE/UTF8
   profiles and complete cross-consumer semantics remain open under
   `LC-AC-01/04/06`.
+
+### LC-STEP-10 — AST boundary and structural crosswalk, 2026-10-03
+
+- The crosswalk above maps the parser's structural families to accepted slices
+  and open lowering obligations. It keeps `SELECT`, controlled DO, PARSE,
+  condition branches, and host/queue shapes visible for early AST closure.
+- Accepted lowering now checks the active tree for missing root, wrong parent,
+  sibling cycles and residual `LEVELC_*` nodes before canonical passes. The
+  direct unit test rejects each malformed case and accepts the restored tree.
+- Release `rxc` and unit-test build passed. The earlier nested/tree-shape
+  focused set passed 8/8, the selected Level C suite passed 111/111, and a
+  redirected `rxc -d2` probe found `STAGE_LEVELC_LOWERED` without AST errors.
+  After the final unit-test wiring, `levelc_*` tests passed 61/61, including
+  the direct negative unit. Retained logs:
+  `/tmp/crexx-levelc-tree-build.cVVuMD`,
+  `/tmp/crexx-levelc-tree-focused.ywIWWn`,
+  `/tmp/crexx-levelc-tree-debug.8M7ww7`,
+  `/tmp/crexx-levelc-tree-suite.awW5rx`,
+  `/tmp/crexx-levelc-tree-build-confirm.q84koC`,
+  `/tmp/crexx-levelc-tree-final-suite.aHpaIM`.
+- `LC-AC-08` remains open: the verifier is a boundary invariant, while
+  generated scope/symbols, evaluation order, source anchors and the remaining
+  parser families still need implementation and evidence.

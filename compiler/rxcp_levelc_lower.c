@@ -81,6 +81,62 @@ static int levelc_node_has_diagnostic(ASTNode *node) {
     return 0;
 }
 
+static int levelc_node_is_source_only(NodeType type) {
+    switch (type) {
+        case LEVELC_ADDRESS:
+        case LEVELC_ARG:
+        case LEVELC_DROP:
+        case LEVELC_INTERPRET:
+        case LEVELC_NUMERIC:
+        case LEVELC_PROCEDURE:
+        case LEVELC_PUSH:
+        case LEVELC_QUEUE:
+        case LEVELC_SIGNAL:
+        case LEVELC_TRACE:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int levelc_verify_lowered_chain(ASTNode *node,
+                                       ASTNode *expected_parent,
+                                       const char **reason_out) {
+    ASTNode *slow = node;
+    ASTNode *fast = node;
+
+    while (fast && fast->sibling) {
+        slow = slow->sibling;
+        fast = fast->sibling->sibling;
+        if (slow == fast) {
+            if (reason_out) *reason_out = "lowered tree has a sibling cycle";
+            return 0;
+        }
+    }
+
+    while (node) {
+        if (node->parent != expected_parent) {
+            if (reason_out) *reason_out = "lowered tree has inconsistent parent ownership";
+            return 0;
+        }
+        if (levelc_node_is_source_only(node->node_type)) {
+            if (reason_out) *reason_out = "lowered tree retains a Level C-only node";
+            return 0;
+        }
+        if (!levelc_verify_lowered_chain(node->child, node, reason_out)) return 0;
+        node = node->sibling;
+    }
+    return 1;
+}
+
+int rxcp_levelc_verify_lowered_tree(ASTNode *root, const char **reason_out) {
+    if (!root) {
+        if (reason_out) *reason_out = "lowered tree has no root";
+        return 0;
+    }
+    return levelc_verify_lowered_chain(root, NULL, reason_out);
+}
+
 static ASTNode *levelc_program_file(Context *context) {
     ASTNode *root;
 
@@ -2696,5 +2752,6 @@ int rxcp_levelc_lower_to_canonical(Context *context, const char **reason_out) {
     }
     result = levelc_rewrite_program(context, program_file, instructions, &plan, reason_out);
     levelc_lower_plan_free(&plan);
+    if (result) result = rxcp_levelc_verify_lowered_tree(context->ast, reason_out);
     return result;
 }

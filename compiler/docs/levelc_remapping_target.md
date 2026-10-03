@@ -98,9 +98,9 @@ import rexxpool
 __lc_pool = .RexxVariablePool()
 
 call __lc_pool.setValue("A", .RexxValue("1"))
-__lc_tmp = __lc_pool.value("A").add(.RexxValue("2"))
+__lc_tmp = __lc_pool.symbolValue("A").add(.RexxValue("2"))
 call __lc_pool.setValue("B", __lc_tmp)
-say __lc_pool.value("B").asString()
+say __lc_pool.symbolValue("B").asString()
 ```
 
 Important consequences:
@@ -427,7 +427,7 @@ rule levelc.variable.read
 phase levelc.pool-lower
 match Classic direct variable reference $name
 guard not assignment target
-build __lc_pool.value(normalizeName($name))
+build __lc_pool.symbolValue(normalizeName($name))
 effects reads variable-pool
 ```
 
@@ -897,7 +897,7 @@ with `rexcpars(context)`, prepares the Level C source tree and diagnostics,
 then attempts the fail-closed remap. Accepted programs are rewritten to a
 Level B-shaped work tree that imports `rexxvalue` and `rexxpool`, creates a
 hidden `RexxVariablePool`, lowers scalar assignments to `setValue`, lowers
-scalar reads to `value`, lowers literals to `RexxValue`, lowers proven Classic
+scalar reads to `symbolValue`, lowers literals to `RexxValue`, lowers proven Classic
 expression operators through named `RexxValue` helpers, lowers `SAY` through
 `asString`, and lowers the first local `CALL` plus `PROCEDURE EXPOSE` shape by
 passing a parent pool reference into a generated helper procedure. Arithmetic,
@@ -929,6 +929,11 @@ procedure pool, and uses `.RexxValue` return types only for routines with
 tails; expression-position local calls such as `x = f(a,b)` are supported when
 the callee has a value return.
 Rejected programs keep the existing unsupported Level C compilation diagnostic.
+Accepted trees pass a production boundary walk before canonical validation:
+every child and sibling must have the expected parent, sibling chains must be
+acyclic, and no `LEVELC_*` instruction node may remain. The direct negative
+unit test and structural closure order are tracked in the
+[Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
 
 The BIF proof layer is now `RexxValue`-native. `RexxBifCallContext` carries
 `RexxValue` argument slots plus a separate provided-argument mask, and

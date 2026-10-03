@@ -5901,6 +5901,20 @@ target_include_directories(test_source_provenance PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
         ${CMAKE_SOURCE_DIR}/binutils/include)
 
+add_executable(test_levelc_tree_boundary src/test_levelc_tree_boundary.c)
+target_link_libraries(test_levelc_tree_boundary PRIVATE rxclib)
+target_include_directories(test_levelc_tree_boundary PRIVATE
+        ${CMAKE_SOURCE_DIR}/compiler
+        ${CMAKE_BINARY_DIR}/compiler
+        ${CMAKE_SOURCE_DIR}/assembler
+        ${CMAKE_SOURCE_DIR}/avl_tree
+        ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/rxpa
+        ${CMAKE_SOURCE_DIR}/interpreter
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
+        ${CMAKE_SOURCE_DIR}/binutils/include)
+
 if (ENABLE_PARSER_MODE)
     add_executable(test_highlight_cache src/test_highlight_cache.c)
     target_link_libraries(test_highlight_cache PRIVATE rxclib DSLSH::editor)
@@ -6020,6 +6034,8 @@ set_tests_properties(crexxsaa_status PROPERTIES
         ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_BINARY_DIR}/bin")
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
+add_test(NAME levelc_tree_boundary COMMAND test_levelc_tree_boundary)
+set_tests_properties(levelc_tree_boundary PROPERTIES LABELS "compiler;stage2;levelc")
 
 add_test(NAME rxc_srcmap
         COMMAND ${CMAKE_COMMAND}
@@ -6302,14 +6318,14 @@ crexx_register_test_prep_targets(
             dynamic_load
             crexxsaa_variables
             crexxsaa_status
-            source_provenance
+            source_provenance levelc_tree_boundary
         TARGETS
             test_address_bridge
             test_address_callback_host
             test_dynamic_load
             test_crexxsaa_variables
             test_crexxsaa_status
-            test_source_provenance)
+            test_source_provenance test_levelc_tree_boundary)
 if(ENABLE_PARSER_MODE)
     crexx_register_test_prep_targets(
             TESTS rxc_help_syntaxhighlight syntaxhighlight_trace_keywords
