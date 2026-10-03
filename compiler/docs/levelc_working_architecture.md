@@ -108,6 +108,14 @@ which the second-word result of `parsewords3` alone would discard. Both
 results are captured before any target assignment, so source aliases and
 repeated targets follow the reference write order. The broader binary/UTF8
 configuration proof remains open.
+The four-item template `first second third .` is the next bounded shape.
+Shared `RexxValue.parseThreeWordsDrop()` wraps the existing `parsewords3d`
+VM instruction and returns the first three words. The final dot discards the
+remaining source and never becomes a pool target. Level C validates that dot
+only in the final position, captures all three results before ordered pool
+writes, and uses the same optional shared TRANSLATE step. This still lowers
+through existing canonical array and call nodes; other dot placements remain
+guarded.
 
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and

@@ -1394,6 +1394,7 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
     size_t target_count;
     int upper = 0;
     int is_value = 0;
+    int final_drop = 0;
 
     if (!stmt || stmt->node_type != PARSE) return 0;
     source = stmt->child;
@@ -1434,14 +1435,17 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
     for (cursor = target; cursor; cursor = cursor->sibling) {
         if (cursor->node_type != TARGET || cursor->child) goto unsupported;
         name = levelc_upper_name(cursor);
-        if (!name || levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR) {
+        target_count++;
+        if (name && strcmp(name, ".") == 0 && target_count == 4 && !cursor->sibling) {
+            final_drop = 1;
+        } else if (!name || levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR) {
             free(name);
             goto unsupported;
         }
         free(name);
-        target_count++;
     }
-    if (target_count < 1 || target_count > 3) goto unsupported;
+    if (target_count < 1 || target_count > 4 ||
+        (target_count == 4 && !final_drop)) goto unsupported;
     if (source_out) *source_out = source;
     if (target_out) *target_out = target;
     if (target_count_out) *target_count_out = target_count;
@@ -3000,18 +3004,17 @@ static int levelc_lower_direct_parse(Context *context,
         if (!value) goto fail;
     }
 
-    if (target_count == 2 || target_count == 3) {
+    if (target_count >= 2) {
         char *fields_name = rxcp_remap_create_generated_node_name(
             LEVELC_PARSE_FIELDS_PREFIX, stmt);
         ASTNode *fields_define = fields_name
             ? rxcp_remap_create_array_define(context, stmt, fields_name,
                                              LEVELC_REXX_VALUE_CLASS_TYPE)
             : NULL;
+        const char *split_method = target_count == 2 ? "parseWordAndRest"
+            : target_count == 3 ? "parseThreeWords" : "parseThreeWordsDrop";
         ASTNode *split = rxcp_remap_create_member_call(context, stmt, value,
-                                                        target_count == 2
-                                                            ? "parseWordAndRest"
-                                                            : "parseThreeWords",
-                                                        NULL, 0);
+                                                        split_method, NULL, 0);
         ASTNode *capture = fields_name && split
             ? rxcp_remap_create_named_assignment(context, stmt, fields_name, split)
             : NULL;
@@ -3022,7 +3025,8 @@ static int levelc_lower_direct_parse(Context *context,
         add_ast(prelude, fields_define);
         add_ast(prelude, capture);
         rxcp_remap_append_builder_children(instructions, prelude);
-        for (index = 1; index <= target_count; index++, target = target->sibling) {
+        for (index = 1; index <= (target_count == 4 ? 3 : target_count);
+             index++, target = target->sibling) {
             receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
             args[0] = levelc_name_string(context, target);
             args[1] = rxcp_remap_create_indexed_ref(context, target, VAR_SYMBOL,

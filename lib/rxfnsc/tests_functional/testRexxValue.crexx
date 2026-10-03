@@ -127,6 +127,15 @@ parse_fields = .RexxValue("a").parseThreeWords()
 errors = errors + check(parse_fields[1].asString() = "a" &,
     parse_fields[2].asString() = "" & parse_fields[3].asString() = "", "parse short input")
 
+parse_source = .RexxValue("  a  b   c d e  ")
+parse_fields = parse_source.parseThreeWordsDrop()
+errors = errors + check(parse_fields[1].asString() = "a" &,
+    parse_fields[2].asString() = "b" & parse_fields[3].asString() = "c", "parse three words dropping tail")
+errors = errors + check(parse_source.asString() = "  a  b   c d e  ", "parse drop source unchanged")
+parse_fields = .RexxValue("a b").parseThreeWordsDrop()
+errors = errors + check(parse_fields[1].asString() = "a" &,
+    parse_fields[2].asString() = "b" & parse_fields[3].asString() = "", "parse drop short input")
+
 parse_source = .RexxValue("  a  b   c  ")
 parse_fields = parse_source.parseWordAndRest()
 errors = errors + check(parse_fields[1].asString() = "a" &,
