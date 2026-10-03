@@ -202,6 +202,17 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   linked execution, canonical WHILE plus end-check BLOCK_EXPR tree shape,
   focused runtime/Debug tests and the relevant correctness suite. BY, FOR,
   dynamic endpoints, named transfer, and combined conditions remain open.
+- [x] **LC-AC-24 — bounded controlled BY step:** parsed scalar
+  `DO name = non-negative integer TO non-negative integer BY signed integer`
+  accepts TO/BY in either parsed order. A negative step checks the lower
+  bound and advances downward; a zero or positive step checks the upper
+  bound. The visible pool variable advances after ordinary and ITERATE paths,
+  preserves body mutation, and retains the correct value after normal exit
+  or LEAVE. Prove guarded zero-step behavior, opposite-direction zero-entry,
+  nested transfers, and opt/no-opt parity. Verify against Regina, linked
+  execution, source-anchored canonical WHILE/UNTIL tree shape, focused
+  normal/Debug tests and the relevant correctness suite. Dynamic BY, FOR,
+  dynamic endpoints, named transfer and combined conditions remain open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -376,6 +387,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     Prove body mutation, zero-entry, final values, ITERATE/LEAVE and nested
     ownership against Regina. Retain fail-closed guards on other controlled
     shapes, qualify and commit separately.
+27. **LC-STEP-27 — complete (LC-AC-08/24; depends on STEP-26):** extend the controlled
+    clause crosswalk to one literal signed BY and one literal TO in either
+    parser order. Reuse the pool-backed canonical WHILE/UNTIL loop and add
+    contextual RexxValue step comparison/advance methods while preserving
+    the default BY-one behavior. Prove negative, positive and guarded zero
+    steps, mutation, final values and ITERATE/LEAVE against Regina; keep
+    dynamic BY/FOR and wider headers fail-closed, qualify and commit.
 
 ## Open findings
 
@@ -405,7 +423,7 @@ itself make its Classic shape executable.
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
-| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar literal-TO control, plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Wider count values, named transfer, BY/FOR and dynamic/combined controlled headers, numeric errors and wider scope remain open |
+| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar literal-TO control with optional signed literal BY, plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Wider count values, named transfer, dynamic BY/FOR and dynamic/combined controlled headers, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
 | `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
@@ -474,7 +492,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal-TO control | BY, FOR, dynamic controlled endpoints, wider count/numeric errors and configuration proof open |
+| `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal-TO control with signed literal BY | Dynamic BY, FOR, dynamic controlled endpoints, wider count/numeric errors and configuration proof open |
 | `SYN-CLASSIC-DROP` | DROP instruction | Bounded slice: direct scalar list | Stem, compound and indirect forms, full condition/profile proof open |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
@@ -1163,6 +1181,27 @@ full compatibility proof.
   `/tmp/crexx-levelc-controlled-debug-focused.9vFoUy`,
   `/tmp/crexx-levelc-controlled-tree.Pr1gSI`, and
   `/tmp/crexx-levelc-controlled-link-log.grYt3z`.
-- `LC-AC-08/04` remain open for BY/FOR, dynamic controlled endpoints,
-  controlled conditions, wider count values, named transfers and other
-  structural families. `LC-FIND-01` remains open.
+- Signed literal BY now works in either TO/BY parser order. A negative step
+  checks the lower bound, while zero and positive steps check the upper bound;
+  the UNTIL end block advances the current pool value after ordinary and
+  ITERATE paths. Bounded Regina output matched optimized/no-opt and linked
+  execution for descending, ascending, guarded zero, opposite-direction
+  zero-entry, body mutation, nested transfer and final values. The dynamic
+  BY shape remains fail-closed. The redirected tree probe showed source
+  anchors through WHILE > controlToContinueBy and UNTIL > BLOCK_EXPR >
+  controlStepBy/setValue > LEAVE_WITH, with no structural validation error.
+  Release selected correctness passed 198/198 and Debug structural/loop and
+  shared-value tests passed 74/74. An initial shared-value build warning
+  about an implicit branch-local binding was corrected before final build
+  and suites. Evidence:
+  `/tmp/crexx-levelc-by-reference-output.ECkvKQ`,
+  `/tmp/crexx-levelc-by-release-build.WYm1fx`,
+  `/tmp/crexx-levelc-by-release-rebuild.gGQzDh`,
+  `/tmp/crexx-levelc-by-release-suite.yOq0q2`,
+  `/tmp/crexx-levelc-by-debug-build.GCddqg`,
+  `/tmp/crexx-levelc-by-debug-focused.2pMz1t`,
+  `/tmp/crexx-levelc-by-tree.hgdhBa`, and
+  `/tmp/crexx-levelc-by-link-log.HBlxiF`.
+- `LC-AC-08/04` remain open for dynamic BY, FOR, dynamic controlled
+  endpoints, controlled conditions, wider count values, named transfers and
+  other structural families. `LC-FIND-01` remains open.

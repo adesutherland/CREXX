@@ -5203,8 +5203,8 @@ add_levelc_unsupported_compile_test(levelc_slice6_procedure_parse_unsupported
 add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
         rexx_src/levelc_slice7_if_unsupported_branch.rexx)
 
-add_levelc_unsupported_compile_test(levelc_slice8_controlled_do_unsupported
-        rexx_src/levelc_slice8_controlled_do_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice26_controlled_dynamic_by_unsupported
+        rexx_src/levelc_slice26_controlled_dynamic_by_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice25_controlled_dynamic_to_unsupported
         rexx_src/levelc_slice25_controlled_dynamic_to_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice25_controlled_condition_unsupported
@@ -5601,6 +5601,12 @@ add_levelc_runtime_slice_test(levelc_slice25_controlled_to
 add_levelc_runtime_slice_test(levelc_slice25_controlled_to_noopt
         rexx_src/levelc_slice25_controlled_to.rexx
         "basic 1\nbasic 2\nbasic 3\nafter-basic 4\nafter-zero 3\nchanged 2\nchanged 3\nchanged 4\nafter-changed 5\niter 1\niter 3\nafter-iter 4\nleft 1\nafter-left 2\nnested 1 2\nnested 2 2\nafter-nested 3 3\n3\n" -n)
+add_levelc_runtime_slice_test(levelc_slice26_controlled_by
+        rexx_src/levelc_slice26_controlled_by.rexx
+        "down 3\ndown 2\ndown 1\nafter-down 0\nup 1\nup 3\nafter-up 5\nchanged 3\nchanged 2\nchanged 1\nafter-changed 0\nzero 1\nafter-zero 1\nafter-bad-up 2\nafter-bad-down 1\nnested 2\nafter-nested 1\n")
+add_levelc_runtime_slice_test(levelc_slice26_controlled_by_noopt
+        rexx_src/levelc_slice26_controlled_by.rexx
+        "down 3\ndown 2\ndown 1\nafter-down 0\nup 1\nup 3\nafter-up 5\nchanged 3\nchanged 2\nchanged 1\nafter-changed 0\nzero 1\nafter-zero 1\nafter-bad-up 2\nafter-bad-down 1\nnested 2\nafter-nested 1\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5878,6 +5884,16 @@ add_levelc_lowered_tree_shape_test(levelc_slice25_controlled_to_tree_shape
         "BLOCK_EXPR"
         "LEAVE_WITH"
         "controlStepByOne"
+        "setValue"
+        "ITERATE")
+add_levelc_lowered_tree_shape_test(levelc_slice26_controlled_by_tree_shape
+        rexx_src/levelc_slice26_controlled_by.rexx
+        "WHILE"
+        "controlToContinueBy"
+        "UNTIL"
+        "BLOCK_EXPR"
+        "LEAVE_WITH"
+        "controlStepBy"
         "setValue"
         "ITERATE")
 

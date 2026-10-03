@@ -649,6 +649,11 @@ RexxValue: class
   /** Check a Classic DO control variable against a fixed TO value. */
   controlToContinue: method = .boolean
     arg limit = .RexxValue
+    return controlToContinueBy(limit, .RexxValue.fromInt(1))
+
+  /** Select the TO comparison from the sign of a Classic DO BY value. */
+  controlToContinueBy: method = .boolean
+    arg limit = .RexxValue, step = .RexxValue
     text = asString()
     if datatype(text, "N") <> "1" then do
       control_message = "RXC-LC-41.6: DO control variable must be numeric; found " || text
@@ -659,17 +664,36 @@ RexxValue: class
       limit_message = "RXC-LC-41.4: DO TO value must be numeric; found " || limit_text
       assembler signal "ERROR", limit_message
     end
-    comparison = compareLessOrEqual(limit)
-    return comparison.logicalValue()
+    step_text = step.asString()
+    if datatype(step_text, "N") <> "1" then do
+      by_message = "RXC-LC-41.5: DO BY value must be numeric; found " || step_text
+      assembler signal "ERROR", by_message
+    end
+    if step.asDecimal() < 0 then do
+      lower_comparison = compareGreaterOrEqual(limit)
+      return lower_comparison.logicalValue()
+    end
+    upper_comparison = compareLessOrEqual(limit)
+    return upper_comparison.logicalValue()
 
   /** Advance the current Classic DO control variable through pool semantics. */
   controlStepByOne: method = .RexxValue
+    return controlStepBy(.RexxValue.fromInt(1))
+
+  /** Advance a Classic DO control variable by its fixed BY value. */
+  controlStepBy: method = .RexxValue
+    arg step = .RexxValue
     text = asString()
     if datatype(text, "N") <> "1" then do
       step_message = "RXC-LC-41.6: DO control variable must be numeric; found " || text
       assembler signal "ERROR", step_message
     end
-    return add(.RexxValue.fromInt(1))
+    step_text = step.asString()
+    if datatype(step_text, "N") <> "1" then do
+      advance_message = "RXC-LC-41.5: DO BY value must be numeric; found " || step_text
+      assembler signal "ERROR", advance_message
+    end
+    return add(step)
 
   logicalResult: method = .RexxValue
     return _rv_bool_value(_rv_logical_text(asString()))

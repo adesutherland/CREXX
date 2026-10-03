@@ -131,14 +131,17 @@ the condition and its setup as well as the body. This bounded slice
 accepts non-negative mathematical whole values up to signed 32-bit maximum;
 the contextual method reports `26.2` for invalid or out-of-range values.
 Wider count values and controlled header forms beyond bounded TO remain open.
-The first controlled-header slice accepts scalar `DO name = integer TO
-integer`. It initializes the visible Classic pool before a canonical REPEAT.
+The bounded controlled-header slice accepts scalar `DO name = integer TO
+integer` with an optional signed literal BY in either TO/BY order. It
+initializes the visible Classic pool before a canonical REPEAT.
 The REPEAT uses a WHILE entry check against the current pool value and an
 UNTIL end-check BLOCK_EXPR that advances that pool value by one and returns
 false. The end block also runs on ITERATE, while LEAVE skips the advance.
-Both checks use shared RexxValue numeric methods; the hidden canonical loop
+Both checks use shared RexxValue numeric methods; BY selects the upper or
+lower bound comparison by its sign and the end block adds that step. The
+default step is one. The hidden canonical loop
 assignment exists only to satisfy the emitter and does not replace the
-Classic control variable. BY, FOR, dynamic endpoints and controlled headers
+Classic control variable. Dynamic BY, FOR, dynamic endpoints and controlled headers
 combined with WHILE/UNTIL remain fail-closed.
 Classic `&` and `|` now evaluate both operands in source order. The lowerer
 copies the left `RexxValue` before any right-hand setup statements, then calls
