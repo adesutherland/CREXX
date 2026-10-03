@@ -43,7 +43,7 @@ exists.
 | LC-REF-024 | API access only during enabled external/host callbacks | host | Open: access-window and lifecycle negatives |
 | LC-REF-025 | Minimum numeric, literal, symbol and string limits | both | Open: documented limits and over-limit messages |
 | LC-REF-026 | Contextual instruction words, no general reserved words | source | Front end fixtures; full reference edge cases open |
-| LC-REF-027 | Quoted/doubled strings and radix suffix boundaries | source | Front end fixtures; configured conversion/limit proof open |
+| LC-REF-027 | Quoted/doubled strings and radix suffix boundaries | source | Front end fixtures and bounded empty quoted-string runtime proof; configured conversion/limit proof open |
 | LC-REF-028 | Hex/binary literal grouping and left padding | source | Front end diagnostics; byte/profile equivalence open |
 | LC-REF-029 | Numeric constants, exponent signs and period-start tokens | source | Front end partial; full Classic lexer pass open |
 | LC-REF-030 | Comma continuation and inferred clause endings | source | Front end partial; whitespace edge cases open |

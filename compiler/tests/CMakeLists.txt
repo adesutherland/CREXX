@@ -5683,6 +5683,12 @@ add_levelc_runtime_slice_test(levelc_slice36_dynamic_start_noopt
         "start 10 1\nto 10 2\nby 10 3\nfor 10 4\nafter-zero 1 4\nchanged 2 2\nchanged 3 9\nafter-changed 4 9\nfractional -1.0\nfractional 0\nfractional 1\nafter-fractional 2 bad\nwhile 1\nwhile 2\nafter-while 3\nuntil 1\nuntil 2\nafter-until 2\nafter-outer 4\nlocal 1\nlocal 2\n3\n" -n)
 set_tests_properties(levelc_slice36_dynamic_start
         levelc_slice36_dynamic_start_noopt PROPERTIES TIMEOUT 60)
+add_levelc_runtime_slice_test(levelc_slice37_empty_string
+        rexx_src/levelc_slice37_empty_string.rexx
+        "\n\nlength 0 0\njoined leftright\ncall 0\ncompare 1\n")
+add_levelc_runtime_slice_test(levelc_slice37_empty_string_noopt
+        rexx_src/levelc_slice37_empty_string.rexx
+        "\n\nlength 0 0\njoined leftright\ncall 0\ncompare 1\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -5776,6 +5782,8 @@ add_levelc_invalid_runtime_test(levelc_slice36_dynamic_start_invalid_after_claus
 add_levelc_invalid_runtime_test(levelc_slice36_dynamic_start_clause_error
         rexx_src/levelc_slice36_dynamic_start_clause_error.rexx
         RXC-LC-41.4 "to 10")
+add_levelc_invalid_runtime_test(levelc_slice37_empty_string_numeric_invalid
+        rexx_src/levelc_slice37_empty_string_numeric_invalid.rexx RXC-LC-41.4)
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
@@ -6084,6 +6092,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice36_dynamic_start_tree_shape
         "__rxcp_levelc_by_"
         "__rxcp_levelc_for_"
         "ITERATE")
+add_levelc_lowered_tree_shape_test(levelc_slice37_empty_string_tree_shape
+        rexx_src/levelc_slice37_empty_string.rexx
+        "FACTORY_CALL"
+        "RexxValue"
+        "STRING"
+        "strictCompareEqual")
 
 # Bridge Connectivity Test
 add_custom_command(

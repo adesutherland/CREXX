@@ -1594,6 +1594,10 @@ static ASTNode *levelc_rexxvalue_from_literal(Context *context, ASTNode *source_
     char *text;
     ASTNode *result;
 
+    if (source_node && source_node->node_type == STRING &&
+        source_node->node_string_length == 0)
+        return levelc_rexxvalue_from_text(context, source_node, "");
+
     text = levelc_node_text_copy(source_node);
     if (!text) return NULL;
     result = levelc_rexxvalue_from_text(context, source_node, text);

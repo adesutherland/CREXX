@@ -188,6 +188,11 @@ copies the left `RexxValue` before any right-hand setup statements, then calls
 shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier
 branch-based short-circuit tracer shape is historical and is no longer the
 Classic Level C target. Exact left/right operand errors use `34.5`/`34.6`.
+The parser represents an empty quoted Classic string with a zero-length
+`STRING` node whose text pointer may be absent. Literal lowering now maps
+that one valid shape to a source-anchored canonical empty string before
+constructing the shared `RexxValue`; other nodes still require their text
+payload. The normal emitter and runtime paths handle the resulting value.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission. The existing WHILE, BLOCK_EXPR and
 LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL

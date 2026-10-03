@@ -342,6 +342,14 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   error-side-effect order, a canonical lowered-tree probe, focused
   Release/Debug regressions, the relevant correctness suite and linked
   execution. Wider expression shapes and complete compatibility remain open.
+- [x] **LC-AC-36 — empty quoted string lowering:** parsed Classic `''` and
+  `""` literals lower to canonical empty string values with their source
+  anchors, in SAY, assignment, concatenation and supported call contexts.
+  They compile, assemble, link and execute with Regina-equivalent output in
+  optimized and no-opt modes. Numeric use reports its contextual runtime
+  error rather than a compile-time unsupported-shape error. Verify a minimal
+  counterexample, focused positive and negative regressions, lowered-tree
+  inspection, the relevant normal compiler suite and linked execution.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -601,16 +609,30 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     builders cannot express the required ownership or timing. Prove reference
     parity, error precedence, tree shape, opt/no-opt and linked behavior,
     qualify the relevant normal suites, and commit this increment separately.
+39. **LC-STEP-39 — complete (LC-AC-08/36; depends on STEP-38):** preserve the parser's
+    zero-length `STRING` payload when creating the shared `RexxValue` literal,
+    without relaxing missing-payload checks on other node types. Retain the
+    existing canonical string factory and emitter path; inspect the source
+    anchor and opt/no-opt value flow, prove Regina and contextual numeric
+    errors, run the relevant normal checks, and commit separately.
 
-## Open findings
+## Findings
 
-- **LC-FIND-01 — empty source string literal:** the independent minimal
-  `options levelc; say ''` source fails during lowering, although the parser
-  accepts its STRING node. It was exposed by a first combined-loop fixture;
-  that fixture now uses nonempty comparison operands to keep the AST loop
-  increment scoped. Investigate and repair as a separate expression increment
-  with a permanent regression. Reproducer log:
-  `/tmp/crexx-levelc-empty-literal-log.LX2Ksv`.
+- **LC-FIND-01 — resolved, empty source string literal:** the independent minimal
+  `options levelc; say ''` source previously failed during lowering, although the parser
+  accepts its STRING node. The parser uses a zero-length payload with an
+  absent text pointer; `LC-STEP-39` now lowers that valid shape through the
+  canonical empty string and shared `RexxValue`. The initial reproducer is
+  `/tmp/crexx-levelc-empty-literal-log.LX2Ksv`; permanent checks and closure
+  evidence are recorded under `LC-AC-36` below.
+- **LC-FIND-02 — SAY-adjacent function call parsed as symbols:** the
+  existing-syntax `options levelc; say 'x' length('a')` prints `x LENGTH a`
+  through Level C instead of Regina's `x 1`. The raw AST has adjacent
+  `VAR_SYMBOL` nodes where the `FUNCTION` call should be. This is independent
+  of empty string lowering and needs a parser/AST increment with a permanent
+  positive regression. Reproducer output:
+  `/tmp/crexx-levelc-adjacent-call-reference.fh07ZP` and
+  `/tmp/crexx-levelc-adjacent-call-output.07V6xB`.
 
 ## AST structural crosswalk and closure order
 
@@ -627,7 +649,7 @@ itself make its Classic shape executable.
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
 | `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and direct scalar DROP | Wider statement operands, stem/compound/indirect DROP and exit/return lifecycle remain open |
-| `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
+| `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, adjacent-call parsing, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar controlled starts with TO, FOR, both or neither, captured dynamic start/TO/BY/FOR, and controlled WHILE/UNTIL, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, other controlled endpoints, numeric errors and wider scope remain open |
@@ -664,7 +686,7 @@ has been approved in this worklist.
 | Area | Feature | Current state and evidence | Remaining proof |
 | --- | --- | --- | --- |
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
-| Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions` and `levelc_slice19_logical_eager` | Full numeric context, remaining operator order, boundary/error and platform equivalence |
+| Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions`, `levelc_slice19_logical_eager` and empty quoted strings in `levelc_slice37_empty_string` | Adjacent-call parsing, full numeric context, remaining operator order, boundary/error and platform equivalence |
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
@@ -1622,7 +1644,26 @@ full compatibility proof.
   `/tmp/crexx-levelc-dynamic-start-final-linked-output.lEaINL`,
   `/tmp/crexx-levelc-dynamic-start-clause-order.UametO`, and
   `/tmp/crexx-levelc-dynamic-start-for-compile.z01VEf`.
+- Empty single- and double-quoted source strings now lower to a canonical
+  source-anchored empty `STRING` under the shared `RexxValue` factory. Regina
+  and linked RXBIN output match byte for byte for SAY, assignment,
+  concatenation, supported BIF/local calls and strict comparison. Empty TO
+  reports contextual `41.4` instead of failing compilation. Final focused
+  Release checks passed 4/4, the Release Level C suite 233/233 and Debug
+  expression/AST/shared-value checks 20/20. The first tree test assertion
+  named the parser comparison node rather than the canonical method; it was
+  corrected, and no runtime regression was found. Evidence:
+  `/tmp/crexx-levelc-empty-literal-baseline.AfmyLS`,
+  `/tmp/crexx-levelc-empty-string-regina-output.rsxwSI`,
+  `/tmp/crexx-levelc-empty-string-release-build.54d6FN`,
+  `/tmp/crexx-levelc-empty-string-focused-release-final.d5hGwu`,
+  `/tmp/crexx-levelc-empty-string-release-suite.1ZU6a4`,
+  `/tmp/crexx-levelc-empty-string-debug-build.4gThvF`,
+  `/tmp/crexx-levelc-empty-string-debug-focused.OVm4j4`,
+  `/tmp/crexx-levelc-empty-string-final-tree.4BIMZA`,
+  `/tmp/crexx-levelc-empty-string-link-log.djwxRM`, and
+  `/tmp/crexx-levelc-empty-string-linked-output.3VVRE6`.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.
-  `LC-FIND-01` remains open.
+  `LC-FIND-02` remains open.
