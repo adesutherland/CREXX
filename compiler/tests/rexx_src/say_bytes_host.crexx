@@ -1,0 +1,7 @@
+options levelb
+namespace say_bytes_host expose emit
+
+emit: procedure = .void
+  arg text = .string
+  say text
+  return

@@ -255,6 +255,12 @@ typedef void (*rxvml_say_exit_func)(char* message);
 void rxvml_set_say_exit(rxvml_say_exit_func say_exit);
 void rxvml_set_context_say_exit(rxvml_context* ctx,
                                 rxvml_say_exit_func say_exit);
+/* Receives the complete SAY/SAYX byte span, including SAY's trailing LF.
+ * The pointer remains valid only for the duration of the callback. Setting
+ * either context SAY exit replaces the other; NULL restores default routing. */
+typedef void (*rxvml_say_exit_bytes_func)(const char* message, size_t length);
+void rxvml_set_context_say_exit_bytes(rxvml_context* ctx,
+                                      rxvml_say_exit_bytes_func say_exit);
 
 /* Error reporting */
 int  rxvml_last_error(rxvml_context* ctx, const char** out_msg);

@@ -556,6 +556,7 @@ static int rxvml_invoke_external_proc(
     value* call_ret;
     char* dummy_argv[1];
     int run_status;
+    int caught_signal = SIGNAL_NONE;
 
     if (run_status_out) *run_status_out = 0;
     if (!ctx || !proc) return -1;
@@ -621,11 +622,16 @@ static int rxvml_invoke_external_proc(
         }
     }
     dummy_argv[0] = (char*)(dummy_argv0 ? dummy_argv0 : "rxvml_call");
-    run_status = run(&ctx->vm, 0, dummy_argv);
+    run_status = rxvm_run_capturing_signal(&ctx->vm, 0, dummy_argv,
+                                           &caught_signal);
     ctx->vm.active.rxvml_context = previous_active_context;
     if (run_status_out) *run_status_out = run_status;
 
-    if (response_out) {
+    if (caught_signal != SIGNAL_NONE) {
+        ctx->last_error = "VM procedure raised an unhandled signal";
+        if (response_out) *response_out = NULL;
+        rxvml_value_free((rxvml_value*)call_ret);
+    } else if (response_out) {
         *response_out = (rxvml_value*)call_ret;
     } else {
         rxvml_value_free((rxvml_value*)call_ret);
@@ -633,7 +639,7 @@ static int rxvml_invoke_external_proc(
 
     rxvml_memory_free(ctx, call_args);
     rxvml_restore_external_call_state(&ctx->vm, &saved_state);
-    return 0;
+    return caught_signal == SIGNAL_NONE ? 0 : -1;
 }
 
 int rxvm_link(rxvm_context* ctx);
@@ -2428,5 +2434,16 @@ void rxvml_set_say_exit(rxvml_say_exit_func say_exit) {
 
 void rxvml_set_context_say_exit(rxvml_context* ctx,
                                 rxvml_say_exit_func say_exit) {
-    if (ctx) ctx->vm.active.say_exit = (say_exit_func)say_exit;
+    if (ctx) {
+        ctx->vm.active.say_exit = (say_exit_func)say_exit;
+        ctx->vm.active.say_exit_bytes = 0;
+    }
+}
+
+void rxvml_set_context_say_exit_bytes(rxvml_context* ctx,
+                                      rxvml_say_exit_bytes_func say_exit) {
+    if (ctx) {
+        ctx->vm.active.say_exit_bytes = say_exit;
+        ctx->vm.active.say_exit = 0;
+    }
 }

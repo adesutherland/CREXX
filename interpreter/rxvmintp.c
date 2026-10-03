@@ -7216,6 +7216,11 @@ int run(rxvm_context *context, int argc, char *argv[]) {
     return run_with_signal(context, argc, argv, NULL);
 }
 
+int rxvm_run_capturing_signal(rxvm_context *context, int argc, char *argv[],
+                              int *signal_out) {
+    return run_with_signal(context, argc, argv, signal_out);
+}
+
 int rxvm_run_external_status(rxvm_context *context, int argc, char *argv[]) {
     int signal = SIGNAL_NONE;
     int status = run_with_signal(context, argc, argv, &signal);

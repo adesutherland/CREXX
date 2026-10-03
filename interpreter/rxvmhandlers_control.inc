@@ -1043,7 +1043,7 @@ RXVM_HANDLER(READLINE_REG, VM_ADVANCE(1);
 
 RXVM_HANDLER(SAY_REG, VM_ADVANCE(1);
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
-            rxvm_mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
+            rxvm_say_write(op1R->string_value, op1R->string_length, 1);
             DISPATCH;
 
 
@@ -1052,7 +1052,7 @@ RXVM_HANDLER(SAY_REG, VM_ADVANCE(1);
 RXVM_HANDLER(SAY_STRING, VM_ADVANCE(1);
             DEBUG("TRACE - SAY \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            rxvm_mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
+            rxvm_say_write(op1S->string, op1S->string_len, 1);
             DISPATCH;
 
 
@@ -1060,7 +1060,7 @@ RXVM_HANDLER(SAY_STRING, VM_ADVANCE(1);
 
 RXVM_HANDLER(SAYX_REG, VM_ADVANCE(1);
             DEBUG("TRACE - SAYX R%lu\n", REG_IDX(1));
-            rxvm_mprintf("%.*s", (int) op1R->string_length, op1R->string_value);
+            rxvm_say_write(op1R->string_value, op1R->string_length, 0);
             DISPATCH;
 
 
@@ -1069,7 +1069,7 @@ RXVM_HANDLER(SAYX_REG, VM_ADVANCE(1);
 RXVM_HANDLER(SAYX_STRING, VM_ADVANCE(1);
             DEBUG("TRACE - SAYX \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            rxvm_mprintf("%.*s", (int) op1S->string_len, op1S->string);
+            rxvm_say_write(op1S->string, op1S->string_len, 0);
             DISPATCH;
 
 

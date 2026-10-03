@@ -560,6 +560,7 @@ typedef struct rxvm_active_state {
     void *rxpa_pool_head;
     void *crexx_command_state;
     say_exit_func say_exit;
+    void (*say_exit_bytes)(const char *message, size_t length);
     volatile sig_atomic_t *pending_interrupts;
     /* Immutable, worker-owned compatibility carrier selected before prepare.
      * NULL keeps the accepted ordinary/native owner; non-NULL selects the
@@ -645,6 +646,10 @@ rxsignal rxvm_getsignalcode(char* signalText);
 int initialz();
 int finalize();
 int run(rxvm_context *context, int argc, char *argv[]);
+/* Preserve normal program status while reporting an unhandled VM signal
+ * separately to an embedding host. */
+int rxvm_run_capturing_signal(rxvm_context *context, int argc, char *argv[],
+                              int *signal_out);
 /* Internal typed external-call boundary: zero means successful RETURN;
  * genuine signals/startup/EXIT failures remain distinct from value fields. */
 int rxvm_run_external_status(rxvm_context *context, int argc, char *argv[]);
@@ -875,6 +880,7 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes);
 /* EXIT Function Support */
 void rxvm_setsayexit(say_exit_func sayExitFunc);
 void rxvm_resetsayexit();
+void rxvm_say_write(const char *message, size_t length, int newline);
 void rxvm_mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
 
 /**

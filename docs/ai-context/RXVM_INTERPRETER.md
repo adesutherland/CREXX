@@ -24,8 +24,15 @@ selected codec. SAY and UTF text stdout/stderr writes use
 instructions remain raw. Native diagnostics, including allocation-free panic
 output, use the same external console page. Default SAY/SAYX and UTF console
 FWRITE/FWRITECDPT raise `UNICODE_ERROR` for conversion failure and `NOTREADY`
-for output/flush failure. Custom SAY callbacks retain their output policy and
-void ABI. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md) for sequential stream and SDK limits.
+for output/flush failure. SAY/SAYX carry the VM operand's explicit byte length
+to the default console writer. `rxvml_set_context_say_exit_bytes` installs a
+context-local callback receiving the complete byte span (including SAY's LF);
+the span remains valid for that callback only. It replaces the old context SAY
+callback, and setting either callback to NULL restores default routing. The
+legacy `rxvml_set_context_say_exit`/RXPA callback ABI remains terminated text;
+an embedded NUL raises `NOTREADY` before callback delivery, and an RXVML
+procedure call reports an unhandled signal as failure. Custom callbacks own
+their output policy. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md) for sequential stream and SDK limits.
 
 ## 1. VM Lifecycle
 

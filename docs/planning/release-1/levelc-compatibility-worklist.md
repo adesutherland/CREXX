@@ -1098,7 +1098,7 @@ The implementation sequence within active `LC-STEP-63` is:
    reads through pool `symbolValue`; remove the compiler-only stem/compound
    read limit. Prove substitution, case, exposure, defaults, source anchors,
    opt/no-opt, linked execution and the normal Level C suite; commit.
-2. **LC-STEP-63B (LC-AC-57; approved, depends on 63A):** carry an explicit
+2. **LC-STEP-63B (LC-AC-57; complete):** carry an explicit
    byte length from SAY operands to default and configured output. Add a
    length-aware per-context callback without breaking the old ABI. Test
    embedded NUL, legacy callback failure, host isolation, UTF8, error and
@@ -1120,7 +1120,7 @@ The implementation sequence within active `LC-STEP-63` is:
 | Invalid source forms | Grammar has explicit close-bracket recovery and general expression diagnostics | Open: reference/error matrix and source anchors |
 | Complete BIF, local and external function terms | Current guard admits only LENGTH, SUBSTR and bounded local calls; direct BIF inventory and host lookup are broader | Open: shared invocation, context, error and resolution foundation |
 | General variable value terms | All validated variable reads now use shared pool `symbolValue`; Regina, opt/no-opt, local exposure/CALL, linked and normal Level C checks pass | Pool-read consolidation proved; complete expression domain remains open |
-| BYTE/UTF8 output, configured host route and failure | Embedded-NUL and BIF-error probes below; legacy SAY callback is terminated text | Open: approved output design, implementation and host/profile proof |
+| BYTE/UTF8 output, configured host route and failure | Length-aware default and per-context output pass embedded-NUL, UTF-8 byte, legacy-error, context-isolation, opt/no-opt and linked checks | Byte route proved; broader host/profile, trace and condition lifecycle remain open |
 | Trace/condition lifecycle | Existing canonical SAY opcode and source anchors | Open: clause hooks, trapped errors and finalization |
 
 Open before closure:
@@ -1148,23 +1148,18 @@ Open before closure:
   infeasible exception. A direct-entry compiler table plus one shared
   call-result check that delivers Classic `SYNTAX` separately from Classic
   command `ERROR` is approved by Adrian; implementation and proof remain open.
-- Prove configured default-output selection, errors, BYTE/UTF8 behavior and
-  source/trace lifecycle through the host interface. Inspect the existing VM
-  SAY callback boundary for byte-exact output before claiming this proof.
-- **Confirmed output defect, approved repair pending:** a BYTE profile
-  probe `options levelc; say '410042'x` produced bytes `41 00 42 0a` with
-  Regina but `41 0a` with the current Release `rxc`/`rxas`/`rxvm` path
-  (`/tmp/crexx-levelc-say-nul.sdYMGN/`). `SAY_REG` and `SAY_STRING` have
-  explicit byte lengths, but `rxvm_mprintf` formats to a C string and the
-  default/custom `say_exit_func(char *)` path uses a terminator. This is
-  implementable, not an infeasible feature. Proposed repair: keep the old
-  callback ABI for existing hosts, add a length-aware per-context SAY callback
-  and an internal byte-span output path, and require an explicit error rather
-  than silent truncation when a legacy custom callback encounters embedded
-  NUL. The default console path can use its existing length-taking writer.
-  Adrian approved carrying explicit lengths through this host path. Prove both
-  callback routes, BYTE exactness, UTF8/error
-  behavior, main/local output ordering and linked execution after approval.
+- Prove the remaining configured host/profile selection and source/trace
+  lifecycle. The byte route and callback failure path have focused proof,
+  but they do not complete the whole SAY condition/lifecycle contract.
+- **Resolved output truncation (LC-STEP-63B):** the earlier BYTE probe
+  `options levelc; say '410042'x` produced `41 00 42 0a` with Regina but
+  `41 0a` through the old VM output route
+  (`/tmp/crexx-levelc-say-nul.sdYMGN/`). `SAY` and `SAYX` now carry explicit
+  operand lengths to the default console writer or a new length-aware RXVML
+  context callback. The legacy callback ABI remains; embedded NUL raises
+  `NOTREADY` before that callback and RXVML reports the unhandled signal as
+  call failure. The exact-byte fixture also covers UTF-8 bytes and childless
+  SAY. Optimized, no-opt, linked and host-callback evidence is recorded below.
 - Keep the childless Regina, opt/no-opt, raw/canonical tree, normal Level C
   and linked results already obtained for unchanged code/test inputs. Add
   only missing decisive cases for expression side effects, output routing and
@@ -1204,6 +1199,23 @@ and former `stemSymbolValue` tree assertions; all were updated to the new
 approved path and passed. Linked proof is under
 `/tmp/crexx-levelc-say-pool-linked.TNUFOd/`. No full SAY closure is claimed;
 output and BIF/condition work proceed under LC-STEP-63B/C.
+
+2026-10-03 LC-STEP-63B increment (SAY remains open): `SAY`/`SAYX` now use a
+VM byte-span output function; the default writer preserves embedded NUL and
+the RXVML context API provides a length-aware callback without changing the
+legacy signature. An RXVML procedure call now reports an unhandled output
+signal to its host separately from an ordinary program return status. The
+`levelc_say_bytes.rexx` output is byte-identical to Regina in optimized,
+no-opt and linked execution, including `41 00 42 0a`, UTF-8 bytes and an
+empty SAY (`/tmp/crexx-levelc-say-bytes-linked.d3nVge`). The host fixture
+checks distinct context callbacks, complete byte spans, legacy normal text
+and `NOTREADY`/host failure without callback delivery on embedded NUL. The
+focused checks passed 6/6, including existing SAY and concurrent context
+isolation; Release core/host build passed
+(`/tmp/crexx-levelc-say-bytes-status-build.F6pnY5`), and the normal Release
+Level C suite passed 296/296
+(`/tmp/crexx-levelc-say-bytes-suite.5sNM2F`). Complete BIF and SAY lifecycle
+work remains under LC-STEP-63C/D.
 
 ## Findings
 

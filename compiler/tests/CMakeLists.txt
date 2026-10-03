@@ -5328,9 +5328,35 @@ function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
 
+function(add_levelc_runtime_bytes_test NAME SOURCE_FILE EXPECTED_HEX)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+    string(APPEND SCRIPT_CONTENT
+           "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${ARGN} -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" RESULT_VARIABLE result ERROR_VARIABLE error)\n"
+           "if(NOT result EQUAL 0)\n  message(FATAL_ERROR \"rxc failed: ${RXAS_DIAG_DOLLAR}{error}\")\nendif()\n"
+           "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${NAME}.rxbin\" \"${NAME}\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" RESULT_VARIABLE result ERROR_VARIABLE error)\n"
+           "if(NOT result EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: ${RXAS_DIAG_DOLLAR}{error}\")\nendif()\n"
+           "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${NAME}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library\" \"${CMAKE_BINARY_DIR}/bin/classlib\" \"${CMAKE_BINARY_DIR}/bin/rxfnsc\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" OUTPUT_FILE \"${NAME}.out\" RESULT_VARIABLE result ERROR_VARIABLE error)\n"
+           "if(NOT result EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: ${RXAS_DIAG_DOLLAR}{error}\")\nendif()\n"
+           "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/${NAME}.out\" actual HEX)\n"
+           "if(NOT actual STREQUAL \"${EXPECTED_HEX}\")\n  message(FATAL_ERROR \"Expected ${EXPECTED_HEX}; got ${RXAS_DIAG_DOLLAR}{actual}\")\nendif()\n")
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+    add_test(NAME ${NAME} COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}")
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+endfunction()
+
 add_levelc_runtime_slice_test(levelc_bare_stem_read
         rexx_src/levelc_bare_stem_read.rexx
         "ITEMS.\n")
+add_levelc_runtime_bytes_test(levelc_say_bytes
+        rexx_src/levelc_say_bytes.rexx
+        "4100420ac3a90a0a")
+add_levelc_runtime_bytes_test(levelc_say_bytes_noopt
+        rexx_src/levelc_say_bytes.rexx
+        "4100420ac3a90a0a" -n)
 
 function(add_levelc_lowered_tree_shape_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -6500,6 +6526,22 @@ target_compile_definitions(test_e2_active_context PRIVATE
 add_dependencies(test_e2_active_context e2_active_context_bin library)
 
 add_custom_command(
+        OUTPUT say_bytes_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o say_bytes_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/say_bytes_host.crexx
+        COMMAND $<TARGET_FILE:rxas> say_bytes_host
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/say_bytes_host.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling say_bytes_host.crexx ...")
+add_custom_target(say_bytes_host_bin DEPENDS say_bytes_host.rxbin)
+add_executable(test_say_bytes_host src/test_say_bytes_host.c)
+target_link_libraries(test_say_bytes_host PRIVATE rxvml rxpashim)
+target_include_directories(test_say_bytes_host PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_say_bytes_host PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_SAY_BYTES_MODULE="${CMAKE_CURRENT_BINARY_DIR}/say_bytes_host.rxbin")
+add_dependencies(test_say_bytes_host say_bytes_host_bin library)
+
+add_custom_command(
         OUTPUT dynamic_load_provider.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o dynamic_load_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_provider.crexx
         COMMAND $<TARGET_FILE:rxas> dynamic_load_provider
@@ -6734,6 +6776,8 @@ set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME e2_active_context_isolation COMMAND test_e2_active_context)
 set_tests_properties(e2_active_context_isolation PROPERTIES LABELS "compiler;stage3")
 crexx_label_concurrency_tests(SP01 e2_active_context_isolation)
+add_test(NAME say_bytes_host_callbacks COMMAND test_say_bytes_host)
+set_tests_properties(say_bytes_host_callbacks PROPERTIES LABELS "compiler;levelc")
 add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
 foreach(_dynamic_interface_runner IN ITEMS rxvm)
