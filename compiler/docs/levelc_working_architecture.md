@@ -143,7 +143,7 @@ default one and returns false. It runs after ordinary bodies and ITERATE,
 including the final count-limited body, while LEAVE skips the advance. The
 hidden canonical loop assignment only satisfies the emitter and does not
 replace the Classic control variable. Dynamic BY/FOR, dynamic endpoints,
-unbounded controlled DO and controlled UNTIL remain fail-closed.
+unbounded controlled DO and dynamic controlled clauses remain fail-closed.
 For a supported controlled WHILE header, the same canonical REPEAT uses one
 WHILE entry node. Its FOR check runs first; when TO exists, a source-anchored
 BLOCK_EXPR branches on the TO guard before evaluating the Classic WHILE
@@ -151,7 +151,12 @@ expression or its setup. The selected branch returns its Boolean value with
 LEAVE_WITH. With no TO guard, the source WHILE value occupies the entry node
 directly or uses the ordinary setup BLOCK_EXPR. The existing UNTIL end block
 still advances the visible control variable after each body and ITERATE.
-Controlled UNTIL remains open.
+For a supported controlled UNTIL header, the canonical UNTIL end-check uses
+one source-anchored BLOCK_EXPR. It evaluates the Classic condition and its
+setup after every body or ITERATE. A true result returns true with LEAVE_WITH
+before the pool step; a false result advances the visible control variable
+and returns false. This also runs after the final FOR-limited body, while a
+zero FOR, a failed TO entry guard, or LEAVE skips the end check entirely.
 Classic `&` and `|` now evaluate both operands in source order. The lowerer
 copies the left `RexxValue` before any right-hand setup statements, then calls
 shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier

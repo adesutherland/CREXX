@@ -257,6 +257,18 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   linked execution, a source-anchored canonical entry BLOCK_EXPR tree,
   focused Release/Debug checks and the relevant correctness suite. Controlled
   UNTIL and dynamic controlled clauses remain open.
+- [x] **LC-AC-29 — bounded controlled UNTIL end check:** parsed scalar
+  controlled `DO name = literal [TO literal] [BY signed literal]
+  [FOR literal] UNTIL expression` with at least one TO or FOR evaluates a
+  supported UNTIL condition after each executed body and on ITERATE, before
+  advancing the visible control variable. A true UNTIL leaves the current
+  value unadvanced; a false UNTIL advances it, including after the final
+  FOR-limited body. Zero FOR and failed TO entry guards skip the condition.
+  LEAVE skips both condition and step. Preserve setup timing, named and
+  childless loop ownership, contextual `34.4`, local scope, and opt/no-opt
+  behavior. Verify bounded Regina output and errors, linked execution,
+  source-anchored canonical end BLOCK_EXPR tree, focused Release/Debug checks
+  and the relevant correctness suite. Dynamic controlled clauses remain open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -465,6 +477,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     including setup-bearing conditions and exact `34.3`. Keep UNTIL and
     dynamic controlled clauses fail-closed, prove Regina/tree/toolchain and
     normal/Debug checks, then commit separately.
+32. **LC-STEP-32 — complete (LC-AC-08/29; depends on STEP-31):** admit a supported
+    controlled UNTIL header by combining its condition and the existing pool
+    advance under the canonical end-check BLOCK_EXPR. Check the condition
+    first, return true without stepping, or step and return false; retain
+    FOR/TO entry guards and hidden source-loop bindings. Prove ITERATE,
+    LEAVE, final count timing, setup and `34.4` with Regina and normal/Debug
+    checks, then commit separately.
 
 ## Open findings
 
@@ -494,7 +513,7 @@ itself make its Classic shape executable.
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
-| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar literal control with TO, FOR or both, optional signed literal BY and controlled WHILE, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, dynamic BY/FOR and dynamic controlled endpoints/UNTIL, numeric errors and wider scope remain open |
+| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar literal control with TO, FOR or both, optional signed literal BY and controlled WHILE/UNTIL, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, dynamic BY/FOR and dynamic controlled endpoints, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
 | `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
@@ -532,7 +551,7 @@ has been approved in this worklist.
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
-| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled TO/FOR/BY with bounded WHILE entry checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, dynamic controlled headers, controlled UNTIL, named transfer to wider loops, exact numeric errors |
+| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled TO/FOR/BY with bounded WHILE entry and UNTIL end checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, dynamic controlled headers, named transfer to wider loops, exact numeric errors |
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
@@ -1346,7 +1365,26 @@ full compatibility proof.
   `/tmp/crexx-levelc-controlled-while-final-rxlink.vXcWAn`,
   `/tmp/crexx-levelc-controlled-while-final-rxvm.hWDN67`, and
   `/tmp/crexx-levelc-controlled-while-final-suite.3s3YaD`.
+- Controlled literal TO/FOR/BY loops now also accept a supported UNTIL
+  condition. The canonical UNTIL end BLOCK_EXPR evaluates the condition and
+  its setup first, returns true without advancing the pool variable, or
+  advances the pool variable and returns false. The redirected tree probe
+  showed both source-anchored LEAVE_WITH paths and no structural error.
+  Regina output matched opt/no-opt and linked execution for failed TO and
+  zero FOR guards, TO plus FOR, signed BY, named ITERATE and LEAVE, local
+  scope, true UNTIL final values and false UNTIL after the final FOR body.
+  Invalid UNTIL retained `34.4`. Focused Release and Debug checks each
+  passed 33/33; the selected Release suite passed 218/218. Evidence:
+  `/tmp/crexx-levelc-controlled-until-final-output.sl0khV`,
+  `/tmp/crexx-levelc-controlled-until-final-release-build.6GfDgD`,
+  `/tmp/crexx-levelc-controlled-until-final-debug-build.eZi4Ou`,
+  `/tmp/crexx-levelc-controlled-until-final-focused-release.xvEh8a`,
+  `/tmp/crexx-levelc-controlled-until-final-focused-debug.kqQ3Fc`,
+  `/tmp/crexx-levelc-controlled-until-final-tree-log.xlrpul`,
+  `/tmp/crexx-levelc-controlled-until-final-rxlink.8NqDE8`,
+  `/tmp/crexx-levelc-controlled-until-final-rxvm.o7OKTS`, and
+  `/tmp/crexx-levelc-controlled-until-final-suite.4HfEBG`.
 - `LC-AC-08/04` remain open for dynamic BY/FOR, dynamic controlled endpoints,
-  unbounded controlled DO, controlled UNTIL, wider count values, named
+  unbounded controlled DO, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.
   `LC-FIND-01` remains open.

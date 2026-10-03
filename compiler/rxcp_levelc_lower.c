@@ -1303,12 +1303,6 @@ static int levelc_do_supported(ASTNode *stmt,
         }
         body = body->sibling;
         if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
-            if (repeat->child && repeat->child->node_type == ASSIGN) {
-                if (body->node_type != WHILE) {
-                    if (reason_out) *reason_out = "controlled DO UNTIL is outside slice";
-                    return 0;
-                }
-            }
             if (!levelc_do_condition_supported(body, plan, reason_out)) return 0;
             body = body->sibling;
         }
@@ -1819,6 +1813,55 @@ static ASTNode *levelc_controlled_while_entry(Context *context,
     if (!branch) return NULL;
     add_ast(block_instructions, branch);
     add_ast(block, block_instructions);
+    return block;
+}
+
+static ASTNode *levelc_controlled_until_end(Context *context,
+                                             ASTNode *condition_node,
+                                             LevelCLowerPlan *plan,
+                                             ASTNode *step_prelude) {
+    ASTNode *condition_prelude = rxcp_remap_create_instruction_builder(context,
+                                                                        condition_node);
+    ASTNode *condition_value = condition_prelude
+        ? levelc_lower_expr(context, condition_node->child, plan,
+                            condition_prelude) : NULL;
+    ASTNode *end_instructions;
+    ASTNode *step_instructions;
+    ASTNode *true_leave;
+    ASTNode *false_leave;
+    ASTNode *step_block;
+    ASTNode *branch;
+    ASTNode *block;
+
+    condition_value = levelc_do_condition_logical_value(context, condition_node,
+                                                        condition_value);
+    if (!condition_value || !step_prelude || !step_prelude->child) return NULL;
+    end_instructions = rxcp_remap_create_instruction_builder(context, condition_node);
+    step_instructions = rxcp_remap_create_instruction_builder(context, condition_node);
+    true_leave = ast_f(context, LEAVE_WITH, condition_node->token);
+    false_leave = ast_f(context, LEAVE_WITH, condition_node->token);
+    block = ast_f(context, BLOCK_EXPR, condition_node->token);
+    if (!end_instructions || !step_instructions || !true_leave ||
+        !false_leave || !block) return NULL;
+    rxcp_remap_anchor_synthetic(true_leave, condition_node);
+    rxcp_remap_anchor_synthetic(false_leave, condition_node);
+    rxcp_remap_anchor_synthetic(block, condition_node);
+    add_ast(true_leave, rxcp_remap_create_integer_constant(context, condition_node,
+                                                            1, TP_BOOLEAN));
+    rxcp_remap_append_builder_children(step_instructions, step_prelude);
+    add_ast(false_leave, rxcp_remap_create_integer_constant(context, condition_node,
+                                                             0, TP_BOOLEAN));
+    add_ast(step_instructions, false_leave);
+    step_block = rxcp_remap_create_do_block(context, condition_node,
+                                           step_instructions);
+    branch = step_block
+        ? rxcp_remap_create_if_statement(context, condition_node,
+                                         condition_value, true_leave, step_block)
+        : NULL;
+    if (!branch) return NULL;
+    rxcp_remap_append_builder_children(end_instructions, condition_prelude);
+    add_ast(end_instructions, branch);
+    add_ast(block, end_instructions);
     return block;
 }
 
@@ -2968,8 +3011,7 @@ static int levelc_lower_do(Context *context,
             int for_count = 0;
 
             if (!levelc_controlled_literal_header_supported(repeat, &to, &by,
-                                                       &for_clause, reason_out) ||
-                (condition_node && condition_node->node_type != WHILE)) goto fail;
+                                                       &for_clause, reason_out)) goto fail;
             control_anchor = to ? to : for_clause;
             if (for_clause &&
                 !levelc_bounded_nonnegative_integer_literal(for_clause->child,
@@ -3000,7 +3042,7 @@ static int levelc_lower_do(Context *context,
                                                     limit_args, by ? 2 : 1)
                     : NULL;
             }
-            if (condition_node) {
+            if (condition_node && condition_node->node_type == WHILE) {
                 while_value = levelc_controlled_while_entry(context,
                                                              condition_node,
                                                              plan, while_value);
@@ -3033,25 +3075,33 @@ static int levelc_lower_do(Context *context,
                                                           set_args, 2)
                 : NULL;
             if (end_prelude && set_statement) add_ast(end_prelude, set_statement);
-            until_value = end_prelude && set_statement
-                ? rxcp_remap_create_prelude_block_expr(
-                    context, control_anchor, end_prelude,
-                    rxcp_remap_create_integer_constant(context, control_anchor,
-                                                       0, TP_BOOLEAN))
-                : NULL;
-            while_source = condition_node ? condition_node
+            until_value = condition_node && condition_node->node_type == UNTIL
+                ? levelc_controlled_until_end(context, condition_node, plan,
+                                               end_prelude)
+                : end_prelude && set_statement
+                    ? rxcp_remap_create_prelude_block_expr(
+                        context, control_anchor, end_prelude,
+                        rxcp_remap_create_integer_constant(context, control_anchor,
+                                                           0, TP_BOOLEAN))
+                    : NULL;
+            while_source = condition_node && condition_node->node_type == WHILE
+                ? condition_node
                 : to ? ast_f(context, WHILE, to->token) : NULL;
-            until_source = ast_f(context, UNTIL, control_anchor->token);
-            if (while_source && to && !condition_node)
+            until_source = condition_node && condition_node->node_type == UNTIL
+                ? condition_node : ast_f(context, UNTIL, control_anchor->token);
+            if (while_source && to &&
+                (!condition_node || condition_node->node_type != WHILE))
                 rxcp_remap_anchor_synthetic(while_source, to);
-            if (until_source) rxcp_remap_anchor_synthetic(until_source, control_anchor);
+            if (until_source && (!condition_node || condition_node->node_type != UNTIL))
+                rxcp_remap_anchor_synthetic(until_source, control_anchor);
             body = condition_node ? condition_node->sibling : repeat->sibling;
             control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);
             count_node = for_clause
                 ? rxcp_remap_create_integer_constant(context, for_clause->child,
                                                      for_count, TP_INTEGER)
                 : NULL;
-            lowered = (!(to || condition_node) || (while_value && while_source)) && until_value &&
+            lowered = (!(to || (condition_node && condition_node->node_type == WHILE)) ||
+                       (while_value && while_source)) && until_value &&
                       until_source && control_name &&
                       (!for_clause || count_node)
                 ? rxcp_remap_create_controlled_do(
