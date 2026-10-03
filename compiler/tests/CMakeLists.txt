@@ -5695,6 +5695,12 @@ add_levelc_runtime_slice_test(levelc_slice38_adjacent_call
 add_levelc_runtime_slice_test(levelc_slice38_adjacent_call_noopt
         rexx_src/levelc_slice38_adjacent_call.rexx
         "literal 3\nx 2\nnested 2\nempty 0\nlocal ZZ\nspaced LENGTH abc\n" -n)
+add_levelc_runtime_slice_test(levelc_slice39_arg_upper
+        rexx_src/levelc_slice39_arg_upper.rexx
+        "inside ABC DEF aBc\nresult ABC/DEF\nafter aBc dEf\ninside A B C D aBc\nspaces A B/C D\nempty 0\n")
+add_levelc_runtime_slice_test(levelc_slice39_arg_upper_noopt
+        rexx_src/levelc_slice39_arg_upper.rexx
+        "inside ABC DEF aBc\nresult ABC/DEF\nafter aBc dEf\ninside A B C D aBc\nspaces A B/C D\nempty 0\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -6110,6 +6116,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice38_adjacent_call_tree_shape
         "rexxclassicbif_call"
         "__rxcp_levelc_proc_ECHO"
         "spaceConcat")
+add_levelc_lowered_tree_shape_test(levelc_slice39_arg_upper_tree_shape
+        rexx_src/levelc_slice39_arg_upper.rexx
+        "rexxclassicbiftranslate"
+        "rexxclassicbif_translate"
+        "setArguments"
+        "setCallerPool"
+        "setValue")
 
 # Bridge Connectivity Test
 add_custom_command(

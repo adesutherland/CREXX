@@ -43,6 +43,7 @@
 #define LEVELC_FOR_COUNT_PREFIX "__rxcp_levelc_for_"
 #define LEVELC_BIF_LENGTH_HELPER "rexxclassicbif_length"
 #define LEVELC_BIF_DISPATCH_HELPER "rexxclassicbif_call"
+#define LEVELC_BIF_TRANSLATE_HELPER "rexxclassicbif_translate"
 #define LEVELC_BIF_CONTEXT_CLASS "RexxBifCallContext"
 #define LEVELC_REXX_VALUE_CLASS "RexxValue"
 #define LEVELC_REXX_VALUE_CLASS_TYPE ".RexxValue"
@@ -1962,7 +1963,9 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
                                                ASTNode *expr,
                                                const char *bif_name,
                                                LevelCLowerPlan *plan,
-                                               ASTNode *prelude) {
+                                               ASTNode *prelude,
+                                               const char *callee_name,
+                                               ASTNode *single_value_override) {
     char *args_name;
     char *exists_name;
     char *context_name;
@@ -1998,6 +2001,7 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     }
 
     arg_count = levelc_function_argument_count(expr);
+    if (single_value_override && arg_count != 1) goto fail;
     arg = expr->child;
     index = 1;
     while (index <= arg_count) {
@@ -2008,7 +2012,8 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
         if (!arg) goto fail;
         arg_provided = levelc_argument_exists(arg);
         if (arg_provided) {
-            value_rhs = levelc_lower_expr(context, arg, plan, prelude);
+            value_rhs = single_value_override ? single_value_override
+                                              : levelc_lower_expr(context, arg, plan, prelude);
             value_copy = levelc_copy_rexxvalue(context, arg, value_rhs);
         } else {
             value_rhs = levelc_blank_rexxvalue(context, arg);
@@ -2088,7 +2093,7 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     free(context_name);
     return rxcp_remap_create_function_call(context,
                                            expr,
-                                           LEVELC_BIF_DISPATCH_HELPER,
+                                           callee_name,
                                            function_args,
                                            1);
 
@@ -2195,7 +2200,8 @@ static ASTNode *levelc_lower_function_call(Context *context,
 
     if (strcmp(name, "SUBSTR") == 0) {
         free(name);
-        return levelc_lower_bif_dispatch_call(context, expr, "SUBSTR", plan, prelude);
+        return levelc_lower_bif_dispatch_call(context, expr, "SUBSTR", plan,
+                                              prelude, LEVELC_BIF_DISPATCH_HELPER, NULL);
     }
 
     free(name);
@@ -2640,7 +2646,9 @@ static int levelc_append_procedure_exposes(Context *context,
     return 1;
 }
 
-static ASTNode *levelc_build_options(Context *context, ASTNode *anchor_node) {
+static ASTNode *levelc_build_options(Context *context,
+                                     ASTNode *anchor_node,
+                                     int needs_translate) {
     ASTNode *options;
     ASTNode *levelb;
     ASTNode *comments_dash;
@@ -2648,6 +2656,7 @@ static ASTNode *levelc_build_options(Context *context, ASTNode *anchor_node) {
     ASTNode *import_value;
     ASTNode *import_pool;
     ASTNode *import_bifs;
+    ASTNode *import_translate;
 
     options = ast_f(context, REXX_OPTIONS, anchor_node ? anchor_node->token : NULL);
     if (!options) return NULL;
@@ -2659,7 +2668,13 @@ static ASTNode *levelc_build_options(Context *context, ASTNode *anchor_node) {
     import_value = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxvalue");
     import_pool = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxpool");
     import_bifs = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxclassicbifs");
-    if (!levelb || !comments_dash || !numeric_classic || !import_value || !import_pool || !import_bifs) return NULL;
+    import_translate = needs_translate
+        ? rxcp_remap_create_generated_import(context,
+                                             anchor_node ? anchor_node : options,
+                                             "rexxclassicbiftranslate")
+        : NULL;
+    if (!levelb || !comments_dash || !numeric_classic || !import_value ||
+        !import_pool || !import_bifs || (needs_translate && !import_translate)) return NULL;
 
     add_ast(options, levelb);
     add_ast(options, comments_dash);
@@ -2667,6 +2682,7 @@ static ASTNode *levelc_build_options(Context *context, ASTNode *anchor_node) {
     add_ast(options, import_value);
     add_ast(options, import_pool);
     add_ast(options, import_bifs);
+    if (import_translate) add_ast(options, import_translate);
     return options;
 }
 
@@ -2680,6 +2696,9 @@ static int levelc_append_arg_bindings(Context *context,
     ASTNode *receiver;
     ASTNode *member_args[2];
     ASTNode *statement;
+    ASTNode *function;
+    ASTNode *function_arg;
+    ASTNode *arg_value;
     size_t index;
 
     if (!procedure || !procedure->arg_statement) return 1;
@@ -2694,10 +2713,17 @@ static int levelc_append_arg_bindings(Context *context,
         arg_name = levelc_generated_arg_name(index);
         receiver = levelc_pool_ref(context, target ? target : template_node, VAR_SYMBOL);
         member_args[0] = target ? levelc_name_string(context, target) : NULL;
-        member_args[1] = arg_name ? rxcp_remap_create_named_ref(context,
-                                                                target ? target : template_node,
-                                                                VAR_SYMBOL,
-                                                                arg_name) : NULL;
+        function = target ? ast_f(context, FUNCTION, target->token) : NULL;
+        function_arg = target ? ast_f(context, VAR_SYMBOL, target->token) : NULL;
+        if (function && function_arg) add_ast(function, function_arg);
+        arg_value = arg_name && target
+            ? rxcp_remap_create_named_ref(context, target, VAR_SYMBOL, arg_name)
+            : NULL;
+        member_args[1] = function && function_arg && arg_value
+            ? levelc_lower_bif_dispatch_call(context, function, "TRANSLATE", NULL,
+                                             instructions,
+                                             LEVELC_BIF_TRANSLATE_HELPER, arg_value)
+            : NULL;
         if (arg_name) free(arg_name);
         if (!receiver || !member_args[0] || !member_args[1]) {
             if (reason_out) *reason_out = "failed to create ARG binding";
@@ -3462,9 +3488,14 @@ static int levelc_rewrite_program(Context *context,
     ASTNode *pool_setup;
     ASTNode *stmt;
     size_t i;
+    int needs_translate = 0;
 
     anchor = old_instructions && old_instructions->child ? old_instructions->child : program_file;
-    options = levelc_build_options(context, anchor);
+    for (i = 0; plan && i < plan->procedure_count; i++) {
+        if (plan->procedures[i].arg_statement && plan->procedures[i].arg_count > 0)
+            needs_translate = 1;
+    }
+    options = levelc_build_options(context, anchor, needs_translate);
     instructions = rxcp_remap_create_instruction_builder(context, anchor);
     if (!options || !instructions) {
         if (reason_out) *reason_out = "failed to create Level C lowered program shell";

@@ -359,6 +359,18 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   as Regina does. Verify minimal reference counterexamples, raw and lowered
   AST shape, supported nested arguments, focused parser/runtime checks and
   the relevant normal compiler suite. Broader call syntax remains open.
+- [x] **LC-AC-38 — direct ARG uppercase binding:** a supported direct
+  local-procedure `ARG` binding applies Classic `PARSE UPPER ARG` conversion
+  to each supplied argument before storing it in the callee's visible pool.
+  The caller's value remains unchanged, scalar target order and exposure
+  still work, and the shared Classic TRANSLATE implementation supplies the
+  current Level C BYTE default mapping. End-to-end delivery of an opt-in
+  UTF8 call configuration remains open under LC-AC-04/06. Verify lowercase
+  and mixed-case Regina
+  examples, opt/no-opt and linked execution, canonical argument-frame and
+  pool-set tree shape, focused shared-runtime checks and the relevant normal
+  compiler suite. Wider parse templates and external-call lifecycle remain
+  open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -631,6 +643,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     add no new emitter node. Reproduce both spellings against Regina, inspect
     raw and lowered trees, qualify focused and normal checks, and commit this
     parser/AST increment separately.
+41. **LC-STEP-41 — complete (LC-AC-06/08/38; depends on STEP-40):** route each supported
+    ARG binding's captured `RexxValue` through the existing shared Classic
+    TRANSLATE BIF context before the canonical pool set. Keep caller argument
+    copies and target order intact; reuse the existing argument-frame builder
+    and source anchors. Prove Regina and shared BYTE-default behavior,
+    opt/no-opt and linked execution, qualify normal checks, and commit this
+    binding increment separately.
 
 ## Findings
 
@@ -648,11 +667,10 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   keeping the blank-separated symbol-plus-group AST. Reproducer output:
   `/tmp/crexx-levelc-adjacent-call-reference.fh07ZP` and
   `/tmp/crexx-levelc-adjacent-call-output.07V6xB`.
-- **LC-FIND-03 — ARG case normalization:** a local procedure with `ARG value`
-  called as `echo('z')` returns `ZZ` in Regina when it appends `'Z'`, but the
-  current Level C path returns `zZ`. This was exposed by the adjacent-call
-  fixture and has a distinct argument binding cause; it remains open for an
-  argument-semantics increment. Reproducer output:
+- **LC-FIND-03 — resolved, ARG case normalization:** a local procedure with
+  `ARG value` called as `echo('z')` returns `ZZ` in Regina when it appends
+  `'Z'`, while the former Level C path returned `zZ`. `LC-STEP-41` now uses
+  shared TRANSLATE before binding the callee pool target. Reproducer output:
   `/tmp/crexx-levelc-adjacent-call-regina-output.qX60V2` and
   `/tmp/crexx-levelc-adjacent-call-toolchain.17jBQE`.
 
@@ -715,7 +733,7 @@ has been approved in this worklist.
 | Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled DO with optional TO/FOR/BY, captured dynamic start/TO/BY/FOR and WHILE entry or UNTIL end checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, named transfer to wider loops, remaining numeric contexts and errors |
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
-| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
+| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed direct ARG with Classic uppercase binding, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, wider PARSE templates, dynamic/external calls, full scope and return/exit lifecycle |
 | PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Front end: parser fixtures | Runtime source acquisition, template assignment, errors |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
 | Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | Front end: selected parser forms | Trap lifecycle, delivery, messages and error identity |
@@ -1703,7 +1721,28 @@ full compatibility proof.
   `/tmp/crexx-levelc-adjacent-call-tree.M4wN3G`,
   `/tmp/crexx-levelc-adjacent-call-link-log.OkFc9t`, and
   `/tmp/crexx-levelc-adjacent-call-linked-output.irO9L1`.
+- Direct local `ARG` now applies shared Classic TRANSLATE to each captured
+  argument before its source-anchored canonical pool set. The tree shows one
+  BIF context/frame and call per target, in target order, with the import
+  generated only when required. Regina and linked RXBIN output match for
+  lowercase/mixed-case and spaced values, multiple arguments, exposure,
+  unchanged caller variables and an empty argument. Final focused Release
+  checks passed 8/8, Release Level C 239/239, shared TRANSLATE/RexxValue
+  4/4, and Debug procedure/structural/shared checks 31/31. The current Level C
+  call configuration defaults to BYTE; UTF8 delivery remains open under
+  `LC-AC-04/06`. Evidence:
+  `/tmp/crexx-levelc-arg-uppercase-reference.2nn27c`,
+  `/tmp/crexx-levelc-arg-uppercase-baseline.qpCi0e`,
+  `/tmp/crexx-levelc-arg-uppercase-regina-output.yaoWNR`,
+  `/tmp/crexx-levelc-arg-uppercase-release-build.XJaXBG`,
+  `/tmp/crexx-levelc-arg-uppercase-focused-release.GhBR4m`,
+  `/tmp/crexx-levelc-arg-uppercase-release-suite.YLlJyL`,
+  `/tmp/crexx-levelc-arg-uppercase-shared-release.OePRCZ`,
+  `/tmp/crexx-levelc-arg-uppercase-debug-build.nR7gEZ`,
+  `/tmp/crexx-levelc-arg-uppercase-debug-focused.DWm9zr`,
+  `/tmp/crexx-levelc-arg-uppercase-tree.3Hzw3j`,
+  `/tmp/crexx-levelc-arg-uppercase-link-log.pQWMl4`, and
+  `/tmp/crexx-levelc-arg-uppercase-linked-output.c6E1qt`.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.
-  `LC-FIND-03` remains open.

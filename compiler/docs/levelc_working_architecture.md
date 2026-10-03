@@ -64,6 +64,14 @@ shared BIF boundary. Sharing these classes does not make RexxScript a Level C
 compiler or imply that every Classic instruction or BIF is available there.
 The caller's host CREXX pool is never passed implicitly into a RexxScript BIF.
 
+Supported direct local-procedure `ARG` bindings now use Classic
+`PARSE UPPER ARG` behavior. The lowerer copies each caller argument into a
+one-value `RexxBifCallContext`, supplies the callee's visible pool, calls the
+shared standalone `rexxclassicbif_translate`, then sets the parsed target in
+the callee pool. It adds the TRANSLATE import only for a programme with such
+bindings. This uses the current Level C BYTE default; delivery of an opt-in
+UTF8 call configuration remains an open compatibility obligation.
+
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and
 capability policy. Changes to shared value, pool, or BIF behavior need focused

@@ -20,7 +20,7 @@ exists.
 | LC-REF-001 | Invocation modes COMMAND, FUNCTION, SUBROUTINE | host | Open: `API_Start`-equivalent entry and lifecycle |
 | LC-REF-002 | Initial source identity and line inventory | source | Open: diagnostics, PARSE SOURCE, SOURCELINE |
 | LC-REF-003 | Initial environment and stream selection | host | Open: configuration adapter |
-| LC-REF-004 | Invocation arguments and omitted positions | host | Bounded local ARG slice; API invocation proof open |
+| LC-REF-004 | Invocation arguments and omitted positions | host | Bounded direct local ARG with Classic uppercase binding; omitted positions and API invocation proof open |
 | LC-REF-005 | Caller-provided trap overrides | host | Open: trap/configuration lifecycle |
 | LC-REF-006 | Completion classes: no value, result, condition, resource failure, unable to continue | host | Open: observable result/error contract |
 | LC-REF-007 | Source characters, EOL/EOS and invalid-encoding `22.1` | source | Front end; configured source service and error proof open |
