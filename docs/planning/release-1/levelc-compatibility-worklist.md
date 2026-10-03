@@ -492,6 +492,21 @@ direct word/dot templates before work resumes on positions and patterns.
   raw/canonical AST, the normal Level C suite and linked execution. Patterns,
   positions, comma templates and other source forms remain open under their
   own criteria.
+- [ ] **LC-AC-51 — static mixed PARSE template plan:** `PARSE VAR` and
+  `PARSE VALUE` accept a nonempty single template with any representable
+  sequence of direct scalar/dot targets, literal patterns, and literal
+  absolute/relative positions. The lowerer validates the parsed AST and
+  serializes its items to the VM's frozen `parseplan` descriptor; no template
+  length or item-order dispatch governs acceptance. One source snapshot and
+  one plan execution precede ordered visible pool writes. Dot targets
+  consume fields without writes; aliases, repeated targets, UPPER, local
+  scope and once-only VALUE effects retain their established behavior.
+  Direct word-only templates may keep their shared generic fast path.
+  Verify literal/position interaction, leading/trailing/repeated delimiters,
+  absent patterns, backward/zero/out-of-range positions, ASCII/UTF8 boundaries,
+  opt/no-opt, raw/canonical AST, Regina equivalence, the normal Level C suite
+  and linked execution. Dynamic pattern/position operands, comma templates
+  and other source forms remain open for subsequent steps.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -853,6 +868,15 @@ direct word/dot templates before work resumes on positions and patterns.
     order. Replace obsolete five-item negatives with a distinct unsupported
     template family. Prove reference, shared-consumer, structural, opt/no-opt,
     normal Level C and linked behavior before a separate commit.
+54. **LC-STEP-54 (LC-AC-08/51; depends on STEP-53):** map the parser's mixed
+    template AST to a validated, count-independent item sequence and compile
+    static items into the frozen `parseplan` descriptor. Reuse the existing
+    canonical assembler node and string-array result shape where possible;
+    add a dedicated node only if the existing emitter boundary cannot
+    represent the descriptor safely. Capture source and results before pool
+    writes, compare with Regina for pattern/position interaction and Unicode,
+    inspect raw/canonical ownership, run focused Debug/Release and the normal
+    Level C suite, and retain linked-image evidence before committing.
 
 ## Findings
 

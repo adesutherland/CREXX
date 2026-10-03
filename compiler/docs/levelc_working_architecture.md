@@ -97,6 +97,21 @@ Pattern, position and comma templates need a structured template plan;
 the certified exit's frozen `parseplan` semantics are the reference for that
 broader design, with Level C's parsed AST and Classic pool boundary retained.
 
+For static mixed templates, the next path walks the parser's existing ordered
+`TARGET`, `PATTERN`, `ABS_POS` and `REL_POS` children. It inserts the
+implicit word boundary between adjacent targets and the initial absolute
+position when the template begins with a target, then serializes the whole
+sequence to the VM's version-1 frozen `parseplan` descriptor. The descriptor
+is a compiler-owned byte constant, not source text interpreted at runtime.
+The existing canonical `ASSEMBLER` node is the first candidate for calling
+`parseplan` into a hidden string result array. The lowerer snapshots the
+source before that call, then converts and assigns captured non-dot fields
+through the Classic pool in authored order. This path has no target-count or
+item-order switch.
+Dynamic operands require version-2 references and an explicit capture plan;
+comma templates require per-source segment handling. They extend the same
+item representation instead of adding shape-specific lowering paths.
+
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including
 direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;
