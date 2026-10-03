@@ -609,11 +609,11 @@ QA and unrelated Python-based package tooling are outside this change.
 
 ### Acceptance criteria
 
-13. **DG-AC-13 — passed locally: René's preamble builds.** Both cREXX staged-preamble
-    checks accept and retain `\\usepackage[hidelinks]{hyperref}` while preserving
+13. **DG-AC-13 — passed: René's preamble builds.** Both cREXX staged-preamble
+    checks accept and retain `\usepackage[hidelinks]{hyperref}` while preserving
     the existing package-order adjustment. Inspect the staged preamble and a
     focused generator run; the authored preamble and style file do not change.
-14. **DG-AC-14 — local checks passed; hosted output open: simple document gate.** The active document workflow,
+14. **DG-AC-14 — passed: simple document gate.** The active document workflow,
     wrapper and document-specific publication path invoke no Python. A successful
     generation yields exactly the four named, non-empty PDFs. Missing or empty
     output prevents document publication. No PDF content, header, page, hash or
@@ -630,12 +630,13 @@ QA and unrelated Python-based package tooling are outside this change.
 10. **DG-STEP-10 — complete (AC-13).** Fast-forward the existing `develop` checkout,
     retain unrelated untracked files, and adapt only the generator's staged
     `hyperref` recognition/reordering to preserve René's option.
-11. **DG-STEP-11 — implemented; hosted output open; depends on STEP-10 (AC-14).** Remove document-path
+11. **DG-STEP-11 — complete; depends on STEP-10 (AC-14).** Remove document-path
     Python setup, helpers and detailed PDF validation. Collect four expected
     PDFs with a shell non-empty-file check; simplify optional publication to
     that same check and remove claims about a new provenance manifest.
-12. **DG-STEP-12 — in progress; depends on STEP-11 (AC-14/15).** Run the smallest
-    focused generation and four-file checks, publish the bounded `develop`
+12. **DG-STEP-12 — implementation complete; scheduled Deep outcome open;
+    depends on STEP-11 (AC-14/15).** Run the smallest focused generation and
+    four-file checks, publish the bounded `develop`
     change, then apply the matching reusable workflow change to `master` under
     Adrian's explicit approval for this narrow scheduled-gate exception. Check
     automatic workflow outcomes; do not dispatch the overnight matrix solely
@@ -651,5 +652,21 @@ QA and unrelated Python-based package tooling are outside this change.
   preamble retained `\usepackage[hidelinks]{hyperref}` after package reordering.
 - `bash scripts/check-doc-pdfs.sh` passed with four non-empty fixture files and
   rejected an empty one. `bash -n`, `actionlint` for both edited workflows,
-  and `git diff --check` passed. Full hosted four-PDF generation and scheduled
-  Deep QA remain open.
+  and `git diff --check` passed. Scheduled Deep QA remains open.
+- Published `develop` repair `d1c0258899f2711a32459d83588cebb091ebd3c7`
+  passed the actual Ubuntu document job
+  [`111159294580`](https://github.com/adesutherland/CREXX/actions/runs/37107663861/job/111159294580).
+  Its downloaded `documentation-release-asset` contains exactly the four
+  expected non-empty PDF files. The full
+  [Build CREXX run](https://github.com/adesutherland/CREXX/actions/runs/37107663861)
+  passed and published the matching development snapshot. That release has
+  exactly four non-empty PDFs, its body names the repaired commit, and the old
+  `CREXX-dev-snapshot-docs.json` asset is absent.
+- The only scheduled-workflow edit on `master` is
+  `77ba820c35e40450311823a3e7f171e37a7982f8`, which removes the
+  documentation job's Python setup/install and obsolete snapshot artifact
+  reference. The next scheduled Deep run remains open.
+- The previous document failure proved the Deep-required path fails as intended,
+  while the ordinary build at René's merge completed despite its optional
+  document failure. The current repaired Build confirms the optional publication
+  path. Deep's next successful scheduled outcome has not yet run.
