@@ -92,6 +92,14 @@ Level C already has a parsed template AST and writes through a separate
 Classic variable pool. Wider template work should assess reuse of those
 lower-level parse operations or descriptor semantics before adding another
 template algorithm, while preserving Level C AST ownership and pool writes.
+The next bounded template form uses that reuse path: `RexxValue.parseThreeWords()`
+wraps the existing `parsewords3` VM instruction and returns two words plus the
+unparsed tail as three `RexxValue` results. Level C captures that array before
+any target write and assigns the three direct scalar targets in source order.
+An optional UPPER still transforms the source through shared TRANSLATE first.
+The parser's nested template nodes are validated and removed by lowering;
+no new AST or emitter node is required. The current default proof is BYTE;
+the broader configuration and remaining template forms stay open.
 
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and

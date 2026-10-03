@@ -36,6 +36,7 @@
 #define LEVELC_BIF_CONTEXT_PREFIX "__rxcp_levelc_bif_context_"
 #define LEVELC_COMPOUND_TAIL_PREFIX "__rxcp_levelc_tail_"
 #define LEVELC_EXPR_RESULT_PREFIX "__rxcp_levelc_expr_"
+#define LEVELC_PARSE_FIELDS_PREFIX "__rxcp_levelc_parse_fields_"
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_START_VALUE_PREFIX "__rxcp_levelc_start_"
 #define LEVELC_TO_LIMIT_PREFIX "__rxcp_levelc_to_"
@@ -1373,10 +1374,11 @@ static int levelc_if_statement_supported(ASTNode *stmt,
     return !else_statement || levelc_main_statement_supported(else_statement, plan, reason_out);
 }
 
-static int levelc_single_parse_shape(ASTNode *stmt,
+static int levelc_direct_parse_shape(ASTNode *stmt,
                                      LevelCLowerPlan *plan,
                                      ASTNode **source_out,
                                      ASTNode **target_out,
+                                     size_t *target_count_out,
                                      int *is_value_out,
                                      int *upper_out,
                                      const char **reason_out) {
@@ -1384,7 +1386,9 @@ static int levelc_single_parse_shape(ASTNode *stmt,
     ASTNode *templates;
     ASTNode *template_node;
     ASTNode *target;
+    ASTNode *cursor;
     char *name;
+    size_t target_count;
     int upper = 0;
     int is_value = 0;
 
@@ -1403,8 +1407,7 @@ static int levelc_single_parse_shape(ASTNode *stmt,
     target = template_node && template_node->node_type == TEMPLATES
         ? template_node->child : NULL;
     if (!source || !templates || templates->sibling || !template_node ||
-        template_node->sibling || !target || target->node_type != TARGET ||
-        target->sibling) goto unsupported;
+        template_node->sibling || !target) goto unsupported;
 
     if (source->node_type == VAR_REFERENCE) {
         name = levelc_upper_name(source);
@@ -1424,14 +1427,21 @@ static int levelc_single_parse_shape(ASTNode *stmt,
             !levelc_expr_supported(expr, plan, reason_out)) goto unsupported;
     } else goto unsupported;
 
-    name = levelc_upper_name(target);
-    if (!name || levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR) {
+    target_count = 0;
+    for (cursor = target; cursor; cursor = cursor->sibling) {
+        if (cursor->node_type != TARGET || cursor->child) goto unsupported;
+        name = levelc_upper_name(cursor);
+        if (!name || levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR) {
+            free(name);
+            goto unsupported;
+        }
         free(name);
-        goto unsupported;
+        target_count++;
     }
-    free(name);
+    if (target_count != 1 && target_count != 3) goto unsupported;
     if (source_out) *source_out = source;
     if (target_out) *target_out = target;
+    if (target_count_out) *target_count_out = target_count;
     if (is_value_out) *is_value_out = is_value;
     if (upper_out) *upper_out = upper;
     return 1;
@@ -1454,7 +1464,7 @@ static int levelc_main_statement_supported(ASTNode *stmt,
     if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == PARSE)
-        return levelc_single_parse_shape(stmt, plan, NULL, NULL, NULL, NULL, reason_out);
+        return levelc_direct_parse_shape(stmt, plan, NULL, NULL, NULL, NULL, NULL, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
 
     if (stmt->node_type == CALL) {
@@ -1486,7 +1496,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == PARSE)
-        return levelc_single_parse_shape(stmt, plan, NULL, NULL, NULL, NULL, reason_out);
+        return levelc_direct_parse_shape(stmt, plan, NULL, NULL, NULL, NULL, NULL, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
     if (stmt->node_type == RETURN) {
         if (stmt->child) return levelc_expr_supported(stmt->child, plan, reason_out);
@@ -2940,7 +2950,7 @@ fail:
     return 0;
 }
 
-static int levelc_lower_single_parse(Context *context,
+static int levelc_lower_direct_parse(Context *context,
                                      ASTNode *instructions,
                                      ASTNode *stmt,
                                      LevelCLowerPlan *plan,
@@ -2953,10 +2963,12 @@ static int levelc_lower_single_parse(Context *context,
     ASTNode *receiver;
     ASTNode *args[2];
     ASTNode *lowered;
+    size_t target_count;
+    size_t index;
     int is_value;
     int upper;
 
-    if (!levelc_single_parse_shape(stmt, plan, &source, &target,
+    if (!levelc_direct_parse_shape(stmt, plan, &source, &target, &target_count,
                                    &is_value, &upper, reason_out)) return 0;
     prelude = rxcp_remap_create_instruction_builder(context, stmt);
     if (!prelude) goto fail;
@@ -2971,6 +2983,44 @@ static int levelc_lower_single_parse(Context *context,
                                                prelude, LEVELC_BIF_TRANSLATE_HELPER,
                                                value);
         if (!value) goto fail;
+    }
+
+    if (target_count == 3) {
+        char *fields_name = rxcp_remap_create_generated_node_name(
+            LEVELC_PARSE_FIELDS_PREFIX, stmt);
+        ASTNode *fields_define = fields_name
+            ? rxcp_remap_create_array_define(context, stmt, fields_name,
+                                             LEVELC_REXX_VALUE_CLASS_TYPE)
+            : NULL;
+        ASTNode *split = rxcp_remap_create_member_call(context, stmt, value,
+                                                        "parseThreeWords", NULL, 0);
+        ASTNode *capture = fields_name && split
+            ? rxcp_remap_create_named_assignment(context, stmt, fields_name, split)
+            : NULL;
+        if (!fields_define || !capture) {
+            free(fields_name);
+            goto fail;
+        }
+        add_ast(prelude, fields_define);
+        add_ast(prelude, capture);
+        rxcp_remap_append_builder_children(instructions, prelude);
+        for (index = 1; index <= 3; index++, target = target->sibling) {
+            receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
+            args[0] = levelc_name_string(context, target);
+            args[1] = rxcp_remap_create_indexed_ref(context, target, VAR_SYMBOL,
+                                                    fields_name, (int)index);
+            lowered = receiver && args[0] && args[1]
+                ? rxcp_remap_create_member_call_statement(context, target,
+                                                          receiver, "setValue", args, 2)
+                : NULL;
+            if (!lowered) {
+                free(fields_name);
+                goto fail;
+            }
+            add_ast(instructions, lowered);
+        }
+        free(fields_name);
+        return 1;
     }
 
     receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
@@ -3006,7 +3056,7 @@ static int levelc_lower_main_statement(Context *context,
         return levelc_lower_scalar_drop(context, instructions, stmt, reason_out);
     }
     if (stmt->node_type == PARSE)
-        return levelc_lower_single_parse(context, instructions, stmt, plan, reason_out);
+        return levelc_lower_direct_parse(context, instructions, stmt, plan, reason_out);
     if (stmt->node_type == IF) {
         return levelc_lower_if_statement(context, instructions, stmt, plan, NULL, 0, reason_out);
     }
@@ -3065,7 +3115,7 @@ static int levelc_lower_proc_statement(Context *context,
         return levelc_append_arg_bindings(context, instructions, procedure, reason_out);
     }
     if (stmt->node_type == PARSE)
-        return levelc_lower_single_parse(context, instructions, stmt, plan, reason_out);
+        return levelc_lower_direct_parse(context, instructions, stmt, plan, reason_out);
     if (stmt->node_type == IF) {
         return levelc_lower_if_statement(context, instructions, stmt, plan,
                                         procedure, 1, reason_out);

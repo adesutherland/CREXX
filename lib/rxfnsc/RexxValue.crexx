@@ -277,6 +277,22 @@ RexxValue: class
     end
     return ""
 
+  /**
+   * Split two Classic blank-delimited words and retain the remaining tail.
+   * @return Three values: first word, second word, and unparsed tail
+   */
+  parseThreeWords: method = .RexxValue[]
+    source = asString()
+    first = .string
+    second = .string
+    tail = .string
+    assembler parsewords3 first,second,tail,source
+    fields = .RexxValue[]
+    fields[1] = .RexxValue(first)
+    fields[2] = .RexxValue(second)
+    fields[3] = .RexxValue(tail)
+    return fields
+
   asInt: method = .int
     temp = 0
     flags = cache_flags

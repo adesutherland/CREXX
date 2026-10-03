@@ -117,6 +117,16 @@ errors = errors + check(.RexxValue("a").strictCompareLessOrEqual(.RexxValue("a")
 errors = errors + check(.RexxValue("same").equals(.RexxValue("same")), "equals")
 errors = errors + check(.RexxValue("a").compare(.RexxValue("b")) = -1, "compare less")
 
+parse_source = .RexxValue("  a  b   c  ")
+parse_fields = parse_source.parseThreeWords()
+errors = errors + check(parse_fields[1].asString() = "a", "parse first word")
+errors = errors + check(parse_fields[2].asString() = "b", "parse second word")
+errors = errors + check(parse_fields[3].asString() = "  c  ", "parse remaining tail")
+errors = errors + check(parse_source.asString() = "  a  b   c  ", "parse source unchanged")
+parse_fields = .RexxValue("a").parseThreeWords()
+errors = errors + check(parse_fields[1].asString() = "a" &,
+    parse_fields[2].asString() = "" & parse_fields[3].asString() = "", "parse short input")
+
 b = .RexxValue.fromBinary("4142"x as .binary)
 errors = errors + check(b.cacheFlags() = RV_FLAG_BINARY, "binary factory flags")
 errors = errors + check(\b.hasText(), "binary not marked text")

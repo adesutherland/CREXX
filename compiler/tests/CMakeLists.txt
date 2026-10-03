@@ -5207,6 +5207,8 @@ add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice40_parse_pattern_unsupported
         rexx_src/levelc_slice40_parse_pattern_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice41_parse_four_unsupported
+        rexx_src/levelc_slice41_parse_four_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
         rexx_src/levelc_slice10_indirect_drop_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_stem_drop_unsupported
@@ -5714,6 +5716,12 @@ add_levelc_runtime_slice_test(levelc_slice40_parse_single_noopt
 add_levelc_runtime_slice_test(levelc_slice40_parse_upper_import
         rexx_src/levelc_slice40_parse_upper_import.rexx
         "MIX\n")
+add_levelc_runtime_slice_test(levelc_slice41_parse_three
+        rexx_src/levelc_slice41_parse_three.rexx
+        "a|b|  c  |  a  b   c  \na||\n  c  |\nleft|right|tail here\nx|y|z  q|1\nA|B|  C |\nlocal a|b|  c \n")
+add_levelc_runtime_slice_test(levelc_slice41_parse_three_noopt
+        rexx_src/levelc_slice41_parse_three.rexx
+        "a|b|  c  |  a  b   c  \na||\n  c  |\nleft|right|tail here\nx|y|z  q|1\nA|B|  C |\nlocal a|b|  c \n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -6142,6 +6150,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice40_parse_single_tree_shape
         "symbolValue"
         "setValue"
         "__rxcp_levelc_proc_LOCAL")
+add_levelc_lowered_tree_shape_test(levelc_slice41_parse_three_tree_shape
+        rexx_src/levelc_slice41_parse_three.rexx
+        "parseThreeWords"
+        "__rxcp_levelc_parse_fields_"
+        "setValue"
+        "rexxclassicbif_translate")
 
 # Bridge Connectivity Test
 add_custom_command(
