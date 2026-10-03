@@ -344,8 +344,17 @@ failed:
 
 static int get_call_window(ASTNode *call) {
     ASTNode *argument;
+    ASTNode *ancestor;
     int position = 1;
     int previous_base = -1;
+
+    /* An UNTIL expression runs on each loop back edge. A call window that
+     * aliases a captured caller symbol can destroy a value required on the
+     * next iteration, so use the disjoint window for this shape. */
+    for (ancestor = call ? call->parent : NULL; ancestor; ancestor = ancestor->parent) {
+        if (ancestor->node_type == UNTIL)
+            return get_regs(call->scope, call->num_additional_registers);
+    }
 
     if (call && call->context && call->context->optimise) {
         for (argument = call->child; argument; argument = argument->sibling, position++) {

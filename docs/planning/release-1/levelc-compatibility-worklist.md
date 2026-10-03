@@ -305,6 +305,30 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   behavior. Verify bounded Regina output and errors, hidden canonical
   captures with source order, linked execution, focused Release/Debug checks
   and the relevant correctness suite. Dynamic start and FOR remain open.
+- [ ] **LC-AC-33 — captured dynamic controlled FOR count:** parsed scalar
+  controlled `DO name = non-negative integer [TO literal-or-expression]
+  [BY signed-literal-or-expression] FOR expression` evaluates a supported
+  FOR expression once in written clause order with TO/BY, before the new
+  visible control assignment. The resulting non-negative whole count is
+  bounded to signed 32-bit and reports contextual `26.3` for invalid or
+  out-of-range values. Zero still evaluates and validates every header
+  clause but skips the body and WHILE/UNTIL checks; positive counts preserve
+  the final pool value and ITERATE/LEAVE timing even if source variables
+  change. Verify bounded Regina output/errors, opt/no-opt, captured canonical
+  FOR count and source anchors, linked execution, focused Release/Debug
+  checks and the relevant correctness suite. Dynamic start and wider counts
+  remain open.
+- [x] **LC-AC-34 — loop-end call argument preservation:** optimized
+  canonical controlled loops preserve captured by-value arguments across a
+  method call and every later iteration, including when a zero-count loop
+  precedes them. Calls within canonical UNTIL end checks use a disjoint
+  argument window so their receiver and by-value argument slots cannot
+  overwrite a value needed at the next entry. Other call affinity shapes
+  retain their existing behavior. Verify the isolated
+  literal-FOR/dynamic-BY counterexample in opt and no-opt, inspect emitted
+  call marshalling, run the relevant normal compiler checks, and execute
+  through the full toolchain. This is a general compiler correctness repair
+  exposed by Level C, independent of dynamic FOR support.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -541,6 +565,20 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     end-step methods. Prove signed/zero steps, source mutation, FOR-zero
     `41.5`, nesting and condition timing against Regina, then qualify and
     commit separately.
+36. **LC-STEP-36 (LC-AC-08/33; depends on STEP-35):** admit a supported
+    dynamic controlled FOR expression, evaluate and validate it once in the
+    parsed TO/BY/FOR order before the initial pool set, and feed its hidden
+    canonical int to the existing REPEAT FOR child. Add shared RexxValue
+    contextual `26.3` conversion; prove zero/positive count, mutation,
+    transfers, conditions, source anchors, linked execution and normal/Debug
+    checks, then commit separately.
+37. **LC-STEP-37 — complete (LC-AC-34; depends on STEP-35, blocks STEP-36):** retain a
+    minimal existing-syntax reproducer for the call-window affinity alias
+    exposed by captured BY across a loop back edge. Use a disjoint call window
+    for canonical UNTIL end-check calls while retaining normal affinity for
+    other call sites; prove the counterexample and the existing WHILE path in
+    opt/no-opt runtime and emitted marshalling, then run the
+    relevant normal/Debug checks and commit the independent repair.
 
 ## Open findings
 
@@ -1498,6 +1536,26 @@ full compatibility proof.
   `/tmp/crexx-levelc-dynamic-by-final-tree-log.NJpdo3`,
   `/tmp/crexx-levelc-dynamic-by-final-rxlink.TkVth6`, and
   `/tmp/crexx-levelc-dynamic-by-final-rxvm.IpplQZ`.
+- The independent optimized call-window defect exposed by controlled FOR/BY
+  now has an existing-syntax fixture. With the original affinity, its
+  optimized path reported `41.6` after one body; no-opt and Regina produced
+  both bodies and final control value 3. Disabling affinity for every call
+  passed this fixture but made the existing `levelc_slice15_while` hang; the
+  bounded repair uses a disjoint window only for calls under a canonical
+  UNTIL end check. The emitted step call now marshals/restores the captured
+  BY register. Release selected compiler checks passed 250/250, Debug
+  focused checks passed 52/52, and linked RXBIN output matched Regina.
+  Evidence: `/tmp/crexx-levelc-for-min.Yf5AZm/zero_then_literal-old.output`,
+  `/tmp/crexx-levelc-call-window-preassign-focused.j5D997` (rejected broad
+  candidate), `/tmp/crexx-levelc-call-window-until-focused.h6kqpx`,
+  `/tmp/crexx-levelc-call-window-release-suite-final2.JPPBXU`,
+  `/tmp/crexx-levelc-call-window-debug-build.d8G1D4`,
+  `/tmp/crexx-levelc-call-window-final-debug-rebuild.5NAeJ4`,
+  `/tmp/crexx-levelc-call-window-debug-focused-final2.RSuasd`,
+  `/tmp/crexx-levelc-call-window-emission.81LA5Z`,
+  `/tmp/crexx-levelc-call-window-regina-output.sLJ3gC`,
+  `/tmp/crexx-levelc-call-window-final-rxlink.fh7JWi`, and
+  `/tmp/crexx-levelc-call-window-final-rxvm.wmAT3T`.
 - `LC-AC-08/04` remain open for dynamic start/FOR and other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.

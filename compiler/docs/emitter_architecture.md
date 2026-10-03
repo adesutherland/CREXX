@@ -154,6 +154,14 @@ counted path and its snapshots. Fixed calls do not change NR-06 register
 affinity, frame allocation/recycling, pass-by-value isolation, `.ref`, optional
 argument, signal, or return semantics.
 
+Counted calls inside a canonical `UNTIL` end-check allocate a contiguous
+argument window disjoint from caller-owned symbols. The ordinary NR-06
+affinity could place a loop-carried symbol in that frame; an optimized
+controlled-DO reproducer then lost its captured BY value after the first
+iteration. Other counted calls retain affinity. Widening this end-check rule
+needs a separate proof because removing affinity for every call made an
+existing optimized WHILE loop fail to terminate.
+
 The serialized forms require RXBIN 007 feature bit
 `RXBIN007_FEATURE_FIXED_CALLS`. RXAS/RXLINK derive that bit from the emitted
 instruction stream, and readers reject a fixed-call opcode without it. See

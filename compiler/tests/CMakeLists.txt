@@ -5661,6 +5661,14 @@ add_levelc_runtime_slice_test(levelc_slice34_dynamic_by_noopt
         "to 10 1\nby 10 2\nfirst-after 1 2\nby 10 1\nto 10 2\nsecond-after 1 2\nup 1 2\nup 3 1\nup 5 1\nafter-up 7 1\ndown 3 -1\ndown 2 1\ndown 1 1\nafter-down 0 1\nzero 1\nafter-zero 1\nno-to 1\nno-to 3\nno-to 5\nafter-no-to 7\nwhile 1\nwhile 2\nafter-while 3\nuntil 1\nuntil 2\nafter-until 2\nafter-outer 4\nlocal 1\nlocal 3\n5\n" -n)
 set_tests_properties(levelc_slice34_dynamic_by
         levelc_slice34_dynamic_by_noopt PROPERTIES TIMEOUT 60)
+add_levelc_runtime_slice_test(levelc_call_window_loop_carried
+        rexx_src/levelc_call_window_loop_carried.rexx
+        "first-after 1\nall 1\nall 2\nafter-all 3\n")
+add_levelc_runtime_slice_test(levelc_call_window_loop_carried_noopt
+        rexx_src/levelc_call_window_loop_carried.rexx
+        "first-after 1\nall 1\nall 2\nafter-all 3\n" -n)
+set_tests_properties(levelc_call_window_loop_carried
+        levelc_call_window_loop_carried_noopt PROPERTIES TIMEOUT 60)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}

@@ -67,6 +67,11 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
 4. **Emitter (IR -> Assembly)**
    - AST walkers (e.g., `rxcp_ast_walk.c`, `rxcp_emit_*.c`) traverse the tree.
    - Outputs intermediate string fragments representing the `rxas` Assembly instructions.
+   - Direct calls inside a canonical `UNTIL` end-check use a contiguous
+     register window separate from caller-owned symbols. That check executes
+     on a loop back edge, so a captured control value must survive the call
+     for the next iteration. Other calls retain the ordinary register-affinity
+     selection and argument marshalling.
    - Short-circuit `AND`/`OR` result-register donation checks each operand's
      cleanup lifetime independently. A linked left attribute must remain live
      through cleanup without preventing a computed right operand from receiving
