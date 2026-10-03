@@ -115,7 +115,12 @@ remaining source and never becomes a pool target. Level C validates that dot
 only in the final position, captures all three results before ordered pool
 writes, and uses the same optional shared TRANSLATE step. This still lowers
 through existing canonical array and call nodes; other dot placements remain
-guarded.
+guarded at that step. Two- and three-item templates now also accept `.` at
+any position when at least one direct scalar target remains. The existing
+`parseWordAndRest()` or `parseThreeWords()` result at that position is consumed
+without a pool write; the other targets are written in source order after
+the result array has been captured. Four-item templates with an internal dot
+and all-dot templates remain guarded.
 
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and

@@ -5220,8 +5220,10 @@ add_levelc_unsupported_compile_test(levelc_slice40_parse_pattern_unsupported
         rexx_src/levelc_slice40_parse_pattern_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice41_parse_four_unsupported
         rexx_src/levelc_slice41_parse_four_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice47_parse_middle_dot_unsupported
-        rexx_src/levelc_slice47_parse_middle_dot_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice48_parse_four_internal_dot_unsupported
+        rexx_src/levelc_slice48_parse_four_internal_dot_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice48_parse_all_dots_unsupported
+        rexx_src/levelc_slice48_parse_all_dots_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
         rexx_src/levelc_slice10_indirect_drop_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice10_stem_drop_unsupported
@@ -5747,6 +5749,12 @@ add_levelc_runtime_slice_test(levelc_slice47_parse_dot
 add_levelc_runtime_slice_test(levelc_slice47_parse_dot_noopt
         rexx_src/levelc_slice47_parse_dot.rexx
         "a|b|c|  a  b   c d e  \na|b|\nz|\nleft|right|third\nm|n|o|1\nA|B|C|\nlocal a|b|c\n" -n)
+add_levelc_runtime_slice_test(levelc_slice48_parse_placeholders
+        rexx_src/levelc_slice48_parse_placeholders.rexx
+        "final2=a|  a  b   c d  |\ninitial2= b   c d  |\nmiddle3=a|  c d  |\ninitial3=b|  c d  |\ndouble3=  c d  |\nfinal3=a|b|\ndoublefinal3=a|\nshort=||\nalias=left|tail more|\nrepeat=z q|\nvalue=n|o p|1\nupper=B|  C D |\nlocal=a|  c d |\n")
+add_levelc_runtime_slice_test(levelc_slice48_parse_placeholders_noopt
+        rexx_src/levelc_slice48_parse_placeholders.rexx
+        "final2=a|  a  b   c d  |\ninitial2= b   c d  |\nmiddle3=a|  c d  |\ninitial3=b|  c d  |\ndouble3=  c d  |\nfinal3=a|b|\ndoublefinal3=a|\nshort=||\nalias=left|tail more|\nrepeat=z q|\nvalue=n|o p|1\nupper=B|  C D |\nlocal=a|  c d |\n" -n)
 add_levelc_runtime_slice_test(levelc_slice42_abuttal
         rexx_src/levelc_slice42_abuttal.rexx
         "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n")
@@ -6218,6 +6226,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice46_parse_two_tree_shape
 add_levelc_lowered_tree_shape_test(levelc_slice47_parse_dot_tree_shape
         rexx_src/levelc_slice47_parse_dot.rexx
         "parseThreeWordsDrop"
+        "__rxcp_levelc_parse_fields_"
+        "setValue"
+        "rexxclassicbif_translate")
+add_levelc_lowered_tree_shape_test(levelc_slice48_parse_placeholders_tree_shape
+        rexx_src/levelc_slice48_parse_placeholders.rexx
+        "parseWordAndRest"
+        "parseThreeWords"
         "__rxcp_levelc_parse_fields_"
         "setValue"
         "rexxclassicbif_translate")

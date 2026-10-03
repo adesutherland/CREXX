@@ -1392,9 +1392,11 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
     ASTNode *cursor;
     char *name;
     size_t target_count;
+    size_t scalar_count = 0;
     int upper = 0;
     int is_value = 0;
     int final_drop = 0;
+    int earlier_drop = 0;
 
     if (!stmt || stmt->node_type != PARSE) return 0;
     source = stmt->child;
@@ -1436,16 +1438,17 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
         if (cursor->node_type != TARGET || cursor->child) goto unsupported;
         name = levelc_upper_name(cursor);
         target_count++;
-        if (name && strcmp(name, ".") == 0 && target_count == 4 && !cursor->sibling) {
-            final_drop = 1;
+        if (name && strcmp(name, ".") == 0) {
+            if (target_count == 4 && !cursor->sibling) final_drop = 1;
+            else earlier_drop = 1;
         } else if (!name || levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR) {
             free(name);
             goto unsupported;
-        }
+        } else scalar_count++;
         free(name);
     }
-    if (target_count < 1 || target_count > 4 ||
-        (target_count == 4 && !final_drop)) goto unsupported;
+    if (target_count < 1 || target_count > 4 || !scalar_count ||
+        (target_count == 4 && (!final_drop || earlier_drop))) goto unsupported;
     if (source_out) *source_out = source;
     if (target_out) *target_out = target;
     if (target_count_out) *target_count_out = target_count;
@@ -3027,6 +3030,10 @@ static int levelc_lower_direct_parse(Context *context,
         rxcp_remap_append_builder_children(instructions, prelude);
         for (index = 1; index <= (target_count == 4 ? 3 : target_count);
              index++, target = target->sibling) {
+            char *target_name = levelc_upper_name(target);
+            int is_drop = target_name && strcmp(target_name, ".") == 0;
+            free(target_name);
+            if (is_drop) continue;
             receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
             args[0] = levelc_name_string(context, target);
             args[1] = rxcp_remap_create_indexed_ref(context, target, VAR_SYMBOL,
