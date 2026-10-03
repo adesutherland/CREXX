@@ -5389,6 +5389,10 @@ add_levelc_runtime_slice_test(levelc_bif_shadow
         rexx_src/levelc_bif_shadow.rexx "local\n")
 add_levelc_runtime_slice_test(levelc_bif_shadow_noopt
         rexx_src/levelc_bif_shadow.rexx "local\n" -n)
+add_levelc_runtime_slice_test(levelc_bif_config_lifecycle
+        rexx_src/levelc_bif_config_lifecycle.rexx "1\n1\n1\n1\n1\n1\n")
+add_levelc_runtime_slice_test(levelc_bif_config_lifecycle_noopt
+        rexx_src/levelc_bif_config_lifecycle.rexx "1\n1\n1\n1\n1\n1\n" -n)
 
 function(add_levelc_lowered_tree_shape_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")

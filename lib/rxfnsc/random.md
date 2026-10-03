@@ -23,4 +23,11 @@ whole-number, and non-negative failures.
 The configured generator uses deterministic Park-Miller state and unbiased
 rejection sampling. It does not call the VM `irand` instruction or process-
 global C `rand()` state. RexxScript owns one configuration per evaluator and
-injects it into every direct BIF context. Compiler lowering is unchanged.
+injects it into every direct BIF context. Compiled Level C owns one
+configuration per program activation, passes its reference through internal
+procedures, and attaches it to each direct BIF context. The variable pool
+remains separate from the generator state. A supplied seed repeats the Level C
+sequence; its individual numbers may differ from Regina's because the
+[IBM REXX reference](https://www.ibm.com/support/pages/zvm/library/710pdfs/71631400.pdf)
+specifies repeatability and program-wide state across internal routines but
+does not specify a generator algorithm.

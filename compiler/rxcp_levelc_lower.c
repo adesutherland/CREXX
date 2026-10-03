@@ -33,6 +33,8 @@
 #include "rxcpcsym.h"
 
 #define LEVELC_POOL_SYMBOL "__rxcp_levelc_pool"
+#define LEVELC_CONFIG_SYMBOL "__rxcp_levelc_config"
+#define LEVELC_CONFIG_REF_SYMBOL "__rxcp_levelc_config_ref"
 #define LEVELC_PARENT_POOL_SYMBOL "__rxcp_levelc_parent_pool"
 #define LEVELC_PARENT_POOL_REF_SYMBOL "__rxcp_levelc_parent_pool_ref"
 #define LEVELC_PROC_PREFIX "__rxcp_levelc_proc_"
@@ -720,6 +722,12 @@ static char *levelc_generated_proc_name(const char *levelc_name, int with_colon)
 
 static ASTNode *levelc_pool_ref(Context *context, ASTNode *source_node, NodeType node_type) {
     return rxcp_remap_create_named_ref(context, source_node, node_type, LEVELC_POOL_SYMBOL);
+}
+
+static ASTNode *levelc_config_ref(Context *context, ASTNode *source_node,
+                                  NodeType node_type) {
+    return rxcp_remap_create_named_ref(context, source_node, node_type,
+                                       LEVELC_CONFIG_REF_SYMBOL);
 }
 
 static ASTNode *levelc_parent_pool_ref(Context *context, ASTNode *source_node, NodeType node_type) {
@@ -2223,6 +2231,17 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     if (!statement) goto fail;
     add_ast(prelude, statement);
 
+    receiver = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name);
+    member_args[0] = levelc_config_ref(context, expr, VAR_SYMBOL);
+    statement = rxcp_remap_create_member_call_statement(context,
+                                                        expr,
+                                                        receiver,
+                                                        "setConfig",
+                                                        member_args,
+                                                        1);
+    if (!statement) goto fail;
+    add_ast(prelude, statement);
+
     function_args[0] = rxcp_remap_create_reference_expr(
             context,
             expr,
@@ -2283,7 +2302,7 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
     free(target_name);
     if (!function_name) return NULL;
 
-    args = calloc(procedure->arg_count + 1, sizeof(ASTNode *));
+    args = calloc(procedure->arg_count + 2, sizeof(ASTNode *));
     if (!args) {
         free(function_name);
         return NULL;
@@ -2291,7 +2310,8 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
 
     pool_symbol = levelc_pool_ref(context, expr, VAR_SYMBOL);
     args[0] = rxcp_remap_create_reference_expr(context, expr, pool_symbol);
-    if (!pool_symbol || !args[0]) {
+    args[1] = levelc_config_ref(context, expr, VAR_SYMBOL);
+    if (!pool_symbol || !args[0] || !args[1]) {
         free(function_name);
         free(args);
         return NULL;
@@ -2304,8 +2324,8 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
         ASTNode *actual_value;
 
         actual_value = levelc_lower_expr(context, arg, plan, prelude);
-        args[index] = levelc_copy_rexxvalue(context, arg, actual_value);
-        if (!actual_value || !args[index]) {
+        args[index + 1] = levelc_copy_rexxvalue(context, arg, actual_value);
+        if (!actual_value || !args[index + 1]) {
             free(function_name);
             free(args);
             return NULL;
@@ -2318,7 +2338,7 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
                                            expr,
                                            function_name,
                                            args,
-                                           procedure->arg_count + 1);
+                                           procedure->arg_count + 2);
     free(function_name);
     free(args);
     return call;
@@ -2535,6 +2555,24 @@ static ASTNode *levelc_pool_setup_statement(Context *context, ASTNode *anchor_no
     return assign;
 }
 
+static ASTNode *levelc_config_setup_statement(Context *context,
+                                               ASTNode *anchor_node,
+                                               int make_reference) {
+    ASTNode *value;
+    if (make_reference) {
+        value = rxcp_remap_create_reference_expr(
+                context, anchor_node,
+                rxcp_remap_create_named_ref(context, anchor_node, VAR_SYMBOL,
+                                            LEVELC_CONFIG_SYMBOL));
+        return value ? rxcp_remap_create_named_assignment(
+                context, anchor_node, LEVELC_CONFIG_REF_SYMBOL, value) : NULL;
+    }
+    value = rxcp_remap_create_factory_call(context, anchor_node,
+                                            "RexxClassicConfig", NULL, 0);
+    return value ? rxcp_remap_create_named_assignment(
+            context, anchor_node, LEVELC_CONFIG_SYMBOL, value) : NULL;
+}
+
 static ASTNode *levelc_parent_pool_setup_statement(Context *context,
                                                    ASTNode *anchor_node) {
     ASTNode *assign;
@@ -2601,7 +2639,7 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
     free(target_name);
     if (!function_name) return NULL;
 
-    args = calloc(procedure->arg_count + 1, sizeof(ASTNode *));
+    args = calloc(procedure->arg_count + 2, sizeof(ASTNode *));
     if (!args) {
         free(function_name);
         return NULL;
@@ -2609,7 +2647,8 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
 
     pool_symbol = levelc_pool_ref(context, call_node, VAR_SYMBOL);
     args[0] = rxcp_remap_create_reference_expr(context, call_node, pool_symbol);
-    if (!pool_symbol || !args[0]) {
+    args[1] = levelc_config_ref(context, call_node, VAR_SYMBOL);
+    if (!pool_symbol || !args[0] || !args[1]) {
         free(function_name);
         free(args);
         return NULL;
@@ -2636,10 +2675,10 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
                                                         tail_node,
                                                         plan,
                                                         prelude);
-            args[arg_index] = levelc_copy_rexxvalue(context,
-                                                    tail_node,
-                                                    actual_value);
-            if (!actual_value || !args[arg_index]) {
+            args[arg_index + 1] = levelc_copy_rexxvalue(context,
+                                                        tail_node,
+                                                        actual_value);
+            if (!actual_value || !args[arg_index + 1]) {
                 free(function_name);
                 free(args);
                 return NULL;
@@ -2653,7 +2692,7 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
                                                 call_node,
                                                 function_name,
                                                 args,
-                                                procedure->arg_count + 1);
+                                                procedure->arg_count + 2);
     free(function_name);
     free(args);
     if (!call_expr) return NULL;
@@ -2743,6 +2782,14 @@ static ASTNode *levelc_procedure_args(Context *context,
 
     add_ast(args, arg);
 
+    target = levelc_config_ref(context, procedure->procedure, VAR_TARGET);
+    type_ref = rxcp_remap_create_reference_type(context,
+                                                procedure->procedure,
+                                                ".RexxClassicConfig");
+    arg = rxcp_remap_create_arg(context, procedure->procedure, target, type_ref);
+    if (!arg) return NULL;
+    add_ast(args, arg);
+
     for (index = 1; index <= procedure->arg_count; index++) {
         char *arg_name;
 
@@ -2804,6 +2851,7 @@ static ASTNode *levelc_build_options(Context *context,
     ASTNode *numeric_classic;
     ASTNode *import_value;
     ASTNode *import_pool;
+    ASTNode *import_config;
     ASTNode *import_bifs;
     ASTNode *import_translate;
     size_t i;
@@ -2817,6 +2865,7 @@ static ASTNode *levelc_build_options(Context *context,
     numeric_classic = rxcp_remap_create_literal(context, anchor_node ? anchor_node : options, "numeric_classic");
     import_value = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxvalue");
     import_pool = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxpool");
+    import_config = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxclassicconfig");
     import_bifs = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxclassicbifs");
     import_translate = needs_translate
         ? rxcp_remap_create_generated_import(context,
@@ -2824,13 +2873,15 @@ static ASTNode *levelc_build_options(Context *context,
                                              "rexxclassicbiftranslate")
         : NULL;
     if (!levelb || !comments_dash || !numeric_classic || !import_value ||
-        !import_pool || !import_bifs || (needs_translate && !import_translate)) return NULL;
+        !import_pool || !import_config || !import_bifs ||
+        (needs_translate && !import_translate)) return NULL;
 
     add_ast(options, levelb);
     add_ast(options, comments_dash);
     add_ast(options, numeric_classic);
     add_ast(options, import_value);
     add_ast(options, import_pool);
+    add_ast(options, import_config);
     add_ast(options, import_bifs);
     if (import_translate) add_ast(options, import_translate);
     for (i = 0; plan && i < LEVELC_DIRECT_BIF_COUNT; i++) {
@@ -4132,6 +4183,8 @@ static int levelc_rewrite_program(Context *context,
     ASTNode *options;
     ASTNode *instructions;
     ASTNode *pool_setup;
+    ASTNode *config_setup;
+    ASTNode *config_ref_setup;
     ASTNode *stmt;
     size_t i;
     int needs_translate = 0;
@@ -4150,11 +4203,15 @@ static int levelc_rewrite_program(Context *context,
     }
 
     pool_setup = levelc_pool_setup_statement(context, anchor);
-    if (!pool_setup) {
+    config_setup = levelc_config_setup_statement(context, anchor, 0);
+    config_ref_setup = levelc_config_setup_statement(context, anchor, 1);
+    if (!pool_setup || !config_setup || !config_ref_setup) {
         if (reason_out) *reason_out = "failed to create Level C pool setup";
         return 0;
     }
     add_ast(instructions, pool_setup);
+    add_ast(instructions, config_setup);
+    add_ast(instructions, config_ref_setup);
 
     stmt = plan ? plan->main_first : old_instructions->child;
     while (stmt && (!plan || stmt != plan->main_end)) {

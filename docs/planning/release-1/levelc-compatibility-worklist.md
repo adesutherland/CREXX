@@ -1113,12 +1113,20 @@ The implementation sequence within active `LC-STEP-63` is:
    parser/reference expression and host matrix, diagnostics, traces and
    lifecycle, and close SAY only when the complete contract is evidenced.
 
+For the remaining LC-STEP-63C configuration work, create one hidden
+`RexxClassicConfig` owner per Level C program activation, pass its reference
+through generated local procedure calls, and attach it to each direct BIF
+context. This gives stateful BIFs one activation lifetime without putting
+character or random state in `RexxVariablePool`. Verify repeated RANDOM
+calls, local calls, caller pool isolation and RexxScript separation before
+marking the configuration part complete.
+
 | SAY contract area | Current evidence | Closure state |
 | --- | --- | --- |
 | Childless and ordinary expressions in main, IF/DO and local procedures | `levelc_say_instruction.rexx`; Regina, opt/no-opt, linked output and source-anchored tree checks | Proved for these forms; complete expression domain remains open |
 | Expression evaluation once and output order | Exposed counter called inside SAY expression; its inner SAY precedes the outer line | Proved for this fixture; external/BIF effects remain open |
 | Invalid source forms | Grammar has explicit close-bracket recovery and general expression diagnostics | Open: reference/error matrix and source anchors |
-| Complete BIF, local and external function terms | A direct table reaches 57 of 70 recognised Classic BIF names plus LOWER/UPPER; a shared check raises distinct Classic SYNTAX. Nested, omitted, pool-mutating and local-procedure calls match Regina in focused proof | Open: remaining BIF services, configured context, local/external resolution, trap/diagnostic lifecycle and full reference proof |
+| Complete BIF, local and external function terms | A direct table reaches 57 of 70 recognised Classic BIF names plus LOWER/UPPER; a shared check raises distinct Classic SYNTAX. Nested, omitted, pool-mutating and local-procedure calls match Regina in focused proof. Activation-owned configuration reaches direct BIFs through internal functions and CALLs; seeded RANDOM lifecycle and pool isolation pass | Open: remaining BIF services, host-selected configuration, external resolution, trap/diagnostic lifecycle and full reference proof |
 | General variable value terms | All validated variable reads now use shared pool `symbolValue`; Regina, opt/no-opt, local exposure/CALL, linked and normal Level C checks pass | Pool-read consolidation proved; complete expression domain remains open |
 | BYTE/UTF8 output, configured host route and failure | Length-aware default and per-context output pass embedded-NUL, UTF-8 byte, legacy-error, context-isolation, opt/no-opt and linked checks | Byte route proved; broader host/profile, trace and condition lifecycle remain open |
 | Trace/condition lifecycle | Existing canonical SAY opcode and source anchors | Open: clause hooks, trapped errors and finalization |
@@ -1239,9 +1247,30 @@ checks passed 12/12 (`/tmp/crexx-levelc-bif-final-focused.eXd5pD`) plus
 RexxScript runtime 2/2; the Release core and `rxfnsc` build passed
 (`/tmp/crexx-levelc-bif-final-build.5X96R1`), and the normal Release Level C
 suite passed 303/303 (`/tmp/crexx-levelc-bif-qualified-suite.lSbDiB`).
-Configured character/numeric state, thirteen absent Classic BIF services,
+Host-selected character/numeric configuration, thirteen absent Classic BIF services,
 external function lookup, Classic traps and authored runtime diagnostic
 location remain open. No whole-instruction closure is claimed.
+
+2026-10-03 LC-STEP-63C configuration increment (step and SAY remain open):
+compiler lowering creates one `RexxClassicConfig` per program activation,
+passes its reference through generated internal function and CALL signatures,
+and attaches it to every direct BIF frame. The permanent
+`levelc_bif_config_lifecycle.rexx` test checks seeded RANDOM sequence
+continuation through a local function, reseeding through a local CALL, and
+separate local variable-pool mutation. It passes optimized and no-opt, while
+the linked image produces the same six true results
+(`/tmp/crexx-levelc-config-linked-final.GCCytB`). Focused Level C, shared RANDOM,
+and RexxScript checks passed 14/14
+(`/tmp/crexx-levelc-config-final-focused.IXpWxw`); the Release core/runtime build
+passed (`/tmp/crexx-levelc-config-final-build.gR4SDr`) and the normal Release
+Level C suite passed 305/305 (`/tmp/crexx-levelc-config-suite.8YNlzF`).
+The [IBM REXX/VM RANDOM reference](https://www.ibm.com/support/pages/zvm/library/710pdfs/71631400.pdf)
+requires a repeatable sequence and program-global generator state across
+internal calls. It does not specify the individual generated numbers; the
+current Park-Miller sequence differs from Regina for the same seed. This is
+an implementation difference in the algorithm, not a claimed exception to
+the state/range contract. Full RANDOM reference proof and host-selected
+configuration remain open.
 
 ## Findings
 
