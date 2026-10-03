@@ -27,6 +27,8 @@ namespace rexxpool expose RexxVariablePool
 import rexxvalue
 import rexxstem
 import rexxclassicstate
+import rexxclassicconfig
+import rexxclassicdatatype
 import rxfnsb
 import data
 -- import data_StringHashMap
@@ -649,6 +651,27 @@ RexxVariablePool: class
       return
     end
     call dropStemTail(substr(resolved, 1, stem_end), substr(resolved, stem_end + 1))
+    return
+
+  /**
+   * Interpret one captured indirect DROP subsidiary list in source order.
+   *
+   * Each word is checked with the shared Classic symbol classifier. Regina
+   * ignores invalid words and continues with subsequent valid names. The
+   * current Level C pool uses the default BYTE character profile; configured
+   * profile propagation remains part of full compatibility qualification.
+   *
+   * @param list captured value of the parenthesized variable reference
+   */
+  dropIndirectList: method = .void
+    arg list = .string
+    config = .RexxClassicConfig()
+    item_count = words(list)
+    do index = 1 to item_count
+      name = word(list, index)
+      if rexxclassic_datatype_symbol_kind(.RexxValue(name), config) <> 1 then iterate
+      call dropSymbol(name)
+    end
     return
 
   isDropped: method = .boolean

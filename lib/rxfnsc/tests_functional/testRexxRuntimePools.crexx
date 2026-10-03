@@ -92,6 +92,24 @@ errors = errors + check(pool.symbolValue("items.A").asString() = "ITEMS.A", "sym
 call child.dropSymbol("local_answer")
 errors = errors + check(pool.symbolValue("answer").asString() = "ANSWER", "symbol scalar drop follows exposed alias")
 
+call pool.setString("answer", "again")
+call pool.setString("key", "b")
+call pool.setStemString("items", "b", "lower-list")
+call pool.setStemString("items", "B", "upper-list")
+call pool.dropIndirectList("answer / 1bad items.key items.B")
+errors = errors + check(pool.symbolValue("answer").asString() = "ANSWER", "indirect list drops first scalar")
+errors = errors + check(pool.symbolValue("items.key").asString() = "ITEMS.b", "indirect list drops substituted tail")
+errors = errors + check(pool.stemSymbolValue("items", "B").asString() = "ITEMS.B", "indirect list continues after invalid words")
+call pool.setStemString("items", "b", "still-lower")
+call pool.setStemString("items", "KEY", "literal-key")
+call pool.dropIndirectList("key items.key")
+errors = errors + check(pool.symbolValue("key").asString() = "KEY", "indirect list first drop changes later substitution")
+errors = errors + check(pool.stemSymbolValue("items", "KEY").asString() = "ITEMS.KEY", "indirect list resolves each item in order")
+errors = errors + check(pool.stemSymbolValue("items", "b").asString() = "still-lower", "indirect list keeps earlier derived tail")
+call pool.setStemString("items", "B", "parent-list")
+call child.dropIndirectList("local_items.B")
+errors = errors + check(pool.stemSymbolValue("items", "B").asString() = "ITEMS.B", "indirect list follows exposed stem")
+
 if errors = 0 then say "ok"
 return errors
 

@@ -61,8 +61,12 @@ authored program must survive lowering for diagnostics and tracing.
 - The pool's `dropSymbol` operation resolves and drops one validated Classic
   symbol, including a compound name's substituted tail. It is the shared
   primitive for runtime subsidiary lists in parenthesized `DROP` references.
-  Regina-style invalid-word handling for those lists is recorded in the
-  worklist; list interpretation remains a separate lowering increment.
+  Level C lowers each `VAR_REFERENCE` to one `dropIndirectList` call with the
+  referenced variable's value evaluated at that position in the direct list.
+  The helper splits the captured string into words, uses the shared Classic
+  symbol classifier, skips invalid words as Adrian chose for Regina parity,
+  and drops valid names sequentially. The classifier currently uses the
+  default BYTE profile; configured character-profile propagation is open.
 - `RexxClassicBif*` modules own compatible BIF algorithms, argument validation,
   and error construction. `RexxBifCallContext` carries `RexxValue` arguments,
   argument-presence flags, caller pool, and Classic configuration. A BIF that
@@ -994,10 +998,12 @@ Forms:
 Validation/lowering consequences:
 
 - Direct variable names can be stem names or compound names.
-- Parenthesized indirect names are evaluated at runtime, uppercased, split into
-  words, and then validated as variable symbols.
-- Milestone 1 can validate static syntax. Full indirect-list validation is a
-  runtime semantic.
+- Parenthesized references evaluate one variable at their place in the source
+  list; the shared pool splits its captured value into words. Each valid word
+  is resolved against the then-visible pool, uppercasing source spelling while
+  preserving substituted tail text case, and dropped in order. Invalid words
+  are ignored for Regina parity. Other variable-list consumers, including
+  `PROCEDURE EXPOSE`, retain their own open lowering work.
 
 ## 7. Canonical Lowering Requirements
 

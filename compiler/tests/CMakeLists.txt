@@ -5218,8 +5218,6 @@ add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice40_parse_pattern_unsupported
         rexx_src/levelc_slice40_parse_pattern_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
-        rexx_src/levelc_slice10_indirect_drop_unsupported.rexx)
 
 function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -5775,6 +5773,12 @@ add_levelc_runtime_slice_test(levelc_slice53_drop_direct
 add_levelc_runtime_slice_test(levelc_slice53_drop_direct_noopt
         rexx_src/levelc_slice53_drop_direct.rexx
         "before=one|two|lower|\ntail=ITEMS.A|two|\nderived=ITEMS.b|two|\nrestore=again|\norder=NAME|ITEMS.NAME|again|\nstem=ITEMS.A|ITEMS.B|ITEMS.b|\nnumeric=ITEMS.1|\nlocal=ITEMS.A/inside|ITEMS.A|\nif=ITEMS.B|\ndo=ITEMS.B|\n" -n)
+add_levelc_runtime_slice_test(levelc_slice54_drop_indirect
+        rexx_src/levelc_slice54_drop_indirect.rexx
+        "pair=A|B|a b|\ninvalid=A|B|\ncompound=ITEMS.b|ITEMS.B|\norder=KEY|ITEMS.KEY|\nretained=lower2|upper2|\nstem=ITEMS.b|ITEMS.B|\nouter=NAMES|held|\nreference=A|\nlocal=ITEMS.B|ITEMS.B|\nif=A|\ndo=A|\n")
+add_levelc_runtime_slice_test(levelc_slice54_drop_indirect_noopt
+        rexx_src/levelc_slice54_drop_indirect.rexx
+        "pair=A|B|a b|\ninvalid=A|B|\ncompound=ITEMS.b|ITEMS.B|\norder=KEY|ITEMS.KEY|\nretained=lower2|upper2|\nstem=ITEMS.b|ITEMS.B|\nouter=NAMES|held|\nreference=A|\nlocal=ITEMS.B|ITEMS.B|\nif=A|\ndo=A|\n" -n)
 add_levelc_runtime_slice_test(levelc_slice42_abuttal
         rexx_src/levelc_slice42_abuttal.rexx
         "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n")
@@ -6286,6 +6290,11 @@ add_levelc_lowered_tree_shape_test(levelc_slice53_drop_direct_tree_shape
         "dropStem"
         "__rxcp_levelc_tail_"
         "setStemValue")
+add_levelc_lowered_tree_shape_test(levelc_slice54_drop_indirect_tree_shape
+        rexx_src/levelc_slice54_drop_indirect.rexx
+        "dropIndirectList"
+        "symbolValue"
+        "stemSymbolValue")
 add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
         rexx_src/levelc_slice42_abuttal.rexx
         "concat"

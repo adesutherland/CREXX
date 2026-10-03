@@ -531,7 +531,7 @@ to RexxScript without sharing the two products' statement parsers.
   tail substitution, dropped-tail reads, stem reset, reassignments, list order
   and scope; focused pool tests, opt/no-opt, raw/canonical AST, normal Level C
   and RexxScript regressions, and linked execution.
-  Parenthesized indirect `DROP` remains open.
+  Parenthesized indirect `DROP` was subsequently completed under `LC-AC-56`.
 - [x] **LC-AC-54 — shared Classic stem lifecycle:** assigning a stem default
   replaces prior explicit and dropped tails; dropping one tail records a
   tombstone that reads as the expanded symbol until reassigned or reset by a
@@ -546,7 +546,7 @@ to RexxScript without sharing the two products' statement parsers.
   one case-preserved tail. It preserves exposure and dropped-tail semantics.
   Verify Regina examples, focused optimized/no-opt pool regressions, linked
   execution and unchanged Level C/RexxScript consumers.
-- [ ] **LC-AC-56 — indirect DROP subsidiary lists:** a parenthesized `DROP`
+- [x] **LC-AC-56 — indirect DROP subsidiary lists:** a parenthesized `DROP`
   reference reads its variable at that point in the authored list, splits its
   value into subsidiary variable names and drops those names from left to
   right through the shared pool, including scalar, stem and compound items.
@@ -947,7 +947,7 @@ to RexxScript without sharing the two products' statement parsers.
     and scalar/stem/tail operations. Prove substitution and exposure with
     focused pool tests, optimized/no-opt, linked execution and cross-consumer
     checks, then commit the runtime primitive separately.
-59. **LC-STEP-59 (LC-AC-08/56; depends on STEP-57/58):** add shared subsidiary-list interpretation and lower the
+59. **LC-STEP-59 — complete (LC-AC-08/56; depends on STEP-57/58):** add shared subsidiary-list interpretation and lower the
     parser's `VAR_REFERENCE` node to a canonical helper call in source order.
     Ignore invalid subsidiary-list words as approved; verify that behavior,
     reference behavior, raw/canonical trees,
@@ -955,12 +955,14 @@ to RexxScript without sharing the two products' statement parsers.
 
 ## Findings
 
-- **LC-FIND-08 — indirect DROP invalid words:** the
+- **LC-FIND-08 — resolved indirect DROP invalid words:** the
   [IBM DROP reference](https://www.ibm.com/docs/SSGMCP_5.5.0/reference/rexx/drop.html)
   requires valid variable names in a parenthesized subsidiary list. Local
   Regina probes ignored invalid words such as `1bad`, `/` and `(b)` while
   continuing to drop later valid names. Adrian selected the Regina behavior
-  on 2026-10-03 for Level C; `LC-AC-56` requires a permanent regression.
+  on 2026-10-03 for Level C; `LC-AC-56` has a permanent pool and compiled
+  regression. Configured UTF8 symbol-classification proof remains open under
+  `LC-AC-04`.
 - **LC-FIND-07 — resolved shared stem lifecycle:** Regina showed that a new
   stem assignment replaces prior tails, a dropped tail hides even a stem
   default until reassigned, and substituted tail text keeps its case. The
@@ -1040,7 +1042,7 @@ itself make its Classic shape executable.
 | Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
-| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and direct scalar/stem/supported-compound DROP | Wider statement operands, parenthesized indirect DROP and exit/return lifecycle remain open |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and ordered direct/indirect DROP lists through the Classic pool | Wider statement operands, indirect `PROCEDURE EXPOSE`, exit/return lifecycle and configuration proof remain open |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
@@ -1079,7 +1081,7 @@ has been approved in this worklist.
 | --- | --- | --- | --- |
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
 | Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions`, `levelc_slice19_logical_eager`, empty quoted strings in `levelc_slice37_empty_string`, and adjacent function calls in `levelc_slice38_adjacent_call` | Full numeric context, remaining operator order, boundary/error and platform equivalence |
-| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar/stem/supported-compound DROP | Parenthesized indirect DROP, full stem assignment, external/API operations and aliasing |
+| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar/stem/supported-compound plus parenthesized indirect DROP | Full stem assignment, indirect EXPOSE, configured profile, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
 | Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled DO with optional TO/FOR/BY, captured dynamic start/TO/BY/FOR and WHILE entry or UNTIL end checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, named transfer to wider loops, remaining numeric contexts and errors |
@@ -1114,7 +1116,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal start with optional captured TO/BY/FOR | Dynamic start, wider count/numeric errors and configuration proof open |
-| `SYN-CLASSIC-DROP` | DROP instruction | Bounded slice: ordered direct scalar/stem/supported-compound list | Parenthesized indirect forms, full condition/profile proof open |
+| `SYN-CLASSIC-DROP` | DROP instruction | Ordered direct scalar/stem/supported-compound and parenthesized indirect lists, including Regina-style invalid-word skip | Wider direct compound forms, full condition/profile proof open |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |
@@ -2437,3 +2439,40 @@ full compatibility proof.
   `/tmp/crexx-levelc-dropsymbol-debug-focused.log`,
   `/tmp/crexx-levelc-dropsymbol-release-focused.log`, and
   `/tmp/crexx-levelc-dropsymbol-levelc-suite.log`.
+
+### LC-STEP-59 — indirect DROP subsidiary lists, 2026-10-03
+
+- `RexxVariablePool.dropIndirectList` consumes one captured list value and
+  iterates every word in source order. The shared Classic symbol classifier
+  skips invalid words per Adrian's Regina decision; each valid word goes
+  through `dropSymbol`, so earlier drops affect later compound substitutions.
+  The pool module's build dependencies now stage `RexxClassicConfig` and
+  `RexxClassicDatatype`. The initial focused build exposed the missing module
+  staging and was repaired before qualification.
+- Level C's guarded `VAR_REFERENCE` shape now lowers to a single canonical
+  `dropIndirectList` call with the referenced variable evaluated at its place
+  in the authored direct/indirect list. The Regina fixture proves scalar,
+  invalid-word, compound, list order, whole-stem, dropped list-variable,
+  compound list-reference, exposed procedure and nested `IF`/`DO` cases.
+  Raw tree inspection shows `LEVELC_DROP` and `VAR_REFERENCE`; neither remains
+  in the lowered tree. The obsolete indirect negative fixture was replaced
+  with optimized, no-opt and tree-shape regressions. There is no fixed list
+  length in the helper.
+- Focused Release and Debug compiler tests passed 6/6 each; pool opt/no-opt
+  passed 2/2 in each build; RexxScript passed 4/4; and the normal Release
+  Level C suite passed 287/287. The fixture compiled, assembled, linked and
+  executed with byte-identical Regina output. Indirect-list classification
+  currently uses the default BYTE profile; configured UTF8 propagation and
+  platform proof remain open under `LC-AC-04/06`. Evidence:
+  `/tmp/crexx-levelc-indirect-regina.out`,
+  `/tmp/crexx-levelc-indirect-release-pool-rebuild.log`,
+  `/tmp/crexx-levelc-indirect-debug-pool-rebuild.log`,
+  `/tmp/crexx-levelc-indirect-release-pool-focused.log`,
+  `/tmp/crexx-levelc-indirect-debug-pool-focused.log`,
+  `/tmp/crexx-levelc-indirect-release-core-build.log`,
+  `/tmp/crexx-levelc-indirect-debug-core-build.log`,
+  `/tmp/crexx-levelc-indirect-release-focused.log`,
+  `/tmp/crexx-levelc-indirect-debug-focused.log`,
+  `/tmp/crexx-levelc-indirect-suite.log`,
+  `/tmp/crexx-levelc-indirect-rexxscript.log`, and
+  `/tmp/crexx-levelc-indirect-linked.m1vxRl/`.
