@@ -1,2 +1,3 @@
 options levelc
-if 1 then parse var source first ',' second
+delimiter=','
+if 1 then parse var source first (delimiter) second

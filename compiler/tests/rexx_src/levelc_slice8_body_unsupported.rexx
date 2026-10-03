@@ -1,4 +1,5 @@
 options levelc
+delimiter=','
 do
-  parse var source first ',' second
+  parse var source first (delimiter) second
 end

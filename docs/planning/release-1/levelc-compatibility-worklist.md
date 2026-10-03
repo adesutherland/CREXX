@@ -492,7 +492,7 @@ direct word/dot templates before work resumes on positions and patterns.
   raw/canonical AST, the normal Level C suite and linked execution. Patterns,
   positions, comma templates and other source forms remain open under their
   own criteria.
-- [ ] **LC-AC-51 — static mixed PARSE template plan:** `PARSE VAR` and
+- [x] **LC-AC-51 — static mixed PARSE template plan:** `PARSE VAR` and
   `PARSE VALUE` accept a nonempty single template with any representable
   sequence of direct scalar/dot targets, literal patterns, and literal
   absolute/relative positions. The lowerer validates the parsed AST and
@@ -875,7 +875,7 @@ direct word/dot templates before work resumes on positions and patterns.
     order. Replace obsolete five-item negatives with a distinct unsupported
     template family. Prove reference, shared-consumer, structural, opt/no-opt,
     normal Level C and linked behavior before a separate commit.
-54. **LC-STEP-54 (LC-AC-08/51; depends on STEP-53):** map the parser's mixed
+54. **LC-STEP-54 — complete (LC-AC-08/51; depends on STEP-53):** map the parser's mixed
     template AST to a validated, count-independent item sequence and compile
     static items into the frozen `parseplan` descriptor. Reuse the existing
     canonical assembler node and string-array result shape where possible;
@@ -970,7 +970,7 @@ itself make its Classic shape executable.
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar controlled starts with TO, FOR, both or neither, captured dynamic start/TO/BY/FOR, and controlled WHILE/UNTIL, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, other controlled endpoints, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
-| `PARSE`, `PULL`, template/pattern/position nodes | Slice: nonempty direct scalar/dot templates in `PARSE VAR` and `PARSE VALUE`, with optional UPPER; one shared `RexxValue.parseWordTemplate(count)` result vector and ordered pool writes | Patterns, positions, comma templates, other sources and errors remain open |
+| `PARSE`, `PULL`, template/pattern/position nodes | Slice: one nonempty static template in `PARSE VAR` or `PARSE VALUE`, with direct scalar/dot targets, literal patterns and positions, and optional UPPER; direct word templates use `RexxValue.parseWordTemplate(count)`, mixed templates use the VM `parseplan` helper, and both paths preserve ordered pool writes | Dynamic pattern/position operands, comma templates, other sources and errors remain open |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
 | `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | Open: parser/front end only | Context changes, dynamic code, signal transfer, trace and error identity |
 
@@ -1010,7 +1010,7 @@ has been approved in this worklist.
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed direct ARG with Classic uppercase binding, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, wider PARSE templates, dynamic/external calls, full scope and return/exit lifecycle |
-| PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Slice: `VAR`/`VALUE` with any nonempty direct scalar/dot template and optional UPPER in `levelc_slice40_parse_single` through `levelc_slice51_parse_generic`; other forms remain front end only | Other source acquisition, patterns, positions, commas, configuration and errors |
+| PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Slice: `VAR`/`VALUE` with one nonempty static template of direct scalar/dot targets, literal patterns and positions, and optional UPPER in `levelc_slice40_parse_single` through `levelc_slice52_parse_static`; other forms remain front end only | Other source acquisition, dynamic patterns/positions, commas, configuration and errors |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
 | Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | Front end: selected parser forms | Trap lifecycle, delivery, messages and error identity |
 | Numeric | DIGITS, FORM, FUZZ, decimal arithmetic, rounding, logical conversion | Runtime: `RexxValue` foundation | Full context, limits, signal and optimized parity |
@@ -2251,3 +2251,36 @@ full compatibility proof.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.
+
+### LC-STEP-54 — static mixed PARSE templates, 2026-10-03
+
+- `PARSE VAR` and `PARSE VALUE` now accept one validated static template with
+  any representable ordered mix of scalar/dot targets, literal delimiters and
+  absolute/relative positions. The compiler serializes the parsed AST to the
+  existing frozen version-1 `parseplan` descriptor and emits one canonical
+  `ASSEMBLER` call. The VM helper owns delimiter search, cursor movement and
+  field capture; the lowerer snapshots the source and writes non-dot results
+  through the Classic variable pool in authored order. Direct word-only
+  templates retain the generic shared `RexxValue` path. No target-count or
+  item-order dispatch and no new AST/emitter node were needed.
+- Regina and optimized/no-opt output agree for leading, trailing, adjacent,
+  repeated and missing patterns; absolute, relative, backward, zero and
+  out-of-range positions; numeric spelling overlays; hex, binary, quoted and
+  UTF-8 delimiters; all-dot templates; aliases, six targets, one-time VALUE
+  effects, UPPER and local scope. Raw tree inspection retains ordered source
+  `PARSE` children; the canonical tree has `parseplan` and pool writes with
+  no surviving Level C template nodes. The static fixture is a permanent
+  opt/no-opt and tree-shape regression. Dynamic pattern/position operands,
+  comma templates and other source forms remain open.
+- Release core build passed, focused Release 6/6 and Debug 6/6 passed, and
+  the normal Release Level C suite passed 284/284. The final fixture compiled,
+  assembled, linked and executed with byte-identical Regina output. The
+  opt-in UTF8 configuration remains open under `LC-AC-04/06`; this increment
+  proves UTF-8 delimiter bytes in the current BYTE configuration.
+  Evidence: `/tmp/crexx-levelc-static-close-release-build.ptGl28`,
+  `/tmp/crexx-levelc-static-close-debug-build.UiSZmq`,
+  `/tmp/crexx-levelc-static-close-release-focused.Tj5rLe`,
+  `/tmp/crexx-levelc-static-close-debug-focused.osxsnh`,
+  `/tmp/crexx-levelc-static-close-suite.b1oLs5`,
+  `/tmp/crexx-levelc-static.4nBnDm/close-tree.log`, and
+  `/tmp/crexx-levelc-static.4nBnDm/close-linked.out`.

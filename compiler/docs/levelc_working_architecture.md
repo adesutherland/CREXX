@@ -73,13 +73,14 @@ bindings. This uses the current Level C BYTE default; delivery of an opt-in
 UTF8 call configuration remains an open compatibility obligation.
 
 The executable `PARSE` slice accepts a `VAR` scalar source or a `VALUE`
-expression with any nonempty direct scalar or `.` template, with optional
-`UPPER`. The parser keeps the outer comma-template list and inner template as
-separate `TEMPLATES` nodes. The lowerer validates both levels, evaluates and
-captures the source before any target write, and emits canonical pool reads,
-result captures and ordered `setValue` calls. A dot consumes its corresponding
-word or tail without a pool write. `UPPER` passes the source through the same
-shared Classic TRANSLATE frame used by `ARG`; its import is added only when a
+expression with one nonempty template containing direct scalar or `.` targets,
+static literal patterns, and static absolute or relative positions, with
+optional `UPPER`. The parser keeps the outer comma-template list and inner
+template as separate `TEMPLATES` nodes. The lowerer validates both levels,
+evaluates and captures the source before any target write, and emits canonical
+pool reads, result captures and ordered `setValue` calls. A dot consumes its
+field without a pool write. `UPPER` passes the source through the same shared
+Classic TRANSLATE frame used by `ARG`; its import is added only when a
 supported uppercase parse exists. The authored `PARSE` and template nodes do
 not survive the canonical boundary. No new AST or emitter node is required.
 
@@ -93,21 +94,20 @@ preserving source aliases and repeated target order. A dot skips only its
 pool write, including for an all-dot template. A `PARSE VALUE` source
 expression still executes once when all items are dots.
 
-Pattern, position and comma templates need a structured template plan;
-the certified exit's frozen `parseplan` semantics are the reference for that
-broader design, with Level C's parsed AST and Classic pool boundary retained.
-
-For static mixed templates, the next path walks the parser's existing ordered
+For static mixed templates, the lowerer walks the parser's existing ordered
 `TARGET`, `PATTERN`, `ABS_POS` and `REL_POS` children. It inserts the
 implicit word boundary between adjacent targets and the initial absolute
 position when the template begins with a target, then serializes the whole
 sequence to the VM's version-1 frozen `parseplan` descriptor. The descriptor
-is a compiler-owned byte constant, not source text interpreted at runtime.
-The existing canonical `ASSEMBLER` node is the first candidate for calling
-`parseplan` into a hidden string result array. The lowerer snapshots the
-source before that call, then converts and assigns captured non-dot fields
+is a compiler-owned escaped-byte string constant, not source text interpreted
+at runtime. The canonical `ASSEMBLER` node calls `parseplan` into a hidden
+string result array; its operand validator requires a string constant, so a
+binary AST constant is not accepted for this opcode. The lowerer snapshots
+the source before the call, then converts and assigns captured non-dot fields
 through the Classic pool in authored order. This path has no target-count or
-item-order switch.
+item-order switch. Delimiter search, cursor movement, and result capture run
+in the existing VM helper shared with the Level B PARSE exit. The AST rewrite
+owns only validation, plan construction, source capture, and pool assignment.
 Dynamic operands require version-2 references and an explicit capture plan;
 comma templates require per-source segment handling. They extend the same
 item representation instead of adding shape-specific lowering paths.
@@ -118,8 +118,8 @@ direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;
 Level C already has a parsed template AST and writes through a separate
 Classic variable pool. Future pattern and position work should assess reuse
 of those lower-level operations or descriptor semantics while preserving
-Level C AST ownership and pool writes. Other source types and
-longer templates, patterns, positions and comma templates remain guarded.
+Level C AST ownership and pool writes. Other source types, dynamic patterns
+and positions, and comma templates remain guarded.
 The current default proof is BYTE; the broader binary/UTF8 configuration
 obligation remains open.
 

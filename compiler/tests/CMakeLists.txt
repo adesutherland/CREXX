@@ -5767,6 +5767,12 @@ add_levelc_runtime_slice_test(levelc_slice51_parse_generic
 add_levelc_runtime_slice_test(levelc_slice51_parse_generic_noopt
         rexx_src/levelc_slice51_parse_generic.rexx
         "five=a|b|c|d|e  |\ndots=b|d|\nalldots=  a  b   c  d e  |\nshort=a|b|||||||\nalias=left|one|two|three|four|five six|\nrepeat=r|\nvalue=m|n|o|p|q|r s|1\nupper=A|C|E|F G |\nlocal=a|b|c|d|e|f |\n" -n)
+add_levelc_runtime_slice_test(levelc_slice52_parse_static
+        rexx_src/levelc_slice52_parse_static.rexx
+        "patterns=ab|cd|ef|\ndots=cd|ab,cd,ef|\nalldots=ab,cd,ef|\nedges=||end||\nmissing=ab,cd,ef||\nalias=ab|cd,ef|\nlong=w|x|y|z|q|r|\nabsolute=ab|cdef|\nrelative=abc|de|f|\nbackward=cd|ef|def|\nzero=abcdef|abcdef|\nfar=abcdef||\nspelling=ab|c|cdef|\nhex=a|b|\nbinary=a|b|\nquote=|,c|\ndoublequote=|,c|\nutf8=a|bc|\nleading=cd,ef|\ntrailing=ab|\nadjacent=ab|ef|\nstartabs=,cd,ef|\nadjpos=ab|d,ef|\nstartrel=ab,cd,ef|\nonce=m|n|1|\nupper=AB|CD|\nlocal=left|right|\n")
+add_levelc_runtime_slice_test(levelc_slice52_parse_static_noopt
+        rexx_src/levelc_slice52_parse_static.rexx
+        "patterns=ab|cd|ef|\ndots=cd|ab,cd,ef|\nalldots=ab,cd,ef|\nedges=||end||\nmissing=ab,cd,ef||\nalias=ab|cd,ef|\nlong=w|x|y|z|q|r|\nabsolute=ab|cdef|\nrelative=abc|de|f|\nbackward=cd|ef|def|\nzero=abcdef|abcdef|\nfar=abcdef||\nspelling=ab|c|cdef|\nhex=a|b|\nbinary=a|b|\nquote=|,c|\ndoublequote=|,c|\nutf8=a|bc|\nleading=cd,ef|\ntrailing=ab|\nadjacent=ab|ef|\nstartabs=,cd,ef|\nadjpos=ab|d,ef|\nstartrel=ab,cd,ef|\nonce=m|n|1|\nupper=AB|CD|\nlocal=left|right|\n" -n)
 add_levelc_runtime_slice_test(levelc_slice42_abuttal
         rexx_src/levelc_slice42_abuttal.rexx
         "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n")
@@ -6261,6 +6267,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice50_parse_four_tree_shape
 add_levelc_lowered_tree_shape_test(levelc_slice51_parse_generic_tree_shape
         rexx_src/levelc_slice51_parse_generic.rexx
         "parseWordTemplate"
+        "__rxcp_levelc_parse_fields_"
+        "setValue"
+        "rexxclassicbif_translate")
+add_levelc_lowered_tree_shape_test(levelc_slice52_parse_static_tree_shape
+        rexx_src/levelc_slice52_parse_static.rexx
+        "parseplan"
+        "__rxcp_levelc_parse_source_"
         "__rxcp_levelc_parse_fields_"
         "setValue"
         "rexxclassicbif_translate")

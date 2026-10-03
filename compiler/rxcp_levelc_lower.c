@@ -18,12 +18,18 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef NUTF8
+#include "utf.h"
+#endif
+
 #include "rxcp_levelc_lower.h"
 #include "rxcp_remap_build.h"
+#include "rxcp_util.h"
 #include "rxcpcsym.h"
 
 #define LEVELC_POOL_SYMBOL "__rxcp_levelc_pool"
@@ -37,6 +43,7 @@
 #define LEVELC_COMPOUND_TAIL_PREFIX "__rxcp_levelc_tail_"
 #define LEVELC_EXPR_RESULT_PREFIX "__rxcp_levelc_expr_"
 #define LEVELC_PARSE_FIELDS_PREFIX "__rxcp_levelc_parse_fields_"
+#define LEVELC_PARSE_SOURCE_PREFIX "__rxcp_levelc_parse_source_"
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_START_VALUE_PREFIX "__rxcp_levelc_start_"
 #define LEVELC_TO_LIMIT_PREFIX "__rxcp_levelc_to_"
@@ -1377,14 +1384,15 @@ static int levelc_if_statement_supported(ASTNode *stmt,
     return !else_statement || levelc_main_statement_supported(else_statement, plan, reason_out);
 }
 
-static int levelc_direct_parse_shape(ASTNode *stmt,
-                                     LevelCLowerPlan *plan,
-                                     ASTNode **source_out,
-                                     ASTNode **target_out,
-                                     size_t *target_count_out,
-                                     int *is_value_out,
-                                     int *upper_out,
-                                     const char **reason_out) {
+static int levelc_parse_shape(ASTNode *stmt,
+                              LevelCLowerPlan *plan,
+                              ASTNode **source_out,
+                              ASTNode **target_out,
+                              size_t *target_count_out,
+                              int *is_value_out,
+                              int *upper_out,
+                              int *direct_out,
+                              const char **reason_out) {
     ASTNode *source;
     ASTNode *templates;
     ASTNode *template_node;
@@ -1394,6 +1402,7 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
     size_t target_count;
     int upper = 0;
     int is_value = 0;
+    int direct = 1;
 
     if (!stmt || stmt->node_type != PARSE) return 0;
     source = stmt->child;
@@ -1432,22 +1441,36 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
 
     target_count = 0;
     for (cursor = target; cursor; cursor = cursor->sibling) {
-        if (cursor->node_type != TARGET || cursor->child) goto unsupported;
-        name = levelc_upper_name(cursor);
         target_count++;
-        if (!name || (strcmp(name, ".") != 0 &&
-                      levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR)) {
+        if (cursor->node_type == TARGET && !cursor->child) {
+            name = levelc_upper_name(cursor);
+            if (!name || (strcmp(name, ".") != 0 &&
+                          levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR)) {
+                free(name);
+                goto unsupported;
+            }
             free(name);
+        } else if (cursor->node_type == PATTERN && !cursor->child && cursor->token) {
+            direct = 0;
+        } else if (cursor->node_type == ABS_POS || cursor->node_type == REL_POS) {
+            ASTNode *position = cursor->child ? cursor->child : cursor;
+            if (cursor->child && (cursor->child->node_type != INTEGER ||
+                                  cursor->child->sibling)) goto unsupported;
+            if (position->node_type != INTEGER && position->node_type != ABS_POS)
+                goto unsupported;
+            direct = 0;
+        } else {
             goto unsupported;
         }
-        free(name);
     }
-    if (target_count < 1 || target_count > INT_MAX) goto unsupported;
+    if (target_count < 1 || target_count > INT_MAX ||
+        (!direct && target_count > UINT16_MAX)) goto unsupported;
     if (source_out) *source_out = source;
     if (target_out) *target_out = target;
     if (target_count_out) *target_count_out = target_count;
     if (is_value_out) *is_value_out = is_value;
     if (upper_out) *upper_out = upper;
+    if (direct_out) *direct_out = direct;
     return 1;
 
 unsupported:
@@ -1468,7 +1491,7 @@ static int levelc_main_statement_supported(ASTNode *stmt,
     if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == PARSE)
-        return levelc_direct_parse_shape(stmt, plan, NULL, NULL, NULL, NULL, NULL, reason_out);
+        return levelc_parse_shape(stmt, plan, NULL, NULL, NULL, NULL, NULL, NULL, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
 
     if (stmt->node_type == CALL) {
@@ -1500,7 +1523,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     if (stmt->node_type == DO) return levelc_do_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == SELECT) return levelc_select_statement_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == PARSE)
-        return levelc_direct_parse_shape(stmt, plan, NULL, NULL, NULL, NULL, NULL, reason_out);
+        return levelc_parse_shape(stmt, plan, NULL, NULL, NULL, NULL, NULL, NULL, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
     if (stmt->node_type == RETURN) {
         if (stmt->child) return levelc_expr_supported(stmt->child, plan, reason_out);
@@ -2966,6 +2989,276 @@ fail:
     return 0;
 }
 
+typedef struct {
+    unsigned char *bytes;
+    size_t length;
+    size_t capacity;
+    unsigned int item_count;
+    unsigned int result_count;
+} LevelCParsePlanBytes;
+
+/* Frozen parseplan version 1 item kinds, shared with the VM and Level B exit.
+ * The descriptor is emitted as escaped bytes in an AST STRING operand because
+ * the canonical assembler signature for parseplan requires a string constant. */
+enum {
+    LEVELC_PARSEPLAN_TARGET = 1,
+    LEVELC_PARSEPLAN_LITERAL = 2,
+    LEVELC_PARSEPLAN_ABSOLUTE = 3,
+    LEVELC_PARSEPLAN_RELATIVE_PLUS = 4,
+    LEVELC_PARSEPLAN_RELATIVE_MINUS = 5,
+    LEVELC_PARSEPLAN_IMPLICIT_WORD = 6
+};
+
+static int levelc_parseplan_byte(LevelCParsePlanBytes *plan, unsigned int value) {
+    unsigned char *grown;
+    size_t capacity;
+    if (plan->length == plan->capacity) {
+        capacity = plan->capacity ? plan->capacity * 2 : 64;
+        if (capacity <= plan->capacity) return 0;
+        grown = realloc(plan->bytes, capacity);
+        if (!grown) return 0;
+        plan->bytes = grown;
+        plan->capacity = capacity;
+    }
+    plan->bytes[plan->length++] = (unsigned char)value;
+    return 1;
+}
+
+static int levelc_parseplan_number(LevelCParsePlanBytes *plan,
+                                   uint64_t value,
+                                   unsigned int width) {
+    unsigned int index;
+    for (index = 0; index < width; index++) {
+        if (!levelc_parseplan_byte(plan, (unsigned int)(value & 0xff))) return 0;
+        value >>= 8;
+    }
+    return 1;
+}
+
+static int levelc_parseplan_item(LevelCParsePlanBytes *plan,
+                                 unsigned int kind,
+                                 unsigned int flags) {
+    if (plan->item_count == UINT16_MAX) return 0;
+    if (!levelc_parseplan_byte(plan, kind) ||
+        !levelc_parseplan_byte(plan, flags)) return 0;
+    plan->item_count++;
+    return 1;
+}
+
+static int levelc_parseplan_position_value(ASTNode *position, uint64_t *out) {
+    char *text;
+    char *end;
+    unsigned long long value;
+    if (!position || !out) return 0;
+    text = levelc_node_text_copy(position);
+    if (!text || !*text || !isdigit((unsigned char)*text)) {
+        free(text);
+        return 0;
+    }
+    errno = 0;
+    value = strtoull(text, &end, 10);
+    if (errno || *end || value > INT64_MAX) {
+        free(text);
+        return 0;
+    }
+    *out = (uint64_t)value;
+    free(text);
+    return 1;
+}
+
+static int levelc_parseplan_literal(ASTNode *pattern,
+                                    unsigned char **bytes_out,
+                                    size_t *length_out,
+                                    size_t *chars_out) {
+    const char *raw;
+    size_t raw_length;
+    size_t close_index;
+    size_t index;
+    size_t count = 0;
+    size_t bit_count = 0;
+    unsigned int pending = 0;
+    unsigned char *bytes;
+    char mode = 0;
+    if (!pattern || !pattern->token || !bytes_out || !length_out || !chars_out)
+        return 0;
+    raw = pattern->token->token_string;
+    raw_length = pattern->token->length;
+    if (!raw || raw_length < 2 || (raw[0] != '\'' && raw[0] != '"')) return 0;
+    close_index = raw_length - 1;
+    if (raw[close_index] != raw[0]) {
+        mode = (char)tolower((unsigned char)raw[close_index]);
+        if ((mode != 'x' && mode != 'b') || raw_length < 3 ||
+            raw[close_index - 1] != raw[0]) return 0;
+        close_index--;
+    }
+    bytes = malloc(raw_length + 1);
+    if (!bytes) return 0;
+    if (!mode) {
+        for (index = 1; index < close_index; index++) {
+            if (raw[index] == raw[0] && index + 1 < close_index &&
+                raw[index + 1] == raw[0]) index++;
+            bytes[count++] = (unsigned char)raw[index];
+        }
+    } else if (mode == 'x') {
+        size_t digits = 0;
+        for (index = 1; index < close_index; index++) {
+            if (isspace((unsigned char)raw[index])) continue;
+            if (!isxdigit((unsigned char)raw[index])) goto invalid;
+            digits++;
+        }
+        if (digits & 1) bit_count = 1;
+        for (index = 1; index < close_index; index++) {
+            if (isspace((unsigned char)raw[index])) continue;
+            pending = (pending << 4) | (unsigned int)hexchar2int(raw[index]);
+            bit_count++;
+            if (bit_count == 2) {
+                bytes[count++] = (unsigned char)pending;
+                pending = 0;
+                bit_count = 0;
+            }
+        }
+    } else {
+        size_t digits = 0;
+        for (index = 1; index < close_index; index++) {
+            if (isspace((unsigned char)raw[index])) continue;
+            if (raw[index] != '0' && raw[index] != '1') goto invalid;
+            digits++;
+        }
+        bit_count = (8 - digits % 8) % 8;
+        for (index = 1; index < close_index; index++) {
+            if (isspace((unsigned char)raw[index])) continue;
+            pending = (pending << 1) | (unsigned int)(raw[index] - '0');
+            bit_count++;
+            if (bit_count == 8) {
+                bytes[count++] = (unsigned char)pending;
+                pending = 0;
+                bit_count = 0;
+            }
+        }
+    }
+#ifndef NUTF8
+    if (utf8nvalid_count(bytes, count, chars_out)) goto invalid;
+#else
+    *chars_out = count;
+#endif
+    *bytes_out = bytes;
+    *length_out = count;
+    return 1;
+invalid:
+    free(bytes);
+    return 0;
+}
+
+static ASTNode *levelc_parseplan_descriptor(Context *context,
+                                            ASTNode *stmt,
+                                            ASTNode *first,
+                                            unsigned int *result_count_out) {
+    LevelCParsePlanBytes plan = {0};
+    ASTNode *cursor;
+    ASTNode *prev1 = NULL;
+    ASTNode *prev2 = NULL;
+    ASTNode *prev3 = NULL;
+    ASTNode *descriptor = NULL;
+    char *escaped_text;
+    size_t index;
+    for (index = 0; index < 8; index++) {
+        if (!levelc_parseplan_byte(&plan, 0)) goto done;
+    }
+    for (cursor = first; cursor; cursor = cursor->sibling) {
+        if (cursor->node_type == TARGET) {
+            char *name = levelc_upper_name(cursor);
+            int is_dot = name && strcmp(name, ".") == 0;
+            free(name);
+            if (!plan.item_count &&
+                (!levelc_parseplan_item(&plan, LEVELC_PARSEPLAN_ABSOLUTE, 0) ||
+                 !levelc_parseplan_number(&plan, 1, 8))) goto done;
+            if (prev1 && prev1->node_type == TARGET &&
+                !levelc_parseplan_item(&plan, LEVELC_PARSEPLAN_IMPLICIT_WORD, 0)) goto done;
+            if (!levelc_parseplan_item(&plan, LEVELC_PARSEPLAN_TARGET, is_dot ? 0 : 1)) goto done;
+            if (!is_dot) {
+                if (plan.result_count == UINT16_MAX) goto done;
+                plan.result_count++;
+            }
+        } else if (cursor->node_type == PATTERN) {
+            unsigned char *bytes = NULL;
+            size_t length;
+            size_t chars;
+            if (!levelc_parseplan_literal(cursor, &bytes, &length, &chars)) goto done;
+            if (length > UINT32_MAX || chars > UINT32_MAX ||
+                !levelc_parseplan_item(&plan, LEVELC_PARSEPLAN_LITERAL, 0) ||
+                !levelc_parseplan_number(&plan, length, 4) ||
+                !levelc_parseplan_number(&plan, chars, 4)) {
+                free(bytes);
+                goto done;
+            }
+            for (index = 0; index < length; index++) {
+                if (!levelc_parseplan_byte(&plan, bytes[index])) {
+                    free(bytes);
+                    goto done;
+                }
+            }
+            free(bytes);
+        } else {
+            ASTNode *position = cursor->child ? cursor->child : cursor;
+            uint64_t value;
+            unsigned int kind = cursor->node_type == ABS_POS ? LEVELC_PARSEPLAN_ABSOLUTE
+                : cursor->node_string && cursor->node_string[0] == '+' ?
+                    LEVELC_PARSEPLAN_RELATIVE_PLUS : LEVELC_PARSEPLAN_RELATIVE_MINUS;
+            unsigned int flags = 0;
+            if (!levelc_parseplan_position_value(position, &value)) goto done;
+            if (kind == LEVELC_PARSEPLAN_ABSOLUTE && prev3 && prev3->node_type == ABS_POS &&
+                prev2 && prev2->node_type == TARGET &&
+                prev1 && prev1->node_type == PATTERN &&
+                cursor->sibling && cursor->sibling->node_type == TARGET) {
+                ASTNode *earlier_position = prev3->child ? prev3->child : prev3;
+                char *earlier_text = levelc_node_text_copy(earlier_position);
+                char *current_text = levelc_node_text_copy(position);
+                if (!earlier_text || !current_text) {
+                    free(earlier_text);
+                    free(current_text);
+                    goto done;
+                }
+                flags = strcmp(earlier_text, current_text) == 0;
+                free(earlier_text);
+                free(current_text);
+            }
+            if (!levelc_parseplan_item(&plan, kind, flags) ||
+                !levelc_parseplan_number(&plan, value, 8)) goto done;
+        }
+        prev3 = prev2;
+        prev2 = prev1;
+        prev1 = cursor;
+    }
+    plan.bytes[0] = 'P';
+    plan.bytes[1] = 1;
+    plan.bytes[2] = 8;
+    plan.bytes[4] = (unsigned char)(plan.item_count & 0xff);
+    plan.bytes[5] = (unsigned char)(plan.item_count >> 8);
+    plan.bytes[6] = (unsigned char)(plan.result_count & 0xff);
+    plan.bytes[7] = (unsigned char)(plan.result_count >> 8);
+    if (plan.length > (SIZE_MAX - 1) / 4) goto done;
+    escaped_text = malloc(plan.length * 4 + 1);
+    if (!escaped_text) goto done;
+    size_t escaped_length = 0;
+    for (index = 0; index < plan.length; index++) {
+        const char *escaped = escape_character(plan.bytes[index]);
+        size_t byte_length = strlen(escaped);
+        memcpy(escaped_text + escaped_length, escaped, byte_length);
+        escaped_length += byte_length;
+    }
+    escaped_text[escaped_length] = '\0';
+    descriptor = ast_ft(context, STRING);
+    if (descriptor) ast_sstr(descriptor, escaped_text, escaped_length);
+    else free(escaped_text);
+    if (descriptor) {
+        rxcp_remap_anchor_synthetic(descriptor, stmt);
+        if (result_count_out) *result_count_out = plan.result_count;
+    }
+done:
+    free(plan.bytes);
+    return descriptor;
+}
+
 static int levelc_lower_direct_parse(Context *context,
                                      ASTNode *instructions,
                                      ASTNode *stmt,
@@ -2983,9 +3276,10 @@ static int levelc_lower_direct_parse(Context *context,
     size_t index;
     int is_value;
     int upper;
+    int direct;
 
-    if (!levelc_direct_parse_shape(stmt, plan, &source, &target, &target_count,
-                                   &is_value, &upper, reason_out)) return 0;
+    if (!levelc_parse_shape(stmt, plan, &source, &target, &target_count,
+                            &is_value, &upper, &direct, reason_out)) return 0;
     prelude = rxcp_remap_create_instruction_builder(context, stmt);
     if (!prelude) goto fail;
     value = is_value ? levelc_lower_expr(context, source->child, plan, prelude)
@@ -2999,6 +3293,84 @@ static int levelc_lower_direct_parse(Context *context,
                                                prelude, LEVELC_BIF_TRANSLATE_HELPER,
                                                value);
         if (!value) goto fail;
+    }
+
+    if (!direct) {
+        char *source_name = rxcp_remap_create_generated_node_name(
+            LEVELC_PARSE_SOURCE_PREFIX, stmt);
+        char *fields_name = rxcp_remap_create_generated_node_name(
+            LEVELC_PARSE_FIELDS_PREFIX, stmt);
+        unsigned int result_count = 0;
+        ASTNode *source_string = rxcp_remap_create_member_call(
+            context, stmt, value, "asString", NULL, 0);
+        ASTNode *source_capture = source_name && source_string
+            ? rxcp_remap_create_named_assignment(context, stmt,
+                                                 source_name, source_string)
+            : NULL;
+        ASTNode *fields_define = fields_name
+            ? rxcp_remap_create_array_define(context, stmt, fields_name, ".string")
+            : NULL;
+        ASTNode *descriptor = levelc_parseplan_descriptor(
+            context, stmt, target, &result_count);
+        ASTNode *fields_ref = fields_name
+            ? rxcp_remap_create_named_ref(context, stmt, VAR_SYMBOL, fields_name)
+            : NULL;
+        ASTNode *source_ref = source_name
+            ? rxcp_remap_create_named_ref(context, stmt, VAR_SYMBOL, source_name)
+            : NULL;
+        ASTNode *parse_instr = descriptor && fields_ref && source_ref
+            ? ast_ftt(context, ASSEMBLER, strdup("parseplan")) : NULL;
+        unsigned int result_index = 0;
+        if (!source_capture || !fields_define || !parse_instr) {
+            free(source_name);
+            free(fields_name);
+            goto fail;
+        }
+        parse_instr->free_node_string = 1;
+        rxcp_remap_anchor_synthetic(parse_instr, stmt);
+        add_ast(parse_instr, fields_ref);
+        add_ast(parse_instr, source_ref);
+        add_ast(parse_instr, descriptor);
+        add_ast(prelude, source_capture);
+        add_ast(prelude, fields_define);
+        add_ast(prelude, parse_instr);
+        rxcp_remap_append_builder_children(instructions, prelude);
+        for (; target; target = target->sibling) {
+            char *target_name;
+            int is_drop;
+            ASTNode *field;
+            ASTNode *value_args[1];
+            if (target->node_type != TARGET) continue;
+            target_name = levelc_upper_name(target);
+            is_drop = target_name && strcmp(target_name, ".") == 0;
+            free(target_name);
+            if (is_drop) continue;
+            result_index++;
+            field = rxcp_remap_create_indexed_ref(context, target, VAR_SYMBOL,
+                                                 fields_name, (int)result_index);
+            value_args[0] = field;
+            receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
+            args[0] = levelc_name_string(context, target);
+            args[1] = field
+                ? rxcp_remap_create_factory_call(context, target,
+                                                 LEVELC_REXX_VALUE_CLASS,
+                                                 value_args, 1)
+                : NULL;
+            lowered = receiver && args[0] && args[1]
+                ? rxcp_remap_create_member_call_statement(context, target,
+                                                          receiver, "setValue", args, 2)
+                : NULL;
+            if (!lowered) {
+                free(source_name);
+                free(fields_name);
+                goto fail;
+            }
+            add_ast(instructions, lowered);
+        }
+        free(source_name);
+        free(fields_name);
+        if (result_index != result_count) goto fail;
+        return 1;
     }
 
     char *fields_name = rxcp_remap_create_generated_node_name(
