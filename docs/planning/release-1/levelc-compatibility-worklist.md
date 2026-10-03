@@ -1132,7 +1132,7 @@ marking the configuration part complete.
 | --- | --- | --- |
 | Childless and ordinary expressions in main, IF/DO and local procedures | `levelc_say_instruction.rexx`; Regina, opt/no-opt, linked output and source-anchored tree checks | Proved for these forms; complete expression domain remains open |
 | Expression evaluation once and output order | Exposed counter called inside SAY expression; its inner SAY precedes the outer line | Proved for this fixture; external/BIF effects remain open |
-| Invalid source forms | Grammar has explicit close-bracket recovery and general expression diagnostics | Open: reference/error matrix and source anchors |
+| Invalid source forms | The seven existing highlighter fixtures cover stray comma/right parenthesis, trailing comparison/arithmetic/logical operators, bad prefix/leading operators, and unmatched left parenthesis with source-token anchors and next-clause recovery. Their `rxc` compile route rejects each with `37.1`, `37.2`, `35.1`, or `36` as expected | Current grammar's negative expression families proved; full source/encoding and expression reference matrix remains open |
 | Complete BIF, local and external function terms | A direct table reaches 57 of 70 recognised Classic BIF names plus LOWER/UPPER; a shared check raises distinct Classic SYNTAX. Nested, omitted, pool-mutating and local-procedure calls match Regina in focused proof. Activation-owned configuration reaches direct BIFs through internal functions and CALLs; seeded RANDOM lifecycle and pool isolation pass. Unhandled errors now report the authored main or local call site | Open: remaining BIF services, host-selected configuration, external resolution, Classic trap lifecycle and full reference proof |
 | General variable value terms | All validated variable reads now use shared pool `symbolValue`; Regina, opt/no-opt, local exposure/CALL, linked and normal Level C checks pass | Pool-read consolidation proved; complete expression domain remains open |
 | BYTE/UTF8 output, configured host route and failure | Length-aware default and per-context output pass embedded-NUL, UTF-8 byte, legacy-error, context-isolation, opt/no-opt and linked checks | Byte route proved; broader host/profile, trace and condition lifecycle remain open |
@@ -1301,6 +1301,16 @@ VM panic and signal checks passed 8/8 in rxbvm/rxtvm
 (`/tmp/crexx-levelc-bif-location-vm.czY3Oe`), and the normal Release Level C
 suite passed 308/308 (`/tmp/crexx-levelc-bif-location-suite.sQMgiq`). Classic
 trap delivery and condition state remain open.
+
+2026-10-03 SAY invalid-source audit: seven retained expression/highlighter
+fixtures and the representative compiler-negative test pass 8/8
+(`/tmp/crexx-levelc-say-invalid-audit.bZ8jqF`). Running all seven through
+Release `rxc` rejects each source with the expected `37.1`, `37.2`, `35.1`
+or `36` identity (`/tmp/crexx-levelc-say-compile-audit.vHgmyI`). The
+highlighter tests assert the fault token and following clause are preserved;
+their Regina mapping is recorded in the architecture document's expression
+review. This covers the known invalid SAY expression grammar families. It
+does not complete broader expression semantics or source/profile proof.
 
 ### Pending architecture decision for LC-STEP-63T
 
