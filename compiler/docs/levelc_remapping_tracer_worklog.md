@@ -62,6 +62,27 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 23 - Level C Scalar Pool Read And DROP Slice
+
+### Intent and accepted shape
+
+The shared pool already distinguishes a Classic symbol lookup from a direct
+value lookup. `value()` materializes a missing scalar as blank; `symbolValue()`
+returns its uppercase spelling. The Level C lowerer now uses `symbolValue()`
+for scalar reads and admits only direct scalar `DROP` lists, lowering each name
+to `RexxVariablePool.drop()`. The procedure's visible pool preserves exposed
+alias behavior. Stem, compound and parenthesized indirect forms remain closed.
+
+### Verification
+
+- A before-change fixture showed the blank-versus-`MISSING` disagreement with
+  Regina. The new nine-line fixture matches Regina in optimized/no-opt runs
+  and linked-image execution.
+- Release build passed, focused tests 6/6, and the selected Level C, runtime
+  pool and RexxScript suite 115/115. Retained log paths and remaining
+  compatibility obligations are in the
+  [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+
 ## Stage 22 - Level C NOP Execution Slice
 
 ### Intent and accepted shape

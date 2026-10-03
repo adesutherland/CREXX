@@ -5207,6 +5207,12 @@ add_levelc_unsupported_compile_test(levelc_slice8_controlled_do_unsupported
         rexx_src/levelc_slice8_controlled_do_unsupported.rexx)
 add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice10_indirect_drop_unsupported
+        rexx_src/levelc_slice10_indirect_drop_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice10_stem_drop_unsupported
+        rexx_src/levelc_slice10_stem_drop_unsupported.rexx)
+add_levelc_unsupported_compile_test(levelc_slice10_compound_drop_unsupported
+        rexx_src/levelc_slice10_compound_drop_unsupported.rexx)
 
 function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -5483,6 +5489,13 @@ add_levelc_runtime_slice_test(levelc_slice9_nop_noopt
         rexx_src/levelc_slice9_nop.rexx
         "before\nmiddle\nafter\n" -n)
 
+add_levelc_runtime_slice_test(levelc_slice10_scalar_drop
+        rexx_src/levelc_slice10_scalar_drop.rexx
+        "MISSING\nA\ntwo\nB C\nA\nA\nLOCAL\nSHARED\nSHARED\n")
+add_levelc_runtime_slice_test(levelc_slice10_scalar_drop_noopt
+        rexx_src/levelc_slice10_scalar_drop.rexx
+        "MISSING\nA\ntwo\nB C\nA\nA\nLOCAL\nSHARED\nSHARED\n" -n)
+
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}
@@ -5588,6 +5601,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice8_do_block_tree_shape
         "REPEAT"
         "FOR"
         "RexxValue")
+
+add_levelc_lowered_tree_shape_test(levelc_slice10_scalar_drop_tree_shape
+        rexx_src/levelc_slice10_scalar_drop.rexx
+        "symbolValue"
+        "drop"
+        "RexxVariablePool")
 
 # Bridge Connectivity Test
 add_custom_command(

@@ -65,8 +65,8 @@ exists.
 | LC-REF-046 | Logical AND/OR/XOR and prefix negation with exact values | both | Bounded expression slice; contextual `34.5/34.6` open |
 | LC-REF-047 | PARSE ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR and UPPER | host | Front end; source acquisition and execution open |
 | LC-REF-048 | PARSE targets, placeholders, literal/variable patterns and positions | both | Front end; template execution and errors open |
-| LC-REF-049 | Pool dropped, implicit, exposed and scalar/stem binding states | both | Runtime foundation; full lifecycle proof open |
-| LC-REF-050 | Set/value/drop, stem-tail propagation and recursive exposure | both | Bounded access/exposure slice; DROP and full alias proof open |
+| LC-REF-049 | Pool dropped, implicit, exposed and scalar/stem binding states | both | Bounded unset scalar read and direct scalar DROP; full lifecycle proof open |
+| LC-REF-050 | Set/value/drop, stem-tail propagation and recursive exposure | both | Bounded direct scalar DROP/access/exposure slice; stem/compound and full alias proof open |
 | LC-REF-051 | Compound-tail evaluation without NOVALUE, final lookup with NOVALUE | both | Bounded compound slice; error/alias proof open |
 | LC-REF-052 | Constant symbols, reserved pool 0 and SIGL/.SIGL updates | both | Front end/runtime pieces; state and label-search proof open |
 | LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | both | RexxValue foundation; full context and condition proof open |
@@ -76,7 +76,7 @@ exists.
 | LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | host | Open: processor lifecycle |
 | LC-REF-058 | ADDRESS selection/swap, transient command and WITH redirection | host | Front end; configured execution open |
 | LC-REF-059 | CALL ON/OFF delayed condition handlers | host | Front end; condition delivery open |
-| LC-REF-060 | DROP direct and parenthesized variable lists | both | Front end; pool mutation and error proof open |
+| LC-REF-060 | DROP direct and parenthesized variable lists | both | Bounded direct scalar list; stem/compound/parenthesized and error proof open |
 | LC-REF-061 | EXIT value, fallthrough and finalization | host | Empty EXIT slice; value/finalization open |
 | LC-REF-062 | INTERPRET source, HALT, syntax and label restrictions | both | Front end; execution and `47.1` open |
 | LC-REF-063 | NUMERIC DIGITS/FORM/FUZZ validation and defaults | both | Front end/runtime pieces; instruction integration open |

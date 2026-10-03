@@ -41,10 +41,11 @@ Use this authority split:
 - Level B is the principal implemented language surface. The initial Level G
   concurrency and provider layers are implemented development content, not a
   claim that the full Level G language contract is stable.
-- Level C has progressed beyond a parser-only proof. Nine fail-closed execution
+- Level C has progressed beyond a parser-only proof. Ten fail-closed execution
   lowering slices now cover scalar values, expressions, selected BIFs, internal
   procedures/arguments/calls, stems, bounded `IF/THEN/ELSE`, simple
-  `DO ... END`, and `NOP` through the Classic value and variable-pool foundation.
+  `DO ... END`, `NOP`, and direct scalar `DROP` through the Classic value and
+  variable-pool foundation.
   Unsupported shapes still reject rather than silently changing semantics.
 - RexxScript is already a distinct standalone and embedded interpreted product.
   It is sandboxed and string-first, shares Classic BIF foundations where

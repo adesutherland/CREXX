@@ -9,7 +9,8 @@
  *
  * The active tracer slices deliberately accept only proven shapes: direct
  * scalar and compound pool reads/writes, string and integer literals, proven
- * expression operators, SAY, NOP, nested IF and simple DO blocks, and local
+ * expression operators, SAY, NOP, direct scalar DROP, nested IF and simple DO
+ * blocks, and local
  * PROCEDURE EXPOSE over direct scalar or stem names.
  * Everything else reports an unsupported-shape diagnostic until its lowering
  * and runtime contract are implemented.
@@ -905,6 +906,37 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
                                            LevelCLowerPlan *plan,
                                            const char **reason_out);
 
+static int levelc_scalar_drop_supported(ASTNode *stmt,
+                                        const char **reason_out) {
+    ASTNode *list = stmt ? stmt->child : NULL;
+    ASTNode *target;
+
+    if (!list || list->node_type != ARGS || list->sibling || !list->child) {
+        if (reason_out) *reason_out = "unsupported DROP list";
+        return 0;
+    }
+
+    target = list->child;
+    while (target) {
+        char *name;
+        int scalar;
+
+        if (target->node_type != VAR_TARGET || target->child) {
+            if (reason_out) *reason_out = "indirect DROP is outside slice";
+            return 0;
+        }
+        name = levelc_upper_name(target);
+        scalar = name && levelc_variable_name_kind(name) == LEVELC_VAR_NAME_SCALAR;
+        free(name);
+        if (!scalar) {
+            if (reason_out) *reason_out = "stem or compound DROP is outside slice";
+            return 0;
+        }
+        target = target->sibling;
+    }
+    return 1;
+}
+
 static int levelc_simple_do_supported(ASTNode *stmt,
                                       LevelCLowerPlan *plan,
                                       int in_procedure,
@@ -965,6 +997,7 @@ static int levelc_main_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS) return 1;
     if (stmt->node_type == NOP) return stmt->child == NULL;
+    if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 0, reason_out);
     if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 0, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
@@ -991,6 +1024,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, NULL, reason_out);
     if (stmt->node_type == NOP) return stmt->child == NULL;
+    if (stmt->node_type == LEVELC_DROP) return levelc_scalar_drop_supported(stmt, reason_out);
     if (stmt->node_type == IF) return levelc_if_statement_supported(stmt, plan, 1, reason_out);
     if (stmt->node_type == DO) return levelc_simple_do_supported(stmt, plan, 1, reason_out);
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
@@ -1197,7 +1231,7 @@ static ASTNode *levelc_scalar_pool_value_by_name(Context *context,
     args[0] = rxcp_remap_create_string_constant(context, source_node, name);
     if (!receiver || !args[0]) return NULL;
 
-    return rxcp_remap_create_member_call(context, source_node, receiver, "value", args, 1);
+    return rxcp_remap_create_member_call(context, source_node, receiver, "symbolValue", args, 1);
 }
 
 static ASTNode *levelc_compound_tail_expr(Context *context,
@@ -2315,6 +2349,31 @@ static int levelc_lower_nop(Context *context,
     return 1;
 }
 
+static int levelc_lower_scalar_drop(Context *context,
+                                    ASTNode *instructions,
+                                    ASTNode *stmt,
+                                    const char **reason_out) {
+    ASTNode *target = stmt->child->child;
+
+    while (target) {
+        ASTNode *receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
+        ASTNode *args[1] = {levelc_name_string(context, target)};
+        ASTNode *lowered;
+
+        if (!receiver || !args[0]) goto fail;
+        lowered = rxcp_remap_create_member_call_statement(context, target,
+                                                            receiver, "drop", args, 1);
+        if (!lowered) goto fail;
+        add_ast(instructions, lowered);
+        target = target->sibling;
+    }
+    return 1;
+
+fail:
+    if (reason_out) *reason_out = "failed to lower Level C DROP";
+    return 0;
+}
+
 static int levelc_lower_main_statement(Context *context,
                                        ASTNode *instructions,
                                        ASTNode *stmt,
@@ -2325,6 +2384,9 @@ static int levelc_lower_main_statement(Context *context,
 
     if (!stmt) return 1;
     if (stmt->node_type == NOP) return levelc_lower_nop(context, instructions, stmt, reason_out);
+    if (stmt->node_type == LEVELC_DROP) {
+        return levelc_lower_scalar_drop(context, instructions, stmt, reason_out);
+    }
     if (stmt->node_type == IF) {
         return levelc_lower_if_statement(context, instructions, stmt, plan, NULL, 0, reason_out);
     }
@@ -2371,6 +2433,9 @@ static int levelc_lower_proc_statement(Context *context,
 
     if (!stmt) return 1;
     if (stmt->node_type == NOP) return levelc_lower_nop(context, instructions, stmt, reason_out);
+    if (stmt->node_type == LEVELC_DROP) {
+        return levelc_lower_scalar_drop(context, instructions, stmt, reason_out);
+    }
     if (stmt->node_type == LEVELC_ARG) {
         return levelc_append_arg_bindings(context, instructions, procedure, reason_out);
     }

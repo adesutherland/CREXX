@@ -73,7 +73,7 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
 
-The current executable Level C surface is nine bounded lowering slices; the
+The current executable Level C surface is ten bounded lowering slices; the
 complete Classic contract remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
 the references and this architecture. A new syntax rule, compatibility

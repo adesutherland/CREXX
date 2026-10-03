@@ -62,6 +62,13 @@ than redefining compatibility around the first slices.
   Level C visible-pool behavior, and configuration/profile boundaries with
   focused cross-consumer integration evidence. RexxScript's string-oriented
   evaluator and allow-list remain product-specific.
+- [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
+  dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
+  affects the current visible pool (including a procedure's exposed alias),
+  and reassignment restores its value. Compound, stem and indirect `DROP`
+  forms remain fail-closed pending separate proof. Verify against the Classic
+  interpreter, optimized/no-opt and linked execution, runtime pool tests,
+  and the relevant Level C and RexxScript correctness suites.
 - [ ] **LC-AC-04 — full compatibility (R1-AC-02):** every required matrix row
   has executable behavior and documentation, or an individually approved
   exception with its diagnostic and user-visible limit. Verify reference
@@ -106,6 +113,12 @@ than redefining compatibility around the first slices.
    pool operations in reviewable cross-consumer increments. Use the shared
    `rxfnsc` implementation, test both adapters and isolation, and commit each
    qualified increment. Keep any observed behavior gap visibly open.
+9. **LC-STEP-09 — complete (LC-AC-07; serves LC-AC-06; depends on STEP-07):** retain the
+   Regina and compiled reproducer for an unset scalar read; use the shared
+   pool's `symbolValue()` for scalar reads and lower guarded direct scalar
+   `DROP` through that pool. Compare main/procedure/IF/DO cases and unsupported
+   forms with the Classic reference, then run focused and normal regressions
+   before committing this separate increment.
 
 ## Coverage matrix
 
@@ -127,7 +140,7 @@ has been approved in this worklist.
 | --- | --- | --- | --- |
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
 | Expressions | precedence, arithmetic, comparisons, concatenation, prefix, short-circuit logic | Slice: `levelc_slice6_expressions` | Full numeric context, boundary/error and platform equivalence |
-| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write and scalar/stem EXPOSE | Remaining stem value, DROP, indirect/external/API operations and aliasing |
+| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
 | Control | controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Front end: parser/validation fixtures | Execution, exact loop semantics and errors |
@@ -162,7 +175,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slice: simple DO only | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-DROP` | DROP instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-DROP` | DROP instruction | Bounded slice: direct scalar list | Stem, compound and indirect forms, full condition/profile proof open |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |
@@ -184,7 +197,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-BIF-CALL` | Recognised ANSI BIF calls | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-LOCAL-CALL` | Direct local function/procedure calls | Bounded slice: direct local function and procedure calls | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DSLSH` | Source tree, diagnostics, and syntax-highlighting projection | Parser-mode milestone | Execution and full diagnostic conformance remain separate |
-| `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Bounded slice: nine proven slices | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Bounded slice: ten proven slices | Remaining Classic forms, errors and configuration proof open |
 
 ### Individual BIF inventory
 
@@ -350,3 +363,26 @@ full compatibility proof.
   sandbox variables and `RexxValue` frames for shared BIF calls; Level C
   lowering uses the same library from compiled code. The required behavioral
   and isolation proof remains open under `LC-AC-06` and `LC-STEP-08`.
+
+### LC-STEP-09 — scalar pool read and direct DROP, 2026-10-03
+
+- The retained before-change reproducer showed Regina output `MISSING`,
+  while compiled Level C printed a blank line for an unset scalar. A separate
+  `DROP a` fixture printed `A` under Regina but was rejected by the compiler.
+  Before-change log: `/tmp/crexx-levelc-pool-before.zIeQRx`.
+- Scalar reads now use `RexxVariablePool.symbolValue()` rather than `value()`;
+  guarded direct scalar lists lower to the pool's `drop()` method. The
+  nine-line fixture matches Regina in main, nested `IF`/`DO`, and an exposed
+  procedure pool, with optimized/no-opt parity. Indirect, stem and compound
+  `DROP` remain fail-closed.
+- Release core/runtime build passed, focused tests 6/6, and the selected Level
+  C, pool and RexxScript correctness suite 115/115. The linked fixture matched
+  Regina through `rxvm`. Retained logs:
+  `/tmp/crexx-levelc-drop-build.2mXMyN`,
+  `/tmp/crexx-levelc-drop-consumers-build.AVcSFk`,
+  `/tmp/crexx-levelc-drop-focused.vvOvKu`,
+  `/tmp/crexx-levelc-drop-suite.EB7iFh`,
+  `/tmp/crexx-levelc-drop-linked-run.YcStKq`.
+- Compound/stem reads and `DROP` variants, NOVALUE trap delivery, BYTE/UTF8
+  profiles and complete cross-consumer semantics remain open under
+  `LC-AC-01/04/06`.
