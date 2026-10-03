@@ -1094,6 +1094,20 @@ Open before closure:
 - Prove configured default-output selection, errors, BYTE/UTF8 behavior and
   source/trace lifecycle through the host interface. Inspect the existing VM
   SAY callback boundary for byte-exact output before claiming this proof.
+- **Confirmed output defect, open architecture decision:** a BYTE profile
+  probe `options levelc; say '410042'x` produced bytes `41 00 42 0a` with
+  Regina but `41 0a` with the current Release `rxc`/`rxas`/`rxvm` path
+  (`/tmp/crexx-levelc-say-nul.sdYMGN/`). `SAY_REG` and `SAY_STRING` have
+  explicit byte lengths, but `rxvm_mprintf` formats to a C string and the
+  default/custom `say_exit_func(char *)` path uses a terminator. This is
+  implementable, not an infeasible feature. Proposed repair: keep the old
+  callback ABI for existing hosts, add a length-aware per-context SAY callback
+  and an internal byte-span output path, and require an explicit error rather
+  than silent truncation when a legacy custom callback encounters embedded
+  NUL. The default console path can use its existing length-taking writer.
+  Approval for this host API change is pending under `AGENTS.md`; no VM code
+  change has begun. Prove both callback routes, BYTE exactness, UTF8/error
+  behavior, main/local output ordering and linked execution after approval.
 - Keep the childless Regina, opt/no-opt, raw/canonical tree, normal Level C
   and linked results already obtained for unchanged code/test inputs. Add
   only missing decisive cases for expression side effects, output routing and
