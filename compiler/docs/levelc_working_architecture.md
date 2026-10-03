@@ -105,20 +105,20 @@ while retaining the hidden canonical control symbol used by LEAVE/ITERATE.
 The conditional loop slices accept source `DO WHILE` and `DO UNTIL`. The
 neutral builder places the canonical condition under REPEAT. WHILE checks at
 loop entry; UNTIL checks after the body, including on ITERATE. Direct WHILE
-also accepts supported expressions that lower to setup statements. The lowerer
-places that setup and a final `LEAVE WITH` of the contextual logical value in
-the existing canonical `BLOCK_EXPR`, so the whole condition runs on every
-entry. A setup-free condition remains a direct expression. The same hidden
+and UNTIL accept supported expressions that lower to setup statements. The
+lowerer places that setup and a final `LEAVE WITH` of the contextual logical
+value in the existing canonical `BLOCK_EXPR`, so the whole condition runs at
+each loop's required check point. A setup-free condition remains a direct
+expression. The same hidden
 control symbol carries source LEAVE/ITERATE across generated wrappers. Shared
 `RexxValue.logicalWhileValue()` and `logicalUntilValue()` enforce Classic
-`34.3` and `34.4` logical identities. Direct UNTIL still requires a setup-free
-condition; the lowerer asserts that it emitted no setup statements rather
-than silently hoisting an end check.
+`34.3` and `34.4` logical identities.
 The first combined-header slice accepts a non-negative literal count followed
 by a setup-free WHILE or UNTIL condition. FOR and the condition share the same
 canonical REPEAT, preserving zero-count behavior and the appropriate entry or
 end check. Dynamic counts, FOREVER with a condition, controlled variables and
-setup-bearing combined conditions remain fail-closed.
+setup-bearing combined conditions remain fail-closed, with an assertion that
+their accepted setup-free conditions emit no setup statements.
 Classic `&` and `|` now evaluate both operands in source order. The lowerer
 copies the left `RexxValue` before any right-hand setup statements, then calls
 shared contextual `logicalAnd()` or `logicalOr()` methods. The earlier
@@ -126,7 +126,7 @@ branch-based short-circuit tracer shape is historical and is no longer the
 Classic Level C target. Exact left/right operand errors use `34.5`/`34.6`.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission. The existing WHILE, BLOCK_EXPR and
-LEAVE_WITH nodes express the required timing and scope for direct WHILE, so
+LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL, so
 this increment adds no new emitter shape.
 
 ## Historical design record

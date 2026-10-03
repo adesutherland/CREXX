@@ -142,6 +142,14 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   block-expression tree and source anchors, focused normal/Debug regressions
   and the relevant correctness suite. UNTIL and combined setup-bearing
   headers remain open pending their distinct end-check/limit proof.
+- [x] **LC-AC-18 — direct UNTIL with setup expressions:** a parsed direct
+  `DO UNTIL expression` executes its body before the first condition, then
+  reevaluates any supported setup-bearing condition after each ordinary or
+  ITERATE path. Preserve eager operand order, BIF argument frames, source
+  LEAVE/ITERATE ownership and exact `34.4` errors. Verify against Regina with
+  bounded fixtures, opt/no-opt and linked execution, a source-anchored
+  canonical block-expression tree, focused normal/Debug regressions and the
+  relevant correctness suite. Count-plus-condition setup remains open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -274,6 +282,12 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     every entry, its generated names remain in scope, and inner LEAVE WITH
     does not disturb source LEAVE/ITERATE. Keep UNTIL/combined setup-bearing
     forms fail-closed, qualify and commit this structural increment.
+21. **LC-STEP-21 — complete (LC-AC-08/18; depends on STEP-20):** admit supported
+    setup-bearing conditions for direct `DO UNTIL` and reuse the canonical
+    `BLOCK_EXPR` condition builder from STEP-20. Prove the generated prelude
+    runs only after the body and on ITERATE, with the correct source loop
+    association and `34.4` identity. Remove the obsolete unsupported fixture,
+    keep combined headers fail-closed, qualify and commit this increment.
 
 ## AST structural crosswalk and closure order
 
@@ -293,7 +307,7 @@ itself make its Classic shape executable.
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
-| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal count, FOREVER, direct WHILE including setup-bearing conditions, setup-free UNTIL and literal count with a setup-free condition, plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Dynamic count, named transfer, controlled headers, FOREVER with condition, setup-bearing UNTIL/combined conditions, numeric errors and wider scope remain open |
+| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal count, FOREVER, direct WHILE/UNTIL including setup-bearing conditions and literal count with a setup-free condition, plus childless LEAVE/ITERATE bound to the nearest source repetitive DO through a hidden canonical target | Dynamic count, named transfer, controlled headers, FOREVER with condition, setup-bearing combined conditions, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
 | `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
@@ -331,7 +345,7 @@ has been approved in this worklist.
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
-| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal count, FOREVER, direct WHILE including setup-bearing conditions, setup-free UNTIL, literal count with setup-free condition, and childless LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Dynamic count, controlled variables, FOREVER with condition, setup-bearing UNTIL/combined conditions, named transfer, exact numeric errors |
+| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal count, FOREVER, direct WHILE/UNTIL including setup-bearing conditions, literal count with setup-free condition, and childless LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Dynamic count, controlled variables, FOREVER with condition, setup-bearing combined conditions, named transfer, exact numeric errors |
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
@@ -880,4 +894,33 @@ full compatibility proof.
   `/tmp/crexx-levelc-while-block-link.irp1c4`, and
   `/tmp/crexx-levelc-while-block-tree.s1TS6B`.
 - `LC-AC-08/04` remain open for setup-bearing UNTIL/combined headers,
+  dynamic/controlled loops, named transfers and other structural families.
+
+### LC-STEP-21 — setup-bearing direct DO UNTIL, 2026-10-03
+
+- Direct `DO UNTIL` now admits the same supported setup-bearing condition
+  expressions as direct WHILE. The existing canonical `BLOCK_EXPR` places
+  condition setup at UNTIL's post-body check, including the ITERATE path;
+  setup-free conditions remain direct. Count-plus-condition headers still
+  reject setup. No new AST node or emitter shape was needed.
+- Bounded Regina and optimized/no-opt compiled output matched for an initially
+  true condition checked only after the body, eager side effects after
+  ITERATE, per-check SUBSTR BIF frames, changing compound tails, childless
+  LEAVE/ITERATE through generated blocks and a local procedure. A nonlogical
+  setup-bearing condition reports `34.4`. The obsolete unsupported-UNTIL
+  fixture was removed. Release focused tests passed 4/4; the selected normal
+  Level C/source-provenance/shared-runtime suite passed 169/169. Debug
+  structural/loop tests passed 31/31. Linked RXBIN output matched Regina.
+  The redirected tree probe showed source-anchored UNTIL > BLOCK_EXPR >
+  LEAVE_WITH and a BIF context, with no AST validation error. Evidence:
+  `/tmp/crexx-levelc-until-setup-reference-output.PUMS4G`,
+  `/tmp/crexx-levelc-until-block-release-build.C8LELR`,
+  `/tmp/crexx-levelc-until-block-direct-log.NsPSk4`,
+  `/tmp/crexx-levelc-until-block-focused.tVTwVb`,
+  `/tmp/crexx-levelc-until-block-release-suite.eZu6Hq`,
+  `/tmp/crexx-levelc-until-block-debug-build.GKVpZm`,
+  `/tmp/crexx-levelc-until-block-debug-focused.P0RHvW`,
+  `/tmp/crexx-levelc-until-block-link.LrLH8w`, and
+  `/tmp/crexx-levelc-until-block-tree.VWYALR`.
+- `LC-AC-08/04` remain open for setup-bearing combined headers,
   dynamic/controlled loops, named transfers and other structural families.

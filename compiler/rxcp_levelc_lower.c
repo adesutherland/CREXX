@@ -1191,9 +1191,7 @@ static int levelc_do_supported(ASTNode *stmt,
             body = body->sibling;
         }
     } else if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
-        if (!levelc_do_condition_supported(body, plan,
-                                           body->node_type == WHILE,
-                                           reason_out)) return 0;
+        if (!levelc_do_condition_supported(body, plan, 1, reason_out)) return 0;
         body = body->sibling;
     }
     if (!body || body->node_type != INSTRUCTIONS || body->sibling) {
@@ -2779,7 +2777,7 @@ static int levelc_lower_do(Context *context,
                     context, condition_node, condition_value);
             if (!condition_value) goto fail;
             if (condition_prelude->child) {
-                if (repeat || condition_node->node_type != WHILE) {
+                if (repeat) {
                     if (reason_out) *reason_out = "DO condition unexpectedly needs setup";
                     goto fail;
                 }
