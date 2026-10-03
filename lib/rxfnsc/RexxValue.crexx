@@ -646,6 +646,15 @@ RexxValue: class
     count = whole as .int
     return count
 
+  /** Validate and capture a Classic DO TO endpoint at loop setup. */
+  controlToValue: method = .RexxValue
+    text = asString()
+    if datatype(text, "N") <> "1" then do
+      message = "RXC-LC-41.4: DO TO value must be numeric; found " || text
+      assembler signal "ERROR", message
+    end
+    return .RexxValue(text)
+
   /** Check a Classic DO control variable against a fixed TO value. */
   controlToContinue: method = .boolean
     arg limit = .RexxValue

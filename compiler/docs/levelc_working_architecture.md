@@ -146,7 +146,12 @@ replace the Classic control variable. Dynamic BY/FOR, dynamic endpoints,
 dynamic controlled clauses remain fail-closed. Without TO or FOR, the canonical
 REPEAT has no synthetic count or entry guard; its pool-backed UNTIL end block
 still advances the visible variable after ordinary or ITERATE paths. Source
-LEAVE, WHILE and UNTIL provide the guarded exit paths.
+LEAVE, WHILE and UNTIL provide the guarded exit paths. A supported dynamic TO
+expression is evaluated once before the new visible control value is assigned,
+so it can observe the prior pool value. Shared `RexxValue.controlToValue()`
+checks `41.4` at setup and returns a copy stored in a hidden canonical local;
+the WHILE TO check reads that local on every entry. This also runs when FOR
+is zero. Dynamic start, BY and FOR remain open.
 For a supported controlled WHILE header, the same canonical REPEAT uses one
 WHILE entry node. Its FOR check runs first; when TO exists, a source-anchored
 BLOCK_EXPR branches on the TO guard before evaluating the Classic WHILE

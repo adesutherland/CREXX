@@ -279,6 +279,20 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   Verify canonical REPEAT with no FOR and no synthetic WHILE for bare/BY
   forms, source anchors, linked execution, focused Release/Debug checks and
   the relevant correctness suite. Dynamic controlled clauses remain open.
+- [x] **LC-AC-31 — captured dynamic TO endpoint:** parsed scalar controlled
+  `DO name = non-negative integer TO expression` with optional signed literal
+  BY, bounded literal FOR, and a supported WHILE or UNTIL condition evaluates
+  a supported TO expression exactly once before assigning the new visible
+  control variable, so it observes any previous value. Later mutation of
+  its source variables does not change
+  the endpoint; a nonnumeric endpoint reports contextual `41.4` at setup,
+  including when FOR is zero. FOR-zero still evaluates the TO expression at
+  loop setup as Regina does. Preserve
+  nested/named transfer ownership, condition timing, source anchors and
+  opt/no-opt behavior. Verify bounded Regina output and errors, a captured
+  canonical value in the lowered tree, linked execution, focused
+  Release/Debug checks and the relevant correctness suite. Dynamic start,
+  BY and FOR remain open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -500,6 +514,14 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     end step, omitting FOR and any synthetic entry guard. Keep guarded
     reference fixtures and bounded command execution; prove transfer,
     condition, scope, tree, toolchain and normal/Debug behavior, then commit.
+34. **LC-STEP-34 — complete (LC-AC-08/31; depends on STEP-33):** accept a supported
+    dynamic TO expression, lower its setup once before the initial pool set,
+    validate its numeric value there, copy the resulting RexxValue into a
+    hidden canonical local, and use that
+    local in the existing WHILE TO check. Keep the literal TO fast path and
+    dynamic start/BY/FOR guards. Prove Regina timing, mutation, `41.4`,
+    source-anchored ownership and normal/Debug/toolchain behavior, then
+    commit separately.
 
 ## Open findings
 
@@ -529,7 +551,7 @@ itself make its Classic shape executable.
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
-| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar literal control with TO, FOR, both or neither, optional signed literal BY and controlled WHILE/UNTIL, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, dynamic BY/FOR and dynamic controlled endpoints, numeric errors and wider scope remain open |
+| Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar literal control with TO, FOR, both or neither, captured dynamic TO, optional signed literal BY and controlled WHILE/UNTIL, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, dynamic start/BY/FOR and other controlled endpoints, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
 | `PARSE`, `PULL`, template/pattern/position nodes | Open: parser and diagnostic coverage only | Template target ownership, source acquisition, ordered assignment and source anchors |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
@@ -567,7 +589,7 @@ has been approved in this worklist.
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
-| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled DO with optional TO/FOR/BY and WHILE entry or UNTIL end checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, dynamic controlled headers, named transfer to wider loops, exact numeric errors |
+| Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled DO with optional TO/FOR/BY, captured dynamic TO and WHILE entry or UNTIL end checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, dynamic start/BY/FOR, named transfer to wider loops, exact numeric errors |
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed ARG, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, dynamic/external calls, full scope and return/exit lifecycle |
@@ -1418,7 +1440,27 @@ full compatibility proof.
   `/tmp/crexx-levelc-unbounded-control-final-rxlink.Uz6AhR`,
   `/tmp/crexx-levelc-unbounded-control-final-rxvm.RtgQkL`, and
   `/tmp/crexx-levelc-unbounded-control-final-suite.BJQr1F`.
-- `LC-AC-08/04` remain open for dynamic BY/FOR, dynamic controlled endpoints,
-  wider count values, named
+- Supported dynamic TO expressions are now evaluated and validated before
+  assigning the new visible control value, then captured in a hidden
+  canonical RexxValue local. The redirected tree probe showed the
+  `controlToValue` capture before the pool assignment and a single hidden
+  reference in each TO check. Regina output matched opt/no-opt and linked
+  execution for endpoint mutation, a pre-existing control value observed by
+  a TO function under FOR-zero, signed BY, WHILE/UNTIL and named outer
+  ITERATE. A nonnumeric TO under FOR-zero reports `41.4` at setup. The shared
+  `rxfnsc` image built in Release and Debug; focused Release checks passed
+  4/4, the selected Release Level C/RexxValue/RexxScript suite 223/223, and
+  Debug structural/loop/shared-value/RexxScript checks 44/44. Evidence:
+  `/tmp/crexx-levelc-dynamic-to-reference-output.Oxyw65`,
+  `/tmp/crexx-levelc-dynamic-to-build.VacXdq`,
+  `/tmp/crexx-levelc-dynamic-to-focused.7wMczl`,
+  `/tmp/crexx-levelc-dynamic-to-final-suite.j7fm7V`,
+  `/tmp/crexx-levelc-dynamic-to-final-debug-build.brP7hY`,
+  `/tmp/crexx-levelc-dynamic-to-final-debug-focused.zlljwp`,
+  `/tmp/crexx-levelc-dynamic-to-final-tree-log.3nGjLn`,
+  `/tmp/crexx-levelc-dynamic-to-final-rxlink.U0YRNN`, and
+  `/tmp/crexx-levelc-dynamic-to-final-rxvm.aOFKn4`.
+- `LC-AC-08/04` remain open for dynamic start/BY/FOR and other controlled
+  endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.
   `LC-FIND-01` remains open.
