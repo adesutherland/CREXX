@@ -48,7 +48,7 @@ exists.
 | LC-REF-029 | Numeric constants, exponent signs and period-start tokens | source | Front end partial; full Classic lexer pass open |
 | LC-REF-030 | Comma continuation and inferred clause endings | source | Front end partial; whitespace edge cases open |
 | LC-REF-031 | Nested comments and unterminated `6.*` messages | source | Front end diagnostics; reference edge cases open |
-| LC-REF-032 | Alternative negators and inferred blank/nonblank concatenation | source | Front end plus expression slice; lexical equivalence open |
+| LC-REF-032 | Alternative negators and inferred blank/nonblank concatenation | source | Front end plus expression slice, including adjacent function calls after blank concatenation; full lexical equivalence open |
 | LC-REF-033 | Top-syntax VALUE insertion, assignment, label and keyword promotion | source | Front end fixtures; complete context matrix open |
 | LC-REF-034 | Reserved .MN/.RESULT/.RC/.RS/.SIGL and `50.1` | both | Front end partial; runtime state and diagnostic proof open |
 | LC-REF-035 | Function-name ending-period `51.1` | source | Front end diagnostic proof open |
@@ -71,7 +71,7 @@ exists.
 | LC-REF-052 | Constant symbols, reserved pool 0 and SIGL/.SIGL updates | both | Front end/runtime pieces; state and label-search proof open |
 | LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | both | RexxValue foundation; full context and condition proof open |
 | LC-REF-054 | Exact logical values and contextual `34.*` identities | both | `IF` reports `34.1`; other contexts open |
-| LC-REF-055 | Function/CALL omitted arguments and resolution order | host | Bounded local-call slice; BIF/external order open |
+| LC-REF-055 | Function/CALL omitted arguments and resolution order | host | Bounded local-call slice including adjacent calls after another operand; BIF/external order open |
 | LC-REF-056 | Function RETURN value, `45.1` and RESULT/.RESULT lifecycle | both | Bounded local RETURN; complete call state open |
 | LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | host | Open: processor lifecycle |
 | LC-REF-058 | ADDRESS selection/swap, transient command and WITH redirection | host | Front end; configured execution open |

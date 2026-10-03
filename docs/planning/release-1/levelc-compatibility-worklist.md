@@ -350,6 +350,15 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   error rather than a compile-time unsupported-shape error. Verify a minimal
   counterexample, focused positive and negative regressions, lowered-tree
   inspection, the relevant normal compiler suite and linked execution.
+- [x] **LC-AC-37 — function call after a concatenated operand:** a Classic
+  function call immediately followed by `(` remains a `FUNCTION` term when
+  it follows another expression operand under blank concatenation, including
+  a SAY literal and a variable. Its arguments, effects and result agree with
+  Regina in opt/no-opt and linked execution. A blank between the function
+  name and `(` continues to mean a symbol followed by a parenthesized term,
+  as Regina does. Verify minimal reference counterexamples, raw and lowered
+  AST shape, supported nested arguments, focused parser/runtime checks and
+  the relevant normal compiler suite. Broader call syntax remains open.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -615,6 +624,13 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     existing canonical string factory and emitter path; inspect the source
     anchor and opt/no-opt value flow, prove Regina and contextual numeric
     errors, run the relevant normal checks, and commit separately.
+40. **LC-STEP-40 — complete (LC-AC-08/37; depends on STEP-39):** admit an adjacent
+    function-call term in the Level C continuation expression grammar, using
+    source token positions to preserve the spaced symbol-plus-group meaning.
+    Build the existing `FUNCTION` AST node and canonical BIF/local-call path;
+    add no new emitter node. Reproduce both spellings against Regina, inspect
+    raw and lowered trees, qualify focused and normal checks, and commit this
+    parser/AST increment separately.
 
 ## Findings
 
@@ -625,14 +641,20 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   canonical empty string and shared `RexxValue`. The initial reproducer is
   `/tmp/crexx-levelc-empty-literal-log.LX2Ksv`; permanent checks and closure
   evidence are recorded under `LC-AC-36` below.
-- **LC-FIND-02 — SAY-adjacent function call parsed as symbols:** the
-  existing-syntax `options levelc; say 'x' length('a')` prints `x LENGTH a`
-  through Level C instead of Regina's `x 1`. The raw AST has adjacent
-  `VAR_SYMBOL` nodes where the `FUNCTION` call should be. This is independent
-  of empty string lowering and needs a parser/AST increment with a permanent
-  positive regression. Reproducer output:
+- **LC-FIND-02 — resolved, SAY-adjacent function call parsed as symbols:** the
+  existing-syntax `options levelc; say 'x' length('a')` previously printed
+  `x LENGTH a` through Level C instead of Regina's `x 1`. `LC-STEP-40`
+  now builds the `FUNCTION` node for an adjacent opening parenthesis while
+  keeping the blank-separated symbol-plus-group AST. Reproducer output:
   `/tmp/crexx-levelc-adjacent-call-reference.fh07ZP` and
   `/tmp/crexx-levelc-adjacent-call-output.07V6xB`.
+- **LC-FIND-03 — ARG case normalization:** a local procedure with `ARG value`
+  called as `echo('z')` returns `ZZ` in Regina when it appends `'Z'`, but the
+  current Level C path returns `zZ`. This was exposed by the adjacent-call
+  fixture and has a distinct argument binding cause; it remains open for an
+  argument-semantics increment. Reproducer output:
+  `/tmp/crexx-levelc-adjacent-call-regina-output.qX60V2` and
+  `/tmp/crexx-levelc-adjacent-call-toolchain.17jBQE`.
 
 ## AST structural crosswalk and closure order
 
@@ -649,7 +671,7 @@ itself make its Classic shape executable.
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
 | `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and direct scalar DROP | Wider statement operands, stem/compound/indirect DROP and exit/return lifecycle remain open |
-| `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls | More expression shapes, adjacent-call parsing, remaining operator order, numeric context and missing-argument behavior remain open |
+| `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar controlled starts with TO, FOR, both or neither, captured dynamic start/TO/BY/FOR, and controlled WHILE/UNTIL, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, other controlled endpoints, numeric errors and wider scope remain open |
@@ -686,7 +708,7 @@ has been approved in this worklist.
 | Area | Feature | Current state and evidence | Remaining proof |
 | --- | --- | --- | --- |
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
-| Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions`, `levelc_slice19_logical_eager` and empty quoted strings in `levelc_slice37_empty_string` | Adjacent-call parsing, full numeric context, remaining operator order, boundary/error and platform equivalence |
+| Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions`, `levelc_slice19_logical_eager`, empty quoted strings in `levelc_slice37_empty_string`, and adjacent function calls in `levelc_slice38_adjacent_call` | Full numeric context, remaining operator order, boundary/error and platform equivalence |
 | Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar DROP | Remaining stem/compound/indirect DROP, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
@@ -1663,7 +1685,25 @@ full compatibility proof.
   `/tmp/crexx-levelc-empty-string-final-tree.4BIMZA`,
   `/tmp/crexx-levelc-empty-string-link-log.djwxRM`, and
   `/tmp/crexx-levelc-empty-string-linked-output.3VVRE6`.
+- A continuation-expression function name now becomes a source `FUNCTION`
+  when its opening parenthesis touches the name; a blank-separated name and
+  group remain `VAR_SYMBOL` plus `OP_SCONCAT`. The raw and lowered tree
+  probes show the intended distinction and existing canonical BIF/local-call
+  paths. Regina output matches opt/no-opt and linked RXBIN for literal and
+  variable left operands, nested BIF arguments, empty string arguments, a local
+  function and the spaced form. Final focused Release checks passed 3/3,
+  Release Level C 236/236, and Debug parser/expression/shared checks 74/74.
+  The distinct `ARG` case-normalization finding remains `LC-FIND-03`.
+  Evidence: `/tmp/crexx-levelc-adjacent-call-regina-output.rmEEm9`,
+  `/tmp/crexx-levelc-adjacent-call-release-build.ksfzMl`,
+  `/tmp/crexx-levelc-adjacent-call-focused-release-final.yn84NQ`,
+  `/tmp/crexx-levelc-adjacent-call-release-suite.cfqQkL`,
+  `/tmp/crexx-levelc-adjacent-call-debug-build.6GCUaK`,
+  `/tmp/crexx-levelc-adjacent-call-debug-focused.7jrIHu`,
+  `/tmp/crexx-levelc-adjacent-call-tree.M4wN3G`,
+  `/tmp/crexx-levelc-adjacent-call-link-log.OkFc9t`, and
+  `/tmp/crexx-levelc-adjacent-call-linked-output.irO9L1`.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.
-  `LC-FIND-02` remains open.
+  `LC-FIND-03` remains open.

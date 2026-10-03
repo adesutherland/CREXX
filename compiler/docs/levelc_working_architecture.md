@@ -193,6 +193,12 @@ The parser represents an empty quoted Classic string with a zero-length
 that one valid shape to a source-anchored canonical empty string before
 constructing the shared `RexxValue`; other nodes still require their text
 payload. The normal emitter and runtime paths handle the resulting value.
+The continuation-expression grammar also accepts function calls after a
+blank-concatenated operand. It uses the name and opening-parenthesis token
+positions to distinguish adjacent `name(`, emitted as the existing source
+`FUNCTION` node, from `name (` with a blank, emitted as a symbol followed by
+a parenthesized value under `OP_SCONCAT`. Both then use the existing canonical
+expression and call lowering; no emitter-specific node is added.
 Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission. The existing WHILE, BLOCK_EXPR and
 LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL

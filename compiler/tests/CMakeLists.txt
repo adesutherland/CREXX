@@ -5689,6 +5689,12 @@ add_levelc_runtime_slice_test(levelc_slice37_empty_string
 add_levelc_runtime_slice_test(levelc_slice37_empty_string_noopt
         rexx_src/levelc_slice37_empty_string.rexx
         "\n\nlength 0 0\njoined leftright\ncall 0\ncompare 1\n" -n)
+add_levelc_runtime_slice_test(levelc_slice38_adjacent_call
+        rexx_src/levelc_slice38_adjacent_call.rexx
+        "literal 3\nx 2\nnested 2\nempty 0\nlocal ZZ\nspaced LENGTH abc\n")
+add_levelc_runtime_slice_test(levelc_slice38_adjacent_call_noopt
+        rexx_src/levelc_slice38_adjacent_call.rexx
+        "literal 3\nx 2\nnested 2\nempty 0\nlocal ZZ\nspaced LENGTH abc\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     add_test(NAME ${NAME}
@@ -6098,6 +6104,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice37_empty_string_tree_shape
         "RexxValue"
         "STRING"
         "strictCompareEqual")
+add_levelc_lowered_tree_shape_test(levelc_slice38_adjacent_call_tree_shape
+        rexx_src/levelc_slice38_adjacent_call.rexx
+        "rexxclassicbif_length"
+        "rexxclassicbif_call"
+        "__rxcp_levelc_proc_ECHO"
+        "spaceConcat")
 
 # Bridge Connectivity Test
 add_custom_command(

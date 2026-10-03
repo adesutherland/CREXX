@@ -47,6 +47,31 @@ static char *levelc_diag_line_text(Token *token) {
     return strdup(buffer);
 }
 
+static int levelc_tokens_touch(Token *left, Token *right) {
+    return left && right && left->line == right->line &&
+           left->column + left->length == right->column;
+}
+
+static ASTNode *levelc_continuation_call_or_concat(Context *context,
+                                                    Token *name,
+                                                    Token *open,
+                                                    ASTNode *args) {
+    ASTNode *node;
+
+    if (levelc_tokens_touch(name, open)) {
+        node = ast_f(context, FUNCTION, name);
+        add_ast(node, args ? args : ast_ft(context, NOVAL));
+        return node;
+    }
+
+    if (!args || args->node_type == NOVAL || args->sibling)
+        return rxcp_levelc_ast_error(context, "37.1", open);
+    node = ast_ft(context, OP_SCONCAT);
+    add_ast(node, ast_f(context, VAR_SYMBOL, name));
+    add_ast(node, args);
+    return node;
+}
+
 static ASTNode *levelc_error_then_or_else(Context *context,
                                           const char *standard_code,
                                           Token *token,
@@ -3115,6 +3140,16 @@ addition(E) ::= addition(L) CTK_HIGH_PRIORITY_MINUS(T) multiplication(R).
 addition(E) ::= addition(L) CTK_HIGH_PRIORITY_MINUS(T) missing_expression_rhs.
 {
     E = levelc_missing_expression_rhs(context, OP_MINUS, T, L);
+}
+
+primary_expr_c(T) ::= CTK_VAR_SYMBOL(S) CTK_OPEN_BRACKET(O) levelc_call_args(A) CTK_CLOSE_BRACKET. [CTK_VAR_SYMBOL]
+{
+    T = levelc_continuation_call_or_concat(context, S, O, A);
+}
+
+primary_expr_c(T) ::= CTK_VAR_SYMBOL(S) CTK_OPEN_BRACKET(O) CTK_CLOSE_BRACKET. [CTK_VAR_SYMBOL]
+{
+    T = levelc_continuation_call_or_concat(context, S, O, 0);
 }
 
 primary_expr_c(T) ::= CTK_VAR_SYMBOL(S).
