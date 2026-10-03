@@ -80,7 +80,7 @@ before writing the target, and emits ordinary canonical pool reads and
 `setValue` calls. `UPPER` passes that source through the same shared Classic
 TRANSLATE frame used by `ARG`; its import is added only when a supported
 uppercase parse exists. The authored `PARSE` tree does not survive the
-canonical boundary. Multiple targets, patterns, positions, other source
+canonical boundary. Pattern and position templates, other source
 types and comma templates remain guarded pending their own AST and runtime
 proof. The current BYTE default and open UTF8 configuration obligation apply
 to this uppercase path too.
@@ -100,6 +100,14 @@ An optional UPPER still transforms the source through shared TRANSLATE first.
 The parser's nested template nodes are validated and removed by lowering;
 no new AST or emitter node is required. The current default proof is BYTE;
 the broader configuration and remaining template forms stay open.
+The two-target implicit-word form uses the same validated template shape and
+ordered pool writes. Shared `RexxValue.parseWordAndRest()` calls the existing
+`parsewords3` primitive for the first word, then derives the remaining source
+after exactly one separator. This retains extra blanks before later words,
+which the second-word result of `parsewords3` alone would discard. Both
+results are captured before any target assignment, so source aliases and
+repeated targets follow the reference write order. The broader binary/UTF8
+configuration proof remains open.
 
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and

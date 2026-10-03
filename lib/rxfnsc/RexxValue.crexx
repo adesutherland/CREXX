@@ -293,6 +293,27 @@ RexxValue: class
     fields[3] = .RexxValue(tail)
     return fields
 
+  /**
+   * Split one Classic blank-delimited word and retain the unparsed remainder.
+   * @return Two values: first word and source after one following separator
+   */
+  parseWordAndRest: method = .RexxValue[]
+    source = asString()
+    first = .string
+    unused_second = .string
+    unused_tail = .string
+    assembler parsewords3 first,unused_second,unused_tail,source
+    rest = .string
+    if length(first) > 0 then do
+      rest_start = .int
+      rest_start = pos(first,source) + length(first) + 1
+      rest = substr(source,rest_start)
+    end
+    fields = .RexxValue[]
+    fields[1] = .RexxValue(first)
+    fields[2] = .RexxValue(rest)
+    return fields
+
   asInt: method = .int
     temp = 0
     flags = cache_flags

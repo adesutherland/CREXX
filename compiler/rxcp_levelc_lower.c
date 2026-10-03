@@ -1441,7 +1441,7 @@ static int levelc_direct_parse_shape(ASTNode *stmt,
         free(name);
         target_count++;
     }
-    if (target_count != 1 && target_count != 3) goto unsupported;
+    if (target_count < 1 || target_count > 3) goto unsupported;
     if (source_out) *source_out = source;
     if (target_out) *target_out = target;
     if (target_count_out) *target_count_out = target_count;
@@ -3000,7 +3000,7 @@ static int levelc_lower_direct_parse(Context *context,
         if (!value) goto fail;
     }
 
-    if (target_count == 3) {
+    if (target_count == 2 || target_count == 3) {
         char *fields_name = rxcp_remap_create_generated_node_name(
             LEVELC_PARSE_FIELDS_PREFIX, stmt);
         ASTNode *fields_define = fields_name
@@ -3008,7 +3008,10 @@ static int levelc_lower_direct_parse(Context *context,
                                              LEVELC_REXX_VALUE_CLASS_TYPE)
             : NULL;
         ASTNode *split = rxcp_remap_create_member_call(context, stmt, value,
-                                                        "parseThreeWords", NULL, 0);
+                                                        target_count == 2
+                                                            ? "parseWordAndRest"
+                                                            : "parseThreeWords",
+                                                        NULL, 0);
         ASTNode *capture = fields_name && split
             ? rxcp_remap_create_named_assignment(context, stmt, fields_name, split)
             : NULL;
@@ -3019,7 +3022,7 @@ static int levelc_lower_direct_parse(Context *context,
         add_ast(prelude, fields_define);
         add_ast(prelude, capture);
         rxcp_remap_append_builder_children(instructions, prelude);
-        for (index = 1; index <= 3; index++, target = target->sibling) {
+        for (index = 1; index <= target_count; index++, target = target->sibling) {
             receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
             args[0] = levelc_name_string(context, target);
             args[1] = rxcp_remap_create_indexed_ref(context, target, VAR_SYMBOL,

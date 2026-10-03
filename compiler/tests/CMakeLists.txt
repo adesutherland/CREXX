@@ -5733,6 +5733,12 @@ add_levelc_runtime_slice_test(levelc_slice41_parse_three
 add_levelc_runtime_slice_test(levelc_slice41_parse_three_noopt
         rexx_src/levelc_slice41_parse_three.rexx
         "a|b|  c  |  a  b   c  \na||\n  c  |\nleft|right|tail here\nx|y|z  q|1\nA|B|  C |\nlocal a|b|  c \n" -n)
+add_levelc_runtime_slice_test(levelc_slice46_parse_two
+        rexx_src/levelc_slice46_parse_two.rexx
+        "a| b   c  |  a  b   c  \na|\n b   c  |\nleft|right tail here\nx|y z  q|1\nA|  B   C |\nlocal a| b   c \n")
+add_levelc_runtime_slice_test(levelc_slice46_parse_two_noopt
+        rexx_src/levelc_slice46_parse_two.rexx
+        "a| b   c  |  a  b   c  \na|\n b   c  |\nleft|right tail here\nx|y z  q|1\nA|  B   C |\nlocal a| b   c \n" -n)
 add_levelc_runtime_slice_test(levelc_slice42_abuttal
         rexx_src/levelc_slice42_abuttal.rexx
         "literal [a]\nsymbol a!\ngroup-left ab\ncall-left 3x\ncall-right x1\nspaced [ a ]\ncomment [a]\ncomment-spaced [ a ]\nexplicit [a]\nparse [a]\nparse-spaced [ a ]\n")
@@ -6192,6 +6198,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice40_parse_single_tree_shape
 add_levelc_lowered_tree_shape_test(levelc_slice41_parse_three_tree_shape
         rexx_src/levelc_slice41_parse_three.rexx
         "parseThreeWords"
+        "__rxcp_levelc_parse_fields_"
+        "setValue"
+        "rexxclassicbif_translate")
+add_levelc_lowered_tree_shape_test(levelc_slice46_parse_two_tree_shape
+        rexx_src/levelc_slice46_parse_two.rexx
+        "parseWordAndRest"
         "__rxcp_levelc_parse_fields_"
         "setValue"
         "rexxclassicbif_translate")

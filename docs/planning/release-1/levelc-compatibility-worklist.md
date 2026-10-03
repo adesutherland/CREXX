@@ -425,6 +425,16 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
   `INTEGER`/`DECIMAL` path, and leading-period symbols remain separate work.
   Verify Regina, raw/canonical tree, opt/no-opt, parser/highlighter checks,
   the normal Level C suite and linked execution.
+- [x] **LC-AC-45 — two-target implicit-word PARSE:** `PARSE VAR scalar
+  first rest` and `PARSE VALUE expression WITH first rest`, with optional
+  UPPER and direct scalar targets, capture the source once before any pool
+  writes. The first target receives the first blank-delimited word; the
+  second receives the remaining source after exactly one separator, retaining
+  further blanks. Source aliases and repeated targets follow authored write
+  order. Verify Regina across leading/repeated/trailing blanks, short input,
+  aliasing, local scope, shared value method, opt/no-opt, raw/canonical tree,
+  normal Level C suite and linked execution. Other template shapes remain
+  guarded; broader binary/UTF8 proof remains under `LC-AC-04/06`.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -744,6 +754,14 @@ BIF and host-service expansion; the full compatibility contract is unchanged.
     and retain numeric and invalid-assignment classification. Prove the raw
     symbol and canonical shared-value tree, Regina parity, parser/highlighter
     behavior and linked output before a separate commit.
+48. **LC-STEP-48 — complete (LC-AC-06/08/45; depends on STEP-47):** derive the first
+    word using the existing shared `parsewords3` VM wrapper, then retain the
+    exact two-target remainder from the captured source in a shared
+    `RexxValue.parseWordAndRest()` method. Extend the validated nested PARSE AST
+    slice to two targets, capture the returned pair before ordered pool
+    writes, and keep optional shared TRANSLATE before splitting. Prove
+    reference behavior, shared method tests, canonical lowering and linked
+    execution before the separate commit.
 
 ## Findings
 
@@ -810,7 +828,7 @@ itself make its Classic shape executable.
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar controlled starts with TO, FOR, both or neither, captured dynamic start/TO/BY/FOR, and controlled WHILE/UNTIL, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, other controlled endpoints, numeric errors and wider scope remain open |
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
-| `PARSE`, `PULL`, template/pattern/position nodes | Slice: one or three direct scalar targets in `PARSE VAR` and `PARSE VALUE`, with optional UPPER; three targets reuse `parsewords3` through `RexxValue` and ordered pool writes | Other target counts, patterns, positions, comma templates, sources and errors remain open |
+| `PARSE`, `PULL`, template/pattern/position nodes | Slice: one, two or three direct scalar targets in `PARSE VAR` and `PARSE VALUE`, with optional UPPER; two and three targets reuse `parsewords3` through `RexxValue` and ordered pool writes | Other target counts, patterns, positions, comma templates, sources and errors remain open |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
 | `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | Open: parser/front end only | Context changes, dynamic code, signal transfer, trace and error identity |
 
@@ -850,7 +868,7 @@ has been approved in this worklist.
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
 | Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed direct ARG with Classic uppercase binding, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, wider PARSE templates, dynamic/external calls, full scope and return/exit lifecycle |
-| PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Slice: `VAR`/`VALUE` with one or three scalar targets and optional UPPER in `levelc_slice40_parse_single`/`levelc_slice41_parse_three`; other forms remain front end only | Other source acquisition, target counts, patterns, positions, commas, configuration and errors |
+| PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Slice: `VAR`/`VALUE` with one, two or three scalar targets and optional UPPER in `levelc_slice40_parse_single`/`levelc_slice46_parse_two`/`levelc_slice41_parse_three`; other forms remain front end only | Other source acquisition, target counts, patterns, positions, commas, configuration and errors |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
 | Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | Front end: selected parser forms | Trap lifecycle, delivery, messages and error identity |
 | Numeric | DIGITS, FORM, FUZZ, decimal arithmetic, rounding, logical conversion | Runtime: `RexxValue` foundation | Full context, limits, signal and optimized parity |
@@ -886,7 +904,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-LEAVE` | LEAVE instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-NOP` | NOP instruction | Bounded slice: standalone and nested NOP | Full source/TRACE and configuration proof open |
 | `SYN-CLASSIC-NUMERIC` | NUMERIC DIGITS/FORM/FUZZ | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-PARSE` | PARSE variants and templates | One- and three-target `VAR`/`VALUE` with optional UPPER execute; parser covers wider templates | Wider source/template execution and reference proof open |
+| `SYN-CLASSIC-PARSE` | PARSE variants and templates | One-, two- and three-target `VAR`/`VALUE` with optional UPPER execute; parser covers wider templates | Wider source/template execution and reference proof open |
 | `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded slice: scalar/stem PROCEDURE EXPOSE | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-PULL` | PULL instruction/templates | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
@@ -1969,6 +1987,27 @@ full compatibility proof.
   `/tmp/crexx-levelc-constsym-debug-build.MOE5TW`,
   `/tmp/crexx-levelc-constsym-debug-tests.6wtAsS`, and
   `/tmp/crexx-levelc-constsym-linked.jx6fO9`.
+- Two direct scalar `PARSE` targets now use shared
+  `RexxValue.parseWordAndRest()`: the first receives the first word and the
+  second receives the source after exactly one separator. The method calls
+  the existing `parsewords3` VM primitive for the first word, then retains
+  the unparsed remainder from the captured source. The Level C lowerer
+  captures both results before ordered pool writes and reuses shared
+  TRANSLATE for optional UPPER. Regina, optimized/no-opt and linked output
+  match for leading/repeated/trailing blanks, short input, repeated targets,
+  source alias, one-time VALUE evaluation and local scope. Raw nested
+  templates become canonical array/result and pool-write nodes. Existing
+  IF/DO negative fixtures were advanced to still-unsupported four-target
+  shapes. Release Level C passed 267/267, focused Debug 7/7, shared
+  RexxValue opt/no-opt 2/2 and RexxScript integration 4/4. Evidence:
+  `/tmp/crexx-levelc-parse-two-reference.65kbCR`,
+  `/tmp/crexx-levelc-parse-two-reconfigure.N7F6ew`,
+  `/tmp/crexx-levelc-parse-two-final-suite.iG3FvQ`,
+  `/tmp/crexx-levelc-parse-two-debug-build.AM9MDF`,
+  `/tmp/crexx-levelc-parse-two-debug-tests.hufXxc`,
+  `/tmp/crexx-levelc-parse-two-rexxscript-tests.3Xjp1D`,
+  `/tmp/crexx-levelc-parse-two-tree.lFVAkL`, and
+  `/tmp/crexx-levelc-parse-two-linked.JAcmAY`.
 - `LC-AC-08/04` remain open for other controlled
   endpoints, wider count values, named
   transfers to wider unsupported loop shapes, and other structural families.
