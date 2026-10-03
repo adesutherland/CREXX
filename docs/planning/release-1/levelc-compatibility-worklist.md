@@ -514,6 +514,27 @@ direct word/dot templates before work resumes on positions and patterns.
   counterexample in both products, focused opt/no-opt VM and exit tests,
   unchanged forward/absolute controls, the relevant normal correctness
   suite, and linked execution. This repairs `LC-FIND-06`.
+- [ ] **LC-AC-53 — direct stem and compound DROP:** a direct Classic `DROP`
+  list accepts scalar, stem and supported compound symbols in authored order.
+  Compound tail components are evaluated once against the visible pool,
+  preserving substituted text case, before the selected tail is dropped; a
+  stem drop removes its default and tails, while an individual compound drop
+  reads as its expanded symbol even when the stem has a default. Exposed stems
+  affect their parent binding and local unexposed stems remain local. The
+  shared stem and pool classes own dropped-tail and default lifecycle, while
+  the compiler emits canonical pool calls in source order. Verify Regina for
+  tail substitution, dropped-tail reads, stem reset, reassignments, list order
+  and scope; focused pool tests, opt/no-opt, raw/canonical AST, normal Level C
+  and RexxScript regressions, and linked execution.
+  Parenthesized indirect `DROP` remains open.
+- [x] **LC-AC-54 — shared Classic stem lifecycle:** assigning a stem default
+  replaces prior explicit and dropped tails; dropping one tail records a
+  tombstone that reads as the expanded symbol until reassigned or reset by a
+  stem assignment. Tail substitution preserves the substituted value's case
+  for lookup and unresolved display. The shared `RexxStem` and
+  `RexxVariablePool` implement these rules for both Level C and RexxScript.
+  Verify minimal Regina counterexamples, focused runtime tests, optimized and
+  no-opt execution, relevant cross-consumer regressions and linked delivery.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -889,9 +910,27 @@ direct word/dot templates before work resumes on positions and patterns.
     backward cursor without changing the descriptor format, prove focused
     opt/no-opt and normal correctness, then commit the shared runtime cause
     separately from Level C mixed-template lowering.
+56. **LC-STEP-56 — complete (LC-AC-06/53/54; depends on STEP-09):** repair shared stem
+    assignment/reset and dropped-tail state, preserve substituted tail case,
+    and add pool operations for non-mutating compound reads and one-tail drops.
+    Prove the discovered reference counterexamples and focused cross-consumer
+    behavior, then commit this distinct runtime cause.
+57. **LC-STEP-57 (LC-AC-08/53; depends on STEP-56):** broaden the Level C
+    direct-list guard and lowerer to call shared scalar/stem/compound pool
+    operations in source order, and replace obsolete negative fixtures with
+    Regina-based focused and linked proof. Retain parenthesized indirect lists
+    as a separately guarded shape; run the normal Level C and RexxScript
+    checks before committing.
 
 ## Findings
 
+- **LC-FIND-07 — resolved shared stem lifecycle:** Regina showed that a new
+  stem assignment replaces prior tails, a dropped tail hides even a stem
+  default until reassigned, and substituted tail text keeps its case. The
+  shared `RexxStem`/`RexxVariablePool` model now records these states and
+  writes back a mutated value-class stem through local or exposed bindings.
+  Compiled direct stem/compound `DROP` remains open under `LC-AC-53` and
+  `LC-STEP-57`.
 - **LC-FIND-06 — resolved, frozen PARSE backward cursor:** Regina returns
   `cd|ef|def` for `s='abcdef'; parse var s 3 a +2 b -1 c`, while the
   existing certified Level B exit and VM `parseplan` return `cd|ef|ef`.
@@ -2284,3 +2323,31 @@ full compatibility proof.
   `/tmp/crexx-levelc-static-close-suite.b1oLs5`,
   `/tmp/crexx-levelc-static.4nBnDm/close-tree.log`, and
   `/tmp/crexx-levelc-static.4nBnDm/close-linked.out`.
+
+### LC-STEP-56 — shared Classic stem lifecycle, 2026-10-03
+
+- Regina reference probes showed that a stem default assignment replaces old
+  explicit and dropped tails; `DROP stem.tail` hides the default for that tail
+  until reassignment; and a variable-derived tail retains its substituted
+  case. The prior shared model discarded dropped-tail state and uppercased
+  derived text. This is the distinct shared-runtime cause behind the direct
+  compound `DROP` work; `LC-AC-53` remains open for compiler lowering.
+- `RexxStem` now tracks dropped-tail tombstones, clears old tail state on
+  default assignment and clears a tombstone on tail assignment.
+  `RexxVariablePool` preserves derived-tail case and offers non-mutating
+  `stemSymbolValue` plus `dropStemTail`. A focused failure found that mutated
+  stems retrieved from pool slots need copyback; the helper now writes them
+  back to local or exposed bindings. The permanent pool test covers default
+  reset, case-distinct tails, dropped reads, reassignment, stem drop and
+  exposed mutation.
+- Release `rxfnsc` and the standalone RexxScript runner built. Focused pool
+  opt/no-opt and linked tests passed 2/2; RexxScript integration passed 4/4;
+  the normal Release Level C suite passed 284/284. Evidence:
+  `/tmp/crexx-levelc-drop.qf1gA9/semantics.out`,
+  `/tmp/crexx-levelc-stem-runtime-focused.PEEXmi` (initial failure),
+  `/tmp/crexx-levelc-stem-runtime-rebuild.oq0Frs` (scope diagnostic),
+  `/tmp/crexx-levelc-stem-runtime-rebuild.EpZx8L`,
+  `/tmp/crexx-levelc-stem-runtime-final-focused.mrPABk`,
+  `/tmp/crexx-levelc-stem-rexxscript-build.uJaVLM`,
+  `/tmp/crexx-levelc-stem-rexxscript-tests.DT87if`, and
+  `/tmp/crexx-levelc-stem-runtime-levelc-suite.1Kg8ty`.

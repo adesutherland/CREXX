@@ -295,7 +295,6 @@ RexxVariablePool: class
       end
     end
 
-    derived_tail = upper(derived_tail)
     return stem_name || derived_tail
 
   /**
@@ -359,6 +358,7 @@ RexxVariablePool: class
     else return .RexxValue(resolved)
 
     if item_stem.containsTail(derived_tail) then return item_stem.value(derived_tail)
+    if item_stem.isDroppedTail(derived_tail) then return .RexxValue(resolved)
     if item_stem.hasDefault() then return item_stem.defaultValue()
     return .RexxValue(resolved)
 
@@ -411,6 +411,7 @@ RexxVariablePool: class
       item_stem = alias.stem()
     end
     else return 0
+    if item_stem.isDroppedTail(derived_tail) then return 0
     return item_stem.containsTail(derived_tail) | item_stem.hasDefault()
 
   bindingKind: method = .int
@@ -501,6 +502,24 @@ RexxVariablePool: class
     item_stem = stem(name)
     return item_stem.value(tail)
 
+  /** Read a Classic compound tail without creating an unset binding. */
+  stemSymbolValue: method = .RexxValue
+    arg name = .string, tail = .string
+    normalized = normalizeStemName(name)
+    item_stem = .RexxStem
+    if \hasBinding(normalized) then return .RexxValue(normalized || tail)
+    slot = slotFor(normalized)
+    if kinds[slot] = RVP_BINDING_STEM then item_stem = stems[slot]
+    else if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+      alias = aliases[slot]
+      item_stem = alias.stem()
+    end
+    else return .RexxValue(normalized || tail)
+    if item_stem.containsTail(tail) then return item_stem.value(tail)
+    if item_stem.isDroppedTail(tail) then return .RexxValue(normalized || tail)
+    if item_stem.hasDefault() then return item_stem.defaultValue()
+    return .RexxValue(normalized || tail)
+
   setStemValue: method = .void
     arg name = .string, tail = .string, item = .RexxValue
     normalized = normalizeStemName(name)
@@ -586,6 +605,25 @@ RexxVariablePool: class
     arg name = .string
     normalized = normalizeStemName(name)
     call drop(normalized)
+    return
+
+  /** Drop one case-preserved compound tail through a local or exposed stem. */
+  dropStemTail: method = .void
+    arg name = .string, tail = .string
+    normalized = normalizeStemName(name)
+    item_stem = .RexxStem
+    alias = .RexxPoolAlias
+    if \hasBinding(normalized) then return
+    slot = slotFor(normalized)
+    if kinds[slot] = RVP_BINDING_STEM then item_stem = stems[slot]
+    else if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+      alias = aliases[slot]
+      item_stem = alias.stem()
+    end
+    else return
+    call item_stem.dropTail(tail)
+    if kinds[slot] = RVP_BINDING_STEM then stems[slot] = item_stem
+    else call alias.setStem(item_stem)
     return
 
   isDropped: method = .boolean

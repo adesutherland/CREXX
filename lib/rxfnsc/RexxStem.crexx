@@ -35,6 +35,7 @@ import data
  */
 RexxStem: class
   slots = .StringHashMap
+  dropped_tails = .StringHashMap
   values = .RexxValue[]
   next_slot = .int
   stem_default = .RexxValue
@@ -43,6 +44,7 @@ RexxStem: class
   *: factory
     arg expected = 1024
     slots = .StringHashMap(expected)
+    dropped_tails = .StringHashMap(expected)
     next_slot = 0
     stem_default = .RexxValue("")
     stem_default_set = 0
@@ -56,9 +58,12 @@ RexxStem: class
   defaultValue: method = .RexxValue
     return stem_default
 
-  /** Assign the value returned for otherwise-unset compound tails. */
+  /** Assign a Classic stem default, replacing all older tail bindings. */
   setDefault: method = .void
     arg item = .RexxValue
+    slots = .StringHashMap()
+    dropped_tails = .StringHashMap()
+    next_slot = 0
     stem_default = item
     stem_default_set = 1
     return
@@ -75,6 +80,7 @@ RexxStem: class
 
   setValue: method = .void
     arg tail = .string, item = .RexxValue
+    rc = dropped_tails.remove(tail)
     if slots.containsKey(tail) then do
       slot = slots.get(tail) as .int
       values[slot] = item
@@ -95,10 +101,17 @@ RexxStem: class
     arg tail = .string
     return slots.containsKey(tail)
 
+  /** Test whether DROP has hidden one tail, including a stem default. */
+  isDroppedTail: method = .boolean
+    arg tail = .string
+    return dropped_tails.containsKey(tail)
+
+  /** Drop one tail while retaining a tombstone over any stem default. */
   dropTail: method = .int
     arg tail = .string
-    if \slots.containsKey(tail) then return 0
-    return slots.remove(tail)
+    rc = slots.remove(tail)
+    rc = dropped_tails.put(tail, "1")
+    return 0
 
   size: method = .int
     return slots.size()

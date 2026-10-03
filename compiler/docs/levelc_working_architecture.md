@@ -46,8 +46,13 @@ authored program must survive lowering for diagnostics and tracing.
 `lib/rxfnsc` owns one shared Classic runtime foundation:
 
 - `RexxValue` owns scalar representations, conversion, numeric and logical
-  behavior. `RexxStem` owns stem values and tails.
-- `RexxVariablePool` owns Classic bindings, dropped state and exposure. Each
+  behavior. `RexxStem` owns explicit tails, dropped-tail tombstones and the
+  Classic reset of all tails when a new stem default is assigned.
+- `RexxVariablePool` owns Classic bindings, dropped state, case-preserving
+  compound tail substitution and exposure. Its `stemSymbolValue` reads an
+  unset or dropped tail without creating a binding; `dropStemTail` mutates one
+  case-preserved tail and copies the updated stem back through a local or
+  exposed binding. Each
   Level C activation uses its visible pool; a RexxScript evaluator creates a
   distinct sandbox pool from the same class.
 - `RexxClassicBif*` modules own compatible BIF algorithms, argument validation,
