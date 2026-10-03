@@ -1085,6 +1085,15 @@ change supplies an empty string to that builder. The emitter uses the normal
 `SAY` opcode, and the VM routes output through its SAY exit callback. No new
 AST node or instruction-specific runtime helper is indicated by this review.
 
+| SAY contract area | Current evidence | Closure state |
+| --- | --- | --- |
+| Childless and ordinary expressions in main, IF/DO and local procedures | `levelc_say_instruction.rexx`; Regina, opt/no-opt, linked output and source-anchored tree checks | Proved for these forms; complete expression domain remains open |
+| Expression evaluation once and output order | Exposed counter called inside SAY expression; its inner SAY precedes the outer line | Proved for this fixture; external/BIF effects remain open |
+| Invalid source forms | Grammar has explicit close-bracket recovery and general expression diagnostics | Open: reference/error matrix and source anchors |
+| Complete BIF, local and external function terms | Current guard admits only LENGTH, SUBSTR and bounded local calls; direct BIF inventory and host lookup are broader | Open: shared invocation, context, error and resolution foundation |
+| BYTE/UTF8 output, configured host route and failure | Embedded-NUL and BIF-error probes below; legacy SAY callback is terminated text | Open: output API decision, implementation and host/profile proof |
+| Trace/condition lifecycle | Existing canonical SAY opcode and source anchors | Open: clause hooks, trapped errors and finalization |
+
 Open before closure:
 
 - Reconcile every expression form admitted by the Classic grammar with the
@@ -1099,8 +1108,10 @@ Open before closure:
   return value. Complete one shared call-result/condition bridge before
   widening BIF reachability; preserve source and argument positions, current
   pool/configuration and RexxScript isolation. This is required work, not an
-  infeasible exception. The bridge design and condition delivery need review
-  before architecture edits.
+  infeasible exception. A direct-entry compiler table plus one shared
+  call-result check that delivers Classic `SYNTAX` separately from Classic
+  command `ERROR` is proposed. Approval is pending under `AGENTS.md`; no
+  architecture edit has begun.
 - Prove configured default-output selection, errors, BYTE/UTF8 behavior and
   source/trace lifecycle through the host interface. Inspect the existing VM
   SAY callback boundary for byte-exact output before claiming this proof.
