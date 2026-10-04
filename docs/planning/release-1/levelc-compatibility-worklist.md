@@ -664,6 +664,20 @@ are verified against all affected consumers.
   cases, optimized/no-opt and normal correctness, focused shared-runtime
   checks, and linked toolchain execution. Shared labels, traps, TRACE and
   host configuration remain open under their own criteria.
+- [ ] **LC-AC-66 — complete OPTIONS instruction:** a leading source directive
+  selects the language and file-level scanner/parser options over a CLI
+  default, with documented defaults and conflict diagnostics. Every executable
+  `OPTIONS` form evaluates its Classic expression once at its source position
+  in main, selected/nested arms and local routines, converts the result to
+  uppercase blank-delimited words and applies the processor's documented
+  runtime words in order; unknown words are ignored. Header words must survive
+  as source-owned AST input even though canonical Level B imports and defaults
+  are generated. Empty operand, IBM DBCS-specific words and the boundary
+  between compile-time and runtime words require the LC-STEP-67B decision
+  before implementation. Verify source and canonical AST, source/CLI and
+  comment/numeric option cases, dynamic expression side effects, invalid
+  forms and recovery, optimized/no-opt, relevant normal Level C and Level B
+  regressions, both character profiles where relevant, and linked execution.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1487,6 +1501,64 @@ exponent limit, are recorded in the architecture document; neither is an
 approved language exception. Shared NUMERIC, condition, TRACE and host
 profile behavior remains open under its separate criteria and instruction
 rows. Resume LC-I-05 OPTIONS next, then IF and SELECT before SIGNAL.
+
+**LC-I-05 OPTIONS plan — vision and intended outcome.** A Classic programme
+must be able to request cREXX source-language defaults before parsing and to
+execute `OPTIONS` at its authored location with Classic expression and
+unknown-word behavior. The first clause currently carries both roles. The
+source pre-scan consumes a static header for level, comment and numeric
+settings, but the Level C grammar accepts only a list of symbols and the
+lowerer discards every parsed `REXX_OPTIONS` node while emitting fixed
+`levelb comments_dash numeric_classic` and imports. Close the whole instruction
+with a single checked ownership path for file-level settings and a source-
+anchored executable path. Preserve Level B, RexxScript, BYTE/UTF8 and the
+generated canonical emitter. Do not treat unrelated TRACE/condition or host
+configuration work as closed by this instruction.
+
+1. **LC-STEP-67A (LC-AC-59/66; complete; depends on DO closure):** inventory
+   pre-scan, Level C grammar, source and canonical trees, validation, emitted
+   options, runtime configuration and tests. Compare the expression/word rule
+   with the IBM reference and Regina, including an empty operand; identify
+   duplicate or discarded behavior and record a concrete architecture choice.
+2. **LC-STEP-67B (LC-AC-66; decision gate open; depends on 67A):** Adrian
+   approves the source/runtime split, the empty-operand dialect choice and the
+   cREXX policy for IBM's EBCDIC DBCS-specific ETMODE/EXMODE words. Approval
+   is required before compiler or runtime architectural changes. The proposed
+   split keeps static, leading `level*`, comment and numeric words as file
+   directives in the existing pre-scan; parses every Level C `OPTIONS` clause
+   as a Classic expression; and lowers it to one shared `rxfnsc` processor
+   service that evaluates at runtime, handles applicable words in order and
+   ignores unknown words. Generated Level B options/imports remain a private
+   canonical header; source choices must not be silently overwritten.
+3. **LC-STEP-67C (LC-AC-66; open; depends on approved 67B):** implement the
+   reviewed parser, validation, lowering and shared processor service in
+   reviewable commits, with focused source/AST, opt/no-opt, runtime and
+   negative tests. Keep the byte-length value model and profile ownership
+   explicit; avoid separate per-word lowering branches.
+4. **LC-STEP-67D (LC-AC-59/61/66; open; depends on 67C):** reconcile all
+   legal and invalid forms, inspect source and canonical ownership/anchors,
+   compare reference output, check source/CLI and option ordering, run focused
+   Level B/RexxScript consumers and one relevant normal correctness suite,
+   prove linked delivery, update architecture/reference docs and close LC-I-05
+   only on a complete evidence receipt.
+
+2026-10-04 LC-STEP-67A audit: the pre-scan's recognized static words are the
+six `level*` selectors, hash/slash/dash comment enable/disable pairs, and
+`numeric_common`/`numeric_classic`; `srcmap` has a separate source marker.
+`floats_binary`/`floats_decimal` are validated later by Level B but not by the
+pre-scan, and are not yet an established Level C source contract. The Level C
+parser forces Classic numeric mode and builds `REXX_OPTIONS` from zero or more
+bare symbols; its lowering plan accepts and then drops those nodes, and
+`levelc_build_options` supplies a fixed Level B header. The IBM TSO/E REXX
+reference specifies `OPTIONS expression`, evaluation into uppercase words in
+order, and ignoring unknown words. Its recognized ETMODE/NOETMODE and
+EXMODE/NOEXMODE words are tied to EBCDIC DBCS shift-out/shift-in behavior,
+with ETMODE subject to a first-instruction rule. Regina executes dynamic
+variables and expression concatenation, ignores unknown words, and accepts
+bare `OPTIONS` (`/tmp/crexx-options-audit.JlwjGf`); IBM's grammar requires an
+expression. Neither source/runtime ownership nor the dialect difference is
+silently resolved by this audit. The present code does not have a Level C
+runtime options service. LC-STEP-67B is the next gate.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
