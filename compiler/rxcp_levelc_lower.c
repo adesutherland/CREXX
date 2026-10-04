@@ -28,6 +28,7 @@
 #endif
 
 #include "rxcp_levelc_lower.h"
+#include "rxcpbgmr.h"
 #include "rxcp_remap_build.h"
 #include "rxcp_util.h"
 #include "rxcpcsym.h"
@@ -513,6 +514,7 @@ static int levelc_expr_supported(ASTNode *expr,
 
     switch (expr->node_type) {
         case STRING:
+        case BINARY:
         case INTEGER:
         case DECIMAL:
         case CONST_SYMBOL:
@@ -610,6 +612,126 @@ static char *levelc_node_text_copy(ASTNode *node) {
     memcpy(copy, node->node_string, node->node_string_length);
     copy[node->node_string_length] = '\0';
     return copy;
+}
+
+static Token *levelc_literal_last_token(ASTNode *node) {
+    Token *first;
+    Token *last;
+    if (!node || !node->token) return NULL;
+    first = node->token;
+    last = first;
+    if (first->token_string && first->length >= 3) {
+        char suffix = (char)tolower((unsigned char)first->token_string[first->length - 1]);
+        if (suffix == 'x' || suffix == 'b') return first;
+    }
+    if (first->token_subtype) {
+        Token *cursor = first;
+        while (cursor && cursor->token_number <= first->token_subtype) {
+            if (cursor->token_type == TK_STRING ||
+                cursor->token_type == TK_STRING_CONTINUATION) last = cursor;
+            cursor = cursor->token_next;
+        }
+    }
+    return last;
+}
+
+static char levelc_byte_literal_kind(ASTNode *node) {
+    Token *last;
+    char suffix;
+    if (!node || (node->node_type != STRING && node->node_type != BINARY &&
+                  node->node_type != PATTERN)) return 0;
+    last = levelc_literal_last_token(node);
+    if (!last || !last->token_string || last->length < 3) return 0;
+    suffix = (char)tolower((unsigned char)last->token_string[last->length - 1]);
+    return suffix == 'x' || suffix == 'b' ? suffix : 0;
+}
+
+/* Read source byte ordinals once, independent of their generic STRING/BINARY AST type. */
+static int levelc_byte_literal_bytes(ASTNode *node,
+                                     unsigned char **bytes_out,
+                                     size_t *length_out) {
+    Token *first = node ? node->token : NULL;
+    Token *last = levelc_literal_last_token(node);
+    Token *cursor;
+    char kind = levelc_byte_literal_kind(node);
+    size_t digits = 0;
+    size_t count;
+    size_t output_index = 0;
+    unsigned int pending = 0;
+    size_t used;
+    size_t group = kind == 'x' ? 2 : 8;
+    unsigned char *bytes;
+    if (!first || !last || !kind || !bytes_out || !length_out) return 0;
+    for (cursor = first; cursor; cursor = cursor->token_next) {
+        size_t body_length;
+        size_t index;
+        if (cursor->token_type == TK_STRING ||
+            cursor->token_type == TK_STRING_CONTINUATION) {
+            if (cursor->length < (cursor == last ? 3 : 2)) return 0;
+            body_length = (size_t)cursor->length - (cursor == last ? 3 : 2);
+            for (index = 0; index < body_length; index++) {
+                unsigned char ch = (unsigned char)cursor->token_string[index + 1];
+                if (isspace(ch)) continue;
+                if (kind == 'x' ? !isxdigit(ch) : ch != '0' && ch != '1') return 0;
+                digits++;
+            }
+        }
+        if (cursor == last) break;
+    }
+    if (cursor != last || digits > SIZE_MAX - (group - 1)) return 0;
+    count = (digits + group - 1) / group;
+    bytes = malloc(count ? count : 1);
+    if (!bytes) return 0;
+    used = (group - digits % group) % group;
+    for (cursor = first; cursor; cursor = cursor->token_next) {
+        size_t body_length;
+        size_t index;
+        if (cursor->token_type == TK_STRING ||
+            cursor->token_type == TK_STRING_CONTINUATION) {
+            body_length = (size_t)cursor->length - (cursor == last ? 3 : 2);
+            for (index = 0; index < body_length; index++) {
+                unsigned char ch = (unsigned char)cursor->token_string[index + 1];
+                if (isspace(ch)) continue;
+                pending = kind == 'x'
+                    ? (pending << 4) | (unsigned int)hexchar2int((char)ch)
+                    : (pending << 1) | (unsigned int)(ch - '0');
+                if (++used == group) {
+                    bytes[output_index++] = (unsigned char)pending;
+                    pending = 0;
+                    used = 0;
+                }
+            }
+        }
+        if (cursor == last) break;
+    }
+    *bytes_out = bytes;
+    *length_out = output_index;
+    if (output_index == count) return 1;
+    free(bytes);
+    *bytes_out = NULL;
+    return 0;
+}
+
+static unsigned char *levelc_latin1_utf8(const unsigned char *ordinals,
+                                         size_t count,
+                                         size_t *length_out) {
+    unsigned char *result;
+    size_t length = 0;
+    size_t index;
+    if (!length_out || count > (SIZE_MAX - 1) / 2) return NULL;
+    result = malloc(count * 2 + 1);
+    if (!result) return NULL;
+    for (index = 0; index < count; index++) {
+        unsigned char ordinal = ordinals[index];
+        if (ordinal < 128) result[length++] = ordinal;
+        else {
+            result[length++] = (unsigned char)(0xc0 | (ordinal >> 6));
+            result[length++] = (unsigned char)(0x80 | (ordinal & 0x3f));
+        }
+    }
+    result[length] = 0;
+    *length_out = length;
+    return result;
 }
 
 static char *levelc_upper_name(ASTNode *node) {
@@ -1578,10 +1700,43 @@ static ASTNode *levelc_rexxvalue_from_text(Context *context,
     return result;
 }
 
+static ASTNode *levelc_rexxvalue_from_byte_literal(Context *context,
+                                                   ASTNode *source_node) {
+    unsigned char *ordinals = NULL;
+    unsigned char *utf8 = NULL;
+    char *escaped = NULL;
+    size_t count = 0;
+    size_t utf8_length = 0;
+    size_t escaped_length = 0;
+    size_t index;
+    ASTNode *result = NULL;
+    if (!levelc_byte_literal_bytes(source_node, &ordinals, &count)) goto done;
+    utf8 = levelc_latin1_utf8(ordinals, count, &utf8_length);
+    if (!utf8 || utf8_length > (SIZE_MAX - 1) / 4) goto done;
+    escaped = malloc(utf8_length * 4 + 1);
+    if (!escaped) goto done;
+    for (index = 0; index < utf8_length; index++) {
+        const char *part = escape_character(utf8[index]);
+        size_t part_length = strlen(part);
+        memcpy(escaped + escaped_length, part, part_length);
+        escaped_length += part_length;
+    }
+    escaped[escaped_length] = '\0';
+    result = levelc_rexxvalue_from_text(context, source_node, escaped);
+done:
+    free(escaped);
+    free(utf8);
+    free(ordinals);
+    return result;
+}
+
 static ASTNode *levelc_rexxvalue_from_literal(Context *context, ASTNode *source_node) {
     char *text;
     char *cursor;
     ASTNode *result;
+
+    if (levelc_byte_literal_kind(source_node))
+        return levelc_rexxvalue_from_byte_literal(context, source_node);
 
     if (source_node && source_node->node_type == STRING &&
         source_node->node_string_length == 0)
@@ -2196,6 +2351,7 @@ static ASTNode *levelc_lower_expr(Context *context,
 
     switch (expr->node_type) {
         case STRING:
+        case BINARY:
         case INTEGER:
         case DECIMAL:
         case CONST_SYMBOL:
@@ -2394,9 +2550,9 @@ static ASTNode *levelc_lower_call_tail_value(Context *context,
 
     if (!node) return NULL;
     if (node->node_type == LITERAL) return levelc_pool_value(context, node);
-    if (node->node_type == STRING && node->token) {
+    if ((node->node_type == STRING || node->node_type == BINARY) && node->token) {
         ASTNode *decoded = ast_fstr(context, node->token);
-        return decoded && decoded->node_type == STRING
+        return decoded && (decoded->node_type == STRING || decoded->node_type == BINARY)
             ? levelc_rexxvalue_from_literal(context, decoded) : NULL;
     }
     if (node->node_type == INTEGER ||
@@ -3037,78 +3193,44 @@ static int levelc_parseplan_literal(ASTNode *pattern,
     size_t close_index;
     size_t index;
     size_t count = 0;
-    size_t bit_count = 0;
-    unsigned int pending = 0;
     unsigned char *bytes;
-    char mode = 0;
+    if (levelc_byte_literal_kind(pattern)) {
+        unsigned char *ordinals = NULL;
+        size_t ordinal_count = 0;
+        if (!levelc_byte_literal_bytes(pattern, &ordinals, &ordinal_count))
+            return 0;
+        bytes = levelc_latin1_utf8(ordinals, ordinal_count, length_out);
+        free(ordinals);
+        if (!bytes) return 0;
+        *bytes_out = bytes;
+        *chars_out = ordinal_count;
+        return 1;
+    }
     if (!pattern || !pattern->token || !bytes_out || !length_out || !chars_out)
         return 0;
     raw = pattern->token->token_string;
     raw_length = pattern->token->length;
-    if (!raw || raw_length < 2 || (raw[0] != '\'' && raw[0] != '"')) return 0;
+    if (!raw || raw_length < 2 || (raw[0] != '\'' && raw[0] != '"') ||
+        raw[raw_length - 1] != raw[0]) return 0;
     close_index = raw_length - 1;
-    if (raw[close_index] != raw[0]) {
-        mode = (char)tolower((unsigned char)raw[close_index]);
-        if ((mode != 'x' && mode != 'b') || raw_length < 3 ||
-            raw[close_index - 1] != raw[0]) return 0;
-        close_index--;
-    }
     bytes = malloc(raw_length + 1);
     if (!bytes) return 0;
-    if (!mode) {
-        for (index = 1; index < close_index; index++) {
-            if (raw[index] == raw[0] && index + 1 < close_index &&
-                raw[index + 1] == raw[0]) index++;
-            bytes[count++] = (unsigned char)raw[index];
-        }
-    } else if (mode == 'x') {
-        size_t digits = 0;
-        for (index = 1; index < close_index; index++) {
-            if (isspace((unsigned char)raw[index])) continue;
-            if (!isxdigit((unsigned char)raw[index])) goto invalid;
-            digits++;
-        }
-        if (digits & 1) bit_count = 1;
-        for (index = 1; index < close_index; index++) {
-            if (isspace((unsigned char)raw[index])) continue;
-            pending = (pending << 4) | (unsigned int)hexchar2int(raw[index]);
-            bit_count++;
-            if (bit_count == 2) {
-                bytes[count++] = (unsigned char)pending;
-                pending = 0;
-                bit_count = 0;
-            }
-        }
-    } else {
-        size_t digits = 0;
-        for (index = 1; index < close_index; index++) {
-            if (isspace((unsigned char)raw[index])) continue;
-            if (raw[index] != '0' && raw[index] != '1') goto invalid;
-            digits++;
-        }
-        bit_count = (8 - digits % 8) % 8;
-        for (index = 1; index < close_index; index++) {
-            if (isspace((unsigned char)raw[index])) continue;
-            pending = (pending << 1) | (unsigned int)(raw[index] - '0');
-            bit_count++;
-            if (bit_count == 8) {
-                bytes[count++] = (unsigned char)pending;
-                pending = 0;
-                bit_count = 0;
-            }
-        }
+    for (index = 1; index < close_index; index++) {
+        if (raw[index] == raw[0] && index + 1 < close_index &&
+            raw[index + 1] == raw[0]) index++;
+        bytes[count++] = (unsigned char)raw[index];
     }
 #ifndef NUTF8
-    if (utf8nvalid_count(bytes, count, chars_out)) goto invalid;
+    if (utf8nvalid_count(bytes, count, chars_out)) {
+        free(bytes);
+        return 0;
+    }
 #else
     *chars_out = count;
 #endif
     *bytes_out = bytes;
     *length_out = count;
     return 1;
-invalid:
-    free(bytes);
-    return 0;
 }
 
 static ASTNode *levelc_parseplan_descriptor(Context *context,

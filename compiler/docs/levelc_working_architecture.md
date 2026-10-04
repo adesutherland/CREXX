@@ -116,6 +116,17 @@ instructions have been reopened for Unicode-specific proof; unchanged
 structural receipts remain valid. The authoritative plan is LC-STEP-88 in
 `docs/planning/release-1/levelc-compatibility-worklist.md`.
 
+Level C source hex and binary literals now decode their written digits to byte
+ordinals, then map each ordinal to `U+00XX` before the ordinary `RexxValue`
+factory. The generic front end still gives a decoded literal either a STRING
+or BINARY AST node according to UTF-8 validity for Level B/G; Level C accepts
+both and lowers them to a source-anchored STRING constant. PARSE literal
+patterns use the same decoder and map, so `C3A9` means two codepoints and
+`FF` means one `U+00FF` in both expressions and templates. No new emitter
+node is needed. Classic ARG uppercases its fields; for example `U+00FF`
+becomes `U+0178`, which a later byte-valued BIF correctly rejects with
+`23.1` while ordinary Unicode operations may use it.
+
 **Historical, superseded LC-STEP-73H profile proposal:** The former design
 puts profile selection on the VM context so
 embedded hosts and standalone execution can select BYTE or UTF8 before an

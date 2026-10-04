@@ -206,8 +206,10 @@ Token actions:
   `CONST_SYMBOL`;
 - quoted strings collapse doubled quote delimiters and enforce literal-length
   limits;
-- binary and hexadecimal strings validate grouping, pad to whole bytes on the
-  left, convert through configuration encoding, and emit `STRING`;
+- binary and hexadecimal strings validate grouping and pad to whole bytes on
+  the left. The shared parser may represent decoded data as `STRING` or
+  `BINARY` according to UTF-8 validity; Level C lowering converts either
+  source form through the fixed `U+00XX` ordinal mapping before emission;
 - alternative negator characters normalize to backslash in operators;
 - blanks are remembered because they can infer concatenation.
 

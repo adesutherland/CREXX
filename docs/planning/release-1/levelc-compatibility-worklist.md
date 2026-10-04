@@ -868,11 +868,20 @@ choice still require Adrian's approval.
    Latin-1 ordinal conversion service and the complete conversion/bitwise
    BIF family, including the selected conversion signal; verify 256 round
    trips, failures and RexxScript consumers before committing the increment.
-3. **LC-STEP-88C (LC-AC-72/73; depends on 88B):** make Level C hex/binary
+3. **LC-STEP-88C (LC-AC-72/73; complete 2026-10-04; depends on 88B):** make Level C hex/binary
    literals, expression argument flow and resulting `RexxValue` objects use
    Unicode text consistently; keep the shared class's binary capability.
    Remove the now-unused conditional UTF-8 byte-to-value helper. Inspect
    canonical AST/emitter output and verify opt/no-opt and linked runs.
+   `88C-1` decode source byte literals once into ordinals while preserving
+   Level B/G AST and emitter behavior; `88C-2` build a source-anchored Unicode
+   STRING constant for the Level C `RexxValue` factory, accepting the parser's
+   STRING and BINARY byte-literal forms; `88C-3` cover `00`, `FF`, valid UTF-8
+   byte sequences such as `C3A9`, binary suffixes, calls and PARSE patterns;
+   `88C-4` remove the unused fallback helper and qualify source/canonical
+   trees, opt/no-opt and linked execution. The 2026-10-04 pre-edit probe at
+   `/tmp/crexx-literal-probe.VZbdvX` shows `'FF'x` rejected as an unsupported
+   main statement and `C2X('C3A9'x)` incorrectly returning `E9`.
 4. **LC-STEP-88D (LC-AC-57/62/63/72/74; depends on 88C):** requalify SAY,
    DROP and assignment as whole instructions for Unicode, including host text
    output, indirect lists and compound substitutions. Retain previously
@@ -902,6 +911,26 @@ suite passed 446/446 (`/tmp/crexx-unicode-levelc.cyeXh5`); RexxScript,
 `0`, `FF`, `255`, `FF`, `16`, `FEFF00`, `1`
 (`/tmp/crexx-unicode-linked.m5iGde`). `LC-AC-72/73` remain open for literal
 flow, host text, and wider character-operation proof in STEP-88C–88E.
+
+**2026-10-04 LC-STEP-88C receipt.** The common front end still classifies a
+decoded source byte literal as STRING or BINARY according to UTF-8 validity;
+Level C lowering accepts both, reads the source digits once, and emits a
+source-anchored UTF-8 STRING constant for the existing `RexxValue` factory.
+The same ordinal decoder serves PARSE literal templates. `'FF'x` and
+`'11111111'b` now map to `U+00FF`; `'C3A9'x` maps to two scalars, and ordinary
+`'é'` remains one. No AST node type or emitter case was added. The unused
+conditional byte-to-value helper and its build dependencies were removed.
+The first broad run exposed an unintended collision with constant symbols
+ending in `B`/`X`, repaired by restricting suffix detection to literal AST
+types, and two expected SAY byte-fixture changes. Seven targeted repairs passed
+(`/tmp/crexx-literal-repair-focused.GqL3JF`); the exact corrected Debug Level C
+suite passed 451/451 (`/tmp/crexx-literal-levelc-final.i3ys3X`), including
+optimized/no-opt literal execution and lowered-tree checks. RexxScript,
+`RexxValue`, shared and direct BIF checks passed 16/16
+(`/tmp/crexx-literal-cross.PDUwOq`). A linked image emitted the same 12-line
+fixture output (`/tmp/crexx-literal-linked.coWgYC`). `LC-AC-72/73` remain open
+for the Unicode review of formerly closed instructions, ARG/PARSE character
+behavior beyond these literals, and the host boundary.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
@@ -3092,14 +3121,14 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-LABELS` | Labels and local routine names | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Bounded slice: stem exposure and simple compound access | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-65B: one pool-owned path, reference order, invalid target, opt/no-opt, tree, normal and linked evidence | Host-selected profile and external API remain cross-cutting open work |
+| `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Hex/binary source literals use the fixed Latin-1 ordinal bridge in expressions, calls and PARSE patterns under LC-STEP-88C; opt/no-opt, tree and linked evidence | Remaining quoted forms, error/reference equivalence and host text proof remain open |
+| `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Prior one-pool structural closure retained; byte-literal value assignment passes under LC-STEP-88C | Unicode tail substitution and host/external API remain open under LC-AC-63/74 |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, host `rxvml_run()` lifecycle, raw/canonical AST, exact bytes, 26.4 dynamic-position errors and linked output are proven | Opt-in UTF8 configuration and any admitted external routine-entry modes remain open under LC-AC-71/LC-STEP-73G |
+| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, host `rxvml_run()` lifecycle, raw/canonical AST, historical exact-byte proof, 26.4 dynamic-position errors and linked output | Unicode uppercasing/codepoint behavior and admitted external routine-entry modes remain open under LC-AC-71/LC-STEP-88E |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, expression actuals such as `CALL nested ARG(1),,ARG(2)`, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal start with optional captured TO/BY/FOR | Dynamic start, wider count/numeric errors and configuration proof open |
-| `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-64B, including arbitrary direct compounds and Regina-style invalid-word skip | Host-selected profile policy remains cross-cutting under LC-AC-04/06 |
+| `SYN-CLASSIC-DROP` | DROP instruction | Prior whole-instruction structural closure retained, including arbitrary direct compounds and Regina-style invalid-word skip | Unicode names and indirect-list blanks remain open under LC-AC-62/74 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |
@@ -3113,7 +3142,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-QUEUE` | QUEUE instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-RETURN` | RETURN instruction | Bounded slice: value/void RETURN in local procedures | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-SAY` | SAY instruction | Whole instruction closed under LC-AC-57/LC-STEP-63F | Missing expression/BIF services, TRACE and SIGNAL remain cross-cutting open work |
+| `SYN-CLASSIC-SAY` | SAY instruction | Prior whole-instruction structural closure retained; NUL, source hex ordinals and Unicode literal output pass under LC-STEP-88C | Host encoding and Unicode output review remain open under LC-AC-57/74; missing expression/BIF, TRACE and SIGNAL services remain shared work |
 | `SYN-CLASSIC-SELECT` | SELECT/WHEN/OTHERWISE | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |

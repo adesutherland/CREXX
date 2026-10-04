@@ -275,8 +275,10 @@ scalar language values and codepoint character positions. Byte-valued Classic
 conversion BIFs use the fixed Latin-1 ordinal bridge (`00`–`FF` to
 `U+0000`–`U+00FF`) and signal on an unmappable scalar; raw `.binary` remains
 available in the shared `RexxValue` implementation for RexxScript and future
-explicit binary APIs. This target is being implemented; existing direct BIF
-BYTE/UTF8 branches still reflect the prior design. See [Unicode](unicode.md).
+explicit binary APIs. The conversion/bitwise BIF family and Level C source
+hex/binary literals use this mapping. Direct BIF consumers may still select
+the BYTE path; remaining character operations and host boundaries are under
+review. See [Unicode](unicode.md).
 
 The `rxfnsb` library provides byte-oriented helpers for common binary work:
 `binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`, `binoverlay`,

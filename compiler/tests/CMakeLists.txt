@@ -5555,10 +5555,10 @@ add_levelc_runtime_slice_test(levelc_options_source_noopt
         rexx_src/levelc_options_source.rexx "1\n" --level levelb -n)
 add_runtime_bytes_test(levelc_say_bytes
         rexx_src/levelc_say_bytes.rexx
-        "4100420ac3a90a0a" levelc)
+        "4100420ac383c2a90ac3a90a0a" levelc)
 add_runtime_bytes_test(levelc_say_bytes_noopt
         rexx_src/levelc_say_bytes.rexx
-        "4100420ac3a90a0a" levelc -n)
+        "4100420ac383c2a90ac3a90a0a" levelc -n)
 add_runtime_bytes_test(levelc_arg_exact_bytes
         rexx_src/levelc_arg_exact_bytes.rexx
         "6100620a4100420a" levelc)
@@ -5618,6 +5618,12 @@ add_levelc_runtime_slice_test(levelc_latin1_ordinals
         rexx_src/levelc_latin1_ordinals.rexx "0\nFF\n255\nFF\n16\nFEFF00\n1\n")
 add_levelc_runtime_slice_test(levelc_latin1_ordinals_noopt
         rexx_src/levelc_latin1_ordinals.rexx "0\nFF\n255\nFF\n16\nFEFF00\n1\n" -n)
+add_levelc_runtime_slice_test(levelc_literal_ordinals
+        rexx_src/levelc_literal_ordinals.rexx
+        "FF\nFF\nC3A9\n2\n00FF\n0F\n07\nC3A9\n80\n80\nAB\nAB\n")
+add_levelc_runtime_slice_test(levelc_literal_ordinals_noopt
+        rexx_src/levelc_literal_ordinals.rexx
+        "FF\nFF\nC3A9\n2\n00FF\n0F\n07\nC3A9\n80\n80\nAB\nAB\n" -n)
 add_levelc_runtime_slice_test(levelc_say_bif_family
         rexx_src/levelc_say_bif_family.rexx
         "length=2\nnested=3\nsubstr=bcd\nomitted=bc\npos=2\nword=blue\nvalue=MiXeD\nlocal=iXeD\nchange=MiXeD\nafter=next\nsymbol=VAR\nx2d=255\ncenter=-A-\nleft=ab..\nmin=2\nmax=4\n")
@@ -6408,6 +6414,11 @@ add_levelc_lowered_tree_shape_test(levelc_options_tree
         "applyOptions"
         "__rxcp_levelc_options_config_"
         "RexxClassicConfig")
+
+add_levelc_lowered_tree_shape_test(levelc_literal_ordinals_tree
+        rexx_src/levelc_literal_ordinals.rexx
+        "RexxValue"
+        "parseplan")
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
