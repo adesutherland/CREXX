@@ -522,8 +522,16 @@ the stem default and its old explicit tails.
 - `FORM` defaults to `SCIENTIFIC`; value forms accept `S` or `E`;
 - `FUZZ` defaults to `0`, must be whole, non-negative, and less than `DIGITS`.
 
-`OPTIONS` passes blank-delimited words to the processor. Unknown words are
-ignored unless cREXX deliberately documents stricter Level C options.
+`OPTIONS` evaluates its expression once at the authored instruction and passes
+the exact-length value to the shared Classic configuration service. The
+leading bare-word clause also selects source-level compiler settings before
+parsing. Later clauses never reparse source. Bare `OPTIONS` is a no-op in the
+Regina-compatible Level C dialect. The current BYTE and UTF8 profiles have no
+recognized runtime option words, so all evaluated words, including IBM's
+EBCDIC DBCS-specific `ETMODE`/`EXMODE` family, are ignored. Unknown words do
+not raise an error. Level C permits explicit hash/dash line-comment source
+switches, rejects `comments_slash` to preserve `//` remainder, and rejects
+`numeric_common` to preserve Classic precedence.
 
 `PARSE`:
 

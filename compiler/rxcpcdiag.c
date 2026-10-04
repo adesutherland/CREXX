@@ -374,6 +374,70 @@ static int levelc_token_text_equals(Token *left, Token *right) {
     return 1;
 }
 
+static int levelc_token_is_word(Token *token, const char *word) {
+    size_t i;
+    size_t length = strlen(word);
+
+    if (!token || !token->token_string || token->length != (int)length) return 0;
+    for (i = 0; i < length; i++) {
+        if (toupper((unsigned char)token->token_string[i]) !=
+            toupper((unsigned char)word[i])) return 0;
+    }
+    return 1;
+}
+
+static void levelc_validate_leading_options(Context *context) {
+    Token *head = context->token_head;
+    Token *word;
+    int hash = 0;
+    int dash = 0;
+    int slash = 0;
+    int numeric = 0;
+    int setting;
+    int *prior;
+
+    while (head && (head->token_type == TK_EOC || head->token_type == TK_EOL))
+        head = head->token_next;
+    if (!head || head->token_type != TK_OPTIONS) return;
+
+    /* Only a clause of bare words is a compiler directive. Every other
+     * leading OPTIONS is solely a runtime Classic expression. */
+    for (word = levelc_next_clause_token(head); word;
+         word = levelc_next_clause_token(word)) {
+        if (word->token_type != TK_VAR_SYMBOL) return;
+    }
+
+    for (word = levelc_next_clause_token(head); word;
+         word = levelc_next_clause_token(word)) {
+        prior = NULL;
+        setting = 0;
+        if (levelc_token_is_word(word, "COMMENTS_HASH")) {
+            prior = &hash; setting = 1;
+        } else if (levelc_token_is_word(word, "COMMENTS_NOHASH")) {
+            prior = &hash; setting = -1;
+        } else if (levelc_token_is_word(word, "COMMENTS_DASH")) {
+            prior = &dash; setting = 1;
+        } else if (levelc_token_is_word(word, "COMMENTS_NODASH")) {
+            prior = &dash; setting = -1;
+        } else if (levelc_token_is_word(word, "COMMENTS_SLASH")) {
+            prior = &slash; setting = 1;
+        } else if (levelc_token_is_word(word, "COMMENTS_NOSLASH")) {
+            prior = &slash; setting = -1;
+        } else if (levelc_token_is_word(word, "NUMERIC_CLASSIC")) {
+            prior = &numeric; setting = 1;
+        } else if (levelc_token_is_word(word, "NUMERIC_COMMON")) {
+            prior = &numeric; setting = -1;
+        }
+        if ((prior && *prior && *prior != setting) ||
+            (prior == &slash && setting == 1) ||
+            (prior == &numeric && setting == -1)) {
+            levelc_append_detached_diagnostic(
+                context, word, rxcp_diag_create("INCOMPATIBLE_OPTIONS"));
+        }
+        if (prior) *prior = setting;
+    }
+}
+
 static int levelc_add_label(LevelCLabel **labels,
                             size_t *count,
                             size_t *capacity,
@@ -1141,6 +1205,8 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
     int procedure_allowed;
 
     if (!context) return 0;
+
+    levelc_validate_leading_options(context);
 
     diagnostics_before = 0;
     diag = (ASTNode *)context->diagnostics_list;

@@ -35,6 +35,7 @@
 #define LEVELC_POOL_SYMBOL "__rxcp_levelc_pool"
 #define LEVELC_CONFIG_SYMBOL "__rxcp_levelc_config"
 #define LEVELC_CONFIG_REF_SYMBOL "__rxcp_levelc_config_ref"
+#define LEVELC_OPTIONS_CONFIG_PREFIX "__rxcp_levelc_options_config_"
 #define LEVELC_PARENT_POOL_SYMBOL "__rxcp_levelc_parent_pool"
 #define LEVELC_PARENT_POOL_REF_SYMBOL "__rxcp_levelc_parent_pool_ref"
 #define LEVELC_PROC_PREFIX "__rxcp_levelc_proc_"
@@ -1406,7 +1407,8 @@ static int levelc_main_statement_supported(ASTNode *stmt,
                                            LevelCLowerPlan *plan,
                                            const char **reason_out) {
     if (!stmt) return 1;
-    if (stmt->node_type == REXX_OPTIONS) return 1;
+    if (stmt->node_type == REXX_OPTIONS)
+        return !stmt->child || levelc_expr_supported(stmt->child, plan, reason_out);
     if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_transfer_supported(stmt, plan, reason_out);
@@ -1438,6 +1440,8 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
                                            LevelCLowerPlan *plan,
                                            const char **reason_out) {
     if (!stmt) return 1;
+    if (stmt->node_type == REXX_OPTIONS)
+        return !stmt->child || levelc_expr_supported(stmt->child, plan, reason_out);
     if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, NULL, reason_out);
     if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
@@ -1496,7 +1500,6 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
     plan->instructions = instructions;
 
     stmt = instructions->child;
-    while (stmt && stmt->node_type == REXX_OPTIONS) stmt = stmt->sibling;
     plan->main_first = stmt;
     while (stmt && stmt->node_type != LABEL) stmt = stmt->sibling;
     plan->main_end = stmt;
@@ -1582,7 +1585,7 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
     stmt = plan->main_first;
     while (stmt && stmt != plan->main_end) {
         if (!levelc_main_statement_supported(stmt, plan, reason_out)) return 0;
-        if (stmt->node_type != REXX_OPTIONS) accepted_statement = 1;
+        accepted_statement = 1;
         stmt = stmt->sibling;
     }
 
@@ -2262,6 +2265,45 @@ static ASTNode *levelc_say_statement(Context *context,
     rxcp_remap_anchor_synthetic(say, say_node);
     add_ast(say, as_string);
     return say;
+}
+
+static ASTNode *levelc_options_statement(Context *context,
+                                          ASTNode *options_node,
+                                          LevelCLowerPlan *plan,
+                                          ASTNode *prelude) {
+    ASTNode *config_ref;
+    ASTNode *config_assignment;
+    ASTNode *config;
+    ASTNode *args[1];
+    char *config_name;
+
+    config_name = rxcp_remap_create_generated_node_name(
+        LEVELC_OPTIONS_CONFIG_PREFIX, options_node);
+    config_ref = levelc_config_ref(context, options_node, VAR_SYMBOL);
+    config_assignment = config_name && config_ref
+        ? rxcp_remap_create_named_assignment(
+              context, options_node, config_name,
+              rxcp_remap_create_dereference_expr(context, options_node,
+                                                config_ref))
+        : NULL;
+    config = config_name ? rxcp_remap_create_named_ref(
+                               context, options_node, VAR_SYMBOL, config_name)
+                         : NULL;
+    args[0] = options_node->child
+        ? levelc_lower_expr(context, options_node->child, plan, prelude)
+        : levelc_blank_rexxvalue(context, options_node);
+    if (!config_assignment || !config || !args[0]) {
+        free(config_name);
+        return NULL;
+    }
+    add_ast(prelude, config_assignment);
+    free(config_name);
+    return rxcp_remap_create_member_call_statement(context,
+                                                    options_node,
+                                                    config,
+                                                    "applyOptions",
+                                                    args,
+                                                    1);
 }
 
 static ASTNode *levelc_pool_setup_statement(Context *context, ASTNode *anchor_node) {
@@ -3314,6 +3356,8 @@ static int levelc_lower_main_statement(Context *context,
 
     if (stmt->node_type == ASSIGN) {
         lowered = levelc_pool_set_statement(context, stmt, plan, prelude, NULL);
+    } else if (stmt->node_type == REXX_OPTIONS) {
+        lowered = levelc_options_statement(context, stmt, plan, prelude);
     } else if (stmt->node_type == SAY) {
         lowered = levelc_say_statement(context, stmt, plan, prelude);
     } else if (stmt->node_type == CALL) {
@@ -3376,6 +3420,8 @@ static int levelc_lower_proc_statement(Context *context,
 
     if (stmt->node_type == ASSIGN) {
         lowered = levelc_pool_set_statement(context, stmt, plan, prelude, NULL);
+    } else if (stmt->node_type == REXX_OPTIONS) {
+        lowered = levelc_options_statement(context, stmt, plan, prelude);
     } else if (stmt->node_type == SAY) {
         lowered = levelc_say_statement(context, stmt, plan, prelude);
     } else if (stmt->node_type == RETURN) {
@@ -3830,14 +3876,12 @@ static int levelc_rewrite_program(Context *context,
 
     stmt = plan ? plan->main_first : old_instructions->child;
     while (stmt && (!plan || stmt != plan->main_end)) {
-        if (stmt->node_type != REXX_OPTIONS) {
-            if (!levelc_lower_main_statement(context,
-                                             instructions,
-                                             stmt,
-                                             plan,
-                                             reason_out)) {
-                return 0;
-            }
+        if (!levelc_lower_main_statement(context,
+                                         instructions,
+                                         stmt,
+                                         plan,
+                                         reason_out)) {
+            return 0;
         }
         stmt = stmt->sibling;
     }

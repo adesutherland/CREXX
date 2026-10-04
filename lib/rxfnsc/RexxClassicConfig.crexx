@@ -162,6 +162,20 @@ RexxClassicConfig: class
   profile: method = .string
     return profile_name
 
+  /**
+   * Accept one evaluated Classic OPTIONS value.
+   *
+   * Source language, comment and numeric switches are consumed before parsing.
+   * BYTE and UTF8 currently define no runtime option words; all supplied
+   * words, including host-specific DBCS words, are therefore ignored without
+   * decoding or scanning. Keep this processor boundary so a future recognized
+   * word has one owner.
+   * @param words Evaluated OPTIONS result with its exact byte length
+   */
+  applyOptions: method = .void
+    arg words = .RexxValue
+    return
+
   isByteProfile: method = .boolean
     return profile_name == "BYTE"
 

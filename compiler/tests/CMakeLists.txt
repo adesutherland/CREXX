@@ -5320,6 +5320,23 @@ add_levelc_invalid_compile_test(levelc_nop_invalid
         "@ 2:5"
         "@ 3:5")
 
+add_levelc_invalid_compile_test(levelc_options_numeric_common
+        rexx_src/levelc_options_numeric_common.rexx
+        "INCOMPATIBLE_OPTIONS"
+        "numeric_common")
+add_levelc_invalid_compile_test(levelc_options_comments_slash
+        rexx_src/levelc_options_comments_slash.rexx
+        "INCOMPATIBLE_OPTIONS"
+        "comments_slash")
+add_levelc_invalid_compile_test(levelc_options_conflicting_comments
+        rexx_src/levelc_options_conflicting_comments.rexx
+        "INCOMPATIBLE_OPTIONS"
+        "comments_nohash")
+add_levelc_invalid_compile_test(levelc_options_invalid_expression
+        rexx_src/levelc_options_invalid_expression.rexx
+        "RXC-LC-35\\.1"
+        "@ 2:12")
+
 add_levelc_invalid_compile_test(levelc_slice13_named_leave_invalid
         rexx_src/levelc_slice13_named_leave_invalid.rexx
         "RXC-LC-28\\.3")
@@ -5425,6 +5442,18 @@ endfunction()
 add_levelc_runtime_slice_test(levelc_bare_stem_read
         rexx_src/levelc_bare_stem_read.rexx
         "ITEMS.\n")
+add_levelc_runtime_slice_test(levelc_options_instruction
+        rexx_src/levelc_options_instruction.rexx "6\n1\n")
+add_levelc_runtime_slice_test(levelc_options_instruction_noopt
+        rexx_src/levelc_options_instruction.rexx "6\n1\n" -n)
+add_levelc_runtime_slice_test(levelc_options_dynamic_first
+        rexx_src/levelc_options_dynamic_first.rexx "1\n" --level levelc)
+add_levelc_runtime_slice_test(levelc_options_dynamic_first_noopt
+        rexx_src/levelc_options_dynamic_first.rexx "1\n" --level levelc -n)
+add_levelc_runtime_slice_test(levelc_options_source
+        rexx_src/levelc_options_source.rexx "1\n" --level levelb)
+add_levelc_runtime_slice_test(levelc_options_source_noopt
+        rexx_src/levelc_options_source.rexx "1\n" --level levelb -n)
 add_runtime_bytes_test(levelc_say_bytes
         rexx_src/levelc_say_bytes.rexx
         "4100420ac3a90a0a" levelc)
@@ -6082,6 +6111,12 @@ add_levelc_invalid_runtime_test(levelc_slice36_dynamic_start_clause_error
         RXC-LC-41.4 "to 10")
 add_levelc_invalid_runtime_test(levelc_slice37_empty_string_numeric_invalid
         rexx_src/levelc_slice37_empty_string_numeric_invalid.rexx RXC-LC-41.4)
+
+add_levelc_lowered_tree_shape_test(levelc_options_tree
+        rexx_src/levelc_options_instruction.rexx
+        "applyOptions"
+        "__rxcp_levelc_options_config_"
+        "RexxClassicConfig")
 
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx

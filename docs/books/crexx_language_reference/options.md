@@ -1,7 +1,8 @@
 # The `OPTIONS` Instruction
 
-`OPTIONS` configures file-level parsing rules and language defaults. When it is
-present, it must be the first instruction in the source file.
+For Level B, a leading `OPTIONS` clause configures file-level parsing rules and
+language defaults. File-level choices must be in the first instruction because
+the compiler must know them before parsing the rest of the file.
 
 ```rexx
 options levelb numeric_common comments_slash
@@ -22,6 +23,28 @@ explicitly says so.
 
 The compiler can also receive a default with `rxc --level levelb`. A source
 file's explicit `options` line overrides that command-line default.
+
+## Level C Compatibility
+
+Level C compatibility is under development. Its leading, bare-word `OPTIONS`
+clause can select the source level and file-level comment and numeric settings.
+Those settings are fixed before parsing. A first clause that is an expression,
+such as `options choose()`, is executable source; use `rxc --level levelc` when
+there is no static `options levelc` selector.
+
+Every Level C `OPTIONS` clause, including the leading clause, also executes at
+its source position. Its expression is evaluated once. Later clauses cannot
+change how already parsed source is recognized. With no operand, `OPTIONS` is
+a no-op, matching Regina. The BYTE and UTF8 Level C profiles currently define
+no runtime option words, so the runtime ignores their evaluated values,
+including unknown words and IBM EBCDIC DBCS options such as `ETMODE` and
+`EXMODE`. An expression's side effects still occur.
+
+Level C defaults to Classic `/* ... */` comments and Classic numeric
+precedence. A leading static clause may enable `comments_hash` or
+`comments_dash`, or explicitly disable them. `comments_slash` is rejected in
+Level C because `//` is the Classic remainder operator. `numeric_common` is
+also rejected in Level C; use `numeric_classic` or the default.
 
 The `crexx` driver compiles headerless top-level scripts as Level B and imports
 `rxfnsb` for convenience. Reusable modules should still write the option and
@@ -64,7 +87,8 @@ The single-line comment controls are:
 - `comments_slash` / `comments_noslash`
 - `comments_dash` / `comments_nodash`
 
-Hash comments are enabled by default so a POSIX shebang can be used:
+For Level B, hash comments are enabled by default so a POSIX shebang can be
+used:
 
 ```rexx
 #!/usr/bin/env crexx

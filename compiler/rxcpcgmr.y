@@ -1330,21 +1330,10 @@ say_instruction(S) ::= CTK_SAY(T) CTK_CLOSE_BRACKET(R).
     add_ast(S, rxcp_levelc_ast_error(context, "37.2", R));
 }
 
-options_instruction(O) ::= CTK_OPTIONS(T) option_tail(L).
+options_instruction(O) ::= CTK_OPTIONS(T) expression_opt(E).
 {
     O = ast_f(context, REXX_OPTIONS, T);
-    if (L) add_ast(O, L);
-}
-
-option_tail(L) ::= option_tail(L0) CTK_VAR_SYMBOL(S).
-{
-    L = L0 ? L0 : ast_ft(context, OPTIONS);
-    add_ast(L, ast_f(context, LITERAL, S));
-}
-
-option_tail(L) ::= .
-{
-    L = 0;
+    if (E) add_ast(O, E);
 }
 
 expression_opt(E) ::= expression(V).

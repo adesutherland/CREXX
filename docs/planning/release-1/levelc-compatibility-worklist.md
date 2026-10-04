@@ -667,11 +667,13 @@ are verified against all affected consumers.
 - [ ] **LC-AC-66 — complete OPTIONS instruction:** a leading source directive
   selects the language and file-level scanner/parser options over a CLI
   default, with documented defaults and clear handling of conflicting words.
-  Every executable
-  `OPTIONS` form evaluates its Classic expression once at its source position
-  in main, selected/nested arms and local routines, converts the result to
-  uppercase blank-delimited words and applies the processor's documented
-  runtime words in order; unknown words are ignored. Header words must survive
+  Every executable `OPTIONS` form evaluates its Classic expression once at its
+  source position in main, selected/nested arms and local routines, passing
+  the exact-length value to the shared processor service. The approved BYTE
+  and UTF8 policy currently recognizes no runtime words, so the service
+  ignores the value without scanning it; if runtime words are later added,
+  that service must process uppercase blank-delimited words in order and ignore
+  unknown words. Header words must survive
   as source-owned AST input even though canonical Level B imports and defaults
   are generated. Empty operand, IBM DBCS-specific words and the boundary
   between compile-time and runtime words require the LC-STEP-67B decision
@@ -1521,7 +1523,7 @@ configuration work as closed by this instruction.
    options, runtime configuration and tests. Compare the expression/word rule
    with the IBM reference and Regina, including an empty operand; identify
    duplicate or discarded behavior and record a concrete architecture choice.
-2. **LC-STEP-67B (LC-AC-66; decision gate open; depends on 67A):** Adrian
+2. **LC-STEP-67B (LC-AC-66; approved 2026-10-04; depends on 67A):** Adrian
    approves the source/runtime split, the empty-operand dialect choice, the
    cREXX policy for IBM's EBCDIC DBCS-specific ETMODE/EXMODE words, and the
    Level C line-comment policy where `comments_slash` collides with the
@@ -1576,6 +1578,18 @@ an explicit Level C policy. Placement probes show nested `OPTIONS word` fails
 only during lowering and a local-routine `OPTIONS` is rejected by its
 statement validator (`/tmp/crexx-options-placement.hpkypp`). LC-STEP-67B is
 the next gate.
+
+2026-10-04 LC-STEP-67B decision: Adrian approved the recommended set. A
+leading bare-word source header selects compiler level and compatible
+file-level lexical settings; every Level C OPTIONS clause remains an
+executable expression evaluated at its source position. Bare OPTIONS is a
+Regina-compatible no-op. Unknown runtime words, including IBM's EBCDIC
+DBCS-specific ETMODE/EXMODE family in cREXX BYTE/UTF8 profiles, are ignored.
+Level C defaults to Classic block comments; explicit hash/dash line-comment
+switches may be used. `comments_slash` is rejected so `//` remains Classic
+remainder, and `numeric_common` is rejected so Level C keeps Classic numeric
+precedence. These rejected source switches require clear diagnostics rather
+than silent pre-scan acceptance. No new runtime profile option is implied.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared

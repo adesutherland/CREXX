@@ -95,6 +95,16 @@ regular:
       goto comment;
     }
 
+    [#] {
+      if (s->comments_hash) goto skip_line_comment;
+      RET(TK_UNKNOWN);
+    }
+    "--" {
+      if (s->comments_dash) goto skip_line_comment;
+      s->cursor = s->top + 1;
+      RET(TK_HIGH_PRIORITY_MINUS);
+    }
+
     "|" ob "|" { RET(TK_CONCAT); }
     "*" ob "*" { RET(TK_POWER_L); }
     "/" ob "/" { RET(TK_MOD); }
@@ -200,5 +210,24 @@ comment:
       RET(TK_BADCOMMENT);
   }
   * { goto comment; }
+*/
+
+skip_line_comment:
+/*!re2c
+  eol2 {
+    s->line++;
+    s->prev_linestart = s->linestart;
+    s->linestart = s->cursor + 2;
+    RET(TK_EOL);
+  }
+  eol1 {
+    s->line++;
+    s->prev_linestart = s->linestart;
+    s->linestart = s->cursor + 1;
+    RET(TK_EOL);
+  }
+  eof { RET(TK_EOS); }
+  $ { RET(TK_EOS); }
+  * { goto skip_line_comment; }
 */
 }

@@ -1,5 +1,6 @@
 options levelb comments_dash numeric_classic
 import rexxclassicbifs
+import rexxclassicconfig
 import rexxvalue
 import rexxpool
 
@@ -35,6 +36,13 @@ errors = errors + check_bif("MAX", "9", "4", "-1", "9")
 errors = errors + check_bif("UPPER", "MIXED", "Mixed")
 errors = errors + check_bif("LOWER", "mixed", "Mixed")
 errors = errors + check(rexxclassicbif_length(.RexxValue("abcdef")).asString() = "6", "direct length helper")
+
+options_config = .RexxClassicConfig()
+call options_config.applyOptions(.RexxValue("  etmode" || '00'x || " unknown  "))
+errors = errors + check(options_config.profile() = "BYTE", "unknown BYTE options with NUL")
+call options_config.useUtf8Profile()
+call options_config.applyOptions(.RexxValue("exmode" || '00'x || " noetmode"))
+errors = errors + check(options_config.profile() = "UTF8", "unknown UTF8 options with NUL")
 
 errors = errors + check_error("LENGTH", "RXC-LC-40.3")
 errors = errors + check_error("LEFT", "RXC-LC-40.13", "abc", "-1")

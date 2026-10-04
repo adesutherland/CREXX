@@ -683,24 +683,31 @@ Classic REXX contextual keyword rules do not destabilize the Level B grammar.
 
 ### Stage 0: options pre-scan
 
-Existing behaviour:
+Current Level C path (2026-10-04):
 
-- `opt_pars()` scans leading `OPTIONS`.
-- It sets `context->level`.
-- It can set comment and numeric standard flags.
-- If no level is supplied, current logic defaults to Level C unless a CLI
-  default is present.
-
-Level C needs:
-
-- Confirm whether Level C default numeric mode should be Classic. The public
-  language-specification source gives `NUMERIC DIGITS 9` as the arithmetic
-  default; current cREXX context defaults to common numeric mode and 18 digits
-  for Level B behaviour.
-- Decide whether Level C accepts only Classic block comments by default or also
-  preserves cREXX optional line comment modes for compatibility.
-- Parser mode must keep the level selected by options/CLI instead of forcing
-  Level B.
+- `opt_pars()` first inspects the complete first `OPTIONS` clause. Only a
+  bare-word clause is a static source directive; expressions containing
+  punctuation do not accidentally select a language level. An explicit source
+  level overrides the CLI default; otherwise the CLI default, then Level C,
+  applies. The import header scanner uses the same bare-word classification
+  before selecting a dependency's level.
+- Static level, comment and numeric words are consumed before parsing. Level C
+  forces Classic numeric syntax. Its scanner defaults to block comments and
+  recognizes `#`/`--` line comments only when explicitly enabled in the
+  leading clause. Validation rejects conflicting comment settings,
+  `comments_slash`, and `numeric_common` with source diagnostics. `//` remains
+  the Classic remainder token.
+- Every source `REXX_OPTIONS` node remains in the raw tree. The Level C
+  lowerer validates its optional expression and replaces the instruction with
+  one call to the shared `RexxClassicConfig.applyOptions` method, anchored at
+  the source clause. The leading clause executes too. The generated Level B
+  `OPTIONS`/imports are private canonical setup and do not replace source
+  execution. A temporary local receives the configuration reference before
+  the member call, satisfying the canonical dereference form.
+- The service receives the evaluated `RexxValue` with exact byte length. BYTE
+  and UTF8 currently define no runtime option words, so all values are
+  ignored after evaluation; a bare `OPTIONS` passes an empty value. This keeps
+  runtime option ownership in one place if a portable word is specified later.
 
 ### Stage 1: scanner
 

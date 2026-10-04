@@ -55,62 +55,78 @@ static int token_text_equals_ci(const Token *token, const char *text) {
     return 1;
 }
 
+static int static_option_word(int type) {
+    switch (type) {
+        case TK_LEVELA: case TK_LEVELB: case TK_LEVELC:
+        case TK_LEVELD: case TK_LEVELG: case TK_LEVELL:
+        case TK_COMMENTS_HASH: case TK_COMMENTS_DASH:
+        case TK_COMMENTS_SLASH: case TK_COMMENTS_NOHASH:
+        case TK_COMMENTS_NODASH: case TK_COMMENTS_NOSLASH:
+        case TK_NUMERIC_COMMON: case TK_NUMERIC_CLASSIC:
+        case TK_SYMBOL:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 int opt_pars(Context *context) {
-
-    int token_type, last_token_type;
-    int scanning_options_clause;
+    int token_type;
+    int static_clause = 1;
+    int hash_explicit = 0;
     Token *token;
-    void *parser;
+    Token *options = NULL;
+    Token *cursor;
+    void *parser = NULL;
 
-    /* Create Options parser to work out required language level */
-    parser = Opts_Alloc(malloc);
-#ifndef NDEBUG
-    if (context->debug_mode >= 2) Opts_Trace(stderr, "[OPTIONS] ");
-    else Opts_Trace(context->traceFile, "Options parser >> ");
-#endif
-    last_token_type = TK_EOC;
-    scanning_options_clause = 0;
-    while((token_type = opt_scan(context))) {
-        // Setup and parse token
+    /* Inspect the complete first clause before applying any static words.
+     * OPTIONS expressions containing punctuation are executable source,
+     * not compiler directives (for example OPTIONS levelc()). */
+    while ((token_type = opt_scan(context))) {
         token = token_f(context, token_type);
-
-        // Skip multiple end of clause/line
-        if (last_token_type == TK_EOC && token_type == TK_EOC) continue;
-        if (last_token_type == TK_EOC) scanning_options_clause = (token_type == TK_OPTIONS);
-        last_token_type = token_type;
-        if (scanning_options_clause &&
-            token_type == TK_SYMBOL &&
-            token_text_equals_ci(token, "srcmap")) {
-            context->source_has_srcmap = 1;
+        if (!options) {
+            if (token_type == TK_EOC) continue;
+            if (token_type != TK_OPTIONS) break;
+            options = token;
+            continue;
         }
-        if (token_type == TK_EOC) scanning_options_clause = 0;
+        if (token_type == TK_EOC || token_type == TK_EOS) {
+            break;
+        }
+        if (!static_option_word(token_type)) static_clause = 0;
+    }
 
-        // EOS Special Processing
-        if(token_type == TK_EOS) {
-            // Send an EOC
-            token = token_f(context, TK_EOC);
+    if (options) {
+        context->source_has_options = 1;
+        if (static_clause) {
+            parser = Opts_Alloc(malloc);
+#ifndef NDEBUG
+            if (context->debug_mode >= 2) Opts_Trace(stderr, "[OPTIONS] ");
+            else Opts_Trace(context->traceFile, "Options parser >> ");
+#endif
+            for (cursor = options; cursor && cursor != token; cursor = cursor->token_next) {
+                if (cursor->token_type == TK_SYMBOL &&
+                    token_text_equals_ci(cursor, "srcmap")) {
+                    context->source_has_srcmap = 1;
+                }
+                if (cursor->token_type == TK_COMMENTS_HASH ||
+                    cursor->token_type == TK_COMMENTS_NOHASH) {
+                    hash_explicit = 1;
+                }
+                Opts_(parser, cursor->token_type, cursor, context);
+            }
             Opts_(parser, TK_EOC, token, context);
-
-            // Send EOS
-            token = token_f(context, token_type);
-            Opts_(parser, token_type, token, context);
-
-            // Send a null
+            Opts_(parser, TK_EOS, token, context);
             Opts_(parser, 0, NULL, context);
-            break;
-        }
-
-        Opts_(parser, token_type, token, context);
-
-        // Check if we are done
-        if (context->processedOptions) {
-            break;
+            Opts_Free(parser, free);
         }
     }
 
-    /* Deallocate memory */
-    Opts_Free(parser, free);
-    return(0);
+    if (context->level == UNKNOWN) context->level = header_cli_or_default_level(context);
+    if (context->level == LEVELC && !hash_explicit)
+        context->comments_hash = 0;
+    context->processedOptions = 1;
+    return 0;
 }
 
 int rxcp_scan_source_header(const char *location, const char *file_name, RexxLevel cli_default_level,
@@ -121,6 +137,8 @@ int rxcp_scan_source_header(const char *location, const char *file_name, RexxLev
     int clause_kind;
     int at_clause_start;
     int expect_namespace_name;
+    int option_clause_static;
+    RexxLevel option_clause_level;
     size_t bytes;
     char *buff_start;
 
@@ -154,12 +172,16 @@ int rxcp_scan_source_header(const char *location, const char *file_name, RexxLev
     clause_kind = 0;
     at_clause_start = 1;
     expect_namespace_name = 0;
+    option_clause_static = 1;
+    option_clause_level = UNKNOWN;
 
     while ((token_type = opt_scan(context))) {
         token = token_f(context, token_type);
         if (!token) break;
 
         if (token_type == TK_EOC) {
+            if (clause_kind == 1 && option_clause_static &&
+                option_clause_level != UNKNOWN) context->level = option_clause_level;
             at_clause_start = 1;
             clause_kind = 0;
             expect_namespace_name = 0;
@@ -172,6 +194,8 @@ int rxcp_scan_source_header(const char *location, const char *file_name, RexxLev
             at_clause_start = 0;
             if (token_type == TK_OPTIONS) {
                 clause_kind = 1;
+                option_clause_static = 1;
+                option_clause_level = UNKNOWN;
                 continue;
             }
             if (token_type == TK_SYMBOL && token_text_equals_ci(token, "namespace")) {
@@ -187,13 +211,14 @@ int rxcp_scan_source_header(const char *location, const char *file_name, RexxLev
         }
 
         if (clause_kind == 1) {
+            if (!static_option_word(token_type)) option_clause_static = 0;
             switch (token_type) {
-                case TK_LEVELA: context->level = LEVELA; break;
-                case TK_LEVELB: context->level = LEVELB; break;
-                case TK_LEVELC: context->level = LEVELC; break;
-                case TK_LEVELD: context->level = LEVELD; break;
-                case TK_LEVELG: context->level = LEVELG; break;
-                case TK_LEVELL: context->level = LEVELL; break;
+                case TK_LEVELA: option_clause_level = LEVELA; break;
+                case TK_LEVELB: option_clause_level = LEVELB; break;
+                case TK_LEVELC: option_clause_level = LEVELC; break;
+                case TK_LEVELD: option_clause_level = LEVELD; break;
+                case TK_LEVELG: option_clause_level = LEVELG; break;
+                case TK_LEVELL: option_clause_level = LEVELL; break;
                 default: break;
             }
             continue;
@@ -207,6 +232,9 @@ int rxcp_scan_source_header(const char *location, const char *file_name, RexxLev
             continue;
         }
     }
+
+    if (clause_kind == 1 && option_clause_static &&
+        option_clause_level != UNKNOWN) context->level = option_clause_level;
 
     if (level_out) {
         *level_out = context->level == UNKNOWN ? header_cli_or_default_level(context) : context->level;
