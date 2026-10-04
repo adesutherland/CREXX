@@ -487,7 +487,8 @@ activity.
 
 Assignment evaluates its right-hand expression before substituting the
 components of a compound target, then writes the derived name in the visible
-pool. Stem assignment resets the stem default and its old explicit tails.
+pool. An omitted expression assigns an empty string. Stem assignment resets
+the stem default and its old explicit tails.
 
 `EXIT`:
 

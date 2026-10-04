@@ -2,7 +2,7 @@
 
 Status: active Level C architecture design; the original parser design record
 is retained below for implementation history
-Last updated: 2026-10-03
+Last updated: 2026-10-04
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
@@ -53,7 +53,9 @@ authored program must survive lowering for diagnostics and tracing.
   Level C variable read through `symbolValue`, including bare stems and
   multi-component compounds. Validated Level C assignments use one
   `setSymbolValue` call after the right-hand expression, so the pool owns
-  arbitrary tail substitution, stem default reset and exposed writes. Its
+  arbitrary tail substitution, stem default reset and exposed writes. An
+  omitted right-hand expression becomes an empty `RexxValue` through that
+  same call. Its
   `stemSymbolValue` reads an
   unset or dropped tail without creating a binding; `dropStemTail` mutates one
   case-preserved tail and copies the updated stem back through a local or

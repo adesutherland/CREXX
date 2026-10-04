@@ -566,12 +566,12 @@ static int levelc_pool_statement_supported(ASTNode *stmt,
     if (stmt->node_type == ASSIGN) {
         target = stmt->child;
         expr = target ? target->sibling : NULL;
-        if (!target || target->node_type != VAR_TARGET || !expr || expr->sibling) {
+        if (!target || target->node_type != VAR_TARGET || (expr && expr->sibling)) {
             if (reason_out) *reason_out = "unsupported assignment shape";
             return 0;
         }
         if (!levelc_assignment_target_supported(target, reason_out)) return 0;
-        return levelc_expr_supported(expr, plan, reason_out);
+        return !expr || levelc_expr_supported(expr, plan, reason_out);
     }
 
     if (stmt->node_type == SAY) {
@@ -2299,12 +2299,13 @@ static ASTNode *levelc_pool_set_statement(Context *context,
 
     target = assign_node->child;
     expr = target ? target->sibling : NULL;
-    if (!target || !expr) return NULL;
+    if (!target) return NULL;
 
     receiver = levelc_pool_ref(context, assign_node, VAR_SYMBOL);
     args[0] = levelc_name_string(context, target);
     args[1] = value_override ? value_override
-                             : levelc_lower_expr(context, expr, plan, prelude);
+                             : expr ? levelc_lower_expr(context, expr, plan, prelude)
+                                    : levelc_blank_rexxvalue(context, assign_node);
     if (!receiver || !args[0] || !args[1]) return NULL;
 
     return rxcp_remap_create_member_call_statement(context,

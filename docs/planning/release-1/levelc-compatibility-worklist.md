@@ -636,7 +636,8 @@ are verified against all affected consumers.
   value in main, nested and local contexts. Compound name substitution follows
   evaluation of the right-hand expression, including a call that mutates a
   tail component. The shared pool owns substitution and final classification,
-  stem reset and exposure behavior; source-invalid targets retain their
+  stem reset and exposure behavior. An omitted expression assigns the empty
+  string, as in Regina and IBM's VM dialect; source-invalid targets retain their
   diagnostics. Verify against Regina, optimized/no-opt and source/canonical
   trees, focused pool and RexxScript checks, normal Level C correctness and
   linked toolchain output, with BYTE/UTF8 values where relevant.
@@ -1202,7 +1203,14 @@ introduce a new language rule or runtime interface.
    remove compiler-only tail materialization and preserve source-invalid
    diagnostics. Build and run
    focused compiler, pool and cross-consumer checks; commit the implementation.
-2. **LC-STEP-65B (LC-AC-59/63; depends on 65A):** reconcile all parser target
+2. **LC-STEP-65C (LC-AC-63; complete; depends on 65A):** accept an omitted assignment
+   expression as an empty string in the Classic grammar, preserving the
+   authored source anchor and existing invalid-target diagnostics. Add a
+   reference case in scalar, stem, compound and nested contexts, plus parser
+   recovery checks; build and run focused tests, then commit this grammar
+   increment. This is within Adrian's approved complete-Classic-assignment
+   scope, not a new cREXX syntax choice.
+3. **LC-STEP-65B (LC-AC-59/63; depends on 65A/65C):** reconcile all parser target
    forms and reference obligations, check optimized/no-opt tree/source and
    runtime equivalence, normal Level C correctness and linked toolchain output;
    record exact evidence and close LC-I-03 only if its contract is met.
@@ -1220,7 +1228,31 @@ focused compiler/pool tests passed 10/10
 (`/tmp/crexx-assignment-focused2.zYYiGi`), and RexxScript Runtime/Compat
 tests passed 4/4 (`/tmp/crexx-assignment-rexxscript.dpfRmX`). Normal Level C,
 source/canonical AST and linked delivery remain for LC-STEP-65B; the whole
-instruction is still open at this implementation checkpoint.
+ instruction is still open at this implementation checkpoint.
+
+2026-10-04 reference reconciliation found an additional valid assignment
+form after STEP-65A: Regina executes `name=` as an empty-string assignment,
+also documented for IBM VM REXX. The current parser reports `21.1` and
+`PARSE_FAILURE` for it (`/tmp/crexx-assignment-empty.75Bo2X`); the reference
+probe is `/tmp/crexx-assignment-empty-regina.9wjBsC`. LC-STEP-65C keeps
+LC-I-03 open until this form is implemented and qualified.
+
+2026-10-04 LC-STEP-65C empty-assignment implementation: the grammar retains
+an `ASSIGN` with only its target for `name=`, including a numeric-start bad
+target; the lowerer constructs one empty `RexxValue` and uses the same pool
+write. The permanent fixture covers scalar, compound, stem, IF and local
+procedure contexts. Its output matches Regina
+(`/tmp/crexx-assignment-regina3.7hjdiG`); invalid targets with and without
+RHS both report `31.1`. Release product build passed
+(`/tmp/crexx-assignment-empty-build.IzM8RA`), focused checks passed 4/4
+(`/tmp/crexx-assignment-empty-focused.ot6dhD`), the normal Release Level C
+suite passed 316/316 (`/tmp/crexx-assignment-empty-levelc.8J5Ayw`), and the
+linked toolchain output matched Regina's 216 bytes
+(`/tmp/crexx-assignment-linked3.r8sqKM`). The AST debug proof retains the
+authored source anchor and empty string at scalar, compound, stem and local
+sites (`/tmp/crexx-assignment-empty-tree.XuTvlU`). The final tree test adds
+the scalar/local anchor assertions; the whole-instruction closure review is
+still LC-STEP-65B.
 
 **Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
@@ -1756,7 +1788,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Bounded slice: stem exposure and simple compound access | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment | One pool-owned implementation under LC-STEP-65A with focused scalar/stem/multi-component, RHS-order and invalid-target checks | Normal/linked and complete instruction closure proof under LC-STEP-65B; profile remains cross-cutting |
+| `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | One pool-owned implementation under LC-STEP-65A/65C with normal, linked, RHS-order, empty-value and invalid-target checks | Whole-instruction receipt under LC-STEP-65B; profile remains cross-cutting |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |

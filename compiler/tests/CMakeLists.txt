@@ -5273,7 +5273,8 @@ add_levelc_invalid_compile_test(levelc_drop_invalid
 add_levelc_invalid_compile_test(levelc_assignment_invalid
         rexx_src/levelc_assignment_invalid.rexx
         "RXC-LC-31\\.1"
-        "@ 2:1")
+        "@ 2:1"
+        "@ 3:1")
 
 add_levelc_invalid_compile_test(levelc_slice13_named_leave_invalid
         rexx_src/levelc_slice13_named_leave_invalid.rexx
@@ -5880,10 +5881,10 @@ add_levelc_runtime_slice_test(levelc_drop_instruction_noopt
         "list=A|B|C|D|E|\nbefore=first\ndirect=ITEMS.part.Tail.last\nindirect=ITEMS.part.Tail.last\norder=third|ITEMS.X.Tail.last\nlocal=ITEMS.part.Tail.last|ITEMS.part.Tail.last\nstem=ITEMS.part.Tail.last\n" -n)
 add_levelc_runtime_slice_test(levelc_assignment_instruction
         rexx_src/levelc_assignment_instruction.rexx
-        "scalar=second\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\n")
+        "scalar=second\nkeyword=keyword\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\nempty-scalar=0\nempty-compound=0\nempty-stem=0|0\nempty-nested=0\nempty-local=0\n")
 add_levelc_runtime_slice_test(levelc_assignment_instruction_noopt
         rexx_src/levelc_assignment_instruction.rexx
-        "scalar=second\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\n" -n)
+        "scalar=second\nkeyword=keyword\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\nempty-scalar=0\nempty-compound=0\nempty-stem=0|0\nempty-nested=0\nempty-local=0\n" -n)
 add_levelc_runtime_slice_test(levelc_say_instruction
         rexx_src/levelc_say_instruction.rexx
         "a\n\n\nb\n\n\ncall=ok\n\ninside=1\nexpr=1\ncount=1\ninside=2\nexpr=2\ncount=2\nz\n")
@@ -6028,8 +6029,8 @@ add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         "OP_DEREFERENCE"
         "RexxVariablePool"
         "exposeValue"
-        "setValue"
-        "value"
+        "setSymbolValue"
+        "symbolValue"
         "add"
         "asString")
 
@@ -6040,8 +6041,8 @@ add_levelc_lowered_tree_shape_test(levelc_slice3_bif_length_tree_shape
         "rexxclassicbifs"
         "RexxVariablePool"
         "RexxValue"
-        "setValue"
-        "value"
+        "setSymbolValue"
+        "symbolValue"
         "asString")
 
 add_levelc_lowered_tree_shape_test(levelc_slice4_bif_substr_tree_shape
@@ -6408,8 +6409,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice53_drop_direct_tree_shape
         "setSymbolValue")
 add_levelc_lowered_tree_shape_test(levelc_assignment_instruction_tree_shape
         rexx_src/levelc_assignment_instruction.rexx
-        "setSymbolValue"
+        "setSymbolValue.*\\(16:0\\)"
         "ITEMS.KEY.PART"
+        "__rxcp_levelc_proc_CHANGE.*\\(16:15\\)"
+        "setSymbolValue.*\\(32:0\\)"
+        "STRING : .*\\(32:0\\)"
+        "setSymbolValue.*\\(58:0\\)"
         "RexxVariablePool")
 add_levelc_lowered_tree_shape_test(levelc_slice54_drop_indirect_tree_shape
         rexx_src/levelc_slice54_drop_indirect.rexx

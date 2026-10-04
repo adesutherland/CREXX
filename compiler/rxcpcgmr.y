@@ -2095,11 +2095,23 @@ assignment(A) ::= CTK_VAR_SYMBOL(V) CTK_EQUAL(T) expression(E).
     add_ast(A, E);
 }
 
+assignment(A) ::= CTK_VAR_SYMBOL(V) CTK_EQUAL(T).
+{
+    A = ast_f(context, ASSIGN, T);
+    add_ast(A, ast_f(context, VAR_TARGET, V));
+}
+
 assignment(A) ::= CTK_BAD_ASSIGN_NUMBER(V) CTK_EQUAL(T) expression(E).
 {
     A = ast_f(context, ASSIGN, T);
     add_ast(A, rxcp_levelc_ast_error_token(context, "31.1", V));
     add_ast(A, E);
+}
+
+assignment(A) ::= CTK_BAD_ASSIGN_NUMBER(V) CTK_EQUAL(T).
+{
+    A = ast_f(context, ASSIGN, T);
+    add_ast(A, rxcp_levelc_ast_error_token(context, "31.1", V));
 }
 
 if_instruction(I) ::= CTK_IF(T) expression(C) CTK_THEN then_instruction(Then) else_clause(Else).
