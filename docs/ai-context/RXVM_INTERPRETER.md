@@ -2182,10 +2182,15 @@ position references. A reference selects either an earlier completed capture
 or an external operand that compiler-generated code placed temporarily after
 the public result slots. The handler consumes those values without textual
 plan decoding and shrinks the vector to its public result count on success.
+In the 12-byte version-2 header, byte 10 bit 0 selects the Classic numeric
+position error policy; all other bits of byte 10 and byte 11 must be zero.
+Version-1 plans have no policy flag.
 
 The handler bounds-checks the header, reference indexes, and every item; rejects
 trailing or structurally inconsistent data with `INVALID_ARGUMENTS`; and raises
-`CONVERSION_ERROR` for an invalid dynamic numeric position. It uses Unicode
+`CLASSIC_SYNTAX` with `RXC-LC-26.4` for an invalid dynamic numeric position
+when the policy bit is set. An unflagged version-2 plan retains
+`CONVERSION_ERROR`. It uses Unicode
 code-point positions in UTF builds and has no load-time cache or private
 prepared representation.
 For a backward relative control without a literal-pattern anchor, the pending

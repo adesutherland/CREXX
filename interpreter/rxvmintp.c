@@ -517,6 +517,7 @@ static uint64_t rxvm_binary_read_le_bytes(const unsigned char *bytes, size_t off
 #define RXVM_PARSE_PLAN_VERSION_DYNAMIC 2u
 #define RXVM_PARSE_PLAN_HEADER_SIZE_FROZEN 8u
 #define RXVM_PARSE_PLAN_HEADER_SIZE_DYNAMIC 12u
+#define RXVM_PARSE_PLAN_FLAG_CLASSIC_NUMERIC_ERROR 0x01u
 #define RXVM_PARSE_PLAN_FLAG_STORE 0x01u
 #define RXVM_PARSE_PLAN_FLAG_SKIP 0x01u
 #define RXVM_PARSE_PLAN_FLAG_CAPTURE 0x01u
@@ -557,7 +558,8 @@ static int rxvm_parse_plan_header(const string_constant *plan,
     } else if (*version == RXVM_PARSE_PLAN_VERSION_DYNAMIC) {
         if (encoded_header_size != RXVM_PARSE_PLAN_HEADER_SIZE_DYNAMIC ||
             plan->string_len < RXVM_PARSE_PLAN_HEADER_SIZE_DYNAMIC ||
-            bytes[10] != 0u || bytes[11] != 0u) return 0;
+            (bytes[10] & ~RXVM_PARSE_PLAN_FLAG_CLASSIC_NUMERIC_ERROR) != 0u ||
+            bytes[11] != 0u) return 0;
         *dynamic_count = (uint16_t)rxvm_binary_read_le_bytes(bytes, 8, 2);
     } else {
         return 0;

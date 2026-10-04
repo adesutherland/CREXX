@@ -5220,11 +5220,6 @@ add_levelc_unsupported_compile_test(levelc_slice5_compound_expose_unsupported
 add_levelc_unsupported_compile_test(levelc_slice6_procedure_parse_unsupported
         rexx_src/levelc_slice6_procedure_parse_unsupported.rexx)
 
-add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
-        rexx_src/levelc_slice7_if_unsupported_branch.rexx)
-
-add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
-        rexx_src/levelc_slice8_body_unsupported.rexx)
 function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
@@ -5599,6 +5594,18 @@ add_levelc_runtime_syntax_signal_test(levelc_arg_bif_bad_index
 add_levelc_runtime_syntax_signal_test(levelc_arg_bif_bad_option
         rexx_src/levelc_arg_bif_bad_option.rexx "40.28" "before\n"
         "levelc_arg_bif_bad_option.rexx:3:")
+add_levelc_runtime_syntax_signal_test(levelc_arg_bad_dynamic_position
+        rexx_src/levelc_arg_bad_dynamic_position.rexx "26.4" "before\n"
+        "levelc_arg_bad_dynamic_position.rexx:9:")
+add_levelc_runtime_syntax_signal_test(levelc_arg_bad_dynamic_position_noopt
+        rexx_src/levelc_arg_bad_dynamic_position.rexx "26.4" "before\n"
+        "levelc_arg_bad_dynamic_position.rexx:9:" -n)
+add_levelc_runtime_syntax_signal_test(levelc_parse_bad_dynamic_position
+        rexx_src/levelc_parse_bad_dynamic_position.rexx "26.4" "before\n"
+        "levelc_parse_bad_dynamic_position.rexx:4:")
+add_levelc_runtime_syntax_signal_test(levelc_parse_bad_dynamic_position_noopt
+        rexx_src/levelc_parse_bad_dynamic_position.rexx "26.4" "before\n"
+        "levelc_parse_bad_dynamic_position.rexx:4:" -n)
 add_levelc_runtime_slice_test(levelc_bif_inventory
         rexx_src/levelc_bif_inventory.rexx "inventory\n")
 add_levelc_runtime_slice_test(levelc_say_bif_family
@@ -5735,6 +5742,15 @@ add_levelc_runtime_slice_test(levelc_slice4_procedure_args_return
 add_levelc_runtime_slice_test(levelc_slice4_call_args_expose
         rexx_src/levelc_slice4_call_args_expose.rexx
         "3\n")
+
+add_levelc_runtime_slice_test(levelc_if_parse_dynamic_branch
+        rexx_src/levelc_if_parse_dynamic_branch.rexx "left|right\n")
+add_levelc_runtime_slice_test(levelc_if_parse_dynamic_branch_noopt
+        rexx_src/levelc_if_parse_dynamic_branch.rexx "left|right\n" -n)
+add_levelc_runtime_slice_test(levelc_do_parse_dynamic_body
+        rexx_src/levelc_do_parse_dynamic_body.rexx "left|right\n")
+add_levelc_runtime_slice_test(levelc_do_parse_dynamic_body_noopt
+        rexx_src/levelc_do_parse_dynamic_body.rexx "left|right\n" -n)
 
 add_levelc_runtime_slice_test(levelc_arg_frame_calls
         rexx_src/levelc_arg_frame_calls.rexx

@@ -3227,6 +3227,7 @@ next_item:
     if (header_size == 12) {
         plan.bytes[8] = (unsigned char)(plan.external_count & 0xff);
         plan.bytes[9] = (unsigned char)(plan.external_count >> 8);
+        plan.bytes[10] = 1; /* Classic numeric-position error policy. */
     }
     if (plan.length > (SIZE_MAX - 1) / 4) goto done;
     escaped_text = malloc(plan.length * 4 + 1);

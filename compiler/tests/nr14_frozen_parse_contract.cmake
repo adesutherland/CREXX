@@ -95,6 +95,34 @@ foreach(mode IN ITEMS parse_opt parse_noopt)
     assert_runs("${WORK_DIR}/${mode}.rxbin" "${expected}")
 endforeach()
 
+foreach(case IN ITEMS unflagged_parseplan unknown_parseplan_flag)
+    set(case_source "${SOURCE_DIR}/nr14_${case}.crexx")
+    run_checked("${case} rxc"
+                "${RXC}" -i "${BIN_DIR}" -o "${WORK_DIR}/${case}"
+                "${case_source}")
+    run_checked("${case} rxas"
+                "${RXAS}" -o "${WORK_DIR}/${case}"
+                "${WORK_DIR}/${case}.rxas")
+    if(case STREQUAL "unflagged_parseplan")
+        set(expected_signal "CONVERSION_ERROR")
+    else()
+        set(expected_signal "INVALID_ARGUMENTS")
+    endif()
+    foreach(runner IN ITEMS RXVM RXBVM)
+        execute_process(
+                COMMAND "${${runner}}" "${WORK_DIR}/${case}.rxbin"
+                OUTPUT_VARIABLE out
+                ERROR_VARIABLE err
+                RESULT_VARIABLE result
+                ENCODING UTF-8)
+        if(result EQUAL 0 OR NOT err MATCHES "${expected_signal}" OR
+           out MATCHES "UNREACHABLE")
+            message(FATAL_ERROR
+                    "${runner} ${case}: expected ${expected_signal}, rc=${result}\n${out}${err}")
+        endif()
+    endforeach()
+endforeach()
+
 run_checked("frozen-PARSE link"
             "${RXLINK}" -o "${WORK_DIR}/parse_linked"
             "${WORK_DIR}/parse_opt.rxbin")

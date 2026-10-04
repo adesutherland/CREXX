@@ -2253,8 +2253,7 @@ case for `ARG(n)` while ARG instruction uppercases parsed fields;
 `levelc_arg_malformed` retains `RXC-LC-46.1` and source position; and the
 dynamic canonical tree and twelve-target nested IF/DO cases pass. These
 checks join the earlier opt/noopt ARG/PARSE and shared runtime evidence.
-LC-AC-71 remains open for the dynamic-position error identity below and the
-applicable configuration/lifecycle boundary.
+LC-AC-71 remains open for the applicable configuration/lifecycle boundary.
 
 **LC-STEP-73F decision proposal — dynamic position error identity.** Regina
 raises Error 26.4 for `arg first =(pos) second` when `pos='Q'`. The current
@@ -2267,24 +2266,41 @@ handler would raise `CLASSIC_SYNTAX` with `RXC-LC-26.4` and the authored source
 location for flagged plans, retaining `CONVERSION_ERROR` for unflagged plans.
 Reject unknown header bits. This adds no AST node or second template executor.
 The VM descriptor/header contract and condition mapping are an architectural
-shift under AGENTS.md; approval is required before code edits.
+shift under AGENTS.md. Adrian approved this exact flag and signal design on
+2026-10-04 before code edits.
 
-- [ ] **LC-73F-01:** invalid dynamic numeric ARG/PARSE positions yield Classic
+- [x] **LC-73F-01:** invalid dynamic numeric ARG/PARSE positions yield Classic
   `26.4`, source position and prior output in optimized/noopt Level C runs.
-- [ ] **LC-73F-02:** existing unflagged Level B version-2 plans still yield
+- [x] **LC-73F-02:** existing unflagged Level B version-2 plans still yield
   `CONVERSION_ERROR`; other valid static/dynamic plans and linked images retain
   their current output.
-- [ ] **LC-73F-03:** the VM descriptor documentation, focused runtime tests
+- [x] **LC-73F-03:** the VM descriptor documentation, focused runtime tests
   and Level C architecture record describe the single flagged policy.
 
-1. **LC-STEP-73F.1 (LC-73F-01/02; approval required):** extend version-2
+1. **LC-STEP-73F.1 (complete; LC-73F-01/02; approved):** extend version-2
    descriptor validation to accept only the Classic policy bit, and select the
    existing `CLASSIC_SYNTAX` signal with `26.4` on flagged conversion failure.
-2. **LC-STEP-73F.2 (LC-73F-01/03; depends on 73F.1):** set the policy bit in
+2. **LC-STEP-73F.2 (complete; LC-73F-01/03; depends on 73F.1):** set the policy bit in
    Level C version-2 descriptors, preserving one PARSE/ARG lowering path.
-3. **LC-STEP-73F.3 (LC-73F-01/02/03; depends on 73F.2):** compare Regina,
+3. **LC-STEP-73F.3 (complete; LC-73F-01/02/03; depends on 73F.2):** compare Regina,
    run flagged/unflagged negative and positive tests in normal Debug and the
    relevant Level C suite, check linked execution, update docs and commit.
+
+LC-STEP-73F evidence: Regina reports 26.4 for invalid dynamic ARG and PARSE
+positions. `levelc_arg_bad_dynamic_position*` and
+`levelc_parse_bad_dynamic_position*` prove the Classic signal, authored line
+and prior output in optimized/noopt runs. The direct version-2 Level B
+`nr14_unflagged_parseplan` fixture retains `CONVERSION_ERROR`, while
+`nr14_unknown_parseplan_flag` rejects unknown bits; both VM variants pass the
+frozen-plan contract. The positive dynamic ARG cases and sealed linked image
+pass. Normal Debug core build passed. Eight focused tests passed together.
+The broad Level C run passed 438 of 441 tests; its two old negative tests
+expected nested dynamic PARSE to remain unsupported and are now four passing
+optimized/noopt IF/DO runtime tests, with Regina output comparison. The third
+broad exception was an unbuilt SAY host test; it passed after building its
+target. Together the retained broad run and five targeted repairs cover all
+443 tests in the revised Level C set. ARG instruction closure still needs
+the LC-AC-71 configuration and invocation-lifecycle audit.
 
 Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
 one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
@@ -2836,7 +2852,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-65B: one pool-owned path, reference order, invalid target, opt/no-opt, tree, normal and linked evidence | Host-selected profile and external API remain cross-cutting open work |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, raw/canonical AST, exact bytes and linked output are proven | Dynamic numeric-position error identity and profile/lifecycle proof remain open under LC-AC-71/LC-STEP-73F |
+| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, raw/canonical AST, exact bytes, 26.4 dynamic-position errors and linked output are proven | Configuration and invocation-lifecycle proof remain open under LC-AC-71 |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal start with optional captured TO/BY/FOR | Dynamic start, wider count/numeric errors and configuration proof open |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-64B, including arbitrary direct compounds and Regina-style invalid-word skip | Host-selected profile policy remains cross-cutting under LC-AC-04/06 |

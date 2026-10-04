@@ -1786,8 +1786,15 @@ RXVM_HANDLER(PARSEPLAN_REG_REG_STRING, VM_ADVANCE(3);
             {
                 int parse_result__ = rxvm_parse_plan_execute(op1R, op2R, op3S);
                 if (parse_result__ == RXVM_PARSE_PLAN_CONVERSION) {
-                    SET_SIGNAL_MSG(RXSIGNAL_CONVERSION_ERROR,
-                                   "Dynamic PARSE position is not a nonnegative native integer");
+                    const unsigned char *plan_bytes__ = (const unsigned char *)op3S->string;
+                    if (op3S->string_len >= RXVM_PARSE_PLAN_HEADER_SIZE_DYNAMIC &&
+                        (plan_bytes__[10] & RXVM_PARSE_PLAN_FLAG_CLASSIC_NUMERIC_ERROR) != 0u) {
+                        SET_SIGNAL_MSG(RXSIGNAL_CLASSIC_SYNTAX,
+                                       "RXC-LC-26.4: Positional parameter of parsing template must be a whole number");
+                    } else {
+                        SET_SIGNAL_MSG(RXSIGNAL_CONVERSION_ERROR,
+                                       "Dynamic PARSE position is not a nonnegative native integer");
+                    }
                 } else if (parse_result__ != RXVM_PARSE_PLAN_OK) {
                     SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS,
                                    "Invalid compact compiled PARSE descriptor");

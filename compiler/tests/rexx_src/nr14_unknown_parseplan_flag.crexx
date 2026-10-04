@@ -1,0 +1,10 @@
+options levelb
+namespace nr14_unknown_parseplan_flag
+
+main: procedure = .int
+  fields = .string[]
+  fields[2] = "Q"
+  source = "abc"
+  assembler parseplan fields,source,"50020c000200010001000200080000000101"x
+  say "UNREACHABLE"
+  return 0
