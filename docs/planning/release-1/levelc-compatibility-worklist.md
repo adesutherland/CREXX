@@ -663,7 +663,7 @@ are verified against all affected consumers.
   toolchain execution. No fixed tail-component or list-length limit remains.
   The 2026-10-04 revision reopens the Unicode subsidiary-word, configured
   blank and symbol-classification cases; prior pool-order evidence is retained.
-- [ ] **LC-AC-63 — complete assignment instruction:** every parsed valid
+- [x] **LC-AC-63 — complete assignment instruction:** every parsed valid
   scalar, stem and arbitrary-component compound target takes its Classic
   value in main, nested and local contexts. Compound name substitution follows
   evaluation of the right-hand expression, including a call that mutates a
@@ -840,7 +840,7 @@ are verified against all affected consumers.
   the existing BIF context, yielding the ordinary Classic syntax signal in
   compiled Level C. It denotes a scalar invalid for this byte conversion,
   not invalid Unicode. This decision is recorded before the first code edit.
-- [ ] **LC-AC-74 — closed-instruction Unicode review:** reconcile each
+- [x] **LC-AC-74 — closed-instruction Unicode review:** reconcile each
   formerly closed LC-I-01–10 instruction against the new scalar, source,
   symbol, host and error contract. Retain unaffected structural receipts;
   reopen and requalify affected instruction-owned behavior, including SAY,
@@ -882,7 +882,7 @@ choice still require Adrian's approval.
    trees, opt/no-opt and linked execution. The 2026-10-04 pre-edit probe at
    `/tmp/crexx-literal-probe.VZbdvX` shows `'FF'x` rejected as an unsupported
    main statement and `C2X('C3A9'x)` incorrectly returning `E9`.
-4. **LC-STEP-88D (LC-AC-57/62/63/72/74; depends on 88C):** requalify SAY,
+4. **LC-STEP-88D (LC-AC-57/62/63/72/74; complete 2026-10-04; depends on 88C):** requalify SAY,
    DROP and assignment as whole instructions for Unicode, including host text
    output, indirect lists and compound substitutions. Retain previously
    valid structural evidence; close each row only after focused and normal
@@ -892,7 +892,8 @@ choice still require Adrian's approval.
    direct/indirect DROP names and blanks, then closes LC-I-02 (complete
    2026-10-04). `88D-3` proves
    Unicode scalar values and compound-tail substitution through the same
-   pool, then closes LC-I-03. Commit and report each instruction separately.
+   pool, then closes LC-I-03 (complete 2026-10-04). Commit and report each
+   instruction separately.
 5. **LC-STEP-88E (LC-AC-04/59/71/72/73/74; depends on 88D):** finish the
    Unicode character BIF and ARG/PARSE audit, then continue the strict
    instruction queue. Use one codepoint template engine; remove obsolete
@@ -975,6 +976,24 @@ optimized pool test); nine RexxScript checks passed
 Unicode-list output (`/tmp/crexx-drop-linked.Ub2di4`). `LC-AC-62` and
 `LC-I-02` close; shared host configuration and full Level C qualification
 remain open.
+
+**2026-10-04 LC-STEP-88D-3 assignment receipt.** The prior whole-instruction
+proof for the parser's RHS/empty forms, scalar/stem/arbitrary compound targets,
+RHS-before-substitution, nested/local execution, exposure, source/canonical
+trees and one `setSymbolValue` pool path remains valid. The expanded
+whole-instruction fixture proves a NUL-bearing scalar via `C2X`, Unicode BMP
+and supplementary values, a compound tail containing mapped `FF`, NUL and
+`80` ordinals, a Unicode RHS call that changes the target tail before the
+pool write, and an exposed local Unicode write. The first expected-output
+attempt incorrectly read a case-preserved tail without setting its component
+variables; correcting the fixture yielded six focused passes
+(`/tmp/crexx-assignment-focused-fix.jxsRdY`). The linked image emitted the
+expected Unicode lines (`/tmp/crexx-assignment-linked.vCgwa3`); the normal
+Debug Level C suite passed 452/452 (`/tmp/crexx-assignment-levelc.qcDNmx`).
+No product implementation change was needed. `LC-AC-63` and `LC-I-03` close.
+Together with the earlier ten-instruction impact audit and the SAY/DROP
+receipts, this completes `LC-AC-74` and `LC-STEP-88D`. Unicode character BIFs,
+ARG/PARSE and full Level C qualification remain open under their own criteria.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
@@ -1404,7 +1423,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | --- | --- | --- |
 | LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F; LC-STEP-88D-1 | `LC-AC-57`: expression, ordering and callback evidence retained; NUL, mapped high ordinals and non-Latin-1 output now pass default, configured host, optimized/no-opt and linked checks. |
 | LC-I-02 DROP — closed 2026-10-04 | LC-STEP-64B; LC-STEP-88D-2 | `LC-AC-62`: prior list order, arbitrary compounds, exposure and Regina invalid-word policy retained; activation configuration, Unicode words and blanks now pass focused pool, opt/no-opt, linked and normal Level C checks. |
-| LC-I-03 assignment — reopened 2026-10-04 | LC-STEP-65B; LC-STEP-88D | `LC-AC-63`: prior RHS order and shared-pool ownership retained; Unicode scalar values and substituted tails require proof. |
+| LC-I-03 assignment — closed 2026-10-04 | LC-STEP-65B; LC-STEP-88D-3 | `LC-AC-63`: prior RHS order and shared-pool ownership retained; Unicode scalar values, NUL/high-ordinal tails, local exposure and RHS-before-substitution now pass opt/no-opt, linked and normal Level C checks. |
 | LC-I-04 NOP — closed 2026-10-04 | LC-STEP-66B | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
 | LC-I-05 OPTIONS — closed 2026-10-04 | LC-STEP-67A–67D | `LC-AC-66`: static source header, executable expression at each source point, no-op empty form, unknown-word policy and configuration ownership. The approved Unicode model defines no runtime profile word. Shared condition, TRACE and host obligations remain open in their own rows. |
 | LC-I-06 IF — closed 2026-10-04 | LC-STEP-68A–68C | `LC-AC-67`: all arm positions without IF-specific rejection, nearest ELSE, condition/error and nesting behavior. Each arm's instruction semantics remain with its owner row; shared condition/trap lifecycle remains open in its own criteria. |
@@ -1436,7 +1455,7 @@ ownership as follows:
 | --- | --- | --- |
 | SAY | Text from mapped byte values and non-Latin-1 scalars now goes through host text output; exact raw-byte expectations no longer describe the contract. | Closed under LC-AC-57/88D-1; length-aware callback, expression order and new host/default Unicode proof retained. |
 | DROP | Indirect words and compound substitutions may contain Unicode; the pool uses the activation's text configuration for splitting and classifying subsidiary words. | Closed under LC-AC-62/88D-2; direct/indirect ordering and invalid-word policy retained. |
-| Assignment | Scalar payloads and compound-tail substitutions can contain Unicode; the pool stores `RexxValue` without a byte conversion. | Reopened under LC-AC-63/88D for visible Unicode values/tails; RHS-order proof retained. |
+| Assignment | Scalar payloads and compound-tail substitutions can contain Unicode; the pool stores `RexxValue` without a byte conversion. | Closed under LC-AC-63/88D-3 for visible Unicode values/tails; RHS-order proof retained. |
 | NOP | No scalar or character operation. | Closed receipt retained. |
 | OPTIONS | Runtime words remain unrecognized and evaluated expression value is not scanned; no profile word is added. | Closed receipt retained; obsolete profile wording will be removed. |
 | IF and SELECT | Exact logical `0`/`1` checks and branch/arm ownership do not use byte indexing. | Closed structural receipts retained; shared expression/condition work remains open. |
@@ -3166,7 +3185,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Bounded slice: stem exposure and simple compound access | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Hex/binary source literals use the fixed Latin-1 ordinal bridge in expressions, calls and PARSE patterns under LC-STEP-88C; opt/no-opt, tree and linked evidence; SAY host text output passes under LC-STEP-88D-1 | Remaining quoted forms, error/reference equivalence and other host text inputs remain open |
-| `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Prior one-pool structural closure retained; byte-literal value assignment passes under LC-STEP-88C | Unicode tail substitution and host/external API remain open under LC-AC-63/74 |
+| `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-88D-3; byte-literal scalar values, Unicode compound tails, NUL in substituted tails and RHS-order/local exposure pass | Shared host/external API remains open under LC-AC-04/06 |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, host `rxvml_run()` lifecycle, raw/canonical AST, historical exact-byte proof, 26.4 dynamic-position errors and linked output | Unicode uppercasing/codepoint behavior and admitted external routine-entry modes remain open under LC-AC-71/LC-STEP-88E |

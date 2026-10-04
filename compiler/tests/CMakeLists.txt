@@ -6233,10 +6233,10 @@ add_levelc_runtime_slice_test(levelc_drop_instruction_noopt
         "list=A|B|C|D|E|\nbefore=first\ndirect=ITEMS.part.Tail.last\nindirect=ITEMS.part.Tail.last\norder=third|ITEMS.X.Tail.last\nlocal=ITEMS.part.Tail.last|ITEMS.part.Tail.last\nstem=ITEMS.part.Tail.last\n" -n)
 add_levelc_runtime_slice_test(levelc_assignment_instruction
         rexx_src/levelc_assignment_instruction.rexx
-        "scalar=second\nkeyword=keyword\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\nempty-scalar=0\nempty-compound=0\nempty-stem=0|0\nempty-nested=0\nempty-local=0\n")
+        "scalar=second\nkeyword=keyword\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\nempty-scalar=0\nempty-compound=0\nempty-stem=0|0\nempty-nested=0\nempty-local=0\nunicode-scalar=410042\nunicode-tail=漢🙂\nnul-tail=🌍\nunicode-order=漢|old-value\nunicode-local=🙂\nunicode-exposed=🙂\n")
 add_levelc_runtime_slice_test(levelc_assignment_instruction_noopt
         rexx_src/levelc_assignment_instruction.rexx
-        "scalar=second\nkeyword=keyword\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\nempty-scalar=0\nempty-compound=0\nempty-stem=0|0\nempty-nested=0\nempty-local=0\n" -n)
+        "scalar=second\nkeyword=keyword\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\nempty-scalar=0\nempty-compound=0\nempty-stem=0|0\nempty-nested=0\nempty-local=0\nunicode-scalar=410042\nunicode-tail=漢🙂\nnul-tail=🌍\nunicode-order=漢|old-value\nunicode-local=🙂\nunicode-exposed=🙂\n" -n)
 add_levelc_runtime_slice_test(levelc_say_instruction
         rexx_src/levelc_say_instruction.rexx
         "a\n\n\nb\n\n\ncall=ok\n\ninside=1\nexpr=1\ncount=1\ninside=2\nexpr=2\ncount=2\nz\n")

@@ -114,8 +114,9 @@ storage for RexxScript/future explicit binary work, while Level C conversion
 BIFs must return text rather than binary-only values. No host BYTE/UTF8
 profile selector is planned. SAY's Unicode output and host route are closed
 under LC-STEP-88D-1; DROP's Unicode indirect-list route is closed under
-LC-STEP-88D-2. Assignment remains reopened for Unicode-specific proof. Its
-unchanged structural receipt remains valid. The authoritative plan is LC-STEP-88 in
+LC-STEP-88D-2. Assignment's Unicode scalar and compound-tail proof is closed
+under LC-STEP-88D-3; its prior structural receipt remains valid. The
+authoritative plan is LC-STEP-88 in
 `docs/planning/release-1/levelc-compatibility-worklist.md`.
 
 Level C source hex and binary literals now decode their written digits to byte

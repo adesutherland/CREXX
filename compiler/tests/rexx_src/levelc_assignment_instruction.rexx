@@ -44,6 +44,24 @@ say 'empty-nested=' || length(blank)
 items.key.part='x'
 call clear
 say 'empty-local=' || length(items.lookup)
+plain='410042'x
+say 'unicode-scalar=' || c2x(plain)
+first='é'
+second='🙂'
+items.first.second='漢🙂'
+say 'unicode-tail=' || items.first.second
+first='FF0080'x
+items.first.second='🌍'
+say 'nul-tail=' || items.first.second
+first='old'
+second='tail'
+items.first.second='old-value'
+items.first.second=unicodechange()
+old='old'
+tail='tail'
+say 'unicode-order=' || items.first.second || '|' || items.old.tail
+say 'unicode-local=' || unicodelocal()
+say 'unicode-exposed=' || items.first.second
 exit
 
 change: procedure expose key part
@@ -58,3 +76,12 @@ return
 clear: procedure expose items. key part
 items.key.part=
 return
+
+unicodechange: procedure expose first second
+first='é'
+second='🙂'
+return '漢'
+
+unicodelocal: procedure expose items. first second
+items.first.second='🙂'
+return items.first.second
