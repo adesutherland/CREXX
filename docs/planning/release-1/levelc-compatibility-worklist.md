@@ -631,7 +631,7 @@ are verified against all affected consumers.
   and mixed-list Regina probes, optimized/no-opt, source/canonical AST,
   focused pool and RexxScript checks, normal Level C correctness and linked
   toolchain execution. No fixed tail-component or list-length limit remains.
-- [ ] **LC-AC-63 — complete assignment instruction:** every parsed valid
+- [x] **LC-AC-63 — complete assignment instruction:** every parsed valid
   scalar, stem and arbitrary-component compound target takes its Classic
   value in main, nested and local contexts. Compound name substitution follows
   evaluation of the right-hand expression, including a call that mutates a
@@ -1083,7 +1083,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | --- | --- | --- |
 | LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F | `LC-AC-57`: expression and childless forms, output and lifecycle; STEP-60 case included. Shared expression, BIF, TRACE and SIGNAL obligations remain open in their own rows. |
 | LC-I-02 DROP — closed 2026-10-04 | LC-STEP-64B | `LC-AC-62`: direct and parenthesized lists, arbitrary compound substitution, exposure, order and errors through the shared pool. Adrian's approved Regina invalid-word behavior is retained. |
-| LC-I-03 assignment — active | LC-STEP-65 | `LC-AC-63`: all valid scalar, stem and compound targets and expression/evaluation order; shared pool boundary. |
+| LC-I-03 assignment — closed 2026-10-04 | LC-STEP-65B | `LC-AC-63`: scalar, stem and arbitrary compound targets, optional empty RHS and evaluation order through the shared pool. Shared profile, expression and condition obligations stay open in their own criteria. |
 | LC-I-04 NOP | LC-STEP-66 | Childless instruction in every legal context and clause/trace lifecycle; existing bounded proof is the baseline. |
 | LC-I-05 OPTIONS | LC-STEP-67 | All processor option words, unknown-option policy and source/configuration behavior; programme initialization. |
 | LC-I-06 IF | LC-STEP-68 | Every legal instruction arm, nearest ELSE, condition/error and nesting behavior; shared statement dispatch. |
@@ -1210,7 +1210,7 @@ introduce a new language rule or runtime interface.
    recovery checks; build and run focused tests, then commit this grammar
    increment. This is within Adrian's approved complete-Classic-assignment
    scope, not a new cREXX syntax choice.
-3. **LC-STEP-65B (LC-AC-59/63; depends on 65A/65C):** reconcile all parser target
+3. **LC-STEP-65B (LC-AC-59/63; complete; depends on 65A/65C):** reconcile all parser target
    forms and reference obligations, check optimized/no-opt tree/source and
    runtime equivalence, normal Level C correctness and linked toolchain output;
    record exact evidence and close LC-I-03 only if its contract is met.
@@ -1251,8 +1251,28 @@ linked toolchain output matched Regina's 216 bytes
 (`/tmp/crexx-assignment-linked3.r8sqKM`). The AST debug proof retains the
 authored source anchor and empty string at scalar, compound, stem and local
 sites (`/tmp/crexx-assignment-empty-tree.XuTvlU`). The final tree test adds
-the scalar/local anchor assertions; the whole-instruction closure review is
-still LC-STEP-65B.
+ the scalar/local anchor assertions; the whole-instruction closure review is
+ still LC-STEP-65B.
+
+2026-10-04 LC-STEP-65B whole-assignment closure at implementation commit
+`0a746c981`: the grammar has one valid assignment production with an RHS and
+one without; numeric-start recovery variants preserve `31.1`. Contextual
+keyword targets, scalar/stem/arbitrary-component compound names, empty RHS,
+main/IF/DO/local execution, BYTE value length, stem default reset, exposed
+aliases and the Regina RHS-before-substitution case are in the single
+instruction fixture. `levelc_pool_statement_supported` accepts exactly those
+shapes and one shared `setSymbolValue` lowerer handles them. The canonical
+tree has no surviving Level C-only nodes; its source anchors include the
+side-effecting assignment and empty main/local writes. Optimized/no-opt
+execution matches Regina; the linked 216-byte result is identical
+(`/tmp/crexx-assignment-linked3.r8sqKM`). The Release Level C sweep passed
+316/316 on the implementation inputs
+(`/tmp/crexx-assignment-empty-levelc.8J5Ayw`); the later, stricter
+empty-assignment tree assertion passed separately without a product-code
+change (`/tmp/crexx-assignment-empty-anchor-retest.UCsFUv`). Focused pool
+and RexxScript checks from 65A remain valid because their code/test inputs
+did not change. This closes `LC-AC-63` and `LC-I-03` only; `LC-AC-04/06/08/61`
+and the wider TRACE/SIGNAL, host profile and external API contracts stay open.
 
 **Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
@@ -1720,7 +1740,7 @@ itself make its Classic shape executable.
 | Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
-| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY and DROP instructions closed under LC-AC-57/62; scalar/stem/arbitrary-compound assignment uses one pool call under LC-STEP-65A; childless NOP, bare main EXIT and procedure RETURN remain bounded slices | Assignment's normal/linked closure proof, wider lifecycle forms, indirect `PROCEDURE EXPOSE`, exit/return behavior and configuration proof remain open |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY, DROP and assignment instructions closed under LC-AC-57/62/63; childless NOP, bare main EXIT and procedure RETURN remain bounded slices | Wider lifecycle forms, indirect `PROCEDURE EXPOSE`, exit/return behavior and configuration proof remain open |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
@@ -1759,7 +1779,7 @@ has been approved in this worklist.
 | --- | --- | --- | --- |
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
 | Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions`, `levelc_slice19_logical_eager`, empty quoted strings in `levelc_slice37_empty_string`, and adjacent function calls in `levelc_slice38_adjacent_call` | Full numeric context, remaining operator order, boundary/error and platform equivalence |
-| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Assignment implementation covers scalar/stem/arbitrary compound through one pool method; scalar/stem EXPOSE, unset scalar read and complete direct/indirect DROP have retained proof | Assignment normal/linked closure proof, indirect EXPOSE, configured profile, external/API operations and aliasing |
+| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Complete assignment and direct/indirect DROP have whole-instruction proof; scalar/stem EXPOSE and unset scalar reads have bounded proof | Indirect EXPOSE, configured profile, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
 | Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled DO with optional TO/FOR/BY, captured dynamic start/TO/BY/FOR and WHILE entry or UNTIL end checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, named transfer to wider loops, remaining numeric contexts and errors |
@@ -1788,7 +1808,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Bounded slice: stem exposure and simple compound access | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | One pool-owned implementation under LC-STEP-65A/65C with normal, linked, RHS-order, empty-value and invalid-target checks | Whole-instruction receipt under LC-STEP-65B; profile remains cross-cutting |
+| `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-65B: one pool-owned path, reference order, invalid target, opt/no-opt, tree, normal and linked evidence | Host-selected profile and external API remain cross-cutting open work |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
