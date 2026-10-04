@@ -1875,7 +1875,7 @@ text instead of recovering to a valid partial instruction. Match IBM's
 and Regina's executable/error behavior, while preserving Level B, DO,
 ITERATE and RexxScript behavior. Do not add a separate LEAVE emitter path.
 
-1. **LC-STEP-71A (LC-AC-59/69; active; depends on SELECT closure):** inventory
+1. **LC-STEP-71A (LC-AC-59/69; complete review; depends on SELECT closure):** inventory
    grammar/token recovery, source and canonical AST, static diagnostics,
    transfer binding and emitter, reference valid/invalid forms, and retained
    DO/LEAVE/ITERATE tests. Reproduce any mismatch before editing, record
@@ -1925,6 +1925,22 @@ tests become invalid-runtime tests. A dead-branch fixture plus reached-error
 fixtures in opt/no-opt, normal Level C, RexxDoState/RexxScript and linked
 execution will prove timing and isolation. This changes the existing static
 validation architecture and is gated on Adrian's approval under AGENTS.md.
+
+2026-10-04 source-form checkpoint: `b0df4e3a5` corrects malformed-name
+`20.1`, extra-token `21.1`, and the no-loop versus unmatched-name subcode in
+the shared LEAVE/ITERATE diagnostic scanner, with a whole LEAVE fixture and
+focused error tests. Regina and compiled optimized/no-opt output match for
+counted, FOREVER, WHILE, UNTIL, named outer/innermost, compound authored
+name, simple group, IF/SELECT and local routine cases
+(`/tmp/crexx-leave-regina.OXJPvX`). Source/canonical tree inspection retains
+named LEAVE nodes and targets (`/tmp/crexx-leave-tree-log.iubjNM`). Focused
+regressions passed 22/22 (`/tmp/crexx-leave-focused-retry.5FvvsG`). The
+Release Level C run passed 384/385; its sole failure was an old highlighter
+assertion expecting `20.2`. `b4e44cdda` updated only that test assertion,
+which passed in isolation (`/tmp/crexx-leave-static-levelc.qCAehB`,
+`/tmp/crexx-leave-highlighter-retry.jTabiN`). No product regression was found.
+The runtime-timing part of LC-AC-69 and LC-I-09 remains open pending the
+recorded architecture decision; this checkpoint is not LEAVE closure.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
