@@ -2129,6 +2129,50 @@ template or argument count limit is acceptable.
    behavior and error paths are verified; keep CALL/BIF/host lifecycle gaps
    visibly open under their owners as well.
 
+2026-10-04 LC-STEP-73A initial audit: IBM defines ARG as `PARSE UPPER ARG`;
+comma-separated templates consume successive argument strings, each call
+reads the active activation again, and missing templates/sources are legal.
+Regina's `call probe 'a b',,'c d'` with two ARG instructions produces
+`first A B`, an empty middle source, `third C D`, and a second parse of the
+same sources (`/tmp/crexx-arg-reference.TdhaJv`). Current Level C rejects
+main `ARG` (`unsupported main statement`), multi-item templates (`unsupported
+ARG template`), repeated routine ARG (`ARG must be first`), and omitted CALL
+arguments (`CALL argument count mismatch`). The existing fixed procedure
+signature derives arity from its first ARG and passes one `RexxValue` formal
+per template; it cannot represent Classic activation argument presence or
+later rereads. Raw AST for `ARG x,,z` has only two inner `TEMPLATES` nodes:
+the shared parser drops the empty comma position
+(`/tmp/crexx-arg-ast-log.B0BW1I`). The existing PARSE path has a compiler
+`parseWordTemplate` fast path and a VM `parseplan` descriptor path, but guards
+comma templates and dynamic operands; VM `parseplan` version 2 already has
+indexed dynamic references. These are implementable foundation gaps, not an
+infeasibility or accepted exception. Routine labels without `PROCEDURE` are
+also rejected by the current Level C slice and must be assigned to the
+PROCEDURE/CALL lifecycle owner while ARG is completed.
+
+**LC-STEP-73B architecture proposal for Adrian's approval:** Preserve every
+comma position in the existing outer/inner `TEMPLATES` AST by representing an
+empty segment with an empty inner `TEMPLATES` node; no new node type or emitter
+instruction is needed. Replace ARG-derived fixed formal arity with one shared
+`RexxActivationArguments` frame containing ordered `RexxValue` strings and
+presence flags. Generated main code fills it from the VM's `-a`/host argument
+array; internal function and subroutine calls fill a fresh frame after
+evaluating actuals once, preserving omitted versus explicit empty arguments.
+The frame is passed into each generated routine alongside the existing pool
+and configuration, so ARG can run repeatedly at any legal point and the
+Classic ARG BIF can inspect the same activation later. Lower each ARG template
+through one extracted PARSE template executor: capture and uppercase that
+source, apply the existing VM `parseplan` descriptor, then write captured
+fields in order through the visible pool. Extend that descriptor construction
+to its existing version-2 dynamic references and comma segments; migrate
+Level C's word-only PARSE lowering into the same path only after the PARSE
+regressions and shared `RexxValue` API consumers are checked. This replaces
+fixed ARG binding rather than layering new special cases. Level B typed ARG
+and RexxScript's separate parser remain unchanged. The proposed activation
+frame, parser AST preservation and PARSE lowering consolidation are an
+architectural shift; AGENTS.md requires Adrian's approval before those
+compiler edits. No product code change for ARG has been made at this gate.
+
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
 pool ownership supports a single `dropSymbol` route. `LC-STEP-64A` — complete
