@@ -579,7 +579,7 @@ are verified against all affected consumers.
   reference retain their order. Verify source/canonical AST shape, Regina for
   valid and invalid lists and scope, focused opt/no-opt, normal correctness
   and linked execution.
-- [ ] **LC-AC-57 — complete SAY instruction:** `SAY [expression]` evaluates an
+- [x] **LC-AC-57 — complete SAY instruction:** `SAY [expression]` evaluates an
   expression once when supplied and writes its string value, or an empty line
   when omitted, through the configured default output. Main, nested and local
   procedure contexts preserve output order, source anchors and relevant
@@ -1022,8 +1022,8 @@ are verified against all affected consumers.
     incorporate childless `SAY` into an instruction-level fixture covering
     expression side effects, output order, nested execution and local routines.
     Regina, opt/no-opt, tree, normal Level C and linked evidence are recorded
-    under the active review below. The full `SAY` contract remains open under
-    STEP-63; this checkpoint is not a feature-completion claim.
+    under the review below. This checkpoint was not a feature-completion
+    claim; whole SAY closed later under STEP-63F.
 
 61. **LC-STEP-61 — review complete (LC-AC-58/59):** inspect the active parser,
     lowerer, remap builders, shared pool/value/BIFs, VM PARSE path, tests and
@@ -1044,9 +1044,10 @@ are verified against all affected consumers.
 
 ### Whole-instruction programme
 
-The following rows are the future semantic delivery units and implementation
-steps for `LC-AC-59`. All are **open** until their full instruction contract
-is evidenced; current bounded behavior is retained in the coverage matrix.
+The following rows are semantic delivery units and implementation steps for
+`LC-AC-59`. A row is **open** until its own full instruction contract is
+evidenced; closed rows are marked explicitly, and current bounded behavior is
+retained in the coverage matrix.
 Work through the rows in order, with only one active row; changing the order
 requires a recorded reason and must not turn a partial row into a closure.
 Each
@@ -1060,7 +1061,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 
 | Unit | Step | Complete instruction obligation and principal dependency |
 | --- | --- | --- |
-| LC-I-01 SAY | LC-STEP-63 | `LC-AC-57`: expression and childless forms, output and lifecycle; include pending STEP-60 case. This is the first active review. |
+| LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F | `LC-AC-57`: expression and childless forms, output and lifecycle; STEP-60 case included. Shared expression, BIF, TRACE and SIGNAL obligations remain open in their own rows. |
 | LC-I-02 DROP | LC-STEP-64 | Direct and parenthesized lists, substitution, exposure, order and errors; shared pool boundary. Preserve Adrian's approved Regina invalid-word behavior. |
 | LC-I-03 assignment | LC-STEP-65 | All valid scalar, stem and compound targets and expression/evaluation order; shared pool boundary. |
 | LC-I-04 NOP | LC-STEP-66 | Childless instruction in every legal context and clause/trace lifecycle; existing bounded proof is the baseline. |
@@ -1090,7 +1091,8 @@ Expression grammar, BIFs, variable semantics, source/character profiles,
 conditions and host adapters are cross-cutting foundations under
 `LC-AC-01/04/06/08`; they are not silently completed by an instruction row.
 Before closing any `LC-I-*`, reconcile its reference-obligation rows and the
-parser's accepted forms. An unresolved dependency keeps the row open.
+parser's accepted forms. An unresolved instruction-specific dependency keeps
+the row open; shared foundations retain their independent acceptance criteria.
 
 ### 2026-10-04 delivery correction and plan
 
@@ -1121,7 +1123,7 @@ unapproved design proposal for that later review, not a SAY closure gate.
    existing byte-span signature. Migrate in-tree registrations, remove the
    legacy-only test branch, update host documentation, build and run focused
    output/context/plugin checks; commit this interface increment.
-2. **LC-STEP-63F (LC-AC-57/59; depends on 63E):** finish the SAY-only
+2. **LC-STEP-63F (LC-AC-57/59; complete; depends on 63E):** finish the SAY-only
    reference/parser/AST/output/error audit, retain focused Regina, opt/no-opt,
    full toolchain and normal correctness evidence, then close `LC-I-01` and
    `LC-AC-57` only if no SAY-specific gap remains; commit its receipt.
@@ -1133,9 +1135,9 @@ unapproved design proposal for that later review, not a SAY closure gate.
    begin `LC-I-23 SIGNAL` until this baseline is clear and its architecture
    gate is approved.
 
-### Active review: LC-I-01 SAY
+### Closed review: LC-I-01 SAY
 
-`SAY` is the only active instruction. The parser has an expression child or
+`SAY` was the first whole-instruction review. The parser has an expression child or
 no child (`compiler/rxcpcgmr.y`), plus recovery for an invalid close bracket.
 The lowerer uses one canonical `SAY` builder; the qualified no-child
 change supplies an empty string to that builder. The emitter uses the normal
@@ -1150,7 +1152,7 @@ decision to retain the terminated SAY callback was explicitly superseded on
 2026-10-04 by `LC-STEP-63E`; assignment's pre-RHS tail capture remains
 separate from the read consolidation.
 
-The implementation sequence within active `LC-STEP-63` is:
+The original `LC-STEP-63` sequence and its later disposition are:
 
 1. **LC-STEP-63A (LC-AC-57/58; complete):** route validated Level C variable
    reads through pool `symbolValue`; remove the compiler-only stem/compound
@@ -1161,49 +1163,46 @@ The implementation sequence within active `LC-STEP-63` is:
    original legacy-callback compatibility proof is historical after
    `LC-STEP-63E`; current output tests cover embedded NUL, host isolation,
    UTF8, error and linked behavior.
-3. **LC-STEP-63C (LC-AC-57/06; in progress, depends on 63A):** use one direct-BIF
+3. **LC-STEP-63C (LC-AC-06; shared work in progress, depends on 63A):** use one direct-BIF
    selection table and one shared result/error check. Deliver BIF failures as
    a Classic `SYNTAX` signal distinct from command `ERROR`; preserve argument
    presence, caller pool/configuration, RexxScript isolation and source
    positions. Prove successful and failing BIFs, opt/no-opt and linked
    execution; commit.
-4. **LC-STEP-63T (LC-AC-57/59; proposed architecture gate, depends on 63C):**
+4. **LC-STEP-63T (LC-AC-59; later SIGNAL architecture gate, depends on 63C):**
    make Classic conditions and labels part of one routine-activation control
    flow, so a shared BIF `SYNTAX` signal can branch to `SIGNAL ON SYNTAX` with
    correct label, pool, `SIGL` and return lifetimes. Do not implement this
-   architectural shift before Adrian approves the design below. Its
-   prerequisite work is part of SAY closure; whole SIGNAL and CALL
-   instructions retain their later open acceptance rows.
-5. **LC-STEP-63D (LC-AC-57/59; depends on 63A-C and 63T):** reconcile the remaining
-   parser/reference expression and host matrix, diagnostics, traces and
-   lifecycle, and close SAY only when the complete contract is evidenced.
+   architectural shift before Adrian approves the design below. It belongs
+   to the later SIGNAL/CALL condition review, not SAY closure.
+5. **LC-STEP-63D (superseded by 63F for LC-AC-57):** its SAY-specific
+   parser, output, diagnostics and host audit closed in 63F. Remaining full
+   expression, BIF, TRACE and condition work retains its original Level C
+   acceptance criteria and instruction rows.
 
-For the remaining LC-STEP-63C configuration work, create one hidden
-`RexxClassicConfig` owner per Level C program activation, pass its reference
-through generated local procedure calls, and attach it to each direct BIF
-context. This gives stateful BIFs one activation lifetime without putting
-character or random state in `RexxVariablePool`. Verify repeated RANDOM
-calls, local calls, caller pool isolation and RexxScript separation before
-marking the configuration part complete.
+The original LC-STEP-63C configuration direction created one hidden
+`RexxClassicConfig` owner per Level C program activation, passed through
+generated local calls and attached to direct BIF contexts. Its focused
+RANDOM/pool-isolation proof is recorded below. Remaining host-selected
+configuration and complete BIF behavior stay open under `LC-AC-06/04`.
 
 | SAY contract area | Current evidence | Closure state |
 | --- | --- | --- |
-| Childless and ordinary expressions in main, IF/DO and local procedures | `levelc_say_instruction.rexx`; Regina, opt/no-opt, linked output and source-anchored tree checks | Proved for these forms; complete expression domain remains open |
-| Expression evaluation once and output order | Exposed counter called inside SAY expression; its inner SAY precedes the outer line | Proved for this fixture; external/BIF effects remain open |
-| Invalid source forms | The seven existing highlighter fixtures cover stray comma/right parenthesis, trailing comparison/arithmetic/logical operators, bad prefix/leading operators, and unmatched left parenthesis with source-token anchors and next-clause recovery. Their `rxc` compile route rejects each with `37.1`, `37.2`, `35.1`, or `36` as expected | Current grammar's negative expression families proved; full source/encoding and expression reference matrix remains open |
-| Complete BIF, local and external function terms | A direct table reaches 57 of 70 recognised Classic BIF names plus LOWER/UPPER; a shared check raises distinct Classic SYNTAX. Nested, omitted, pool-mutating and local-procedure calls match Regina in focused proof. Activation-owned configuration reaches direct BIFs through internal functions and CALLs; seeded RANDOM lifecycle and pool isolation pass. Unhandled errors now report the authored main or local call site | Open: remaining BIF services, host-selected configuration, external resolution, Classic trap lifecycle and full reference proof |
-| General variable value terms | All validated variable reads now use shared pool `symbolValue`; Regina, opt/no-opt, local exposure/CALL, linked and normal Level C checks pass | Pool-read consolidation proved; complete expression domain remains open |
-| BYTE/UTF8 output, configured host route and failure | Length-aware default and per-context output pass embedded-NUL, UTF-8 byte, context-isolation, opt/no-opt and linked checks; the terminated callback was removed in LC-STEP-63E | Byte route proved; broader host/profile, trace and condition lifecycle remain open |
-| Trace/condition lifecycle | Existing canonical SAY opcode and source anchors | Open: clause hooks, trapped errors and finalization |
+| Childless and ordinary expressions in main, IF/DO and local procedures | `levelc_say_instruction.rexx`; Regina, opt/no-opt, linked output and source-anchored tree checks | SAY forms closed; unsupported expression services remain under `LC-AC-04/06` |
+| Expression evaluation once and output order | Exposed counter called inside SAY expression; its inner SAY precedes the outer line | SAY evaluation and ordering closed; external/BIF service coverage is cross-cutting |
+| Invalid source forms | Seven highlighter fixtures and direct `rxc` negatives cover stray punctuation, incomplete expressions and recovery with `37.1`, `37.2`, `35.1` or `36` | SAY parser/error route closed; wider expression source rules remain under `LC-AC-04/08` |
+| Function and variable expression terms | The SAY lowerer invokes the same `levelc_expr_supported`/`levelc_lower_expr` path as other instructions, then one `asString` and canonical SAY node; supported BIF/local/pool read cases match Regina, including error source | No SAY-only expression limit remains; missing BIF services, external resolution, profiles and traps remain under `LC-AC-04/06` and CALL/SIGNAL |
+| BYTE/UTF8 output, configured host route and failure | Length-aware default and per-context output pass embedded-NUL, UTF-8 byte, context-isolation, opt/no-opt, both VMs and linked checks; the terminated callback was removed in LC-STEP-63E | SAY output route closed; host-selected profile policy remains under `LC-AC-04/06` |
+| Source and condition propagation | Canonical SAY opcode carries source and trace clause metadata; direct BIF failure aborts before the next SAY with authored site, and console output errors retain VM signal identity | SAY propagation closed; TRACE hooks and caught Classic conditions remain under TRACE/SIGNAL |
 
-Open before closure:
+Historical SAY-adjacent findings and their remaining cross-cutting owners:
 
 - Reconcile every expression form admitted by the Classic grammar with the
-  shared expression/BIF path. The direct table now reaches 57 of 70
-  recognised Classic BIF names plus LOWER/UPPER; thirteen recognised names
-  still need runtime services. Local omitted arguments, external functions,
-  configured state and reference error/trap behavior remain open. A valid
-  expression must not fail solely because it appears in `SAY`.
+  shared expression/BIF path under `LC-AC-04/06/08`. The direct table reaches
+  57 of 70 recognised Classic BIF names plus LOWER/UPPER; thirteen recognised
+  names still need runtime services. External functions, configured state and
+  reference error/trap behavior remain open. The SAY instruction adds no
+  separate restriction to a supported expression.
 - **Resolved compiler-only variable-read limit (LC-STEP-63A):** Regina writes
   `Q.x.y` and `Q.` for `a='x'; b='y'; say q.a.b; say q.`, whereas the old
   compiler rejected both SAY operands
@@ -1225,26 +1224,25 @@ Open before closure:
   and RexxScript equivalence beyond the focused shared tests remain open;
   these are required work, not infeasible
   exceptions.
-- Prove the remaining configured host/profile selection and source/trace
-  lifecycle. The byte route and callback failure path have focused proof,
-  but they do not complete the whole SAY condition/lifecycle contract.
+- Prove remaining host-selected profile, TRACE hooks and trapped-condition
+  lifecycle under `LC-AC-04/06`, TRACE and SIGNAL. The SAY byte route and
+  direct error propagation have focused proof; they do not claim those shared
+  capabilities complete.
 - **Resolved output truncation (LC-STEP-63B):** the earlier BYTE probe
   `options levelc; say '410042'x` produced `41 00 42 0a` with Regina but
   `41 0a` through the old VM output route
   (`/tmp/crexx-levelc-say-nul.sdYMGN/`). `SAY` and `SAYX` now carry explicit
   operand lengths to the default console writer or a new length-aware RXVML
-  context callback. The legacy callback ABI remains; embedded NUL raises
-  `NOTREADY` before that callback and RXVML reports the unhandled signal as
-  call failure. The exact-byte fixture also covers UTF-8 bytes and childless
+  context callback. The former legacy callback was removed in LC-STEP-63E;
+  the current callback receives the full span. The exact-byte fixture covers
+  UTF-8 bytes and childless
   SAY. Optimized, no-opt, linked and host-callback evidence is recorded below.
-- Keep the childless Regina, opt/no-opt, raw/canonical tree, normal Level C
-  and linked results already obtained for unchanged code/test inputs. Add
-  only missing decisive cases for expression side effects, output routing and
-  diagnostics. Record exact evidence in the instruction receipt.
+- The childless Regina, opt/no-opt, raw/canonical tree, normal Level C and
+  linked results are retained; LC-STEP-63F records exact current-head proof.
 
-These are open implementation/proof items, not infeasible exceptions. Do not
-start `LC-I-02 DROP` until `LC-I-01` closes or Adrian explicitly changes the
-queue after reviewing a specific blocker.
+These cross-cutting items are open implementation/proof work, not infeasible
+exceptions. SAY is closed; `LC-STEP-62B` now audits previously touched
+instructions before SIGNAL.
 
 2026-10-03 STEP-63 checkpoint (SAY remains open): the single
 `levelc_say_instruction.rexx` fixture covers expression and childless forms
@@ -1387,6 +1385,29 @@ run lacked the separately built harness; after building it, the test passed
 (`/tmp/crexx-say-host-tests.ytj53z`). This completes `LC-AC-60`; SAY closure
 and the prior-instruction baseline remain separate steps.
 
+2026-10-04 LC-STEP-63F whole-SAY closure: the parser's two valid SAY forms
+(`SAY expression` and childless `SAY`) and invalid-close-bracket recovery
+map to one canonical SAY node. The lowerer uses the common expression path
+and one `asString` conversion or an empty string; there is no SAY-specific
+expression whitelist or secondary output implementation. The canonical
+emitter retains source/trace metadata and the VM outputs the operand's full
+length through the one default/custom route. The existing instruction
+fixture proves once-only side effects, line order and childless output in
+main, IF/DO and local procedures; source-anchored tree tests, invalid-source
+tests, BIF failure/source tests, pool reads, opt/no-opt and callback tests
+remain registered. On this code/test input, the Release Level C suite passed
+308/308 (`/tmp/crexx-say-callback-levelc.6ijx8N`) and the eight focused
+callback/Level C/Level G tests passed
+(`/tmp/crexx-say-byte-parity-tests.CbdcMM`). Current `rxc` -> `rxas` ->
+`rxlink` -> `rxvm` output for the whole-instruction fixture matched Regina
+byte for byte (67 bytes, `/tmp/crexx-say-close.8AYujv`); `rxtvm` independently
+produced the expected NUL/UTF-8 bytes for both Level C and G. The direct
+output/host error path and authored BIF failure source are covered by the
+retained focused tests. `LC-AC-57` and `LC-I-01` close here. The full
+expression/BIF/host-profile contract, Classic trap delivery and TRACE hooks
+remain open in `LC-AC-04/06/08` and their instruction rows; none is an
+approved exclusion or a whole-Level-C completion claim.
+
 ### Pending architecture decision for LC-STEP-63T
 
 The active lowerer treats each top-level label as a separate generated Level B
@@ -1438,7 +1459,7 @@ invocation entry shape with a small Regina corpus; (2) add one reviewed
 canonical branch/label representation and refactor current local calls onto
 it; (3) attach VM Classic condition handlers and activation state; (4) prove
 the gates and remove the old label/`PROCEDURE`/`RETURN` guards. Commit and
-report at coherent architecture checkpoints; do not claim SAY closure from
+report at coherent architecture checkpoints; do not claim SIGNAL closure from
 one trapped-error example.
 
 ## Findings
@@ -1530,7 +1551,7 @@ itself make its Classic shape executable.
 | Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
-| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | Slice: guarded scalar/compound assignment, SAY, childless NOP, bare main EXIT, procedure RETURN, and ordered direct/indirect DROP lists through the Classic pool | Wider statement operands, indirect `PROCEDURE EXPOSE`, exit/return lifecycle and configuration proof remain open |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY instruction closed under LC-AC-57; guarded scalar/compound assignment, childless NOP, bare main EXIT, procedure RETURN, and ordered direct/indirect DROP lists are bounded slices | Wider non-SAY statement operands, indirect `PROCEDURE EXPOSE`, exit/return lifecycle and configuration proof remain open |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
@@ -1618,7 +1639,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-QUEUE` | QUEUE instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-RETURN` | RETURN instruction | Bounded slice: value/void RETURN in local procedures | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-SAY` | SAY instruction | Bounded slice: supported SAY expressions | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-SAY` | SAY instruction | Whole instruction closed under LC-AC-57/LC-STEP-63F | Missing expression/BIF services, TRACE and SIGNAL remain cross-cutting open work |
 | `SYN-CLASSIC-SELECT` | SELECT/WHEN/OTHERWISE | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |
