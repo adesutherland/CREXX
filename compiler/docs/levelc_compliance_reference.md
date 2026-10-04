@@ -479,8 +479,11 @@ activity.
 `DROP`:
 
 - direct variable-list words drop the named variable;
-- parenthesized entries evaluate to an uppercase word list, and each word must
-  be valid variable syntax.
+- parenthesized entries read their named variable at that point in the list,
+  split its value into words, and drop valid variable names from left to right;
+  invalid words are ignored, following the approved Regina behavior;
+- scalar, stem and compound names use the visible variable pool, including
+  arbitrary compound-tail components and exposed aliases.
 
 `EXIT`:
 

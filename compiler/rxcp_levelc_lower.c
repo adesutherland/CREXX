@@ -1109,8 +1109,7 @@ static int levelc_drop_supported(ASTNode *stmt,
         }
         name = levelc_upper_name(target);
         kind = levelc_variable_name_kind(name);
-        supported = kind == LEVELC_VAR_NAME_SCALAR || kind == LEVELC_VAR_NAME_STEM ||
-                    (kind == LEVELC_VAR_NAME_COMPOUND && levelc_compound_tail_supported(name));
+        supported = kind != LEVELC_VAR_NAME_INVALID;
         free(name);
         if (!supported) {
             if (reason_out) *reason_out = "unsupported DROP name";
@@ -3067,14 +3066,10 @@ static int levelc_lower_drop(Context *context,
     ASTNode *target = stmt->child->child;
 
     while (target) {
-        char *name = levelc_upper_name(target);
-        LevelCVariableNameKind kind = levelc_variable_name_kind(name);
-        ASTNode *prelude = NULL;
         ASTNode *receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
-        ASTNode *args[2] = {NULL, NULL};
+        ASTNode *args[1] = {NULL};
         ASTNode *lowered;
         const char *method;
-        size_t arg_count;
 
         if (target->node_type == VAR_REFERENCE) {
             ASTNode *value = levelc_pool_value(context, target);
@@ -3083,27 +3078,15 @@ static int levelc_lower_drop(Context *context,
                                                 "asString", NULL, 0)
                 : NULL;
             method = "dropIndirectList";
-            arg_count = 1;
-        } else if (kind == LEVELC_VAR_NAME_COMPOUND) {
-            prelude = rxcp_remap_create_instruction_builder(context, target);
-            args[0] = levelc_compound_stem_string(context, target, name);
-            args[1] = prelude
-                ? levelc_materialise_compound_tail(context, target, name, prelude)
-                : NULL;
-            method = "dropStemTail";
-            arg_count = 2;
         } else {
             args[0] = levelc_name_string(context, target);
-            method = kind == LEVELC_VAR_NAME_STEM ? "dropStem" : "drop";
-            arg_count = 1;
+            method = "dropSymbol";
         }
-        free(name);
 
-        if (!receiver || !args[0] || (arg_count == 2 && !args[1])) goto fail;
+        if (!receiver || !args[0]) goto fail;
         lowered = rxcp_remap_create_member_call_statement(context, target,
-                                                            receiver, method, args, arg_count);
+                                                            receiver, method, args, 1);
         if (!lowered) goto fail;
-        if (prelude) rxcp_remap_append_builder_children(instructions, prelude);
         add_ast(instructions, lowered);
         target = target->sibling;
     }

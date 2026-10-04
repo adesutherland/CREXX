@@ -1147,7 +1147,7 @@ unapproved design proposal for that later review, not a SAY closure gate.
 
 **Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
-pool ownership supports a single `dropSymbol` route. `LC-STEP-64A`
+pool ownership supports a single `dropSymbol` route. `LC-STEP-64A` — complete
 (`LC-AC-58/62`, depends on 63F) removes the compiler's per-kind method
 selection and the single-tail-component guard for DROP, retaining parser
 validation and ordered per-item evaluation. `LC-STEP-64B` (`LC-AC-59/62`,
@@ -1156,6 +1156,20 @@ Regina substitution and exposure, opt/no-opt, AST, pool/RexxScript, normal
 correctness and linked delivery, then closes DROP only if all pass. Each step
 gets a separate reviewable commit and evidence receipt. The indirect-list
 invalid-word rule remains the previously approved Regina behavior.
+
+2026-10-04 LC-STEP-64A DROP simplification: direct scalar, stem and compound
+items now call `RexxVariablePool.dropSymbol` in source order; parenthesized
+items retain one `dropIndirectList` call after reading their reference. The
+compiler no longer chooses `drop`/`dropStem`/`dropStemTail` or rejects a
+compound name with multiple tail components. A whole-DROP fixture compares
+five direct names, three substituted tail components, direct/indirect drops,
+item order, local exposure and stem removal with Regina
+(`/tmp/crexx-drop-regina.fgswsJ`). Parser invalid forms (`DROP`, `DROP ()`,
+`DROP (1)`) retain `20.1` source diagnostics. Thirteen focused Release CTest
+cases passed on the changed code/test inputs
+(`/tmp/crexx-drop-focused2.iVSjzP`); the tree proof sees `dropSymbol` and
+`dropIndirectList`. Full instruction qualification under 64B remains open,
+as do assignment and wider profile/host rules.
 
 ### Closed review: LC-I-01 SAY
 
