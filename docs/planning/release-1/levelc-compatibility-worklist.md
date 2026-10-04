@@ -711,6 +711,22 @@ are verified against all affected consumers.
   and canonical AST, focused valid/invalid tests, optimized/no-opt execution,
   relevant normal correctness and shared runtime checks, and linked toolchain
   execution. Do not close the criterion with a SELECT-specific restriction.
+- [ ] **LC-AC-69 — complete LEAVE instruction:** childless `LEAVE` exits the
+  innermost active repetitive DO and named `LEAVE symbol` exits the innermost
+  active controlled DO whose authored control symbol matches, ignoring case
+  but without compound-tail substitution. Simple DO, IF and SELECT wrappers
+  do not change the target; leaving nested loops skips their remaining
+  bodies, end checks and steps and preserves each visible control value at
+  the point of transfer. Local routine calls cannot leave an inactive caller
+  loop. Diagnose no active loop, unmatched or malformed name, extra
+  same-clause text, and illegal END/loop interactions with the correct Classic
+  error identity and source position. Preserve source/canonical AST ownership
+  and one shared transfer/binding path without a LEAVE-specific loop rewrite.
+  Verify IBM/Regina reference cases, optimized/no-opt, main/nested/local
+  output, invalid-source fixtures, source and canonical trees, relevant normal
+  Level C and shared runtime checks, and linked toolchain output. Shared
+  SIGNAL/INTERPRET loop invalidation and TRACE lifecycle remain open under
+  their own instruction rows and LC-AC-04/08.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1848,6 +1864,50 @@ with `LC-I-23/24`; arm-instruction semantics remain with their owner rows.
 No SELECT-specific infeasibility or approved compatibility exception was
 needed. `LC-AC-68` and LC-I-07 close; `LC-AC-04/08/59/61` stay open for the
 remaining programme. Next is LC-I-09 LEAVE.
+
+**LC-I-09 LEAVE plan — vision and intended outcome.** Every parsed Classic
+`LEAVE` form should use the existing source-loop binding and canonical loop
+transfer path, selecting the correct active loop and leaving its visible
+control state unchanged. The grammar must reject malformed or trailing source
+text instead of recovering to a valid partial instruction. Match IBM's
+[LEAVE reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=instructions-leave)
+and Regina's executable/error behavior, while preserving Level B, DO,
+ITERATE and RexxScript behavior. Do not add a separate LEAVE emitter path.
+
+1. **LC-STEP-71A (LC-AC-59/69; active; depends on SELECT closure):** inventory
+   grammar/token recovery, source and canonical AST, static diagnostics,
+   transfer binding and emitter, reference valid/invalid forms, and retained
+   DO/LEAVE/ITERATE tests. Reproduce any mismatch before editing, record
+   whether it belongs to LEAVE or a shared lifecycle owner, and identify any
+   decision gate before an architecture or language change.
+2. **LC-STEP-71B (LC-AC-69; pending; depends on 71A and any required Adrian
+   decision):** repair LEAVE-owned syntax, diagnostics or loop targeting in
+   one coherent increment using the existing shared transfer machinery;
+   remove duplication where the whole-instruction review warrants it. Add
+   a complete optimized/no-opt fixture and focused invalid and AST checks.
+3. **LC-STEP-71C (LC-AC-59/61/69; pending; depends on 71B):** compare IBM and
+   Regina, inspect source/canonical associations, run focused and relevant
+   normal correctness plus shared-consumer checks, prove linked output,
+   update architecture/reference docs, and commit an exact-revision receipt.
+   Close LC-I-09 only when its own contract is proved; keep shared SIGNAL,
+   INTERPRET, TRACE and condition lifecycle in their owner rows.
+
+2026-10-04 LC-STEP-71A initial audit: the parser already builds `LEAVE` with
+zero or one source `VAR_SYMBOL`; the common LEAVE/ITERATE validator resolves
+the nearest source repetitive DO or a named controlled ancestor, and the
+lowerer emits a canonical transfer to that binding's hidden loop control.
+IBM specifies that a name is constant, matches the authored control symbol
+except case, never substitutes compound components, and chooses the innermost
+matching active loop. Regina/cREXX probes agree on compound names and reject
+routine-to-caller transfer. Three LEAVE-owned gaps are reproduced: `LEAVE i j`
+is silently accepted by cREXX but Regina reports `21.1`; a malformed numeric,
+parenthesized or dot target reports `20.2` in cREXX but Regina reports `20.1`;
+and a named LEAVE with no repetitive loop reports `28.3` in cREXX but Regina
+reports `28.1`. The errors are ordinary Classic fidelity corrections within
+the current grammar/diagnostic architecture. The `20.2` route is shared with
+ITERATE, so the same correction must be checked for that consumer without
+prematurely closing LC-I-10. SIGNAL/INTERPRET invalidation remains with those
+instruction owners. No new syntax or architecture decision is identified.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
