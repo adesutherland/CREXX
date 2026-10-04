@@ -5270,6 +5270,11 @@ add_levelc_invalid_compile_test(levelc_drop_invalid
         "@ 3:7"
         "@ 4:6")
 
+add_levelc_invalid_compile_test(levelc_assignment_invalid
+        rexx_src/levelc_assignment_invalid.rexx
+        "RXC-LC-31\\.1"
+        "@ 2:1")
+
 add_levelc_invalid_compile_test(levelc_slice13_named_leave_invalid
         rexx_src/levelc_slice13_named_leave_invalid.rexx
         "RXC-LC-28\\.3")
@@ -5873,6 +5878,12 @@ add_levelc_runtime_slice_test(levelc_drop_instruction
 add_levelc_runtime_slice_test(levelc_drop_instruction_noopt
         rexx_src/levelc_drop_instruction.rexx
         "list=A|B|C|D|E|\nbefore=first\ndirect=ITEMS.part.Tail.last\nindirect=ITEMS.part.Tail.last\norder=third|ITEMS.X.Tail.last\nlocal=ITEMS.part.Tail.last|ITEMS.part.Tail.last\nstem=ITEMS.part.Tail.last\n" -n)
+add_levelc_runtime_slice_test(levelc_assignment_instruction
+        rexx_src/levelc_assignment_instruction.rexx
+        "scalar=second\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\n")
+add_levelc_runtime_slice_test(levelc_assignment_instruction_noopt
+        rexx_src/levelc_assignment_instruction.rexx
+        "scalar=second\nbytes=3\ncompound=first\nreset=default\ncaptured=default|captured\nchanged=new\nnested=do\nexposed=local\nstem=again\n" -n)
 add_levelc_runtime_slice_test(levelc_say_instruction
         rexx_src/levelc_say_instruction.rexx
         "a\n\n\nb\n\n\ncall=ok\n\ninside=1\nexpr=1\ncount=1\ninside=2\nexpr=2\ncount=2\nz\n")
@@ -6058,11 +6069,10 @@ add_levelc_lowered_tree_shape_test(levelc_slice4_procedure_args_return_tree_shap
 add_levelc_lowered_tree_shape_test(levelc_slice5_stem_expose_tree_shape
         rexx_src/levelc_slice5_stem_expose.rexx
         "RexxVariablePool"
-        "setStemValue"
+        "setSymbolValue"
         "symbolValue"
         "exposeStem"
-        "__rxcp_levelc_tail"
-        "asString")
+        "ITEMS.I")
 
 add_levelc_lowered_tree_shape_test(levelc_slice6_expressions_tree_shape
         rexx_src/levelc_slice6_expressions.rexx
@@ -6395,8 +6405,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice53_drop_direct_tree_shape
         rexx_src/levelc_slice53_drop_direct.rexx
         "symbolValue"
         "dropSymbol"
-        "__rxcp_levelc_tail_"
-        "setStemValue")
+        "setSymbolValue")
+add_levelc_lowered_tree_shape_test(levelc_assignment_instruction_tree_shape
+        rexx_src/levelc_assignment_instruction.rexx
+        "setSymbolValue"
+        "ITEMS.KEY.PART"
+        "RexxVariablePool")
 add_levelc_lowered_tree_shape_test(levelc_slice54_drop_indirect_tree_shape
         rexx_src/levelc_slice54_drop_indirect.rexx
         "dropIndirectList"

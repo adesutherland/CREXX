@@ -633,9 +633,9 @@ are verified against all affected consumers.
   toolchain execution. No fixed tail-component or list-length limit remains.
 - [ ] **LC-AC-63 — complete assignment instruction:** every parsed valid
   scalar, stem and arbitrary-component compound target takes its Classic
-  value in main, nested and local contexts. Compound name substitution is
-  captured before evaluating the right-hand expression, including a call that
-  mutates a tail component. The shared pool owns final name classification,
+  value in main, nested and local contexts. Compound name substitution follows
+  evaluation of the right-hand expression, including a call that mutates a
+  tail component. The shared pool owns substitution and final classification,
   stem reset and exposure behavior; source-invalid targets retain their
   diagnostics. Verify against Regina, optimized/no-opt and source/canonical
   trees, focused pool and RexxScript checks, normal Level C correctness and
@@ -1165,7 +1165,7 @@ losing the genuinely different routine rules.
 | Earlier instruction | Current implementation shape | Open review or work before closure |
 | --- | --- | --- |
 | SAY, DROP | Whole instruction closed in LC-I-01/02 | Shared TRACE, SIGNAL and host profile remain separate open criteria. |
-| Assignment | Scalar and one-component compound targets use different compiler-selected pool methods; stem and multi-component targets are rejected | Capture resolved compound name before RHS, then use one pool-owned final assignment operation; prove stem/exposure and calls that mutate tail variables. Active LC-I-03. |
+| Assignment | Scalar and one-component compound targets use different compiler-selected pool methods; stem and multi-component targets are rejected | Evaluate RHS before pool substitution, then use one pool-owned assignment operation; prove stem/exposure and calls that mutate tail variables. Active LC-I-03. |
 | NOP | Childless parser node and one no-op lowerer in main/procedure, including nested bounded arms | Reconcile clause and TRACE hooks and malformed source before LC-I-04 closure. |
 | OPTIONS | Parser emits REXX_OPTIONS; acceptance of the node is broad, with option handling in programme setup | Inventory option words and unknown policy, test source/configuration lifecycle. |
 | IF, SELECT | Guarded trees lower to canonical branches; validation/lowering dispatch repeats between main and procedure | Audit every legal arm and diagnostic, nearest ELSE, ordering and no-match lifecycle; simplify common dispatch. |
@@ -1182,23 +1182,45 @@ the earlier AST risk is visible rather than hidden by passing slice tests.
 
 **LC-I-03 assignment plan — vision and outcome.** One parsed Classic
 assignment target produces one pool operation with full scalar, stem and
-compound semantics. The compiler captures the name when Classic evaluation
-requires it and preserves the authored expression and source location; the
+compound semantics. The compiler evaluates the authored expression before
+the pool substitutes the target name, preserving its source location; the
 shared pool implements the final write for Level C and RexxScript consumers.
 This completes the instruction without adding a special case for each tail
 shape.
 
-1. **LC-STEP-65A (LC-AC-58/63; depends on 62B):** retain a whole-instruction
+The first Regina whole-instruction probe contradicted the review's earlier
+pre-RHS capture assumption: `items.key.part=change()` wrote the name derived
+from `key` and `part` *after* `change()` mutated them. The previous compiler
+lowering captured one tail component before the RHS. The correction follows
+the observed Classic order and makes the compiler path smaller; it does not
+introduce a new language rule or runtime interface.
+
+1. **LC-STEP-65A (LC-AC-58/63; complete; depends on 62B):** retain a whole-instruction
    Regina fixture for scalar/stem/compound names, multi-component substitution,
-   default reset, exposure and RHS side effects. Introduce a pool method for
-   an already-resolved name, make `setSymbolValue` delegate to it, and lower
-   every valid assignment through one captured-name path. Preserve the
-   pre-RHS resolution point and source-invalid diagnostics. Build and run
+   default reset, exposure and RHS side effects. Lower every valid assignment
+   through the existing `setSymbolValue` operation after evaluating the RHS;
+   remove compiler-only tail materialization and preserve source-invalid
+   diagnostics. Build and run
    focused compiler, pool and cross-consumer checks; commit the implementation.
 2. **LC-STEP-65B (LC-AC-59/63; depends on 65A):** reconcile all parser target
    forms and reference obligations, check optimized/no-opt tree/source and
    runtime equivalence, normal Level C correctness and linked toolchain output;
    record exact evidence and close LC-I-03 only if its contract is met.
+
+2026-10-04 LC-STEP-65A assignment simplification: the old compiler-side
+stem/tail splitter and its single-component guard are gone. All validated
+targets lower through `RexxVariablePool.setSymbolValue` after RHS evaluation;
+the method already handles scalar, stem default, arbitrary compound tails and
+exposed aliases. The Regina whole-instruction probe output is retained at
+`/tmp/crexx-assignment-regina.6uqdnk`; the new fixture matches it in optimized
+and no-opt modes, including the side-effecting RHS that distinguishes the
+old incorrect order. Invalid numeric-start target `1bad` retains `31.1` at
+line 2. Release core build passed (`/tmp/crexx-assignment-build2.lVfDyb`),
+focused compiler/pool tests passed 10/10
+(`/tmp/crexx-assignment-focused2.zYYiGi`), and RexxScript Runtime/Compat
+tests passed 4/4 (`/tmp/crexx-assignment-rexxscript.dpfRmX`). Normal Level C,
+source/canonical AST and linked delivery remain for LC-STEP-65B; the whole
+instruction is still open at this implementation checkpoint.
 
 **Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
@@ -1264,8 +1286,8 @@ lengths must carry through the SAY output route; BIF validation failure should
 raise a signal through one shared check, preserving Classic `SYNTAX` identity;
 and general variable reads belong to `RexxVariablePool`. The 2026-10-03
 decision to retain the terminated SAY callback was explicitly superseded on
-2026-10-04 by `LC-STEP-63E`; assignment's pre-RHS tail capture remains
-separate from the read consolidation.
+2026-10-04 by `LC-STEP-63E`; the former assignment pre-RHS tail capture was
+corrected under `LC-STEP-65A` after the whole-instruction Regina probe.
 
 The original `LC-STEP-63` sequence and its later disposition are:
 
@@ -1323,8 +1345,8 @@ Historical SAY-adjacent findings and their remaining cross-cutting owners:
   compiler rejected both SAY operands
   (`/tmp/crexx-levelc-say-variable.0er3lh/`). All validated Level C variable
   *reads* now use `RexxVariablePool.symbolValue`, including bare stems and
-  multi-component compounds. Assignment retains its distinct pre-RHS tail
-  capture until its own instruction review. The new pool-read fixture covers
+  multi-component compounds. The former assignment pre-RHS tail capture was
+  corrected in `LC-STEP-65A`. The new pool-read fixture covers
   substitution, case, unset/dropped values, exposure and a CALL argument.
 - **Resolved blank-result continuation for direct BIFs (LC-STEP-63C in
   progress):** the earlier `SAY SUBSTR('abc', 0)` probe printed a blank line
@@ -1666,7 +1688,7 @@ itself make its Classic shape executable.
 | Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
-| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY and DROP instructions closed under LC-AC-57/62; guarded scalar/compound assignment, childless NOP, bare main EXIT and procedure RETURN remain bounded slices | Wider assignment and lifecycle forms, indirect `PROCEDURE EXPOSE`, exit/return behavior and configuration proof remain open |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY and DROP instructions closed under LC-AC-57/62; scalar/stem/arbitrary-compound assignment uses one pool call under LC-STEP-65A; childless NOP, bare main EXIT and procedure RETURN remain bounded slices | Assignment's normal/linked closure proof, wider lifecycle forms, indirect `PROCEDURE EXPOSE`, exit/return behavior and configuration proof remain open |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
@@ -1705,7 +1727,7 @@ has been approved in this worklist.
 | --- | --- | --- | --- |
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
 | Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions`, `levelc_slice19_logical_eager`, empty quoted strings in `levelc_slice37_empty_string`, and adjacent function calls in `levelc_slice38_adjacent_call` | Full numeric context, remaining operator order, boundary/error and platform equivalence |
-| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Slice: scalar/compound read/write, scalar/stem EXPOSE, unset scalar read and direct scalar/stem/supported-compound plus parenthesized indirect DROP | Full stem assignment, indirect EXPOSE, configured profile, external/API operations and aliasing |
+| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Assignment implementation covers scalar/stem/arbitrary compound through one pool method; scalar/stem EXPOSE, unset scalar read and complete direct/indirect DROP have retained proof | Assignment normal/linked closure proof, indirect EXPOSE, configured profile, external/API operations and aliasing |
 | Control | IF/THEN/ELSE | Slice: `levelc_slice7_if_else`, nested and procedure fixtures, opt/no-opt, invalid logical and unsupported-arm tests | Other instructions in arms and broader condition/message lifecycle remain open |
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
 | Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled DO with optional TO/FOR/BY, captured dynamic start/TO/BY/FOR and WHILE entry or UNTIL end checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, named transfer to wider loops, remaining numeric contexts and errors |
@@ -1734,7 +1756,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Bounded slice: stem exposure and simple compound access | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ASSIGNMENT` | Simple and compound assignment | Bounded slice: scalar and simple compound assignment | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment | One pool-owned implementation under LC-STEP-65A with focused scalar/stem/multi-component, RHS-order and invalid-target checks | Normal/linked and complete instruction closure proof under LC-STEP-65B; profile remains cross-cutting |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |

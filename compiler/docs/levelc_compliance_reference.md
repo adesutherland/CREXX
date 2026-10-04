@@ -485,6 +485,10 @@ activity.
 - scalar, stem and compound names use the visible variable pool, including
   arbitrary compound-tail components and exposed aliases.
 
+Assignment evaluates its right-hand expression before substituting the
+components of a compound target, then writes the derived name in the visible
+pool. Stem assignment resets the stem default and its old explicit tails.
+
 `EXIT`:
 
 - optional expression becomes the program result;
