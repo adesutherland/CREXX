@@ -238,18 +238,19 @@ the runtime condition model.
 
 The character configuration is implemented entirely in the library/runtime:
 
-- `RexxClassicConfig` supplies BYTE/UTF8 selection and configured blanks;
+- `RexxClassicConfig` keeps BYTE for direct binary consumers and supplies the
+  text configuration selected by compiled Level C, plus configured blanks;
 - `RexxClassicCharacterScan` supplies profile-aware word scans, retaining the
   VM Unicode fast path when UTF8 has no extra blanks;
-- `RexxClassicEncoding` supplies exact byte/hex conversion and UTF-8 validity;
+- `RexxClassicEncoding` supplies exact byte/hex conversion, UTF-8 validity for
+  binary consumers, and the reversible Latin-1 ordinal bridge for Level C;
 - the Unicode data contract is pinned to Unicode 17.0.0;
-- BYTE `Config_Xrange`, `Config_C2B`, and `Config_B2C` are exact octet
-  operations; UTF8 outputs gain a text flag only when their exact bytes are
-  valid UTF-8.
+- Level C byte-valued BIFs map `U+00XX` to byte `XX` and back; a higher scalar
+  reports `RXC-LC-23.1` through the normal BIF context.
 
-UTF8 XRANGE is unavailable because Classic XRANGE is a configured coded-byte
-range, not a Unicode scalar or grapheme range. No compiler or lowering change
-is required for these direct BIF services.
+`XRANGE` uses the same ordinal mapping and wraps after `U+00FF`. It is not a
+general Unicode range operation. Compiled Level C initializes its text
+configuration explicitly; the shared BYTE default remains for direct clients.
 
 ### Configuration Dependencies
 
@@ -330,7 +331,7 @@ source for planning. This is implementation guidance, not a code copy.
 | `WORDLENGTH` | `WORDLENGTH(string, n)` | `rANY rWHOLE>0` | Returns the length of word `n`, or `0` if absent. | Can share `WORD` extraction. |
 | `WORDPOS` | `WORDPOS(phrase, string [,start])` | `rANY rANY oWHOLE>0` | Finds a sequence of words from `phrase` in `string`; returns the word position or `0`. | Compare normalized word sequences, not raw spacing. |
 | `WORDS` | `WORDS(string)` | `rANY` | Counts blank-delimited words. | Share word scanner. |
-| `XRANGE` | `XRANGE([start [,end]])` | `oPAD oPAD` | Returns configuration-defined characters from start through end. | Direct BYTE implementation; deliberately unavailable in UTF8. |
+| `XRANGE` | `XRANGE([start [,end]])` | `oPAD oPAD` | Returns configured byte ordinals from start through end, wrapping at `FF`. | In compiled Level C, returns `U+00XX` scalars. |
 
 ### Arithmetic Built-in Functions
 
@@ -362,15 +363,15 @@ source for planning. This is implementation guidance, not a code copy.
 | Function | Signature | Checklist | Definition summary | Level B/RexxValue notes |
 | --- | --- | --- | --- | --- |
 | `B2X` | `B2X(binaryDigits)` | `rBIN` | Removes blanks and converts binary digit text to hexadecimal digit text. | Operates on textual `0`/`1` digits, not `.binary` buffers. |
-| `BITAND` | `BITAND(left [,right [,pad]])` | `rANY oANY oPAD` | Converts encoded characters to bits, applies bitwise AND over the common length, and preserves the longer tail. | Depends on `Config_C2B` and coded-character policy. |
-| `BITOR` | `BITOR(left [,right [,pad]])` | same as `BITAND` | Same as `BITAND`, using bitwise OR. | Implement through one shared bit helper keyed by `#Bif`. |
-| `BITXOR` | `BITXOR(left [,right [,pad]])` | same as `BITAND` | Same as `BITAND`, using bitwise exclusive OR. | Implement through one shared bit helper keyed by `#Bif`. |
-| `C2D` | `C2D(string [,length])` | `rANY oWHOLE>=0` | Converts exact coded bytes to decimal. With length, treats the rightmost `length` bytes as a signed twos-complement value. | Direct implementation; raises `40.35` when result cannot fit current digits. |
-| `C2X` | `C2X(string)` | `rANY` | Converts exact coded bytes to uppercase hexadecimal. | Direct implementation; empty input returns null. |
-| `D2C` | `D2C(number [,length])` | `rWHOLENUM>=0`, or `rWHOLENUM rWHOLE>=0` | Converts a decimal whole number to exact coded bytes; with length, pads/truncates according to sign. | Direct implementation; negative values use twos-complement. |
+| `BITAND` | `BITAND(left [,right [,pad]])` | `rANY oANY oPAD` | Applies bitwise AND over the common ordinal length and preserves the longer tail. | Level C uses the shared Latin-1 ordinal bridge; higher scalars raise `23.1`. |
+| `BITOR` | `BITOR(left [,right [,pad]])` | same as `BITAND` | Same as `BITAND`, using bitwise OR. | Uses the same bridge and helper. |
+| `BITXOR` | `BITXOR(left [,right [,pad]])` | same as `BITAND` | Same as `BITAND`, using bitwise exclusive OR. | Uses the same bridge and helper. |
+| `C2D` | `C2D(string [,length])` | `rANY oWHOLE>=0` | Converts byte ordinals to decimal. With length, treats the rightmost `length` bytes as a signed twos-complement value. | Level C uses `U+00XX`; higher scalars raise `23.1`, and digits overflow raises `40.35`. |
+| `C2X` | `C2X(string)` | `rANY` | Converts byte ordinals to uppercase hexadecimal. | Level C uses `U+00XX`; higher scalars raise `23.1`. |
+| `D2C` | `D2C(number [,length])` | `rWHOLENUM>=0`, or `rWHOLENUM rWHOLE>=0` | Converts a decimal whole number to byte ordinals; with length, pads/truncates according to sign. | Level C returns text `U+00XX`; negative values use twos-complement. |
 | `D2X` | `D2X(number [,length])` | `rWHOLENUM>=0`, or `rWHOLENUM rWHOLE>=0` | Converts decimal whole number to hex; with length, pads/truncates with `0` or `F` depending on sign. | Negative values use twos-complement. |
 | `X2B` | `X2B(hex)` | `rHEX` | Removes blanks and converts hex digit text to binary digit text. | Empty input returns null. |
-| `X2C` | `X2C(hex)` | `rHEX` | Converts hex digit text to exact coded bytes, left-padding to a full byte as needed. | Direct implementation; empty input returns null. |
+| `X2C` | `X2C(hex)` | `rHEX` | Converts hex digit text to byte ordinals, left-padding to a full byte as needed. | Level C returns text `U+00XX`, including `U+0000` and `U+00FF`. |
 | `X2D` | `X2D(hex [,length])` | `rHEX oWHOLE>=0` | Converts hex digit text to decimal. With length, interprets sign bit for twos-complement. | Raises `40.35` when result cannot fit current digits. |
 
 ### Input/Output Built-in Functions

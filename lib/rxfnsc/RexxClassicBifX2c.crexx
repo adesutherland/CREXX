@@ -28,7 +28,7 @@ import rexxclassicbifs
 import rexxclassicencoding
 import rexxvalue
 
-/** Convert validated hexadecimal text to exact configured character bytes. */
+/** Convert hexadecimal bytes to Level C Latin-1 scalars or exact bytes. */
 rexxclassicbif_x2c: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
@@ -37,6 +37,6 @@ rexxclassicbif_x2c: procedure = .RexxValue
 
   bytes = rexxclassic_hex_to_bytes(context.argumentText(1))
   config = context.characterConfig()
-  if config.isUtf8Profile() & rexxclassic_bytes_are_utf8(bytes) then
-    return .RexxValue.fromBinaryText(bytes)
+  if config.isUtf8Profile() then
+    return .RexxValue(rexxclassic_latin1_to_text(bytes))
   return .RexxValue.fromBinary(bytes)

@@ -99,11 +99,11 @@ RexxInMemoryExternalValuePool: class implements .RexxExternalValuePool
     return 0
 
 /**
- * Level C coded-character configuration used by direct Classic BIFs.
+ * Coded-character configuration shared by direct Classic BIF consumers.
  *
- * BYTE is the compatibility default. UTF8 is an explicit text profile. The
- * profile belongs to the call configuration; RexxValue flags continue to
- * describe the representation held by each individual value.
+ * Direct consumers default to BYTE for existing binary calls. The compiled
+ * Level C setup selects UTF8 text, whose byte-valued BIFs use Latin-1
+ * ordinals. RexxValue flags still describe the held representation.
  *
  * @docType runtime-class
  * @unicodeVersion 17.0.0
@@ -125,6 +125,7 @@ RexxClassicConfig: class
   external_pool_count = .int
 
   *: factory
+    arg requested_profile = "BYTE"
     profile_name = "BYTE"
     byte_other_blanks = "" as .binary
     text_other_blanks = ""
@@ -137,6 +138,9 @@ RexxClassicConfig: class
     exponent_digit_limit = 9
     random_state = .RexxRandomState()
     external_pool_count = 0
+    if requested_profile == "BYTE" | requested_profile == "UTF8" then
+      profile_name = requested_profile
+    else assembler signal "INVALID_ARGUMENTS", "Character profile must be BYTE or UTF8"
     return
 
   useByteProfile: method = .void

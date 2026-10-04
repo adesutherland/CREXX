@@ -132,17 +132,11 @@ errors = errors + check_hex(53, "BITOR", "", "", "", "", "", 0)
 
 errors = errors + check_hex(54, "BITXOR", "", "", "", "", "", 0)
 
-/*
- * UTF-8 profile: verify that binary input is processed as encoded bytes
- * and is not treated as a zero-terminated or character-counted value.
- *
- * C3 A9 is the UTF-8 representation of U+00E9.
- */
-errors = errors + check_hex(55, "BITAND", "C3A9", "C3A9", "FFFF", "", "UTF8", 0)
-
-errors = errors + check_hex(56, "BITOR", "C3A9", "C3A9", "0000", "", "UTF8", 0)
-
-errors = errors + check_hex(57, "BITXOR", "3C56", "C3A9", "FFFF", "", "UTF8", 0)
+/* Text scalars use Latin-1 ordinals, including high values and zero. */
+errors = errors + check_hex(55, "BITAND", "E9", "E9", "FF", "", "UTF8", 0)
+errors = errors + check_hex(56, "BITOR", "E9", "E9", "00", "", "UTF8", 0)
+errors = errors + check_hex(57, "BITXOR", "16", "E9", "FF", "", "UTF8", 0)
+errors = errors + check_unicode_error()
 
 /* -------------- */
 
@@ -174,10 +168,14 @@ check_hex: procedure = .int
   arg testnum=.int, name = .string, expected_hex = .string, left_hex = .string, right_hex = .string, pad_hex = .string, profile = .string, pad_exists = .int
   args = .RexxValue[]
   exists = .int[]
-  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(left_hex))
+  if profile = "UTF8" then
+    args[1] = .RexxValue(rexxclassic_latin1_to_text(rexxclassic_hex_to_bytes(left_hex)))
+  else args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(left_hex))
   exists[1] = 1
   if right_hex <> "" then do
-    args[2] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(right_hex))
+    if profile = "UTF8" then
+      args[2] = .RexxValue(rexxclassic_latin1_to_text(rexxclassic_hex_to_bytes(right_hex)))
+    else args[2] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(right_hex))
     exists[2] = 1
   end
   if pad_exists then do
@@ -185,20 +183,37 @@ check_hex: procedure = .int
       args[2] = .RexxValue("")
       exists[2] = 0
     end
-    args[3] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(pad_hex))
+    if profile = "UTF8" then
+      args[3] = .RexxValue(rexxclassic_latin1_to_text(rexxclassic_hex_to_bytes(pad_hex)))
+    else args[3] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(pad_hex))
     exists[3] = 1
   end
   context = .RexxBifCallContext(name)
   if profile = "UTF8" then call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = invoke_bitwise(name, reference context)
-  actual_hex = rexxclassic_bytes_to_hex(result.asBinary())
+  if profile = "UTF8" then
+    actual_hex = rexxclassic_bytes_to_hex(rexxclassic_text_to_latin1(result.asString()))
+  else actual_hex = rexxclassic_bytes_to_hex(result.asBinary())
   if \context.hasError() & actual_hex = expected_hex then  do
      say "SUCCESS, test:" testnum actual_hex' = 'expected_hex
      return 0
   end
   say "FAIL test:" testnum" name hex expected" expected_hex "got" actual_hex,
       context.errorCode() context.errorMessage()
+  return 1
+
+check_unicode_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("Ā")
+  exists[1] = 1
+  context = .RexxBifCallContext("BITAND")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_bitand(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-23.1" then return 0
+  say "FAIL: BITAND Unicode error" context.errorCode() result.asString()
   return 1
 
 check_count_error: procedure = .int

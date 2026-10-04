@@ -29,7 +29,7 @@ import rexxclassicbifd2x
 import rexxclassicencoding
 import rexxvalue
 
-/** Convert a Classic whole number to exact configured character bytes. */
+/** Convert a Classic whole number to configured character ordinals. */
 rexxclassicbif_d2c: procedure = .RexxValue
   numeric digits inherited
   numeric form inherited
@@ -65,6 +65,6 @@ rexxclassicbif_d2c: procedure = .RexxValue
   end
   bytes = rexxclassic_hex_to_bytes(hexadecimal)
   config = context.characterConfig()
-  if config.isUtf8Profile() & rexxclassic_bytes_are_utf8(bytes) then
-    return .RexxValue.fromBinaryText(bytes)
+  if config.isUtf8Profile() then
+    return .RexxValue(rexxclassic_latin1_to_text(bytes))
   return .RexxValue.fromBinary(bytes)

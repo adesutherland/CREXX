@@ -5576,6 +5576,12 @@ add_runtime_bytes_test(levelg_say_bytes_noopt
 add_levelc_runtime_syntax_signal_test(levelc_bif_missing_required
         rexx_src/levelc_bif_missing_required.rexx "40.3" ""
         "levelc_bif_missing_required.rexx:3:")
+add_levelc_runtime_syntax_signal_test(levelc_latin1_out_of_range
+        rexx_src/levelc_latin1_out_of_range.rexx "23.1" "before\n"
+        "levelc_latin1_out_of_range.rexx:3:")
+add_levelc_runtime_syntax_signal_test(levelc_latin1_out_of_range_noopt
+        rexx_src/levelc_latin1_out_of_range.rexx "23.1" "before\n"
+        "levelc_latin1_out_of_range.rexx:3:" -n)
 add_levelc_runtime_syntax_signal_test(levelc_bif_syntax_signal
         rexx_src/levelc_bif_syntax_signal.rexx "40.14" "before\n"
         "levelc_bif_syntax_signal.rexx:3:")
@@ -5608,6 +5614,10 @@ add_levelc_runtime_syntax_signal_test(levelc_parse_bad_dynamic_position_noopt
         "levelc_parse_bad_dynamic_position.rexx:4:" -n)
 add_levelc_runtime_slice_test(levelc_bif_inventory
         rexx_src/levelc_bif_inventory.rexx "inventory\n")
+add_levelc_runtime_slice_test(levelc_latin1_ordinals
+        rexx_src/levelc_latin1_ordinals.rexx "0\nFF\n255\nFF\n16\nFEFF00\n1\n")
+add_levelc_runtime_slice_test(levelc_latin1_ordinals_noopt
+        rexx_src/levelc_latin1_ordinals.rexx "0\nFF\n255\nFF\n16\nFEFF00\n1\n" -n)
 add_levelc_runtime_slice_test(levelc_say_bif_family
         rexx_src/levelc_say_bif_family.rexx
         "length=2\nnested=3\nsubstr=bcd\nomitted=bc\npos=2\nword=blue\nvalue=MiXeD\nlocal=iXeD\nchange=MiXeD\nafter=next\nsymbol=VAR\nx2d=255\ncenter=-A-\nleft=ab..\nmin=2\nmax=4\n")

@@ -10,7 +10,16 @@ errors = errors + check_value("0F", "F", "BYTE", 0)
 errors = errors + check_value("4352455858", "43 52455858", "BYTE", 0)
 errors = errors + check_value("C3A9", "C3A9", "BYTE", 0)
 errors = errors + check_value("C3A9", "C3A9", "UTF8", 1)
-errors = errors + check_value("FF", "FF", "UTF8", 0)
+errors = errors + check_value("FF", "FF", "UTF8", 1)
+do ordinal = 0 to 255
+  bytes = .binary
+  width = 1
+  index = 0
+  assembler bresize bytes,width
+  assembler setbyte bytes,index,ordinal
+  hexadecimal = rexxclassic_bytes_to_hex(bytes)
+  errors = errors + check_value(hexadecimal,hexadecimal,"UTF8",1)
+end
 errors = errors + check_count("RXC-LC-40.3", 0)
 errors = errors + check_count("RXC-LC-40.4", 2)
 errors = errors + check_omitted()
@@ -31,7 +40,9 @@ check_value: procedure = .int
   if profile = "UTF8" then call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbifx2c..rexxclassicbif_x2c(reference context)
-  actual_hex = rexxclassic_bytes_to_hex(result.asBinary())
+  if profile = "UTF8" then
+    actual_hex = rexxclassic_bytes_to_hex(rexxclassic_text_to_latin1(result.asString()))
+  else actual_hex = rexxclassic_bytes_to_hex(result.asBinary())
   if \context.hasError() & actual_hex = expected_hex & result.hasText() = expected_text then return 0
   say "FAIL: X2C" hexadecimal profile "expected" expected_hex expected_text,
       "got" actual_hex result.hasText() context.errorCode() context.errorMessage()

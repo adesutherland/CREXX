@@ -784,8 +784,9 @@ multi-character input is valid, and leading zero digits are retained.
 
 The current Level B implementation preserves RXAS `hexchar` behavior for
 Unicode: a code point beyond the single-byte range contributes its low eight
-bits. Classic Level C C2X instead converts the exact coded bytes selected by
-the call context's BYTE or UTF8 profile.
+bits. Compiled Classic Level C C2X maps each `U+00XX` scalar to byte `XX` and
+returns its two hexadecimal digits. A scalar above `U+00FF` raises Classic
+`23.1`. The direct BIF library retains BYTE mode for binary callers.
 
 **Examples:**
 ```
@@ -805,20 +806,19 @@ See the separate [Level C BIF contract](../../../lib/rxfnsc/c2x.md) and
 
 ## D2C(number [,length])
 
-Classic Level C D2C converts a decimal whole number to
-configuration-coded characters. Without *length*, the number must be
+Classic Level C D2C converts a decimal whole number to Latin-1 ordinal
+characters: each output byte `XX` becomes `U+00XX`. Without *length*, the number must be
 non-negative and the result uses the minimum encoded width. With a
 non-negative *length*, negative numbers use twos-complement and the result is
-padded or truncated to exactly that many coded characters. The configuration,
-not Unicode code-point numbering, defines those characters.
+padded or truncated to exactly that many characters.
 
 Level B deliberately provides a different typed helper:
 `d2c(codepoint=.int [,output_length=.int])`. It emits one Unicode scalar value;
 its explicit output length may only be zero or one.
 
 See the separate [Level C BIF contract](../../../lib/rxfnsc/d2c.md) and
-[native Level B API](../../../lib/rxfnsb/rexx/d2c.md). The direct Level C
-implementation returns exact bytes and records valid UTF-8 text when applicable.
+[native Level B API](../../../lib/rxfnsb/rexx/d2c.md). Direct BYTE-profile
+consumers of the shared BIF library continue to receive binary values.
 
 
 
@@ -895,21 +895,19 @@ See the separate [Level C BIF contract](../../../lib/rxfnsc/x2b.md) and
 ## X2C(hexadecimal)
 
 Classic Level C X2C validates hexadecimal text, removes valid interior
-grouping blanks, left-pads an odd leading nibble, and converts each full byte
-through the implementation's configured coded-character encoding. Empty input
+grouping blanks, left-pads an odd leading nibble, and maps each full byte
+`XX` to Unicode `U+00XX`. Empty input
 returns empty and encoded leading zero bytes are retained.
 
 Hexadecimal letters are case-insensitive. Leading/trailing blanks,
-mis-grouped blanks, and non-hexadecimal characters are errors. Because the
-character encoding is configured, the character produced by a byte such as
-`4D` is not portable across ASCII/Unicode and EBCDIC configurations.
+mis-grouped blanks, and non-hexadecimal characters are errors. The mapping is
+fixed across platforms: `4D` produces `U+004D`.
 
-Level B deliberately provides a different typed helper that maps every parsed
-byte to Unicode U+0000 through U+00FF.
+Level B provides a separate typed helper with the same ordinal mapping.
 
 See the separate [Level C BIF contract](../../../lib/rxfnsc/x2c.md) and
-[native Level B API](../../../lib/rxfnsb/rexx/x2c.md). Direct Level C X2C
-preserves exact configured bytes and records a text view only for valid UTF-8.
+[native Level B API](../../../lib/rxfnsb/rexx/x2c.md). Direct binary consumers
+can still select the BYTE profile in the shared BIF library.
 
 
 
@@ -1920,10 +1918,10 @@ must contain exactly one character, and invalid endpoints signal
 `INVALID_ARGUMENTS`. It is retained for legacy byte-range use; `SEQUENCE` is
 the non-wrapping Unicode range API.
 
-Classic Level C `XRANGE([start [,end]])` is different. In the default BYTE
-profile it returns the inclusive wrapping exact-byte range, defaulting to
-`00` through `FF`. It is intentionally unavailable in UTF8 because it is not a
-Unicode scalar or grapheme range.
+Classic Level C `XRANGE([start [,end]])` defaults to the inclusive ordinal
+range `U+0000` through `U+00FF` and wraps after `U+00FF`. Endpoints above
+`U+00FF` raise `23.1`. This is a byte-domain range with text scalars as its
+representation, not a general Unicode scalar or grapheme range.
 See the separate [Level B API](../../../lib/rxfnsb/rexx/xrange.md) and
 [Level C contract](../../../lib/rxfnsc/xrange.md).
 

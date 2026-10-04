@@ -23,6 +23,9 @@ errors = errors + check_count("RXC-LC-40.4", 3)
 errors = errors + check_omitted()
 errors = errors + check_argument_error("RXC-LC-40.12", "1.5")
 errors = errors + check_argument_error("RXC-LC-40.13", "-1")
+errors = errors + check_unicode("233", "é", "")
+errors = errors + check_unicode("-1", "ÿ", "1")
+errors = errors + check_unicode_error("Ā")
 
 if errors = 0 then say "PASS: Level C C2D BIF"
 return errors <> 0
@@ -43,6 +46,36 @@ check_value: procedure = .int
   if \context.hasError() & result.asString() = expected then return 0
   say "FAIL: C2D" hexadecimal length_text "expected" expected "got" result.asString(),
       context.errorCode() context.errorMessage()
+  return 1
+
+check_unicode: procedure = .int
+  arg expected = .string, source = .string, length_text = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(source)
+  exists[1] = 1
+  args[2] = .RexxValue(length_text)
+  exists[2] = length_text <> ""
+  context = .RexxBifCallContext("C2D")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifc2d..rexxclassicbif_c2d(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: C2D Unicode" source expected result.asString() context.errorCode()
+  return 1
+
+check_unicode_error: procedure = .int
+  arg source = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("C2D")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifc2d..rexxclassicbif_c2d(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-23.1" then return 0
+  say "FAIL: C2D Unicode error" source context.errorCode() result.asString()
   return 1
 
 check_digits_error: procedure = .int

@@ -29,7 +29,7 @@ import rexxclassicbifx2d
 import rexxclassicencoding
 import rexxvalue
 
-/** Convert exact configured character bytes to a Classic whole number. */
+/** Convert configured byte ordinals to a Classic whole number. */
 rexxclassicbif_c2d: procedure = .RexxValue
   numeric digits inherited
   numeric form inherited
@@ -38,7 +38,17 @@ rexxclassicbif_c2d: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY oWHOLE>=0") = 0 then return .RexxValue("")
 
-  bytes = context.argument(1).asBinary()
+  bytes = .binary
+  config = context.characterConfig()
+  if config.isUtf8Profile() then do
+    source = context.argumentText(1)
+    if \rexxclassic_text_is_latin1(source) then do
+      call rexxclassicbif_set_error(context_ref, "23.1", 1, "", "")
+      return .RexxValue("")
+    end
+    bytes = rexxclassic_text_to_latin1(source)
+  end
+  else bytes = context.argument(1).asBinary()
   byte_length = .int
   assembler blen byte_length,bytes
   if byte_length = 0 then return .RexxValue("0")

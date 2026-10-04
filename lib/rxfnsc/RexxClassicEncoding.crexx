@@ -23,9 +23,48 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicencoding expose rexxclassic_bytes_to_hex rexxclassic_hex_to_bytes rexxclassic_bytes_are_utf8 rexxclassic_value_from_bytes
+namespace rexxclassicencoding expose rexxclassic_bytes_to_hex rexxclassic_hex_to_bytes rexxclassic_bytes_are_utf8 rexxclassic_value_from_bytes rexxclassic_text_is_latin1 rexxclassic_text_to_latin1 rexxclassic_latin1_to_text
 import rexxclassicconfig
 import rexxvalue
+
+/** True when every Unicode scalar has an exact Latin-1 ordinal byte. */
+rexxclassic_text_is_latin1: procedure = .boolean
+  arg value = .string
+  text_length = .int
+  codepoint = .int
+  assembler strlen text_length,value
+  do index = 0 to text_length - 1
+    assembler strchar codepoint,value,index
+    if codepoint > 255 then return 0
+  end
+  return 1
+
+/** Map checked U+0000 through U+00FF scalars to their byte ordinals. */
+rexxclassic_text_to_latin1: procedure = .binary
+  arg value = .string
+  text_length = .int
+  codepoint = .int
+  result = .binary
+  assembler strlen text_length,value
+  assembler bresize result,text_length
+  do index = 0 to text_length - 1
+    assembler strchar codepoint,value,index
+    assembler setbyte result,index,codepoint
+  end
+  return result
+
+/** Map each byte ordinal to one U+00XX Unicode scalar. */
+rexxclassic_latin1_to_text: procedure = .string
+  arg value = .binary
+  byte_length = .int
+  codepoint = .int
+  result = ""
+  assembler blen byte_length,value
+  do index = 0 to byte_length - 1
+    assembler getbyte codepoint,value,index
+    assembler appendchar result,codepoint
+  end
+  return result
 
 /** Convert exact octets to two uppercase hexadecimal digits per byte. */
 rexxclassic_bytes_to_hex: procedure = .string

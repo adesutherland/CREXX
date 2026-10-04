@@ -2343,6 +2343,7 @@ static ASTNode *levelc_config_setup_statement(Context *context,
                                                ASTNode *anchor_node,
                                                int make_reference) {
     ASTNode *value;
+    ASTNode *args[1];
     if (make_reference) {
         value = rxcp_remap_create_reference_expr(
                 context, anchor_node,
@@ -2351,8 +2352,10 @@ static ASTNode *levelc_config_setup_statement(Context *context,
         return value ? rxcp_remap_create_named_assignment(
                 context, anchor_node, LEVELC_CONFIG_REF_SYMBOL, value) : NULL;
     }
-    value = rxcp_remap_create_factory_call(context, anchor_node,
-                                            "RexxClassicConfig", NULL, 0);
+    args[0] = rxcp_remap_create_string_constant(context, anchor_node, "UTF8");
+    value = args[0] ? rxcp_remap_create_factory_call(context, anchor_node,
+                                                     "RexxClassicConfig", args, 1)
+                    : NULL;
     return value ? rxcp_remap_create_named_assignment(
             context, anchor_node, LEVELC_CONFIG_SYMBOL, value) : NULL;
 }

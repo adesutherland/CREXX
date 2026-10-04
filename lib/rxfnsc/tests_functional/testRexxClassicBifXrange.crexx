@@ -9,6 +9,7 @@ errors = errors + check_default()
 errors = errors + check_value("FEFF", "FE", 1, "", 0)
 errors = errors + check_value("FF0001", "FF", 1, "01", 1)
 errors = errors + check_value("000102", "", 0, "02", 1)
+errors = errors + check_utf8_range()
 errors = errors + check_utf8_error()
 errors = errors + check_count_error()
 errors = errors + check_pad_error("C3A9")
@@ -55,12 +56,30 @@ check_value: procedure = .int
 check_utf8_error: procedure = .int
   args = .RexxValue[]
   exists = .int[]
+  args[1] = .RexxValue("Ā")
+  exists[1] = 1
   context = .RexxBifCallContext("XRANGE")
   call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbifxrange..rexxclassicbif_xrange(reference context)
-  if context.hasError() & context.errorCode() = "RXC-LC-40.1" then return 0
-  say "FAIL: XRANGE UTF8 expected RXC-LC-40.1 got" context.errorCode() result.asString()
+  if context.hasError() & context.errorCode() = "RXC-LC-23.1" then return 0
+  say "FAIL: XRANGE UTF8 expected RXC-LC-23.1 got" context.errorCode() result.asString()
+  return 1
+
+check_utf8_range: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("þ")
+  args[2] = .RexxValue(rexxclassic_latin1_to_text(rexxclassic_hex_to_bytes("00")))
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("XRANGE")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifxrange..rexxclassicbif_xrange(reference context)
+  actual_hex = rexxclassic_bytes_to_hex(rexxclassic_text_to_latin1(result.asString()))
+  if \context.hasError() & actual_hex = "FEFF00" then return 0
+  say "FAIL: XRANGE UTF8 ordinal range" actual_hex context.errorCode()
   return 1
 
 check_count_error: procedure = .int

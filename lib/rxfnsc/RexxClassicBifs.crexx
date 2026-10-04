@@ -637,8 +637,24 @@ _rexxclassicbif_bitop: procedure = .RexxValue
   end
 
   config = context.characterConfig()
+  if config.isUtf8Profile() then do
+    do argument_index = 1 to 3
+      if \context.argumentExists(argument_index) then iterate
+      argument_value = context.argument(argument_index)
+      if argument_value.hasBinary() & \argument_value.hasText() then do
+        call _set_bif_error(context_ref, "23.1", argument_index, "", "")
+        return _context_error(context_ref)
+      end
+      if \rexxclassic_text_is_latin1(context.argumentText(argument_index)) then do
+        call _set_bif_error(context_ref, "23.1", argument_index, "", "")
+        return _context_error(context_ref)
+      end
+    end
+  end
   if context.argumentExists(3) then do
-    pad_check = context.argument(3).asBinary()
+    if config.isUtf8Profile() then
+      pad_check = rexxclassic_text_to_latin1(context.argumentText(3))
+    else pad_check = context.argument(3).asBinary()
     pad_check_length = .int
     assembler blen pad_check_length,pad_check
     if pad_check_length <> 1 then do
@@ -646,11 +662,21 @@ _rexxclassicbif_bitop: procedure = .RexxValue
       return _context_error(context_ref)
     end
   end
-  left = context.argument(1).asBinary()
+  if config.isUtf8Profile() then
+    left = rexxclassic_text_to_latin1(context.argumentText(1))
+  else left = context.argument(1).asBinary()
   right = .binary
   pad = .binary
-  if context.argumentExists(2) then right = context.argument(2).asBinary()
-  if context.argumentExists(3) then pad = context.argument(3).asBinary()
+  if context.argumentExists(2) then do
+    if config.isUtf8Profile() then
+      right = rexxclassic_text_to_latin1(context.argumentText(2))
+    else right = context.argument(2).asBinary()
+  end
+  if context.argumentExists(3) then do
+    if config.isUtf8Profile() then
+      pad = rexxclassic_text_to_latin1(context.argumentText(3))
+    else pad = context.argument(3).asBinary()
+  end
 
   left_length = .int
   right_length = .int
@@ -685,7 +711,7 @@ _rexxclassicbif_bitop: procedure = .RexxValue
     else assembler getbyte result_byte,right,index
     assembler setbyte result,index,result_byte
   end
-  if config.isUtf8Profile() & rexxclassic_bytes_are_utf8(result) then return .RexxValue.fromBinaryText(result)
+  if config.isUtf8Profile() then return .RexxValue(rexxclassic_latin1_to_text(result))
 return .RexxValue.fromBinary(result)
 
 _rexxclassic_bitop_byte: procedure = .int

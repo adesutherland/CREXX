@@ -8,9 +8,20 @@ errors = 0
 errors = errors + check_text("", "", "BYTE")
 errors = errors + check_text("414243", "ABC", "BYTE")
 errors = errors + check_text("C3A9", "é", "BYTE")
-errors = errors + check_text("C3A9", "é", "UTF8")
+errors = errors + check_text("E9", "é", "UTF8")
 errors = errors + check_binary("FF00", "BYTE", "")
 errors = errors + check_binary("FF", "UTF8", "RXC-LC-23.1")
+errors = errors + check_text_error("Ā", "RXC-LC-23.1")
+do ordinal = 0 to 255
+  source = ""
+  assembler appendchar source,ordinal
+  bytes = .binary
+  width = 1
+  index = 0
+  assembler bresize bytes,width
+  assembler setbyte bytes,index,ordinal
+  errors = errors + check_text(rexxclassic_bytes_to_hex(bytes),source,"UTF8")
+end
 errors = errors + check_count("RXC-LC-40.3", 0)
 errors = errors + check_count("RXC-LC-40.4", 2)
 errors = errors + check_omitted()
@@ -50,6 +61,20 @@ check_binary: procedure = .int
   else if \context.hasError() & result.asString() = hexadecimal then return 0
   say "FAIL: C2X binary" profile hexadecimal result.asString(),
       context.errorCode() context.errorMessage()
+  return 1
+
+check_text_error: procedure = .int
+  arg source = .string, expected = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("C2X")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifc2x..rexxclassicbif_c2x(reference context)
+  if context.hasError() & context.errorCode() = expected then return 0
+  say "FAIL: C2X scalar conversion" source context.errorCode() result.asString()
   return 1
 
 check_count: procedure = .int

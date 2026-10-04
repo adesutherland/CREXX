@@ -28,12 +28,22 @@ import rexxclassicbifs
 import rexxclassicencoding
 import rexxvalue
 
-/** Convert exact configured character bytes to uppercase hexadecimal. */
+/** Convert byte ordinals or Level C Latin-1 scalars to uppercase hexadecimal. */
 rexxclassicbif_c2x: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
 
-  bytes = context.argument(1).asBinary()
+  bytes = .binary
+  config = context.characterConfig()
+  if config.isUtf8Profile() then do
+    source = context.argumentText(1)
+    if \rexxclassic_text_is_latin1(source) then do
+      call rexxclassicbif_set_error(context_ref, "23.1", 1, "", "")
+      return .RexxValue("")
+    end
+    bytes = rexxclassic_text_to_latin1(source)
+  end
+  else bytes = context.argument(1).asBinary()
   return .RexxValue(rexxclassic_bytes_to_hex(bytes))

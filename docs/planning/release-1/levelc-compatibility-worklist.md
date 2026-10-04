@@ -836,8 +836,10 @@ are verified against all affected consumers.
   A byte-valued operation receiving a scalar above `U+00FF` raises the agreed
   conversion signal, while ordinary character operations accept it. Verify
   complete 256-value and out-of-range cases, nested BIFs, CTest, linked image
-  and host text output. The specific error identity is an implementation
-  decision to record before its first code edit.
+  and host text output. The selected error identity is `RXC-LC-23.1` through
+  the existing BIF context, yielding the ordinary Classic syntax signal in
+  compiled Level C. It denotes a scalar invalid for this byte conversion,
+  not invalid Unicode. This decision is recorded before the first code edit.
 - [ ] **LC-AC-74 — closed-instruction Unicode review:** reconcile each
   formerly closed LC-I-01–10 instruction against the new scalar, source,
   symbol, host and error contract. Retain unaffected structural receipts;
@@ -862,14 +864,15 @@ choice still require Adrian's approval.
    in this authoritative worklist, release plan and architecture/reference
    docs; audit all ten formerly closed instructions and retain valid evidence.
    No code dependency.
-2. **LC-STEP-88B (LC-AC-72/73; depends on 88A):** implement one shared
+2. **LC-STEP-88B (LC-AC-72/73; complete 2026-10-04; depends on 88A):** implement one shared
    Latin-1 ordinal conversion service and the complete conversion/bitwise
    BIF family, including the selected conversion signal; verify 256 round
    trips, failures and RexxScript consumers before committing the increment.
 3. **LC-STEP-88C (LC-AC-72/73; depends on 88B):** make Level C hex/binary
    literals, expression argument flow and resulting `RexxValue` objects use
    Unicode text consistently; keep the shared class's binary capability.
-   Inspect canonical AST/emitter output and verify opt/no-opt and linked runs.
+   Remove the now-unused conditional UTF-8 byte-to-value helper. Inspect
+   canonical AST/emitter output and verify opt/no-opt and linked runs.
 4. **LC-STEP-88D (LC-AC-57/62/63/72/74; depends on 88C):** requalify SAY,
    DROP and assignment as whole instructions for Unicode, including host text
    output, indirect lists and compound substitutions. Retain previously
@@ -883,6 +886,22 @@ choice still require Adrian's approval.
    explicit Unicode BIF APIs for separate language approval. Plan raw binary
    values/I/O separately rather than adding them implicitly to the scalar
    path.
+
+**2026-10-04 LC-STEP-88B receipt.** `RexxClassicEncoding` now owns the
+reversible `U+00XX`/byte ordinal bridge. Generated Level C config selects its
+text path; direct BYTE consumers and `RexxValue` binary storage remain
+available to RexxScript. `C2X`, `X2C`, `C2D`, `D2C`, `BITAND`, `BITOR`,
+`BITXOR`, and `XRANGE` use the bridge and return text on the Level C path.
+Inputs above `U+00FF` report `RXC-LC-23.1` through the BIF context and
+compiled `CLASSIC_SYNTAX` signal. The focused Debug tests passed 14/14
+(`/tmp/crexx-unicode-focused.5t4oPd`), including all 256 `X2C`/`C2X`
+ordinals and optimized/no-opt compiled round trips. The normal Debug Level C
+suite passed 446/446 (`/tmp/crexx-unicode-levelc.cyeXh5`); RexxScript,
+`RexxValue`, shared BIF, and compiled out-of-range checks passed 10/10
+(`/tmp/crexx-unicode-cross.Lc9jtS`). The linked image printed the expected
+`0`, `FF`, `255`, `FF`, `16`, `FEFF00`, `1`
+(`/tmp/crexx-unicode-linked.m5iGde`). `LC-AC-72/73` remain open for literal
+flow, host text, and wider character-operation proof in STEP-88C–88E.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
