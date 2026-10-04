@@ -2,6 +2,8 @@
 
 RexxScript is an interpreted, sandboxed Rexx-family scripting surface for small
 rules, calculations, and generated-code execution inside CREXX applications.
+RexxScript borrows familiar syntax from REXX but implements only the subset
+described in this guide; it is not a full REXX interpreter.
 It is a RexxScript product, not the Level C compiler path.
 
 RexxScript is delivered as:
@@ -133,6 +135,8 @@ RETURN
 CALL intrinsic(...)
 ```
 
+`ELSE IF` is currently unsupported. This limitation may be lifted in the future.
+
 `GOTO label` is accepted as an alias for `SIGNAL label`.
 
 Expressions support:
@@ -149,6 +153,8 @@ comparisons in conditions
 ```
 
 Expression evaluation is intentionally simple and left-to-right.
+Conditions support one test or comparison at a time; compound conditions joined
+with `&` or `|` are not supported.
 
 ## Variables
 
@@ -160,7 +166,9 @@ Variable names are matched case-insensitively.
 
 ## Intrinsic Functions
 
-RexxScript currently supports this shared Classic-compatible intrinsic set:
+RexxScript supports only the intrinsic functions listed here. The set includes
+shared Classic-compatible functions and a small number of RexxScript-specific
+intrinsics; it is not the full REXX BIF library.
 
 ```text
 ABBREV

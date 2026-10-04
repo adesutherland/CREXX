@@ -773,7 +773,10 @@ CMD_define: procedure=.int
       end
       nlen=nlen-1
       if nlen>1 then do
-         body=strip(substr(body,1,nlen))' ; 'strip(source.nlino)
+         /* Keep continued lines until expansion can decide whether they are
+          * standalone script-macro calls. Ordinary macros are folded back
+          * to semicolons by rxpp_split_cstyle_lines(). */
+         body=strip(substr(body,1,nlen))||d2c(10)||strip(source.nlino)
       end
       else body=strip(source.nlino)
       stype.nlino='D'
@@ -1742,21 +1745,122 @@ expandRecursive:  procedure=.string
   arg line=.string,linnum=.int
   old = ''
 
-  word1=lower(word(line,1))
-  if substr(word1,1,2)='##' then do
-     do k=1 to scriptMacros[0]
-        macname=scriptMacros[k]
-        /* A scripted directive names one macro. Prefix matching made a macro
-         * such as ##ui capture ##ui_node when both packages were present. */
-        if word1=macname then return newmacros(macname,line,linnum,1)
-     end
+  macname=rxpp_script_macro_name(line)
+  if macname\='' then do
+     line=rxpp_srcmap_unwrap(line)
+     return newmacros(macname,line,linnum,1)
   end
   expandlevel=0
   do until old = line | line=''   /* No change → stop */
      old = line
      line = expandLine(line,linnum)  /* Expand one level */
+     if pos(d2c(10),line)>0 then line=rxpp_split_cstyle_lines(line,linnum)
+     /* C-style expansion can produce a standalone script-macro invocation.
+      * Dispatch only when its first word is an exact registered macro name. */
+     macname=rxpp_script_macro_name(line)
+     if macname\='' then do
+        line=rxpp_srcmap_unwrap(line)
+        return newmacros(macname,line,linnum,1)
+     end
   end
 return line
+
+/* ------------------------------------------------------------------
+ * rxpp_script_macro_name: Return the exact registered script macro at the
+ * first word of LINE, or an empty string when LINE is ordinary source.
+ * ------------------------------------------------------------------
+ */
+rxpp_script_macro_name: procedure=.string
+  arg line=.string
+  line=rxpp_srcmap_unwrap(line)
+  word1=lower(word(line,1))
+  if substr(word1,1,2)\='##' then return ''
+  do k=1 to scriptMacros[0]
+     macname=scriptMacros[k]
+     /* Exact matching prevents ##ui from capturing ##ui_node. */
+     if word1=macname then return macname
+  end
+return ''
+
+/* ------------------------------------------------------------------
+ * rxpp_srcmap_unwrap: Remove source-map span delimiters while retaining their
+ * contents. Generated script-macro calls are inspected before final output,
+ * so source-map wrappers must not hide the directive token or its arguments.
+ * ------------------------------------------------------------------
+ */
+rxpp_srcmap_unwrap: procedure=.string
+  arg line=.string
+  marker=rxpp_srcmap_marker()
+  marker_len=length(marker)
+  close_marker=marker||'}'
+  close_len=length(close_marker)
+  result=''
+  i=1
+  line_len=length(line)
+  do while i<=line_len
+     if substr(line,i,marker_len)=marker then do
+        j=i+marker_len
+        k=j
+        do while k<=line_len & datatype(substr(line,k,1),'W')
+           k=k+1
+        end
+        if k>j & substr(line,k,1)='+' then do
+           k=k+1
+           digits=k
+           do while k<=line_len & datatype(substr(line,k,1),'W')
+              k=k+1
+           end
+           if k>digits & substr(line,k,1)='{' then do
+              i=k+1
+              iterate
+           end
+        end
+        if substr(line,i,close_len)=close_marker then do
+           i=i+close_len
+           iterate
+        end
+     end
+     result=result||substr(line,i,1)
+     i=i+1
+  end
+return result
+
+/* ------------------------------------------------------------------
+ * rxpp_split_cstyle_lines: Split a continued C-style expansion only when it
+ * contains a standalone script-macro call. Remaining lines are inserted after
+ * the current line, preserving their order for Pass Three. Ordinary continued
+ * macros retain their historical semicolon expansion.
+ * ------------------------------------------------------------------
+ */
+rxpp_split_cstyle_lines: procedure=.string
+  arg line=.string,linnum=.int
+  separator=d2c(10)
+  parts=.string[]
+  rest=line
+  part_count=0
+  has_script_call=0
+  do forever
+     split_at=pos(separator,rest)
+     part_count=part_count+1
+     if split_at=0 then do
+        parts[part_count]=rest
+        if rxpp_script_macro_name(rest)\='' then has_script_call=1
+        leave
+     end
+     parts[part_count]=left(rest,split_at-1)
+     if rxpp_script_macro_name(parts[part_count])\='' then has_script_call=1
+     rest=substr(rest,split_at+1)
+  end
+
+  if has_script_call=0 then return changestr(separator,' ; ',line)
+
+  if part_count>1 then do
+     call insert_source linnum+1,part_count-1
+     do part_index=2 to part_count
+        call inject2Source linnum+part_index-1,3,parts[part_index]
+     end
+  end
+return parts[1]
 /* ------------------------------------------------------------------
  * expandLine: Expands all macro invocations within a single line (one expansion pass).
  * ------------------------------------------------------------------
@@ -1806,6 +1910,8 @@ newMacros:  procedure=.string
 
   subparm=substr(line,ipi)
   subparm=subword(subparm,2)
+  grouped_script_args=pos('=(',subparm)>0
+  if grouped_script_args then subparm=protectScriptMacroGroup(subparm)
   subparm=translate(subparm,,',')
   inparms=''
   original_call=source[linnum]
@@ -1813,6 +1919,16 @@ newMacros:  procedure=.string
   source[linnum]='/* 'source[linnum]' */'
   do kk=1 to words(scriptMacro.macname.parms)
      sword=qword(subparm,kk)
+     if grouped_script_args then do
+        sword=changestr(d2c(1),sword,',')
+        sword=changestr(d2c(2),sword,' ')
+        expectedarg=word(scriptMacro.macname.parms,kk)
+        equal_pos=pos('=',sword)
+        if equal_pos>0 & upper(substr(sword,1,equal_pos-1))=upper(expectedarg) then do
+           sword=substr(sword,equal_pos+1)
+           if left(sword,1)='(' & right(sword,1)=')' then sword=substr(sword,2,length(sword)-2)
+        end
+     end
      sword=quote(sword)
      if sword \= '' then inparms=inparms||word(scriptMacro.macname.parms,kk)' = 'sword'; '
   end
@@ -1838,8 +1954,11 @@ newMacros:  procedure=.string
    else do
      REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _macro_calls, _file, _module, _date, _time, _macro, _mline, _mlino, _mcalls OUTPUT out RESULT result /* DEBUG */
    end
+   script_error=.int
+   script_error=0
    if result[1]='OK' then nop
    else do
+      script_error=1
       say '/// Macro Error at line : '_mlino
       say '/// Macro Call          : '_mline
       say '/// Error Message       : 'result.1
@@ -1849,6 +1968,10 @@ newMacros:  procedure=.string
      do k=1 to result.0
         say "Script Result" k result.k
      end
+  end
+  if script_error=1 then do
+     call rxpp_diag 'error','RXPP Precompile aborted'
+     exit 8
   end
 
   main_insert = 0
@@ -1869,9 +1992,16 @@ newMacros:  procedure=.string
         if parent_mcall_depth = '' then parent_mcall_depth = 0
         mcall_depth = parent_mcall_depth + 1
         if mcall_depth > 16 then do
-           call rxpp_diag 'error','++RXPP_MCALL_DEPTH','macro',macname,'depth',mcall_depth,'limit',16
-           out[kk] = ''
-           generated_mcall_depth[kk] = 0
+           call rxpp_diag 'error','RXPP_MCALL_DEPTH','macro',macname,'depth',mcall_depth,'limit',16
+           ki=.int
+           do ki=1 to outbuf[0]
+              say right(ki,4,'0')' \\\ 'outbuf[ki]
+           end
+           do kj=1 to out[0]
+              say right(ki+kj-1,4,'0')' \\+ 'out[kj]
+           end
+           call rxpp_diag 'error','RXPP Precompile aborted'
+           exit 8
         end
         else do
            out[kk] = substr(line, p + 8)
@@ -2064,6 +2194,7 @@ injectVariable: procedure=.string
 replaceFixArg: Procedure=.string
   arg bodyexp=.string,macname=.string, xargs=.string,callargcount=.int,source_base=.int
   iargs=xargs
+  preserveScriptGroups=pos('##_',bodyExp)>0
 
   xargs   = translate(xargs, , ',')
   wrds=words(xargs)
@@ -2099,7 +2230,7 @@ replaceFixArg: Procedure=.string
   if keypositional=0 then return bodyExp
 ## now that we know we have keyword paramters, we need to translate tso-style call back to key= syntax
   do i=1 to callargcount
-       callargs.i=tso2func(callargs.i)
+       callargs.i=tso2func(callargs.i,preserveScriptGroups)
   end
 ## start matching macro definition parm list to calling parameters (keywords only)
   do k=.int(keypositional) to wrds        ## run through the macroc header definition
@@ -2115,11 +2246,14 @@ replaceFixArg: Procedure=.string
      aval = .string
      aval=callargs.j                       ## identifies the call of the macro
      value_source_col=0
-     if pos('=',aval)=0 then aval=adefault ## if keyword is not defined use the default in the macro def part
+     equal_pos=pos('=',aval)
+     if equal_pos=0 then aval=adefault ## if keyword is not defined use the default in the macro def part
      else do                               ## if so check if the keyword call is also in the value clause
-        value_source_col=callargs_source_col.j+pos('=',aval)
-        aval=translate(aval,,'=')
-        aval=subword(aval,2)
+        value_source_col=callargs_source_col.j+equal_pos
+        aval=substr(aval,equal_pos+1)
+        /* Keep the keyword label on a grouped value forwarded to a script
+         * macro so newMacros can recognize the original key=(...) group. */
+        if preserveScriptGroups & left(strip(aval),1)='(' & pos(',',aval)>0 then aval=aname'='aval
      end
      /*
       * Peter note: keyword defaults are generated text and therefore stay on
@@ -2131,16 +2265,74 @@ replaceFixArg: Procedure=.string
   end
 return bodyExp
 /* ------------------------------------------------------------------
+ * protectScriptMacroGroup: Protects separators inside key=(...) while
+ * the existing qword argument splitter handles surrounding arguments.
+ * ------------------------------------------------------------------
+ */
+protectScriptMacroGroup: procedure=.string
+  arg text=.string
+  out=''
+  depth=0
+  quote_char=''
+  text_len=length(text)
+
+  do j=1 to text_len
+     ch=substr(text,j,1)
+
+     if quote_char\='' then do
+        out=out||ch
+        if ch=quote_char then do
+           if j<text_len & substr(text,j+1,1)=quote_char then do
+              out=out||quote_char
+              j=j+1
+           end
+           else quote_char=''
+        end
+        iterate
+     end
+
+     if ch='"' | ch="'" then do
+        quote_char=ch
+        out=out||ch
+        iterate
+     end
+
+     if depth=0 & ch='=' & j<text_len & substr(text,j+1,1)='(' then do
+        out=out||'=('
+        depth=1
+        j=j+1
+        iterate
+     end
+
+     if depth>0 & ch='(' then depth=depth+1
+     else if depth>0 & ch=')' then depth=depth-1
+
+     if depth>0 & ch=',' then out=out||d2c(1)
+     else if depth>0 & (ch=' ' | ch='09'x) then out=out||d2c(2)
+     else out=out||ch
+  end
+return out
+
+/* ------------------------------------------------------------------
  * tso2func: Normalizes TSO-style keyword arguments to function-style key=value syntax.
  * ------------------------------------------------------------------
  */
 tso2func: procedure=.string
-  arg inparm=.string
+  arg inparm=.string,preserve_group=.int
   pp1=pos('(',inparm)
   if pp1=0 then return inparm
   pp2=lastpos(')',inparm)
-  inparm=overlay('=',inparm,pp1)
-  if pp2>1 then inparm=substr(inparm,1,pp2-1)
+  if pp2<pp1 then return inparm
+  if pp1>1 & substr(inparm,pp1-1,1)='=' then do
+     if preserve_group & pos(',',substr(inparm,pp1+1,pp2-pp1-1))>0 then return inparm
+     /* Preserve keyword expressions wrapped in parentheses, including any
+      * comparison '=' inside the expression. */
+     inparm=substr(inparm,1,pp1-1)||substr(inparm,pp1+1,pp2-pp1-1)||substr(inparm,pp2+1)
+  end
+  else do
+     inparm=overlay('=',inparm,pp1)
+     if pp2>1 then inparm=substr(inparm,1,pp2-1)
+  end
 return strip(inparm)
 /* ------------------------------------------------------------------
  * variadic: Expands variadic macros (macros with ... arguments) into repeated generated statements.
