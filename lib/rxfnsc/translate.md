@@ -17,8 +17,9 @@ XRANGE, calculated directly without allocating the table. ASCII lowercase is
 the BYTE uppercase mapping.
 
 In UTF8, tables, PAD, and positions are Unicode codepoints and no normalization
-occurs. Output-with-omitted-input reports `RXC-LC-40.1` because UTF8 XRANGE is
-not defined. Invalid UTF-8 reports `23.1`; an invalid profile-sized PAD reports
+occurs. Output-with-omitted-input currently reports `RXC-LC-40.1`; the
+Unicode-first treatment of its implicit table is pending a language decision.
+Invalid UTF-8 reports `23.1`; an invalid profile-sized PAD reports
 `40.23`; standard presence/count errors use `40.3`, `40.4`, and `40.5`.
 
 The direct optimized/unoptimized RexxValue harness covers uppercase, duplicate

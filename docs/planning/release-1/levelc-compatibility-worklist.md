@@ -898,6 +898,13 @@ choice still require Adrian's approval.
    Unicode character BIF and ARG/PARSE audit, then continue the strict
    instruction queue. Use one codepoint template engine; remove obsolete
    profile-selection assumptions and qualify affected shared consumers.
+   `88E-1` (in progress) audits the complete implemented character BIF family as one
+   Unicode text boundary, with codepoint positions, mapped ordinals, return
+   types and RexxScript isolation. `88E-2` reviews ARG as a whole instruction
+   for Unicode uppercasing, codepoint templates, activation modes and host
+   entry. `88E-3` reviews PARSE as a whole instruction across its admitted
+   source types and templates. Keep their open reference/condition obligations
+   visible, and commit each qualified unit separately.
 6. **LC-STEP-88F (LC-AC-75; depends on 88E for stable semantics):** propose
    explicit Unicode BIF APIs for separate language approval. Plan raw binary
    values/I/O separately rather than adding them implicitly to the scalar
@@ -994,6 +1001,25 @@ No product implementation change was needed. `LC-AC-63` and `LC-I-03` close.
 Together with the earlier ten-instruction impact audit and the SAY/DROP
 receipts, this completes `LC-AC-74` and `LC-STEP-88D`. Unicode character BIFs,
 ARG/PARSE and full Level C qualification remain open under their own criteria.
+
+**2026-10-04 LC-STEP-88E-1 checkpoint.** The shared direct BIF sweep passed
+106/110 first; four `SYMBOL`/`VALUE` failures came from July fixtures storing
+only uppercase `A.X` while expecting the substituted lowercase `A.x` value.
+Regina confirmed these are distinct case-preserved tails. The fixtures now
+store and assert both keys; all four repaired opt/no-opt tests pass
+(`/tmp/crexx-symbol-value-focused.1AysO6`), with the unchanged 106 direct
+BIF results retained (`/tmp/crexx-character-bifs.2n9Vy2`). A compiled
+31-result Unicode matrix covers character length/position, search, edits,
+word scanning with U+00A0, case conversion and text results in optimized and
+no-opt modes. Eight focused checks passed
+(`/tmp/crexx-character-focused.kQE6rh`); the linked matrix matched the
+unlinked output byte for byte (`/tmp/crexx-character-linked.6SjH5G`), and the
+Debug Level C suite passed 454/454 (`/tmp/crexx-character-levelc.jssCD8`).
+The character BIF text paths and direct BYTE isolation are evidenced, but
+`88E-1` stays open: `TRANSLATE(source, output_table)` currently reports
+`40.1` when its implicit input table is omitted. Adrian's approval is pending
+on whether that table should be mapped U+0000–U+00FF ordinals, leaving other
+Unicode scalars unchanged. No implementation of that choice is made here.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
@@ -3210,7 +3236,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-EXPRESSIONS` | Classic arithmetic, comparison, Boolean, and concatenation expressions | Bounded slice: documented operator family | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-BIF-CALL` | Recognised ANSI BIF calls | Direct compiler table for 57 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge | Remaining services, configured context and complete reference proof open |
+| `SYN-CLASSIC-BIF-CALL` | Recognised ANSI BIF calls | Direct compiler table for 57 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and shared direct sweep under LC-STEP-88E-1 | TRANSLATE implicit-table decision, remaining services, configured context and complete reference proof open |
 | `SYN-CLASSIC-LOCAL-CALL` | Direct local function/procedure calls | Bounded slice: direct local function and procedure calls | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DSLSH` | Source tree, diagnostics, and syntax-highlighting projection | Parser-mode milestone | Execution and full diagnostic conformance remain separate |
 | `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Bounded slice: ten proven slices | Remaining Classic forms, errors and configuration proof open |

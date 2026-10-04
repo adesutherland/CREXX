@@ -30,7 +30,7 @@ lines and `CHARIN` counts codepoints. Text output writes the string's UTF-8
 encoding. Arbitrary file or protocol bytes belong in `.binary` and byte-oriented
 I/O APIs rather than being smuggled through `.string`.
 
-The VM whitespace table and the Level C UTF8 profile are pinned to the same
+The VM whitespace table and the Level C Unicode text route are pinned to the same
 Unicode version. U+180E is not whitespace in that version.
 
 ## Level G

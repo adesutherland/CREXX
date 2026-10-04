@@ -5618,6 +5618,12 @@ add_levelc_runtime_slice_test(levelc_latin1_ordinals
         rexx_src/levelc_latin1_ordinals.rexx "0\nFF\n255\nFF\n16\nFEFF00\n1\n")
 add_levelc_runtime_slice_test(levelc_latin1_ordinals_noopt
         rexx_src/levelc_latin1_ordinals.rexx "0\nFF\n255\nFF\n16\nFEFF00\n1\n" -n)
+add_levelc_runtime_slice_test(levelc_unicode_character_bifs
+        rexx_src/levelc_unicode_character_bifs.rexx
+        "length=4\nsubstr=é🙂\npos=3\nlastpos=3\nreverse=B🙂éA\nleft=Aé\nright=🙂B\ndelstr=AB\ninsert=A漢B\noverlay=A漢B\nchangestr=漢🙂漢\ncountstr=2\ncompare=2\nverify=2\nabbrev=1\nwords=2\nword=🙂\nwordindex=3\nwordlength=1\nwordpos=2\nsubword=🙂\ndelword=🙂\nspace=é|🙂\nstrip=é\ntranslate=É🙂\nupper=É🙂\nlower=é🙂\ncopies=é🙂é🙂\ncenter=.é.\nleftpad=é.\nrightpad=.é\n")
+add_levelc_runtime_slice_test(levelc_unicode_character_bifs_noopt
+        rexx_src/levelc_unicode_character_bifs.rexx
+        "length=4\nsubstr=é🙂\npos=3\nlastpos=3\nreverse=B🙂éA\nleft=Aé\nright=🙂B\ndelstr=AB\ninsert=A漢B\noverlay=A漢B\nchangestr=漢🙂漢\ncountstr=2\ncompare=2\nverify=2\nabbrev=1\nwords=2\nword=🙂\nwordindex=3\nwordlength=1\nwordpos=2\nsubword=🙂\ndelword=🙂\nspace=é|🙂\nstrip=é\ntranslate=É🙂\nupper=É🙂\nlower=é🙂\ncopies=é🙂é🙂\ncenter=.é.\nleftpad=é.\nrightpad=.é\n" -n)
 add_levelc_runtime_slice_test(levelc_literal_ordinals
         rexx_src/levelc_literal_ordinals.rexx
         "FF\nFF\nC3A9\n2\n00FF\n0F\n07\nC3A9\n80\n80\nAB\nAB\n")
