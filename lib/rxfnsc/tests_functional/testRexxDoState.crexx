@@ -1,0 +1,68 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+import rexxdostate
+
+main: procedure = .int
+  errors = 0
+  pool = .RexxVariablePool()
+
+  count = .RexxDoState(reference pool, "")
+  call count.setRepeatCount(.RexxValue("3"))
+  seen = 0
+  do while count.entryAllowed()
+    seen = seen + 1
+    call count.advance()
+  end
+  errors = errors + check(seen = 3, "exact simple count")
+
+  count = .RexxDoState(reference pool, "")
+  call count.setRepeatCount(.RexxValue("0"))
+  errors = errors + check(\count.entryAllowed(), "zero count skips body")
+
+  count = .RexxDoState(reference pool, "")
+  call count.setRepeatCount(.RexxValue("2147483648"))
+  errors = errors + check(count.countDigits(.RexxValue("2147483648"), "26.2") = "2147483648", "large count retains digits")
+  errors = errors + check(count.entryAllowed(), "count above 32-bit range")
+  call count.advance()
+  errors = errors + check(count.entryAllowed(), "large count advances exactly")
+
+  count = .RexxDoState(reference pool, "")
+  call count.setRepeatCount(.RexxValue("1E30"))
+  errors = errors + check(count.countDigits(.RexxValue("1E30"), "26.2") = "1000000000000000000000000000000", "exponent count expands exactly")
+  errors = errors + check(count.entryAllowed(), "exponent whole count")
+  call count.advance()
+  errors = errors + check(count.entryAllowed(), "exponent count advances exactly")
+
+  call pool.setSymbolValue("I", .RexxValue("a"))
+  control = .RexxDoState(reference pool, "A.I")
+  call control.setStart(.RexxValue("1.0"))
+  call control.setTo(.RexxValue("2"))
+  call control.startControl()
+  errors = errors + check(pool.stemSymbolValue("A", "a").asString() = "1.0", "numeric start scale retained")
+  errors = errors + check(control.entryAllowed(), "compound start checks endpoint")
+  call pool.setSymbolValue("I", .RexxValue("b"))
+  call pool.setSymbolValue("A.I", .RexxValue("10"))
+  call control.advance()
+  errors = errors + check(pool.stemSymbolValue("A", "a").asString() = "1.0", "old compound tail unchanged")
+  errors = errors + check(pool.stemSymbolValue("A", "b").asString() = "11", "new compound tail stepped")
+  errors = errors + check(\control.entryAllowed(), "new compound tail checked")
+
+  bounded = .RexxDoState(reference pool, "J")
+  call bounded.setStart(.RexxValue("1"))
+  call bounded.setForCount(.RexxValue("1"))
+  call bounded.setTo(.RexxValue("3"))
+  call bounded.startControl()
+  errors = errors + check(bounded.entryAllowed(), "FOR first entry")
+  call bounded.advance()
+  errors = errors + check(pool.symbolValue("J").asString() = "2", "FOR final step")
+  errors = errors + check(\bounded.entryAllowed(), "FOR stops after one body")
+
+  if errors = 0 then say "ok"
+  return errors
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL" label
+  return 1

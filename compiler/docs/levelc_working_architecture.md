@@ -452,8 +452,18 @@ requires reference probes before code removal. `LC-STEP-70A` records this
 comparison. Adrian approved this architecture on 2026-10-04. LC-STEP-70B
 implemented the checked source-header descriptor, shared by validation,
 lowering and named transfer checks, without adding an AST node or changing
-runtime behavior. The loop-state service, count representation and full DO
-qualification remain open under LC-STEP-70C/D.
+runtime behavior. LC-STEP-70C routes counted and controlled headers through
+`RexxDoState` in `rxfnsc`: setup methods capture operands in source order,
+`entryAllowed` tests decimal-string counts and the current pool control value,
+and `advance` steps the current pool target and decrements the count. The
+compiler emits one canonical DO with a WHILE entry and UNTIL end check;
+source WHILE and UNTIL expressions retain lazy evaluation. The pool re-resolves
+compound control names on entry and step, including after a tail variable
+changes. `RexxValue.controlNumericAdd` preserves Classic numeric display scale
+for the initial control value and step without changing generic arithmetic.
+The generated loop uses the established LEAVE/ITERATE target and emitter. No
+new AST node was needed. LC-STEP-70D must still reconcile the whole instruction
+matrix, errors, associations and linked delivery before DO can close.
 
 ## Historical design record
 

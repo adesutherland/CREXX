@@ -469,12 +469,20 @@ activity.
 `DO`:
 
 - simple `DO` groups only sequence instructions;
-- repetitive `DO` records loop state for `LEAVE`/`ITERATE`;
+- repetitive `DO` uses the canonical loop and records its target for
+  `LEAVE`/`ITERATE`; counted and controlled headers share one checked source
+  description and a runtime `RexxDoState` for setup, entry and advancement;
 - repeat and `FOR` counts must be non-negative whole numbers;
+- counts retain decimal digits rather than narrowing to a compiler integer;
 - control variable start, `TO`, and `BY` values must be numeric;
+- `TO`, `BY`, and `FOR` are evaluated once in written order before the
+  initial control assignment; the pool resolves compound control names again
+  at each entry check and step;
 - `WHILE` and `UNTIL` expressions must be exact logical values;
-- updating the control variable uses variable-pool semantics and can raise
-  `NOVALUE`.
+- `WHILE` checks at entry, `UNTIL` checks after the body and before the step;
+  `ITERATE` reaches that end check, while `LEAVE` bypasses it;
+- control starts and steps preserve Classic numeric display scale, and pool
+  updates can raise `NOVALUE`.
 
 `DROP`:
 

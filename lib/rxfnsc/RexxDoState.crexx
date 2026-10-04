@@ -1,0 +1,180 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 Adrian Sutherland
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxdostate expose RexxDoState
+import rexxvalue
+import rexxpool
+import rxfnsb
+
+/**
+ * Per-loop Classic DO state shared by Level C and RexxScript consumers.
+ *
+ * Header expressions are passed in source order before startControl writes
+ * the visible control variable. A compound control name is resolved through
+ * the visible pool at each entry check and step. Counts are decimal digit
+ * strings so loop progress never narrows to the VM's integer register width.
+ */
+RexxDoState: class
+  pool_ref = reference .RexxVariablePool
+  symbol = .string
+  start_value = .RexxValue
+  to_value = .RexxValue
+  by_value = .RexxValue
+  has_to = .boolean
+  has_count = .boolean
+  remaining = .string
+
+  *: factory
+    arg pool = reference .RexxVariablePool, control_symbol = .string
+    pool_ref = pool
+    symbol = control_symbol
+    by_value = .RexxValue.fromInt(1)
+    has_to = 0
+    has_count = 0
+    remaining = "0"
+    return
+
+  /** Capture a control start before the other header operands are evaluated. */
+  setStart: method = .void
+    arg value = .RexxValue
+    start_value = .RexxValue(value.asString())
+    return
+
+  /** Validate and capture the fixed TO value at its authored position. */
+  setTo: method = .void
+    arg value = .RexxValue
+    checked = value.controlToValue()
+    to_value = .RexxValue(checked.asString())
+    has_to = 1
+    return
+
+  /** Validate and capture the fixed BY value at its authored position. */
+  setBy: method = .void
+    arg value = .RexxValue
+    checked = value.controlByValue()
+    by_value = .RexxValue(checked.asString())
+    return
+
+  /** Validate and capture a simple repetitive DO count. */
+  setRepeatCount: method = .void
+    arg value = .RexxValue
+    remaining = countDigits(value, "26.2")
+    has_count = 1
+    return
+
+  /** Validate and capture the controlled DO FOR count. */
+  setForCount: method = .void
+    arg value = .RexxValue
+    remaining = countDigits(value, "26.3")
+    has_count = 1
+    return
+
+  /** Assign the initial control value only after all header expressions. */
+  startControl: method = .void
+    if symbol = "" then return
+    pool = dereference pool_ref
+    checked = start_value.controlStartValue()
+    initial = checked.controlNumericAdd(.RexxValue.fromInt(0))
+    call pool.setSymbolValue(symbol, initial)
+    return
+
+  /** Test count and fixed endpoint before a source WHILE expression. */
+  entryAllowed: method = .boolean
+    if has_count & remaining = "0" then return 0
+    if symbol = "" | \has_to then return 1
+    pool = dereference pool_ref
+    current = pool.symbolValue(symbol)
+    return current.controlToContinueBy(to_value, by_value)
+
+  /** Advance after an iteration unless a source UNTIL condition ended it. */
+  advance: method = .void
+    if symbol \= "" then do
+      pool = dereference pool_ref
+      current = pool.symbolValue(symbol)
+      next_value = current.controlStepBy(by_value)
+      call pool.setSymbolValue(symbol, next_value)
+    end
+    if has_count then call decrementCount()
+    return
+
+  /** Return a canonical non-negative whole count without an integer cast. */
+  countDigits: method = .string
+    arg item = .RexxValue, code = .string
+    digits = .string
+    original = item.asString()
+    if datatype(original, "N") <> "1" then call _rd_invalid_count(code, original)
+    rounded = item.add(.RexxValue.fromInt(0))
+    text = strip(rounded.asString())
+    if datatype(text, "W") <> "1" then call _rd_invalid_count(code, original)
+
+    negative = 0
+    if left(text, 1) = "-" then do
+      negative = 1
+      text = substr(text, 2)
+    end
+    else if left(text, 1) = "+" then text = substr(text, 2)
+
+    exponent = 0
+    exponent_at = pos("E", upper(text))
+    if exponent_at > 0 then do
+      exponent = substr(text, exponent_at + 1) as .int
+      text = left(text, exponent_at - 1)
+    end
+    decimal_at = pos(".", text)
+    fraction_length = 0
+    if decimal_at > 0 then do
+      fraction_length = length(text) - decimal_at
+      digits = left(text, decimal_at - 1) || substr(text, decimal_at + 1)
+    end
+    else digits = text
+
+    do while length(digits) > 1 & left(digits, 1) = "0"
+      digits = substr(digits, 2)
+    end
+    if digits = "0" then return "0"
+    if negative then call _rd_invalid_count(code, original)
+
+    scale = exponent - fraction_length
+    if scale < 0 then do
+      removed = 0 - scale
+      if removed > length(digits) then call _rd_invalid_count(code, original)
+      do index = length(digits) - removed + 1 to length(digits)
+        if substr(digits, index, 1) <> "0" then
+          call _rd_invalid_count(code, original)
+      end
+      digits = left(digits, length(digits) - removed)
+    end
+    else if scale > 0 then digits = digits || copies("0", scale)
+    if digits = "" then return "0"
+    return digits
+
+  /** Subtract one decimal digit exactly, independent of NUMERIC DIGITS. */
+  decrementCount: method = .void
+    if remaining = "0" then return
+    count_length = length(remaining)
+    position = count_length
+    do while position > 0 & substr(remaining, position, 1) = "0"
+      position = position - 1
+    end
+    if position = 0 then do
+      remaining = "0"
+      return
+    end
+    digit = (substr(remaining, position, 1) as .int) - 1
+    remaining = left(remaining, position - 1) || digit || copies("9", count_length - position)
+    do while length(remaining) > 1 & left(remaining, 1) = "0"
+      remaining = substr(remaining, 2)
+    end
+    return
+
+_rd_invalid_count: procedure = .void
+  arg code = .string, original = .string
+  subject = "DO repetition count"
+  if code = "26.3" then subject = "DO FOR count"
+  message = "RXC-LC-" || code || ": " || subject || " must be a non-negative whole number; found " || original
+  assembler signal "ERROR", message
+  return

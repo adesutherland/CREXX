@@ -764,6 +764,26 @@ RexxValue: class
     end
     return .RexxValue(text)
 
+  /** Classic DO arithmetic keeps significant fractional zeroes through a step. */
+  controlNumericAdd: method = .RexxValue
+    arg other = .RexxValue
+    left_scale = _rv_control_fraction_scale(asString())
+    right_scale = _rv_control_fraction_scale(other.asString())
+    scale = left_scale
+    if right_scale > scale then scale = right_scale
+    result = add(other)
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT | scale = 0 then return result
+    if result.asDecimal() = 0 then return result
+    result_text = result.asString()
+    scale_limit = _rv_control_result_scale(result_text, rexxvalue_numeric_digits())
+    if scale_limit < scale then scale = scale_limit
+    if scale <= 0 then return result
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    return .RexxValue(format(result.asDecimal(), , scale))
+
   /** Validate a bounded Classic controlled DO FOR count at loop setup. */
   controlForCountValue: method = .int
     text = asString()
@@ -827,7 +847,7 @@ RexxValue: class
       advance_message = "RXC-LC-41.5: DO BY value must be numeric; found " || step_text
       assembler signal "ERROR", advance_message
     end
-    return add(step)
+    return controlNumericAdd(step)
 
   logicalResult: method = .RexxValue
     return _rv_bool_value(_rv_logical_text(asString()))
@@ -1021,3 +1041,47 @@ _rv_compare_strict_text: procedure = .int
   if left == right then return 0
   if left << right then return -1
   return 1
+
+/** Fractional places contributed by a numeric operand after its exponent. */
+_rv_control_fraction_scale: procedure = .int
+  arg value = .string
+  text = strip(value)
+  exponent = 0
+  exponent_at = pos("E", upper(text))
+  if exponent_at > 0 then do
+    exponent = substr(text, exponent_at + 1) as .int
+    text = left(text, exponent_at - 1)
+  end
+  decimal_at = pos(".", text)
+  if decimal_at = 0 then return 0
+  scale = length(text) - decimal_at - exponent
+  if scale < 0 then return 0
+  return scale
+
+/** Maximum fixed fractional places allowed by the current precision. */
+_rv_control_result_scale: procedure = .int
+  arg value = .string, precision = .int
+  text = strip(value)
+  exponent = 0
+  exponent_at = pos("E", upper(text))
+  if exponent_at > 0 then do
+    exponent = substr(text, exponent_at + 1) as .int
+    text = left(text, exponent_at - 1)
+  end
+  if left(text, 1) = "-" | left(text, 1) = "+" then text = substr(text, 2)
+  decimal_at = pos(".", text)
+  if decimal_at = 0 then decimal_at = length(text) + 1
+  digits_before = decimal_at - 1
+  if decimal_at <= length(text) then
+    digits = left(text, decimal_at - 1) || substr(text, decimal_at + 1)
+  else digits = text
+  first_significant = 0
+  do index = 1 to length(digits)
+    if substr(digits, index, 1) <> "0" then do
+      first_significant = index
+      leave
+    end
+  end
+  if first_significant = 0 then return 0
+  magnitude = digits_before - first_significant + exponent
+  return precision - magnitude - 1

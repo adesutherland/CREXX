@@ -67,6 +67,7 @@ set(RXFNSC_MODULES
   RexxClassicEncoding
   RexxClassicState
   RexxVariablePool
+  RexxDoState
   RexxClassicBifs
   RexxClassicBitFunctions
   ${RXFNSC_DIRECT_BIF_MODULES}
@@ -125,6 +126,7 @@ set(RXFNSC_SELECTORS ${RXFNSC_MODULES})
 set(RXFNSC_DEPS_RexxStem RexxValue)
 set(RXFNSC_DEPS_RexxClassicState RexxValue)
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype)
+set(RXFNSC_DEPS_RexxDoState RexxValue RexxVariablePool)
 set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxVariablePool)
 set(RXFNSC_DEPS_RexxClassicConfig RexxValue)
 set(RXFNSC_DEPS_RexxClassicDatatype RexxValue RexxClassicConfig)

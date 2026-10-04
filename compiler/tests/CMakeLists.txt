@@ -5792,6 +5792,24 @@ add_levelc_runtime_slice_test(levelc_slice36_dynamic_start_noopt
         "start 10 1\nto 10 2\nby 10 3\nfor 10 4\nafter-zero 1 4\nchanged 2 2\nchanged 3 9\nafter-changed 4 9\nfractional -1.0\nfractional 0\nfractional 1\nafter-fractional 2 bad\nwhile 1\nwhile 2\nafter-while 3\nuntil 1\nuntil 2\nafter-until 2\nafter-outer 4\nlocal 1\nlocal 2\n3\n" -n)
 set_tests_properties(levelc_slice36_dynamic_start
         levelc_slice36_dynamic_start_noopt PROPERTIES TIMEOUT 60)
+add_levelc_runtime_slice_test(levelc_do_compound_whole
+        rexx_src/levelc_do_compound_whole.rexx
+        "body=1\nafter=1|11\nmulti=1\nmulti-after=1|8\n")
+add_levelc_runtime_slice_test(levelc_do_compound_whole_noopt
+        rexx_src/levelc_do_compound_whole.rexx
+        "body=1\nafter=1|11\nmulti=1\nmulti-after=1|8\n" -n)
+add_levelc_runtime_slice_test(levelc_do_large_count
+        rexx_src/levelc_do_large_count.rexx
+        "dynamic\nliteral\nfor 1\nexponent 1\nafter 1 1\n")
+add_levelc_runtime_slice_test(levelc_do_large_count_noopt
+        rexx_src/levelc_do_large_count.rexx
+        "dynamic\nliteral\nfor 1\nexponent 1\nafter 1 1\n" -n)
+add_levelc_runtime_slice_test(levelc_do_numeric_scale
+        rexx_src/levelc_do_numeric_scale.rexx
+        "scale 1.00\nscale 2.00\nafter-scale 3.00\nleading 1\nleading 2\nplus 1\nplus 2\nexponent 10\nexponent 11\nadjusted 12.0\nadjusted 13.0\nfraction 0.500\nfraction 1.000\nfraction 1.500\nnegative -1.0\nnegative 0\nnegative 1\n")
+add_levelc_runtime_slice_test(levelc_do_numeric_scale_noopt
+        rexx_src/levelc_do_numeric_scale.rexx
+        "scale 1.00\nscale 2.00\nafter-scale 3.00\nleading 1\nleading 2\nplus 1\nplus 2\nexponent 10\nexponent 11\nadjusted 12.0\nadjusted 13.0\nfraction 0.500\nfraction 1.000\nfraction 1.500\nnegative -1.0\nnegative 0\nnegative 1\n" -n)
 add_levelc_runtime_slice_test(levelc_slice37_empty_string
         rexx_src/levelc_slice37_empty_string.rexx
         "\n\nlength 0 0\njoined leftright\ncall 0\ncompare 1\n")
@@ -5984,10 +6002,6 @@ add_levelc_invalid_runtime_test(levelc_slice23_dynamic_count_invalid_text
         rexx_src/levelc_slice23_dynamic_count_invalid_text.rexx RXC-LC-26.2)
 add_levelc_invalid_runtime_test(levelc_slice23_dynamic_count_invalid_fraction
         rexx_src/levelc_slice23_dynamic_count_invalid_fraction.rexx RXC-LC-26.2)
-add_levelc_invalid_runtime_test(levelc_slice23_dynamic_count_invalid_range
-        rexx_src/levelc_slice23_dynamic_count_invalid_range.rexx RXC-LC-26.2)
-add_levelc_invalid_runtime_test(levelc_slice23_dynamic_count_invalid_exponent
-        rexx_src/levelc_slice23_dynamic_count_invalid_exponent.rexx RXC-LC-26.2)
 add_levelc_invalid_runtime_test(levelc_slice24_dynamic_combined_invalid_count
         rexx_src/levelc_slice24_dynamic_combined_invalid_count.rexx RXC-LC-26.2)
 add_levelc_invalid_runtime_test(levelc_slice24_dynamic_combined_invalid_while
@@ -6006,8 +6020,6 @@ add_levelc_invalid_runtime_test(levelc_slice34_dynamic_by_invalid
         rexx_src/levelc_slice34_dynamic_by_invalid.rexx RXC-LC-41.5)
 add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_invalid
         rexx_src/levelc_slice35_dynamic_for_invalid.rexx RXC-LC-26.3)
-add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_range
-        rexx_src/levelc_slice35_dynamic_for_range.rexx RXC-LC-26.3)
 add_levelc_invalid_runtime_test(levelc_slice35_dynamic_for_fraction
         rexx_src/levelc_slice35_dynamic_for_fraction.rexx RXC-LC-26.3)
 add_levelc_invalid_runtime_test(levelc_slice44_exponent_for_fraction
@@ -6136,8 +6148,10 @@ add_levelc_lowered_tree_shape_test(levelc_slice12_counted_do_tree_shape
         rexx_src/levelc_slice12_counted_do.rexx
         "DO"
         "REPEAT"
-        "FOR"
-        "RexxVariablePool")
+        "RexxDoState"
+        "setRepeatCount"
+        "entryAllowed"
+        "advance")
 
 add_levelc_lowered_tree_shape_test(levelc_slice13_loop_transfer_tree_shape
         rexx_src/levelc_slice13_loop_transfer.rexx
@@ -6172,7 +6186,10 @@ add_levelc_lowered_tree_shape_test(levelc_slice16_until_tree_shape
 add_levelc_lowered_tree_shape_test(levelc_slice17_combined_do_tree_shape
         rexx_src/levelc_slice17_combined_do.rexx
         "__rxcp_levelc_loop_"
-        "FOR"
+        "RexxDoState"
+        "setRepeatCount"
+        "entryAllowed"
+        "advance"
         "WHILE"
         "UNTIL"
         "LEAVE"
@@ -6201,7 +6218,10 @@ add_levelc_lowered_tree_shape_test(levelc_slice20_until_setup_tree_shape
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice21_combined_setup_tree_shape
         rexx_src/levelc_slice21_combined_setup.rexx
-        "FOR"
+        "RexxDoState"
+        "setRepeatCount"
+        "entryAllowed"
+        "advance"
         "WHILE"
         "UNTIL"
         "BLOCK_EXPR"
@@ -6218,16 +6238,20 @@ add_levelc_lowered_tree_shape_test(levelc_slice22_forever_condition_tree_shape
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice23_dynamic_count_tree_shape
         rexx_src/levelc_slice23_dynamic_count.rexx
-        "FOR"
-        "repeatCountValue"
+        "RexxDoState"
+        "setRepeatCount"
+        "entryAllowed"
+        "advance"
         "BLOCK_EXPR"
         "LEAVE_WITH"
         "RexxBifCallContext"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice24_dynamic_combined_tree_shape
         rexx_src/levelc_slice24_dynamic_combined.rexx
-        "FOR"
-        "repeatCountValue"
+        "RexxDoState"
+        "setRepeatCount"
+        "entryAllowed"
+        "advance"
         "WHILE"
         "UNTIL"
         "BLOCK_EXPR"
@@ -6236,110 +6260,131 @@ add_levelc_lowered_tree_shape_test(levelc_slice24_dynamic_combined_tree_shape
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice25_controlled_to_tree_shape
         rexx_src/levelc_slice25_controlled_to.rexx
+        "RexxDoState"
+        "setStart"
+        "setTo"
+        "entryAllowed"
+        "advance"
         "WHILE"
-        "controlToContinue"
         "UNTIL"
         "BLOCK_EXPR"
         "LEAVE_WITH"
-        "controlStepByOne"
-        "setValue"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice26_controlled_by_tree_shape
         rexx_src/levelc_slice26_controlled_by.rexx
+        "RexxDoState"
+        "setStart"
+        "setTo"
+        "setBy"
+        "entryAllowed"
+        "advance"
         "WHILE"
-        "controlToContinueBy"
         "UNTIL"
         "BLOCK_EXPR"
         "LEAVE_WITH"
-        "controlStepBy"
-        "setValue"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice27_controlled_for_tree_shape
         rexx_src/levelc_slice27_controlled_for.rexx
-        "FOR"
+        "RexxDoState"
+        "setStart"
+        "setTo"
+        "setBy"
+        "setForCount"
+        "entryAllowed"
+        "advance"
         "WHILE"
-        "controlToContinueBy"
         "UNTIL"
         "BLOCK_EXPR"
         "LEAVE_WITH"
-        "controlStepBy"
-        "setValue"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice28_controlled_for_only_tree_shape
         rexx_src/levelc_slice28_controlled_for_only.rexx
-        "FOR"
+        "RexxDoState"
+        "setStart"
+        "setForCount"
+        "entryAllowed"
+        "advance"
         "UNTIL"
         "BLOCK_EXPR"
         "LEAVE_WITH"
-        "controlStepBy"
-        "setValue"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice29_named_transfer_tree_shape
         rexx_src/levelc_slice29_named_transfer.rexx
-        "ITERATE"
-        "LEAVE"
+        "RexxDoState"
         "__rxcp_levelc_loop_"
-        "FOR"
-        "WHILE"
-        "UNTIL"
+        "entryAllowed"
+        "advance"
+        "LEAVE"
+        "ITERATE"
         "BLOCK_EXPR")
 add_levelc_lowered_tree_shape_test(levelc_slice30_controlled_while_tree_shape
         rexx_src/levelc_slice30_controlled_while.rexx
-        "FOR"
+        "RexxDoState"
+        "setStart"
+        "entryAllowed"
+        "advance"
+        "logicalWhileValue"
         "WHILE"
         "UNTIL"
         "BLOCK_EXPR"
-        "LEAVE_WITH"
-        "controlToContinue"
-        "logicalWhileValue"
-        "controlStepBy")
+        "LEAVE_WITH")
 add_levelc_lowered_tree_shape_test(levelc_slice31_controlled_until_tree_shape
         rexx_src/levelc_slice31_controlled_until.rexx
-        "FOR"
+        "RexxDoState"
+        "setStart"
+        "entryAllowed"
+        "advance"
+        "logicalUntilValue"
         "WHILE"
         "UNTIL"
         "BLOCK_EXPR"
-        "LEAVE_WITH"
-        "logicalUntilValue"
-        "controlStepBy")
+        "LEAVE_WITH")
 add_levelc_lowered_tree_shape_test(levelc_slice32_unbounded_control_tree_shape
         rexx_src/levelc_slice32_unbounded_control.rexx
+        "RexxDoState"
+        "setStart"
+        "entryAllowed"
+        "advance"
+        "logicalUntilValue"
         "REPEAT"
         "UNTIL"
         "BLOCK_EXPR"
         "LEAVE_WITH"
-        "controlStepBy"
-        "logicalUntilValue"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice33_dynamic_to_tree_shape
         rexx_src/levelc_slice33_dynamic_to.rexx
-        "__rxcp_levelc_to_"
-        "controlToValue"
-        "controlToContinue"
+        "RexxDoState"
+        "setTo"
+        "entryAllowed"
+        "advance"
         "BLOCK_EXPR"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice34_dynamic_by_tree_shape
         rexx_src/levelc_slice34_dynamic_by.rexx
-        "__rxcp_levelc_by_"
-        "controlByValue"
-        "controlToContinueBy"
-        "controlStepBy"
+        "RexxDoState"
+        "setBy"
+        "setTo"
+        "entryAllowed"
+        "advance"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice35_dynamic_for_tree_shape
         rexx_src/levelc_slice35_dynamic_for.rexx
-        "__rxcp_levelc_for_"
-        "controlForCountValue"
-        "FOR"
-        "__rxcp_levelc_to_"
-        "__rxcp_levelc_by_"
+        "RexxDoState"
+        "setForCount"
+        "setTo"
+        "setBy"
+        "entryAllowed"
+        "advance"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice36_dynamic_start_tree_shape
         rexx_src/levelc_slice36_dynamic_start.rexx
-        "__rxcp_levelc_start_"
-        "controlStartValue"
-        "__rxcp_levelc_to_"
-        "__rxcp_levelc_by_"
-        "__rxcp_levelc_for_"
+        "RexxDoState"
+        "setStart"
+        "setTo"
+        "setBy"
+        "setForCount"
+        "entryAllowed"
+        "advance"
         "ITERATE")
 add_levelc_lowered_tree_shape_test(levelc_slice37_empty_string_tree_shape
         rexx_src/levelc_slice37_empty_string.rexx
