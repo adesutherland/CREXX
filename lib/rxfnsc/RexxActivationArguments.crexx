@@ -36,9 +36,11 @@ RexxActivationArguments: class
   values = .RexxValue[]
   presence = .int[]
   slot_count = .int
+  supplied_count = .int
 
   *: factory
     slot_count = 0
+    supplied_count = 0
     return
 
   /**
@@ -51,6 +53,7 @@ RexxActivationArguments: class
     slot_count = slot_count + 1
     values[slot_count] = value
     presence[slot_count] = exists
+    if exists then supplied_count = slot_count
     return
 
   /**
@@ -62,9 +65,9 @@ RexxActivationArguments: class
     call append(.RexxValue(text), 1)
     return
 
-  /** @return number of positional slots, including omitted positions */
+  /** @return highest explicitly supplied position, excluding trailing omissions */
   argumentCount: method = .int
-    return slot_count
+    return supplied_count
 
   /**
    * Test whether a positional slot was explicitly supplied.

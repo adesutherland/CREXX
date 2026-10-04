@@ -18,6 +18,9 @@ main: procedure = .int
   errors = errors + check(args.argument(3).asString() = "", "explicit empty value")
   errors = errors + check(args.argument(4).asString() = "", "missing value")
   errors = errors + check(args.argument(1).asString() = "first", "repeat read")
+  call args.append(.RexxValue("ignored trailing"), 0)
+  errors = errors + check(args.argumentCount() = 3, "trailing omission does not count")
+  errors = errors + check(\args.argumentExists(4), "trailing omission remains absent")
   if errors = 0 then say "ok"
   return errors
 

@@ -2129,6 +2129,12 @@ template or argument count limit is acceptable.
    commit an exact-revision receipt. Close LC-I-11 only when all AC-71
    behavior and error paths are verified; keep CALL/BIF/host lifecycle gaps
    visibly open under their owners as well.
+5. **LC-STEP-73E (LC-AC-06/71; after the activation frame, may precede 73D):**
+   implement the adjacent Classic `ARG()` BIF against that same activation
+   state, with zero/one/two-argument forms, E/O existence tests, omissions,
+   and standard BIF errors. Compare IBM and Regina, exercise main/routine and
+   optimized/noopt calls, and retain shared `rxfnsc` regression evidence.
+   Keep the BIF inventory row separate from ARG instruction closure.
 
 2026-10-04 LC-STEP-73A initial audit: IBM defines ARG as `PARSE UPPER ARG`;
 comma-separated templates consume successive argument strings, each call
@@ -2222,6 +2228,18 @@ now runs through the full toolchain in both modes. Three former negative tests
 for missing/omitted call arguments and dynamic PARSE were replaced by positive
 runtime checks because the compiler now accepts those shapes. ARG BIF, broader call modes, errors, BYTE/UTF8 and
 linked-image qualification remain open, so LC-AC-71 remains open.
+
+LC-STEP-73E BIF checkpoint: the standalone `RexxClassicBifArg` helper reads
+the same activation frame as the ARG instruction. `ARG()` reports the last
+explicitly supplied position, while `ARG(n)` retains exact source case and
+`ARG(n,'E'/'O')` distinguishes omitted and explicit empty values. The direct
+compiler entry reuses the standard BIF argument/context/result-check path and
+passes the activation frame as its one additional input. [IBM's ARG BIF
+reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=functions-arg-argument)
+count/E/O rules and Regina's trailing-omission behavior match the opt/noopt
+`levelc_arg_bif*` and `testRexxClassicBifArg*` checks. Invalid index and
+option cases signal Classic SYNTAX with authored source positions. Broader
+profile, host-entry and BIF reference proof remain open.
 
 Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
 one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
@@ -2805,9 +2823,10 @@ These 36 contract names come from the existing [raw language catalogue](componen
 The source list is `component-catalogue/raw-levelc-bifs.md` (recognition
 only). A standalone `lib/rxfnsc/RexxClassicBif<Name>.crexx` module establishes
 a runtime entry, not compiler reachability or conformance. The direct-entry
-compiler table reaches 57 of these 70 recognized Classic names, plus LOWER and
+compiler table reaches 58 of these 70 recognized Classic names, plus LOWER and
 UPPER. The legacy dispatcher is no longer on the Level C
-expression path. An unreachable-branch fixture links all 59 direct entries;
+expression path. The unreachable-branch fixture links the earlier 59 direct
+entries; the ARG BIF tests link the added entry.
 selected running BIFs match Regina, but every BIF row remains open for complete
 argument, configured-context, signal and reference proof.
 
@@ -2816,7 +2835,7 @@ argument, configured-context, signal and reference proof.
 | `ABBREV` | Direct + runtime | [`RexxClassicBifAbbrev.crexx`](../../../lib/rxfnsc/RexxClassicBifAbbrev.crexx); full reference proof open |
 | `ABS` | Direct + runtime | [`RexxClassicBifAbs.crexx`](../../../lib/rxfnsc/RexxClassicBifAbs.crexx); full reference proof open |
 | `ADDRESS` | Direct + runtime | [`RexxClassicBifAddress.crexx`](../../../lib/rxfnsc/RexxClassicBifAddress.crexx); full reference proof open |
-| `ARG` | Open | No standalone Classic BIF module; implementation and proof open |
+| `ARG` | Direct + runtime | [`RexxClassicBifArg.crexx`](../../../lib/rxfnsc/RexxClassicBifArg.crexx); count, value, E/O, omitted/empty and selected errors proven; full profile/reference proof open |
 | `B2X` | Direct + runtime | [`RexxClassicBifB2x.crexx`](../../../lib/rxfnsc/RexxClassicBifB2x.crexx); full reference proof open |
 | `BITAND` | Direct + runtime | [`RexxClassicBifBitand.crexx`](../../../lib/rxfnsc/RexxClassicBifBitand.crexx); full reference proof open |
 | `BITOR` | Direct + runtime | [`RexxClassicBifBitor.crexx`](../../../lib/rxfnsc/RexxClassicBifBitor.crexx); full reference proof open |

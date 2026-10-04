@@ -5582,6 +5582,12 @@ add_levelc_runtime_syntax_signal_test(levelc_bif_syntax_local
 add_levelc_runtime_syntax_signal_test(levelc_bif_syntax_local_noopt
         rexx_src/levelc_bif_syntax_local.rexx "40.14" "before\n"
         "levelc_bif_syntax_local.rexx:8:" -n)
+add_levelc_runtime_syntax_signal_test(levelc_arg_bif_bad_index
+        rexx_src/levelc_arg_bif_bad_index.rexx "40.14" "before\n"
+        "levelc_arg_bif_bad_index.rexx:3:")
+add_levelc_runtime_syntax_signal_test(levelc_arg_bif_bad_option
+        rexx_src/levelc_arg_bif_bad_option.rexx "40.28" "before\n"
+        "levelc_arg_bif_bad_option.rexx:3:")
 add_levelc_runtime_slice_test(levelc_bif_inventory
         rexx_src/levelc_bif_inventory.rexx "inventory\n")
 add_levelc_runtime_slice_test(levelc_say_bif_family
@@ -5743,6 +5749,12 @@ add_levelc_runtime_slice_test(levelc_arg_patterns
 add_levelc_runtime_slice_test(levelc_arg_patterns_noopt
         rexx_src/levelc_arg_patterns.rexx
         "pattern AB CD \nleading LEFT RIGHT\ntrailing AB:CD\nbare\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_bif
+        rexx_src/levelc_arg_bif.rexx
+        "main=0\ncount=3\nvalues=a|||\nexists=1010\nomitted=0101\nagain=a|A\nfunction=1:xy\n")
+add_levelc_runtime_slice_test(levelc_arg_bif_noopt
+        rexx_src/levelc_arg_bif.rexx
+        "main=0\ncount=3\nvalues=a|||\nexists=1010\nomitted=0101\nagain=a|A\nfunction=1:xy\n" -n)
 add_levelc_runtime_slice_test(levelc_slice4_procedure_missing_arg
         rexx_src/levelc_slice4_procedure_missing_arg.rexx "2|\n")
 add_levelc_runtime_slice_test(levelc_slice6_local_function_omitted_arg

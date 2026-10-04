@@ -488,7 +488,7 @@ _check_arg_type: procedure = .int
     return 1
   end
 
-  if rule = "ABLMNSUWX" | rule = "EINO" | rule = "LTB" | rule = "MN" |,
+  if rule = "ABLMNSUWX" | rule = "EINO" | rule = "EO" | rule = "LTB" | rule = "MN" |,
      rule = "BDEMNOSUW" | rule = "BDENOSU" |,
      rule = "CEHLMNORS" | rule = "CHLMNS" then do
     if length(value) = 0 then do

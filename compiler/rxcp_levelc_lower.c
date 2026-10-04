@@ -108,6 +108,7 @@ static const LevelCBifEntry levelc_direct_bifs[] = {
     LEVELC_DIRECT_BIF("ABBREV", "rexxclassicbifabbrev", "rexxclassicbif_abbrev"),
     LEVELC_DIRECT_BIF("ABS", "rexxclassicbifabs", "rexxclassicbif_abs"),
     LEVELC_DIRECT_BIF("ADDRESS", "rexxclassicbifaddress", "rexxclassicbif_address"),
+    LEVELC_DIRECT_BIF("ARG", "rexxclassicbifarg", "rexxclassicbif_arg"),
     LEVELC_DIRECT_BIF("B2X", "rexxclassicbifb2x", "rexxclassicbif_b2x"),
     {"BITAND", NULL, "rexxclassicbifs.rexxclassicbif_bitand"},
     {"BITOR", NULL, "rexxclassicbifs.rexxclassicbif_bitor"},
@@ -1921,14 +1922,16 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     ASTNode *receiver;
     ASTNode *member_args[2];
     ASTNode *call_args[1];
-    ASTNode *function_args[1];
+    ASTNode *function_args[2];
     ASTNode *checked_args[2];
     ASTNode *direct_call;
     ASTNode *arg;
     size_t arg_count;
     size_t index;
+    int activation_bif;
 
     if (!context || !expr || !bif_name || !prelude) return NULL;
+    activation_bif = strcmp(bif_name, "ARG") == 0;
 
     args_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_ARGS_PREFIX, expr);
     exists_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_EXISTS_PREFIX, expr);
@@ -2049,11 +2052,18 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
             rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name));
     if (!function_args[0]) goto fail;
 
+    if (activation_bif) {
+        function_args[1] = rxcp_remap_create_reference_expr(
+            context, expr,
+            rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL,
+                                         LEVELC_ACTIVATION_SYMBOL));
+        if (!function_args[1]) goto fail;
+    }
     direct_call = rxcp_remap_create_function_call(context,
                                                   expr,
                                                   callee_name,
                                                   function_args,
-                                                  1);
+                                                  activation_bif ? 2 : 1);
     checked_args[0] = rxcp_remap_create_reference_expr(
             context, expr,
             rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name));
@@ -3977,6 +3987,20 @@ static int levelc_tree_contains_arg(ASTNode *node) {
     return 0;
 }
 
+static int levelc_tree_contains_arg_bif(ASTNode *node) {
+    while (node) {
+        if (node->node_type == FUNCTION) {
+            char *name = levelc_upper_name(node);
+            int is_arg = name && strcmp(name, "ARG") == 0;
+            free(name);
+            if (is_arg) return 1;
+        }
+        if (levelc_tree_contains_arg_bif(node->child)) return 1;
+        node = node->sibling;
+    }
+    return 0;
+}
+
 static int levelc_append_main_activation(Context *context,
                                          ASTNode *instructions,
                                          ASTNode *anchor) {
@@ -4092,7 +4116,8 @@ static int levelc_rewrite_program(Context *context,
         int main_has_arg = 0;
         while (main_cursor && main_cursor != plan->main_end) {
             if (main_cursor->node_type == LEVELC_ARG ||
-                levelc_tree_contains_arg(main_cursor->child)) {
+                levelc_tree_contains_arg(main_cursor->child) ||
+                levelc_tree_contains_arg_bif(main_cursor)) {
                 main_has_arg = 1;
                 break;
             }

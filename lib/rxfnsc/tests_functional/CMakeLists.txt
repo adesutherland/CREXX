@@ -16,6 +16,7 @@ set(REXXBINS
   testRexxClassicBifAbbrev
   testRexxClassicBifAbs
   testRexxClassicBifAddress
+  testRexxClassicBifArg
   testRexxClassicBifB2x
   testRexxClassicBifBitwise
   testRexxClassicBifC2d

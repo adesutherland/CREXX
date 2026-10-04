@@ -1,0 +1,72 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifarg
+import rexxclassicbifs
+import rexxactivation
+import rexxvalue
+
+errors = 0
+activation = .RexxActivationArguments()
+call activation.append(.RexxValue("a"),1)
+call activation.append(.RexxValue("ignored"),0)
+call activation.append(.RexxValue(""),1)
+call activation.append(.RexxValue("ignored trailing"),0)
+
+errors = errors + expect(activation,"3")
+errors = errors + expect(activation,"a","1")
+errors = errors + expect(activation,"","2")
+errors = errors + expect(activation,"","3")
+errors = errors + expect(activation,"1","3","exists")
+errors = errors + expect(activation,"0","2","E")
+errors = errors + expect(activation,"1","4","omitted")
+errors = errors + expect(activation,"0","3","O")
+errors = errors + expect_error(activation,"RXC-LC-40.14","0")
+errors = errors + expect_error(activation,"RXC-LC-40.21","1","")
+errors = errors + expect_error(activation,"RXC-LC-40.28","1","X")
+errors = errors + expect_error(activation,"RXC-LC-40.4","1","E","extra")
+
+missing_args = .RexxValue[]
+missing_exists = .int[]
+missing_args[1] = .RexxValue("")
+missing_args[2] = .RexxValue("E")
+missing_exists[1] = 0
+missing_exists[2] = 1
+missing_context = .RexxBifCallContext("ARG")
+call missing_context.setArguments(missing_args,missing_exists)
+missing_result = rexxclassicbif_arg(reference missing_context,reference activation)
+if missing_context.errorCode() \= "RXC-LC-40.5" then do
+  say "FAIL omitted index" missing_result.asString() missing_context.errorCode()
+  errors = errors + 1
+end
+
+if errors = 0 then say "ok"
+return errors
+
+expect: procedure = .int
+  arg activation = .RexxActivationArguments, expected = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("ARG")
+  call context.setArguments(args,exists)
+  result = rexxclassicbif_arg(reference context,reference activation)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL value" expected result.asString() context.errorCode()
+  return 1
+
+expect_error: procedure = .int
+  arg activation = .RexxActivationArguments, expected_code = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("ARG")
+  call context.setArguments(args,exists)
+  result = rexxclassicbif_arg(reference context,reference activation)
+  if context.errorCode() = expected_code then return 0
+  say "FAIL error" expected_code result.asString() context.errorCode()
+  return 1
