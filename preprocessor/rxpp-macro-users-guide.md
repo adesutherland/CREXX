@@ -47,6 +47,45 @@ swap(left, right)
 Textual macros are substitutions, not syntax-tree transformations. Use
 distinctive temporary names to reduce collisions with the surrounding source.
 
+### Use a textual macro as a facade for a script macro
+
+A `##define` macro can provide a convenient call syntax for a `##MACRO`.
+After textual expansion, RXPP checks each generated line: if its first word
+matches a registered `##MACRO` name, RXPP passes that line to the script-macro
+handler. Other generated lines remain ordinary CREXX source. Put each script
+macro call on its own generated line; multiple calls on separate lines are
+supported.
+
+```rexx
+##MACRO _BUTTON_IMPL label, color, border
+    .gen say 111 &label
+    .gen say 222 &color
+    .gen say 333 &border
+##MEND
+
+##define cmd BUTTON(label, color='blue', border=1) { ##_BUTTON_IMPL label, color, border }
+
+BUTTON "Save", border=2, color="green"
+Button "OK", color(red) border(4711)
+```
+
+The `BUTTON` facade supplies defaults and accepts keyword arguments in either
+`name=value` form or TSO-style `name(value)` form. The example generates:
+
+```rexx
+say 111 "Save"
+say 222 "green"
+say 333 2
+say 111 "OK"
+say 222 red
+say 333 4711
+```
+
+Define the script macro before using the facade. A generated call is recognized
+only when its first word exactly matches a registered script macro name.
+Generated script-macro calls must each start on their own line; embedding one
+after other generated text does not invoke the script-macro handler.
+
 ## 3. Script macros with `##MACRO`
 
 A script macro has a name, parameters, a RexxScript body, and an `##MEND`:

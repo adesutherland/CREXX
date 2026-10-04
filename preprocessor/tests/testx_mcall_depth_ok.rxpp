@@ -2,10 +2,57 @@ options levelb
 import rxfnsb
 ##cflags nosrcmap
 
-/* Exactly 16 nested .mcall expansions are allowed. */
-##MACRO LOOP depth
-    if depth < 16 then .mcall LOOP &depth + 1
+/* Sixteen generated .mcall expansions complete without crossing the limit. */
+##MACRO DEPTH01
+    .mcall DEPTH02
+##MEND
+##MACRO DEPTH02
+    .mcall DEPTH03
+##MEND
+##MACRO DEPTH03
+    .mcall DEPTH04
+##MEND
+##MACRO DEPTH04
+    .mcall DEPTH05
+##MEND
+##MACRO DEPTH05
+    .mcall DEPTH06
+##MEND
+##MACRO DEPTH06
+    .mcall DEPTH07
+##MEND
+##MACRO DEPTH07
+    .mcall DEPTH08
+##MEND
+##MACRO DEPTH08
+    .mcall DEPTH09
+##MEND
+##MACRO DEPTH09
+    .mcall DEPTH10
+##MEND
+##MACRO DEPTH10
+    .mcall DEPTH11
+##MEND
+##MACRO DEPTH11
+    .mcall DEPTH12
+##MEND
+##MACRO DEPTH12
+    .mcall DEPTH13
+##MEND
+##MACRO DEPTH13
+    .mcall DEPTH14
+##MEND
+##MACRO DEPTH14
+    .mcall DEPTH15
+##MEND
+##MACRO DEPTH15
+    .mcall DEPTH16
+##MEND
+##MACRO DEPTH16
+    .mcall DEPTH17
+##MEND
+##MACRO DEPTH17
+    say "completed at the nesting limit"
 ##MEND
 
-##LOOP 1
-say "completed at the nesting limit"
+##DEPTH01

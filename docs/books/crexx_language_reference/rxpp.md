@@ -186,7 +186,10 @@ myStem_values.10 = ''
 In addition to function-style macros with comma-separated arguments (e.g., FOO(a,b)), RXPP also supports command-style macros, which resemble REXX commands: arguments are separated by blanks instead of commas.
 The macro body and substitution rules are identical to those of function-style macros.
 * A command-style call must begin at the start of a statement line; unlike function-style macros, it cannot be invoked within an expression.
-* Command-style macros do not support nested expansion — one command-style macro call cannot expand into another.
+* Command-style `##define` macros do not recursively expand into another
+  command-style `##define`. A generated line whose first word names a
+  registered script-backed `##MACRO` is dispatched to that facility; see
+  [Using `##define` as a facade for `##MACRO`](#using-define-as-a-facade-for-macro).
 
 ### ✍️ Definition
 
@@ -407,6 +410,50 @@ RXPP parses the `##define` argument list **left-to-right** and builds two sets:
 - `keywords{name}` — parameters declared with `=` and optional default
 
 Once the parser sees the **first `=`**, it switches into **keyword mode**. From then on, all parameters must be keyword form.
+
+---
+
+## Using `##define` as a facade for `##MACRO`
+
+A C-style `##define` can expose a shorter or more convenient interface to a
+RexxScript-backed `##MACRO`. RXPP expands the `##define` first. It then checks
+each generated line: when the first word exactly matches a registered
+`##MACRO` name, that line is dispatched to the script-macro handler. Other
+generated lines are left as ordinary CREXX source.
+
+Put each generated script-macro call on a separate line. One C-style macro may
+generate several such lines, and each matching line is expanded in turn. The
+script macro must already be registered when the generated call is processed.
+
+```rexx
+##MACRO _BUTTON_IMPL label, color, border
+    .gen say 111 &label
+    .gen say 222 &color
+    .gen say 333 &border
+##MEND
+
+##define cmd BUTTON(label, color='blue', border=1) { ##_BUTTON_IMPL label, color, border }
+
+BUTTON "Save", border=2, color="green"
+Button "OK", color(red) border(4711)
+```
+
+The first call uses `name=value` keyword arguments; the second uses TSO-style
+`name(value)` keywords. Both are parsed by the facade and passed positionally
+to `_BUTTON_IMPL`, producing:
+
+```rexx
+say 111 "Save"
+say 222 "green"
+say 333 2
+say 111 "OK"
+say 222 red
+say 333 4711
+```
+
+The exact first-word match prevents a similarly prefixed macro name from being
+selected accidentally. A generated `##MACRO` call must begin its own line;
+text later on that same generated line is not separately scanned for calls.
 
 ---
 

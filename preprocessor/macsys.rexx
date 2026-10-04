@@ -36,3 +36,15 @@
 ##define Dquote(string2quote) {"string2quote"}
 
 ##define cmd clear(array)     {assembler SETATTRS array,0}   ## calling syntax must be reset array-name (no function call type)
+##define cmd foreach(variable,over,collection) {##_forEach variable,over,collection}
+##MACRO _forEach variable,over,collection
+    over=upper(over)
+    isok=0
+    if over='OVER'    then isok=1
+    else if over='IN' then isok=1
+    if isok=0 then .gen /// FOREACH: invalid keyword &over
+    else do
+      .gen do _forEach_i=.int(1) to &collection[0]
+      .gen &variable=&collection[_forEach_i]
+    end
+##MEND

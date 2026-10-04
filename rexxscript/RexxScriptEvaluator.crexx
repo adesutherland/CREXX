@@ -688,6 +688,7 @@ rexxscriptcoreevaluator: class
       if condition == "" then return _set_error("missing_expression", "missing IF condition", stmtno, 1)
       if action == "" then return _set_error("missing_expression", "missing IF body", stmtno, then_pos + 4)
       if else_pos > 0 & else_action == "" then return _set_error("missing_expression", "missing ELSE body", stmtno, else_pos + 1)
+      if else_pos > 0 & _starts_keyword(else_action, "IF") = 1 then return _set_error("syntax_error", "ELSE IF is not supported; use ELSE DO with a nested IF", stmtno, else_pos + 1)
 
       is_block_if = translate(action) == "DO"
       end_pc = 0
@@ -707,6 +708,7 @@ rexxscriptcoreevaluator: class
             block_else_pc = candidate_else
             block_else_action = strip(substr(candidate_text, 5))
             if block_else_action == "" then return _set_error("missing_expression", "missing ELSE body", statement_numbers[candidate_else] + 0, 1)
+            if _starts_keyword(block_else_action, "IF") = 1 then return _set_error("syntax_error", "ELSE IF is not supported; use ELSE DO with a nested IF", statement_numbers[candidate_else] + 0, 1)
             if translate(block_else_action) == "DO" then do
               block_else_end_pc = _find_matching_end(candidate_else + 1)
               if block_else_end_pc = 0 then return _set_error("syntax_error", "missing END for ELSE DO block", statement_numbers[candidate_else] + 0, 1)
