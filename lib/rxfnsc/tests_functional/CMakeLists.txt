@@ -9,6 +9,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 set(REXXBINS
   testRexxValue
+  testRexxActivationArguments
   testRexxRuntimePools
   testRexxDoState
   testRexxClassicBifs

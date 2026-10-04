@@ -2191,6 +2191,12 @@ LC-STEP-73C parser checkpoint: the Level C grammar now retains empty inner
 the focused PARSE syntax highlighting checks pass. ARG lowering and LC-AC-71
 remain open.
 
+LC-STEP-73C runtime frame checkpoint: `RexxActivationArguments` now owns
+ordered values and per-slot presence for one activation. The focused
+`testRexxActivationArguments` opt/noopt tests prove omitted, explicit empty,
+missing and repeat-read behavior. Compiler-generated main/routine population,
+ARG/PARSE consumption, and LC-AC-71 remain open.
+
 Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
 one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
 call with three positions including an omitted middle position gives

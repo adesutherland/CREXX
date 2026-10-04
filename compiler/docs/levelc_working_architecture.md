@@ -145,6 +145,13 @@ Dynamic operands require version-2 references and an explicit capture plan;
 comma templates require per-source segment handling. They extend the same
 item representation instead of adding shape-specific lowering paths.
 
+The shared `RexxActivationArguments` runtime class stores one ordered frame
+per Classic activation. Each slot carries a `RexxValue` and a presence flag;
+an omitted slot reads as empty while remaining absent to existence queries.
+Main and routine call lowering will populate separate frames, and ARG/PARSE
+ARG will read them without consuming their values. This keeps argument
+presence independent of template execution and visible variable-pool writes.
+
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including
 direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;

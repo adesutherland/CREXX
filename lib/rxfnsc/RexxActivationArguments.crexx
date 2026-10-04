@@ -1,0 +1,88 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxactivation expose RexxActivationArguments
+import rexxvalue
+
+/**
+ * Positional arguments captured once for a Classic program or routine call.
+ * An omitted position occupies a slot but is not present to ARG existence
+ * queries. A missing position returns an empty value without extending the
+ * frame. Repeated ARG instructions read the same captured values.
+ */
+RexxActivationArguments: class
+  values = .RexxValue[]
+  presence = .int[]
+  slot_count = .int
+
+  *: factory
+    slot_count = 0
+    return
+
+  /**
+   * Append one evaluated argument position.
+   * @param value captured argument value
+   * @param exists 1 for an explicitly supplied value, 0 for an omission
+   */
+  append: method = .void
+    arg value = .RexxValue, exists = .boolean
+    slot_count = slot_count + 1
+    values[slot_count] = value
+    presence[slot_count] = exists
+    return
+
+  /**
+   * Append one command-line argument string.
+   * @param text exact argument bytes supplied by the host
+   */
+  appendText: method = .void
+    arg text = .string
+    call append(.RexxValue(text), 1)
+    return
+
+  /** @return number of positional slots, including omitted positions */
+  argumentCount: method = .int
+    return slot_count
+
+  /**
+   * Test whether a positional slot was explicitly supplied.
+   * @param index one-based position
+   * @return true only for a supplied position
+   */
+  argumentExists: method = .boolean
+    arg index = .int
+    if index < 1 | index > slot_count then return 0
+    return presence[index] <> 0
+
+  /**
+   * Read one captured argument without modifying the frame.
+   * @param index one-based position
+   * @return the captured value, or an empty value for an omission or missing slot
+   */
+  argument: method = .RexxValue
+    arg index = .int
+    if index < 1 | index > slot_count then return .RexxValue("")
+    if presence[index] = 0 then return .RexxValue("")
+    return values[index]

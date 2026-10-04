@@ -1,0 +1,28 @@
+options levelb comments_dash numeric_classic
+import rexxactivation
+import rexxvalue
+
+main: procedure = .int
+  errors = 0
+  args = .RexxActivationArguments()
+  call args.append(.RexxValue("first"), 1)
+  call args.append(.RexxValue("ignored"), 0)
+  call args.appendText("")
+  errors = errors + check(args.argumentCount() = 3, "omitted slot counts")
+  errors = errors + check(args.argumentExists(1), "first present")
+  errors = errors + check(\args.argumentExists(2), "middle omitted")
+  errors = errors + check(args.argumentExists(3), "explicit empty present")
+  errors = errors + check(\args.argumentExists(4), "missing absent")
+  errors = errors + check(args.argument(1).asString() = "first", "first value")
+  errors = errors + check(args.argument(2).asString() = "", "omitted value")
+  errors = errors + check(args.argument(3).asString() = "", "explicit empty value")
+  errors = errors + check(args.argument(4).asString() = "", "missing value")
+  errors = errors + check(args.argument(1).asString() = "first", "repeat read")
+  if errors = 0 then say "ok"
+  return errors
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL" label
+  return 1
