@@ -4540,7 +4540,7 @@ if (ENABLE_PARSER_MODE)
             MUST_MATCH
             "RXC-LC-24\\.1 value=\"B\""
             "RXC-LC-19\\.6 token=\"\\+\""
-            "RXC-LC-20\\.2 token=\"10\""
+            "RXC-LC-20\\.1 token=\"10\""
             "RXC-LC-31\\.1 token=\"10\""
             "RXC-LC-25\\.6 keywords=\"STREAM STEM NORMAL\" token=\"end-of-clause\""
             "RXC-LC-53\\.1 token=\"end-of-clause\""
