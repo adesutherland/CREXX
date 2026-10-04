@@ -54,15 +54,15 @@ authored program must survive lowering for diagnostics and tracing.
   multi-component compounds. Its `stemSymbolValue` reads an
   unset or dropped tail without creating a binding; `dropStemTail` mutates one
   case-preserved tail and copies the updated stem back through a local or
-  exposed binding. Direct Level C `DROP` lists lower to ordered `drop`,
-  `dropStem`, or `dropStemTail` calls; the compiler evaluates each compound
-  tail once before its corresponding call. The pool and `RexxStem` implement
+  exposed binding. Direct Level C `DROP` lists now lower to ordered
+  `dropSymbol` calls, so the pool resolves every compound tail at its authored
+  list position. The pool and `RexxStem` implement
   default reset, dropped-tail reads, and alias mutation. Each Level C
   activation uses its visible pool; a RexxScript evaluator creates a
   distinct sandbox pool from the same class.
 - The pool's `dropSymbol` operation resolves and drops one validated Classic
-  symbol, including a compound name's substituted tail. It is the shared
-  primitive for runtime subsidiary lists in parenthesized `DROP` references.
+  symbol, including arbitrary compound tail components. It serves direct
+  `DROP` items and the runtime subsidiary lists in parenthesized references.
   Level C lowers each `VAR_REFERENCE` to one `dropIndirectList` call with the
   referenced variable's value evaluated at that position in the direct list.
   The helper splits the captured string into words, uses the shared Classic

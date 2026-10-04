@@ -621,7 +621,7 @@ are verified against all affected consumers.
   and normal/toolchain evidence are recorded, and list any remaining work
   explicitly. Verify the per-instruction receipts and code-path inventory;
   significant work does not count as an infeasible exception.
-- [ ] **LC-AC-62 — complete DROP instruction:** every parsed direct or
+- [x] **LC-AC-62 — complete DROP instruction:** every parsed direct or
   parenthesized DROP list item executes in authored order in main, nested and
   local contexts. Direct scalar, stem and arbitrary-component compound names
   use the same shared pool operation as indirect subsidiary words; exposed
@@ -1072,7 +1072,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | Unit | Step | Complete instruction obligation and principal dependency |
 | --- | --- | --- |
 | LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F | `LC-AC-57`: expression and childless forms, output and lifecycle; STEP-60 case included. Shared expression, BIF, TRACE and SIGNAL obligations remain open in their own rows. |
-| LC-I-02 DROP | LC-STEP-64 | Direct and parenthesized lists, substitution, exposure, order and errors; shared pool boundary. Preserve Adrian's approved Regina invalid-word behavior. |
+| LC-I-02 DROP — closed 2026-10-04 | LC-STEP-64B | `LC-AC-62`: direct and parenthesized lists, arbitrary compound substitution, exposure, order and errors through the shared pool. Adrian's approved Regina invalid-word behavior is retained. |
 | LC-I-03 assignment | LC-STEP-65 | All valid scalar, stem and compound targets and expression/evaluation order; shared pool boundary. |
 | LC-I-04 NOP | LC-STEP-66 | Childless instruction in every legal context and clause/trace lifecycle; existing bounded proof is the baseline. |
 | LC-I-05 OPTIONS | LC-STEP-67 | All processor option words, unknown-option policy and source/configuration behavior; programme initialization. |
@@ -1150,7 +1150,7 @@ identified duplicated compiler/runtime DROP selection. The approved shared
 pool ownership supports a single `dropSymbol` route. `LC-STEP-64A` — complete
 (`LC-AC-58/62`, depends on 63F) removes the compiler's per-kind method
 selection and the single-tail-component guard for DROP, retaining parser
-validation and ordered per-item evaluation. `LC-STEP-64B` (`LC-AC-59/62`,
+validation and ordered per-item evaluation. `LC-STEP-64B` — complete (`LC-AC-59/62`,
 depends on 64A) checks the complete parser/reference matrix, invalid source,
 Regina substitution and exposure, opt/no-opt, AST, pool/RexxScript, normal
 correctness and linked delivery, then closes DROP only if all pass. Each step
@@ -1170,6 +1170,30 @@ cases passed on the changed code/test inputs
 (`/tmp/crexx-drop-focused2.iVSjzP`); the tree proof sees `dropSymbol` and
 `dropIndirectList`. Full instruction qualification under 64B remains open,
 as do assignment and wider profile/host rules.
+
+2026-10-04 LC-STEP-64B whole-DROP closure: the parser admits nonempty lists
+of direct symbols and parenthesized references; bare DROP and malformed
+references produce `20.1` at the offending source. The compiler validates
+each source node once, then emits one ordered pool call per authored item.
+Direct items use `dropSymbol`; indirect items read their reference at that
+position and use `dropIndirectList`, whose invalid-word skip follows Adrian's
+Regina decision. No fixed list or compound-tail-component limit remains.
+The new whole-DROP fixture matches Regina for five-item lists, three
+substituted tail components, direct/indirect drops, item order, exposed local
+pool mutation and stem removal (`/tmp/crexx-drop-regina.fgswsJ`). Existing
+direct/indirect fixtures retain tail case, tombstone/default, invalid-word,
+numeric tail, repeated target and nested IF/DO proof. Thirteen focused
+Release tests, including opt/no-opt, invalid diagnostics and canonical trees,
+passed (`/tmp/crexx-drop-focused2.iVSjzP`); shared pool tests passed 2/2
+(`/tmp/crexx-drop-pool-tests.myRkaO`) and rebuilt RexxScript runtime/compat
+tests passed 4/4 (`/tmp/crexx-drop-rexxscript-tests.ZPenYW`). Current
+`rxc` -> `rxas` -> `rxlink`
+-> `rxvm` output matched Regina byte for byte (191 bytes,
+`/tmp/crexx-drop-linked.CNlG4h`), and the normal Release Level C suite passed
+312/312 (`/tmp/crexx-drop-levelc-suite.vd90UJ`). `LC-AC-62` and `LC-I-02`
+close here. Host-selected character profile propagation remains a shared
+`LC-AC-04/06` obligation, not a DROP-specific exception or a whole-Level-C
+completion claim.
 
 ### Closed review: LC-I-01 SAY
 
@@ -1587,7 +1611,7 @@ itself make its Classic shape executable.
 | Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
-| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY instruction closed under LC-AC-57; guarded scalar/compound assignment, childless NOP, bare main EXIT, procedure RETURN, and ordered direct/indirect DROP lists are bounded slices | Wider non-SAY statement operands, indirect `PROCEDURE EXPOSE`, exit/return lifecycle and configuration proof remain open |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY and DROP instructions closed under LC-AC-57/62; guarded scalar/compound assignment, childless NOP, bare main EXIT and procedure RETURN remain bounded slices | Wider assignment and lifecycle forms, indirect `PROCEDURE EXPOSE`, exit/return behavior and configuration proof remain open |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
@@ -1661,7 +1685,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal start with optional captured TO/BY/FOR | Dynamic start, wider count/numeric errors and configuration proof open |
-| `SYN-CLASSIC-DROP` | DROP instruction | Ordered direct scalar/stem/supported-compound and parenthesized indirect lists, including Regina-style invalid-word skip | Wider direct compound forms, full condition/profile proof open |
+| `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-64B, including arbitrary direct compounds and Regina-style invalid-word skip | Host-selected profile policy remains cross-cutting under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |
