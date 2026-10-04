@@ -2140,6 +2140,13 @@ template or argument count limit is acceptable.
    preserving the existing Level B `parseplan` conversion signal. The proposed
    version-2 descriptor flag and VM handler change below require Adrian's
    approval before implementation.
+7. **LC-STEP-73G (LC-AC-71; active after 73F):** qualify supported host ARG
+   entry and repeated activation lifecycles, audit the actual invocation and
+   character-profile boundary, then complete BYTE/UTF8 behavior after a
+   separately approved profile-selection design if it changes architecture.
+   Keep non-admitted CALL/host entry modes with their owning instruction or
+   host-service row; do not count the ARG instruction closed until LC-AC-71
+   has its full applicable profile evidence.
 
 2026-10-04 LC-STEP-73A initial audit: IBM defines ARG as `PARSE UPPER ARG`;
 comma-separated templates consume successive argument strings, each call
@@ -2301,6 +2308,21 @@ broad exception was an unbuilt SAY host test; it passed after building its
 target. Together the retained broad run and five targeted repairs cover all
 443 tests in the revised Level C set. ARG instruction closure still needs
 the LC-AC-71 configuration and invocation-lifecycle audit.
+
+LC-STEP-73G host-entry checkpoint: the native `rxvml_run()` entry reaches
+generated Level C main with its argument vector. `levelc_arg_host_entry`
+loads the same module in one host context and runs two arguments, one argument,
+one explicit empty argument and zero arguments in sequence. `ARG()` count,
+`ARG(n,'E')`, raw `ARG(n)`, and uppercased instruction fields reset for each
+activation; the host uses the length-aware SAY callback. The focused host test
+passes in normal Debug. CLI main entry remains covered in optimized/noopt
+`levelc_arg_frame_main_*`; local CALL frames and omissions remain covered by
+`levelc_arg_frame_calls*`. `rxvml_run()` accepts terminated C strings, so it
+cannot carry an embedded NUL; internal CALL exact-byte behavior is covered
+separately by `levelc_arg_exact_bytes*`. `RexxClassicConfig` already owns BYTE
+and UTF8 modes, but generated Level C main constructs a BYTE-default owner
+without a host/profile selector. Opt-in UTF8 qualification remains open under
+LC-AC-71 and the shared LC-AC-04/06 configuration contract.
 
 Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
 one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
@@ -2852,7 +2874,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-65B: one pool-owned path, reference order, invalid target, opt/no-opt, tree, normal and linked evidence | Host-selected profile and external API remain cross-cutting open work |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, raw/canonical AST, exact bytes, 26.4 dynamic-position errors and linked output are proven | Configuration and invocation-lifecycle proof remain open under LC-AC-71 |
+| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, host `rxvml_run()` lifecycle, raw/canonical AST, exact bytes, 26.4 dynamic-position errors and linked output are proven | Opt-in UTF8 configuration and any admitted external routine-entry modes remain open under LC-AC-71/LC-STEP-73G |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal start with optional captured TO/BY/FOR | Dynamic start, wider count/numeric errors and configuration proof open |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-64B, including arbitrary direct compounds and Regina-style invalid-word skip | Host-selected profile policy remains cross-cutting under LC-AC-04/06 |

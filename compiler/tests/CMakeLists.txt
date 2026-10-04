@@ -7122,6 +7122,24 @@ target_compile_definitions(test_say_bytes_host PRIVATE
 add_dependencies(test_say_bytes_host say_bytes_host_bin library)
 
 add_custom_command(
+        OUTPUT levelc_arg_host_entry.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_arg_host_entry ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_host_entry.rexx
+        COMMAND $<TARGET_FILE:rxas> levelc_arg_host_entry
+        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_host_entry.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling levelc_arg_host_entry.rexx ...")
+add_custom_target(levelc_arg_host_entry_bin DEPENDS levelc_arg_host_entry.rxbin)
+add_executable(test_levelc_arg_host_entry src/test_levelc_arg_host_entry.c)
+target_link_libraries(test_levelc_arg_host_entry PRIVATE rxvml rxpashim)
+target_include_directories(test_levelc_arg_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_levelc_arg_host_entry PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_CLASSLIB_PATH="${CMAKE_BINARY_DIR}/bin/classlib"
+        CREXX_TEST_RXFNSC_PATH="${CMAKE_BINARY_DIR}/bin/rxfnsc"
+        CREXX_TEST_ARG_MODULE="${CMAKE_CURRENT_BINARY_DIR}/levelc_arg_host_entry.rxbin")
+add_dependencies(test_levelc_arg_host_entry levelc_arg_host_entry_bin library rxfnsc)
+
+add_custom_command(
         OUTPUT dynamic_load_provider.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o dynamic_load_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_provider.crexx
         COMMAND $<TARGET_FILE:rxas> dynamic_load_provider
@@ -7358,6 +7376,10 @@ set_tests_properties(e2_active_context_isolation PROPERTIES LABELS "compiler;sta
 crexx_label_concurrency_tests(SP01 e2_active_context_isolation)
 add_test(NAME say_bytes_host_callbacks COMMAND test_say_bytes_host)
 set_tests_properties(say_bytes_host_callbacks PROPERTIES LABELS "compiler;levelc")
+add_test(NAME levelc_arg_host_entry COMMAND test_levelc_arg_host_entry)
+set_tests_properties(levelc_arg_host_entry PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "test_levelc_arg_host_entry")
 add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
 foreach(_dynamic_interface_runner IN ITEMS rxvm)

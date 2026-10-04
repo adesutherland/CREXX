@@ -151,6 +151,10 @@ presence flag, and pass one frame to the generated routine. The old routine
 signature derived from its first ARG template has been removed. Current
 ARG lowering reads that frame at each execution, including repeated ARG
 instructions. General templates share the PARSE executor.
+The native `rxvml_run()` entry supplies the same hidden array and starts a new
+frame on each run, including consecutive runs in one host context. Its C-string
+argument API does not carry embedded NUL bytes; internal calls and ARG values
+retain exact lengths independently of that host entry limit.
 The Classic `ARG()` BIF reads that same unchanged frame. Its no-operand count
 is the highest explicitly supplied position, so trailing omitted CALL slots
 do not increase the count. Its E/O options use each slot's presence bit; an
