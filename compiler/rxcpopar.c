@@ -109,6 +109,10 @@ int opt_pars(Context *context) {
                     token_text_equals_ci(cursor, "srcmap")) {
                     context->source_has_srcmap = 1;
                 }
+                if (cursor->token_type == TK_SYMBOL &&
+                    token_text_equals_ci(cursor, "strictc")) {
+                    context->levelc_strict_classic = 1;
+                }
                 if (cursor->token_type == TK_COMMENTS_HASH ||
                     cursor->token_type == TK_COMMENTS_NOHASH) {
                     hash_explicit = 1;
@@ -123,6 +127,7 @@ int opt_pars(Context *context) {
     }
 
     if (context->level == UNKNOWN) context->level = header_cli_or_default_level(context);
+    if (context->level != LEVELC) context->levelc_strict_classic = 0;
     if (context->level == LEVELC && !hash_explicit)
         context->comments_hash = 0;
     context->processedOptions = 1;

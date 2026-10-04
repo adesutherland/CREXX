@@ -1021,6 +1021,8 @@ static void levelc_validate_loop_transfer(Context *context, Token *keyword,
         levelc_append_code_token(context, extra, "21.1");
     } else if (levelc_leave_iterate_has_bad_target(keyword)) {
         /* The source grammar reports 20.1 for a malformed name. */
+    } else if (context->levelc_strict_classic) {
+        /* A valid source form signals Error 28 only when reached. */
     } else if (!levelc_has_repetitive_do(frames, frame_count)) {
         levelc_append_code(context, keyword, is_leave ? "28.1" : "28.2");
     } else if (target && !levelc_has_controlled_do(frames, frame_count, target)) {

@@ -711,6 +711,16 @@ Current Level C path (2026-10-04):
   and UTF8 currently define no runtime option words, so all values are
   ignored after evaluation; a bare `OPTIONS` passes an empty value. This keeps
   runtime option ownership in one place if a portable word is specified later.
+- A leading bare `STRICTC` word sets the Level C Classic-fidelity policy flag.
+  It currently changes the timing of source-provable invalid LEAVE/ITERATE
+  targets: the default profile diagnoses them during compilation, while
+  `OPTIONS LEVELC STRICTC` emits a shared `RexxDoState` Error 28 call at the
+  transfer site. The error occurs only if execution reaches that site. Syntax
+  errors remain compile-time errors; valid transfers retain their canonical
+  loop binding. Later executable `OPTIONS` cannot retroactively change this
+  source policy. Level B/G validation is unchanged. Other Classic differences
+  are assessed instruction by instruction; the flag is not a blanket claim of
+  complete Classic fidelity.
 
 ### Stage 1: scanner
 

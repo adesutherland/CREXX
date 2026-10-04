@@ -5408,6 +5408,9 @@ add_levelc_invalid_compile_test(levelc_slice13_named_leave_invalid
 add_levelc_invalid_compile_test(levelc_leave_named_outside
         rexx_src/levelc_leave_named_outside.rexx
         "RXC-LC-28\\.1" "@ 2:1" "1 error")
+add_levelc_invalid_compile_test(levelc_leave_dead_default
+        rexx_src/levelc_leave_dead_default.rexx
+        "RXC-LC-28\\.1")
 add_levelc_invalid_compile_test(levelc_leave_inactive_caller
         rexx_src/levelc_leave_inactive_caller.rexx
         "RXC-LC-28\\.1" "@ 7:1" "1 error")
@@ -5417,6 +5420,15 @@ add_levelc_invalid_compile_test(levelc_leave_malformed_target
 add_levelc_invalid_compile_test(levelc_leave_extra_target
         rexx_src/levelc_leave_extra_target.rexx
         "RXC-LC-21\\.1" "@ 3:11" "1 error")
+add_levelc_invalid_compile_test(levelc_strictc_late_option
+        rexx_src/levelc_strictc_late_option.rexx
+        "RXC-LC-28\\.1")
+add_levelc_invalid_compile_test(levelc_strictc_leave_extra_target
+        rexx_src/levelc_strictc_leave_extra_target.rexx
+        "RXC-LC-21\\.1")
+add_levelc_invalid_compile_test(levelc_strictc_leave_malformed_target
+        rexx_src/levelc_strictc_leave_malformed_target.rexx
+        "RXC-LC-20\\.1")
 add_levelc_invalid_compile_test(levelc_slice29_named_leave_invalid
         rexx_src/levelc_slice29_named_leave_invalid.rexx
         "RXC-LC-28\\.3")
@@ -5795,6 +5807,12 @@ add_levelc_runtime_slice_test(levelc_leave_instruction
 add_levelc_runtime_slice_test(levelc_leave_instruction_noopt
         rexx_src/levelc_leave_instruction.rexx
         "count 2\nforever\nwhile 1\nuntil 1\ninner 1 1\nouter-state 1 2\nsame-inner 1\nsame-final 1\ncompound STEM.A STEM.B\nlimit-body 1\nlimit-state 1\nlocal 1\n" -n)
+add_levelc_runtime_slice_test(levelc_strictc_transfer_dead
+        rexx_src/levelc_strictc_transfer_dead.rexx
+        "body 1\nafter 2\n")
+add_levelc_runtime_slice_test(levelc_strictc_transfer_dead_noopt
+        rexx_src/levelc_strictc_transfer_dead.rexx
+        "body 1\nafter 2\n" -n)
 
 add_levelc_runtime_slice_test(levelc_slice14_forever
         rexx_src/levelc_slice14_forever.rexx
@@ -6137,6 +6155,27 @@ function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
 
+add_levelc_invalid_runtime_test(levelc_strictc_leave_outside
+        rexx_src/levelc_strictc_leave_outside.rexx RXC-LC-28.1)
+add_levelc_invalid_runtime_test(levelc_strictc_leave_outside_noopt
+        rexx_src/levelc_strictc_leave_outside.rexx RXC-LC-28.1 -n)
+add_levelc_invalid_runtime_test(levelc_strictc_leave_unknown
+        rexx_src/levelc_strictc_leave_unknown.rexx RXC-LC-28.3)
+add_levelc_invalid_runtime_test(levelc_strictc_leave_unknown_noopt
+        rexx_src/levelc_strictc_leave_unknown.rexx RXC-LC-28.3 -n)
+add_levelc_invalid_runtime_test(levelc_strictc_leave_inactive_caller
+        rexx_src/levelc_strictc_leave_inactive_caller.rexx RXC-LC-28.1)
+add_levelc_invalid_runtime_test(levelc_strictc_leave_inactive_caller_noopt
+        rexx_src/levelc_strictc_leave_inactive_caller.rexx RXC-LC-28.1 -n)
+add_levelc_invalid_runtime_test(levelc_strictc_iterate_outside
+        rexx_src/levelc_strictc_iterate_outside.rexx RXC-LC-28.2)
+add_levelc_invalid_runtime_test(levelc_strictc_iterate_outside_noopt
+        rexx_src/levelc_strictc_iterate_outside.rexx RXC-LC-28.2 -n)
+add_levelc_invalid_runtime_test(levelc_strictc_iterate_unknown
+        rexx_src/levelc_strictc_iterate_unknown.rexx RXC-LC-28.4)
+add_levelc_invalid_runtime_test(levelc_strictc_iterate_unknown_noopt
+        rexx_src/levelc_strictc_iterate_unknown.rexx RXC-LC-28.4 -n)
+
 add_levelc_invalid_runtime_test(levelc_slice6_invalid_logical
         rexx_src/levelc_slice6_invalid_logical.rexx RXC-LC-34)
 add_levelc_invalid_runtime_test(levelc_slice7_if_invalid_logical
@@ -6378,6 +6417,19 @@ add_levelc_lowered_tree_shape_test(levelc_leave_instruction_tree
         "LEAVE"
         "IF"
         "RexxDoState")
+add_levelc_lowered_tree_shape_test(levelc_strictc_transfer_dead_tree
+        rexx_src/levelc_strictc_transfer_dead.rexx
+        "LEAVE"
+        "rexxdostate_invalid_transfer"
+        "IF")
+add_test(NAME levelc_strictc_transfer_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_strictc_transfer_dead.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_strictc_transfer_tree.cmake)
+set_tests_properties(levelc_strictc_transfer_source_tree PROPERTIES LABELS "compiler;levelc")
 
 add_levelc_lowered_tree_shape_test(levelc_slice14_forever_tree_shape
         rexx_src/levelc_slice14_forever.rexx

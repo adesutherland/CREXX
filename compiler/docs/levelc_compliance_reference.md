@@ -329,8 +329,10 @@ does not fully express:
 
 - `END name` must match the controlled `DO` variable; `END name` on a
   non-controlled `DO` is invalid.
-- `LEAVE` and `ITERATE` must occur within a repetitive `DO`; named forms must
-  match an active controlled loop, with nesting correction recorded for
+- By default, `LEAVE` and `ITERATE` must occur within a repetitive `DO` at
+  compile time; named forms must match an active controlled loop. With a
+  leading static `STRICTC` word, a syntactically valid invalid target instead
+  signals Error 28 only if reached. Nesting correction is recorded for
   runtime control flow.
 - labels inside active groups can be trace-only and cannot be branch targets or
   internal routine entry points.
@@ -535,6 +537,14 @@ EBCDIC DBCS-specific `ETMODE`/`EXMODE` family, are ignored. Unknown words do
 not raise an error. Level C permits explicit hash/dash line-comment source
 switches, rejects `comments_slash` to preserve `//` remainder, and rejects
 `numeric_common` to preserve Classic precedence.
+
+The leading bare word `STRICTC` selects closer Classic error timing for
+LEAVE/ITERATE: syntactically valid transfers with no active target compile and
+signal Error 28 only when reached. Ordinary Level C reports a source-provable
+invalid target at compile time. Level B/G retain their existing compile-time
+checks, and syntax errors remain compile-time errors in every mode. `STRICTC`
+is a central source-policy flag for subsequent instruction reviews; it does
+not imply that every remaining Classic difference is already implemented.
 
 `PARSE`:
 

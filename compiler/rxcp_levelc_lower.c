@@ -1242,13 +1242,22 @@ static int levelc_transfer_supported(ASTNode *stmt,
         return 0;
     }
     if (stmt->child) {
+        if (stmt->child->node_type != VAR_SYMBOL || stmt->child->child ||
+            stmt->child->sibling) {
+            if (reason_out) *reason_out = "unsupported named LEAVE/ITERATE shape";
+            return 0;
+        }
         target = levelc_named_source_repetitive_do(stmt);
+        if (!target && stmt->context && stmt->context->levelc_strict_classic)
+            return 1;
         header = levelc_find_do_header(plan, target);
         if (header && header->kind == LEVELC_DO_CONTROLLED) return 1;
         if (reason_out && !*reason_out) *reason_out = "named LEAVE/ITERATE requires a supported controlled DO";
         return 0;
     }
     target = levelc_nearest_source_repetitive_do(stmt);
+    if (!target && stmt->context && stmt->context->levelc_strict_classic)
+        return 1;
     header = levelc_find_do_header(plan, target);
     if (header && header->kind != LEVELC_DO_GROUP) return 1;
     if (reason_out) *reason_out = "LEAVE/ITERATE requires a supported repetitive DO";
@@ -2626,7 +2635,7 @@ static ASTNode *levelc_build_options(Context *context,
     ASTNode *import_bifs;
     ASTNode *import_translate;
     size_t i;
-    int needs_do_state = 0;
+    int needs_do_state = context->levelc_strict_classic;
 
     options = ast_f(context, REXX_OPTIONS, anchor_node ? anchor_node->token : NULL);
     if (!options) return NULL;
@@ -2830,6 +2839,31 @@ static int levelc_lower_transfer(Context *context,
 
     while (binding && binding->source_do != source_target) binding = binding->previous;
     if (!source_target || !binding) {
+        if (context->levelc_strict_classic && !source_target) {
+            const int has_loop = levelc_nearest_source_repetitive_do(stmt) != NULL;
+            const char *code = stmt->node_type == LEAVE
+                ? (has_loop ? "28.3" : "28.1")
+                : (has_loop ? "28.4" : "28.2");
+            char *name = stmt->child ? levelc_upper_name(stmt->child) : NULL;
+            ASTNode *args[2];
+            ASTNode *call;
+
+            args[0] = rxcp_remap_create_string_constant(context, stmt, code);
+            args[1] = rxcp_remap_create_string_constant(context, stmt,
+                                                        name ? name : "");
+            free(name);
+            call = args[0] && args[1]
+                ? rxcp_remap_create_function_call(context, stmt,
+                                                   "rexxdostate_invalid_transfer", args, 2)
+                : NULL;
+            lowered = call ? rxcp_remap_create_call_statement(context, stmt, call) : NULL;
+            if (!lowered) {
+                if (reason_out) *reason_out = "failed to lower Classic loop transfer error";
+                return 0;
+            }
+            add_ast(instructions, lowered);
+            return 1;
+        }
         if (reason_out) *reason_out = "LEAVE/ITERATE lost its source loop binding";
         return 0;
     }
