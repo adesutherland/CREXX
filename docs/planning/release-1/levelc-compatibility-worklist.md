@@ -696,7 +696,7 @@ are verified against all affected consumers.
   with an IBM/Regina reference matrix, source and lowered-tree inspection,
   focused positive and negative CTests, optimized/no-opt execution, relevant
   normal correctness and shared runtime checks, and linked execution.
-- [ ] **LC-AC-68 — complete SELECT instruction:** `SELECT` contains one or more
+- [x] **LC-AC-68 — complete SELECT instruction:** `SELECT` contains one or more
   ordered `WHEN expression THEN instruction` arms and an optional `OTHERWISE`
   instruction list, ending with `END`. Evaluate each condition at most once in
   source order until the first exact logical `1`; skip later conditions and
@@ -1142,8 +1142,8 @@ Work through the rows in order, with only one active row; changing the order
 requires a recorded reason and must not turn a partial row into a closure.
 On 2026-10-04 Adrian prioritized the high-risk DO AST work before the remaining
 prior-instruction audit and SIGNAL. LC-I-08 closed after its whole-instruction
-review; LC-I-05 OPTIONS and LC-I-06 IF subsequently closed, and LC-I-07 SELECT
-is now the active row. The priority change did not count any of them as
+review; LC-I-05 OPTIONS, LC-I-06 IF and LC-I-07 SELECT subsequently closed.
+LC-I-09 LEAVE is next. The priority change did not count any of them as
 reviewed or closed before their own evidence receipts.
 Each step includes parser-form inventory, reference cases, invalid forms,
 main/procedure/nested execution where legal, opt/no-opt, source/AST checks,
@@ -1161,7 +1161,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-04 NOP — closed 2026-10-04 | LC-STEP-66B | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
 | LC-I-05 OPTIONS — closed 2026-10-04 | LC-STEP-67A–67D | `LC-AC-66`: static source header, executable expression at each source point, no-op empty form, unknown-word policy and configuration ownership. BYTE/UTF8 define no runtime words. Shared condition, TRACE and host obligations remain open in their own rows. |
 | LC-I-06 IF — closed 2026-10-04 | LC-STEP-68A–68C | `LC-AC-67`: all arm positions without IF-specific rejection, nearest ELSE, condition/error and nesting behavior. Each arm's instruction semantics remain with its owner row; shared condition/trap lifecycle remains open in its own criteria. |
-| LC-I-07 SELECT — active | LC-STEP-69A–69C | `LC-AC-68`: WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
+| LC-I-07 SELECT — closed 2026-10-04 | LC-STEP-69A–69C | `LC-AC-68`: WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. Shared helper-stack source reporting and TRACE/trap lifecycle remain open under LC-AC-08/04. |
 | LC-I-08 DO — closed 2026-10-04 | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. Shared NUMERIC/condition/TRACE/host lifecycle remains open in its own rows. |
 | LC-I-09 LEAVE | LC-STEP-71 | Unnamed/named targets, nesting, value/state and errors across all legal loops; DO. |
 | LC-I-10 ITERATE | LC-STEP-72 | Unnamed/named targets, end-step timing, nesting and errors across all legal loops; DO. |
@@ -1764,7 +1764,7 @@ in their owning open rows. Preserve Level B and RexxScript behavior.
    increment, keeping one source-anchored lowering path and ordinary statement
    dispatch for arms. Add a whole-instruction fixture plus focused invalid,
    AST and optimized/no-opt coverage; replace bounded assertions where useful.
-3. **LC-STEP-69C (LC-AC-59/61/68; active; depends on 69B):** inspect source and
+3. **LC-STEP-69C (LC-AC-59/61/68; complete; depends on 69B):** inspect source and
    canonical trees, reconcile every valid/invalid form and error recovery,
    compare reference output, run focused shared-runtime/RexxScript and relevant
    normal correctness checks, prove `rxc`/`rxas`/`rxlink`/`rxvm`, update the
@@ -1821,6 +1821,33 @@ recovering past them without source AST ownership. Retain those LABEL nodes in
 the SELECT list while the current canonical lowering skips their trace-only
 execution role; shared TRACE and SIGNAL label semantics remain open in their
 own rows. Null clauses already pass without a label-specific route.
+
+2026-10-04 LC-STEP-69B/69C receipt: `dde8909aa` implements the complete
+SELECT parser/AST/diagnostic repair while retaining one canonical IF-chain
+lowerer and ordinary arm dispatch. `levelc_select_instruction.rexx` matches
+Regina byte-for-byte for first-true selection, lazy conditions, empty and
+same-clause OTHERWISE, labels around WHEN, nested SELECT/IF/DO, local calls,
+and selected instruction side effects. Source-tree and canonical-tree CTests
+check the normalized OTHERWISE list, retained labels, branch chain and pool
+calls. Focused SELECT/IF/assignment checks passed 41/41
+(`/tmp/crexx-select-focused6.M6NBDf`); final optimized/no-opt `34.2` and
+`7.3` assertions passed 4/4 (`/tmp/crexx-select-error-tests.g6bkrm`).
+Shared RexxValue/RexxScript checks passed 12/12
+(`/tmp/crexx-select-shared-tests.rFKyS7`), and the normal Release Level C
+suite passed 378/378 (`/tmp/crexx-select-levelc-qa.GyVd61`). A linked image
+from `rxc`/`rxas`/`rxlink`/`rxvm` matched Regina exactly
+(`/tmp/crexx-select-linked-run.LKlXnF`,
+`/tmp/crexx-select-regina.nKOSP7`). `git diff --check` passed before commit;
+the subsequent architecture note changed documentation only. The active
+WHEN's nonlogical-value error reports its WHEN source line in both modes.
+The no-match error includes the SELECT line in its `7.3` message; VM stack
+source can report the last WHEN or an inlined shared helper instead, a
+cross-cutting source-stack obligation under `LC-AC-08/04`, not a SELECT-only
+runtime restriction. Shared label TRACE and condition-trap behavior remain
+with `LC-I-23/24`; arm-instruction semantics remain with their owner rows.
+No SELECT-specific infeasibility or approved compatibility exception was
+needed. `LC-AC-68` and LC-I-07 close; `LC-AC-04/08/59/61` stay open for the
+remaining programme. Next is LC-I-09 LEAVE.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
