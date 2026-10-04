@@ -2173,6 +2173,19 @@ frame, parser AST preservation and PARSE lowering consolidation are an
 architectural shift; AGENTS.md requires Adrian's approval before those
 compiler edits. No product code change for ARG has been made at this gate.
 
+Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
+one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
+call with three positions including an omitted middle position gives
+uppercased word fields, permits a literal delimiter, retains the argument
+source for a second ARG, and reports existence correctly through the ARG BIF
+(`/tmp/crexx-arg-reference-matrix.xnNmdw`). A second fixture confirms dynamic
+pattern variables, leading/trailing empty comma slots, a bare ARG, and
+repeated instruction semantics (`/tmp/crexx-arg-reference-patterns.Vy4j5j`).
+The current VM's canonical Level B main `arg args = .string[]` accepts `-a`
+items as an array, providing a direct source for generated Level C main code;
+local CALL omissions still require explicit presence flags. These probes
+strengthen the proposed frame/parse design but do not approve or implement it.
+
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
 pool ownership supports a single `dropSymbol` route. `LC-STEP-64A` — complete
