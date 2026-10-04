@@ -718,9 +718,12 @@ are verified against all affected consumers.
   do not change the target; leaving nested loops skips their remaining
   bodies, end checks and steps and preserves each visible control value at
   the point of transfer. Local routine calls cannot leave an inactive caller
-  loop. A syntactically valid but invalid-target LEAVE in an unselected branch
-  must compile and not signal; reaching it must raise the contextual `28.1`
-  or `28.3` at runtime. Diagnose malformed names and extra same-clause text
+  loop. Ordinary compiled Level C diagnoses a source-provable invalid loop
+  target at compile time (`28.1` or `28.3`). With leading static `OPTIONS
+  LEVELC STRICTC`, a syntactically valid but invalid-target LEAVE in an
+  unselected branch compiles and does not signal; reaching it raises the
+  contextual `28.1` or `28.3` at runtime. Level B/G retain their existing
+  compile-time checks. Diagnose malformed names and extra same-clause text
   at compile time with Classic identity and source position. Preserve source/canonical AST ownership
   and one shared transfer/binding path without a LEAVE-specific loop rewrite.
   Verify IBM/Regina reference cases, optimized/no-opt, main/nested/local
@@ -1881,11 +1884,13 @@ ITERATE and RexxScript behavior. Do not add a separate LEAVE emitter path.
    DO/LEAVE/ITERATE tests. Reproduce any mismatch before editing, record
    whether it belongs to LEAVE or a shared lifecycle owner, and identify any
    decision gate before an architecture or language change.
-2. **LC-STEP-71B (LC-AC-69; pending runtime decision; depends on 71A and Adrian
-   decision):** repair LEAVE-owned syntax, diagnostics or loop targeting in
-   one coherent increment using the existing shared transfer machinery;
-   remove duplication where the whole-instruction review warrants it. Add
-   a complete optimized/no-opt fixture and focused invalid and AST checks.
+2. **LC-STEP-71B (LC-AC-69; approved and active; depends on 71A and Adrian's
+   `STRICTC` direction):** retain default static target diagnostics; add a
+   central leading-header `STRICTC` flag for Level C and lower invalid-target
+   LEAVE/ITERATE to one shared `RexxDoState` runtime error service only in
+   that mode. Keep syntax diagnostics static and valid transfers on the
+   canonical binding path. Add a complete optimized/no-opt fixture and
+   focused default, strict, invalid and AST checks.
 3. **LC-STEP-71C (LC-AC-59/61/69; pending; depends on 71B):** compare IBM and
    Regina, inspect source/canonical associations, run focused and relevant
    normal correctness plus shared-consumer checks, prove linked output,
@@ -1926,25 +1931,22 @@ fixtures in opt/no-opt, normal Level C, RexxDoState/RexxScript and linked
 execution will prove timing and isolation. This changes the existing static
 validation architecture and is gated on Adrian's approval under AGENTS.md.
 
-2026-10-04 policy discussion, pending Adrian's choice: Adrian clarified that
-the question concerns **compiled** Level C and suggested a `STRICTC` option;
-Level B/G should retain their compile-time rejection for a LEAVE with no
-lexical loop. The current Level B compiler does reject `if 0 then leave`
-outside a loop (`NOT_IN_LOOP`) and accepts it inside one. Regina accepts an
-unselected outside-loop LEAVE, and IBM documents Error 28 as an error while
-*running* a compiled REXX program. This supports retaining the runtime rule
-as the default compatibility behavior, though it does not by itself prove
-IBM's handling of this exact dead-branch source. The proposed narrow policy
-is: ordinary Level C compiles syntactically valid LEAVE/ITERATE and signals
-`28.*` only if an invalid transfer executes; a leading static
-`OPTIONS LEVELC STRICTC` additionally diagnoses a source-provable invalid
-loop target at compile time. `STRICTC` would not alter malformed-syntax
-diagnostics or suppress an executed signal, and Level B/G would remain
-unchanged. An unselected branch simply never executes its error path. Making
-compile-time rejection the Level C default would instead be a deliberate
-compatibility deviation requiring Adrian's explicit approval and a clear
-inverse option name. Do not change LC-AC-69, implement either policy, or
-close LEAVE until the default and option scope are decided.
+2026-10-04 accepted policy: Adrian clarified that the question concerns
+**compiled** Level C. `STRICTC` means closer Classic REXX behavior. The
+current Level B compiler rejects `if 0 then leave` outside a loop
+(`NOT_IN_LOOP`) and accepts it inside one. Regina accepts an unselected
+outside-loop LEAVE, and IBM documents Error 28 as an error while *running* a
+compiled REXX program; the exact IBM dead-branch compilation case is not yet
+proved. Adrian chose the opposite mapping from the earlier proposal:
+ordinary Level C keeps compile-time rejection for source-provable invalid
+LEAVE/ITERATE targets, while a leading static `OPTIONS LEVELC STRICTC` seeks
+closer Classic behavior by compiling syntactically valid transfers and
+signalling `28.*` only if an invalid transfer executes. This is the accepted
+default-profile compatibility exception for these instructions. `STRICTC`
+does not change malformed-syntax diagnostics or suppress an executed signal;
+Level B/G remain unchanged. The flag is a central policy point for subsequent
+instruction reviews, not a claim that all Classic behaviors already have a
+strict-mode implementation. This decision explicitly revises LC-AC-69.
 
 2026-10-04 source-form checkpoint: `b0df4e3a5` corrects malformed-name
 `20.1`, extra-token `21.1`, and the no-loop versus unmatched-name subcode in
@@ -1959,8 +1961,9 @@ Release Level C run passed 384/385; its sole failure was an old highlighter
 assertion expecting `20.2`. `b4e44cdda` updated only that test assertion,
 which passed in isolation (`/tmp/crexx-leave-static-levelc.qCAehB`,
 `/tmp/crexx-leave-highlighter-retry.jTabiN`). No product regression was found.
-The runtime-timing part of LC-AC-69 and LC-I-09 remains open pending the
-recorded architecture decision; this checkpoint is not LEAVE closure.
+The runtime-timing part of LC-AC-69 and LC-I-09 remains open for implementation
+and qualification under the accepted policy; this checkpoint is not LEAVE
+closure.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
