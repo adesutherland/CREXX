@@ -898,11 +898,17 @@ choice still require Adrian's approval.
    Unicode character BIF and ARG/PARSE audit, then continue the strict
    instruction queue. Use one codepoint template engine; remove obsolete
    profile-selection assumptions and qualify affected shared consumers.
-   `88E-1` (in progress) audits the complete implemented character BIF family as one
+   `88E-1` audits the complete implemented character BIF family as one
    Unicode text boundary, with codepoint positions, mapped ordinals, return
    types and RexxScript isolation. `88E-2` reviews ARG as a whole instruction
    for Unicode uppercasing, codepoint templates, activation modes and host
-   entry. `88E-3` reviews PARSE as a whole instruction across its admitted
+   entry. `88E-2A` (LC-AC-71/59; complete 2026-10-04; part of 88E-2;
+   no new architecture gate)
+   reuses the existing checked direct-CALL lowering and activation frame for
+   a CALL inside a local procedure, including nested arms, so ARG can read
+   that callee's arguments. Prove source/canonical trees, opt/no-opt, linked
+   execution and normal Level C correctness; CALL's other forms stay open.
+   `88E-3` reviews PARSE as a whole instruction across its admitted
    source types and templates. Keep their open reference/condition obligations
    visible, and commit each qualified unit separately.
 6. **LC-STEP-88F (LC-AC-75; depends on 88E for stable semantics):** propose
@@ -1020,6 +1026,32 @@ The character BIF text paths and direct BYTE isolation are evidenced, but
 `40.1` when its implicit input table is omitted. Adrian's approval is pending
 on whether that table should be mapped U+0000–U+00FF ordinals, leaving other
 Unicode scalars unchanged. No implementation of that choice is made here.
+
+**2026-10-04 LC-STEP-88E-2A ARG checkpoint.** The Unicode ARG probe first
+exposed that a local procedure could read its own ARG frame but could not
+make a direct CALL (`unsupported procedure statement`). Procedure validation
+and lowering now invoke the existing checked direct-CALL path also used by
+main; no new AST node, activation implementation, or emitter case was added.
+The new whole-instruction fixture covers codepoint positional templates,
+Unicode uppercase, a Latin-1 byte literal, unchanged raw ARG BIF values,
+repeated ARG, a local function and a local CALL nested in a selected IF arm.
+The host-entry regression covers Unicode values over two native arguments;
+the earlier main/local omission, empty, NUL, pattern, dynamic-position and
+error checks are retained. The source/canonical tree check confirms the
+authored nested CALL and a source-anchored canonical call with the existing
+pool, configuration and fresh activation frame. Focused ARG checks passed
+16/16 (`/tmp/crexx-arg-focused-fix.vlpFE9`), the nested fixture and tree
+recheck passed 3/3 (`/tmp/crexx-arg-nested.SSr7U3`,
+`/tmp/crexx-arg-treecheck.Xbpeez`), and the linked image produced the five
+expected Unicode lines (`/tmp/crexx-arg-linked.NGQdTi`). The normal Debug
+Level C suite passed 456/456 (`/tmp/crexx-arg-levelc.3YarlU`). The initial
+new fixture failure is retained in `/tmp/crexx-arg-focused.RpgPlX` and was
+repaired before qualification. `RexxValue` and RexxScript implementation
+were not changed. LC-AC-71 and LC-I-11 stay open for the remaining invocation
+and full-reference audit; unsupported expression actuals such as `CALL nested
+ARG(1),,ARG(2)` and labels without PROCEDURE remain with the open CALL and
+PROCEDURE rows, with their ARG activation consequences to be reconciled before
+closure. LC-AC-59/61 remain open for the full instruction programme.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
@@ -2392,11 +2424,12 @@ template or argument count limit is acceptable.
    approval before implementation.
 7. **LC-STEP-73G (LC-AC-71; active after 73F):** qualify supported host ARG
    entry and repeated activation lifecycles, audit the actual invocation and
-   character-profile boundary, then complete BYTE/UTF8 behavior after a
-   separately approved profile-selection design if it changes architecture.
-   Keep non-admitted CALL/host entry modes with their owning instruction or
-   host-service row; do not count the ARG instruction closed until LC-AC-71
-   has its full applicable profile evidence.
+   approved Unicode-first boundary, including codepoint templates and
+   Latin-1 ordinals. The earlier BYTE/UTF8 profile-selection proposal was
+   superseded by the 2026-10-04 character-model decision. Keep non-admitted
+   CALL/host entry modes with their owning instruction or host-service row;
+   do not count the ARG instruction closed until LC-AC-71 has its full
+   applicable invocation and character evidence.
 
 2026-10-04 LC-STEP-73A initial audit: IBM defines ARG as `PARSE UPPER ARG`;
 comma-separated templates consume successive argument strings, each call

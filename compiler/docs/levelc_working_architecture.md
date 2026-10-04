@@ -74,7 +74,7 @@ authored program must survive lowering for diagnostics and tracing.
   Classic text scanner for Unicode and configured blanks, classifies each
   word with that same configuration, skips invalid words as Adrian chose for
   Regina parity, and drops valid names sequentially. This avoids a second
-  BYTE-default configuration in the pool.
+  independently configured pool path.
 - `RexxClassicBif*` modules own compatible BIF algorithms, argument validation,
   and error construction. `RexxBifCallContext` carries `RexxValue` arguments,
   argument-presence flags, caller pool, and Classic configuration. A BIF that
@@ -201,7 +201,9 @@ evaluate each supplied actual once, append omitted positions with a false
 presence flag, and pass one frame to the generated routine. The old routine
 signature derived from its first ARG template has been removed. Current
 ARG lowering reads that frame at each execution, including repeated ARG
-instructions. General templates share the PARSE executor.
+instructions. Direct CALL from a local procedure, including one in a nested
+instruction arm, uses the same checked call frame and source-anchored canonical
+lowering as main. General templates share the PARSE executor.
 The native `rxvml_run()` entry supplies the same hidden array and starts a new
 frame on each run, including consecutive runs in one host context. Its C-string
 argument API does not carry embedded NUL bytes; internal calls and ARG values
@@ -220,8 +222,10 @@ direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;
 Level C already has a parsed template AST and writes through a separate
 Classic variable pool. It reuses the VM descriptor semantics while preserving
 Level C AST ownership and pool writes. Other PARSE source types remain guarded.
-The current default proof is BYTE; the broader binary/UTF8 configuration
-obligation remains open.
+The approved compiled Level C scalar route is Unicode text. ARG uppercases
+Unicode codepoints before applying the same PARSE descriptor; byte literals
+are Latin-1 ordinals in that text. This does not change `RexxValue` binary
+storage or RexxScript's separate caller contract.
 An invalid dynamic numeric position uses the version-2 `parseplan` descriptor's
 Classic policy bit to raise `CLASSIC_SYNTAX` with `RXC-LC-26.4` for Level C
 ARG/PARSE. Unflagged plans retain the VM `CONVERSION_ERROR` contract used by

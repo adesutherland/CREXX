@@ -53,6 +53,7 @@ static int run_case(rxvml_context *ctx, int argc, const char **argv,
 
 int main(void) {
     static const char *two_args[] = {"blue green", "tail"};
+    static const char *unicode_args[] = {"é🙂", "ÿ"};
     static const char *one_arg[] = {"red"};
     static const char *empty_arg[] = {""};
     rxvml_context *ctx = rxvml_create(NULL, 0);
@@ -75,6 +76,8 @@ int main(void) {
     rxvml_set_context_say_exit_bytes(ctx, capture_say);
     if (run_case(ctx, 2, two_args,
                  "count=2\nexists=1|1\nraw=blue green|tail\nparsed=BLUE GREEN|TAIL\n") ||
+        run_case(ctx, 2, unicode_args,
+                 "count=2\nexists=1|1\nraw=é🙂|ÿ\nparsed=É🙂|Ÿ\n") ||
         run_case(ctx, 1, one_arg,
                  "count=1\nexists=1|0\nraw=red|\nparsed=RED|\n") ||
         run_case(ctx, 1, empty_arg,

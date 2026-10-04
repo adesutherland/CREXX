@@ -1534,6 +1534,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
         return !stmt->child || levelc_expr_supported(stmt->child, plan, reason_out);
     if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, reason_out);
     if (stmt->node_type == NOP) return stmt->child == NULL;
+    if (stmt->node_type == CALL) return levelc_call_statement_supported(stmt, plan, reason_out);
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_transfer_supported(stmt, plan, reason_out);
     if (stmt->node_type == LEVELC_DROP) return levelc_drop_supported(stmt, reason_out);
@@ -3698,6 +3699,8 @@ static int levelc_lower_proc_statement(Context *context,
         lowered = levelc_options_statement(context, stmt, plan, prelude);
     } else if (stmt->node_type == SAY) {
         lowered = levelc_say_statement(context, stmt, plan, prelude);
+    } else if (stmt->node_type == CALL) {
+        lowered = levelc_call_local_procedure_statement(context, stmt, plan, prelude);
     } else if (stmt->node_type == RETURN) {
         lowered = levelc_proc_return_statement(context, stmt, plan, procedure, prelude);
     } else {

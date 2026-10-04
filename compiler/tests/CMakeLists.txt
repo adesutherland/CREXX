@@ -5792,6 +5792,12 @@ add_levelc_runtime_slice_test(levelc_arg_dynamic_templates
 add_levelc_runtime_slice_test(levelc_arg_dynamic_templates_noopt
         rexx_src/levelc_arg_dynamic_templates.rexx
         "parse=mn|op|\nliteral=AB|CD|\nposition=AB|CDEF|\ncapture=X|B:TAIL||\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_unicode
+        rexx_src/levelc_arg_unicode.rexx
+        "fields=AÉ|🙂B|Ÿ\nraw=aé🙂b|FF\nrepeat=AÉ🙂B\ndot=🙂\nfunction=É🙂\n")
+add_levelc_runtime_slice_test(levelc_arg_unicode_noopt
+        rexx_src/levelc_arg_unicode.rexx
+        "fields=AÉ|🙂B|Ÿ\nraw=aé🙂b|FF\nrepeat=AÉ🙂B\ndot=🙂\nfunction=É🙂\n" -n)
 add_levelc_runtime_slice_test(levelc_arg_patterns
         rexx_src/levelc_arg_patterns.rexx
         "pattern AB CD \nleading LEFT RIGHT\ntrailing AB:CD\nbare\n")
