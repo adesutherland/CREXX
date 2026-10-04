@@ -1525,7 +1525,8 @@ configuration work as closed by this instruction.
    approves the source/runtime split, the empty-operand dialect choice, the
    cREXX policy for IBM's EBCDIC DBCS-specific ETMODE/EXMODE words, and the
    Level C line-comment policy where `comments_slash` collides with the
-   Classic `//` remainder operator. Approval
+   Classic `//` remainder operator, and whether `numeric_common` is legal in
+   a Classic-precedence source. Approval
    is required before compiler or runtime architectural changes. The proposed
    split keeps static, leading `level*`, comment and numeric words as file
    directives in the existing pre-scan; parses every Level C `OPTIONS` clause
@@ -1569,7 +1570,12 @@ probe shows the Level C parser forces Classic numeric mode, while a dynamic
 `OPTIONS word` and an expression form have no lowered execution at all. Since
 `//` is the Classic remainder operator, enabling Level B's slash comments
 would change a valid Level C expression; that conflict needs an explicit
-language choice. LC-STEP-67B is the next gate.
+language choice. `numeric_common` is likewise recognized by the pre-scan but
+overwritten when `rexcpars` forces Classic numeric mode, so it also requires
+an explicit Level C policy. Placement probes show nested `OPTIONS word` fails
+only during lowering and a local-routine `OPTIONS` is rejected by its
+statement validator (`/tmp/crexx-options-placement.hpkypp`). LC-STEP-67B is
+the next gate.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
