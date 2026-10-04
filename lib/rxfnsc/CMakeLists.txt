@@ -127,7 +127,7 @@ add_custom_target(rxfnsc_imports
 set(RXFNSC_SELECTORS ${RXFNSC_MODULES})
 set(RXFNSC_DEPS_RexxStem RexxValue)
 set(RXFNSC_DEPS_RexxClassicState RexxValue)
-set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype)
+set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan)
 set(RXFNSC_DEPS_RexxActivationArguments RexxValue)
 set(RXFNSC_DEPS_RexxDoState RexxValue RexxVariablePool)
 set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxVariablePool)

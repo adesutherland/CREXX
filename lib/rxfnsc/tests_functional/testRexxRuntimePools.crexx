@@ -2,6 +2,7 @@ options levelb comments_dash numeric_classic
 import rexxvalue
 import rexxstem
 import rexxpool
+import rexxclassicconfig
 
 test_runtime_pool_constants: procedure expose RV_FLAG_INT
   constant RV_FLAG_INT = 0x00020000
@@ -31,6 +32,7 @@ errors = errors + check(\stem.isDroppedTail("1"), "tail assignment clears droppe
 errors = errors + check(stem.value("1").asString() = "restored", "tail assignment restores value")
 
 pool = .RexxVariablePool()
+classic_config = .RexxClassicConfig("UTF8")
 call pool.setString("answer", "41")
 errors = errors + check(pool.value("ANSWER").asString() = "41", "pool normalizes scalar names")
 call pool.setValue("answer", .RexxValue.fromInt(42))
@@ -96,19 +98,33 @@ call pool.setString("answer", "again")
 call pool.setString("key", "b")
 call pool.setStemString("items", "b", "lower-list")
 call pool.setStemString("items", "B", "upper-list")
-call pool.dropIndirectList("answer / 1bad items.key items.B")
+call pool.dropIndirectList("answer / 1bad items.key items.B", reference classic_config)
 errors = errors + check(pool.symbolValue("answer").asString() = "ANSWER", "indirect list drops first scalar")
 errors = errors + check(pool.symbolValue("items.key").asString() = "ITEMS.b", "indirect list drops substituted tail")
 errors = errors + check(pool.stemSymbolValue("items", "B").asString() = "ITEMS.B", "indirect list continues after invalid words")
 call pool.setStemString("items", "b", "still-lower")
 call pool.setStemString("items", "KEY", "literal-key")
-call pool.dropIndirectList("key items.key")
+call pool.dropIndirectList("key items.key", reference classic_config)
 errors = errors + check(pool.symbolValue("key").asString() = "KEY", "indirect list first drop changes later substitution")
 errors = errors + check(pool.stemSymbolValue("items", "KEY").asString() = "ITEMS.KEY", "indirect list resolves each item in order")
 errors = errors + check(pool.stemSymbolValue("items", "b").asString() = "still-lower", "indirect list keeps earlier derived tail")
 call pool.setStemString("items", "B", "parent-list")
-call child.dropIndirectList("local_items.B")
+call child.dropIndirectList("local_items.B", reference classic_config)
 errors = errors + check(pool.stemSymbolValue("items", "B").asString() = "ITEMS.B", "indirect list follows exposed stem")
+
+configured = .RexxClassicConfig("UTF8")
+call configured.setTextDatatypeLetters("α", "Α")
+call configured.setTextOtherBlanks("·")
+call pool.setString("α", "greek")
+call pool.setString("answer", "again")
+call pool.dropIndirectList("α·answer", reference configured)
+errors = errors + check(pool.symbolValue("α").asString() = "Α", "indirect list uses configured Unicode symbol alphabet")
+errors = errors + check(pool.symbolValue("answer").asString() = "ANSWER", "indirect list uses configured text blank")
+call pool.setString("α", "again")
+call pool.setString("answer", "again")
+call pool.dropIndirectList("answer 🙂 α", reference configured)
+errors = errors + check(pool.symbolValue("answer").asString() = "ANSWER", "indirect list uses Unicode whitespace")
+errors = errors + check(pool.symbolValue("α").asString() = "Α", "indirect list skips invalid Unicode word and continues")
 
 if errors = 0 then say "ok"
 return errors

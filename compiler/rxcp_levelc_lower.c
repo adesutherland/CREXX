@@ -3008,9 +3008,10 @@ static int levelc_lower_drop(Context *context,
 
     while (target) {
         ASTNode *receiver = levelc_pool_ref(context, target, VAR_SYMBOL);
-        ASTNode *args[1] = {NULL};
+        ASTNode *args[2] = {NULL, NULL};
         ASTNode *lowered;
         const char *method;
+        int arg_count = 1;
 
         if (target->node_type == VAR_REFERENCE) {
             ASTNode *value = levelc_pool_value(context, target);
@@ -3018,15 +3019,18 @@ static int levelc_lower_drop(Context *context,
                 ? rxcp_remap_create_member_call(context, target, value,
                                                 "asString", NULL, 0)
                 : NULL;
+            args[1] = levelc_config_ref(context, target, VAR_SYMBOL);
+            arg_count = 2;
             method = "dropIndirectList";
         } else {
             args[0] = levelc_name_string(context, target);
             method = "dropSymbol";
         }
 
-        if (!receiver || !args[0]) goto fail;
+        if (!receiver || !args[0] || (arg_count == 2 && !args[1])) goto fail;
         lowered = rxcp_remap_create_member_call_statement(context, target,
-                                                            receiver, method, args, 1);
+                                                            receiver, method,
+                                                            args, arg_count);
         if (!lowered) goto fail;
         add_ast(instructions, lowered);
         target = target->sibling;

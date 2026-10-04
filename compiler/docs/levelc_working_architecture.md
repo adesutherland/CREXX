@@ -69,11 +69,12 @@ authored program must survive lowering for diagnostics and tracing.
   symbol, including arbitrary compound tail components. It serves direct
   `DROP` items and the runtime subsidiary lists in parenthesized references.
   Level C lowers each `VAR_REFERENCE` to one `dropIndirectList` call with the
-  referenced variable's value evaluated at that position in the direct list.
-  The helper splits the captured string into words, uses the shared Classic
-  symbol classifier, skips invalid words as Adrian chose for Regina parity,
-  and drops valid names sequentially. The classifier currently creates a
-  default BYTE configuration; this is open for the approved Unicode model.
+  referenced variable's value evaluated at that position in the direct list
+  and the activation's configuration reference. The helper uses the shared
+  Classic text scanner for Unicode and configured blanks, classifies each
+  word with that same configuration, skips invalid words as Adrian chose for
+  Regina parity, and drops valid names sequentially. This avoids a second
+  BYTE-default configuration in the pool.
 - `RexxClassicBif*` modules own compatible BIF algorithms, argument validation,
   and error construction. `RexxBifCallContext` carries `RexxValue` arguments,
   argument-presence flags, caller pool, and Classic configuration. A BIF that
@@ -112,8 +113,9 @@ operations accept Unicode codepoints. `RexxValue` retains binary and numeric
 storage for RexxScript/future explicit binary work, while Level C conversion
 BIFs must return text rather than binary-only values. No host BYTE/UTF8
 profile selector is planned. SAY's Unicode output and host route are closed
-under LC-STEP-88D-1; DROP and assignment remain reopened for Unicode-specific
-proof. Their unchanged structural receipts remain valid. The authoritative plan is LC-STEP-88 in
+under LC-STEP-88D-1; DROP's Unicode indirect-list route is closed under
+LC-STEP-88D-2. Assignment remains reopened for Unicode-specific proof. Its
+unchanged structural receipt remains valid. The authoritative plan is LC-STEP-88 in
 `docs/planning/release-1/levelc-compatibility-worklist.md`.
 
 Level C source hex and binary literals now decode their written digits to byte

@@ -651,7 +651,7 @@ are verified against all affected consumers.
   and normal/toolchain evidence are recorded, and list any remaining work
   explicitly. Verify the per-instruction receipts and code-path inventory;
   significant work does not count as an infeasible exception.
-- [ ] **LC-AC-62 — complete DROP instruction:** every parsed direct or
+- [x] **LC-AC-62 — complete DROP instruction:** every parsed direct or
   parenthesized DROP list item executes in authored order in main, nested and
   local contexts. Direct scalar, stem and arbitrary-component compound names
   use the same shared pool operation as indirect subsidiary words; exposed
@@ -889,7 +889,8 @@ choice still require Adrian's approval.
    correctness checks. `88D-1` proves Level C SAY output through default and
    configured host routes for NUL, mapped high ordinals and non-Latin-1 text,
    then closes LC-I-01 (complete 2026-10-04). `88D-2` audits the shared pool classifier and Unicode
-   direct/indirect DROP names and blanks, then closes LC-I-02. `88D-3` proves
+   direct/indirect DROP names and blanks, then closes LC-I-02 (complete
+   2026-10-04). `88D-3` proves
    Unicode scalar values and compound-tail substitution through the same
    pool, then closes LC-I-03. Commit and report each instruction separately.
 5. **LC-STEP-88E (LC-AC-04/59/71/72/73/74; depends on 88D):** finish the
@@ -953,6 +954,27 @@ receipts remain valid. Ten focused checks passed
 approved Unicode text contract. Shared character BIFs, raw binary I/O,
 trapped conditions and complete Level C qualification remain in their own
 open criteria.
+
+**2026-10-04 LC-STEP-88D-2 DROP receipt.** The prior whole-instruction proof
+for authored item order, direct scalar/stem/arbitrary compounds, source and
+canonical trees, local/exposed pools and Regina's ignore-invalid-word rule is
+retained. Indirect `DROP` now receives the existing activation configuration
+reference. One pool helper uses the shared Classic Unicode text scanner for
+ordinary and configured blanks, then the same configuration for subsidiary
+symbol classification; it creates no BYTE-default configuration. The focused
+pool test proves configured Greek letters, an extra separator, nonbreaking
+space, an invalid emoji word and continuation to later valid names. A compiled
+Level C fixture proves Unicode whitespace and invalid-word continuation in
+optimized/no-opt modes. An initial build exposed a missing member dependency
+and the first focused run exposed a config object/reference type mismatch;
+both integration errors were repaired before qualification. Ten focused pool,
+DROP and tree checks passed (`/tmp/crexx-drop-focused-fix.qdv7sU` plus the
+optimized pool test); nine RexxScript checks passed
+(`/tmp/crexx-drop-cross.L64JPf`), and the Debug Level C suite passed 452/452
+(`/tmp/crexx-drop-levelc.WzlRuO`). The linked fixture preserved the expected
+Unicode-list output (`/tmp/crexx-drop-linked.Ub2di4`). `LC-AC-62` and
+`LC-I-02` close; shared host configuration and full Level C qualification
+remain open.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
@@ -1381,7 +1403,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | Unit | Step | Complete instruction obligation and principal dependency |
 | --- | --- | --- |
 | LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F; LC-STEP-88D-1 | `LC-AC-57`: expression, ordering and callback evidence retained; NUL, mapped high ordinals and non-Latin-1 output now pass default, configured host, optimized/no-opt and linked checks. |
-| LC-I-02 DROP — reopened 2026-10-04 | LC-STEP-64B; LC-STEP-88D | `LC-AC-62`: prior list order, arbitrary compounds, exposure and Regina invalid-word policy retained; Unicode names/blanks in indirect lists require proof. |
+| LC-I-02 DROP — closed 2026-10-04 | LC-STEP-64B; LC-STEP-88D-2 | `LC-AC-62`: prior list order, arbitrary compounds, exposure and Regina invalid-word policy retained; activation configuration, Unicode words and blanks now pass focused pool, opt/no-opt, linked and normal Level C checks. |
 | LC-I-03 assignment — reopened 2026-10-04 | LC-STEP-65B; LC-STEP-88D | `LC-AC-63`: prior RHS order and shared-pool ownership retained; Unicode scalar values and substituted tails require proof. |
 | LC-I-04 NOP — closed 2026-10-04 | LC-STEP-66B | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
 | LC-I-05 OPTIONS — closed 2026-10-04 | LC-STEP-67A–67D | `LC-AC-66`: static source header, executable expression at each source point, no-op empty form, unknown-word policy and configuration ownership. The approved Unicode model defines no runtime profile word. Shared condition, TRACE and host obligations remain open in their own rows. |
@@ -1413,7 +1435,7 @@ ownership as follows:
 | Instruction | Unicode-first effect | Disposition |
 | --- | --- | --- |
 | SAY | Text from mapped byte values and non-Latin-1 scalars now goes through host text output; exact raw-byte expectations no longer describe the contract. | Closed under LC-AC-57/88D-1; length-aware callback, expression order and new host/default Unicode proof retained. |
-| DROP | Indirect words and compound substitutions may contain Unicode; the pool's classifier still creates a BYTE-default configuration. | Reopened under LC-AC-62/88D; direct/indirect ordering and invalid-word policy retained. |
+| DROP | Indirect words and compound substitutions may contain Unicode; the pool uses the activation's text configuration for splitting and classifying subsidiary words. | Closed under LC-AC-62/88D-2; direct/indirect ordering and invalid-word policy retained. |
 | Assignment | Scalar payloads and compound-tail substitutions can contain Unicode; the pool stores `RexxValue` without a byte conversion. | Reopened under LC-AC-63/88D for visible Unicode values/tails; RHS-order proof retained. |
 | NOP | No scalar or character operation. | Closed receipt retained. |
 | OPTIONS | Runtime words remain unrecognized and evaluated expression value is not scanned; no profile word is added. | Closed receipt retained; obsolete profile wording will be removed. |
@@ -3150,7 +3172,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, host `rxvml_run()` lifecycle, raw/canonical AST, historical exact-byte proof, 26.4 dynamic-position errors and linked output | Unicode uppercasing/codepoint behavior and admitted external routine-entry modes remain open under LC-AC-71/LC-STEP-88E |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, expression actuals such as `CALL nested ARG(1),,ARG(2)`, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal start with optional captured TO/BY/FOR | Dynamic start, wider count/numeric errors and configuration proof open |
-| `SYN-CLASSIC-DROP` | DROP instruction | Prior whole-instruction structural closure retained, including arbitrary direct compounds and Regina-style invalid-word skip | Unicode names and indirect-list blanks remain open under LC-AC-62/74 |
+| `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Bounded slice: bounded IF/THEN/ELSE | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |

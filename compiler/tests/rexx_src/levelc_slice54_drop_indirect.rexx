@@ -45,6 +45,11 @@ do
   drop (names)
 end
 say 'do=' || a || '|'
+a='unicode-a'
+b='unicode-b'
+names='a' || 'A0'x || '🙂' || 'A0'x || 'b'
+drop (names)
+say 'unicode=' || a || '|' || b || '|'
 exit
 local: procedure expose items. names
 drop (names)

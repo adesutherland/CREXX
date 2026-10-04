@@ -6221,10 +6221,10 @@ add_levelc_runtime_slice_test(levelc_slice53_drop_direct_noopt
         "before=one|two|lower|\ntail=ITEMS.A|two|\nderived=ITEMS.b|two|\nrestore=again|\norder=NAME|ITEMS.NAME|again|\nstem=ITEMS.A|ITEMS.B|ITEMS.b|\nnumeric=ITEMS.1|\nlocal=ITEMS.A/inside|ITEMS.A|\nif=ITEMS.B|\ndo=ITEMS.B|\n" -n)
 add_levelc_runtime_slice_test(levelc_slice54_drop_indirect
         rexx_src/levelc_slice54_drop_indirect.rexx
-        "pair=A|B|a b|\ninvalid=A|B|\ncompound=ITEMS.b|ITEMS.B|\norder=KEY|ITEMS.KEY|\nretained=lower2|upper2|\nstem=ITEMS.b|ITEMS.B|\nouter=NAMES|held|\nreference=A|\nlocal=ITEMS.B|ITEMS.B|\nif=A|\ndo=A|\n")
+        "pair=A|B|a b|\ninvalid=A|B|\ncompound=ITEMS.b|ITEMS.B|\norder=KEY|ITEMS.KEY|\nretained=lower2|upper2|\nstem=ITEMS.b|ITEMS.B|\nouter=NAMES|held|\nreference=A|\nlocal=ITEMS.B|ITEMS.B|\nif=A|\ndo=A|\nunicode=A|B|\n")
 add_levelc_runtime_slice_test(levelc_slice54_drop_indirect_noopt
         rexx_src/levelc_slice54_drop_indirect.rexx
-        "pair=A|B|a b|\ninvalid=A|B|\ncompound=ITEMS.b|ITEMS.B|\norder=KEY|ITEMS.KEY|\nretained=lower2|upper2|\nstem=ITEMS.b|ITEMS.B|\nouter=NAMES|held|\nreference=A|\nlocal=ITEMS.B|ITEMS.B|\nif=A|\ndo=A|\n" -n)
+        "pair=A|B|a b|\ninvalid=A|B|\ncompound=ITEMS.b|ITEMS.B|\norder=KEY|ITEMS.KEY|\nretained=lower2|upper2|\nstem=ITEMS.b|ITEMS.B|\nouter=NAMES|held|\nreference=A|\nlocal=ITEMS.B|ITEMS.B|\nif=A|\ndo=A|\nunicode=A|B|\n" -n)
 add_levelc_runtime_slice_test(levelc_drop_instruction
         rexx_src/levelc_drop_instruction.rexx
         "list=A|B|C|D|E|\nbefore=first\ndirect=ITEMS.part.Tail.last\nindirect=ITEMS.part.Tail.last\norder=third|ITEMS.X.Tail.last\nlocal=ITEMS.part.Tail.last|ITEMS.part.Tail.last\nstem=ITEMS.part.Tail.last\n")
