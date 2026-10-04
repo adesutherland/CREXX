@@ -3,8 +3,8 @@
 Status: active component worklist under [the Release 1 plan](../../release-1-plan.md).
 Started 2026-10-03 on `develop`. The Release 1 plan owns the Beta 4 completion
 contract (`R1-AC-01/02`) and the roadmap owns portfolio order. This worklist
-records the coverage and incremental implementation evidence; it does not
-change either scope or the 2026-11-30 target.
+records coverage, incremental evidence and Adrian-approved scope revisions;
+it does not change the 2026-11-30 target.
 
 ## Vision and intended outcome
 
@@ -13,8 +13,9 @@ with the syntax, scalar and numeric rules, variable-pool behavior, control
 flow, routines, built-in functions, conditions, diagnostics, source services,
 and host interfaces described in the [compliance reference](../../../compiler/docs/levelc_compliance_reference.md)
 and [BIF reference](../../../compiler/docs/levelc_classic_bifs.md).
-Keep the BYTE and opt-in UTF8 configuration boundary, source provenance,
-Classic error identities, and fail-closed handling for shapes not yet proved.
+Keep the approved Unicode-scalar/Latin-1-ordinal compatibility boundary,
+source provenance, Classic error identities where applicable, and fail-closed
+handling for shapes not yet proved.
 Preserve Level B behavior and the separate RexxScript sandbox. An exclusion
 counts only after Adrian individually approves its reason, user-visible
 behavior, and documentation; unfinished work remains open.
@@ -23,6 +24,30 @@ The [Level C architecture design](../../../compiler/docs/levelc_working_architec
 records the common `rxfnsc` value, variable-pool and BIF foundation with
 RexxScript. Adrian confirmed this shared foundation on 2026-10-03 while
 retaining the two products' distinct language and sandbox contracts.
+
+**Approved 2026-10-04 character-model revision.** Compiled Level C scalar
+strings are valid Unicode text, stored as Level B `.string` values and indexed
+by codepoint. There is one ordinary character route: SAY emits text, PARSE and
+character BIFs use codepoints, and no implicit BYTE/UTF8 profile selection is
+required. A fixed Latin-1 ordinal bridge maps every byte `00`–`FF` to the
+same-numbered Unicode scalar `U+0000`–`U+00FF`. Byte-valued Classic conversion
+and bitwise BIFs reverse that bridge and signal when a required scalar exceeds
+`U+00FF`; they must not silently encode a scalar as UTF8 bytes. Thus
+`X2C('FF')` is `U+00FF`, `C2X(X2C('FF'))` is `FF`, and text output of that value
+uses the selected host text encoding rather than promising a raw `FF` byte.
+Ordinary character operations may accept all Unicode scalars. Explicit
+Unicode BIFs/codecs will be designed in a later approved language step; raw
+binary values and I/O are later, separately scoped facilities. Preserve the
+shared `RexxValue` class, its binary storage and numeric caches for RexxScript
+and future APIs; Level C's visible scalar contract selects valid text without
+removing those capabilities. RexxScript retains its own evaluator and sandbox.
+This is an approved departure from byte-exact Classic behavior, including
+UTF8-source byte positions and host raw-byte output; reference comparisons
+must label those differences rather than call them parity. The former
+BYTE-default/opt-in-UTF8 profile proposal and LC-STEP-73H implementation route
+are superseded. Existing profile tests remain historical regression evidence
+until their replacements are qualified. `LC-AC-04/06/57/59/71` and the
+instruction receipts below must be assessed against this revision.
 
 The first delivery increments are a coverage inventory, then executable
 `IF/THEN/ELSE`, then simple `DO ... END`. They do not complete the Beta 4
@@ -94,7 +119,7 @@ are verified against all affected consumers.
   use the same `rxfnsc` `RexxValue`, `RexxVariablePool`, and overlapping Classic
   BIF implementations with their own caller contexts. Verify shared BIF
   argument/error behavior from both products, RexxScript sandbox isolation,
-  Level C visible-pool behavior, and configuration/profile boundaries with
+  Level C visible-pool behavior, and Unicode/Latin-1 conversion boundaries with
   focused cross-consumer integration evidence. RexxScript's string-oriented
   evaluator and allow-list remain product-specific.
 - [ ] **LC-AC-08 — AST lowering closure:** every parsed Level C instruction,
@@ -396,8 +421,8 @@ are verified against all affected consumers.
   to each supplied argument before storing it in the callee's visible pool.
   The caller's value remains unchanged, scalar target order and exposure
   still work, and the shared Classic TRANSLATE implementation supplies the
-  current Level C BYTE default mapping. End-to-end delivery of an opt-in
-  UTF8 call configuration remains open under LC-AC-04/06. Verify lowercase
+  then-current Level C BYTE default mapping. Unicode uppercase behavior is
+  open under LC-AC-72/74. Verify lowercase
   and mixed-case Regina
   examples, opt/no-opt and linked execution, canonical argument-frame and
   pool-set tree shape, focused shared-runtime checks and the relevant normal
@@ -409,7 +434,8 @@ are verified against all affected consumers.
   once and write the target through the Classic visible pool. The source
   variable and caller state retain their values unless the target aliases
   them. The optional uppercase path uses shared Classic TRANSLATE with the
-  current BYTE default. Other parse sources, multiple targets, patterns,
+  then-current BYTE default. Unicode source values remain under LC-AC-72.
+  Other parse sources, multiple targets, patterns,
   positions and comma templates remain fail-closed. Verify Regina output,
   main/procedure and self-target behavior, opt/no-opt, raw and canonical tree
   shape, focused negatives, normal compiler checks and linked execution.
@@ -466,7 +492,7 @@ are verified against all affected consumers.
   order. Verify Regina across leading/repeated/trailing blanks, short input,
   aliasing, local scope, shared value method, opt/no-opt, raw/canonical tree,
   normal Level C suite and linked execution. Other template shapes remain
-  guarded; broader binary/UTF8 proof remains under `LC-AC-04/06`.
+  guarded; broader Unicode proof remains under `LC-AC-04/72`.
 - [x] **LC-AC-46 — three words with final PARSE drop:** `PARSE VAR scalar
   first second third .` and the corresponding `PARSE VALUE expression WITH`
   form, with optional UPPER, use the existing `parsewords3d` primitive through
@@ -579,7 +605,7 @@ are verified against all affected consumers.
   reference retain their order. Verify source/canonical AST shape, Regina for
   valid and invalid lists and scope, focused opt/no-opt, normal correctness
   and linked execution.
-- [x] **LC-AC-57 — complete SAY instruction:** `SAY [expression]` evaluates an
+- [ ] **LC-AC-57 — complete SAY instruction:** `SAY [expression]` evaluates an
   expression once when supplied and writes its string value, or an empty line
   when omitted, through the configured default output. Main, nested and local
   procedure contexts preserve output order, source anchors and relevant
@@ -587,6 +613,10 @@ are verified against all affected consumers.
   Regina output, side-effect order, opt/no-opt, AST, normal correctness,
   linked delivery and configured host output. The already tested childless
   fixture is one case in this instruction contract, not a separate slice.
+  The 2026-10-04 Unicode-first decision reopens output qualification: prove
+  mapped `U+0080`–`U+00FF`, non-Latin-1 text, embedded NUL, host text encoding
+  and errors without claiming raw-byte output. Earlier expression, ordering,
+  callback and AST evidence remains valid for its tested inputs.
 - [ ] **LC-AC-58 — simpler Level C implementation:** the active lowering has
   one context-aware instruction dispatch, one reviewed variable-operation
   ownership boundary, and one general PARSE execution path. DO header
@@ -600,7 +630,7 @@ are verified against all affected consumers.
 - [ ] **LC-AC-59 — instruction-level delivery:** each `LC-I-*` row in the
   instruction programme below is individually closed only after its complete
   reference and parser-form matrix, diagnostics, interaction/lifecycle cases,
-  relevant BYTE/UTF8 and host evidence, optimized/no-opt parity, and full
+  relevant Unicode/Latin-1 and host evidence, optimized/no-opt parity, and full
   toolchain proof are recorded, or a specific exception is approved. Preserve
   each existing bounded test as regression evidence. Verify against the
   compliance reference, parser grammar, reference-obligation appendix,
@@ -621,7 +651,7 @@ are verified against all affected consumers.
   and normal/toolchain evidence are recorded, and list any remaining work
   explicitly. Verify the per-instruction receipts and code-path inventory;
   significant work does not count as an infeasible exception.
-- [x] **LC-AC-62 — complete DROP instruction:** every parsed direct or
+- [ ] **LC-AC-62 — complete DROP instruction:** every parsed direct or
   parenthesized DROP list item executes in authored order in main, nested and
   local contexts. Direct scalar, stem and arbitrary-component compound names
   use the same shared pool operation as indirect subsidiary words; exposed
@@ -631,7 +661,9 @@ are verified against all affected consumers.
   and mixed-list Regina probes, optimized/no-opt, source/canonical AST,
   focused pool and RexxScript checks, normal Level C correctness and linked
   toolchain execution. No fixed tail-component or list-length limit remains.
-- [x] **LC-AC-63 — complete assignment instruction:** every parsed valid
+  The 2026-10-04 revision reopens the Unicode subsidiary-word, configured
+  blank and symbol-classification cases; prior pool-order evidence is retained.
+- [ ] **LC-AC-63 — complete assignment instruction:** every parsed valid
   scalar, stem and arbitrary-component compound target takes its Classic
   value in main, nested and local contexts. Compound name substitution follows
   evaluation of the right-hand expression, including a call that mutates a
@@ -640,7 +672,9 @@ are verified against all affected consumers.
   string, as in Regina and IBM's VM dialect; source-invalid targets retain their
   diagnostics. Verify against Regina, optimized/no-opt and source/canonical
   trees, focused pool and RexxScript checks, normal Level C correctness and
-  linked toolchain output, with BYTE/UTF8 values where relevant.
+  linked toolchain output, with Unicode values where relevant. The 2026-10-04
+  revision reopens Unicode scalar and compound-tail proof while retaining
+  prior evaluation-order and pool ownership evidence.
 - [x] **LC-AC-64 — complete NOP instruction:** a childless Classic `NOP`
   preserves adjacent statement order and has no visible effect in main,
   selected IF/SELECT arms, DO bodies and local procedures. Text after `NOP`
@@ -669,8 +703,8 @@ are verified against all affected consumers.
   default, with documented defaults and clear handling of conflicting words.
   Every executable `OPTIONS` form evaluates its Classic expression once at its
   source position in main, selected/nested arms and local routines, passing
-  the exact-length value to the shared processor service. The approved BYTE
-  and UTF8 policy currently recognizes no runtime words, so the service
+  the exact-length value to the shared processor service. The approved
+  Unicode-first policy recognizes no runtime words, so the service
   ignores the value without scanning it; if runtime words are later added,
   that service must process uppercase blank-delimited words in order and ignore
   unknown words. Header words must survive
@@ -680,7 +714,7 @@ are verified against all affected consumers.
   before implementation. Verify source and canonical AST, source/CLI and
   comment/numeric option cases, dynamic expression side effects, invalid
   forms and recovery, optimized/no-opt, relevant normal Level C and Level B
-  regressions, both character profiles where relevant, and linked execution.
+  regressions, the approved Unicode character model, and linked execution.
 - [x] **LC-AC-67 — complete IF instruction:** `IF expression THEN instruction
   [ELSE instruction]` retains the Classic clause and nearest-eligible-ELSE
   rules in main, nested DO/SELECT, and local routines. It evaluates the
@@ -767,8 +801,8 @@ are verified against all affected consumers.
   for unsupported invocation paths without counting ARG itself complete.
   Diagnose malformed templates and illegal instruction placement with
   Classic identity and source position. Verify IBM/Regina examples,
-  omitted-versus-empty behavior, exact-length strings and applicable
-  BYTE/UTF8 profile behavior, source/canonical AST, optimized/no-opt,
+  omitted-versus-empty behavior, exact-length strings and Unicode codepoint
+  behavior under LC-AC-72, source/canonical AST, optimized/no-opt,
   relevant normal/shared runtime checks and linked toolchain execution.
   ARG built-in function behavior remains under the BIF row, but its shared
   activation-state dependency must be reviewed here.
@@ -783,12 +817,72 @@ are verified against all affected consumers.
 - [ ] **LC-AC-04 — full compatibility (R1-AC-02):** every required matrix row
   has executable behavior and documentation, or an individually approved
   exception with its diagnostic and user-visible limit. Verify reference
-  equivalence, supported-platform and BYTE/UTF8 configuration behavior,
+  equivalence within the approved Unicode-first boundary, documented Classic
+  departures, supported-platform Unicode/Latin-1 behavior,
   optimized/no-opt parity, errors/conditions, lifecycle, toolchain, and
   packaging evidence on the exact Beta 4 candidate. This remains open after
   the first control-flow increments.
+- [ ] **LC-AC-72 — one Unicode Level C scalar route:** every Level C literal,
+  expression, variable, activation argument, PARSE field and returned BIF value
+  used as a Classic scalar is valid UTF8 text; ordinary character units are
+  codepoints with no runtime BYTE/UTF8 selector. `RexxValue` retains its
+  binary and numeric capabilities for other consumers. Verify NUL, Latin-1,
+  supplementary characters, opt/no-opt, linked output and RexxScript/Level B
+  cross-consumer tests; inspect generated code for unwanted binary-to-text
+  conversion of byte-valued BIF results.
+- [ ] **LC-AC-73 — Latin-1 ordinal conversion bridge:** each of the 256 byte
+  values round-trips through `X2C`/`C2X` as `U+00XX`; `D2C`, `C2D`, bitwise,
+  `XRANGE` and hex/binary literals follow the same mapping where applicable.
+  A byte-valued operation receiving a scalar above `U+00FF` raises the agreed
+  conversion signal, while ordinary character operations accept it. Verify
+  complete 256-value and out-of-range cases, nested BIFs, CTest, linked image
+  and host text output. The specific error identity is an implementation
+  decision to record before its first code edit.
+- [ ] **LC-AC-74 — closed-instruction Unicode review:** reconcile each
+  formerly closed LC-I-01–10 instruction against the new scalar, source,
+  symbol, host and error contract. Retain unaffected structural receipts;
+  reopen and requalify affected instruction-owned behavior, including SAY,
+  DROP and assignment. Verify the reviewed table below, targeted Unicode
+  regressions and one relevant normal correctness suite after code changes.
+- [ ] **LC-AC-75 — explicit Unicode and later binary boundary:** document the
+  proposed new Unicode BIF names, input/output semantics, errors and Level
+  B/G/RexxScript reuse for Adrian's separate syntax approval. Keep raw binary
+  values/I/O as a separately planned future facility with no implicit
+  conversion into Level C text. Verify the accepted BIF design and explicit
+  binary deferral in architecture, language and release documents.
 
 ## Implementation steps
+
+**Unicode-first revision steps (approved character model; 2026-10-04).**
+These supersede the unimplemented LC-STEP-73H profile bridge while preserving
+its historical IDs and probe evidence. New BIF syntax and any further language
+choice still require Adrian's approval.
+
+1. **LC-STEP-88A (LC-AC-72/74/75; complete 2026-10-04):** record the approved scope change
+   in this authoritative worklist, release plan and architecture/reference
+   docs; audit all ten formerly closed instructions and retain valid evidence.
+   No code dependency.
+2. **LC-STEP-88B (LC-AC-72/73; depends on 88A):** implement one shared
+   Latin-1 ordinal conversion service and the complete conversion/bitwise
+   BIF family, including the selected conversion signal; verify 256 round
+   trips, failures and RexxScript consumers before committing the increment.
+3. **LC-STEP-88C (LC-AC-72/73; depends on 88B):** make Level C hex/binary
+   literals, expression argument flow and resulting `RexxValue` objects use
+   Unicode text consistently; keep the shared class's binary capability.
+   Inspect canonical AST/emitter output and verify opt/no-opt and linked runs.
+4. **LC-STEP-88D (LC-AC-57/62/63/72/74; depends on 88C):** requalify SAY,
+   DROP and assignment as whole instructions for Unicode, including host text
+   output, indirect lists and compound substitutions. Retain previously
+   valid structural evidence; close each row only after focused and normal
+   correctness checks.
+5. **LC-STEP-88E (LC-AC-04/59/71/72/73/74; depends on 88D):** finish the
+   Unicode character BIF and ARG/PARSE audit, then continue the strict
+   instruction queue. Use one codepoint template engine; remove obsolete
+   profile-selection assumptions and qualify affected shared consumers.
+6. **LC-STEP-88F (LC-AC-75; depends on 88E for stable semantics):** propose
+   explicit Unicode BIF APIs for separate language approval. Plan raw binary
+   values/I/O separately rather than adding them implicitly to the scalar
+   path.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
@@ -1216,11 +1310,11 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 
 | Unit | Step | Complete instruction obligation and principal dependency |
 | --- | --- | --- |
-| LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F | `LC-AC-57`: expression and childless forms, output and lifecycle; STEP-60 case included. Shared expression, BIF, TRACE and SIGNAL obligations remain open in their own rows. |
-| LC-I-02 DROP — closed 2026-10-04 | LC-STEP-64B | `LC-AC-62`: direct and parenthesized lists, arbitrary compound substitution, exposure, order and errors through the shared pool. Adrian's approved Regina invalid-word behavior is retained. |
-| LC-I-03 assignment — closed 2026-10-04 | LC-STEP-65B | `LC-AC-63`: scalar, stem and arbitrary compound targets, optional empty RHS and evaluation order through the shared pool. Shared profile, expression and condition obligations stay open in their own criteria. |
+| LC-I-01 SAY — reopened 2026-10-04 | LC-STEP-63F; LC-STEP-88D | `LC-AC-57`: prior expression, ordering and callback evidence retained; Unicode output and host encoding require new proof. |
+| LC-I-02 DROP — reopened 2026-10-04 | LC-STEP-64B; LC-STEP-88D | `LC-AC-62`: prior list order, arbitrary compounds, exposure and Regina invalid-word policy retained; Unicode names/blanks in indirect lists require proof. |
+| LC-I-03 assignment — reopened 2026-10-04 | LC-STEP-65B; LC-STEP-88D | `LC-AC-63`: prior RHS order and shared-pool ownership retained; Unicode scalar values and substituted tails require proof. |
 | LC-I-04 NOP — closed 2026-10-04 | LC-STEP-66B | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
-| LC-I-05 OPTIONS — closed 2026-10-04 | LC-STEP-67A–67D | `LC-AC-66`: static source header, executable expression at each source point, no-op empty form, unknown-word policy and configuration ownership. BYTE/UTF8 define no runtime words. Shared condition, TRACE and host obligations remain open in their own rows. |
+| LC-I-05 OPTIONS — closed 2026-10-04 | LC-STEP-67A–67D | `LC-AC-66`: static source header, executable expression at each source point, no-op empty form, unknown-word policy and configuration ownership. The approved Unicode model defines no runtime profile word. Shared condition, TRACE and host obligations remain open in their own rows. |
 | LC-I-06 IF — closed 2026-10-04 | LC-STEP-68A–68C | `LC-AC-67`: all arm positions without IF-specific rejection, nearest ELSE, condition/error and nesting behavior. Each arm's instruction semantics remain with its owner row; shared condition/trap lifecycle remains open in its own criteria. |
 | LC-I-07 SELECT — closed 2026-10-04 | LC-STEP-69A–69C | `LC-AC-68`: WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. Shared helper-stack source reporting and TRACE/trap lifecycle remain open under LC-AC-08/04. |
 | LC-I-08 DO — closed 2026-10-04 | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. Shared NUMERIC/condition/TRACE/host lifecycle remains open in its own rows. |
@@ -1241,6 +1335,25 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-23 SIGNAL | LC-STEP-85 | Direct/VALUE branch and ON/OFF conditions, labels, loop-state clearing and delivery; condition lifecycle. |
 | LC-I-24 TRACE | LC-STEP-86 | Options, skip/inhibit, interactive and source/result/command tracing; clause hooks and host output. |
 | LC-I-25 INTERPRET | LC-STEP-87 | Dynamic source parsing, current context, HALT/SYNTAX/label rules and condition state; parser and lifecycle foundation. |
+
+**LC-STEP-88A closed-instruction review.** The former receipts remain evidence
+for their tested forms; the changed character contract affects instruction
+ownership as follows:
+
+| Instruction | Unicode-first effect | Disposition |
+| --- | --- | --- |
+| SAY | Text from mapped byte values and non-Latin-1 scalars now goes through host text output; exact raw-byte expectations no longer describe the contract. | Reopened under LC-AC-57/88D; length-aware callback and expression-order proof retained. |
+| DROP | Indirect words and compound substitutions may contain Unicode; the pool's classifier still creates a BYTE-default configuration. | Reopened under LC-AC-62/88D; direct/indirect ordering and invalid-word policy retained. |
+| Assignment | Scalar payloads and compound-tail substitutions can contain Unicode; the pool stores `RexxValue` without a byte conversion. | Reopened under LC-AC-63/88D for visible Unicode values/tails; RHS-order proof retained. |
+| NOP | No scalar or character operation. | Closed receipt retained. |
+| OPTIONS | Runtime words remain unrecognized and evaluated expression value is not scanned; no profile word is added. | Closed receipt retained; obsolete profile wording will be removed. |
+| IF and SELECT | Exact logical `0`/`1` checks and branch/arm ownership do not use byte indexing. | Closed structural receipts retained; shared expression/condition work remains open. |
+| DO | Loop setup, state and numeric checks are independent of character units; compound names share the reopened pool audit. | Closed loop receipt retained; pool, NUMERIC and condition obligations remain open. |
+| LEAVE and ITERATE | Named/unnamed transfer and loop-state mechanics do not use character units. | Closed receipts retained; shared DO/pool obligations remain open. |
+
+ARG and PARSE are already open. Their pending configuration proof changes to
+Unicode codepoint positions and mapped conversion values. No previously
+closed receipt proves the new high-character output or byte conversion rules.
 
 Expression grammar, BIFs, variable semantics, source/character profiles,
 conditions and host adapters are cross-cutting foundations under
@@ -2330,7 +2443,10 @@ Completing expressions as CALL actuals belongs to the open `SYN-CLASSIC-CALL`
 row; this unsupported CALL form is not counted as a working ARG invocation
 mode.
 
-**LC-STEP-73H proposed profile bridge — decision gate.** Vision: a host
+**LC-STEP-73H historical profile bridge — superseded 2026-10-04.** The
+following proposal and `LC-73H-*` checks are retained as design history and
+probe evidence. They are not active implementation steps after Adrian's
+Unicode-first decision under LC-STEP-88A. Vision: a host
 selects BYTE or UTF8 once per VM context, with BYTE as the default; each new
 Level C activation samples that choice into its existing `RexxClassicConfig`.
 ARG, PARSE UPPER and shared Classic BIFs then use one configuration object

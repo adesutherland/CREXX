@@ -101,29 +101,26 @@ guide.
 
 ## Level C
 
-Classic compatibility selects a character profile through the
-`RexxBifCallContext` configuration object. The profile is call/runtime state;
-it is not selected by flags on an individual `RexxValue`.
+**Approved design, implementation in progress (2026-10-04):** compiled Level C
+uses valid Unicode text for ordinary scalar strings. Character positions,
+including PARSE positions, count codepoints; SAY writes text through the
+configured host output encoding. There is no implicit BYTE/UTF8 profile
+switch. Unicode 17.0.0 `White_Space` plus configured additions is the default
+word-blank policy. No ordinary operation normalizes implicitly.
 
-Two profiles are defined:
+Byte-valued conversion and bitwise BIFs use a fixed, reversible Latin-1
+ordinal bridge: byte `XX` maps to Unicode `U+00XX` for every `00`–`FF` value.
+`X2C('FF')` produces `U+00FF`; `C2X` maps that scalar back to `FF`. A scalar
+above `U+00FF` in a byte-valued operation raises a conversion signal. For
+example, `C2X('é')` is `E9`, while `C2X('漢')` signals. `X2C('C3A9')` is two
+characters, `U+00C3 U+00A9`, and SAY encodes them as text rather than emitting
+the input bytes. These are deliberate differences from byte-exact Classic
+implementations. Raw binary values and I/O are reserved for a later explicit
+facility; explicit Unicode BIFs/codecs will receive a separate language design.
 
-| Profile | Meaning |
-| --- | --- |
-| `BYTE` | Default Classic compatibility profile. Character units are exact bytes. Arbitrary binary values remain valid inputs, PAD means one byte, positions are byte positions, and the configured range is `00` through `FF`. |
-| `UTF8` | Opt-in text profile. Inputs used as text must be valid UTF-8; character positions are Unicode codepoints, PAD means one codepoint, and default blanks use Unicode 17.0.0 `White_Space`. |
-
-Both profiles can add configured blank characters. BYTE additions are bytes;
-UTF8 additions are codepoints. With no additions, the UTF8 word scanner uses
-the VM fast path.
-
-`RexxValue` text/binary flags only describe which representations are current
-and whether held bytes are valid UTF-8. They never change the active profile.
-There is no implicit fallback from UTF8 to BYTE and no implicit normalization.
-
-The direct Level C conversion BIFs preserve exact encoded bytes. C2X and C2D
-read those bytes; X2C and D2C produce them. In the UTF8 profile, a produced
-value is marked as text only when its exact bytes are canonical valid UTF-8;
-otherwise it remains binary-authoritative. BYTE XRANGE provides the inclusive,
-wrapping 256-byte configured range. UTF8 XRANGE is intentionally unavailable
-because it is not a Unicode range API; Level B `sequence` is the non-wrapping
-Unicode-codepoint operation.
+The shared `RexxValue` class retains binary storage and numeric caches for
+RexxScript and future APIs. That flexibility does not change Level C's visible
+text-scalar contract. Current BYTE/UTF8 runtime branches and some compiler
+paths still implement the former design; the Level C worklist tracks their
+migration, so this paragraph describes the approved target rather than a
+completed product claim.

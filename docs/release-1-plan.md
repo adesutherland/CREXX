@@ -105,7 +105,14 @@ tracks the component inventory, incremental delivery criteria and evidence under
 this plan's `R1-AC-01/02` completion contract. Its
 [architecture design](../compiler/docs/levelc_working_architecture.md) records
 the shared `rxfnsc` value, variable-pool and BIF foundation with the separate
-RexxScript sandbox and evaluator.
+RexxScript product. On 2026-10-04 Adrian approved a Unicode-first Level C
+character model with a reversible Latin-1 ordinal bridge for all 256 byte
+values. This is an explicit compatibility boundary: character positions and
+SAY text output use Unicode rather than byte-exact Classic behavior; raw
+binary values/I/O are future separate work. The component worklist owns the
+revised acceptance and affected instruction requalification. Complete Level C
+claims must use that documented boundary and must not imply byte-exact Classic
+parity.
 
 Existing interface dispatch is implemented; interface inheritance and overloads are not part of
 the current documented Level B surface. Listing polymorphism here does not

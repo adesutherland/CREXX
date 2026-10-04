@@ -106,31 +106,36 @@ Source scanning depends on configuration services:
 - `Config_Upper` supplies the uppercase mapping for symbols and options.
 - `Config_Compare`, `Config_Substr`, `Config_Length`, and `Config_Xrange`
   define character comparison, indexing, length, and range behavior.
-- `Config_B2C` and `Config_C2B` convert between binary digits and encoded
-  characters for binary/hex strings and conversion BIFs.
+- `Config_B2C` and `Config_C2B` are the character/byte conversion boundary.
+  The approved Level C default is the fixed Latin-1 ordinal bridge; host
+  source, stream and console codecs are separate services.
 
 Level B `.string` remains valid UTF-8 and its character operations use
-codepoints. Level C selects character behavior through the active
-`RexxClassicConfig` referenced by `RexxBifCallContext`, not through an
-individual value flag:
+codepoints. Under Adrian's 2026-10-04 Level C decision, ordinary Classic scalar
+strings also use this Unicode text representation and codepoint indexing.
+There is no implicit BYTE/UTF8 character-profile switch. SAY writes text through
+the configured host encoding. A fixed Latin-1 ordinal bridge maps every byte
+`00`–`FF` to `U+0000`–`U+00FF` for byte-valued conversion and bitwise BIFs;
+reverse conversion signals if any required scalar exceeds `U+00FF`.
+`X2C('FF')` therefore produces `U+00FF`, not an invalid UTF-8 payload.
+`C2X('é')` is `E9`, while `C2X('漢')` signals. Ordinary character operations
+may accept all Unicode scalars, and PARSE uses codepoint positions. This is a
+documented departure from byte-exact Classic processors. Raw binary values
+and I/O belong to a later explicit facility.
 
-- `BYTE` is the default compatibility profile. Character units, PAD values,
-  configured blanks, coded-character conversion, and XRANGE are exact bytes.
-- `UTF8` is opt-in. Text operations require valid UTF-8 and use Unicode
-  codepoints; default blanks follow Unicode 17.0.0 `White_Space` plus configured
-  codepoints.
+`RexxValue` retains binary storage, numeric caches and representation flags for
+RexxScript and future uses; this Level C scalar contract does not remove them.
+The configuration object still owns host services, extra character tables,
+blank behavior and numeric limits. Unicode 17.0.0 `White_Space` is the default
+word-blank set, with configured additions. There is no implicit normalization.
+Level G owns grapheme, normalization, full folding and segmentation algorithms;
+new explicit Unicode Level C BIFs require a separate approved design.
 
-`RexxValue` binary/text flags continue to describe representation validity.
-There is no implicit profile fallback and no implicit normalization. Level G,
-not Level C or B, owns grapheme, normalization, full folding, and segmentation
-algorithms.
-
-Classic DATATYPE configuration is carried by the same object. BYTE and UTF8
-profiles each have paired extra lowercase/uppercase tables and digit families
-listed in consecutive `0` through `9` order. The configured blank set controls
-right-grouped binary/hexadecimal validation, and the exponent-digit limit
-defaults to nine. `RexxClassicDatatype` applies these services consistently to
-DATATYPE, SYMBOL, and CheckArgs rather than duplicating ASCII-only validators.
+The configured blank set controls right-grouped binary/hexadecimal validation,
+and the exponent-digit limit defaults to nine. `RexxClassicDatatype` applies
+these services consistently to DATATYPE, SYMBOL, and CheckArgs rather than
+duplicating ASCII-only validators. Existing BYTE/UTF8 implementation branches
+are transitional until the single Unicode path is qualified.
 
 ### Commands, Routines, Queues, Streams
 

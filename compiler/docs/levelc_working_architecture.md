@@ -72,8 +72,8 @@ authored program must survive lowering for diagnostics and tracing.
   referenced variable's value evaluated at that position in the direct list.
   The helper splits the captured string into words, uses the shared Classic
   symbol classifier, skips invalid words as Adrian chose for Regina parity,
-  and drops valid names sequentially. The classifier currently uses the
-  default BYTE profile; configured character-profile propagation is open.
+  and drops valid names sequentially. The classifier currently creates a
+  default BYTE configuration; this is open for the approved Unicode model.
 - `RexxClassicBif*` modules own compatible BIF algorithms, argument validation,
   and error construction. `RexxBifCallContext` carries `RexxValue` arguments,
   argument-presence flags, caller pool, and Classic configuration. A BIF that
@@ -83,8 +83,9 @@ authored program must survive lowering for diagnostics and tracing.
   through the generated routine signature; every direct BIF context receives
   that reference. Thus a stateful BIF such as RANDOM continues across internal
   routine calls while local variable pools still obey PROCEDURE isolation.
-  RexxScript instead creates its own configuration per evaluator. Host-selected
-  profiles and other configured services remain open.
+  RexxScript instead creates its own configuration per evaluator. The approved
+  Unicode-first Level C contract removes the pending host profile selector;
+  other configured host services remain open.
 
 RexxScript remains a separate interpreted product. Its parser, statement
 semantics, intrinsic allow-list, captured output, and host-exposure policy are
@@ -98,11 +99,25 @@ The caller's host CREXX pool is never passed implicitly into a RexxScript BIF.
 Level C `ARG` uses Classic `PARSE UPPER ARG` behavior. Each nonempty comma
 segment reads its position from the activation frame and passes its value
 through the shared Classic TRANSLATE call before template execution. The
-callee's visible pool receives the resulting fields. This uses the current
-Level C BYTE default; delivery of an opt-in UTF8 call configuration remains
-an open compatibility obligation.
+callee's visible pool receives the resulting fields. The approved Unicode
+contract requires codepoint template and uppercase behavior; its ARG
+qualification remains open.
 
-The pending LC-STEP-73H design puts profile selection on the VM context so
+**Approved 2026-10-04 Unicode-first direction.** Level C visible scalar
+strings are valid text. Existing Level B `.string` and codepoint PARSE/SAY
+paths are the desired execution route. A central Latin-1 ordinal bridge maps
+all 256 byte values to/from `U+0000`–`U+00FF` for byte-valued conversion and
+bitwise BIFs, signaling when an input scalar cannot map. Ordinary character
+operations accept Unicode codepoints. `RexxValue` retains binary and numeric
+storage for RexxScript/future explicit binary work, while Level C conversion
+BIFs must return text rather than binary-only values. No host BYTE/UTF8
+profile selector is planned. The already closed SAY, DROP and assignment
+instructions have been reopened for Unicode-specific proof; unchanged
+structural receipts remain valid. The authoritative plan is LC-STEP-88 in
+`docs/planning/release-1/levelc-compatibility-worklist.md`.
+
+**Historical, superseded LC-STEP-73H profile proposal:** The former design
+puts profile selection on the VM context so
 embedded hosts and standalone execution can select BYTE or UTF8 before an
 activation. Generated main would read that one setting into its existing
 `RexxClassicConfig`; local routines and BIFs already share the reference.
@@ -110,8 +125,9 @@ The same setting must reach the single VM `parseplan` executor through a
 Level C descriptor policy bit, since a current BYTE-default probe parses
 position 3 in `éa` by codepoint and yields `éa|` instead of the byte-oriented
 `é|a`. All Level C templates would use version-2 descriptors, while unflagged
-Level B plans retain their behavior. This is an architectural proposal awaiting
-Adrian's approval; no profile-selection code has been changed.
+Level B plans retain their behavior. No profile-selection code was changed.
+This proposal was superseded by the Unicode-first decision above; its probes
+record the deliberate departure from byte-exact Classic behavior.
 
 The 2026-10-04 byte-boundary review found that this proposed selector/unit-bit
 bridge cannot be implemented alone. The compiler currently copies BIF
@@ -120,8 +136,8 @@ PARSE result storage is `.string[]`, and the VM `parseplan` emits `.string`
 spans. Exact BYTE fields may be invalid UTF8, so a profile-aware offset rule
 without byte-preserving operands/results would violate the documented BYTE
 contract. `C2X(X2C('FF'))` currently raises `UNICODE_ERROR` at the generated
-BIF argument copy. LC-STEP-73H is paused for a revised design covering the
-whole value path, including relevant `RexxValue` operators and host boundaries.
+BIF argument copy. This finding motivated the superseding LC-STEP-88 design;
+its byte-preserving Level C route is no longer an active requirement.
 
 The executable `PARSE` slice accepts a `VAR` scalar source or a `VALUE`
 expression with one nonempty template containing direct scalar, stem, compound
