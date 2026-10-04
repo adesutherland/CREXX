@@ -696,6 +696,21 @@ are verified against all affected consumers.
   with an IBM/Regina reference matrix, source and lowered-tree inspection,
   focused positive and negative CTests, optimized/no-opt execution, relevant
   normal correctness and shared runtime checks, and linked execution.
+- [ ] **LC-AC-68 — complete SELECT instruction:** `SELECT` contains one or more
+  ordered `WHEN expression THEN instruction` arms and an optional `OTHERWISE`
+  instruction list, ending with `END`. Evaluate each condition at most once in
+  source order until the first exact logical `1`; skip later conditions and
+  unchosen arms. Execute the chosen instruction or complete OTHERWISE list in
+  main, nested DO/IF/SELECT and local routine contexts. Raise the Classic
+  logical-value error at the active WHEN and `7.3` at the SELECT when no arm
+  matches without OTHERWISE. Preserve source ownership through lowering and
+  normal statement dispatch for all legal arm instructions; instruction-owned
+  open behavior stays with its own row. Diagnose missing/stray WHEN, THEN,
+  arm, OTHERWISE/END placement, named END, and malformed nesting with Classic
+  clause identities and recovery. Verify IBM/Regina reference cases, source
+  and canonical AST, focused valid/invalid tests, optimized/no-opt execution,
+  relevant normal correctness and shared runtime checks, and linked toolchain
+  execution. Do not close the criterion with a SELECT-specific restriction.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1146,7 +1161,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-04 NOP — closed 2026-10-04 | LC-STEP-66B | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
 | LC-I-05 OPTIONS — closed 2026-10-04 | LC-STEP-67A–67D | `LC-AC-66`: static source header, executable expression at each source point, no-op empty form, unknown-word policy and configuration ownership. BYTE/UTF8 define no runtime words. Shared condition, TRACE and host obligations remain open in their own rows. |
 | LC-I-06 IF — closed 2026-10-04 | LC-STEP-68A–68C | `LC-AC-67`: all arm positions without IF-specific rejection, nearest ELSE, condition/error and nesting behavior. Each arm's instruction semantics remain with its owner row; shared condition/trap lifecycle remains open in its own criteria. |
-| LC-I-07 SELECT | LC-STEP-69 | WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
+| LC-I-07 SELECT — active | LC-STEP-69A–69C | `LC-AC-68`: WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
 | LC-I-08 DO — closed 2026-10-04 | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. Shared NUMERIC/condition/TRACE/host lifecycle remains open in its own rows. |
 | LC-I-09 LEAVE | LC-STEP-71 | Unnamed/named targets, nesting, value/state and errors across all legal loops; DO. |
 | LC-I-10 ITERATE | LC-STEP-72 | Unnamed/named targets, end-step timing, nesting and errors across all legal loops; DO. |
@@ -1724,6 +1739,38 @@ row. `IF ()` parsing and wider expression syntax remain under LC-AC-04/08.
 Shared trap/condition lifecycle remains open under SIGNAL and its foundation
 criteria. No IF-specific infeasible feature or approved compatibility
 exception was needed. Proceed to LC-I-07 SELECT.
+
+**LC-I-07 SELECT plan — vision and intended outcome.** Classic `SELECT` should
+evaluate ordered WHEN conditions and execute exactly the first selected arm,
+or its optional OTHERWISE list, using the same instruction dispatch as outside
+the selection. The full source form, errors, nesting, source ownership and
+linked execution should agree with the
+[IBM REXX SELECT reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=ki-select)
+and Regina where they agree. The existing source grammar and canonical IF
+lowering are the intended foundation; review and repair the whole instruction
+rather than accumulating bounded cases or new per-arm handling. Shared
+expression, condition/trap and individual arm-instruction obligations remain
+in their owning open rows. Preserve Level B and RexxScript behavior.
+
+1. **LC-STEP-69A (LC-AC-59/68; active; depends on IF closure):** inventory the
+   full SELECT grammar, token adapter, validation and fallback diagnostics,
+   source/canonical AST, main/procedure dispatch, logical/no-match services,
+   and retained tests. Probe IBM/Regina valid and invalid forms, including
+   ordering, separators, empty OTHERWISE, nesting, END and error location.
+   Classify gaps by owner and record any architecture or language decision
+   before compiler edits.
+2. **LC-STEP-69B (LC-AC-68; pending; depends on 69A and any required Adrian
+   approval):** repair SELECT-owned gaps in one coherent implementation
+   increment, keeping one source-anchored lowering path and ordinary statement
+   dispatch for arms. Add a whole-instruction fixture plus focused invalid,
+   AST and optimized/no-opt coverage; replace bounded assertions where useful.
+3. **LC-STEP-69C (LC-AC-59/61/68; pending; depends on 69B):** inspect source and
+   canonical trees, reconcile every valid/invalid form and error recovery,
+   compare reference output, run focused shared-runtime/RexxScript and relevant
+   normal correctness checks, prove `rxc`/`rxas`/`rxlink`/`rxvm`, update the
+   architecture/reference docs, and close LC-I-07 only with an exact-commit
+   evidence receipt. If any SELECT-owned capability remains absent, keep
+   LC-AC-68 open; significant work is not an infeasibility exception.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
