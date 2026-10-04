@@ -5211,17 +5211,11 @@ add_levelc_unsupported_compile_test(levelc_compile_unsupported
 add_levelc_unsupported_compile_test(levelc_slice2_procedure_expose_unsupported
         rexx_src/levelc_slice2_procedure_expose_unsupported.rexx)
 
-add_levelc_unsupported_compile_test(levelc_slice4_procedure_arg_count_unsupported
-        rexx_src/levelc_slice4_procedure_arg_count_unsupported.rexx)
-
 add_levelc_unsupported_compile_test(levelc_slice4_omitted_call_unsupported
         rexx_src/levelc_slice4_omitted_call_unsupported.rexx)
 
 add_levelc_unsupported_compile_test(levelc_slice5_compound_expose_unsupported
         rexx_src/levelc_slice5_compound_expose_unsupported.rexx)
-
-add_levelc_unsupported_compile_test(levelc_slice6_local_function_omitted_arg_unsupported
-        rexx_src/levelc_slice6_local_function_omitted_arg_unsupported.rexx)
 
 add_levelc_unsupported_compile_test(levelc_slice6_procedure_parse_unsupported
         rexx_src/levelc_slice6_procedure_parse_unsupported.rexx)
@@ -5231,9 +5225,6 @@ add_levelc_unsupported_compile_test(levelc_slice7_if_unsupported_branch
 
 add_levelc_unsupported_compile_test(levelc_slice8_body_unsupported
         rexx_src/levelc_slice8_body_unsupported.rexx)
-add_levelc_unsupported_compile_test(levelc_slice40_parse_pattern_unsupported
-        rexx_src/levelc_slice40_parse_pattern_unsupported.rexx)
-
 function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
@@ -5734,6 +5725,30 @@ add_levelc_runtime_slice_test(levelc_arg_frame_calls
 add_levelc_runtime_slice_test(levelc_arg_frame_calls_noopt
         rexx_src/levelc_arg_frame_calls.rexx
         "A /  / C\nA\n / B / \n\n / B / \n\n:B\nA:\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_static_templates
+        rexx_src/levelc_arg_static_templates.rexx
+        "first=AB|CD|ONE|TWO|\nrepeat=AB|CD|ONE TWO|\nmissing=|\nexposed=TAIL|\n")
+add_levelc_runtime_slice_test(levelc_arg_static_templates_noopt
+        rexx_src/levelc_arg_static_templates.rexx
+        "first=AB|CD|ONE|TWO|\nrepeat=AB|CD|ONE TWO|\nmissing=|\nexposed=TAIL|\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_dynamic_templates
+        rexx_src/levelc_arg_dynamic_templates.rexx
+        "parse=mn|op|\nliteral=AB|CD|\nposition=AB|CDEF|\ncapture=X|B:TAIL||\n")
+add_levelc_runtime_slice_test(levelc_arg_dynamic_templates_noopt
+        rexx_src/levelc_arg_dynamic_templates.rexx
+        "parse=mn|op|\nliteral=AB|CD|\nposition=AB|CDEF|\ncapture=X|B:TAIL||\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_patterns
+        rexx_src/levelc_arg_patterns.rexx
+        "pattern AB CD \nleading LEFT RIGHT\ntrailing AB:CD\nbare\n")
+add_levelc_runtime_slice_test(levelc_arg_patterns_noopt
+        rexx_src/levelc_arg_patterns.rexx
+        "pattern AB CD \nleading LEFT RIGHT\ntrailing AB:CD\nbare\n" -n)
+add_levelc_runtime_slice_test(levelc_slice4_procedure_missing_arg
+        rexx_src/levelc_slice4_procedure_missing_arg.rexx "2|\n")
+add_levelc_runtime_slice_test(levelc_slice6_local_function_omitted_arg
+        rexx_src/levelc_slice6_local_function_omitted_arg.rexx "|2\n")
+add_levelc_runtime_slice_test(levelc_slice40_parse_dynamic
+        rexx_src/levelc_slice40_parse_dynamic.rexx "a|b\n")
 foreach(variant IN ITEMS opt noopt)
     set(arg_main_name "levelc_arg_frame_main_${variant}")
     add_test(NAME ${arg_main_name}
@@ -6368,7 +6383,8 @@ add_levelc_lowered_tree_shape_test(levelc_slice4_procedure_args_return_tree_shap
         "append"
         "argument"
         ".RexxValue"
-        "setValue"
+        "parseplan"
+        "setSymbolValue"
         "RETURN"
         "add")
 
@@ -6748,60 +6764,60 @@ add_levelc_lowered_tree_shape_test(levelc_slice39_arg_upper_tree_shape
         "rexxclassicbif_translate"
         "setArguments"
         "setCallerPool"
-        "setValue")
+        "setSymbolValue")
 add_levelc_lowered_tree_shape_test(levelc_slice40_parse_single_tree_shape
         rexx_src/levelc_slice40_parse_single.rexx
         "rexxclassicbif_translate"
         "symbolValue"
-        "setValue"
+        "setSymbolValue"
         "__rxcp_levelc_proc_LOCAL")
 add_levelc_lowered_tree_shape_test(levelc_slice41_parse_three_tree_shape
         rexx_src/levelc_slice41_parse_three.rexx
-        "parseWordTemplate"
+        "parseplan"
         "__rxcp_levelc_parse_fields_"
-        "setValue"
+        "setSymbolValue"
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice46_parse_two_tree_shape
         rexx_src/levelc_slice46_parse_two.rexx
-        "parseWordTemplate"
+        "parseplan"
         "__rxcp_levelc_parse_fields_"
-        "setValue"
+        "setSymbolValue"
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice47_parse_dot_tree_shape
         rexx_src/levelc_slice47_parse_dot.rexx
-        "parseWordTemplate"
+        "parseplan"
         "__rxcp_levelc_parse_fields_"
-        "setValue"
+        "setSymbolValue"
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice48_parse_placeholders_tree_shape
         rexx_src/levelc_slice48_parse_placeholders.rexx
-        "parseWordTemplate"
+        "parseplan"
         "__rxcp_levelc_parse_fields_"
-        "setValue"
+        "setSymbolValue"
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice49_parse_all_dots_tree_shape
         rexx_src/levelc_slice49_parse_all_dots.rexx
-        "parseWordTemplate"
+        "parseplan"
         "__rxcp_levelc_parse_fields_"
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice50_parse_four_tree_shape
         rexx_src/levelc_slice50_parse_four.rexx
-        "parseWordTemplate"
+        "parseplan"
         "__rxcp_levelc_parse_fields_"
-        "setValue"
+        "setSymbolValue"
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice51_parse_generic_tree_shape
         rexx_src/levelc_slice51_parse_generic.rexx
-        "parseWordTemplate"
+        "parseplan"
         "__rxcp_levelc_parse_fields_"
-        "setValue"
+        "setSymbolValue"
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice52_parse_static_tree_shape
         rexx_src/levelc_slice52_parse_static.rexx
         "parseplan"
         "__rxcp_levelc_parse_source_"
         "__rxcp_levelc_parse_fields_"
-        "setValue"
+        "setSymbolValue"
         "rexxclassicbif_translate")
 add_levelc_lowered_tree_shape_test(levelc_slice53_drop_direct_tree_shape
         rexx_src/levelc_slice53_drop_direct.rexx

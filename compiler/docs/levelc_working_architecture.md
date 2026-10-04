@@ -95,43 +95,36 @@ shared BIF boundary. Sharing these classes does not make RexxScript a Level C
 compiler or imply that every Classic instruction or BIF is available there.
 The caller's host CREXX pool is never passed implicitly into a RexxScript BIF.
 
-Supported direct local-procedure `ARG` bindings now use Classic
-`PARSE UPPER ARG` behavior. The lowerer copies each caller argument into a
-one-value `RexxBifCallContext`, supplies the callee's visible pool, calls the
-shared standalone `rexxclassicbif_translate`, then sets the parsed target in
-the callee pool. It adds the TRANSLATE import only for a programme with such
-bindings. This uses the current Level C BYTE default; delivery of an opt-in
-UTF8 call configuration remains an open compatibility obligation.
+Level C `ARG` uses Classic `PARSE UPPER ARG` behavior. Each nonempty comma
+segment reads its position from the activation frame and passes its value
+through the shared Classic TRANSLATE call before template execution. The
+callee's visible pool receives the resulting fields. This uses the current
+Level C BYTE default; delivery of an opt-in UTF8 call configuration remains
+an open compatibility obligation.
 
 The executable `PARSE` slice accepts a `VAR` scalar source or a `VALUE`
-expression with one nonempty template containing direct scalar or `.` targets,
-static literal patterns, and static absolute or relative positions, with
+expression with one nonempty template containing direct scalar, stem, compound
+or `.` targets, literal or variable patterns, and static or variable absolute
+and relative positions, with
 optional `UPPER`. The parser keeps the outer comma-template list and inner
 template as separate `TEMPLATES` nodes. Empty comma positions have empty inner
 `TEMPLATES` nodes, so `ARG x,,z`, leading commas and trailing commas retain
 their positional meaning in the source tree. The lowerer validates both levels,
 evaluates and captures the source before any target write, and emits canonical
-pool reads, result captures and ordered `setValue` calls. A dot consumes its
+pool reads, result captures and ordered `setSymbolValue` calls. A dot consumes its
 field without a pool write. `UPPER` passes the source through the same shared
 Classic TRANSLATE frame used by `ARG`; its import is added only when a
 supported uppercase parse exists. The authored `PARSE` and template nodes do
 not survive the canonical boundary. No new AST or emitter node is required.
 
-The lowerer counts the validated targets and calls
-`RexxValue.parseWordTemplate(count)` once. The shared method returns one
-`RexxValue` per item: the first `count-1` items receive words and the last
-receives the unparsed tail. It chains the existing `parsewords3`-based
-`parseWordAndRest()` primitive, with no compiler dispatch by item count.
-Lowering captures the entire result vector before visible pool writes,
-preserving source aliases and repeated target order. A dot skips only its
-pool write, including for an all-dot template. A `PARSE VALUE` source
-expression still executes once when all items are dots.
-
-For static mixed templates, the lowerer walks the parser's existing ordered
+One shared executor handles `PARSE` and each nonempty `ARG` comma segment. It
+walks the parser's existing ordered
 `TARGET`, `PATTERN`, `ABS_POS` and `REL_POS` children. It inserts the
 implicit word boundary between adjacent targets and the initial absolute
 position when the template begins with a target, then serializes the whole
-sequence to the VM's version-1 frozen `parseplan` descriptor. The descriptor
+sequence to the VM's version-1 or version-2 `parseplan` descriptor. Version 2
+references completed captured fields or external operands read from the
+visible pool before the VM call. The descriptor
 is a compiler-owned escaped-byte string constant, not source text interpreted
 at runtime. The canonical `ASSEMBLER` node calls `parseplan` into a hidden
 string result array; its operand validator requires a string constant, so a
@@ -141,14 +134,14 @@ through the Classic pool in authored order. This path has no target-count or
 item-order switch. Delimiter search, cursor movement, and result capture run
 in the existing VM helper shared with the Level B PARSE exit. The AST rewrite
 owns only validation, plan construction, source capture, and pool assignment.
-Dynamic operands require version-2 references and an explicit capture plan;
-comma templates require per-source segment handling. They extend the same
-item representation instead of adding shape-specific lowering paths.
+The public `RexxValue.parseWordTemplate(count)` method remains for its library
+consumers; Level C compiler lowering no longer calls it. Empty ARG comma
+segments advance the activation position without executing a template.
 
 The shared `RexxActivationArguments` runtime class stores one ordered frame
 per Classic activation. Each slot carries a `RexxValue` and a presence flag;
 an omitted slot reads as empty while remaining absent to existence queries.
-Main and routine call lowering will populate separate frames, and ARG/PARSE
+Main and routine call lowering populate separate frames, and ARG/PARSE
 ARG will read them without consuming their values. This keeps argument
 presence independent of template execution and visible variable-pool writes.
 The generated implicit main copies the VM's hidden `arg[]`/`arg[index]` array
@@ -156,17 +149,15 @@ into its frame before source statements. Direct CALL and local function sites
 evaluate each supplied actual once, append omitted positions with a false
 presence flag, and pass one frame to the generated routine. The old routine
 signature derived from its first ARG template has been removed. Current
-simple ARG lowering reads that frame at each execution; general templates
-are still being consolidated with PARSE.
+ARG lowering reads that frame at each execution, including repeated ARG
+instructions. General templates share the PARSE executor.
 
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including
 direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;
 Level C already has a parsed template AST and writes through a separate
-Classic variable pool. Future pattern and position work should assess reuse
-of those lower-level operations or descriptor semantics while preserving
-Level C AST ownership and pool writes. Other source types, dynamic patterns
-and positions, and comma templates remain guarded.
+Classic variable pool. It reuses the VM descriptor semantics while preserving
+Level C AST ownership and pool writes. Other PARSE source types remain guarded.
 The current default proof is BYTE; the broader binary/UTF8 configuration
 obligation remains open.
 
@@ -368,7 +359,7 @@ not be added until these paths are assessed against the existing tests.
 | --- | --- | --- |
 | LC-REV-01: statement dispatch is duplicated | `levelc_main_statement_supported` and `levelc_proc_statement_supported`, then `levelc_lower_main_statement` and `levelc_lower_proc_statement`, repeat most instruction cases | Use one statement validator and one lowerer with an explicit main/procedure context. Keep the genuinely different CALL, ARG, RETURN and EXIT rules visible. Prove identical nested behavior and diagnostics. |
 | LC-REV-02: variable semantics cross the compiler/runtime boundary in several ways | The pool has `resolveSymbolName`, `symbolValue`, `setSymbolValue`, and `dropSymbol`. Direct and indirect DROP use the pool's general operations under LC-STEP-64A. The assignment audit found that Regina evaluates the right-hand side before compound-target substitution; the former compiler path captured one tail component too early. | LC-STEP-65A routes scalar, stem and arbitrary-component compound assignments through one `setSymbolValue` call after RHS evaluation and removes the compiler's tail materialization. The whole-instruction fixture checks RHS mutation, default reset, exposure, nested execution and opt/no-opt parity. Keep full assignment closure separate from shared profile and condition work. |
-| LC-REV-03: PARSE has two result paths | Direct word templates call `RexxValue.parseWordTemplate`; mixed static templates serialize a descriptor for VM `parseplan`. Both paths capture results and emit ordered pool writes independently | Assess one template item representation and one VM/runtime execution path for all templates, including word-only cases. Retain the single source capture and ordered writes. Prove whitespace, dots, aliases, repeated targets, patterns, positions, BYTE/UTF8 and Level B exit parity before removing a path. Existing public runtime methods need a consumer/API check before removal. Dynamic operands and comma templates belong in this whole-instruction design. |
+| LC-REV-03: PARSE and ARG template path | Level C compiler lowering now uses one `parseplan` path for word, static mixed, and dynamic templates. ARG applies it once per nonempty comma segment. Source capture and ordered pool writes are shared. The public `RexxValue.parseWordTemplate` method remains for library consumers. | Complete whole-instruction ARG qualification for invocation modes, errors, BYTE/UTF8 and linked images, and retain Level B exit parity. Do not remove the public runtime method without a separate consumer/API decision. |
 | LC-REV-04: DO lowering has accumulated shape decisions | `levelc_do_supported` validates a header, while `levelc_lower_do` repeats positional AST interpretation and constructs captured header values, synthetic conditions, `BLOCK_EXPR` and hidden loop targets | Normalize the parsed header once into a checked loop description, then lower from that description. Compare the resulting canonical AST with a dedicated node/emitter route for the hard controlled forms. Choose the route with fewer invariants and less total code while preserving optimizer and source behavior. This is an architectural decision gate. |
 | LC-REV-05: BIF construction is generic; full coverage remains open | The shared argument-frame builder and `RexxBifCallContext` now serve a compiler table of 59 direct entries: 57 recognized Classic names plus LOWER/UPPER. The deprecated `rexxclassicbif_call` dispatcher is no longer used by Level C expression lowering. One activation-owned configuration reaches BIFs through local calls. | Keep one selection table and one result check. Thirteen recognized Classic BIFs still lack runtime services; host-selected configuration, complete reference behavior and external function resolution remain under LC-AC-04/06 and CALL. |
 | LC-REV-06: functional tests are stronger than structural assertions | The Level C suite contains reference-oriented, opt/no-opt, negative and tree probes. The production verifier checks parent ownership, sibling cycles and residual source-only nodes. Many tree CTests assert only that named nodes occur in debug output | Preserve all existing cases. Before aggressive AST refactoring, add a small number of decisive assertions for association targets, source anchors, generated scope/symbol ownership and evaluation order at the riskiest trees. Keep runtime equivalence and linked-image proof. Do not multiply tests merely to mirror implementation details. |

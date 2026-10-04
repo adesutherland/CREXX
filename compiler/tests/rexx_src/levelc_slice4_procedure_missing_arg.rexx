@@ -8,4 +8,4 @@ exit
 double:
 procedure
 arg x, y
-return x + y
+return x || '|' || y

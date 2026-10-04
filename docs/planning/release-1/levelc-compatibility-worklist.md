@@ -2207,6 +2207,22 @@ the prior procedure runtime and updated canonical tree-shape tests pass.
 General ARG templates, PARSE path reuse, ARG BIF and broader invocation/error
 qualification remain open. The fixed ARG-derived procedure signature is gone.
 
+LC-STEP-73C shared template checkpoint: one compiler executor now lowers the
+supported PARSE and ARG template items through the VM `parseplan` operation.
+Word-only templates no longer use a separate `parseWordTemplate` compiler
+path; that public runtime method remains for library consumers. ARG traverses
+all comma segments, preserving empty positional slots, and writes non-dot
+captures through the visible variable pool in authored order. Static and
+dynamic literal/position plans use the VM's version-1 and version-2 formats;
+version-2 operands read the visible pool or an earlier completed capture.
+The `levelc_arg_static_templates*` and `levelc_arg_dynamic_templates*`
+opt/noopt fixtures match Regina, including compound/exposed targets and
+captured dynamic operands. The prior parser-only `levelc_arg_patterns` fixture
+now runs through the full toolchain in both modes. Three former negative tests
+for missing/omitted call arguments and dynamic PARSE were replaced by positive
+runtime checks because the compiler now accepts those shapes. ARG BIF, broader call modes, errors, BYTE/UTF8 and
+linked-image qualification remain open, so LC-AC-71 remains open.
+
 Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
 one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
 call with three positions including an omitted middle position gives
@@ -2691,8 +2707,8 @@ itself make its Classic shape executable.
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Slice: literal and bounded dynamic direct/combined counts, FOREVER, WHILE/UNTIL including setup-bearing conditions, scalar controlled starts with TO, FOR, both or neither, captured dynamic start/TO/BY/FOR, and controlled WHILE/UNTIL, plus childless and bounded named controlled-loop LEAVE/ITERATE through hidden canonical targets | Wider count values, named transfer to wider loops, other controlled endpoints, numeric errors and wider scope remain open |
-| `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: bounded direct local routines, fixed ARG, scalar/stem EXPOSE and value returns | Wider routine and argument shapes, external resolution, exposure and condition lifecycle |
-| `PARSE`, `PULL`, template/pattern/position nodes | Slice: one nonempty static template in `PARSE VAR` or `PARSE VALUE`, with direct scalar/dot targets, literal patterns and positions, and optional UPPER; direct word templates use `RexxValue.parseWordTemplate(count)`, mixed templates use the VM `parseplan` helper, and both paths preserve ordered pool writes | Dynamic pattern/position operands, comma templates, other sources and errors remain open |
+| `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | Slice: local routine and main activation frames, repeatable ARG with comma template positions, scalar/stem EXPOSE and value returns | Wider call modes, ARG BIF, exposure and condition lifecycle |
+| `PARSE`, `PULL`, template/pattern/position nodes | Slice: one nonempty `PARSE VAR` or `PARSE VALUE` template and all ARG comma segments use the VM `parseplan` helper for word, literal, position and dynamic items; captures are written to the pool in order | Other PARSE sources, error behavior, BYTE/UTF8 and linked-image proof remain open |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
 | `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | Open: parser/front end only | Context changes, dynamic code, signal transfer, trace and error identity |
 

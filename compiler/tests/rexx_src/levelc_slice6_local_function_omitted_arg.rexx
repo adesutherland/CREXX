@@ -6,4 +6,4 @@ exit
 double:
 procedure
 arg a, b
-return a + b
+return a || '|' || b
