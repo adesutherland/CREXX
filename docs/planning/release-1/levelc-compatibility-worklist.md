@@ -718,9 +718,10 @@ are verified against all affected consumers.
   do not change the target; leaving nested loops skips their remaining
   bodies, end checks and steps and preserves each visible control value at
   the point of transfer. Local routine calls cannot leave an inactive caller
-  loop. Diagnose no active loop, unmatched or malformed name, extra
-  same-clause text, and illegal END/loop interactions with the correct Classic
-  error identity and source position. Preserve source/canonical AST ownership
+  loop. A syntactically valid but invalid-target LEAVE in an unselected branch
+  must compile and not signal; reaching it must raise the contextual `28.1`
+  or `28.3` at runtime. Diagnose malformed names and extra same-clause text
+  at compile time with Classic identity and source position. Preserve source/canonical AST ownership
   and one shared transfer/binding path without a LEAVE-specific loop rewrite.
   Verify IBM/Regina reference cases, optimized/no-opt, main/nested/local
   output, invalid-source fixtures, source and canonical trees, relevant normal
@@ -1880,7 +1881,7 @@ ITERATE and RexxScript behavior. Do not add a separate LEAVE emitter path.
    DO/LEAVE/ITERATE tests. Reproduce any mismatch before editing, record
    whether it belongs to LEAVE or a shared lifecycle owner, and identify any
    decision gate before an architecture or language change.
-2. **LC-STEP-71B (LC-AC-69; pending; depends on 71A and any required Adrian
+2. **LC-STEP-71B (LC-AC-69; pending runtime decision; depends on 71A and Adrian
    decision):** repair LEAVE-owned syntax, diagnostics or loop targeting in
    one coherent increment using the existing shared transfer machinery;
    remove duplication where the whole-instruction review warrants it. Add
@@ -1907,7 +1908,23 @@ reports `28.1`. The errors are ordinary Classic fidelity corrections within
 the current grammar/diagnostic architecture. The `20.2` route is shared with
 ITERATE, so the same correction must be checked for that consumer without
 prematurely closing LC-I-10. SIGNAL/INTERPRET invalidation remains with those
-instruction owners. No new syntax or architecture decision is identified.
+instruction owners. These source-form repairs need no new architecture decision.
+
+Further LC-STEP-71A runtime probe: Regina prints `ok` for `if 0 then leave`,
+`if 0 then leave i`, and an unselected LEAVE in a simple DO, whereas cREXX
+rejects all three with static `28.1`. This is a LEAVE-owned timing gap, not an
+infeasible capability. The proposed architecture adjustment is to keep source
+syntax errors (`20.1`, `21.1`) static, retain the existing canonical transfer
+for a valid source-loop binding, and lower a syntactically valid invalid-target
+LEAVE/ITERATE to one shared `RexxDoState` runtime error service that signals
+the contextual `28.1`/`28.2` or `28.3`/`28.4` only if reached. This uses the
+already imported DO runtime and ordinary statement dispatch; no new AST or
+emitter instruction is required. The shared transfer validator and lowerer
+must remove their static target rejection, and the affected invalid-compile
+tests become invalid-runtime tests. A dead-branch fixture plus reached-error
+fixtures in opt/no-opt, normal Level C, RexxDoState/RexxScript and linked
+execution will prove timing and isolation. This changes the existing static
+validation architecture and is gated on Adrian's approval under AGENTS.md.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared

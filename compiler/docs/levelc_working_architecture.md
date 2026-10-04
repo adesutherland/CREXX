@@ -1896,8 +1896,11 @@ Level C DO/END control slice on 2026-05-11:
   - static `TRACE` request constants emit `24.1` when the first effective
     request letter is not one of `ACEFILNOR`; signed whole-number trace settings
     are accepted, and a bare sign after `TRACE` emits `19.6`;
-  - malformed `LEAVE` and `ITERATE` targets emit `20.2` and suppress the
-    misleading loop-context `28.*` diagnostics for the same clause;
+  - malformed `LEAVE` and `ITERATE` targets emit `20.1` and suppress the
+    misleading loop-context `28.*` diagnostics for the same clause; extra
+    same-clause text after a valid name emits `21.1`. A named transfer with no
+    repetitive loop reports `28.1`/`28.2`; a name that misses active
+    controlled loops reports `28.3`/`28.4`;
   - number-leading assignment such as `10 = value` emits `31.1` rather than
     being treated as an implicit ADDRESS command;
   - `ADDRESS WITH` resources now validate the reachable static resource shape:

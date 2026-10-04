@@ -2616,7 +2616,7 @@ leave_instruction(L) ::= CTK_LEAVE(T) CTK_VAR_SYMBOL(S).
 leave_instruction(L) ::= CTK_LEAVE(T) bad_name_target_start(B) simple_tail(S).
 {
     L = ast_f(context, LEAVE, T);
-    add_ast(L, rxcp_levelc_ast_error_token(context, "20.2", B));
+    add_ast(L, rxcp_levelc_ast_error_token(context, "20.1", B));
     if (S) add_ast(L, S);
 }
 
@@ -2634,7 +2634,7 @@ iterate_instruction(I) ::= CTK_ITERATE(T) CTK_VAR_SYMBOL(S).
 iterate_instruction(I) ::= CTK_ITERATE(T) bad_name_target_start(B) simple_tail(S).
 {
     I = ast_f(context, ITERATE, T);
-    add_ast(I, rxcp_levelc_ast_error_token(context, "20.2", B));
+    add_ast(I, rxcp_levelc_ast_error_token(context, "20.1", B));
     if (S) add_ast(I, S);
 }
 

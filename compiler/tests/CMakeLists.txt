@@ -5405,6 +5405,18 @@ add_levelc_invalid_compile_test(levelc_options_invalid_expression
 add_levelc_invalid_compile_test(levelc_slice13_named_leave_invalid
         rexx_src/levelc_slice13_named_leave_invalid.rexx
         "RXC-LC-28\\.3")
+add_levelc_invalid_compile_test(levelc_leave_named_outside
+        rexx_src/levelc_leave_named_outside.rexx
+        "RXC-LC-28\\.1" "@ 2:1" "1 error")
+add_levelc_invalid_compile_test(levelc_leave_inactive_caller
+        rexx_src/levelc_leave_inactive_caller.rexx
+        "RXC-LC-28\\.1" "@ 7:1" "1 error")
+add_levelc_invalid_compile_test(levelc_leave_malformed_target
+        rexx_src/levelc_leave_malformed_target.rexx
+        "RXC-LC-20\\.1" "@ 3:9" "1 error")
+add_levelc_invalid_compile_test(levelc_leave_extra_target
+        rexx_src/levelc_leave_extra_target.rexx
+        "RXC-LC-21\\.1" "@ 3:11" "1 error")
 add_levelc_invalid_compile_test(levelc_slice29_named_leave_invalid
         rexx_src/levelc_slice29_named_leave_invalid.rexx
         "RXC-LC-28\\.3")
@@ -5777,6 +5789,12 @@ add_levelc_runtime_slice_test(levelc_slice13_loop_transfer
 add_levelc_runtime_slice_test(levelc_slice13_loop_transfer_noopt
         rexx_src/levelc_slice13_loop_transfer.rexx
         "leave 1\nafter-leave 2\niterate 3\nafter-select-leave\nafter-select-iterate\nouter\nouter\n2\n" -n)
+add_levelc_runtime_slice_test(levelc_leave_instruction
+        rexx_src/levelc_leave_instruction.rexx
+        "count 2\nforever\nwhile 1\nuntil 1\ninner 1 1\nouter-state 1 2\nsame-inner 1\nsame-final 1\ncompound STEM.A STEM.B\nlimit-body 1\nlimit-state 1\nlocal 1\n")
+add_levelc_runtime_slice_test(levelc_leave_instruction_noopt
+        rexx_src/levelc_leave_instruction.rexx
+        "count 2\nforever\nwhile 1\nuntil 1\ninner 1 1\nouter-state 1 2\nsame-inner 1\nsame-final 1\ncompound STEM.A STEM.B\nlimit-body 1\nlimit-state 1\nlocal 1\n" -n)
 
 add_levelc_runtime_slice_test(levelc_slice14_forever
         rexx_src/levelc_slice14_forever.rexx
@@ -6354,6 +6372,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice13_loop_transfer_tree_shape
         "LEAVE"
         "ITERATE"
         "IF")
+add_levelc_lowered_tree_shape_test(levelc_leave_instruction_tree
+        rexx_src/levelc_leave_instruction.rexx
+        "__rxcp_levelc_loop_"
+        "LEAVE"
+        "IF"
+        "RexxDoState")
 
 add_levelc_lowered_tree_shape_test(levelc_slice14_forever_tree_shape
         rexx_src/levelc_slice14_forever.rexx

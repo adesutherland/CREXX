@@ -1011,6 +1011,23 @@ static int levelc_has_controlled_do(LevelCFallbackFrame *frames,
     return 0;
 }
 
+static void levelc_validate_loop_transfer(Context *context, Token *keyword,
+                                          LevelCFallbackFrame *frames,
+                                          size_t frame_count, int is_leave) {
+    Token *target = levelc_leave_iterate_symbol(keyword);
+    Token *extra = target ? levelc_next_clause_token(target) : NULL;
+
+    if (extra) {
+        levelc_append_code_token(context, extra, "21.1");
+    } else if (levelc_leave_iterate_has_bad_target(keyword)) {
+        /* The source grammar reports 20.1 for a malformed name. */
+    } else if (!levelc_has_repetitive_do(frames, frame_count)) {
+        levelc_append_code(context, keyword, is_leave ? "28.1" : "28.2");
+    } else if (target && !levelc_has_controlled_do(frames, frame_count, target)) {
+        levelc_append_code_token(context, target, is_leave ? "28.3" : "28.4");
+    }
+}
+
 static Token *levelc_fallback_anchor_token(Context *context) {
     Token *token;
 
@@ -1190,7 +1207,6 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
     Token *control;
     Token *bad_forever_token;
     Token *end_name;
-    Token *target_name;
     LevelCFallbackFrame *frames;
     LevelCFallbackFrame frame;
     LevelCLabel *labels;
@@ -1324,29 +1340,13 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
                 break;
 
             case TK_LEAVE:
-                target_name = levelc_leave_iterate_symbol(token);
-                if (target_name) {
-                    if (!levelc_has_controlled_do(frames, frame_count, target_name)) {
-                        levelc_append_code_token(context, target_name, "28.3");
-                    }
-                } else if (levelc_leave_iterate_has_bad_target(token)) {
-                    /* The grammar reports Msg20.2 for the malformed target. */
-                } else if (!levelc_has_repetitive_do(frames, frame_count)) {
-                    levelc_append_code(context, token, "28.1");
-                }
+                levelc_validate_loop_transfer(context, token, frames,
+                                              frame_count, 1);
                 break;
 
             case TK_ITERATE:
-                target_name = levelc_leave_iterate_symbol(token);
-                if (target_name) {
-                    if (!levelc_has_controlled_do(frames, frame_count, target_name)) {
-                        levelc_append_code_token(context, target_name, "28.4");
-                    }
-                } else if (levelc_leave_iterate_has_bad_target(token)) {
-                    /* The grammar reports Msg20.2 for the malformed target. */
-                } else if (!levelc_has_repetitive_do(frames, frame_count)) {
-                    levelc_append_code(context, token, "28.2");
-                }
+                levelc_validate_loop_transfer(context, token, frames,
+                                              frame_count, 0);
                 break;
 
             case TK_NUMERIC:
