@@ -641,6 +641,14 @@ are verified against all affected consumers.
   diagnostics. Verify against Regina, optimized/no-opt and source/canonical
   trees, focused pool and RexxScript checks, normal Level C correctness and
   linked toolchain output, with BYTE/UTF8 values where relevant.
+- [ ] **LC-AC-64 — complete NOP instruction:** a childless Classic `NOP`
+  preserves adjacent statement order and has no visible effect in main,
+  selected IF/SELECT arms, DO bodies and local procedures. Text after `NOP`
+  in the same clause reports the Classic `21.1` syntax identity instead of
+  being silently discarded. Verify Regina positive and negative behavior,
+  source/canonical trees, optimized/no-opt, normal Level C correctness and
+  linked execution. Shared label/TRACE/condition lifecycle stays explicitly
+  open under `LC-AC-04/08` and `LC-I-23/24`, as for SAY.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1084,7 +1092,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F | `LC-AC-57`: expression and childless forms, output and lifecycle; STEP-60 case included. Shared expression, BIF, TRACE and SIGNAL obligations remain open in their own rows. |
 | LC-I-02 DROP — closed 2026-10-04 | LC-STEP-64B | `LC-AC-62`: direct and parenthesized lists, arbitrary compound substitution, exposure, order and errors through the shared pool. Adrian's approved Regina invalid-word behavior is retained. |
 | LC-I-03 assignment — closed 2026-10-04 | LC-STEP-65B | `LC-AC-63`: scalar, stem and arbitrary compound targets, optional empty RHS and evaluation order through the shared pool. Shared profile, expression and condition obligations stay open in their own criteria. |
-| LC-I-04 NOP | LC-STEP-66 | Childless instruction in every legal context and clause/trace lifecycle; existing bounded proof is the baseline. |
+| LC-I-04 NOP — active | LC-STEP-66 | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
 | LC-I-05 OPTIONS | LC-STEP-67 | All processor option words, unknown-option policy and source/configuration behavior; programme initialization. |
 | LC-I-06 IF | LC-STEP-68 | Every legal instruction arm, nearest ELSE, condition/error and nesting behavior; shared statement dispatch. |
 | LC-I-07 SELECT | LC-STEP-69 | WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
@@ -1271,8 +1279,35 @@ execution matches Regina; the linked 216-byte result is identical
 empty-assignment tree assertion passed separately without a product-code
 change (`/tmp/crexx-assignment-empty-anchor-retest.UCsFUv`). Focused pool
 and RexxScript checks from 65A remain valid because their code/test inputs
-did not change. This closes `LC-AC-63` and `LC-I-03` only; `LC-AC-04/06/08/61`
-and the wider TRACE/SIGNAL, host profile and external API contracts stay open.
+ did not change. This closes `LC-AC-63` and `LC-I-03` only; `LC-AC-04/06/08/61`
+ and the wider TRACE/SIGNAL, host profile and external API contracts stay open.
+
+**LC-I-04 NOP plan — vision and outcome.** Preserve one source-anchored NOP
+through the normal canonical emitter and make invalid same-clause tails fail
+with the Classic diagnostic. The existing no-op behavior and broader nested
+control flow tests are the positive baseline. The pending single-activation
+label design and TRACE hooks are shared capabilities that apply to every
+statement; they remain visible open work rather than NOP-specific omissions.
+
+1. **LC-STEP-66A (LC-AC-64; depends on 65B):** compare childless, selected
+   IF/SELECT, DO and local NOP with Regina; add a source-level `21.1` recovery
+   path for extra same-clause tokens, including variable and nonvariable
+   starts. Retain a focused invalid-source regression and source-tree check;
+   build and commit the parser repair.
+2. **LC-STEP-66B (LC-AC-59/64; depends on 66A):** reconcile the grammar and
+   reference, check the existing positive opt/no-opt/linked cases, new negative
+   diagnostics, canonical NOP/source anchors and the relevant normal Level C
+   suite; close the instruction-specific row only if all pass. Keep shared
+   label/TRACE obligations open with their own evidence.
+
+2026-10-04 NOP audit reproducer: `NOP extra` compiled with a raw NOP node and
+silently dropped `extra` (`/tmp/crexx-nop-audit.5EO6LD` and
+`/tmp/crexx-nop-invalid-tree.rwYLGW`), while Regina reports `21.1`
+(`/tmp/crexx-nop-reference.wClRwy`). `mark: nop` currently fails compilation
+because the lowering plan requires a `PROCEDURE` after a local label; Regina
+runs it. That label/fallthrough defect is shared across statement kinds and
+remains open under `LC-AC-08` and the pending SIGNAL architecture gate. It
+does not authorize bypassing or weakening that later work.
 
 **Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
