@@ -887,7 +887,10 @@ int rxcmain(int argc, char *argv[]) {
          * Keep grammar recovery for cases that preserve a usable AST.
          * Use fallback diagnostics only when parsing has already failed to
          * produce any AST at all. */
-        errors = rxcp_run_fallback_diagnostics(context);
+        /* The Level C parser has already run its structural fallback.
+         * A second generic pass would duplicate its source diagnostic. */
+        errors = context->level == LEVELC && context->diagnostics_list
+            ? 1 : rxcp_run_fallback_diagnostics(context);
         if (errors) {
             errors = prnterrs(context);
             if (errors) fprintf(stderr,"%d error(s) in source file\n", errors);

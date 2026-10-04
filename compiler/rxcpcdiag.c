@@ -1499,7 +1499,18 @@ int rxcp_levelc_run_fallback_diagnostics(Context *context) {
     }
 
     if (diagnostics_after == diagnostics_before) {
-        levelc_append_code_token(context, levelc_fallback_anchor_token(context), "21.1");
+        Token *last = context->token_tail;
+
+        while (last && (last->token_type == TK_EOS ||
+                        last->token_type == TK_EOC ||
+                        last->token_type == TK_EOL ||
+                        last->token_type == TK_LABEL)) {
+            last = last->token_prev;
+        }
+        if (last && last->token_type == TK_THEN)
+            levelc_append_code(context, last, "14.3");
+        else
+            levelc_append_code_token(context, levelc_fallback_anchor_token(context), "21.1");
         diagnostics_after++;
     }
 

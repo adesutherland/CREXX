@@ -5271,6 +5271,27 @@ endfunction()
 add_levelc_invalid_compile_test(levelc_compile_invalid_if_missing_then
         rexx_src/levelc_if_missing_then.rexx
         "RXC-LC-18\\.1")
+add_levelc_invalid_compile_test(levelc_if_missing_condition
+        rexx_src/levelc_if_missing_condition.rexx
+        "RXC-LC-35\\.1" "1 error")
+add_levelc_invalid_compile_test(levelc_if_stray_else
+        rexx_src/levelc_if_stray_else.rexx
+        "RXC-LC-8\\.2" "1 error")
+add_levelc_invalid_compile_test(levelc_if_nested_missing_then
+        rexx_src/levelc_if_nested_missing_then.rexx
+        "RXC-LC-18\\.1" "1 error")
+add_levelc_invalid_compile_test(levelc_if_then_missing_arm
+        rexx_src/levelc_if_then_missing_arm.rexx
+        "RXC-LC-14\\.3" "1 error")
+add_levelc_invalid_compile_test(levelc_if_then_label_missing_arm
+        rexx_src/levelc_if_then_label_missing_arm.rexx
+        "RXC-LC-14\\.3" "1 error")
+add_levelc_invalid_compile_test(levelc_if_then_separator_missing_arm
+        rexx_src/levelc_if_then_separator_missing_arm.rexx
+        "RXC-LC-14\\.3" "1 error")
+add_levelc_invalid_compile_test(levelc_if_else_missing_arm
+        rexx_src/levelc_if_else_missing_arm.rexx
+        "RXC-LC-14\\.4" "1 error")
 
 foreach(kind IN ITEMS to by for)
     add_levelc_invalid_compile_test(levelc_do_duplicate_${kind}
@@ -5649,6 +5670,12 @@ add_levelc_runtime_slice_test(levelc_slice7_if_nested
 add_levelc_runtime_slice_test(levelc_slice7_if_nested_noopt
         rexx_src/levelc_slice7_if_nested.rexx
         "true\nfalse\nnested\nafter\nonce\n1\n1\n" -n)
+add_levelc_runtime_slice_test(levelc_if_instruction
+        rexx_src/levelc_if_instruction.rexx
+        "red blue new\n1\n2\nselect-if\nlocal\nlabel\nouter\n")
+add_levelc_runtime_slice_test(levelc_if_instruction_noopt
+        rexx_src/levelc_if_instruction.rexx
+        "red blue new\n1\n2\nselect-if\nlocal\nlabel\nouter\n" -n)
 
 add_levelc_runtime_slice_test(levelc_slice8_do_block_target_shape
         rexx_src/levelc_slice8_do_block_target_shape.crexx
@@ -6201,6 +6228,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice7_if_else_tree_shape
         "logicalIfValue"
         "IF"
         "DO"
+        "RexxVariablePool")
+add_levelc_lowered_tree_shape_test(levelc_if_instruction_tree
+        rexx_src/levelc_if_instruction.rexx
+        "logicalIfValue"
+        "IF"
+        "DO"
+        "applyOptions"
         "RexxVariablePool")
 
 add_levelc_lowered_tree_shape_test(levelc_slice8_do_block_tree_shape

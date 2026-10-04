@@ -335,6 +335,9 @@ does not fully express:
 - labels inside active groups can be trace-only and cannot be branch targets or
   internal routine entry points.
 - `ELSE` associates with the nearest preceding compatible `IF`.
+- A separator or label between `THEN`/`ELSE` and a later instruction is
+  permitted but is not itself an empty branch instruction. A missing following
+  instruction reports `14.3` for `THEN` or `14.4` for `ELSE`.
 - clause line numbers are based on source lines before the first token in the
   clause.
 - message choice rules must pick the more specific syntax message where the

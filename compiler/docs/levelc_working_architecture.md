@@ -1111,6 +1111,19 @@ Implementation consequences:
 - `ELSE` binds to the nearest valid previous `IF`.
 - The THEN/ELSE instruction may be a group or a single instruction.
 
+Current whole-instruction review (2026-10-04): the source tree holds one IF
+condition, one THEN instruction and an optional ELSE instruction. The single
+`levelc_lower_if_statement` path evaluates and checks the condition before
+either arm, then recursively uses ordinary main/procedure statement dispatch
+to build canonical IF/DO blocks at the authored source anchors. Both arm
+builders are compiled, but only the selected arm runs. A legal separator or
+label between THEN and its following instruction does not create an empty
+arm. An absent arm at end of source is diagnosed as `14.3` for THEN or `14.4`
+for ELSE. On total Level C parse failure, the Level C fallback owns its
+diagnostic; the driver does not add a second generic `PARSE_FAILURE`. An arm
+whose instruction is globally unsupported remains owned by that instruction
+row, not by IF dispatch.
+
 ### 6.8 SELECT
 
 `SELECT` syntax:
