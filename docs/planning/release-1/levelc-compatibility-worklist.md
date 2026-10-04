@@ -631,6 +631,15 @@ are verified against all affected consumers.
   and mixed-list Regina probes, optimized/no-opt, source/canonical AST,
   focused pool and RexxScript checks, normal Level C correctness and linked
   toolchain execution. No fixed tail-component or list-length limit remains.
+- [ ] **LC-AC-63 — complete assignment instruction:** every parsed valid
+  scalar, stem and arbitrary-component compound target takes its Classic
+  value in main, nested and local contexts. Compound name substitution is
+  captured before evaluating the right-hand expression, including a call that
+  mutates a tail component. The shared pool owns final name classification,
+  stem reset and exposure behavior; source-invalid targets retain their
+  diagnostics. Verify against Regina, optimized/no-opt and source/canonical
+  trees, focused pool and RexxScript checks, normal Level C correctness and
+  linked toolchain output, with BYTE/UTF8 values where relevant.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1073,7 +1082,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | --- | --- | --- |
 | LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F | `LC-AC-57`: expression and childless forms, output and lifecycle; STEP-60 case included. Shared expression, BIF, TRACE and SIGNAL obligations remain open in their own rows. |
 | LC-I-02 DROP — closed 2026-10-04 | LC-STEP-64B | `LC-AC-62`: direct and parenthesized lists, arbitrary compound substitution, exposure, order and errors through the shared pool. Adrian's approved Regina invalid-word behavior is retained. |
-| LC-I-03 assignment | LC-STEP-65 | All valid scalar, stem and compound targets and expression/evaluation order; shared pool boundary. |
+| LC-I-03 assignment — active | LC-STEP-65 | `LC-AC-63`: all valid scalar, stem and compound targets and expression/evaluation order; shared pool boundary. |
 | LC-I-04 NOP | LC-STEP-66 | Childless instruction in every legal context and clause/trace lifecycle; existing bounded proof is the baseline. |
 | LC-I-05 OPTIONS | LC-STEP-67 | All processor option words, unknown-option policy and source/configuration behavior; programme initialization. |
 | LC-I-06 IF | LC-STEP-68 | Every legal instruction arm, nearest ELSE, condition/error and nesting behavior; shared statement dispatch. |
@@ -1144,6 +1153,52 @@ unapproved design proposal for that later review, not a SAY closure gate.
    checkpoints. Record closed and still-open rows with exact evidence. Do not
    begin `LC-I-23 SIGNAL` until this baseline is clear and its architecture
    gate is approved.
+
+2026-10-04 prior-instruction audit at the DROP checkpoint (`7f0f08b92`):
+the parser grammar, Classic compliance reference, lowerer validation and
+lowering, worklist crosswalk and existing tests were reconciled. This is a
+baseline inventory, not closure of the open rows. The current code has two
+parallel main/procedure validators and lowerers for most instructions. Each
+whole-instruction review must reduce that duplication where practical without
+losing the genuinely different routine rules.
+
+| Earlier instruction | Current implementation shape | Open review or work before closure |
+| --- | --- | --- |
+| SAY, DROP | Whole instruction closed in LC-I-01/02 | Shared TRACE, SIGNAL and host profile remain separate open criteria. |
+| Assignment | Scalar and one-component compound targets use different compiler-selected pool methods; stem and multi-component targets are rejected | Capture resolved compound name before RHS, then use one pool-owned final assignment operation; prove stem/exposure and calls that mutate tail variables. Active LC-I-03. |
+| NOP | Childless parser node and one no-op lowerer in main/procedure, including nested bounded arms | Reconcile clause and TRACE hooks and malformed source before LC-I-04 closure. |
+| OPTIONS | Parser emits REXX_OPTIONS; acceptance of the node is broad, with option handling in programme setup | Inventory option words and unknown policy, test source/configuration lifecycle. |
+| IF, SELECT | Guarded trees lower to canonical branches; validation/lowering dispatch repeats between main and procedure | Audit every legal arm and diagnostic, nearest ELSE, ordering and no-match lifecycle; simplify common dispatch. |
+| DO | Many proven bounded header slices, but header validation and lowering independently interpret positional REPEAT/condition/body children and synthesize loop blocks | Normalize one checked header, then compare canonical construction with a dedicated node/emitter route for total simplicity. Remove arbitrary count bound; prove all legal header combinations and associations. Architecture decision remains gated. |
+| LEAVE, ITERATE | Hidden loop targets and canonical transfers support bounded unnamed and named forms | Audit targets, nested loops, invalid placement and step timing with the complete DO representation. |
+| ARG, PROCEDURE | Local routine slice with direct ARG and limited EXPOSE/pool lifecycle | Complete templates, omitted arguments, direct/indirect exposure and routine context. |
+| CALL, RETURN, EXIT | Internal calls and bounded return/exit paths; main and procedure rules differ | Complete resolution, optional values, traps and activation/fallthrough lifecycle; SIGNAL architecture may affect these rows. |
+| PARSE | Direct word templates and VM parseplan are separate execution paths; VAR/VALUE source subset | Design one execution representation before completing sources, patterns, dynamic positions and comma templates. |
+
+This records why the bounded DO acceptance checks do not close LC-I-08. The
+order stays assignment, NOP, OPTIONS, IF, SELECT, DO, then transfers and
+routines; DO's representation review starts before its implementation, so
+the earlier AST risk is visible rather than hidden by passing slice tests.
+
+**LC-I-03 assignment plan — vision and outcome.** One parsed Classic
+assignment target produces one pool operation with full scalar, stem and
+compound semantics. The compiler captures the name when Classic evaluation
+requires it and preserves the authored expression and source location; the
+shared pool implements the final write for Level C and RexxScript consumers.
+This completes the instruction without adding a special case for each tail
+shape.
+
+1. **LC-STEP-65A (LC-AC-58/63; depends on 62B):** retain a whole-instruction
+   Regina fixture for scalar/stem/compound names, multi-component substitution,
+   default reset, exposure and RHS side effects. Introduce a pool method for
+   an already-resolved name, make `setSymbolValue` delegate to it, and lower
+   every valid assignment through one captured-name path. Preserve the
+   pre-RHS resolution point and source-invalid diagnostics. Build and run
+   focused compiler, pool and cross-consumer checks; commit the implementation.
+2. **LC-STEP-65B (LC-AC-59/63; depends on 65A):** reconcile all parser target
+   forms and reference obligations, check optimized/no-opt tree/source and
+   runtime equivalence, normal Level C correctness and linked toolchain output;
+   record exact evidence and close LC-I-03 only if its contract is met.
 
 **Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
