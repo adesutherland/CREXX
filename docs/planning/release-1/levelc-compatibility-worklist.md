@@ -711,7 +711,7 @@ are verified against all affected consumers.
   and canonical AST, focused valid/invalid tests, optimized/no-opt execution,
   relevant normal correctness and shared runtime checks, and linked toolchain
   execution. Do not close the criterion with a SELECT-specific restriction.
-- [ ] **LC-AC-69 — complete LEAVE instruction:** childless `LEAVE` exits the
+- [x] **LC-AC-69 — complete LEAVE instruction:** childless `LEAVE` exits the
   innermost active repetitive DO and named `LEAVE symbol` exits the innermost
   active controlled DO whose authored control symbol matches, ignoring case
   but without compound-tail substitution. Simple DO, IF and SELECT wrappers
@@ -1884,14 +1884,14 @@ ITERATE and RexxScript behavior. Do not add a separate LEAVE emitter path.
    DO/LEAVE/ITERATE tests. Reproduce any mismatch before editing, record
    whether it belongs to LEAVE or a shared lifecycle owner, and identify any
    decision gate before an architecture or language change.
-2. **LC-STEP-71B (LC-AC-69; approved and active; depends on 71A and Adrian's
+2. **LC-STEP-71B (LC-AC-69; complete; depends on 71A and Adrian's
    `STRICTC` direction):** retain default static target diagnostics; add a
    central leading-header `STRICTC` flag for Level C and lower invalid-target
    LEAVE/ITERATE to one shared `RexxDoState` runtime error service only in
    that mode. Keep syntax diagnostics static and valid transfers on the
    canonical binding path. Add a complete optimized/no-opt fixture and
    focused default, strict, invalid and AST checks.
-3. **LC-STEP-71C (LC-AC-59/61/69; pending; depends on 71B):** compare IBM and
+3. **LC-STEP-71C (LC-AC-59/61/69; complete; depends on 71B):** compare IBM and
    Regina, inspect source/canonical associations, run focused and relevant
    normal correctness plus shared-consumer checks, prove linked output,
    update architecture/reference docs, and commit an exact-revision receipt.
@@ -1964,6 +1964,30 @@ which passed in isolation (`/tmp/crexx-leave-static-levelc.qCAehB`,
 The runtime-timing part of LC-AC-69 and LC-I-09 remains open for implementation
 and qualification under the accepted policy; this checkpoint is not LEAVE
 closure.
+
+2026-10-04 LC-I-09 LEAVE closure: `1382bdc9b` records Adrian's accepted
+default/`STRICTC` policy; `2aad4ec65` implements the central leading-header
+flag, preserves default static 28.x diagnostics, and lowers only invalid
+strict-mode source targets to one shared `RexxDoState` error service. Valid
+transfers keep the existing canonical loop binding; a lost binding remains a
+compiler failure. Syntax 20.1/21.1 remains static. Raw and canonical transfer
+trees are checked by `levelc_strictc_transfer_source_tree` and the existing
+LEAVE tree/whole-instruction fixtures. Final Release build of `rxc`, `rxas`,
+`rxlink`, `rxvm`, and `rxfnsc` passed (`/tmp/crexx-strictc-final-build.nF5lFX`);
+the normal Level C suite passed 403/403
+(`/tmp/crexx-strictc-final-levelc.ivizDu`), and shared RexxValue,
+RexxDoState, RexxScript, CLI and linked-consumer checks passed 14/14.
+Optimized/no-opt strict-mode fixtures cover dead and reached LEAVE/ITERATE,
+unmatched names, local routine isolation and malformed syntax. Regina matches
+the dead-branch output and runtime 28.1/28.2/28.3/28.4 cases. Level B/G still
+reject `if 0 then leave` outside a loop with `NOT_IN_LOOP` in direct probes.
+The final linked `rxc`→`rxas`→`rxlink`→`rxvm` run printed `body 1`/`after 2`
+for dead transfers and signalled `RXC-LC-28.1` at source line 2 for a reached
+LEAVE (`/tmp/crexx-strictc-final-linked.e0HyA7`). No LEAVE-owned infeasible
+feature or exception remains beyond the explicitly accepted default-profile
+timing distinction. `LC-AC-69` and LC-I-09 close; shared SIGNAL/INTERPRET
+lifecycle and `LC-AC-04/08/59/61` remain open under their own owners. Next is
+LC-I-10 ITERATE for a separate whole-instruction review and closure.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
