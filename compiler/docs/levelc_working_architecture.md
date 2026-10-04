@@ -102,6 +102,17 @@ callee's visible pool receives the resulting fields. This uses the current
 Level C BYTE default; delivery of an opt-in UTF8 call configuration remains
 an open compatibility obligation.
 
+The pending LC-STEP-73H design puts profile selection on the VM context so
+embedded hosts and standalone execution can select BYTE or UTF8 before an
+activation. Generated main would read that one setting into its existing
+`RexxClassicConfig`; local routines and BIFs already share the reference.
+The same setting must reach the single VM `parseplan` executor through a
+Level C descriptor policy bit, since a current BYTE-default probe parses
+position 3 in `éa` by codepoint and yields `éa|` instead of the byte-oriented
+`é|a`. All Level C templates would use version-2 descriptors, while unflagged
+Level B plans retain their behavior. This is an architectural proposal awaiting
+Adrian's approval; no profile-selection code has been changed.
+
 The executable `PARSE` slice accepts a `VAR` scalar source or a `VALUE`
 expression with one nonempty template containing direct scalar, stem, compound
 or `.` targets, literal or variable patterns, and static or variable absolute

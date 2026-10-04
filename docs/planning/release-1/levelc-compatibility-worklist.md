@@ -2324,6 +2324,64 @@ and UTF8 modes, but generated Level C main constructs a BYTE-default owner
 without a host/profile selector. Opt-in UTF8 qualification remains open under
 LC-AC-71 and the shared LC-AC-04/06 configuration contract.
 
+**LC-STEP-73H proposed profile bridge — decision gate.** Vision: a host
+selects BYTE or UTF8 once per VM context, with BYTE as the default; each new
+Level C activation samples that choice into its existing `RexxClassicConfig`.
+ARG, PARSE UPPER and shared Classic BIFs then use one configuration object
+through local calls. The source `OPTIONS` unknown-word behavior, Level B
+programs and RexxScript's independent evaluator configuration keep their
+current contracts. The preferred route is a context-owned profile setting
+through `rxvml`, a standalone `rxvm --classic-profile` selector, and one VM
+read-only register operation that returns the current profile to the generated
+Level C main prefix. The compiler uses its existing canonical `ASSEMBLER`
+node, then calls `RexxClassicConfig.setProfile`; no new AST node is needed.
+The reserved VM operation slot 411 is available but its opcode/effect/signal/
+feature contract must be updated together. The existing `parseplan` executor
+also needs the selected unit rule: a read-only probe shows current default
+BYTE Level C yields `éa|` for position 3 in `éa`, whereas Regina yields
+`é|a`. Force Level C templates to version-2 descriptors and use the next
+reserved policy bit to request profile-sensitive units. One parseplan source
+view then chooses byte offsets for BYTE and codepoint offsets for UTF8,
+including literal lengths, dynamic patterns and exact output spans. Unflagged
+Level B plans retain their codepoint behavior and the same executor remains
+the sole template engine. A source
+`OPTIONS UTF8` word would change the already closed OPTIONS language contract;
+a compiler-only flag would not let an embedding host choose per context.
+Adrian's approval is required under AGENTS.md before this VM/host/compiler
+architecture change.
+
+- [ ] **LC-73H-01:** default BYTE output and existing Level B/RexxScript
+  behavior remain unchanged; invalid profile selectors fail before execution.
+  Verify exact-output and error tests in standalone and embedded runs.
+- [ ] **LC-73H-02:** separate host contexts and consecutive activations can
+  select BYTE/UTF8 without leakage; local routines and BIFs see the entry
+  profile, and a changed host setting applies to the next activation. Verify
+  host callback tests for both profiles and repeated runs.
+- [ ] **LC-73H-03:** ARG source uppercasing, static/dynamic template positions,
+  literal and variable patterns, and adjacent PARSE/BIF consumers use the
+  selected character units. BYTE fields preserve exact octets even when a
+  position cuts through UTF8 bytes; UTF8 fields use codepoints. Verify
+  profile-paired optimized/noopt, linked, binary and shared `rxfnsc` checks.
+- [ ] **LC-73H-04:** the single VM query operation has assembler, disassembler,
+  interpreter, opcode-effect/signal and feature coverage; version-1 and
+  unflagged version-2 PARSE descriptors retain their behavior, with unknown
+  flags rejected. The C API, CLI and Level C architecture/reference docs
+  agree. Verify focused contract tests, normal Debug build and the relevant
+  Level C suite on the exact code inputs.
+
+1. **LC-STEP-73H.1 (LC-73H-01/02/04; approval required):** add the per-context
+   BYTE/UTF8 setting and read-only VM query, expose checked `rxvml` and CLI
+   selectors, and validate the operation through both VM variants.
+2. **LC-STEP-73H.2 (LC-73H-02/03/04; depends on 73H.1):** set the generated
+   main configuration once before source clauses, preserving the existing
+   local reference handoff. Mark all Level C parse plans profile-sensitive and
+   make one VM template executor select byte or codepoint units without
+   changing Level B plans or duplicating ARG/PARSE/BIF paths.
+3. **LC-STEP-73H.3 (LC-73H-01/02/03/04; depends on 73H.2):** compare the
+   selected-profile cases with the Classic reference where its configuration
+   is comparable, run the focused and relevant normal checks, update docs,
+   and commit separate reviewable implementation increments.
+
 Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
 one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
 call with three positions including an omitted middle position gives
