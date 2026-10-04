@@ -39,7 +39,11 @@
 #define LEVELC_PARENT_POOL_SYMBOL "__rxcp_levelc_parent_pool"
 #define LEVELC_PARENT_POOL_REF_SYMBOL "__rxcp_levelc_parent_pool_ref"
 #define LEVELC_PROC_PREFIX "__rxcp_levelc_proc_"
-#define LEVELC_PROC_ARG_PREFIX "__rxcp_levelc_arg_"
+#define LEVELC_ACTIVATION_SYMBOL "__rxcp_levelc_activation"
+#define LEVELC_CALL_ACTIVATION_PREFIX "__rxcp_levelc_call_activation_"
+#define LEVELC_MAIN_ARG_INDEX_PREFIX "__rxcp_levelc_main_arg_index_"
+#define LEVELC_ACTIVATION_CLASS "RexxActivationArguments"
+#define LEVELC_ACTIVATION_CLASS_TYPE ".RexxActivationArguments"
 #define LEVELC_BIF_ARGS_PREFIX "__rxcp_levelc_bif_args_"
 #define LEVELC_BIF_EXISTS_PREFIX "__rxcp_levelc_bif_exists_"
 #define LEVELC_BIF_CONTEXT_PREFIX "__rxcp_levelc_bif_context_"
@@ -58,11 +62,9 @@
 typedef struct {
     ASTNode *label;
     ASTNode *procedure;
-    ASTNode *arg_statement;
     ASTNode *body_first;
     ASTNode *body_end;
     char *name;
-    size_t arg_count;
     int returns_value;
 } LevelCProcedureSlice;
 
@@ -295,11 +297,9 @@ static void levelc_lower_plan_free(LevelCLowerPlan *plan) {
 static int levelc_lower_plan_add_procedure(LevelCLowerPlan *plan,
                                            ASTNode *label,
                                            ASTNode *procedure,
-                                           ASTNode *arg_statement,
                                            ASTNode *body_first,
                                            ASTNode *body_end,
                                            char *name,
-                                           size_t arg_count,
                                            int returns_value) {
     LevelCProcedureSlice *procedures;
 
@@ -312,11 +312,9 @@ static int levelc_lower_plan_add_procedure(LevelCLowerPlan *plan,
     plan->procedures = procedures;
     plan->procedures[plan->procedure_count].label = label;
     plan->procedures[plan->procedure_count].procedure = procedure;
-    plan->procedures[plan->procedure_count].arg_statement = arg_statement;
     plan->procedures[plan->procedure_count].body_first = body_first;
     plan->procedures[plan->procedure_count].body_end = body_end;
     plan->procedures[plan->procedure_count].name = name;
-    plan->procedures[plan->procedure_count].arg_count = arg_count;
     plan->procedures[plan->procedure_count].returns_value = returns_value;
     plan->procedure_count++;
     return 1;
@@ -489,19 +487,11 @@ static int levelc_local_function_supported(ASTNode *expr,
         if (reason_out) *reason_out = "local function has no return value";
         return 0;
     }
-    if (levelc_function_argument_count(expr) != procedure->arg_count) {
-        if (reason_out) *reason_out = "local function argument count mismatch";
-        return 0;
-    }
-
     arg = expr->child;
     if (arg && arg->node_type == NOVAL && !arg->sibling) arg = NULL;
     while (arg) {
-        if (!levelc_argument_exists(arg)) {
-            if (reason_out) *reason_out = "omitted local function argument is outside slice";
-            return 0;
-        }
-        if (!levelc_expr_supported(arg, plan, reason_out)) return 0;
+        if (levelc_argument_exists(arg) &&
+            !levelc_expr_supported(arg, plan, reason_out)) return 0;
         arg = arg->sibling;
     }
 
@@ -844,15 +834,11 @@ static ASTNode *levelc_arg_template_target(ASTNode *template_node) {
 }
 
 static int levelc_arg_statement_supported(ASTNode *stmt,
-                                          size_t *arg_count_out,
                                           const char **reason_out) {
     ASTNode *templates;
     ASTNode *template_node;
     ASTNode *target;
     char *name;
-    size_t arg_count;
-
-    if (arg_count_out) *arg_count_out = 0;
     if (!stmt || stmt->node_type != LEVELC_ARG) {
         if (reason_out) *reason_out = "missing ARG statement";
         return 0;
@@ -865,7 +851,6 @@ static int levelc_arg_statement_supported(ASTNode *stmt,
         return 0;
     }
 
-    arg_count = 0;
     template_node = templates->child;
     while (template_node) {
         target = levelc_arg_template_target(template_node);
@@ -884,23 +869,32 @@ static int levelc_arg_statement_supported(ASTNode *stmt,
             return 0;
         }
         free(name);
-        arg_count++;
         template_node = template_node->sibling;
     }
-
-    if (arg_count_out) *arg_count_out = arg_count;
     return 1;
 }
 
 static int levelc_call_tail_value_supported(ASTNode *node,
                                             const char **reason_out) {
     if (!node) return 0;
-    if (node->node_type == INTEGER || node->node_type == DECIMAL ||
+    if (node->node_type == STRING || node->node_type == INTEGER ||
+        node->node_type == DECIMAL ||
         node->node_type == CONST_SYMBOL) return 1;
     if (node->node_type == LITERAL) {
         return levelc_variable_value_supported(node, reason_out);
     }
     return 0;
+}
+
+static int levelc_call_tail_is_comma(ASTNode *node) {
+    char *text;
+    int result;
+
+    if (!node || node->node_type != TOKEN) return 0;
+    text = levelc_node_text_copy(node);
+    result = text && strcmp(text, ",") == 0;
+    free(text);
+    return result;
 }
 
 static int levelc_call_tail_supported(ASTNode *args,
@@ -918,33 +912,23 @@ static int levelc_call_tail_supported(ASTNode *args,
     }
 
     expect_value = 1;
-    arg_count = 0;
+    arg_count = args->child ? 1 : 0;
     node = args->child;
     while (node) {
-        if (node->node_type == TOKEN && node->node_string &&
-            strcmp(node->node_string, ",") == 0) {
-            if (expect_value) {
-                if (reason_out) *reason_out = "omitted CALL arguments are outside slice";
-                return 0;
-            }
+        if (levelc_call_tail_is_comma(node)) {
             expect_value = 1;
+            arg_count++;
         } else if (levelc_call_tail_value_supported(node, reason_out)) {
             if (!expect_value) {
                 if (reason_out) *reason_out = "CALL arguments must be comma separated";
                 return 0;
             }
             expect_value = 0;
-            arg_count++;
         } else {
             if (reason_out) *reason_out = "unsupported CALL argument expression";
             return 0;
         }
         node = node->sibling;
-    }
-
-    if (expect_value && arg_count > 0) {
-        if (reason_out) *reason_out = "trailing CALL comma is outside slice";
-        return 0;
     }
 
     if (arg_count_out) *arg_count_out = arg_count;
@@ -969,11 +953,7 @@ static int levelc_call_statement_supported(ASTNode *stmt,
 
     args = stmt->child ? stmt->child->sibling : NULL;
     if (!levelc_call_tail_supported(args, &arg_count, reason_out)) return 0;
-    if (arg_count != procedure->arg_count) {
-        if (reason_out) *reason_out = "CALL argument count mismatch";
-        return 0;
-    }
-
+    (void)arg_count;
     return 1;
 }
 
@@ -1008,7 +988,6 @@ static int levelc_select_statement_supported(ASTNode *stmt,
             if (!condition || !body || body->sibling) goto invalid;
             if (!levelc_expr_supported(condition, plan, reason_out)) return 0;
             if (in_procedure) {
-                if (body->node_type == LEVELC_ARG) goto invalid;
                 if (!levelc_proc_statement_supported(body, plan, reason_out)) return 0;
             } else if (!levelc_main_statement_supported(body, plan, reason_out)) return 0;
             saw_when = 1;
@@ -1020,7 +999,6 @@ static int levelc_select_statement_supported(ASTNode *stmt,
             part = body_list->child;
             while (part) {
                 if (in_procedure) {
-                    if (part->node_type == LEVELC_ARG) goto invalid;
                     if (!levelc_proc_statement_supported(part, plan, reason_out)) return 0;
                 } else if (!levelc_main_statement_supported(part, plan, reason_out)) return 0;
                 part = part->sibling;
@@ -1276,10 +1254,6 @@ static int levelc_do_supported(ASTNode *stmt,
     body_statement = header->body->child;
     while (body_statement) {
         if (in_procedure) {
-            if (body_statement->node_type == LEVELC_ARG) {
-                if (reason_out) *reason_out = "ARG must be first in procedure slice";
-                return 0;
-            }
             if (!levelc_proc_statement_supported(body_statement, plan, reason_out)) return 0;
         } else if (!levelc_main_statement_supported(body_statement, plan, reason_out)) {
             return 0;
@@ -1302,11 +1276,6 @@ static int levelc_if_statement_supported(ASTNode *stmt,
         return 0;
     }
     if (!levelc_expr_supported(condition, plan, reason_out)) return 0;
-    if (in_procedure && (then_statement->node_type == LEVELC_ARG ||
-                         (else_statement && else_statement->node_type == LEVELC_ARG))) {
-        if (reason_out) *reason_out = "ARG must be first in procedure slice";
-        return 0;
-    }
     if (in_procedure) {
         if (!levelc_proc_statement_supported(then_statement, plan, reason_out)) return 0;
         return !else_statement || levelc_proc_statement_supported(else_statement, plan, reason_out);
@@ -1415,6 +1384,7 @@ static int levelc_main_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS)
         return !stmt->child || levelc_expr_supported(stmt->child, plan, reason_out);
+    if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, reason_out);
     if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_transfer_supported(stmt, plan, reason_out);
@@ -1448,7 +1418,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS)
         return !stmt->child || levelc_expr_supported(stmt->child, plan, reason_out);
-    if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, NULL, reason_out);
+    if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, reason_out);
     if (stmt->node_type == NOP) return stmt->child == NULL;
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_transfer_supported(stmt, plan, reason_out);
@@ -1489,9 +1459,7 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
     ASTNode *body_end;
     ASTNode *body_stmt;
     ASTNode *last_body_stmt;
-    ASTNode *arg_statement;
     char *name;
-    size_t arg_count;
     size_t i;
     int accepted_statement;
     int returns_value;
@@ -1527,22 +1495,10 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
 
         if (!levelc_procedure_tail_supported(procedure, reason_out)) return 0;
 
-        arg_statement = NULL;
-        arg_count = 0;
         returns_value = 0;
         last_body_stmt = NULL;
         body_stmt = body_first;
         while (body_stmt && body_stmt != body_end) {
-            if (body_stmt->node_type == LEVELC_ARG) {
-                if (body_stmt != body_first || arg_statement) {
-                    if (reason_out) *reason_out = "ARG must be first in procedure slice";
-                    return 0;
-                }
-                if (!levelc_arg_statement_supported(body_stmt, &arg_count, reason_out)) {
-                    return 0;
-                }
-                arg_statement = body_stmt;
-            }
             if (body_stmt->node_type == RETURN && body_stmt->child) returns_value = 1;
             last_body_stmt = body_stmt;
             body_stmt = body_stmt->sibling;
@@ -1565,11 +1521,9 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
         if (!levelc_lower_plan_add_procedure(plan,
                                              label,
                                              procedure,
-                                             arg_statement,
                                              body_first,
                                              body_end,
                                              name,
-                                             arg_count,
                                              returns_value)) {
             free(name);
             if (reason_out) *reason_out = "failed to record local routine plan";
@@ -1612,10 +1566,6 @@ static ASTNode *levelc_lower_expr(Context *context,
                                   ASTNode *expr,
                                   LevelCLowerPlan *plan,
                                   ASTNode *prelude);
-
-static char *levelc_generated_arg_name(size_t index) {
-    return rxcp_remap_create_generated_indexed_name(LEVELC_PROC_ARG_PREFIX, index);
-}
 
 static ASTNode *levelc_rexxvalue_from_text(Context *context,
                                            ASTNode *source_node,
@@ -1709,6 +1659,54 @@ static ASTNode *levelc_copy_rexxvalue(Context *context,
                                           LEVELC_REXX_VALUE_CLASS,
                                           factory_args,
                                           1);
+}
+
+static char *levelc_begin_call_activation(Context *context,
+                                          ASTNode *call_node,
+                                          ASTNode *prelude) {
+    char *name;
+    ASTNode *factory;
+    ASTNode *assignment;
+
+    if (!context || !call_node || !prelude) return NULL;
+    name = rxcp_remap_create_generated_node_name(
+        LEVELC_CALL_ACTIVATION_PREFIX, call_node);
+    factory = name ? rxcp_remap_create_factory_call(
+        context, call_node, LEVELC_ACTIVATION_CLASS, NULL, 0) : NULL;
+    assignment = factory ? rxcp_remap_create_named_assignment(
+        context, call_node, name, factory) : NULL;
+    if (!assignment) {
+        free(name);
+        return NULL;
+    }
+    add_ast(prelude, assignment);
+    return name;
+}
+
+static int levelc_append_call_argument(Context *context,
+                                       ASTNode *source_node,
+                                       ASTNode *prelude,
+                                       const char *frame_name,
+                                       ASTNode *value,
+                                       int exists) {
+    ASTNode *receiver;
+    ASTNode *args[2];
+    ASTNode *statement;
+
+    if (!context || !source_node || !prelude || !frame_name) return 0;
+    receiver = rxcp_remap_create_named_ref(context, source_node,
+                                           VAR_SYMBOL, frame_name);
+    args[0] = exists ? levelc_copy_rexxvalue(context, source_node, value)
+                     : levelc_blank_rexxvalue(context, source_node);
+    args[1] = rxcp_remap_create_integer_constant(context, source_node,
+                                                   exists, TP_INTEGER);
+    statement = receiver && args[0] && args[1]
+        ? rxcp_remap_create_member_call_statement(context, source_node,
+                                                  receiver, "append", args, 2)
+        : NULL;
+    if (!statement) return 0;
+    add_ast(prelude, statement);
+    return 1;
 }
 
 static ASTNode *levelc_lower_binary_method(Context *context,
@@ -2094,18 +2092,17 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
     char *target_name;
     char *function_name;
     LevelCProcedureSlice *procedure;
-    ASTNode **args;
+    ASTNode *args[3];
     ASTNode *pool_symbol;
     ASTNode *arg;
     ASTNode *call;
-    size_t index;
+    char *frame_name;
 
     if (!context || !expr || !plan) return NULL;
 
     target_name = levelc_upper_name(expr);
     procedure = target_name ? levelc_find_procedure(plan, target_name) : NULL;
-    if (!procedure || !procedure->returns_value ||
-        levelc_function_argument_count(expr) != procedure->arg_count) {
+    if (!procedure || !procedure->returns_value) {
         if (target_name) free(target_name);
         return NULL;
     }
@@ -2114,8 +2111,8 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
     free(target_name);
     if (!function_name) return NULL;
 
-    args = calloc(procedure->arg_count + 2, sizeof(ASTNode *));
-    if (!args) {
+    frame_name = levelc_begin_call_activation(context, expr, prelude);
+    if (!frame_name) {
         free(function_name);
         return NULL;
     }
@@ -2125,34 +2122,41 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
     args[1] = levelc_config_ref(context, expr, VAR_SYMBOL);
     if (!pool_symbol || !args[0] || !args[1]) {
         free(function_name);
-        free(args);
+        free(frame_name);
         return NULL;
     }
 
     arg = expr->child;
     if (arg && arg->node_type == NOVAL && !arg->sibling) arg = NULL;
-    index = 1;
     while (arg) {
-        ASTNode *actual_value;
-
-        actual_value = levelc_lower_expr(context, arg, plan, prelude);
-        args[index + 1] = levelc_copy_rexxvalue(context, arg, actual_value);
-        if (!actual_value || !args[index + 1]) {
+        int exists = levelc_argument_exists(arg);
+        ASTNode *actual_value = exists
+            ? levelc_lower_expr(context, arg, plan, prelude) : NULL;
+        if ((exists && !actual_value) ||
+            !levelc_append_call_argument(context, arg, prelude, frame_name,
+                                         actual_value, exists)) {
             free(function_name);
-            free(args);
+            free(frame_name);
             return NULL;
         }
         arg = arg->sibling;
-        index++;
+    }
+
+    args[2] = rxcp_remap_create_named_ref(context, expr,
+                                          VAR_SYMBOL, frame_name);
+    if (!args[2]) {
+        free(function_name);
+        free(frame_name);
+        return NULL;
     }
 
     call = rxcp_remap_create_function_call(context,
                                            expr,
                                            function_name,
                                            args,
-                                           procedure->arg_count + 2);
+                                           3);
     free(function_name);
-    free(args);
+    free(frame_name);
     return call;
 }
 
@@ -2386,7 +2390,13 @@ static ASTNode *levelc_lower_call_tail_value(Context *context,
 
     if (!node) return NULL;
     if (node->node_type == LITERAL) return levelc_pool_value(context, node);
-    if (node->node_type == INTEGER || node->node_type == DECIMAL ||
+    if (node->node_type == STRING && node->token) {
+        ASTNode *decoded = ast_fstr(context, node->token);
+        return decoded && decoded->node_type == STRING
+            ? levelc_rexxvalue_from_literal(context, decoded) : NULL;
+    }
+    if (node->node_type == INTEGER ||
+        node->node_type == DECIMAL ||
         node->node_type == CONST_SYMBOL)
         return levelc_rexxvalue_from_literal(context, node);
     return NULL;
@@ -2398,14 +2408,15 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
                                                       ASTNode *prelude) {
     char *target_name;
     char *function_name;
+    char *frame_name;
     LevelCProcedureSlice *procedure;
-    ASTNode **args;
+    ASTNode *args[3];
     ASTNode *tail;
     ASTNode *tail_node;
     ASTNode *pool_symbol;
     ASTNode *call_expr;
     ASTNode *statement;
-    size_t arg_index;
+    int expects_value;
 
     target_name = levelc_call_target_name(call_node);
     procedure = target_name ? levelc_find_procedure(plan, target_name) : NULL;
@@ -2418,8 +2429,8 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
     free(target_name);
     if (!function_name) return NULL;
 
-    args = calloc(procedure->arg_count + 2, sizeof(ASTNode *));
-    if (!args) {
+    frame_name = levelc_begin_call_activation(context, call_node, prelude);
+    if (!frame_name) {
         free(function_name);
         return NULL;
     }
@@ -2429,23 +2440,25 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
     args[1] = levelc_config_ref(context, call_node, VAR_SYMBOL);
     if (!pool_symbol || !args[0] || !args[1]) {
         free(function_name);
-        free(args);
+        free(frame_name);
         return NULL;
     }
 
     tail = call_node->child ? call_node->child->sibling : NULL;
     tail_node = tail ? tail->child : NULL;
-    arg_index = 1;
+    expects_value = 1;
     while (tail_node) {
-        if (tail_node->node_type == TOKEN && tail_node->node_string &&
-            strcmp(tail_node->node_string, ",") == 0) {
+        if (levelc_call_tail_is_comma(tail_node)) {
+            if (expects_value &&
+                !levelc_append_call_argument(context, tail_node, prelude,
+                                             frame_name, NULL, 0)) {
+                free(function_name);
+                free(frame_name);
+                return NULL;
+            }
+            expects_value = 1;
             tail_node = tail_node->sibling;
             continue;
-        }
-        if (arg_index > procedure->arg_count) {
-            free(function_name);
-            free(args);
-            return NULL;
         }
         {
             ASTNode *actual_value;
@@ -2454,26 +2467,40 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
                                                         tail_node,
                                                         plan,
                                                         prelude);
-            args[arg_index + 1] = levelc_copy_rexxvalue(context,
-                                                        tail_node,
-                                                        actual_value);
-            if (!actual_value || !args[arg_index + 1]) {
+            if (!actual_value ||
+                !levelc_append_call_argument(context, tail_node, prelude,
+                                             frame_name, actual_value, 1)) {
                 free(function_name);
-                free(args);
+                free(frame_name);
                 return NULL;
             }
         }
-        arg_index++;
+        expects_value = 0;
         tail_node = tail_node->sibling;
+    }
+    if (tail && tail->child && expects_value &&
+        !levelc_append_call_argument(context, tail, prelude,
+                                     frame_name, NULL, 0)) {
+        free(function_name);
+        free(frame_name);
+        return NULL;
+    }
+
+    args[2] = rxcp_remap_create_named_ref(context, call_node,
+                                          VAR_SYMBOL, frame_name);
+    if (!args[2]) {
+        free(function_name);
+        free(frame_name);
+        return NULL;
     }
 
     call_expr = rxcp_remap_create_function_call(context,
                                                 call_node,
                                                 function_name,
                                                 args,
-                                                procedure->arg_count + 2);
+                                                3);
     free(function_name);
-    free(args);
+    free(frame_name);
     if (!call_expr) return NULL;
 
     statement = rxcp_remap_create_call_statement(context, call_node, call_expr);
@@ -2547,7 +2574,6 @@ static ASTNode *levelc_procedure_args(Context *context,
     ASTNode *target;
     ASTNode *type_ref;
     ASTNode *class_node;
-    size_t index;
 
     if (!context || !procedure) return NULL;
 
@@ -2569,23 +2595,16 @@ static ASTNode *levelc_procedure_args(Context *context,
     if (!arg) return NULL;
     add_ast(args, arg);
 
-    for (index = 1; index <= procedure->arg_count; index++) {
-        char *arg_name;
-
-        arg_name = levelc_generated_arg_name(index);
-        target = arg_name ? rxcp_remap_create_named_ref(context,
-                                                        procedure->procedure,
-                                                        VAR_TARGET,
-                                                        arg_name) : NULL;
-        class_node = rxcp_remap_create_class_type(context,
-                                                  procedure->procedure,
-                                                  LEVELC_REXX_VALUE_CLASS_TYPE);
-        if (arg_name) free(arg_name);
-        arg = rxcp_remap_create_arg(context, procedure->procedure, target, class_node);
-        if (!arg) return NULL;
-
-        add_ast(args, arg);
-    }
+    target = rxcp_remap_create_named_ref(context, procedure->procedure,
+                                         VAR_TARGET, LEVELC_ACTIVATION_SYMBOL);
+    class_node = rxcp_remap_create_class_type(context,
+                                               procedure->procedure,
+                                               LEVELC_ACTIVATION_CLASS_TYPE);
+    arg = target && class_node
+        ? rxcp_remap_create_arg(context, procedure->procedure, target, class_node)
+        : NULL;
+    if (!arg) return NULL;
+    add_ast(args, arg);
 
     return args;
 }
@@ -2630,6 +2649,7 @@ static ASTNode *levelc_build_options(Context *context,
     ASTNode *numeric_classic;
     ASTNode *import_value;
     ASTNode *import_pool;
+    ASTNode *import_activation;
     ASTNode *import_do;
     ASTNode *import_config;
     ASTNode *import_bifs;
@@ -2646,6 +2666,8 @@ static ASTNode *levelc_build_options(Context *context,
     numeric_classic = rxcp_remap_create_literal(context, anchor_node ? anchor_node : options, "numeric_classic");
     import_value = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxvalue");
     import_pool = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxpool");
+    import_activation = rxcp_remap_create_generated_import(context,
+        anchor_node ? anchor_node : options, "rexxactivation");
     for (i = 0; plan && i < plan->do_header_count; i++) {
         if (plan->do_headers[i].kind == LEVELC_DO_COUNTED ||
             plan->do_headers[i].kind == LEVELC_DO_CONTROLLED) {
@@ -2666,7 +2688,7 @@ static ASTNode *levelc_build_options(Context *context,
                                              "rexxclassicbiftranslate")
         : NULL;
     if (!levelb || !comments_dash || !numeric_classic || !import_value ||
-        !import_pool || (needs_do_state && !import_do) ||
+        !import_pool || !import_activation || (needs_do_state && !import_do) ||
         !import_config || !import_bifs ||
         (needs_translate && !import_translate)) return NULL;
 
@@ -2675,6 +2697,7 @@ static ASTNode *levelc_build_options(Context *context,
     add_ast(options, numeric_classic);
     add_ast(options, import_value);
     add_ast(options, import_pool);
+    add_ast(options, import_activation);
     if (import_do) add_ast(options, import_do);
     add_ast(options, import_config);
     add_ast(options, import_bifs);
@@ -2703,7 +2726,7 @@ static ASTNode *levelc_build_options(Context *context,
 
 static int levelc_append_arg_bindings(Context *context,
                                       ASTNode *instructions,
-                                      LevelCProcedureSlice *procedure,
+                                      ASTNode *arg_statement,
                                       const char **reason_out) {
     ASTNode *templates;
     ASTNode *template_node;
@@ -2716,37 +2739,41 @@ static int levelc_append_arg_bindings(Context *context,
     ASTNode *arg_value;
     size_t index;
 
-    if (!procedure || !procedure->arg_statement) return 1;
+    if (!arg_statement) return 1;
 
-    templates = procedure->arg_statement->child;
+    templates = arg_statement->child;
     template_node = templates ? templates->child : NULL;
     index = 1;
     while (template_node) {
-        char *arg_name;
+        ASTNode *activation_ref;
+        ASTNode *index_arg[1];
 
         target = levelc_arg_template_target(template_node);
-        arg_name = levelc_generated_arg_name(index);
         receiver = levelc_pool_ref(context, target ? target : template_node, VAR_SYMBOL);
         member_args[0] = target ? levelc_name_string(context, target) : NULL;
         function = target ? ast_f(context, FUNCTION, target->token) : NULL;
         function_arg = target ? ast_f(context, VAR_SYMBOL, target->token) : NULL;
         if (function && function_arg) add_ast(function, function_arg);
-        arg_value = arg_name && target
-            ? rxcp_remap_create_named_ref(context, target, VAR_SYMBOL, arg_name)
+        activation_ref = target ? rxcp_remap_create_named_ref(
+            context, target, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL) : NULL;
+        index_arg[0] = target ? rxcp_remap_create_integer_constant(
+            context, target, (int)index, TP_INTEGER) : NULL;
+        arg_value = activation_ref && index_arg[0]
+            ? rxcp_remap_create_member_call(context, target, activation_ref,
+                                            "argument", index_arg, 1)
             : NULL;
         member_args[1] = function && function_arg && arg_value
             ? levelc_lower_bif_dispatch_call(context, function, "TRANSLATE", NULL,
                                              instructions,
                                              LEVELC_BIF_TRANSLATE_HELPER, arg_value)
             : NULL;
-        if (arg_name) free(arg_name);
         if (!receiver || !member_args[0] || !member_args[1]) {
             if (reason_out) *reason_out = "failed to create ARG binding";
             return 0;
         }
 
         statement = rxcp_remap_create_member_call_statement(context,
-                                                            procedure->arg_statement,
+                                                            arg_statement,
                                                             receiver,
                                                             "setValue",
                                                             member_args,
@@ -3367,6 +3394,9 @@ static int levelc_lower_main_statement(Context *context,
     if (stmt->node_type == LEVELC_DROP) {
         return levelc_lower_drop(context, instructions, stmt, reason_out);
     }
+    if (stmt->node_type == LEVELC_ARG) {
+        return levelc_append_arg_bindings(context, instructions, stmt, reason_out);
+    }
     if (stmt->node_type == PARSE)
         return levelc_lower_direct_parse(context, instructions, stmt, plan, reason_out);
     if (stmt->node_type == IF) {
@@ -3426,7 +3456,7 @@ static int levelc_lower_proc_statement(Context *context,
         return levelc_lower_drop(context, instructions, stmt, reason_out);
     }
     if (stmt->node_type == LEVELC_ARG) {
-        return levelc_append_arg_bindings(context, instructions, procedure, reason_out);
+        return levelc_append_arg_bindings(context, instructions, stmt, reason_out);
     }
     if (stmt->node_type == PARSE)
         return levelc_lower_direct_parse(context, instructions, stmt, plan, reason_out);
@@ -3865,6 +3895,89 @@ static int levelc_tree_contains_parse_upper(ASTNode *node) {
     return 0;
 }
 
+static int levelc_tree_contains_arg(ASTNode *node) {
+    while (node) {
+        if (node->node_type == LEVELC_ARG ||
+            levelc_tree_contains_arg(node->child)) return 1;
+        node = node->sibling;
+    }
+    return 0;
+}
+
+static int levelc_append_main_activation(Context *context,
+                                         ASTNode *instructions,
+                                         ASTNode *anchor) {
+    char *index_name;
+    ASTNode *factory;
+    ASTNode *assignment;
+    ASTNode *body;
+    ASTNode *receiver;
+    ASTNode *source;
+    ASTNode *count;
+    ASTNode *args[1];
+    ASTNode *append;
+    ASTNode *index_initial;
+    ASTNode *next_index;
+    ASTNode *index_increment;
+    ASTNode *loop;
+
+    index_name = rxcp_remap_create_generated_node_name(
+        LEVELC_MAIN_ARG_INDEX_PREFIX, anchor);
+    factory = rxcp_remap_create_factory_call(context, anchor,
+                                             LEVELC_ACTIVATION_CLASS, NULL, 0);
+    assignment = factory ? rxcp_remap_create_named_assignment(
+        context, anchor, LEVELC_ACTIVATION_SYMBOL, factory) : NULL;
+    body = rxcp_remap_create_instruction_builder(context, anchor);
+    receiver = rxcp_remap_create_named_ref(context, anchor, VAR_SYMBOL,
+                                            LEVELC_ACTIVATION_SYMBOL);
+    source = ast_ftt(context, OP_ARG_VALUE, strdup("arg"));
+    count = ast_ftt(context, OP_ARGS, strdup("arg"));
+    if (source) {
+        source->free_node_string = 1;
+        rxcp_remap_anchor_synthetic(source, anchor);
+        if (index_name) add_ast(source, rxcp_remap_create_named_ref(
+            context, anchor, VAR_SYMBOL, index_name));
+    }
+    if (count) {
+        count->free_node_string = 1;
+        rxcp_remap_anchor_synthetic(count, anchor);
+    }
+    args[0] = source;
+    append = receiver && source
+        ? rxcp_remap_create_member_call_statement(context, anchor, receiver,
+                                                   "appendText", args, 1)
+        : NULL;
+    index_initial = index_name ? rxcp_remap_create_named_assignment(
+        context, anchor, index_name,
+        rxcp_remap_create_integer_constant(context, anchor, 1, TP_INTEGER))
+        : NULL;
+    next_index = ast_f(context, OP_ADD, anchor->token);
+    if (next_index && index_name) {
+        rxcp_remap_anchor_synthetic(next_index, anchor);
+        add_ast(next_index, rxcp_remap_create_named_ref(
+            context, anchor, VAR_SYMBOL, index_name));
+        add_ast(next_index, rxcp_remap_create_integer_constant(
+            context, anchor, 1, TP_INTEGER));
+    }
+    index_increment = index_name && next_index
+        ? rxcp_remap_create_named_assignment(context, anchor,
+                                              index_name, next_index)
+        : NULL;
+    if (body && append && index_increment) {
+        add_ast(body, append);
+        add_ast(body, index_increment);
+    }
+    loop = index_initial && body && append && index_increment && count
+        ? rxcp_remap_create_do_with_count(context, anchor, body, count)
+        : NULL;
+    free(index_name);
+    if (!assignment || !index_initial || !loop) return 0;
+    add_ast(instructions, assignment);
+    add_ast(instructions, index_initial);
+    add_ast(instructions, loop);
+    return 1;
+}
+
 static int levelc_rewrite_program(Context *context,
                                   ASTNode *program_file,
                                   ASTNode *old_instructions,
@@ -3881,11 +3994,8 @@ static int levelc_rewrite_program(Context *context,
     int needs_translate = 0;
 
     anchor = old_instructions && old_instructions->child ? old_instructions->child : program_file;
-    needs_translate = levelc_tree_contains_parse_upper(old_instructions);
-    for (i = 0; plan && i < plan->procedure_count; i++) {
-        if (plan->procedures[i].arg_statement && plan->procedures[i].arg_count > 0)
-            needs_translate = 1;
-    }
+    needs_translate = levelc_tree_contains_parse_upper(old_instructions) ||
+                      levelc_tree_contains_arg(old_instructions);
     options = levelc_build_options(context, anchor, needs_translate, plan);
     instructions = rxcp_remap_create_instruction_builder(context, anchor);
     if (!options || !instructions) {
@@ -3903,6 +4013,24 @@ static int levelc_rewrite_program(Context *context,
     add_ast(instructions, pool_setup);
     add_ast(instructions, config_setup);
     add_ast(instructions, config_ref_setup);
+    if (plan && plan->main_first) {
+        /* Only the main prefix may read the VM's hidden command-line argv. */
+        ASTNode *main_cursor = plan->main_first;
+        int main_has_arg = 0;
+        while (main_cursor && main_cursor != plan->main_end) {
+            if (main_cursor->node_type == LEVELC_ARG ||
+                levelc_tree_contains_arg(main_cursor->child)) {
+                main_has_arg = 1;
+                break;
+            }
+            main_cursor = main_cursor->sibling;
+        }
+        if (main_has_arg &&
+            !levelc_append_main_activation(context, instructions, anchor)) {
+            if (reason_out) *reason_out = "failed to capture main ARG activation";
+            return 0;
+        }
+    }
 
     stmt = plan ? plan->main_first : old_instructions->child;
     while (stmt && (!plan || stmt != plan->main_end)) {

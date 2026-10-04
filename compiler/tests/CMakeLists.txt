@@ -5728,6 +5728,28 @@ add_levelc_runtime_slice_test(levelc_slice4_call_args_expose
         rexx_src/levelc_slice4_call_args_expose.rexx
         "3\n")
 
+add_levelc_runtime_slice_test(levelc_arg_frame_calls
+        rexx_src/levelc_arg_frame_calls.rexx
+        "A /  / C\nA\n / B / \n\n / B / \n\n:B\nA:\n")
+add_levelc_runtime_slice_test(levelc_arg_frame_calls_noopt
+        rexx_src/levelc_arg_frame_calls.rexx
+        "A /  / C\nA\n / B / \n\n / B / \n\n:B\nA:\n" -n)
+foreach(variant IN ITEMS opt noopt)
+    set(arg_main_name "levelc_arg_frame_main_${variant}")
+    add_test(NAME ${arg_main_name}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_frame_main.rexx
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            -DNAME=${arg_main_name}
+            -DNOOPT=$<STREQUAL:${variant},noopt>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_frame_main.cmake)
+    set_tests_properties(${arg_main_name} PROPERTIES LABELS "compiler;levelc")
+endforeach()
+
 add_levelc_runtime_slice_test(levelc_slice5_stem_expose_target_shape
         rexx_src/levelc_slice5_stem_expose_target_shape.crexx
         "after\n")
@@ -6341,8 +6363,10 @@ add_levelc_lowered_tree_shape_test(levelc_slice4_bif_substr_tree_shape
 add_levelc_lowered_tree_shape_test(levelc_slice4_procedure_args_return_tree_shape
         rexx_src/levelc_slice4_procedure_args_return.rexx
         "__rxcp_levelc_proc_DOUBLE"
-        "__rxcp_levelc_arg_1"
-        "__rxcp_levelc_arg_2"
+        "__rxcp_levelc_activation"
+        "RexxActivationArguments"
+        "append"
+        "argument"
         ".RexxValue"
         "setValue"
         "RETURN"

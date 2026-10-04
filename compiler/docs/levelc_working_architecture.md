@@ -151,6 +151,13 @@ an omitted slot reads as empty while remaining absent to existence queries.
 Main and routine call lowering will populate separate frames, and ARG/PARSE
 ARG will read them without consuming their values. This keeps argument
 presence independent of template execution and visible variable-pool writes.
+The generated implicit main copies the VM's hidden `arg[]`/`arg[index]` array
+into its frame before source statements. Direct CALL and local function sites
+evaluate each supplied actual once, append omitted positions with a false
+presence flag, and pass one frame to the generated routine. The old routine
+signature derived from its first ARG template has been removed. Current
+simple ARG lowering reads that frame at each execution; general templates
+are still being consolidated with PARSE.
 
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including

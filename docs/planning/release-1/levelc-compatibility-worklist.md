@@ -2197,6 +2197,16 @@ ordered values and per-slot presence for one activation. The focused
 missing and repeat-read behavior. Compiler-generated main/routine population,
 ARG/PARSE consumption, and LC-AC-71 remain open.
 
+LC-STEP-73C call bridge checkpoint: generated main captures the VM argument
+array once, and direct CALL/local function sites build a fresh ordered frame
+from evaluated actuals. Simple ARG instructions can read the frame repeatedly
+in main and routines. The `levelc_arg_frame_main_*` and
+`levelc_arg_frame_calls*` opt/noopt tests prove main positions, omitted CALL
+slots, explicit empty values, leading/trailing omissions and repeated reads;
+the prior procedure runtime and updated canonical tree-shape tests pass.
+General ARG templates, PARSE path reuse, ARG BIF and broader invocation/error
+qualification remain open. The fixed ARG-derived procedure signature is gone.
+
 Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
 one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
 call with three positions including an omitted middle position gives
