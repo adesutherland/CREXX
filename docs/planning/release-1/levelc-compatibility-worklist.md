@@ -681,6 +681,21 @@ are verified against all affected consumers.
   comment/numeric option cases, dynamic expression side effects, invalid
   forms and recovery, optimized/no-opt, relevant normal Level C and Level B
   regressions, both character profiles where relevant, and linked execution.
+- [ ] **LC-AC-67 — complete IF instruction:** `IF expression THEN instruction
+  [ELSE instruction]` retains the Classic clause and nearest-eligible-ELSE
+  rules in main, nested DO/SELECT, and local routines. It evaluates the
+  condition once before either arm, accepts exactly logical `0` or `1` with
+  the correct Classic error and source location otherwise, executes only the
+  selected arm, and preserves source ownership through canonical lowering.
+  Every legal instruction form can occupy an arm without an IF-specific
+  restriction; an arm whose instruction has its own open `LC-I-*` row remains
+  explicitly open under that row rather than being claimed as delivered by
+  IF. Missing condition, THEN or arm, misplaced delimiter/label, stray ELSE,
+  and nested recovery must follow Classic clause rules and produce the
+  applicable diagnostic. Verify
+  with an IBM/Regina reference matrix, source and lowered-tree inspection,
+  focused positive and negative CTests, optimized/no-opt execution, relevant
+  normal correctness and shared runtime checks, and linked execution.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1130,7 +1145,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-03 assignment — closed 2026-10-04 | LC-STEP-65B | `LC-AC-63`: scalar, stem and arbitrary compound targets, optional empty RHS and evaluation order through the shared pool. Shared profile, expression and condition obligations stay open in their own criteria. |
 | LC-I-04 NOP — closed 2026-10-04 | LC-STEP-66B | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
 | LC-I-05 OPTIONS — closed 2026-10-04 | LC-STEP-67A–67D | `LC-AC-66`: static source header, executable expression at each source point, no-op empty form, unknown-word policy and configuration ownership. BYTE/UTF8 define no runtime words. Shared condition, TRACE and host obligations remain open in their own rows. |
-| LC-I-06 IF | LC-STEP-68 | Every legal instruction arm, nearest ELSE, condition/error and nesting behavior; shared statement dispatch. |
+| LC-I-06 IF | LC-STEP-68 | All arm positions without IF-specific rejection, nearest ELSE, condition/error and nesting behavior; each arm's instruction semantics remain with its owner row. |
 | LC-I-07 SELECT | LC-STEP-69 | WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
 | LC-I-08 DO — closed 2026-10-04 | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. Shared NUMERIC/condition/TRACE/host lifecycle remains open in its own rows. |
 | LC-I-09 LEAVE | LC-STEP-71 | Unnamed/named targets, nesting, value/state and errors across all legal loops; DO. |
@@ -1624,6 +1639,63 @@ was covered by the final focused and Level C runs. `rxc` → `rxas` → `rxlink`
 (`/tmp/crexx-options-closure-link-log.PRQgPW`). `git diff --check` passed.
 No infeasible feature or approved compatibility exception was needed. Proceed
 to LC-I-06 IF; LC-AC-59/61 remain open until their remaining rows close.
+
+**LC-I-06 IF plan — vision and intended outcome.** Classic `IF` should select
+exactly one authored instruction through the same statement path used outside
+the branch, with no special-case list of allowed arm kinds. Clause boundaries,
+nearest ELSE, exact logical values, errors and source anchors should match the
+[IBM REXX IF reference](https://www.ibm.com/docs/SSGMCP_5.5.0/reference/rexx/if.html)
+and Regina where its behavior agrees. The current grammar builds a
+condition/THEN/optional ELSE tree, and the lowerer has one recursive IF helper
+but separate main/procedure dispatch. The earlier `LC-AC-02` pass was bounded:
+its unsupported-arm fixture fails because the PARSE template is not yet
+globally supported. This review must identify any IF-specific limitations,
+remove avoidable duplication without inventing special cases, and leave other
+instructions' open semantics under their own rows. Preserve Level B and
+RexxScript behavior and the established canonical IF emitter.
+
+1. **LC-STEP-68A (LC-AC-59/67; active; depends on OPTIONS closure):** inventory
+   every parser IF/THEN/ELSE form, token adapter, diagnostics, source and
+   canonical AST shape, main/procedure dispatch, logical service, and retained
+   tests. Compare IBM and Regina for clause placement, dangling ELSE, empty
+   arms, exact truth values and error identity. Classify each failing arm as
+   IF-specific or as work owned by its statement row. Record any architecture
+   decision before editing compiler logic.
+2. **LC-STEP-68B (LC-AC-67; open; depends on 68A and any required Adrian
+   approval):** repair the complete IF-owned path in one coherent
+   implementation increment. Keep a single source-anchored canonical IF
+   lowering path and use normal statement dispatch for arms. Add focused
+   positive, negative, AST and opt/no-opt tests for the full IF matrix;
+   preserve or replace earlier bounded fixtures.
+3. **LC-STEP-68C (LC-AC-59/61/67; open; depends on 68B):** inspect source and
+   lowered trees, reconcile all legal/invalid forms and error recovery, compare
+   reference output, run focused runtime/RexxScript consumers and the relevant
+   normal correctness suite, prove `rxc`/`rxas`/`rxlink`/`rxvm`, update the
+   architecture/reference docs, and close LC-I-06 only with an exact-commit
+   evidence receipt. If any IF-owned capability is absent, leave LC-AC-67
+   open; significant implementation work is not an infeasibility exception.
+
+2026-10-04 LC-STEP-68A initial IF audit: the grammar owns a three-child
+condition/THEN/ELSE source shape and already recognizes nested IF, DO and
+SELECT arms; the lowerer has one recursive IF helper and uses the ordinary
+main/procedure statement paths for each arm. `RexxValue.logicalIfValue`
+enforces exact `0`/`1` with `34.1`. A Regina and compiled seven-line matrix
+matched on nearest ELSE, false outer IF, one-time side effects and a DO arm
+(`/tmp/crexx-if-matrix.DsQOqP`). Semicolons and labels between THEN and its
+following instruction are legal in both; they are not dummy instructions.
+The older unsupported-arm fixture fails for a PARSE template not supported
+outside IF (`/tmp/crexx-if-arm-baseline.Lr24aW`), so it is not an IF-specific
+capability limit. Invalid probes found a concrete IF-owned gap: a trailing
+THEN, including one followed only by separators or a label, reports generic
+`21.1` and duplicate `PARSE_FAILURE` rather than Regina's `14.3` (case logs
+under `/tmp/crexx-if-arm-invalid.LhlEgo` and
+`/tmp/crexx-if-more-invalid.Z3OvFR`). A trailing ELSE already reports `14.4`.
+The Level C parser calls its fallback on total parse failure, then the
+top-level driver calls the generic fallback again even when diagnostics exist;
+the duplicate conflicts with the driver's stated last-resort contract.
+Repair this existing ownership path and the missing-THEN-arm diagnosis before
+qualification. Empty parentheses after IF remain a general expression-parser
+case under `LC-AC-04/08`; do not mark them as an IF-only success.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
