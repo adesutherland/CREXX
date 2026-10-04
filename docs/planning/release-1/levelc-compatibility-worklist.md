@@ -1926,6 +1926,26 @@ fixtures in opt/no-opt, normal Level C, RexxDoState/RexxScript and linked
 execution will prove timing and isolation. This changes the existing static
 validation architecture and is gated on Adrian's approval under AGENTS.md.
 
+2026-10-04 policy discussion, pending Adrian's choice: Adrian clarified that
+the question concerns **compiled** Level C and suggested a `STRICTC` option;
+Level B/G should retain their compile-time rejection for a LEAVE with no
+lexical loop. The current Level B compiler does reject `if 0 then leave`
+outside a loop (`NOT_IN_LOOP`) and accepts it inside one. Regina accepts an
+unselected outside-loop LEAVE, and IBM documents Error 28 as an error while
+*running* a compiled REXX program. This supports retaining the runtime rule
+as the default compatibility behavior, though it does not by itself prove
+IBM's handling of this exact dead-branch source. The proposed narrow policy
+is: ordinary Level C compiles syntactically valid LEAVE/ITERATE and signals
+`28.*` only if an invalid transfer executes; a leading static
+`OPTIONS LEVELC STRICTC` additionally diagnoses a source-provable invalid
+loop target at compile time. `STRICTC` would not alter malformed-syntax
+diagnostics or suppress an executed signal, and Level B/G would remain
+unchanged. An unselected branch simply never executes its error path. Making
+compile-time rejection the Level C default would instead be a deliberate
+compatibility deviation requiring Adrian's explicit approval and a clear
+inverse option name. Do not change LC-AC-69, implement either policy, or
+close LEAVE until the default and option scope are decided.
+
 2026-10-04 source-form checkpoint: `b0df4e3a5` corrects malformed-name
 `20.1`, extra-token `21.1`, and the no-loop versus unmatched-name subcode in
 the shared LEAVE/ITERATE diagnostic scanner, with a whole LEAVE fixture and
