@@ -666,7 +666,8 @@ are verified against all affected consumers.
   host configuration remain open under their own criteria.
 - [ ] **LC-AC-66 — complete OPTIONS instruction:** a leading source directive
   selects the language and file-level scanner/parser options over a CLI
-  default, with documented defaults and conflict diagnostics. Every executable
+  default, with documented defaults and clear handling of conflicting words.
+  Every executable
   `OPTIONS` form evaluates its Classic expression once at its source position
   in main, selected/nested arms and local routines, converts the result to
   uppercase blank-delimited words and applies the processor's documented
@@ -1521,8 +1522,10 @@ configuration work as closed by this instruction.
    with the IBM reference and Regina, including an empty operand; identify
    duplicate or discarded behavior and record a concrete architecture choice.
 2. **LC-STEP-67B (LC-AC-66; decision gate open; depends on 67A):** Adrian
-   approves the source/runtime split, the empty-operand dialect choice and the
-   cREXX policy for IBM's EBCDIC DBCS-specific ETMODE/EXMODE words. Approval
+   approves the source/runtime split, the empty-operand dialect choice, the
+   cREXX policy for IBM's EBCDIC DBCS-specific ETMODE/EXMODE words, and the
+   Level C line-comment policy where `comments_slash` collides with the
+   Classic `//` remainder operator. Approval
    is required before compiler or runtime architectural changes. The proposed
    split keeps static, leading `level*`, comment and numeric words as file
    directives in the existing pre-scan; parses every Level C `OPTIONS` clause
@@ -1558,7 +1561,15 @@ variables and expression concatenation, ignores unknown words, and accepts
 bare `OPTIONS` (`/tmp/crexx-options-audit.JlwjGf`); IBM's grammar requires an
 expression. Neither source/runtime ownership nor the dialect difference is
 silently resolved by this audit. The present code does not have a Level C
-runtime options service. LC-STEP-67B is the next gate.
+runtime options service. The Level C scanner currently handles only nested
+block comments, irrespective of the pre-scan comment flags. A source probe
+with `options levelc numeric_common comments_dash` still parses a following
+`--` line as minus operators (`/tmp/crexx-options-current.E1m8tV`). The same
+probe shows the Level C parser forces Classic numeric mode, while a dynamic
+`OPTIONS word` and an expression form have no lowered execution at all. Since
+`//` is the Classic remainder operator, enabling Level B's slash comments
+would change a valid Level C expression; that conflict needs an explicit
+language choice. LC-STEP-67B is the next gate.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
