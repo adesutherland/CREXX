@@ -2358,6 +2358,27 @@ a compiler-only flag would not let an embedding host choose per context.
 Adrian's approval is required under AGENTS.md before this VM/host/compiler
 architecture change.
 
+**2026-10-04 BYTE/UTF8 architecture review — proposal paused for revision.**
+The host selector and `parseplan` unit bit described above are insufficient as
+an implementation plan. The agreed BYTE contract allows arbitrary octets, but
+the current Level C lowerer copies every supplied BIF argument through
+`RexxValue.asString()`, converts SAY and PARSE sources/external operands through
+`asString()`, and stores PARSE fields in `.string[]`. The VM `parseplan` also
+uses codepoint offsets and `.string` result spans in normal UTF8 builds. These
+paths cannot carry a BYTE field split inside a UTF8 sequence, or a value such
+as `X2C('FF')`, without implicit UTF8 validation. A focused current-build
+probe of `C2X(X2C('FF'))` raises `UNICODE_ERROR` at the compiler-generated
+BIF argument copy, despite the documented exact-byte C2X/X2C contract.
+Pool assignment retains the `RexxValue` object and direct BYTE BIF helpers can
+operate on `.binary`, so the defect is at the compiler/runtime and VM operand
+boundaries rather than the basic binary storage. Before approving or executing
+LC-STEP-73H.1–3, revise the architecture to define one byte-preserving path
+for expression/BIF arguments, PARSE input and results, SAY/output, and host
+ingress/egress; audit `RexxValue` operators that call `asString()`. Preserve
+the Level B `.string` invariant and the distinct RexxScript evaluator
+configuration. The decision gate remains open, and no profile-selection code
+has been changed.
+
 - [ ] **LC-73H-01:** default BYTE output and existing Level B/RexxScript
   behavior remain unchanged; invalid profile selectors fail before execution.
   Verify exact-output and error tests in standalone and embedded runs.

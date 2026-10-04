@@ -113,6 +113,16 @@ position 3 in `éa` by codepoint and yields `éa|` instead of the byte-oriented
 Level B plans retain their behavior. This is an architectural proposal awaiting
 Adrian's approval; no profile-selection code has been changed.
 
+The 2026-10-04 byte-boundary review found that this proposed selector/unit-bit
+bridge cannot be implemented alone. The compiler currently copies BIF
+arguments and converts SAY and PARSE sources through `RexxValue.asString()`;
+PARSE result storage is `.string[]`, and the VM `parseplan` emits `.string`
+spans. Exact BYTE fields may be invalid UTF8, so a profile-aware offset rule
+without byte-preserving operands/results would violate the documented BYTE
+contract. `C2X(X2C('FF'))` currently raises `UNICODE_ERROR` at the generated
+BIF argument copy. LC-STEP-73H is paused for a revised design covering the
+whole value path, including relevant `RexxValue` operators and host boundaries.
+
 The executable `PARSE` slice accepts a `VAR` scalar source or a `VALUE`
 expression with one nonempty template containing direct scalar, stem, compound
 or `.` targets, literal or variable patterns, and static or variable absolute
