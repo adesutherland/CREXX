@@ -731,7 +731,7 @@ are verified against all affected consumers.
   Level C and shared runtime checks, and linked toolchain output. Shared
   SIGNAL/INTERPRET loop invalidation and TRACE lifecycle remain open under
   their own instruction rows and LC-AC-04/08.
-- [ ] **LC-AC-70 — complete ITERATE instruction:** childless `ITERATE`
+- [x] **LC-AC-70 — complete ITERATE instruction:** childless `ITERATE`
   continues the innermost active repetitive DO, and `ITERATE symbol`
   continues the innermost active controlled DO whose authored control symbol
   matches without compound-tail substitution. It ends any intervening inner
@@ -1204,7 +1204,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-07 SELECT — closed 2026-10-04 | LC-STEP-69A–69C | `LC-AC-68`: WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. Shared helper-stack source reporting and TRACE/trap lifecycle remain open under LC-AC-08/04. |
 | LC-I-08 DO — closed 2026-10-04 | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. Shared NUMERIC/condition/TRACE/host lifecycle remains open in its own rows. |
 | LC-I-09 LEAVE — closed 2026-10-04 | LC-STEP-71A–71C | `LC-AC-69`: unnamed/named targets, nesting, state and errors with the approved default/STRICTC timing distinction; DO. |
-| LC-I-10 ITERATE | LC-STEP-72 | Unnamed/named targets, end-step timing, nesting and errors across all legal loops; DO. |
+| LC-I-10 ITERATE — closed 2026-10-04 | LC-STEP-72A–72C | `LC-AC-70`: unnamed/named targets, end-step timing, nesting and errors across all legal loops through the shared DO/LEAVE path. |
 | LC-I-11 ARG | LC-STEP-73 | Direct argument acquisition and Classic upper/template behavior, omitted positions and invocation modes; routine context and shared parse semantics. |
 | LC-I-12 PROCEDURE | LC-STEP-74 | Pool creation and all direct/indirect EXPOSE forms with alias lifecycle; shared variable pool and routines. |
 | LC-I-13 CALL | LC-STEP-75 | Internal/BIF/external resolution, arguments, results and ON/OFF traps; BIF registry, routines and conditions. |
@@ -2018,18 +2018,18 @@ shared runtime Error 28 service. Preserve Level B/G, DO, LEAVE and RexxScript
 behavior. Compare the [IBM ITERATE reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=instructions-iterate)
 and Regina, recording any true cross-cutting lifecycle gap under its owner.
 
-1. **LC-STEP-72A (LC-AC-59/70; active review; depends on LEAVE closure):**
+1. **LC-STEP-72A (LC-AC-59/70; complete review; depends on LEAVE closure):**
    inventory grammar and recovery, raw/canonical AST, transfer binding and
    emitter, end-check/step order across counted, controlled, FOREVER,
    WHILE/UNTIL and combinations, named nesting, routine isolation, default
    and `STRICTC` errors. Reproduce any mismatch before editing and identify
    its instruction owner and any new decision gate.
-2. **LC-STEP-72B (LC-AC-70; pending 72A):** repair ITERATE-owned gaps in one
+2. **LC-STEP-72B (LC-AC-70; complete evidence-only; depends on 72A):** repair ITERATE-owned gaps in one
    coherent instruction increment using the established transfer machinery;
    add a complete optimized/no-opt fixture and focused error/tree checks.
    If the review finds no code gap, add only the missing whole-instruction
    evidence and document that conclusion.
-3. **LC-STEP-72C (LC-AC-59/61/70; pending 72B):** compare IBM/Regina results,
+3. **LC-STEP-72C (LC-AC-59/61/70; complete; depends on 72B):** compare IBM/Regina results,
    inspect source/canonical ownership, run focused and relevant normal and
    shared-consumer checks, prove linked execution, update architecture and
    reference docs, and commit the exact-revision receipt. Close LC-I-10 only
@@ -2049,8 +2049,34 @@ and a local routine matches Regina exactly in optimized execution
 (`/tmp/crexx-iterate-probe.hvoWVy`). No ITERATE-owned code mismatch is yet
 reproduced. The remaining 72A review should verify combined controlled
 end-check/step timing, duplicate-name nearest binding, syntax/error matrix,
-no-opt and source/canonical trees before deciding whether 72B needs product
-code or only regression coverage.
+ no-opt and source/canonical trees before deciding whether 72B needs product
+ code or only regression coverage.
+
+2026-10-04 LC-I-10 ITERATE closure: `86727645a` adds one complete instruction
+fixture and focused invalid-source checks; no ITERATE product code change was
+needed. The whole fixture agrees byte-for-byte with Regina in optimized and
+no-opt execution across counted, FOREVER, WHILE, UNTIL, TO/BY, FOR, combined
+controlled end conditions, named outer and innermost duplicate controls,
+compound authored control, IF/SELECT/simple DO wrappers and a local routine
+(`/tmp/crexx-iterate-matrix.U34zSg`). The CTest matrix confirms default
+compile-time 28.2/28.4, `STRICTC` runtime 28.2/28.4, routine isolation and
+static 20.1/21.1 syntax errors; Regina confirms the same reached-error and
+syntax subcodes while accepting the explicitly approved default-profile
+dead-branch exception. Raw ITERATE nodes, authored names and canonical target
+nodes were inspected (`/tmp/crexx-iterate-tree.YptUAM`), with canonical shape
+retained in `levelc_iterate_instruction_tree`. Focused ITERATE regressions
+passed 18/18 (`/tmp/crexx-iterate-focused.uxsjHa`); the normal Release Level C
+suite passed 415/415 (`/tmp/crexx-iterate-levelc.3TCXZL`). The unchanged
+shared RexxDoState/RexxValue/RexxScript code and its 14/14 qualified checks
+from LEAVE were reused. Linked `rxc`→`rxas`→`rxlink`→`rxvm` output matches
+Regina (`/tmp/crexx-iterate-linked.dvHEz1`); direct Level B/G probes still
+reject outside-loop `if 0 then iterate` with `NOT_IN_LOOP`. IBM's
+[ITERATE reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=instructions-iterate)
+and [IRX0028I explanation](https://www.ibm.com/docs/en/zos/2.5.0?topic=irx-irx0028i)
+support the end-step and inactive-routine contracts. No ITERATE-owned
+infeasible feature or further compatibility exception was found. LC-AC-70 and
+LC-I-10 close; shared SIGNAL/INTERPRET, TRACE and condition lifecycle remain
+open under LC-AC-04/08/59/61 and their instruction rows. Next is LC-I-11 ARG.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
