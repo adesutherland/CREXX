@@ -4892,6 +4892,27 @@ if (ENABLE_PARSER_MODE)
     set_tests_properties(syntaxhighlight_levelc_do_invalid_initial_to PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_do_missing_to
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_do_missing_to.rexx
+            MUST_MATCH
+            "RXC-LC-35\\.1"
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_do_missing_to PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_do_duplicate_to
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_do_duplicate_to.rexx
+            MUST_MATCH
+            "RXC-LC-27\\.1 token=\"to\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_do_duplicate_to PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_levelc_select_keyword_variables
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_select_keyword_variables.rexx
             MUST_MATCH
@@ -5250,6 +5271,23 @@ endfunction()
 add_levelc_invalid_compile_test(levelc_compile_invalid_if_missing_then
         rexx_src/levelc_if_missing_then.rexx
         "RXC-LC-18\\.1")
+
+foreach(kind IN ITEMS to by for)
+    add_levelc_invalid_compile_test(levelc_do_duplicate_${kind}
+            rexx_src/levelc_do_duplicate_${kind}.rexx
+            "RXC-LC-27\\.1")
+endforeach()
+foreach(kind IN ITEMS to by for while until)
+    add_levelc_invalid_compile_test(levelc_do_missing_${kind}
+            rexx_src/levelc_do_missing_${kind}.rexx
+            "RXC-LC-35\\.1")
+endforeach()
+add_levelc_invalid_compile_test(levelc_do_missing_end
+        rexx_src/levelc_do_missing_end.rexx
+        "RXC-LC-14\\.1")
+add_levelc_invalid_compile_test(levelc_do_group_named_end
+        rexx_src/levelc_do_group_named_end.rexx
+        "RXC-LC-10\\.3")
 
 add_levelc_invalid_compile_test(levelc_compile_invalid_expression_trailing_operator
         rexx_src/levelc_expression_bad_trailing_operator.rexx
@@ -5794,10 +5832,10 @@ set_tests_properties(levelc_slice36_dynamic_start
         levelc_slice36_dynamic_start_noopt PROPERTIES TIMEOUT 60)
 add_levelc_runtime_slice_test(levelc_do_compound_whole
         rexx_src/levelc_do_compound_whole.rexx
-        "body=1\nafter=1|11\nmulti=1\nmulti-after=1|8\n")
+        "body=1\nafter=1|11\nmulti=1\nmulti-after=1|8\nheader-before 90 80 a\nheader-body 90 1 b\nheader-body 90 2 b\nheader-after 90 3 b\n")
 add_levelc_runtime_slice_test(levelc_do_compound_whole_noopt
         rexx_src/levelc_do_compound_whole.rexx
-        "body=1\nafter=1|11\nmulti=1\nmulti-after=1|8\n" -n)
+        "body=1\nafter=1|11\nmulti=1\nmulti-after=1|8\nheader-before 90 80 a\nheader-body 90 1 b\nheader-body 90 2 b\nheader-after 90 3 b\n" -n)
 add_levelc_runtime_slice_test(levelc_do_large_count
         rexx_src/levelc_do_large_count.rexx
         "dynamic\nliteral\nfor 1\nexponent 1\nafter 1 1\n")
@@ -5810,6 +5848,12 @@ add_levelc_runtime_slice_test(levelc_do_numeric_scale
 add_levelc_runtime_slice_test(levelc_do_numeric_scale_noopt
         rexx_src/levelc_do_numeric_scale.rexx
         "scale 1.00\nscale 2.00\nafter-scale 3.00\nleading 1\nleading 2\nplus 1\nplus 2\nexponent 10\nexponent 11\nadjusted 12.0\nadjusted 13.0\nfraction 0.500\nfraction 1.000\nfraction 1.500\nnegative -1.0\nnegative 0\nnegative 1\n" -n)
+add_levelc_runtime_slice_test(levelc_do_modifier_order
+        rexx_src/levelc_do_modifier_order.rexx
+        "TBF 1 STBF\nafter-TBF 2 STBF\nTFB 1 STFB\nafter-TFB 2 STFB\nBTF 1 SBTF\nafter-BTF 2 SBTF\nBFT 1 SBFT\nafter-BFT 2 SBFT\nFTB 1 SFTB\nafter-FTB 2 SFTB\nFBT 1 SFBT\nafter-FBT 2 SFBT\n")
+add_levelc_runtime_slice_test(levelc_do_modifier_order_noopt
+        rexx_src/levelc_do_modifier_order.rexx
+        "TBF 1 STBF\nafter-TBF 2 STBF\nTFB 1 STFB\nafter-TFB 2 STFB\nBTF 1 SBTF\nafter-BTF 2 SBTF\nBFT 1 SBFT\nafter-BFT 2 SBFT\nFTB 1 SFTB\nafter-FTB 2 SFTB\nFBT 1 SFBT\nafter-FBT 2 SFBT\n" -n)
 add_levelc_runtime_slice_test(levelc_slice37_empty_string
         rexx_src/levelc_slice37_empty_string.rexx
         "\n\nlength 0 0\njoined leftright\ncall 0\ncompare 1\n")

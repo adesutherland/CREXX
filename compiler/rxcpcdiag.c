@@ -843,12 +843,17 @@ static void levelc_validate_address_with(Context *context, Token *address_token)
     }
 }
 
-static void levelc_scan_do_header(Token *do_token,
+static void levelc_scan_do_header(Context *context,
+                                  Token *do_token,
                                   Token **control,
                                   int *repetitive,
                                   Token **bad_forever_token) {
     Token *first;
     Token *second;
+    Token *item;
+    int seen_to = 0;
+    int seen_by = 0;
+    int seen_for = 0;
 
     if (control) *control = 0;
     if (repetitive) *repetitive = 0;
@@ -872,6 +877,20 @@ static void levelc_scan_do_header(Token *do_token,
         second = levelc_next_clause_token(first);
         if (second && second->token_type == TK_EQUAL && control) {
             *control = first;
+        }
+    }
+
+    if (!control || !*control) return;
+    for (item = first; item; item = levelc_next_clause_token(item)) {
+        if (item->token_type == TK_TO) {
+            if (seen_to) levelc_append_code_token(context, item, "27.1");
+            seen_to = 1;
+        } else if (item->token_type == TK_BY) {
+            if (seen_by) levelc_append_code_token(context, item, "27.1");
+            seen_by = 1;
+        } else if (item->token_type == TK_FOR) {
+            if (seen_for) levelc_append_code_token(context, item, "27.1");
+            seen_for = 1;
         }
     }
 }
@@ -1189,7 +1208,8 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
                 control = 0;
                 repetitive = 0;
                 bad_forever_token = 0;
-                levelc_scan_do_header(token, &control, &repetitive, &bad_forever_token);
+                levelc_scan_do_header(context, token, &control, &repetitive,
+                                      &bad_forever_token);
                 if (!levelc_push_frame(&frames, &frame_count, &frame_capacity,
                                        LEVELC_FB_FRAME_DO, token, control, repetitive)) {
                     free(frames);

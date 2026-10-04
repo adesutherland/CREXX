@@ -721,22 +721,6 @@ RexxValue: class
     assembler signal "ERROR", message
     return 0
 
-  /** Validate a bounded Classic DO repetition count before the canonical FOR. */
-  repeatCountValue: method = .int
-    text = asString()
-    if datatype(text, "W") <> "1" then do
-      invalid_message = "RXC-LC-26.2: DO repetition count must be a non-negative whole number; found " || text
-      assembler signal "ERROR", invalid_message
-    end
-    whole = .decimal
-    whole = asDecimal()
-    if whole < 0 | whole > 2147483647 then do
-      range_message = "RXC-LC-26.2: DO repetition count is outside the supported range; found " || text
-      assembler signal "ERROR", range_message
-    end
-    count = whole as .int
-    return count
-
   /** Validate and capture a Classic DO TO endpoint at loop setup. */
   controlToValue: method = .RexxValue
     text = asString()
@@ -784,27 +768,6 @@ RexxValue: class
     assembler setnumfuz numeric_fuzz
     return .RexxValue(format(result.asDecimal(), , scale))
 
-  /** Validate a bounded Classic controlled DO FOR count at loop setup. */
-  controlForCountValue: method = .int
-    text = asString()
-    if datatype(text, "W") <> "1" then do
-      invalid_message = "RXC-LC-26.3: DO FOR count must be a non-negative whole number; found " || text
-      assembler signal "ERROR", invalid_message
-    end
-    whole = .decimal
-    whole = asDecimal()
-    if whole < 0 | whole > 2147483647 then do
-      range_message = "RXC-LC-26.3: DO FOR count is outside the supported range; found " || text
-      assembler signal "ERROR", range_message
-    end
-    count = whole as .int
-    return count
-
-  /** Check a Classic DO control variable against a fixed TO value. */
-  controlToContinue: method = .boolean
-    arg limit = .RexxValue
-    return controlToContinueBy(limit, .RexxValue.fromInt(1))
-
   /** Select the TO comparison from the sign of a Classic DO BY value. */
   controlToContinueBy: method = .boolean
     arg limit = .RexxValue, step = .RexxValue
@@ -829,10 +792,6 @@ RexxValue: class
     end
     upper_comparison = compareLessOrEqual(limit)
     return upper_comparison.logicalValue()
-
-  /** Advance the current Classic DO control variable through pool semantics. */
-  controlStepByOne: method = .RexxValue
-    return controlStepBy(.RexxValue.fromInt(1))
 
   /** Advance a Classic DO control variable by its fixed BY value. */
   controlStepBy: method = .RexxValue

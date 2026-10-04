@@ -2451,9 +2451,21 @@ do_control_item(I) ::= CTK_TO(T) expression(E).
     I = levelc_condition_node(context, TO, T, E);
 }
 
+do_control_item(I) ::= CTK_TO(T) missing_expression_rhs.
+{
+    I = levelc_condition_node(context, TO, T,
+                              rxcp_levelc_ast_error_token(context, "35.1", T));
+}
+
 do_control_item(I) ::= CTK_BY(T) expression(E).
 {
     I = levelc_condition_node(context, BY, T, E);
+}
+
+do_control_item(I) ::= CTK_BY(T) missing_expression_rhs.
+{
+    I = levelc_condition_node(context, BY, T,
+                              rxcp_levelc_ast_error_token(context, "35.1", T));
 }
 
 do_control_item(I) ::= CTK_FOR(T) expression(E).
@@ -2461,14 +2473,32 @@ do_control_item(I) ::= CTK_FOR(T) expression(E).
     I = levelc_condition_node(context, FOR, T, E);
 }
 
+do_control_item(I) ::= CTK_FOR(T) missing_expression_rhs.
+{
+    I = levelc_condition_node(context, FOR, T,
+                              rxcp_levelc_ast_error_token(context, "35.1", T));
+}
+
 do_condition(C) ::= CTK_WHILE(T) expression(E).
 {
     C = levelc_condition_node(context, WHILE, T, E);
 }
 
+do_condition(C) ::= CTK_WHILE(T) missing_expression_rhs.
+{
+    C = levelc_condition_node(context, WHILE, T,
+                              rxcp_levelc_ast_error_token(context, "35.1", T));
+}
+
 do_condition(C) ::= CTK_UNTIL(T) expression(E).
 {
     C = levelc_condition_node(context, UNTIL, T, E);
+}
+
+do_condition(C) ::= CTK_UNTIL(T) missing_expression_rhs.
+{
+    C = levelc_condition_node(context, UNTIL, T,
+                              rxcp_levelc_ast_error_token(context, "35.1", T));
 }
 
 do_forever_invalid(B) ::= CTK_TO(T).

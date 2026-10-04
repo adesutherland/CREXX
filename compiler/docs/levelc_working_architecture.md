@@ -462,8 +462,30 @@ compound control names on entry and step, including after a tail variable
 changes. `RexxValue.controlNumericAdd` preserves Classic numeric display scale
 for the initial control value and step without changing generic arithmetic.
 The generated loop uses the established LEAVE/ITERATE target and emitter. No
-new AST node was needed. LC-STEP-70D must still reconcile the whole instruction
-matrix, errors, associations and linked delivery before DO can close.
+new AST node was needed. LC-STEP-70D reconciled the whole instruction matrix,
+errors, associations and linked delivery, closing DO under `LC-AC-65`; the
+worklist retains the exact evidence and the separate open shared contracts.
+
+The whole-instruction audit added `27.1` for repeated TO/BY/FOR modifiers at
+the repeated keyword. Empty TO/BY/FOR/WHILE/UNTIL operands now create a
+source-tree `35.1` diagnostic at the keyword and keep the following body
+clause; Regina reports a generic `64.1` parse error for this malformed source,
+while the Level C compiler uses the specification's invalid-expression
+identity, consistent with its other trailing-expression diagnostics. The
+obsolete bounded `RexxValue.repeatCountValue` and `controlForCountValue`
+methods and unused one-line control wrappers were removed; count ownership is
+now only in `RexxDoState`.
+
+Counts have no 32-bit compiler cutoff. `RexxDoState` expands a rounded whole
+count to decimal digits and decrements those digits exactly. Its storage grows
+with the number of digits, so available memory is a practical bound for an
+extremely large exponential count. The maintained decNumber backend declares
+a maximum adjusted exponent of 999999999 in
+`interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumberLocal.h`;
+that source limit is distinct from what has been exercised end to end. The
+Level C tests exercise literal and dynamic 2147483648 and 1E30 FOR values
+with early exits. Regina reports `26.2` at 2147483648; that interpreter limit
+is not used as a cREXX language limit.
 
 ## Historical design record
 

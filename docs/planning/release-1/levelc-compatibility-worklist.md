@@ -649,7 +649,7 @@ are verified against all affected consumers.
   source/canonical trees, optimized/no-opt, normal Level C correctness and
   linked execution. Shared label/TRACE/condition lifecycle stays explicitly
   open under `LC-AC-04/08` and `LC-I-23/24`, as for SAY.
-- [ ] **LC-AC-65 — complete DO instruction:** simple grouping and every valid
+- [x] **LC-AC-65 — complete DO instruction:** simple grouping and every valid
   counted, FOREVER and controlled loop form execute with Classic setup,
   entry, body, end-check and step order in main, nested and local contexts.
   Scalar and compound control names use the shared variable pool, including
@@ -1094,10 +1094,10 @@ retained in the coverage matrix.
 Work through the rows in order, with only one active row; changing the order
 requires a recorded reason and must not turn a partial row into a closure.
 On 2026-10-04 Adrian prioritized the high-risk DO AST work before the remaining
-prior-instruction audit and SIGNAL. LC-I-08 therefore becomes the one active
-review/implementation row after NOP. LC-I-05 through LC-I-07 remain open and
-retain their original order for completion after DO; this priority change
-does not count any of them as reviewed or closed.
+prior-instruction audit and SIGNAL. LC-I-08 closed after its whole-instruction
+review; LC-I-05 OPTIONS is now the active row. LC-I-05 through LC-I-07 remain
+open and retain their original order before SIGNAL; the priority change did
+not count any of them as reviewed or closed.
 Each step includes parser-form inventory, reference cases, invalid forms,
 main/procedure/nested execution where legal, opt/no-opt, source/AST checks,
 relevant runtime and host/profile checks, and linked delivery. The relevant
@@ -1115,7 +1115,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-05 OPTIONS | LC-STEP-67 | All processor option words, unknown-option policy and source/configuration behavior; programme initialization. |
 | LC-I-06 IF | LC-STEP-68 | Every legal instruction arm, nearest ELSE, condition/error and nesting behavior; shared statement dispatch. |
 | LC-I-07 SELECT | LC-STEP-69 | WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
-| LC-I-08 DO — runtime implemented, whole-instruction audit open | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. |
+| LC-I-08 DO — closed 2026-10-04 | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. Shared NUMERIC/condition/TRACE/host lifecycle remains open in its own rows. |
 | LC-I-09 LEAVE | LC-STEP-71 | Unnamed/named targets, nesting, value/state and errors across all legal loops; DO. |
 | LC-I-10 ITERATE | LC-STEP-72 | Unnamed/named targets, end-step timing, nesting and errors across all legal loops; DO. |
 | LC-I-11 ARG | LC-STEP-73 | Direct argument acquisition and Classic upper/template behavior, omitted positions and invocation modes; routine context and shared parse semantics. |
@@ -1386,7 +1386,7 @@ semantics are a high-risk foundation. IF, SELECT and OPTIONS remain open.
    Classic numeric display scale for controlled start and step through one
    shared `RexxValue` operation; reference probes show that generic decimal
    addition currently strips it (`/tmp/crexx-do-scale.q3LHLn`).
-4. **LC-STEP-70D (LC-AC-59/61/65; pending; depends on 70C):** reconcile all
+4. **LC-STEP-70D (LC-AC-59/61/65; complete; depends on 70C):** reconcile all
    valid parser forms and Classic errors, main/local/nested execution,
    optimized/no-opt and canonical/source trees, normal Level C correctness,
    RexxScript consumers of changed shared services and linked delivery. Close
@@ -1446,6 +1446,47 @@ state objects in nested canonical loops, with `ITERATE outer` bound to the
 outer generated loop target. The whole-instruction LC-STEP-70D audit remains
 required before
 `LC-AC-65` or LC-I-08 can close.
+
+LC-STEP-70D first audit finding: the three duplicate controlled modifiers
+(`TO`, `BY`, `FOR`) reached the checked-header validator but fell through to a
+generic unsupported-shape result, while Regina reports `27.1` for each.
+An empty `TO` operand also recovered by consuming a following body expression
+and compiled. The reproductions and raw tree are retained at
+`/tmp/crexx-do-invalid-audit.DKBebx` and
+`/tmp/crexx-do-to-explicit-tree.4ihzVy`. The repair emits `27.1` at each
+repeated modifier and `35.1` for empty TO/BY/FOR/WHILE/UNTIL operands, keeping
+the following body clause in the source tree. Regina uses its generic `64.1`
+parser identity for the latter; the Level C identity follows the existing
+standard invalid-expression mapping. They were defects, not approved
+compatibility exceptions. The audit also removed the now-unreferenced bounded
+`RexxValue` count methods
+and one-line control wrappers. Their 32-bit contracts are superseded by
+`RexxDoState`; retained older worklist receipts remain historical evidence.
+
+2026-10-04 LC-STEP-70D closure receipt: the parser forms were checked against
+the grammar (`compiler/rxcpcgmr.y`): grouping, counted, FOREVER, bare
+WHILE/UNTIL, counted plus WHILE/UNTIL, and controlled scalar/compound with
+TO/BY/FOR in any legal order and optional WHILE/UNTIL. The existing focused
+runtime/tree matrix covers these in main, nested and local procedure contexts,
+including LEAVE/ITERATE, zero-entry and end-step behavior. New Regina probes
+and optimized/no-opt fixtures cover all six modifier orders and a compound
+tail changed during header evaluation (`/tmp/crexx-do-order.2HqazG`,
+`/tmp/crexx-do-tail-header.xKk77V`). Invalid-source fixtures now cover
+duplicate and empty modifiers, missing END and illegal END names in addition
+to existing numeric/logical/transfer errors; parser-mode tests verify that
+diagnostics and the following body survive recovery. The lowered/source tree
+inspection (`/tmp/crexx-do-closure-tree.ZVjME7`) and the boundary test show distinct
+nested state and canonical target ownership. The exact-input Release Level C
+suite passed 335/335 (`/tmp/crexx-do-closure-final-suite.0Uybf3`), shared
+value/DO-state/RexxScript consumers passed 8/8
+(`/tmp/crexx-do-close-consumers.bdUe3h`), and a linked four-toolchain run of
+all six orders matched Regina byte for byte
+(`/tmp/crexx-do-order.2HqazG`). `LC-AC-65` and LC-I-08 close. The memory cost
+of representing an extreme exponential count, and the decNumber source
+exponent limit, are recorded in the architecture document; neither is an
+approved language exception. Shared NUMERIC, condition, TRACE and host
+profile behavior remains open under its separate criteria and instruction
+rows. Resume LC-I-05 OPTIONS next, then IF and SELECT before SIGNAL.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared

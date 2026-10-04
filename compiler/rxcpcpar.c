@@ -437,6 +437,11 @@ static int levelc_token_expects_expression_rhs(int parser_token) {
         case CTK_AND:
         case CTK_OR:
         case CTK_XOR:
+        case CTK_TO:
+        case CTK_BY:
+        case CTK_FOR:
+        case CTK_WHILE:
+        case CTK_UNTIL:
             return 1;
         default:
             return 0;
