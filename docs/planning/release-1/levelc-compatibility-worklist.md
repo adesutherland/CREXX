@@ -766,8 +766,9 @@ are verified against all affected consumers.
   modes that the compiler/runtime actually admits; record a CALL/host owner
   for unsupported invocation paths without counting ARG itself complete.
   Diagnose malformed templates and illegal instruction placement with
-  Classic identity and source position. Verify IBM/Regina examples and
-  omitted-versus-empty behavior, source/canonical AST, optimized/no-opt,
+  Classic identity and source position. Verify IBM/Regina examples,
+  omitted-versus-empty behavior, exact-length strings and applicable
+  BYTE/UTF8 profile behavior, source/canonical AST, optimized/no-opt,
   relevant normal/shared runtime checks and linked toolchain execution.
   ARG built-in function behavior remains under the BIF row, but its shared
   activation-state dependency must be reviewed here.
