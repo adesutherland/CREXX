@@ -907,7 +907,15 @@ choice still require Adrian's approval.
    reuses the existing checked direct-CALL lowering and activation frame for
    a CALL inside a local procedure, including nested arms, so ARG can read
    that callee's arguments. Prove source/canonical trees, opt/no-opt, linked
-   execution and normal Level C correctness; CALL's other forms stay open.
+   execution and normal Level C correctness. `88E-2B` (LC-AC-08/59/71;
+   proposed after 88E-2A; **Adrian's grammar/AST approval required before
+   implementation**) replaces direct CALL's flat `simple_tail` token list
+   with the parser's existing expression/omission list, then uses the one
+   general Level C expression validator and lowerer for actuals. Preserve
+   omitted slots, once-only source-order evaluation, fresh frames, and CALL
+   ON/OFF syntax. Prove nested ARG BIF actuals, recursive calls, malformed
+   tails, source/canonical trees, opt/no-opt, linked output and normal
+   correctness. CALL's other forms stay open.
    `88E-3` reviews PARSE as a whole instruction across its admitted
    source types and templates. Keep their open reference/condition obligations
    visible, and commit each qualified unit separately.
@@ -1052,6 +1060,42 @@ and full-reference audit; unsupported expression actuals such as `CALL nested
 ARG(1),,ARG(2)` and labels without PROCEDURE remain with the open CALL and
 PROCEDURE rows, with their ARG activation consequences to be reconciled before
 closure. LC-AC-59/61 remain open for the full instruction programme.
+
+**LC-STEP-88E-2B decision proposal (2026-10-04; awaiting Adrian).** The
+minimal `CALL relay ARG(1),,ARG(2)` probe in
+`/tmp/crexx-arg-call-expr.LTSEjA` fails with `unsupported CALL argument
+expression`. The raw tree shows why: direct CALL's `simple_tail` contains
+`LITERAL arg`, `TOKEN (`, `INTEGER 1`, `TOKEN )` and comma tokens, whereas
+normal function expressions already have a `FUNCTION` node with expression
+children. A provisional lowerer-only attempt admitted general expression
+nodes but could not repair that missing parser structure; it also revealed
+that the old CALL string token retains source quotes and needs its special
+decoder. That unqualified attempt and a failing new CTest registration were
+removed. The prior qualified product code and tests remain intact.
+
+1. **LC-88E-2B-01 (LC-AC-08/71):** parse direct CALL actuals using the
+   existing `levelc_call_args` expression/comma grammar, with `NOVAL` for
+   omissions under one `ARGS` node; keep CALL ON/OFF and recovery branches
+   separate. Verify a raw AST matrix for no actuals, leading/middle/trailing
+   omissions, quoted/hex literals, nested calls, operators and malformed
+   parentheses/commas. Retain source anchors and Classic diagnostics.
+2. **LC-88E-2B-02 (LC-AC-59/71; depends on 01):** remove the flat-tail
+   validator/lowerer and pass each expression through the existing
+   `levelc_expr_supported`/`levelc_lower_expr` path, appending a presence
+   flagged value into the already approved activation frame immediately
+   after that actual's setup. An omitted position appends absent/empty.
+   Preserve one evaluation in source order, including side effects.
+3. **LC-88E-2B-03 (LC-AC-08/59/71; depends on 02):** prove opt/no-opt,
+   nested and recursive ARG/CALL frames, source/canonical trees, linked
+   execution, malformed forms, existing CALL/ARG and Level B/G regressions,
+   and one relevant normal Level C suite. Commit the qualified instruction
+   dependency separately. Keep external/condition CALL under LC-I-13.
+
+This is a source grammar/AST shape change even though it admits established
+Classic syntax rather than inventing a new rule. Under `AGENTS.md`, Adrian's
+approval is required. A lowerer-side token mini-parser would duplicate the
+existing expression grammar and create another special path; retaining the
+current guard would leave valid CALL/ARG activation behavior unfinished.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
