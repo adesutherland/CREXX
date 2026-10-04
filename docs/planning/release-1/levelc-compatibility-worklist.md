@@ -605,6 +605,22 @@ are verified against all affected consumers.
   each existing bounded test as regression evidence. Verify against the
   compliance reference, parser grammar, reference-obligation appendix,
   tests and exact candidate revision.
+- [ ] **LC-AC-60 — one length-aware SAY output callback:** the VM, RXVML and
+  RXPA expose only a `(const char *, size_t)` custom SAY callback. The compiler
+  exit bridge and in-tree hosts use it; the terminated-text callback and its
+  legacy-only test are removed. Default and custom output preserve embedded
+  NUL and SAY's newline, while output failures retain their signal identity.
+  Verify symbol/call-site inventory, focused host and console tests, both VM
+  modes, core build and updated public documentation. Adrian approved removing
+  the old callback API on 2026-10-04; this is a native host ABI change.
+- [ ] **LC-AC-61 — reviewed prior-instruction baseline:** before SIGNAL work,
+  audit every Level C instruction with earlier implementation work against its
+  full parser/reference forms, shared foundations, AST/ownership and emitted
+  behavior. Remove avoidable duplicate or case-specific paths; retain focused
+  regression coverage. Close an instruction only after its complete contract
+  and normal/toolchain evidence are recorded, and list any remaining work
+  explicitly. Verify the per-instruction receipts and code-path inventory;
+  significant work does not count as an infeasible exception.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1075,6 +1091,47 @@ conditions and host adapters are cross-cutting foundations under
 `LC-AC-01/04/06/08`; they are not silently completed by an instruction row.
 Before closing any `LC-I-*`, reconcile its reference-obligation rows and the
 parser's accepted forms. An unresolved dependency keeps the row open.
+
+### 2026-10-04 delivery correction and plan
+
+**Vision and intended outcome.** Keep one length-aware SAY output interface
+across the VM and native hosts, including compiler exits and RXPA, so valid
+NUL text cannot be truncated by an obsolete callback. Close the SAY
+instruction for its own evaluation, output, diagnostic and host contract,
+without treating every cross-cutting BIF, external-call, TRACE or SIGNAL
+feature as a SAY prerequisite. Preserve those full Level C obligations under
+their existing criteria and instruction rows. Then audit and complete the
+previously implemented instruction families, including DO, to establish a
+simple, evidenced baseline before beginning SIGNAL. Adrian explicitly
+approved this order and the callback API removal on 2026-10-04.
+
+**Acceptance:** `LC-AC-57` (whole SAY), `LC-AC-59` (instruction receipts),
+`LC-AC-60` (single callback) and `LC-AC-61` (prior-instruction baseline)
+above remain independently checkable; overall `LC-AC-04/06/08` remain open
+until their full contracts are proved. Missing BIF services and external
+resolution are cross-cutting open work, not SAY-specific exceptions. Classic
+trap delivery and label/activation flow belong to `LC-I-23 SIGNAL` and its
+dependent CALL/condition contracts; `LC-STEP-63T` below is retained as an
+unapproved design proposal for that later review, not a SAY closure gate.
+
+**Implementation steps:**
+
+1. **LC-STEP-63E (LC-AC-60; approved; depends on 63B):** replace the
+   terminated callback surface in VM, RXVML, RXPA and compiler exits with the
+   existing byte-span signature. Migrate in-tree registrations, remove the
+   legacy-only test branch, update host documentation, build and run focused
+   output/context/plugin checks; commit this interface increment.
+2. **LC-STEP-63F (LC-AC-57/59; depends on 63E):** finish the SAY-only
+   reference/parser/AST/output/error audit, retain focused Regina, opt/no-opt,
+   full toolchain and normal correctness evidence, then close `LC-I-01` and
+   `LC-AC-57` only if no SAY-specific gap remains; commit its receipt.
+3. **LC-STEP-62B (LC-AC-61/58/59; depends on 63F):** inventory all earlier
+   touched instruction rows, inspect implementation shape and duplication,
+   reconcile complete reference and parser obligations, and work through
+   their existing `LC-STEP-64` onward rows in reviewable whole-instruction
+   checkpoints. Record closed and still-open rows with exact evidence. Do not
+   begin `LC-I-23 SIGNAL` until this baseline is clear and its architecture
+   gate is approved.
 
 ### Active review: LC-I-01 SAY
 
