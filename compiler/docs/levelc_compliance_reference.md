@@ -489,6 +489,15 @@ activity.
 - control starts and steps preserve Classic numeric display scale, and pool
   updates can raise `NOVALUE`.
 
+Whole-instruction ITERATE coverage confirms childless and named transfers
+through counted, FOREVER, WHILE, UNTIL, TO/BY, FOR and combined controlled
+loops. The selected loop skips its remaining body and ends intervening inner
+loops, then performs its own end check and step. A named transfer selects the
+innermost matching authored control symbol, including a compound symbol;
+local routines cannot iterate an inactive caller loop. The same canonical
+transfer emitter serves ordinary and strict Level C. The default/`STRICTC`
+Error 28 timing is described under `OPTIONS` below.
+
 `DROP`:
 
 - direct variable-list words drop the named variable;

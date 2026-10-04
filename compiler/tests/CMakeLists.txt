@@ -5435,6 +5435,27 @@ add_levelc_invalid_compile_test(levelc_slice29_named_leave_invalid
 add_levelc_invalid_compile_test(levelc_slice29_named_iterate_invalid
         rexx_src/levelc_slice29_named_iterate_invalid.rexx
         "RXC-LC-28\\.4")
+add_levelc_invalid_compile_test(levelc_iterate_dead_default
+        rexx_src/levelc_iterate_dead_default.rexx
+        "RXC-LC-28\\.2")
+add_levelc_invalid_compile_test(levelc_iterate_named_outside
+        rexx_src/levelc_iterate_named_outside.rexx
+        "RXC-LC-28\\.2")
+add_levelc_invalid_compile_test(levelc_iterate_inactive_caller
+        rexx_src/levelc_iterate_inactive_caller.rexx
+        "RXC-LC-28\\.2")
+add_levelc_invalid_compile_test(levelc_iterate_extra_target
+        rexx_src/levelc_iterate_extra_target.rexx
+        "RXC-LC-21\\.1")
+add_levelc_invalid_compile_test(levelc_iterate_malformed_target
+        rexx_src/levelc_iterate_malformed_target.rexx
+        "RXC-LC-20\\.1")
+add_levelc_invalid_compile_test(levelc_strictc_iterate_extra_target
+        rexx_src/levelc_strictc_iterate_extra_target.rexx
+        "RXC-LC-21\\.1")
+add_levelc_invalid_compile_test(levelc_strictc_iterate_malformed_target
+        rexx_src/levelc_strictc_iterate_malformed_target.rexx
+        "RXC-LC-20\\.1")
 
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -5807,6 +5828,14 @@ add_levelc_runtime_slice_test(levelc_leave_instruction
 add_levelc_runtime_slice_test(levelc_leave_instruction_noopt
         rexx_src/levelc_leave_instruction.rexx
         "count 2\nforever\nwhile 1\nuntil 1\ninner 1 1\nouter-state 1 2\nsame-inner 1\nsame-final 1\ncompound STEM.A STEM.B\nlimit-body 1\nlimit-state 1\nlocal 1\n" -n)
+set(LEVELC_ITERATE_EXPECTED
+        "counted 1\ncounted 3\ncounted 4\ncounted-state 4\nforever 1\nforever 3\nforever-state 4\nwhile 1\nwhile 3\nwhile-state 3\nuntil 1\nuntil 3\nuntil-state 3\ncontrolled 1\ncontrolled 5\ncontrolled-state 7\nfor 1\nfor 3\nfor-state 4\nuntil-step 3\nuntil-step-state 3\nwhile-step 1\nwhile-step 3\nwhile-step-state 4\nfor-until 2\nfor-until-state 2\nouter-visit 1\nouter-visit 2\nouter-visit 3\nouter-state 4 1\nsame-inner 2\nsame-outer 3\nsame-state 4\ncompound 2\ncompound 3\ncompound-state 4\nselect-done\nlocal 4\n")
+add_levelc_runtime_slice_test(levelc_iterate_instruction
+        rexx_src/levelc_iterate_instruction.rexx
+        "${LEVELC_ITERATE_EXPECTED}")
+add_levelc_runtime_slice_test(levelc_iterate_instruction_noopt
+        rexx_src/levelc_iterate_instruction.rexx
+        "${LEVELC_ITERATE_EXPECTED}" -n)
 add_levelc_runtime_slice_test(levelc_strictc_transfer_dead
         rexx_src/levelc_strictc_transfer_dead.rexx
         "body 1\nafter 2\n")
@@ -6175,6 +6204,10 @@ add_levelc_invalid_runtime_test(levelc_strictc_iterate_unknown
         rexx_src/levelc_strictc_iterate_unknown.rexx RXC-LC-28.4)
 add_levelc_invalid_runtime_test(levelc_strictc_iterate_unknown_noopt
         rexx_src/levelc_strictc_iterate_unknown.rexx RXC-LC-28.4 -n)
+add_levelc_invalid_runtime_test(levelc_strictc_iterate_inactive_caller
+        rexx_src/levelc_strictc_iterate_inactive_caller.rexx RXC-LC-28.2)
+add_levelc_invalid_runtime_test(levelc_strictc_iterate_inactive_caller_noopt
+        rexx_src/levelc_strictc_iterate_inactive_caller.rexx RXC-LC-28.2 -n)
 
 add_levelc_invalid_runtime_test(levelc_slice6_invalid_logical
         rexx_src/levelc_slice6_invalid_logical.rexx RXC-LC-34)
@@ -6421,6 +6454,12 @@ add_levelc_lowered_tree_shape_test(levelc_strictc_transfer_dead_tree
         rexx_src/levelc_strictc_transfer_dead.rexx
         "LEAVE"
         "rexxdostate_invalid_transfer"
+        "IF")
+add_levelc_lowered_tree_shape_test(levelc_iterate_instruction_tree
+        rexx_src/levelc_iterate_instruction.rexx
+        "ITERATE"
+        "__rxcp_levelc_loop_"
+        "RexxDoState"
         "IF")
 add_test(NAME levelc_strictc_transfer_source_tree
         COMMAND ${CMAKE_COMMAND}

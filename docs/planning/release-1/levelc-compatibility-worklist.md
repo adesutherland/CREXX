@@ -2036,6 +2036,22 @@ and Regina, recording any true cross-cutting lifecycle gap under its owner.
    when its own contract is proved. Shared SIGNAL/INTERPRET, TRACE and
    condition lifecycle remain with their owner rows.
 
+2026-10-04 LC-STEP-72A initial audit: ITERATE shares the LEAVE/ITERATE source
+grammar, 20.1/21.1 recovery, static 28.x validator, source-loop association,
+canonical target emitter and approved `STRICTC` runtime-error service. IBM's
+ITERATE reference says the selected loop's control variable is incremented
+and tested as usual and inner active loops end; IBM IRX0028I confirms an
+inactive caller loop cannot be crossed by an internal routine. Existing DO
+tests cover counted, WHILE/UNTIL and named transfers but no complete ITERATE
+fixture. A whole-instruction probe covering counted, FOREVER, WHILE, UNTIL,
+TO/BY, FOR, named outer, compound authored control, SELECT/simple-DO wrappers
+and a local routine matches Regina exactly in optimized execution
+(`/tmp/crexx-iterate-probe.hvoWVy`). No ITERATE-owned code mismatch is yet
+reproduced. The remaining 72A review should verify combined controlled
+end-check/step timing, duplicate-name nearest binding, syntax/error matrix,
+no-opt and source/canonical trees before deciding whether 72B needs product
+code or only regression coverage.
+
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
 pool ownership supports a single `dropSymbol` route. `LC-STEP-64A` — complete

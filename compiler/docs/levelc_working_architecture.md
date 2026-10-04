@@ -469,6 +469,11 @@ new AST node was needed. LC-STEP-70D reconciled the whole instruction matrix,
 errors, associations and linked delivery, closing DO under `LC-AC-65`; the
 worklist retains the exact evidence and the separate open shared contracts.
 
+The ITERATE whole-instruction review needs no additional AST node or emitter
+rewrite. It exercises named nearest-control binding, intervening loop
+teardown, the selected loop's UNTIL-before-step behavior, and default versus
+`STRICTC` Error 28 timing through this shared path.
+
 The whole-instruction audit added `27.1` for repeated TO/BY/FOR modifiers at
 the repeated keyword. Empty TO/BY/FOR/WHILE/UNTIL operands now create a
 source-tree `35.1` diagnostic at the keyword and keep the following body
