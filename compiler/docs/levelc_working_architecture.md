@@ -111,9 +111,9 @@ bitwise BIFs, signaling when an input scalar cannot map. Ordinary character
 operations accept Unicode codepoints. `RexxValue` retains binary and numeric
 storage for RexxScript/future explicit binary work, while Level C conversion
 BIFs must return text rather than binary-only values. No host BYTE/UTF8
-profile selector is planned. The already closed SAY, DROP and assignment
-instructions have been reopened for Unicode-specific proof; unchanged
-structural receipts remain valid. The authoritative plan is LC-STEP-88 in
+profile selector is planned. SAY's Unicode output and host route are closed
+under LC-STEP-88D-1; DROP and assignment remain reopened for Unicode-specific
+proof. Their unchanged structural receipts remain valid. The authoritative plan is LC-STEP-88 in
 `docs/planning/release-1/levelc-compatibility-worklist.md`.
 
 Level C source hex and binary literals now decode their written digits to byte

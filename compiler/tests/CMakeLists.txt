@@ -5555,10 +5555,10 @@ add_levelc_runtime_slice_test(levelc_options_source_noopt
         rexx_src/levelc_options_source.rexx "1\n" --level levelb -n)
 add_runtime_bytes_test(levelc_say_bytes
         rexx_src/levelc_say_bytes.rexx
-        "4100420ac383c2a90ac3a90a0a" levelc)
+        "410042c280c3bf0ae6bca2f09f99820ac280c3bf0ac383c2a90ac3a90a0a" levelc)
 add_runtime_bytes_test(levelc_say_bytes_noopt
         rexx_src/levelc_say_bytes.rexx
-        "4100420ac383c2a90ac3a90a0a" levelc -n)
+        "410042c280c3bf0ae6bca2f09f99820ac280c3bf0ac383c2a90ac3a90a0a" levelc -n)
 add_runtime_bytes_test(levelc_arg_exact_bytes
         rexx_src/levelc_arg_exact_bytes.rexx
         "6100620a4100420a" levelc)
@@ -7143,6 +7143,24 @@ target_compile_definitions(test_say_bytes_host PRIVATE
 add_dependencies(test_say_bytes_host say_bytes_host_bin library)
 
 add_custom_command(
+        OUTPUT levelc_say_host_output.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_say_host_output ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_say_bytes.rexx
+        COMMAND $<TARGET_FILE:rxas> levelc_say_host_output
+        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_say_bytes.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling Level C SAY host output fixture ...")
+add_custom_target(levelc_say_host_output_bin DEPENDS levelc_say_host_output.rxbin)
+add_executable(test_levelc_say_host_output src/test_levelc_say_host_output.c)
+target_link_libraries(test_levelc_say_host_output PRIVATE rxvml rxpashim)
+target_include_directories(test_levelc_say_host_output PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_levelc_say_host_output PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_CLASSLIB_PATH="${CMAKE_BINARY_DIR}/bin/classlib"
+        CREXX_TEST_RXFNSC_PATH="${CMAKE_BINARY_DIR}/bin/rxfnsc"
+        CREXX_TEST_SAY_MODULE="${CMAKE_CURRENT_BINARY_DIR}/levelc_say_host_output.rxbin")
+add_dependencies(test_levelc_say_host_output levelc_say_host_output_bin library rxfnsc)
+
+add_custom_command(
         OUTPUT levelc_arg_host_entry.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_arg_host_entry ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_host_entry.rexx
         COMMAND $<TARGET_FILE:rxas> levelc_arg_host_entry
@@ -7397,6 +7415,9 @@ set_tests_properties(e2_active_context_isolation PROPERTIES LABELS "compiler;sta
 crexx_label_concurrency_tests(SP01 e2_active_context_isolation)
 add_test(NAME say_bytes_host_callbacks COMMAND test_say_bytes_host)
 set_tests_properties(say_bytes_host_callbacks PROPERTIES LABELS "compiler;levelc")
+add_test(NAME levelc_say_host_output COMMAND test_levelc_say_host_output)
+set_tests_properties(levelc_say_host_output PROPERTIES LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "test_levelc_say_host_output")
 add_test(NAME levelc_arg_host_entry COMMAND test_levelc_arg_host_entry)
 set_tests_properties(levelc_arg_host_entry PROPERTIES
         LABELS "compiler;levelc"

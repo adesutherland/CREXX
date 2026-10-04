@@ -605,7 +605,7 @@ are verified against all affected consumers.
   reference retain their order. Verify source/canonical AST shape, Regina for
   valid and invalid lists and scope, focused opt/no-opt, normal correctness
   and linked execution.
-- [ ] **LC-AC-57 — complete SAY instruction:** `SAY [expression]` evaluates an
+- [x] **LC-AC-57 — complete SAY instruction:** `SAY [expression]` evaluates an
   expression once when supplied and writes its string value, or an empty line
   when omitted, through the configured default output. Main, nested and local
   procedure contexts preserve output order, source anchors and relevant
@@ -886,7 +886,12 @@ choice still require Adrian's approval.
    DROP and assignment as whole instructions for Unicode, including host text
    output, indirect lists and compound substitutions. Retain previously
    valid structural evidence; close each row only after focused and normal
-   correctness checks.
+   correctness checks. `88D-1` proves Level C SAY output through default and
+   configured host routes for NUL, mapped high ordinals and non-Latin-1 text,
+   then closes LC-I-01 (complete 2026-10-04). `88D-2` audits the shared pool classifier and Unicode
+   direct/indirect DROP names and blanks, then closes LC-I-02. `88D-3` proves
+   Unicode scalar values and compound-tail substitution through the same
+   pool, then closes LC-I-03. Commit and report each instruction separately.
 5. **LC-STEP-88E (LC-AC-04/59/71/72/73/74; depends on 88D):** finish the
    Unicode character BIF and ARG/PARSE audit, then continue the strict
    instruction queue. Use one codepoint template engine; remove obsolete
@@ -931,6 +936,23 @@ optimized/no-opt literal execution and lowered-tree checks. RexxScript,
 fixture output (`/tmp/crexx-literal-linked.coWgYC`). `LC-AC-72/73` remain open
 for the Unicode review of formerly closed instructions, ARG/PARSE character
 behavior beyond these literals, and the host boundary.
+
+**2026-10-04 LC-STEP-88D-1 SAY receipt.** The previously qualified two parser
+forms, one canonical SAY lowerer/emitter path, source anchors, once-only
+evaluation, output order, diagnostics and length-aware VM route are unchanged.
+The expanded optimized/no-opt Level C byte fixture now proves embedded NUL,
+mapped `U+0080`/`U+00FF`, non-Latin-1 BMP and supplementary text, BIF-produced
+mapped text, source byte-literal ordinals and childless output. A new compiled
+Level C RXVML entry proves the exact same UTF-8 spans and six callback calls;
+the existing Level B/Level G callback, context-isolation and output-error
+receipts remain valid. Ten focused checks passed
+(`/tmp/crexx-say-focused.Sms7jz`); the Debug Level C suite passed 452/452
+(`/tmp/crexx-say-levelc.M6KK8Z`). A `rxc`/`rxas`-built fixture linked with
+`rxlink` and executed with `rxvm` emitted the expected bytes
+(`/tmp/crexx-say-linked.p6jm66`). `LC-AC-57` and `LC-I-01` close for the
+approved Unicode text contract. Shared character BIFs, raw binary I/O,
+trapped conditions and complete Level C qualification remain in their own
+open criteria.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
@@ -1358,7 +1380,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 
 | Unit | Step | Complete instruction obligation and principal dependency |
 | --- | --- | --- |
-| LC-I-01 SAY — reopened 2026-10-04 | LC-STEP-63F; LC-STEP-88D | `LC-AC-57`: prior expression, ordering and callback evidence retained; Unicode output and host encoding require new proof. |
+| LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F; LC-STEP-88D-1 | `LC-AC-57`: expression, ordering and callback evidence retained; NUL, mapped high ordinals and non-Latin-1 output now pass default, configured host, optimized/no-opt and linked checks. |
 | LC-I-02 DROP — reopened 2026-10-04 | LC-STEP-64B; LC-STEP-88D | `LC-AC-62`: prior list order, arbitrary compounds, exposure and Regina invalid-word policy retained; Unicode names/blanks in indirect lists require proof. |
 | LC-I-03 assignment — reopened 2026-10-04 | LC-STEP-65B; LC-STEP-88D | `LC-AC-63`: prior RHS order and shared-pool ownership retained; Unicode scalar values and substituted tails require proof. |
 | LC-I-04 NOP — closed 2026-10-04 | LC-STEP-66B | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
@@ -1390,7 +1412,7 @@ ownership as follows:
 
 | Instruction | Unicode-first effect | Disposition |
 | --- | --- | --- |
-| SAY | Text from mapped byte values and non-Latin-1 scalars now goes through host text output; exact raw-byte expectations no longer describe the contract. | Reopened under LC-AC-57/88D; length-aware callback and expression-order proof retained. |
+| SAY | Text from mapped byte values and non-Latin-1 scalars now goes through host text output; exact raw-byte expectations no longer describe the contract. | Closed under LC-AC-57/88D-1; length-aware callback, expression order and new host/default Unicode proof retained. |
 | DROP | Indirect words and compound substitutions may contain Unicode; the pool's classifier still creates a BYTE-default configuration. | Reopened under LC-AC-62/88D; direct/indirect ordering and invalid-word policy retained. |
 | Assignment | Scalar payloads and compound-tail substitutions can contain Unicode; the pool stores `RexxValue` without a byte conversion. | Reopened under LC-AC-63/88D for visible Unicode values/tails; RHS-order proof retained. |
 | NOP | No scalar or character operation. | Closed receipt retained. |
@@ -3121,7 +3143,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-LABELS` | Labels and local routine names | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Bounded slice: stem exposure and simple compound access | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Hex/binary source literals use the fixed Latin-1 ordinal bridge in expressions, calls and PARSE patterns under LC-STEP-88C; opt/no-opt, tree and linked evidence | Remaining quoted forms, error/reference equivalence and host text proof remain open |
+| `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Hex/binary source literals use the fixed Latin-1 ordinal bridge in expressions, calls and PARSE patterns under LC-STEP-88C; opt/no-opt, tree and linked evidence; SAY host text output passes under LC-STEP-88D-1 | Remaining quoted forms, error/reference equivalence and other host text inputs remain open |
 | `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Prior one-pool structural closure retained; byte-literal value assignment passes under LC-STEP-88C | Unicode tail substitution and host/external API remain open under LC-AC-63/74 |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
@@ -3142,7 +3164,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-QUEUE` | QUEUE instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-RETURN` | RETURN instruction | Bounded slice: value/void RETURN in local procedures | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-SAY` | SAY instruction | Prior whole-instruction structural closure retained; NUL, source hex ordinals and Unicode literal output pass under LC-STEP-88C | Host encoding and Unicode output review remain open under LC-AC-57/74; missing expression/BIF, TRACE and SIGNAL services remain shared work |
+| `SYN-CLASSIC-SAY` | SAY instruction | Whole-instruction closure under LC-AC-57/LC-STEP-88D-1; NUL, source hex ordinals, mapped high characters and non-Latin-1 text pass default, host, optimized/no-opt and linked output | Missing expression/BIF, TRACE and SIGNAL services remain shared work |
 | `SYN-CLASSIC-SELECT` | SELECT/WHEN/OTHERWISE | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |
