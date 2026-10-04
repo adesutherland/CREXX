@@ -2323,6 +2323,12 @@ separately by `levelc_arg_exact_bytes*`. `RexxClassicConfig` already owns BYTE
 and UTF8 modes, but generated Level C main constructs a BYTE-default owner
 without a host/profile selector. Opt-in UTF8 qualification remains open under
 LC-AC-71 and the shared LC-AC-04/06 configuration contract.
+The host fixture initially used `CALL nested ARG(1),,ARG(2)`; Regina accepts
+that expression shape, but Level C currently reports `unsupported CALL
+argument expression`. The host regression now isolates ARG entry behavior.
+Completing expressions as CALL actuals belongs to the open `SYN-CLASSIC-CALL`
+row; this unsupported CALL form is not counted as a working ARG invocation
+mode.
 
 **LC-STEP-73H proposed profile bridge — decision gate.** Vision: a host
 selects BYTE or UTF8 once per VM context, with BYTE as the default; each new
@@ -2344,7 +2350,9 @@ reserved policy bit to request profile-sensitive units. One parseplan source
 view then chooses byte offsets for BYTE and codepoint offsets for UTF8,
 including literal lengths, dynamic patterns and exact output spans. Unflagged
 Level B plans retain their codepoint behavior and the same executor remains
-the sole template engine. A source
+the sole template engine. A second read-only probe at position 2 yields
+`C3A9|61` in current Level C versus Regina's `C3|A961`, confirming BYTE must
+preserve fields that split a multibyte UTF8 sequence. A source
 `OPTIONS UTF8` word would change the already closed OPTIONS language contract;
 a compiler-only flag would not let an embedding host choose per context.
 Adrian's approval is required under AGENTS.md before this VM/host/compiler
@@ -2933,7 +2941,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, host `rxvml_run()` lifecycle, raw/canonical AST, exact bytes, 26.4 dynamic-position errors and linked output are proven | Opt-in UTF8 configuration and any admitted external routine-entry modes remain open under LC-AC-71/LC-STEP-73G |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, expression actuals such as `CALL nested ARG(1),,ARG(2)`, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal start with optional captured TO/BY/FOR | Dynamic start, wider count/numeric errors and configuration proof open |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-64B, including arbitrary direct compounds and Regina-style invalid-word skip | Host-selected profile policy remains cross-cutting under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
