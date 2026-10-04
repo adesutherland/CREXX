@@ -5262,6 +5262,9 @@ endfunction()
 add_levelc_invalid_compile_test(levelc_compile_invalid_if_missing_then
         rexx_src/levelc_if_missing_then.rexx
         "RXC-LC-18\\.1")
+add_levelc_invalid_compile_test(levelc_arg_malformed
+        rexx_src/levelc_arg_malformed.rexx
+        "RXC-LC-46\\.1" "levelc_arg_malformed\\.rexx @ 2:7")
 add_levelc_invalid_compile_test(levelc_if_missing_condition
         rexx_src/levelc_if_missing_condition.rexx
         "RXC-LC-35\\.1" "1 error")
@@ -5561,6 +5564,14 @@ add_runtime_bytes_test(levelc_say_bytes
 add_runtime_bytes_test(levelc_say_bytes_noopt
         rexx_src/levelc_say_bytes.rexx
         "4100420ac3a90a0a" levelc -n)
+add_runtime_bytes_test(levelc_arg_exact_bytes
+        rexx_src/levelc_arg_exact_bytes.rexx
+        "6100620a4100420a" levelc)
+add_runtime_bytes_test(levelc_arg_exact_bytes_noopt
+        rexx_src/levelc_arg_exact_bytes.rexx
+        "6100620a4100420a" levelc -n)
+set_tests_properties(levelc_arg_exact_bytes levelc_arg_exact_bytes_noopt PROPERTIES
+        CREXX_PREP_TARGETS "rxc;rxas;rxvm;library;classlib;rxfnsc")
 add_runtime_bytes_test(levelg_say_bytes
         rexx_src/levelg_say_bytes.crexx
         "4100420ac3a90a" levelg)
@@ -5749,12 +5760,31 @@ add_levelc_runtime_slice_test(levelc_arg_patterns
 add_levelc_runtime_slice_test(levelc_arg_patterns_noopt
         rexx_src/levelc_arg_patterns.rexx
         "pattern AB CD \nleading LEFT RIGHT\ntrailing AB:CD\nbare\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_nested_long
+        rexx_src/levelc_arg_nested_long.rexx
+        "ONE|SIX|TWELVE\nONE TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE TEN ELEVEN TWELVE\n")
+add_levelc_runtime_slice_test(levelc_arg_nested_long_noopt
+        rexx_src/levelc_arg_nested_long.rexx
+        "ONE|SIX|TWELVE\nONE TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE TEN ELEVEN TWELVE\n" -n)
 add_levelc_runtime_slice_test(levelc_arg_bif
         rexx_src/levelc_arg_bif.rexx
         "main=0\ncount=3\nvalues=a|||\nexists=1010\nomitted=0101\nagain=a|A\nfunction=1:xy\n")
 add_levelc_runtime_slice_test(levelc_arg_bif_noopt
         rexx_src/levelc_arg_bif.rexx
         "main=0\ncount=3\nvalues=a|||\nexists=1010\nomitted=0101\nagain=a|A\nfunction=1:xy\n" -n)
+add_test(NAME levelc_arg_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_dynamic_templates.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_arg_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 add_levelc_runtime_slice_test(levelc_slice4_procedure_missing_arg
         rexx_src/levelc_slice4_procedure_missing_arg.rexx "2|\n")
 add_levelc_runtime_slice_test(levelc_slice6_local_function_omitted_arg
@@ -5774,7 +5804,9 @@ foreach(variant IN ITEMS opt noopt)
             -DNAME=${arg_main_name}
             -DNOOPT=$<STREQUAL:${variant},noopt>
             -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_frame_main.cmake)
-    set_tests_properties(${arg_main_name} PROPERTIES LABELS "compiler;levelc")
+    set_tests_properties(${arg_main_name} PROPERTIES
+            LABELS "compiler;levelc"
+            CREXX_PREP_TARGETS "rxc;rxas;rxvm;library;classlib;rxfnsc")
 endforeach()
 
 add_levelc_runtime_slice_test(levelc_slice5_stem_expose_target_shape
@@ -6776,6 +6808,12 @@ add_levelc_lowered_tree_shape_test(levelc_slice39_arg_upper_tree_shape
         "rexxclassicbif_translate"
         "setArguments"
         "setCallerPool"
+        "setSymbolValue")
+add_levelc_lowered_tree_shape_test(levelc_arg_dynamic_tree_shape
+        rexx_src/levelc_arg_dynamic_templates.rexx
+        "RexxActivationArguments"
+        "parseplan"
+        "rexxclassicbif_translate"
         "setSymbolValue")
 add_levelc_lowered_tree_shape_test(levelc_slice40_parse_single_tree_shape
         rexx_src/levelc_slice40_parse_single.rexx

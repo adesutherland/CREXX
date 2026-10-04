@@ -167,6 +167,12 @@ Classic variable pool. It reuses the VM descriptor semantics while preserving
 Level C AST ownership and pool writes. Other PARSE source types remain guarded.
 The current default proof is BYTE; the broader binary/UTF8 configuration
 obligation remains open.
+An invalid dynamic numeric position currently comes from the shared VM
+`parseplan` handler as `CONVERSION_ERROR`. Classic ARG/PARSE requires Error
+26.4 for that case. The worklist's LC-STEP-73F proposes a version-2 descriptor
+policy bit so Level C can request Classic error identity while the Level B
+exit retains its current conversion signal; that VM contract change awaits
+approval.
 
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and

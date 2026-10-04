@@ -2135,6 +2135,11 @@ template or argument count limit is acceptable.
    and standard BIF errors. Compare IBM and Regina, exercise main/routine and
    optimized/noopt calls, and retain shared `rxfnsc` regression evidence.
    Keep the BIF inventory row separate from ARG instruction closure.
+6. **LC-STEP-73F (LC-AC-71; decision gate after 73D error audit):** map a
+   failed dynamic numeric PARSE/ARG position to Classic Error 26.4 while
+   preserving the existing Level B `parseplan` conversion signal. The proposed
+   version-2 descriptor flag and VM handler change below require Adrian's
+   approval before implementation.
 
 2026-10-04 LC-STEP-73A initial audit: IBM defines ARG as `PARSE UPPER ARG`;
 comma-separated templates consume successive argument strings, each call
@@ -2240,6 +2245,46 @@ count/E/O rules and Regina's trailing-omission behavior match the opt/noopt
 `levelc_arg_bif*` and `testRexxClassicBifArg*` checks. Invalid index and
 option cases signal Classic SYNTAX with authored source positions. Broader
 profile, host-entry and BIF reference proof remain open.
+
+LC-STEP-73D qualification checkpoint: main `-a` arguments retain their raw
+case for `ARG(n)` while ARG instruction uppercases parsed fields;
+`levelc_arg_exact_bytes*` proves an embedded NUL survives both paths;
+`levelc_arg_linked` runs a dynamic template from one sealed image;
+`levelc_arg_malformed` retains `RXC-LC-46.1` and source position; and the
+dynamic canonical tree and twelve-target nested IF/DO cases pass. These
+checks join the earlier opt/noopt ARG/PARSE and shared runtime evidence.
+LC-AC-71 remains open for the dynamic-position error identity below and the
+applicable configuration/lifecycle boundary.
+
+**LC-STEP-73F decision proposal — dynamic position error identity.** Regina
+raises Error 26.4 for `arg first =(pos) second` when `pos='Q'`. The current
+Level C generated `parseplan` instead raises VM `CONVERSION_ERROR` at the
+authored ARG clause. The VM's version-2 compact descriptor reserves two header
+bytes; assign bit 0 of byte 10 as a Classic numeric-error policy flag, leaving
+the current zero value and Level B PARSE exit unchanged. Level C would set the
+flag on its version-2 plans. On a dynamic-position conversion failure, the VM
+handler would raise `CLASSIC_SYNTAX` with `RXC-LC-26.4` and the authored source
+location for flagged plans, retaining `CONVERSION_ERROR` for unflagged plans.
+Reject unknown header bits. This adds no AST node or second template executor.
+The VM descriptor/header contract and condition mapping are an architectural
+shift under AGENTS.md; approval is required before code edits.
+
+- [ ] **LC-73F-01:** invalid dynamic numeric ARG/PARSE positions yield Classic
+  `26.4`, source position and prior output in optimized/noopt Level C runs.
+- [ ] **LC-73F-02:** existing unflagged Level B version-2 plans still yield
+  `CONVERSION_ERROR`; other valid static/dynamic plans and linked images retain
+  their current output.
+- [ ] **LC-73F-03:** the VM descriptor documentation, focused runtime tests
+  and Level C architecture record describe the single flagged policy.
+
+1. **LC-STEP-73F.1 (LC-73F-01/02; approval required):** extend version-2
+   descriptor validation to accept only the Classic policy bit, and select the
+   existing `CLASSIC_SYNTAX` signal with `26.4` on flagged conversion failure.
+2. **LC-STEP-73F.2 (LC-73F-01/03; depends on 73F.1):** set the policy bit in
+   Level C version-2 descriptors, preserving one PARSE/ARG lowering path.
+3. **LC-STEP-73F.3 (LC-73F-01/02/03; depends on 73F.2):** compare Regina,
+   run flagged/unflagged negative and positive tests in normal Debug and the
+   relevant Level C suite, check linked execution, update docs and commit.
 
 Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
 one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
@@ -2791,7 +2836,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-65B: one pool-owned path, reference order, invalid target, opt/no-opt, tree, normal and linked evidence | Host-selected profile and external API remain cross-cutting open work |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ARG` | Classic ARG instruction | Bounded slice: fixed procedure ARG | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, raw/canonical AST, exact bytes and linked output are proven | Dynamic numeric-position error identity and profile/lifecycle proof remain open under LC-AC-71/LC-STEP-73F |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Bounded slice: direct local CALL | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Bounded slices: simple DO, literal and bounded dynamic direct/combined counts, FOREVER and conditional headers, scalar literal start with optional captured TO/BY/FOR | Dynamic start, wider count/numeric errors and configuration proof open |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-64B, including arbitrary direct compounds and Regina-style invalid-word skip | Host-selected profile policy remains cross-cutting under LC-AC-04/06 |
