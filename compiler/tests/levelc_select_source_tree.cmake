@@ -1,0 +1,38 @@
+foreach(required RXC BINDIR SOURCE BUILD_DIR)
+    if(NOT DEFINED ${required})
+        message(FATAL_ERROR "Missing ${required}")
+    endif()
+endforeach()
+
+execute_process(
+        COMMAND "${RXC}" -d1 -i "${BINDIR}" -o levelc_select_source_tree "${SOURCE}"
+        WORKING_DIRECTORY "${BUILD_DIR}"
+        OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+    message(FATAL_ERROR "SELECT source tree failed: ${out}${err}")
+endif()
+
+set(full "${out}${err}")
+string(FIND "${full}" "--- STAGE_RAW ---" raw_start)
+string(FIND "${full}" "--- STAGE_LEVELC_LOWERED ---" lowered_start)
+if(raw_start EQUAL -1 OR lowered_start EQUAL -1)
+    message(FATAL_ERROR "SELECT source or lowered tree is missing")
+endif()
+math(EXPR raw_length "${lowered_start} - ${raw_start}")
+string(SUBSTRING "${full}" ${raw_start} ${raw_length} raw)
+
+foreach(label IN ITEMS before_first between_arms)
+    if(NOT raw MATCHES "LABEL : \"${label}:\"")
+        message(FATAL_ERROR "SELECT lost source label ${label}")
+    endif()
+endforeach()
+string(REGEX MATCHALL "OTHERWISE : \"otherwise\"" all_otherwise "${raw}")
+string(REGEX MATCHALL "OTHERWISE : \"otherwise\"[^\n]*\n[ ]+INSTRUCTIONS :" list_otherwise "${raw}")
+list(LENGTH all_otherwise all_count)
+list(LENGTH list_otherwise list_count)
+if(all_count LESS 3 OR NOT all_count EQUAL list_count)
+    message(FATAL_ERROR "OTHERWISE clauses do not all own one instruction list: ${all_count}/${list_count}")
+endif()
+if(NOT raw MATCHES "OTHERWISE : \"otherwise\"[^\n]*\n[ ]+INSTRUCTIONS :[^\n]*\n[ ]+SELECT : \"select\"")
+    message(FATAL_ERROR "Inline OTHERWISE SELECT is missing from its source list")
+endif()

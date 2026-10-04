@@ -565,7 +565,11 @@ external data queue. Missing expression means the null string.
 output.
 
 `SELECT` evaluates `WHEN` expressions in order. Each must be exact `0` or `1`.
-If none are true and there is no `OTHERWISE`, raise `7.3`.
+It runs only the first selected arm. `OTHERWISE` may contain several
+instructions or no instructions, including when its first instruction shares
+the OTHERWISE clause. Labels and null clauses may separate WHEN clauses; the
+label's trace and branch lifecycle is part of the shared condition/TRACE
+foundation. If none are true and there is no `OTHERWISE`, raise `7.3`.
 
 `SIGNAL`:
 

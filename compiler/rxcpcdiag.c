@@ -25,6 +25,7 @@
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
 #include "rxcpcsym.h"
+#include "rxcp_source_tree.h"
 
 typedef enum {
     LEVELC_FB_FRAME_DO,
@@ -1381,6 +1382,64 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
     return diagnostics_after - diagnostics_before;
 }
 
+int rxcp_levelc_validate_recovered_syntax(Context *context) {
+    SourceDiagnostic *existing;
+    LevelCFallbackFrame *frames = 0;
+    size_t frame_count = 0;
+    size_t frame_capacity = 0;
+    Token *token;
+    Token *bad;
+    Token *prior;
+
+    if (!context || !context->ast || !context->syntax_error_token) return 0;
+    for (existing = context->source_diagnostics_list; existing;
+         existing = existing->next_in_context) {
+        if (existing->severity == SOURCE_DIAG_ERROR) return 0;
+    }
+
+    bad = context->syntax_error_token;
+    /* Only a recovered instruction at a SELECT clause boundary is owned by
+     * this validator. Other parser recovery includes legal empty assignments
+     * and transparent labels; their grammar/owner handles those forms. */
+    if (bad->token_type == TK_LABEL || bad->token_type == TK_EOC ||
+        bad->token_type == TK_EOL || bad->token_type == TK_EOS ||
+        !bad->token_prev ||
+        (bad->token_prev->token_type != TK_EOC &&
+         bad->token_prev->token_type != TK_EOL)) return 0;
+    for (token = context->token_head; token && token != bad; token = token->token_next) {
+        if (token->token_type == TK_DO || token->token_type == TK_LOOP ||
+            token->token_type == TK_SELECT) {
+            LevelCFallbackFrameType type = token->token_type == TK_SELECT
+                ? LEVELC_FB_FRAME_SELECT : LEVELC_FB_FRAME_DO;
+            if (!levelc_push_frame(&frames, &frame_count, &frame_capacity,
+                                   type, token, 0, 0)) {
+                free(frames);
+                return 0;
+            }
+        } else if (token->token_type == TK_END && frame_count > 0) {
+            frame_count--;
+        }
+    }
+
+    prior = bad->token_prev;
+    while (prior && (prior->token_type == TK_EOC ||
+                     prior->token_type == TK_EOL ||
+                     prior->token_type == TK_LABEL)) {
+        prior = prior->token_prev;
+    }
+    if (frame_count > 0 && frames[frame_count - 1].type == LEVELC_FB_FRAME_SELECT &&
+        (!prior || (prior->token_type != TK_THEN &&
+                    prior->token_type != TK_ELSE &&
+                    prior->token_type != TK_OTHERWISE))) {
+        levelc_append_line_token(context, bad, "7.2",
+                                 frames[frame_count - 1].token, bad);
+        free(frames);
+        return 1;
+    }
+    free(frames);
+    return 0;
+}
+
 int rxcp_levelc_run_fallback_diagnostics(Context *context) {
     ASTNode *diag;
     Token *token;
@@ -1445,6 +1504,16 @@ int rxcp_levelc_run_fallback_diagnostics(Context *context) {
                 break;
 
             case TK_END:
+                {
+                    Token *prior = token->token_prev;
+                    while (prior && (prior->token_type == TK_EOC ||
+                                     prior->token_type == TK_EOL ||
+                                     prior->token_type == TK_LABEL)) {
+                        prior = prior->token_prev;
+                    }
+                    if (prior && prior->token_type == TK_THEN)
+                        levelc_append_code(context, prior, "14.3");
+                }
                 pending_if = 0;
                 pending_when = 0;
                 if (frame_count > 0) frame_count--;

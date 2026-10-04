@@ -4,8 +4,13 @@ foreach(required RXC RXAS RXVM BINDIR BUILD_DIR SOURCE NAME EXPECTED_DIAGNOSTIC)
     endif()
 endforeach()
 
+set(rxc_options)
+if(NOOPT)
+    list(APPEND rxc_options -n)
+endif()
+
 execute_process(
-    COMMAND "${RXC}" -i "${BINDIR}" -o "${NAME}" "${SOURCE}"
+    COMMAND "${RXC}" ${rxc_options} -i "${BINDIR}" -o "${NAME}" "${SOURCE}"
     WORKING_DIRECTORY "${BUILD_DIR}"
     OUTPUT_VARIABLE rxc_out ERROR_VARIABLE rxc_err RESULT_VARIABLE rxc_result)
 if(NOT rxc_result EQUAL 0)
@@ -30,6 +35,12 @@ if(rxvm_result EQUAL 0)
 endif()
 if(NOT "${rxvm_out}${rxvm_err}" MATCHES "${EXPECTED_DIAGNOSTIC}")
     message(FATAL_ERROR "Missing ${EXPECTED_DIAGNOSTIC}: ${rxvm_out}${rxvm_err}")
+endif()
+if(DEFINED ENV{LEVELC_EXPECTED_FRAGMENT})
+    string(FIND "${rxvm_out}${rxvm_err}" "$ENV{LEVELC_EXPECTED_FRAGMENT}" fragment_offset)
+    if(fragment_offset EQUAL -1)
+        message(FATAL_ERROR "Missing expected runtime fragment $ENV{LEVELC_EXPECTED_FRAGMENT}: ${rxvm_out}${rxvm_err}")
+    endif()
 endif()
 if(DEFINED EXPECTED_OUTPUT_ORDER AND NOT "${EXPECTED_OUTPUT_ORDER}" STREQUAL "")
     string(REPLACE "|" ";" expected_tokens "${EXPECTED_OUTPUT_ORDER}")

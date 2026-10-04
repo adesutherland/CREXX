@@ -186,11 +186,14 @@ ownership and residual Classic-only nodes before canonical validation. The
 NOP path preserves one source-anchored canonical NOP; the parser now rejects
 extra same-clause tokens with `21.1` instead of discarding them. Labeled
 clauses and TRACE hooks remain shared structural work.
-The first additional structural family is `SELECT`: guarded WHEN/OTHERWISE lists
-become nested canonical IF blocks, with each later condition contained in the
-earlier false arm. The shared `RexxValue` class supplies exact WHEN logical
-validation; a small exported runtime helper reports the Classic no-match
-identity. RexxScript's evaluator and sandbox contract remain separate.
+The Classic `SELECT` source tree owns ordered WHEN clauses, trace-only labels,
+and at most one OTHERWISE. The latter always owns one `INSTRUCTIONS` list,
+including when its first instruction shares the OTHERWISE clause or the list
+is empty. The lowerer turns WHENs into nested canonical IF blocks, with each
+later condition contained in the earlier false arm. The shared `RexxValue`
+class supplies exact WHEN logical validation; a small exported runtime helper
+reports the Classic no-match identity. RexxScript's evaluator and sandbox
+contract remain separate.
 The initial loop slice accepted `DO > REPEAT > FOR > INTEGER` with a
 non-negative literal count representable by the canonical integer builder.
 Later bounded slices extend this tree to dynamic counts, controlled loops,
@@ -1129,16 +1132,39 @@ row, not by IF dispatch.
 `SELECT` syntax:
 
 - `SELECT`, end-of-clause, select body, `END`
-- select body requires `WHEN` clauses and may include `OTHERWISE`
+- select body requires `WHEN` clauses and may include `OTHERWISE`; labels and
+  null clauses may separate these clauses
 - each `WHEN` has an expression and `THEN` instruction
-- `OTHERWISE` has an optional instruction list
+- `OTHERWISE` has an optional instruction list, which may begin on the same
+  clause; an empty list is valid
 - `END` may carry an optional variable symbol that is invalid for `SELECT`
   according to the Classic diagnostic rules
 
-Implementation consequence:
+The Level C parser retains `SELECT > INSTRUCTIONS > LABEL*/WHEN*
+[OTHERWISE]`. Every OTHERWISE owns a single `INSTRUCTIONS` child, so the
+validator and lowerer traverse the same list regardless of source layout.
+The lowerer skips trace-only labels and reverses the WHEN sequence into
+canonical IF/DO blocks. Each WHEN value is converted by
+`RexxValue.logicalWhenValue()` exactly when its predecessor is false; only
+the selected arm runs. The OTHERWISE list is lowered through normal statement
+dispatch, and an absent OTHERWISE calls `rexxvalue_select_missing()` only
+after every WHEN is false. Each condition retains its WHEN source token. The
+fallback block is anchored to OTHERWISE or the last WHEN, so an invalid
+WHEN value reports that active line even when no OTHERWISE exists. The
+no-match helper embeds the SELECT line in its `7.3` message; the VM stack
+location can instead name the inlined shared helper. Shared label/TRACE and
+condition-trap lifecycle remains separately open.
 
-- Current Level B `SELECT expression` switch shape is not Classic REXX syntax.
-  Level C should parse Classic `SELECT` separately and lower later if needed.
+The parser diagnoses an extra SELECT header operand as `21.1`, no WHEN as
+`7.1`, an OTHERWISE without a WHEN or an unexpected instruction among WHENs
+as `7.2`, missing condition as `35.1`, missing THEN as `18.2`, missing arm as
+`14.3`, invalid logical value as `34.2`, unmatched selection as `7.3`, and a
+named END as `10.4`. Lemon can recover past a malformed source clause while
+still producing an AST; the Level C diagnostic pass retains the first syntax
+error and reports `7.2` when the unreported token begins an unexpected clause
+at SELECT level. This check excludes transparent labels and expression/arm
+syntax, which retain their own owners. Level B's `SELECT expression` switch
+is a separate grammar and emitter path.
 
 ### 6.9 ADDRESS
 

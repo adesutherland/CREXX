@@ -529,8 +529,7 @@ int rexcpars(Context *context) {
         }
 
         if (token_type == TK_EOC &&
-            (last_parser_token == CTK_THEN || last_parser_token == CTK_ELSE ||
-             last_parser_token == CTK_OTHERWISE) &&
+            (last_parser_token == CTK_THEN || last_parser_token == CTK_ELSE) &&
             peek_token->token_type != TK_EOS) {
             continue;
         }

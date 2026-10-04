@@ -4727,10 +4727,10 @@ if (ENABLE_PARSER_MODE)
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=9, sev=48, text=\"otherwise\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"end\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            "Node: type=72 \\(PARSE_TREE_CODEBLOCK\\), pos=[0-9]+, len=[0-9]+, sev=48\n[ ]+Node: type=73 \\(PARSE_TREE_STATEMENT\\), pos=[0-9]+, len=[0-9]+, sev=48\n[ ]+Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
             MUST_NOT_MATCH
             "RXC-LC-"
             "PARSE_FAILURE"
-            "Node: type=72 \\(PARSE_TREE_CODEBLOCK\\), pos=[0-9]+, len=[0-9]+, sev=48\n[ ]+Node: type=73 \\(PARSE_TREE_STATEMENT\\), pos=[0-9]+, len=[0-9]+, sev=48\n[ ]+Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
     )
     set_tests_properties(syntaxhighlight_levelc_select_when_otherwise PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
@@ -5321,6 +5321,50 @@ add_levelc_invalid_compile_test(levelc_compile_invalid_do_end_symbol
 add_levelc_invalid_compile_test(levelc_compile_invalid_select_missing_when
         rexx_src/levelc_select_missing_when.rexx
         "RXC-LC-7\\.1")
+add_levelc_invalid_compile_test(levelc_select_only_otherwise
+        rexx_src/levelc_select_only_otherwise.rexx
+        "RXC-LC-7\\.2" "1 error")
+add_levelc_invalid_compile_test(levelc_select_missing_condition
+        rexx_src/levelc_select_missing_condition.rexx
+        "RXC-LC-35\\.1" "1 error")
+add_levelc_invalid_compile_test(levelc_select_missing_arm
+        rexx_src/levelc_select_missing_arm.rexx
+        "RXC-LC-14\\.3" "1 error")
+add_levelc_invalid_compile_test(levelc_select_separator_missing_arm
+        rexx_src/levelc_select_separator_missing_arm.rexx
+        "RXC-LC-14\\.3" "1 error")
+add_levelc_invalid_compile_test(levelc_select_stray_when
+        rexx_src/levelc_select_stray_when.rexx
+        "RXC-LC-9\\.1" "1 error")
+add_levelc_invalid_compile_test(levelc_select_stray_otherwise
+        rexx_src/levelc_select_stray_otherwise.rexx
+        "RXC-LC-9\\.2" "1 error")
+add_levelc_invalid_compile_test(levelc_select_when_after_otherwise
+        rexx_src/levelc_select_when_after_otherwise.rexx
+        "RXC-LC-9\\.1" "1 error")
+add_levelc_invalid_compile_test(levelc_select_duplicate_otherwise
+        rexx_src/levelc_select_duplicate_otherwise.rexx
+        "RXC-LC-9\\.2" "1 error")
+add_levelc_invalid_compile_test(levelc_select_named_end
+        rexx_src/levelc_select_end_symbol.rexx
+        "RXC-LC-10\\.4" "1 error")
+add_levelc_invalid_compile_test(levelc_select_missing_end
+        rexx_src/levelc_select_missing_end.rexx
+        "RXC-LC-14\\.2" "1 error")
+add_levelc_invalid_compile_test(levelc_select_missing_then
+        rexx_src/levelc_when_missing_then.rexx
+        "RXC-LC-18\\.2" "1 error")
+add_levelc_invalid_compile_test(levelc_select_bad_header
+        rexx_src/levelc_select_bad_header.rexx
+        "RXC-LC-21\\.1" "@ 2:8" "1 error")
+add_levelc_invalid_compile_test(levelc_select_same_clause_when
+        rexx_src/levelc_select_same_clause_when.rexx
+        "RXC-LC-21\\.1" "@ 2:8" "1 error")
+foreach(position IN ITEMS before between after)
+    add_levelc_invalid_compile_test(levelc_select_unexpected_${position}_when
+            rexx_src/levelc_select_unexpected_${position}_when.rexx
+            "RXC-LC-7\\.2" "1 error")
+endforeach()
 
 add_levelc_invalid_compile_test(levelc_drop_invalid
         rexx_src/levelc_drop_invalid.rexx
@@ -5713,6 +5757,12 @@ add_levelc_runtime_slice_test(levelc_slice11_select
 add_levelc_runtime_slice_test(levelc_slice11_select_noopt
         rexx_src/levelc_slice11_select.rexx
         "first\n0\nsecond\nnested\n1\narm\nprocedure\n" -n)
+add_levelc_runtime_slice_test(levelc_select_instruction
+        rexx_src/levelc_select_instruction.rexx
+        "new 1\nempty\ninline\nred blue\n2\nnested\n2\nlabel\nlocal\nVALUE\n")
+add_levelc_runtime_slice_test(levelc_select_instruction_noopt
+        rexx_src/levelc_select_instruction.rexx
+        "new 1\nempty\ninline\nred blue\n2\nnested\n2\nlabel\nlocal\nVALUE\n" -n)
 
 add_levelc_runtime_slice_test(levelc_slice12_counted_do
         rexx_src/levelc_slice12_counted_do.rexx
@@ -6047,6 +6097,12 @@ add_levelc_runtime_slice_test(levelc_slice45_constant_symbols_noopt
         "literal 1X 1E 1.2.3 1A.B 123ABC 1E2X\npool 1X 1E\nabutted [1X]\nparse 1A.B\n" -n)
 
 function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
+    set(noopt OFF)
+    set(expected_order "${ARGN}")
+    if("${ARGN}" STREQUAL "-n")
+        set(noopt ON)
+        set(expected_order "")
+    endif()
     add_test(NAME ${NAME}
             COMMAND ${CMAKE_COMMAND}
             -DRXC=$<TARGET_FILE:rxc>
@@ -6057,7 +6113,8 @@ function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
             -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}
             -DNAME=${NAME}
             -DEXPECTED_DIAGNOSTIC=${EXPECTED_DIAGNOSTIC}
-            -DEXPECTED_OUTPUT_ORDER=${ARGN}
+            -DEXPECTED_OUTPUT_ORDER=${expected_order}
+            -DNOOPT=${noopt}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_invalid_runtime.cmake)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
@@ -6068,8 +6125,18 @@ add_levelc_invalid_runtime_test(levelc_slice7_if_invalid_logical
         rexx_src/levelc_slice7_if_invalid_logical.rexx RXC-LC-34.1)
 add_levelc_invalid_runtime_test(levelc_slice11_select_invalid_logical
         rexx_src/levelc_slice11_select_invalid_logical.rexx RXC-LC-34.2)
+add_levelc_invalid_runtime_test(levelc_select_invalid_logical_noopt
+        rexx_src/levelc_slice11_select_invalid_logical.rexx RXC-LC-34.2 -n)
 add_levelc_invalid_runtime_test(levelc_slice11_select_no_match
         rexx_src/levelc_slice11_select_no_match.rexx RXC-LC-7.3)
+add_levelc_invalid_runtime_test(levelc_select_no_match_noopt
+        rexx_src/levelc_slice11_select_no_match.rexx RXC-LC-7.3 -n)
+set_tests_properties(levelc_slice11_select_invalid_logical
+        levelc_select_invalid_logical_noopt PROPERTIES
+        ENVIRONMENT "LEVELC_EXPECTED_FRAGMENT=source: levelc_slice11_select_invalid_logical.rexx:3:3")
+set_tests_properties(levelc_slice11_select_no_match
+        levelc_select_no_match_noopt PROPERTIES
+        ENVIRONMENT "LEVELC_EXPECTED_FRAGMENT=SELECT on line 2")
 add_levelc_invalid_runtime_test(levelc_slice15_while_invalid_logical
         rexx_src/levelc_slice15_while_invalid_logical.rexx RXC-LC-34.3)
 add_levelc_invalid_runtime_test(levelc_slice16_until_invalid_logical
@@ -6256,6 +6323,21 @@ add_levelc_lowered_tree_shape_test(levelc_slice11_select_tree_shape
         "IF"
         "DO"
         "RexxVariablePool")
+add_levelc_lowered_tree_shape_test(levelc_select_instruction_tree
+        rexx_src/levelc_select_instruction.rexx
+        "logicalWhenValue"
+        "IF"
+        "DO"
+        "RexxVariablePool"
+        "applyOptions")
+add_test(NAME levelc_select_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_select_instruction.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_select_source_tree.cmake)
+set_tests_properties(levelc_select_source_tree PROPERTIES LABELS "compiler;levelc")
 
 add_levelc_lowered_tree_shape_test(levelc_slice12_counted_do_tree_shape
         rexx_src/levelc_slice12_counted_do.rexx

@@ -1752,25 +1752,75 @@ rather than accumulating bounded cases or new per-arm handling. Shared
 expression, condition/trap and individual arm-instruction obligations remain
 in their owning open rows. Preserve Level B and RexxScript behavior.
 
-1. **LC-STEP-69A (LC-AC-59/68; active; depends on IF closure):** inventory the
+1. **LC-STEP-69A (LC-AC-59/68; complete; depends on IF closure):** inventory the
    full SELECT grammar, token adapter, validation and fallback diagnostics,
    source/canonical AST, main/procedure dispatch, logical/no-match services,
    and retained tests. Probe IBM/Regina valid and invalid forms, including
    ordering, separators, empty OTHERWISE, nesting, END and error location.
    Classify gaps by owner and record any architecture or language decision
    before compiler edits.
-2. **LC-STEP-69B (LC-AC-68; pending; depends on 69A and any required Adrian
+2. **LC-STEP-69B (LC-AC-68; complete; depends on 69A and any required Adrian
    approval):** repair SELECT-owned gaps in one coherent implementation
    increment, keeping one source-anchored lowering path and ordinary statement
    dispatch for arms. Add a whole-instruction fixture plus focused invalid,
    AST and optimized/no-opt coverage; replace bounded assertions where useful.
-3. **LC-STEP-69C (LC-AC-59/61/68; pending; depends on 69B):** inspect source and
+3. **LC-STEP-69C (LC-AC-59/61/68; active; depends on 69B):** inspect source and
    canonical trees, reconcile every valid/invalid form and error recovery,
    compare reference output, run focused shared-runtime/RexxScript and relevant
    normal correctness checks, prove `rxc`/`rxas`/`rxlink`/`rxvm`, update the
    architecture/reference docs, and close LC-I-07 only with an exact-commit
    evidence receipt. If any SELECT-owned capability remains absent, keep
    LC-AC-68 open; significant work is not an infeasibility exception.
+
+2026-10-04 LC-STEP-69A audit: the existing parser builds `SELECT >
+INSTRUCTIONS > WHEN* [OTHERWISE]`; the lowerer builds an ordered canonical IF
+chain and passes arm statements through the ordinary main/procedure dispatcher.
+The shared `logicalWhenValue` and `rexxvalue_select_missing` services supply
+`34.2` and `7.3`. A Regina/compiled matrix matched first-true selection,
+condition laziness, nested IF/SELECT/DO, a multi-instruction OTHERWISE, and
+an omitted OTHERWISE after a true arm (`/tmp/crexx-select-audit-_z_7gpbm`).
+IBM's reference explicitly permits an empty OTHERWISE list; Regina accepts
+it, but cREXX currently reports `21.1`. Debug parser trace
+(`/tmp/crexx-select-empty-parse.dwwNEZ`) shows the token adapter discarding
+the clause boundary after OTHERWISE, leaving END where the grammar expects an
+EOC. A SELECT containing only OTHERWISE currently reports `7.1`; Regina
+distinguishes it as `7.2`. Missing WHEN condition and missing THEN arm fall
+back to generic or misleading diagnostics; the source grammar already has
+corresponding recovery forms for the analogous IF case. Repair these existing
+parser/diagnostic ownership paths, retain the one canonical lowerer, and
+characterize wider expression/parser failures under LC-AC-04/08 rather than
+adding SELECT-only runtime cases. No new language syntax or architecture
+decision is needed for this repair.
+The arm inventory additionally found that `OTHERWISE SELECT` on the same
+clause is valid in Regina but rejected because the first-instruction parser
+rule omits SELECT (`/tmp/crexx-select-first-z0ulgu7f`). The grammar also
+stores that first instruction outside its OTHERWISE `INSTRUCTIONS` child,
+forcing two lowerer paths for one list. Admit the existing SELECT instruction
+in the common first-instruction production and normalize this source AST to a
+single ordered list; this is a representation cleanup within the documented
+SELECT-to-IF design, not a new language or runtime architecture.
+An additional invalid-header probe found `SELECT 1` and `SELECT foo` silently
+accepted: Lemon records a syntax error for the extra same-clause token but
+recovers to a valid SELECT tree without a diagnostic. Regina reports `21.1`.
+Give the invalid header an explicit source grammar production and source
+diagnostic, retaining the following WHEN tree for recovery. This is a
+SELECT-owned correction; broader silent parser recovery remains a general
+front-end audit concern under LC-AC-04/08.
+The same silent Lemon recovery also drops an unexpected SAY before, between,
+or after WHEN arms while accepting the remaining SELECT
+(`/tmp/crexx-select-body-mfdxp643`); Regina reports `7.2` at the first such
+clause. The grammar's existing `%syntax_error` record is overwritten by later
+recovery tokens and ignored when a usable AST remains. Keep the first syntax
+error and diagnose an otherwise undiagnosed unexpected instruction at a SELECT
+clause boundary as `7.2`. Existing grammar diagnostics continue to take
+precedence. Broader parser recovery is kept under its own instruction and
+expression owners, because legal empty assignments and labels also appear in
+the parser's syntax-error record.
+Regina also accepts labels before and between WHEN clauses. Lemon had been
+recovering past them without source AST ownership. Retain those LABEL nodes in
+the SELECT list while the current canonical lowering skips their trace-only
+execution role; shared TRACE and SIGNAL label semantics remain open in their
+own rows. Null clauses already pass without a label-specific route.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared

@@ -225,7 +225,8 @@ static ASTNode *levelc_missing_then(Context *context,
 
 static ASTNode *levelc_select_missing_when(Context *context,
                                            Token *select_token,
-                                           Token *found_token) {
+                                           Token *found_token,
+                                           const char *standard_code) {
     ASTNode *node;
     char *line;
     char *found;
@@ -233,11 +234,25 @@ static ASTNode *levelc_select_missing_when(Context *context,
     node = ast_f(context, SELECT, select_token);
     line = levelc_diag_line_text(select_token);
     found = levelc_diag_token_text(found_token);
-    add_ast(node, rxcp_levelc_ast_error_insert2(context, "7.1", found_token ? found_token : select_token,
+    add_ast(node, rxcp_levelc_ast_error_insert2(context, standard_code, found_token ? found_token : select_token,
                                                 "linenumber", line,
                                                 "token", found));
     free(line);
     free(found);
+    return node;
+}
+
+static ASTNode *levelc_otherwise_node(Context *context, Token *token,
+                                     ASTNode *first, ASTNode *body) {
+    ASTNode *node = ast_f(context, OTHERWISE, token);
+
+    if (first) {
+        ASTNode *remaining = body->child;
+        body->child = 0;
+        add_ast(body, first);
+        add_ast(body, remaining);
+    }
+    add_ast(node, body);
     return node;
 }
 
@@ -493,8 +508,10 @@ static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expressio
 %stack_size 0
 
 %syntax_error {
-    context->syntax_error_clause_token = context->current_clause_token;
-    context->syntax_error_token = TOKEN;
+    if (!context->syntax_error_token) {
+        context->syntax_error_clause_token = context->current_clause_token;
+        context->syntax_error_token = TOKEN;
+    }
 }
 
 program(P) ::= top_instruction_list(I) CTK_EOS.
@@ -2163,16 +2180,31 @@ select_instruction(S) ::= CTK_SELECT(T) CTK_EOC select_body(B) end_clause.
     add_ast(S, B);
 }
 
+select_instruction(S) ::= CTK_SELECT(T) expression(E) CTK_EOC select_body(B) end_clause.
+{
+    S = ast_f(context, SELECT, T);
+    add_ast(S, rxcp_levelc_ast_error_token(context, "21.1",
+                                          levelc_expression_edge_token(E, 0)));
+    add_ast(S, B);
+}
+
+select_instruction(S) ::= CTK_SELECT(T) expression(E) CTK_EOC end_clause.
+{
+    S = ast_f(context, SELECT, T);
+    add_ast(S, rxcp_levelc_ast_error_token(context, "21.1",
+                                          levelc_expression_edge_token(E, 0)));
+}
+
 select_instruction(S) ::= CTK_SELECT(T) CTK_EOC end_clause(E).
 {
-    S = levelc_select_missing_when(context, T, levelc_end_clause_token(E));
+    S = levelc_select_missing_when(context, T, levelc_end_clause_token(E), "7.1");
 }
 
 select_instruction(S) ::= CTK_SELECT(T) CTK_EOC CTK_OTHERWISE(O) CTK_EOC select_inner_list(L) end_clause.
 {
     ASTNode *other;
 
-    S = levelc_select_missing_when(context, T, O);
+    S = levelc_select_missing_when(context, T, O, "7.2");
     other = ast_f(context, OTHERWISE, O);
     add_ast(other, L);
     add_ast(S, other);
@@ -2180,13 +2212,8 @@ select_instruction(S) ::= CTK_SELECT(T) CTK_EOC CTK_OTHERWISE(O) CTK_EOC select_
 
 select_instruction(S) ::= CTK_SELECT(T) CTK_EOC CTK_OTHERWISE(O) recovery_instruction(I) CTK_EOC select_inner_list(L) end_clause.
 {
-    ASTNode *other;
-
-    S = levelc_select_missing_when(context, T, O);
-    other = ast_f(context, OTHERWISE, O);
-    add_ast(other, I);
-    add_ast(other, L);
-    add_ast(S, other);
+    S = levelc_select_missing_when(context, T, O, "7.2");
+    add_ast(S, levelc_otherwise_node(context, O, I, L));
 }
 
 select_body(B) ::= when_list(W).
@@ -2206,10 +2233,34 @@ when_list(L) ::= when_clause(W).
     add_ast(L, W);
 }
 
+select_leading_labels(L) ::= CTK_LABEL(T) CTK_EOC.
+{
+    L = ast_ft(context, INSTRUCTIONS);
+    add_ast(L, ast_f(context, LABEL, T));
+}
+
+select_leading_labels(L) ::= select_leading_labels(L0) CTK_LABEL(T) CTK_EOC.
+{
+    L = L0;
+    add_ast(L, ast_f(context, LABEL, T));
+}
+
+when_list(L) ::= select_leading_labels(P) when_clause(W).
+{
+    L = P;
+    add_ast(L, W);
+}
+
 when_list(L) ::= when_list(L0) when_clause(W).
 {
     L = L0;
     add_ast(L, W);
+}
+
+when_list(L) ::= when_list(L0) CTK_LABEL(T) CTK_EOC.
+{
+    L = L0;
+    add_ast(L, ast_f(context, LABEL, T));
 }
 
 when_clause(W) ::= CTK_WHEN(T) expression(C) CTK_THEN then_instruction(Then) CTK_EOC.
@@ -2226,6 +2277,20 @@ when_clause(W) ::= CTK_WHEN(T) expression(C) CTK_THEN CTK_EOC.
     add_ast(W, rxcp_levelc_ast_error(context, "14.3", T));
 }
 
+when_clause(W) ::= CTK_WHEN(T) CTK_THEN(Th) then_instruction(Then) CTK_EOC.
+{
+    W = ast_f(context, WHEN, T);
+    add_ast(W, rxcp_levelc_ast_error_token(context, "35.1", Th));
+    add_ast(W, Then);
+}
+
+when_clause(W) ::= CTK_WHEN(T) CTK_THEN(Th) CTK_EOC.
+{
+    W = ast_f(context, WHEN, T);
+    add_ast(W, rxcp_levelc_ast_error_token(context, "35.1", Th));
+    add_ast(W, rxcp_levelc_ast_error(context, "14.3", Th));
+}
+
 when_clause(W) ::= CTK_WHEN(T) expression(C) CTK_EOC.
 {
     W = levelc_missing_then(context, "18.2", T, C);
@@ -2233,15 +2298,12 @@ when_clause(W) ::= CTK_WHEN(T) expression(C) CTK_EOC.
 
 otherwise_clause(O) ::= CTK_OTHERWISE(T) CTK_EOC select_inner_list(L).
 {
-    O = ast_f(context, OTHERWISE, T);
-    add_ast(O, L);
+    O = levelc_otherwise_node(context, T, 0, L);
 }
 
 otherwise_clause(O) ::= CTK_OTHERWISE(T) recovery_instruction(I) CTK_EOC select_inner_list(L).
 {
-    O = ast_f(context, OTHERWISE, T);
-    add_ast(O, I);
-    add_ast(O, L);
+    O = levelc_otherwise_node(context, T, I, L);
 }
 
 select_inner_list(L) ::= .
@@ -2348,6 +2410,11 @@ recovery_instruction(I) ::= if_instruction(F).
 recovery_instruction(I) ::= do_instruction(D).
 {
     I = D;
+}
+
+recovery_instruction(I) ::= select_instruction(S).
+{
+    I = S;
 }
 
 do_instruction(D) ::= CTK_DO(T) do_header(H) CTK_EOC select_inner_list(L) end_clause.

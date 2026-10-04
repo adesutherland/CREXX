@@ -833,6 +833,8 @@ int rxcmain(int argc, char *argv[]) {
 
             rxcp_levelc_prepare_source_ast(context);
             source_tree_sync_diagnostics(context);
+            if (rxcp_levelc_validate_recovered_syntax(context))
+                source_tree_sync_diagnostics(context);
             errors = prnterrs(context);
             if (errors) {
                 fprintf(stderr,"%d error(s) in source file\n", errors);

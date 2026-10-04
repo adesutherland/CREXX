@@ -998,6 +998,10 @@ static int levelc_select_statement_supported(ASTNode *stmt,
     while (clause) {
         ASTNode *condition;
         ASTNode *body;
+        if (clause->node_type == LABEL && !saw_otherwise) {
+            clause = clause->sibling;
+            continue;
+        }
         if (clause->node_type == WHEN && !saw_otherwise) {
             condition = clause->child;
             body = condition ? condition->sibling : NULL;
@@ -1010,16 +1014,9 @@ static int levelc_select_statement_supported(ASTNode *stmt,
             saw_when = 1;
         } else if (clause->node_type == OTHERWISE && saw_when && !saw_otherwise &&
                    !clause->sibling) {
-            ASTNode *part = clause->child;
-            ASTNode *body_list = part && part->node_type == INSTRUCTIONS ? part :
-                                 part ? part->sibling : NULL;
+            ASTNode *body_list = clause->child;
+            ASTNode *part;
             if (!body_list || body_list->node_type != INSTRUCTIONS || body_list->sibling) goto invalid;
-            if (part != body_list) {
-                if (in_procedure) {
-                    if (part->node_type == LEVELC_ARG) goto invalid;
-                    if (!levelc_proc_statement_supported(part, plan, reason_out)) return 0;
-                } else if (!levelc_main_statement_supported(part, plan, reason_out)) return 0;
-            }
             part = body_list->child;
             while (part) {
                 if (in_procedure) {
@@ -3752,21 +3749,19 @@ static int levelc_lower_select_statement(Context *context,
 
     for (clause = stmt->child->child; clause; clause = clause->sibling) {
         if (clause->node_type == WHEN) count++;
-        else otherwise = clause;
+        else if (clause->node_type == OTHERWISE) otherwise = clause;
     }
     whens = calloc(count, sizeof(*whens));
     if (!whens) goto fail;
-    for (clause = stmt->child->child; clause && clause->node_type == WHEN;
-         clause = clause->sibling) whens[index++] = clause;
+    for (clause = stmt->child->child; clause; clause = clause->sibling)
+        if (clause->node_type == WHEN) whens[index++] = clause;
 
-    fallback = rxcp_remap_create_instruction_builder(context, stmt);
+    fallback = rxcp_remap_create_instruction_builder(
+        context, otherwise ? otherwise : whens[count - 1]);
     if (!fallback) goto fail_free;
     if (otherwise) {
-        ASTNode *part = otherwise->child;
-        ASTNode *list = part->node_type == INSTRUCTIONS ? part : part->sibling;
-        if (part != list &&
-            !levelc_lower_select_body_statement(context, fallback, part, plan,
-                                                 procedure, in_procedure, reason_out)) goto fail_free;
+        ASTNode *list = otherwise->child;
+        ASTNode *part;
         for (part = list->child; part; part = part->sibling) {
             if (!levelc_lower_select_body_statement(context, fallback, part, plan,
                                                     procedure, in_procedure, reason_out)) goto fail_free;
@@ -3775,11 +3770,12 @@ static int levelc_lower_select_statement(Context *context,
         char line[32];
         ASTNode *args[1];
         ASTNode *call;
+        ASTNode *last_when = whens[count - 1];
         snprintf(line, sizeof(line), "%d", stmt->token ? stmt->token->line + 1 : 0);
-        args[0] = rxcp_remap_create_string_constant(context, stmt, line);
-        call = args[0] ? rxcp_remap_create_function_call(context, stmt,
+        args[0] = rxcp_remap_create_string_constant(context, last_when, line);
+        call = args[0] ? rxcp_remap_create_function_call(context, last_when,
                                                         "rexxvalue_select_missing", args, 1) : NULL;
-        call = call ? rxcp_remap_create_call_statement(context, stmt, call) : NULL;
+        call = call ? rxcp_remap_create_call_statement(context, last_when, call) : NULL;
         if (!call) goto fail_free;
         add_ast(fallback, call);
     }
