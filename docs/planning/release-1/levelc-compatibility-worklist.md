@@ -641,7 +641,7 @@ are verified against all affected consumers.
   diagnostics. Verify against Regina, optimized/no-opt and source/canonical
   trees, focused pool and RexxScript checks, normal Level C correctness and
   linked toolchain output, with BYTE/UTF8 values where relevant.
-- [ ] **LC-AC-64 — complete NOP instruction:** a childless Classic `NOP`
+- [x] **LC-AC-64 — complete NOP instruction:** a childless Classic `NOP`
   preserves adjacent statement order and has no visible effect in main,
   selected IF/SELECT arms, DO bodies and local procedures. Text after `NOP`
   in the same clause reports the Classic `21.1` syntax identity instead of
@@ -1092,7 +1092,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-01 SAY — closed 2026-10-04 | LC-STEP-63F | `LC-AC-57`: expression and childless forms, output and lifecycle; STEP-60 case included. Shared expression, BIF, TRACE and SIGNAL obligations remain open in their own rows. |
 | LC-I-02 DROP — closed 2026-10-04 | LC-STEP-64B | `LC-AC-62`: direct and parenthesized lists, arbitrary compound substitution, exposure, order and errors through the shared pool. Adrian's approved Regina invalid-word behavior is retained. |
 | LC-I-03 assignment — closed 2026-10-04 | LC-STEP-65B | `LC-AC-63`: scalar, stem and arbitrary compound targets, optional empty RHS and evaluation order through the shared pool. Shared profile, expression and condition obligations stay open in their own criteria. |
-| LC-I-04 NOP — active | LC-STEP-66 | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
+| LC-I-04 NOP — closed 2026-10-04 | LC-STEP-66B | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
 | LC-I-05 OPTIONS | LC-STEP-67 | All processor option words, unknown-option policy and source/configuration behavior; programme initialization. |
 | LC-I-06 IF | LC-STEP-68 | Every legal instruction arm, nearest ELSE, condition/error and nesting behavior; shared statement dispatch. |
 | LC-I-07 SELECT | LC-STEP-69 | WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
@@ -1294,7 +1294,7 @@ statement; they remain visible open work rather than NOP-specific omissions.
    path for extra same-clause tokens, including variable and nonvariable
    starts. Retain a focused invalid-source regression and source-tree check;
    build and commit the parser repair.
-2. **LC-STEP-66B (LC-AC-59/64; depends on 66A):** reconcile the grammar and
+2. **LC-STEP-66B (LC-AC-59/64; complete; depends on 66A):** reconcile the grammar and
    reference, check the existing positive opt/no-opt/linked cases, new negative
    diagnostics, canonical NOP/source anchors and the relevant normal Level C
    suite; close the instruction-specific row only if all pass. Keep shared
@@ -1319,7 +1319,24 @@ WHILE/UNTIL, negative and tree tests passed 16/16
 passed 4/4 (`/tmp/crexx-nop-tree-tests.r3M4Pr`). The Release Level C suite
 passed 318/318 (`/tmp/crexx-nop-levelc-suite.9Ykdll`) and the linked
 toolchain matched Regina's 20 bytes (`/tmp/crexx-nop-linked.CFAj8d`). The
-shared labeled-clause and TRACE obligations remain open.
+ shared labeled-clause and TRACE obligations remain open.
+
+2026-10-04 LC-STEP-66B NOP closure at implementation commit `c7469d9da`:
+the only valid NOP parser production is childless; two recovery productions
+consume and diagnose invalid variable/nonvariable tails with `21.1` at the
+first extra token. The same codepath rejects keyword, numeric and bracket
+starts (`/tmp/crexx-nop-tail-audit.WR8ZSJ`). One source-anchored canonical
+NOP is emitted, with main, IF and DO, plus local anchors checked by the tree
+test (`/tmp/crexx-nop-tree.TiFq9z` and
+`/tmp/crexx-nop-tree-tests.r3M4Pr`). Existing SELECT, WHILE and UNTIL
+fixtures also execute nested NOP in opt/no-opt; focused tests passed 16/16.
+Regina, optimized/no-opt and linked output agree on `before`, `middle`,
+`after`, with exact linked proof at `/tmp/crexx-nop-linked.CFAj8d`. The
+normal Release Level C suite passed 318/318 on the implementation inputs
+(`/tmp/crexx-nop-levelc-suite.9Ykdll`). No NOP-specific runtime helper or
+case-by-case emitter path was added. This closes `LC-AC-64` and `LC-I-04`;
+the shared label/fallthrough, TRACE, condition and host profile contracts
+remain open under `LC-AC-04/08` and their instruction rows.
 
 **Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
@@ -1787,7 +1804,7 @@ itself make its Classic shape executable.
 | Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: plan partitions main and bounded local procedures; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
-| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY, DROP and assignment instructions closed under LC-AC-57/62/63; childless NOP, bare main EXIT and procedure RETURN remain bounded slices | Wider lifecycle forms, indirect `PROCEDURE EXPOSE`, exit/return behavior and configuration proof remain open |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY, DROP, assignment and NOP instructions closed under LC-AC-57/62/63/64; bare main EXIT and procedure RETURN remain bounded slices | Wider lifecycle forms, indirect `PROCEDURE EXPOSE`, exit/return behavior and configuration proof remain open |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Slice: recursive guards and canonical branch/group builders, including nested forms | More accepted arm statements and source/scope proof as forms expand |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Slice: guarded list lowers to nested canonical `IF`/one-shot `DO`, including nested arms, local procedures, `34.2` and `7.3` | Broader statement arms, condition lifecycle and profile proof remain open |
@@ -1831,7 +1848,7 @@ has been approved in this worklist.
 | Control | simple DO/END | Slice: `levelc_slice8_do_block` and nested/empty/procedure fixtures, opt/no-opt, tree-shape and linked execution | Broader clause lifecycle and conditions remain open |
 | Control | counted/controlled/repetitive DO, WHILE/UNTIL, LEAVE/ITERATE | Slice: literal and bounded dynamic direct/combined counts, FOREVER and WHILE/UNTIL including setup-bearing conditions, scalar controlled DO with optional TO/FOR/BY, captured dynamic start/TO/BY/FOR and WHILE entry or UNTIL end checks, and childless plus bounded named LEAVE/ITERATE across generated IF/SELECT/simple-DO wrappers | Wider count values, named transfer to wider loops, remaining numeric contexts and errors |
 | Control | SELECT/WHEN/OTHERWISE | Slice: `levelc_slice11_select`, opt/no-opt and linked execution, exact `34.2`/`7.3` negatives | Wider arms, lifecycle and configuration proof |
-| Control | NOP | Slice: `levelc_slice9_nop` in main, local procedure, and IF/DO bodies | Full source/TRACE lifecycle and configuration proof open |
+| Control | NOP | Whole instruction closed under LC-AC-64: childless opt/no-opt, nested SELECT/IF/DO/local, source anchors, invalid `21.1`, normal and linked proof | Shared labeled-clause, TRACE and host profile lifecycle remains open under LC-AC-04/08 and later rows |
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | Slice: bounded local calls, fixed direct ARG with Classic uppercase binding, scalar/stem EXPOSE, RETURN and empty EXIT | Omitted arguments, wider PARSE templates, dynamic/external calls, full scope and return/exit lifecycle |
 | PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Slice: `VAR`/`VALUE` with one nonempty static template of direct scalar/dot targets, literal patterns and positions, and optional UPPER in `levelc_slice40_parse_single` through `levelc_slice52_parse_static`; other forms remain front end only | Other source acquisition, dynamic patterns/positions, commas, configuration and errors |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
@@ -1867,7 +1884,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ITERATE` | ITERATE instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-LEAVE` | LEAVE instruction | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-NOP` | NOP instruction | Bounded slice: standalone and nested NOP | Full source/TRACE and configuration proof open |
+| `SYN-CLASSIC-NOP` | NOP instruction | Whole instruction closed under LC-AC-64/LC-STEP-66B | Shared label/TRACE and configuration proof remains open under LC-AC-04/08 |
 | `SYN-CLASSIC-NUMERIC` | NUMERIC DIGITS/FORM/FUZZ | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PARSE` | PARSE variants and templates | Nonempty direct scalar/dot `VAR`/`VALUE` templates with optional UPPER execute through one generic result-vector path; parser covers wider templates | Other source/template execution and reference proof open |
 | `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded slice: scalar/stem PROCEDURE EXPOSE | Remaining Classic forms, errors and configuration proof open |
