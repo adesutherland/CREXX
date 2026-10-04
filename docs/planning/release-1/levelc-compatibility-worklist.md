@@ -1289,7 +1289,7 @@ control flow tests are the positive baseline. The pending single-activation
 label design and TRACE hooks are shared capabilities that apply to every
 statement; they remain visible open work rather than NOP-specific omissions.
 
-1. **LC-STEP-66A (LC-AC-64; depends on 65B):** compare childless, selected
+1. **LC-STEP-66A (LC-AC-64; complete; depends on 65B):** compare childless, selected
    IF/SELECT, DO and local NOP with Regina; add a source-level `21.1` recovery
    path for extra same-clause tokens, including variable and nonvariable
    starts. Retain a focused invalid-source regression and source-tree check;
@@ -1307,7 +1307,19 @@ silently dropped `extra` (`/tmp/crexx-nop-audit.5EO6LD` and
 because the lowering plan requires a `PROCEDURE` after a local label; Regina
 runs it. That label/fallthrough defect is shared across statement kinds and
 remains open under `LC-AC-08` and the pending SIGNAL architecture gate. It
-does not authorize bypassing or weakening that later work.
+ does not authorize bypassing or weakening that later work.
+
+2026-10-04 LC-STEP-66A NOP parser repair: the grammar now creates a source
+`21.1` diagnostic for a variable or nonvariable token after `NOP` in the same
+clause, preserving the tail for recovery. The canonical childless NOP and its
+source anchor are unchanged. Invalid `NOP extra` and `NOP 'quoted'` now fail
+at their authored tokens in the permanent fixture. Focused nested/SELECT/
+WHILE/UNTIL, negative and tree tests passed 16/16
+(`/tmp/crexx-nop-focused.oggHWy`); the dedicated NOP source-anchor tests
+passed 4/4 (`/tmp/crexx-nop-tree-tests.r3M4Pr`). The Release Level C suite
+passed 318/318 (`/tmp/crexx-nop-levelc-suite.9Ykdll`) and the linked
+toolchain matched Regina's 20 bytes (`/tmp/crexx-nop-linked.CFAj8d`). The
+shared labeled-clause and TRACE obligations remain open.
 
 **Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared

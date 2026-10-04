@@ -5276,6 +5276,12 @@ add_levelc_invalid_compile_test(levelc_assignment_invalid
         "@ 2:1"
         "@ 3:1")
 
+add_levelc_invalid_compile_test(levelc_nop_invalid
+        rexx_src/levelc_nop_invalid.rexx
+        "RXC-LC-21\\.1"
+        "@ 2:5"
+        "@ 3:5")
+
 add_levelc_invalid_compile_test(levelc_slice13_named_leave_invalid
         rexx_src/levelc_slice13_named_leave_invalid.rexx
         "RXC-LC-28\\.3")
@@ -6074,6 +6080,13 @@ add_levelc_lowered_tree_shape_test(levelc_slice5_stem_expose_tree_shape
         "symbolValue"
         "exposeStem"
         "ITEMS.I")
+
+add_levelc_lowered_tree_shape_test(levelc_nop_instruction_tree_shape
+        rexx_src/levelc_slice9_nop.rexx
+        "NOP : .*\\(2:0\\)"
+        "NOP : .*\\(4:5\\)"
+        "NOP : .*\\(8:2\\)"
+        "NOP : .*\\(16:0\\)")
 
 add_levelc_lowered_tree_shape_test(levelc_slice6_expressions_tree_shape
         rexx_src/levelc_slice6_expressions.rexx

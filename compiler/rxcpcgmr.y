@@ -855,6 +855,20 @@ nop_instruction(I) ::= CTK_NOP(T).
     I = ast_f(context, NOP, T);
 }
 
+nop_instruction(I) ::= CTK_NOP(T) CTK_VAR_SYMBOL(B) simple_tail(L).
+{
+    I = ast_f(context, NOP, T);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "21.1", B));
+    if (L) add_ast(I, L);
+}
+
+nop_instruction(I) ::= CTK_NOP(T) bad_instruction_tail_start(B) simple_tail(L).
+{
+    I = ast_f(context, NOP, T);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "21.1", B));
+    if (L) add_ast(I, L);
+}
+
 numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_DIGITS(D) expression_opt(E).
 {
     I = ast_f(context, LEVELC_NUMERIC, T);

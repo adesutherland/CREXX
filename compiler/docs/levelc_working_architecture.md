@@ -183,7 +183,10 @@ explicit decision under `AGENTS.md`.
 
 The early AST closure path checks accepted lowered trees for parent/sibling
 ownership and residual Classic-only nodes before canonical validation. The
-first additional structural family is `SELECT`: guarded WHEN/OTHERWISE lists
+NOP path preserves one source-anchored canonical NOP; the parser now rejects
+extra same-clause tokens with `21.1` instead of discarding them. Labeled
+clauses and TRACE hooks remain shared structural work.
+The first additional structural family is `SELECT`: guarded WHEN/OTHERWISE lists
 become nested canonical IF blocks, with each later condition contained in the
 earlier false arm. The shared `RexxValue` class supplies exact WHEN logical
 validation; a small exported runtime helper reports the Classic no-match
