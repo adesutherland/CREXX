@@ -1373,12 +1373,12 @@ semantics are a high-risk foundation. IF, SELECT and OPTIONS remain open.
    reference probes, compare a shared runtime-state design using canonical
    `DO` with a dedicated AST/emitter node, and record the architecture gate.
    This is a read-only implementation review, not DO closure.
-2. **LC-STEP-70B (LC-AC-65; pending Adrian's architecture approval; depends
+2. **LC-STEP-70B (LC-AC-65; complete; depends
    on 70A):** normalize source DO headers once into a checked description used
    by validation and lowering. Preserve source anchors, emitted loop-target
    association and invalid-form diagnostics; add structural assertions where
    they distinguish ownership or control timing.
-3. **LC-STEP-70C (LC-AC-65; pending approval; depends on 70B):** implement the
+3. **LC-STEP-70C (LC-AC-65; approved, pending; depends on 70B):** implement the
    chosen common loop-state service in `rxfnsc`, route counted and controlled
    forms through it and the shared pool, and remove redundant compiler header
    branches and arbitrary `int` conversion. Qualify focused reference,
@@ -1407,6 +1407,21 @@ has a count limit, but this does not justify a compiler-imposed limit as the
 portable language contract. The exact reference/profile range and overflow
 diagnostics remain to be resolved in 70C. The design comparison and proposed
 invariants are in the [architecture review](../../../compiler/docs/levelc_working_architecture.md#2026-10-04-do-architecture-decision-proposal).
+
+Adrian approved the checked-header, shared `rxfnsc` loop-state service and
+existing canonical DO emitter architecture on 2026-10-04. Regina timing
+probes (`/tmp/crexx-do-timing.Vcjwp5`) confirm that start and TO/BY/FOR
+expressions see the pre-loop control value and execute in written order,
+that UNTIL exits before stepping, and that ITERATE reaches the UNTIL check.
+LC-STEP-70B records one checked descriptor per source DO in the lower plan;
+the validator, lowerer and named transfer checks use it instead of decoding
+the header repeatedly. It caches controlled literal classifications and the
+source-ordered modifier nodes; no new emitter node or runtime behavior was
+added. The focused DO set passed 38/38
+(`/tmp/crexx-do-header-focused2.sviu4y`) and the Release Level C suite passed
+318/318 (`/tmp/crexx-do-header-levelc3.NzQvDI`) on this code input. LC-I-08
+and `LC-AC-65` remain open for the shared loop-state and whole-instruction
+qualification.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared

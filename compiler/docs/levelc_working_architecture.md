@@ -449,9 +449,11 @@ numeric profile and its actual representation limits during implementation;
 do not turn the current `int` cutoff into an undocumented Level C rule.
 Exact mixed TO/BY/FOR and WHILE/UNTIL timing, including exceptional exits,
 requires reference probes before code removal. `LC-STEP-70A` records this
-comparison. `LC-STEP-70B/C` are gated by Adrian's approval of the proposed
-architecture under `AGENTS.md`; the document is a reviewable proposal, not
-approval or implementation evidence.
+comparison. Adrian approved this architecture on 2026-10-04. LC-STEP-70B
+implemented the checked source-header descriptor, shared by validation,
+lowering and named transfer checks, without adding an AST node or changing
+runtime behavior. The loop-state service, count representation and full DO
+qualification remain open under LC-STEP-70C/D.
 
 ## Historical design record
 

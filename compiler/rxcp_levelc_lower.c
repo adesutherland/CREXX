@@ -74,6 +74,34 @@ typedef struct LevelCLoopBinding {
     struct LevelCLoopBinding *previous;
 } LevelCLoopBinding;
 
+typedef enum {
+    LEVELC_DO_GROUP,
+    LEVELC_DO_COUNTED,
+    LEVELC_DO_FOREVER,
+    LEVELC_DO_CONTROLLED,
+    LEVELC_DO_CONDITIONAL
+} LevelCDoKind;
+
+typedef struct {
+    ASTNode *source_do;
+    ASTNode *repeat;
+    ASTNode *condition;
+    ASTNode *body;
+    ASTNode *assign;
+    ASTNode *target;
+    ASTNode *start;
+    ASTNode *to;
+    ASTNode *by;
+    ASTNode *for_clause;
+    LevelCDoKind kind;
+    int literal_count;
+    int literal_start;
+    int literal_to;
+    int literal_by;
+    int literal_for;
+    int for_count;
+} LevelCDoHeader;
+
 typedef struct {
     const char *name;
     const char *module;
@@ -153,6 +181,8 @@ typedef struct {
     ASTNode *main_end;
     LevelCProcedureSlice *procedures;
     size_t procedure_count;
+    LevelCDoHeader *do_headers;
+    size_t do_header_count;
     LevelCLoopBinding *active_loop;
     uint64_t used_direct_bifs;
 } LevelCLowerPlan;
@@ -266,6 +296,7 @@ static void levelc_lower_plan_free(LevelCLowerPlan *plan) {
         if (plan->procedures[i].name) free(plan->procedures[i].name);
     }
     if (plan->procedures) free(plan->procedures);
+    free(plan->do_headers);
     memset(plan, 0, sizeof(*plan));
 }
 
@@ -1153,55 +1184,53 @@ static int levelc_bounded_nonnegative_integer_literal(ASTNode *node,
     return 1;
 }
 
-static int levelc_controlled_header_supported(ASTNode *repeat,
+static int levelc_controlled_header_supported(LevelCDoHeader *header,
                                                LevelCLowerPlan *plan,
-                                               ASTNode **to_out,
-                                               ASTNode **by_out,
-                                               ASTNode **for_out,
                                                const char **reason_out) {
+    ASTNode *repeat = header ? header->repeat : NULL;
     ASTNode *assign = repeat ? repeat->child : NULL;
     ASTNode *target = assign ? assign->child : NULL;
     ASTNode *start = target ? target->sibling : NULL;
     ASTNode *clause = assign ? assign->sibling : NULL;
-    ASTNode *to = NULL;
-    ASTNode *by = NULL;
-    ASTNode *for_clause = NULL;
     char *name;
     int scalar;
 
+    if (!header) goto unsupported;
     if (!repeat || repeat->node_type != REPEAT || !assign ||
         assign->node_type != ASSIGN || !target ||
         target->node_type != VAR_TARGET || !start ||
-        !(levelc_nonnegative_integer_literal(start) ||
-          levelc_expr_supported(start, plan, reason_out))) goto unsupported;
+        start->sibling) goto unsupported;
+    header->assign = assign;
+    header->target = target;
+    header->start = start;
+    header->literal_start = levelc_nonnegative_integer_literal(start);
+    if (!header->literal_start &&
+        !levelc_expr_supported(start, plan, reason_out)) goto unsupported;
     while (clause) {
-        if (clause->node_type == TO && !to && clause->child &&
-            !clause->child->sibling &&
-            (levelc_nonnegative_integer_literal(clause->child) ||
-             levelc_expr_supported(clause->child, plan, reason_out))) {
-            to = clause;
-        } else if (clause->node_type == BY && !by && clause->child &&
-                   !clause->child->sibling &&
-                   (levelc_signed_integer_literal(clause->child) ||
-                    levelc_expr_supported(clause->child, plan, reason_out))) {
-            by = clause;
-        } else if (clause->node_type == FOR && !for_clause && clause->child &&
-                   !clause->child->sibling &&
-                   (levelc_bounded_nonnegative_integer_literal(clause->child, NULL) ||
-                    levelc_expr_supported(clause->child, plan, reason_out))) {
-            for_clause = clause;
+        if (!clause->child || clause->child->sibling) goto unsupported;
+        if (clause->node_type == TO && !header->to) {
+            header->to = clause;
+            header->literal_to = levelc_nonnegative_integer_literal(clause->child);
+            if (!header->literal_to &&
+                !levelc_expr_supported(clause->child, plan, reason_out)) goto unsupported;
+        } else if (clause->node_type == BY && !header->by) {
+            header->by = clause;
+            header->literal_by = levelc_signed_integer_literal(clause->child);
+            if (!header->literal_by &&
+                !levelc_expr_supported(clause->child, plan, reason_out)) goto unsupported;
+        } else if (clause->node_type == FOR && !header->for_clause) {
+            header->for_clause = clause;
+            header->literal_for = levelc_bounded_nonnegative_integer_literal(
+                    clause->child, &header->for_count);
+            if (!header->literal_for &&
+                !levelc_expr_supported(clause->child, plan, reason_out)) goto unsupported;
         } else goto unsupported;
         clause = clause->sibling;
     }
     name = levelc_upper_name(target);
     scalar = name && levelc_variable_name_kind(name) == LEVELC_VAR_NAME_SCALAR;
     free(name);
-    if (scalar) {
-        if (to_out) *to_out = to;
-        if (by_out) *by_out = by;
-        if (for_out) *for_out = for_clause;
-        return 1;
-    }
+    if (scalar) return 1;
 
 unsupported:
     if (reason_out) *reason_out = "unsupported controlled DO header";
@@ -1218,6 +1247,68 @@ static int levelc_do_condition_supported(ASTNode *condition,
         return 0;
     }
     return levelc_expr_supported(condition->child, plan, reason_out);
+}
+
+static LevelCDoHeader *levelc_find_do_header(LevelCLowerPlan *plan,
+                                              ASTNode *source_do) {
+    size_t i;
+
+    if (!plan || !source_do) return NULL;
+    for (i = 0; i < plan->do_header_count; i++) {
+        if (plan->do_headers[i].source_do == source_do) return &plan->do_headers[i];
+    }
+    return NULL;
+}
+
+static LevelCDoHeader *levelc_record_do_header(ASTNode *stmt,
+                                                LevelCLowerPlan *plan,
+                                                const char **reason_out) {
+    LevelCDoHeader header = {0};
+    LevelCDoHeader *grown;
+    ASTNode *cursor;
+
+    if (!stmt || !plan) return NULL;
+    grown = levelc_find_do_header(plan, stmt);
+    if (grown) return grown;
+
+    header.source_do = stmt;
+    header.literal_count = 1;
+    cursor = stmt->child;
+    if (cursor && cursor->node_type == REPEAT) {
+        header.repeat = cursor;
+        if (cursor->child && cursor->child->node_type == ASSIGN) {
+            header.kind = LEVELC_DO_CONTROLLED;
+            if (!levelc_controlled_header_supported(&header, plan, reason_out))
+                return NULL;
+        } else {
+            int forever = 0;
+            if (!levelc_repetition_supported(cursor, &header.literal_count,
+                                             &forever, reason_out)) return NULL;
+            header.kind = forever ? LEVELC_DO_FOREVER : LEVELC_DO_COUNTED;
+            if (!forever && header.literal_count < 0 &&
+                !levelc_expr_supported(cursor->child->child, plan, reason_out))
+                return NULL;
+        }
+        cursor = cursor->sibling;
+    }
+    if (cursor && (cursor->node_type == WHILE || cursor->node_type == UNTIL)) {
+        if (!levelc_do_condition_supported(cursor, plan, reason_out)) return NULL;
+        header.condition = cursor;
+        if (!header.repeat) header.kind = LEVELC_DO_CONDITIONAL;
+        cursor = cursor->sibling;
+    }
+    if (!cursor || cursor->node_type != INSTRUCTIONS || cursor->sibling) {
+        if (reason_out) *reason_out = "unsupported DO header";
+        return NULL;
+    }
+    header.body = cursor;
+    if (plan->do_header_count >= SIZE_MAX / sizeof(*grown)) return NULL;
+    grown = realloc(plan->do_headers,
+                    (plan->do_header_count + 1) * sizeof(*grown));
+    if (!grown) return NULL;
+    plan->do_headers = grown;
+    plan->do_headers[plan->do_header_count] = header;
+    return &plan->do_headers[plan->do_header_count++];
 }
 
 static ASTNode *levelc_nearest_source_repetitive_do(ASTNode *stmt) {
@@ -1264,6 +1355,7 @@ static int levelc_transfer_supported(ASTNode *stmt,
                                      LevelCLowerPlan *plan,
                                      const char **reason_out) {
     ASTNode *target;
+    LevelCDoHeader *header;
 
     if (!stmt) {
         if (reason_out) *reason_out = "unsupported LEAVE/ITERATE shape";
@@ -1271,18 +1363,14 @@ static int levelc_transfer_supported(ASTNode *stmt,
     }
     if (stmt->child) {
         target = levelc_named_source_repetitive_do(stmt);
-        if (target && levelc_controlled_header_supported(
-                target->child, plan, NULL, NULL, NULL, reason_out)) return 1;
+        header = levelc_find_do_header(plan, target);
+        if (header && header->kind == LEVELC_DO_CONTROLLED) return 1;
         if (reason_out && !*reason_out) *reason_out = "named LEAVE/ITERATE requires a supported controlled DO";
         return 0;
     }
     target = levelc_nearest_source_repetitive_do(stmt);
-    if (target) {
-        if (target->child->node_type == WHILE ||
-            target->child->node_type == UNTIL) return 1;
-        if (levelc_controlled_header_supported(target->child, plan, NULL, NULL, NULL, NULL)) return 1;
-        return levelc_repetition_supported(target->child, NULL, NULL, reason_out);
-    }
+    header = levelc_find_do_header(plan, target);
+    if (header && header->kind != LEVELC_DO_GROUP) return 1;
     if (reason_out) *reason_out = "LEAVE/ITERATE requires a supported repetitive DO";
     return 0;
 }
@@ -1291,33 +1379,12 @@ static int levelc_do_supported(ASTNode *stmt,
                               LevelCLowerPlan *plan,
                               int in_procedure,
                               const char **reason_out) {
-    ASTNode *body = stmt ? stmt->child : NULL;
+    LevelCDoHeader *header = levelc_record_do_header(stmt, plan, reason_out);
     ASTNode *body_statement;
 
-    if (body && body->node_type == REPEAT) {
-        int count = 0;
-        ASTNode *repeat = body;
-        if (repeat->child && repeat->child->node_type == ASSIGN) {
-            if (!levelc_controlled_header_supported(repeat, plan, NULL, NULL, NULL, reason_out)) return 0;
-        } else {
-            if (!levelc_repetition_supported(repeat, &count, NULL, reason_out)) return 0;
-            if (count < 0 && !levelc_expr_supported(repeat->child->child, plan, reason_out)) return 0;
-        }
-        body = body->sibling;
-        if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
-            if (!levelc_do_condition_supported(body, plan, reason_out)) return 0;
-            body = body->sibling;
-        }
-    } else if (body && (body->node_type == WHILE || body->node_type == UNTIL)) {
-        if (!levelc_do_condition_supported(body, plan, reason_out)) return 0;
-        body = body->sibling;
-    }
-    if (!body || body->node_type != INSTRUCTIONS || body->sibling) {
-        if (reason_out) *reason_out = "unsupported DO header";
-        return 0;
-    }
+    if (!header) return 0;
 
-    body_statement = body->child;
+    body_statement = header->body->child;
     while (body_statement) {
         if (in_procedure) {
             if (body_statement->node_type == LEVELC_ARG) {
@@ -3520,12 +3587,10 @@ static int levelc_lower_do(Context *context,
                            LevelCProcedureSlice *procedure,
                            int in_procedure,
                            const char **reason_out) {
-    ASTNode *body = stmt->child;
-    ASTNode *repeat = body && body->node_type == REPEAT ? body : NULL;
-    ASTNode *possible_condition = repeat ? repeat->sibling : body;
-    ASTNode *condition_node = possible_condition &&
-        (possible_condition->node_type == WHILE ||
-         possible_condition->node_type == UNTIL) ? possible_condition : NULL;
+    LevelCDoHeader *header = levelc_find_do_header(plan, stmt);
+    ASTNode *body = header ? header->body : NULL;
+    ASTNode *repeat = header ? header->repeat : NULL;
+    ASTNode *condition_node = header ? header->condition : NULL;
     ASTNode *body_statement;
     ASTNode *lowered_body = rxcp_remap_create_instruction_builder(context, stmt);
     ASTNode *lowered = NULL;
@@ -3535,22 +3600,22 @@ static int levelc_lower_do(Context *context,
     LevelCLoopBinding *previous = plan ? plan->active_loop : NULL;
     char *control_name = NULL;
     int loop_active = 0;
-    int count = 1;
-    int forever = 0;
-    int controlled = repeat && repeat->child && repeat->child->node_type == ASSIGN;
+    int count = header ? header->literal_count : 1;
+    int forever = header && header->kind == LEVELC_DO_FOREVER;
+    int controlled = header && header->kind == LEVELC_DO_CONTROLLED;
 
-    if (!lowered_body) goto fail;
+    if (!header || !lowered_body) goto fail;
     if (repeat || condition_node) {
         ASTNode *count_node;
         ASTNode *condition_value = NULL;
 
         if (!plan) goto fail;
         if (controlled) {
-            ASTNode *assign = repeat->child;
-            ASTNode *target = assign->child;
-            ASTNode *to = NULL;
-            ASTNode *by = NULL;
-            ASTNode *for_clause = NULL;
+            ASTNode *assign = header->assign;
+            ASTNode *target = header->target;
+            ASTNode *to = header->to;
+            ASTNode *by = header->by;
+            ASTNode *for_clause = header->for_clause;
             ASTNode *control_anchor;
             ASTNode *initial_prelude;
             ASTNode *step_prelude;
@@ -3574,7 +3639,7 @@ static int levelc_lower_do(Context *context,
             ASTNode *start_copy = NULL;
             ASTNode *start_capture = NULL;
             ASTNode *checked_start = NULL;
-            int literal_start;
+            int literal_start = header->literal_start;
             char *start_name = NULL;
             char *to_name = NULL;
             char *by_name = NULL;
@@ -3582,20 +3647,14 @@ static int levelc_lower_do(Context *context,
             char *target_name;
             ASTNode *limit_args[2];
             ASTNode *step_args[1];
-            int for_count = 0;
-            int literal_for = 0;
+            int for_count = header->for_count;
+            int literal_for = header->literal_for;
 
-            if (!levelc_controlled_header_supported(repeat, plan, &to, &by,
-                                                       &for_clause, reason_out)) goto fail;
-            literal_start = levelc_nonnegative_integer_literal(target->sibling);
             control_anchor = to ? to : (for_clause ? for_clause : (by ? by : assign));
-            if (for_clause)
-                literal_for = levelc_bounded_nonnegative_integer_literal(
-                        for_clause->child, &for_count);
             header_setup = rxcp_remap_create_instruction_builder(context, assign);
             if (!header_setup) goto fail;
             if (!literal_start) {
-                ASTNode *start = target->sibling;
+                ASTNode *start = header->start;
                 start_name = rxcp_remap_create_generated_node_name(
                         LEVELC_START_VALUE_PREFIX, start);
                 start_value = levelc_lower_expr(context, start, plan, header_setup);
@@ -3615,8 +3674,7 @@ static int levelc_lower_do(Context *context,
                 if (!captured_start_ref) goto fail;
             }
             for (clause = assign->sibling; clause; clause = clause->sibling) {
-                if (clause == to &&
-                    !levelc_nonnegative_integer_literal(clause->child)) {
+                if (clause == to && !header->literal_to) {
                     to_name = levelc_capture_control_clause(
                             context, clause, plan, header_setup,
                             LEVELC_TO_LIMIT_PREFIX, "controlToValue");
@@ -3625,8 +3683,7 @@ static int levelc_lower_do(Context *context,
                         free(for_name);
                         goto fail;
                     }
-                } else if (clause == by &&
-                           !levelc_signed_integer_literal(clause->child)) {
+                } else if (clause == by && !header->literal_by) {
                     by_name = levelc_capture_control_clause(
                             context, clause, plan, header_setup,
                             LEVELC_BY_STEP_PREFIX, "controlByValue");
@@ -3662,14 +3719,14 @@ static int levelc_lower_do(Context *context,
             free(to_name);
             free(by_name);
             free(for_name);
-            if ((to && !levelc_nonnegative_integer_literal(to->child) &&
+            if ((to && !header->literal_to &&
                  !captured_to_ref) ||
-                (by && !levelc_signed_integer_literal(by->child) &&
+                (by && !header->literal_by &&
                  (!captured_by_step_ref || (to && !captured_by_check_ref))) ||
                 (for_clause && !literal_for && !captured_for_ref)) goto fail;
             if (!literal_start) {
                 checked_start = rxcp_remap_create_member_call(
-                        context, target->sibling, captured_start_ref,
+                        context, header->start, captured_start_ref,
                         "controlStartValue", NULL, 0);
                 if (!checked_start) goto fail;
             }
@@ -3755,7 +3812,6 @@ static int levelc_lower_do(Context *context,
                 rxcp_remap_anchor_synthetic(while_source, to);
             if (until_source && (!condition_node || condition_node->node_type != UNTIL))
                 rxcp_remap_anchor_synthetic(until_source, control_anchor);
-            body = condition_node ? condition_node->sibling : repeat->sibling;
             control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);
             count_node = for_clause
                 ? literal_for
@@ -3773,10 +3829,6 @@ static int levelc_lower_do(Context *context,
                 : NULL;
             free(target_name);
             if (!lowered) goto fail;
-        } else if (repeat) {
-            if (!levelc_repetition_supported(repeat, &count, &forever,
-                                             reason_out)) goto fail;
-            body = repeat->sibling;
         }
         if (condition_node && !controlled) {
             ASTNode *condition_prelude = rxcp_remap_create_instruction_builder(
@@ -3792,7 +3844,6 @@ static int levelc_lower_do(Context *context,
                         context, condition_node, condition_prelude, condition_value);
                 if (!condition_value) goto fail;
             }
-            body = condition_node->sibling;
         }
         if (!controlled) {
             control_name = rxcp_remap_create_generated_node_name(LEVELC_LOOP_PREFIX, stmt);
