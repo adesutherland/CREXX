@@ -664,7 +664,7 @@ are verified against all affected consumers.
   cases, optimized/no-opt and normal correctness, focused shared-runtime
   checks, and linked toolchain execution. Shared labels, traps, TRACE and
   host configuration remain open under their own criteria.
-- [ ] **LC-AC-66 — complete OPTIONS instruction:** a leading source directive
+- [x] **LC-AC-66 — complete OPTIONS instruction:** a leading source directive
   selects the language and file-level scanner/parser options over a CLI
   default, with documented defaults and clear handling of conflicting words.
   Every executable `OPTIONS` form evaluates its Classic expression once at its
@@ -1112,9 +1112,9 @@ Work through the rows in order, with only one active row; changing the order
 requires a recorded reason and must not turn a partial row into a closure.
 On 2026-10-04 Adrian prioritized the high-risk DO AST work before the remaining
 prior-instruction audit and SIGNAL. LC-I-08 closed after its whole-instruction
-review; LC-I-05 OPTIONS is now the active row. LC-I-05 through LC-I-07 remain
-open and retain their original order before SIGNAL; the priority change did
-not count any of them as reviewed or closed.
+review; LC-I-05 OPTIONS subsequently closed and LC-I-06 IF is now the active
+row. IF and SELECT retain their original order before SIGNAL; the priority
+change did not count any of them as reviewed or closed.
 Each step includes parser-form inventory, reference cases, invalid forms,
 main/procedure/nested execution where legal, opt/no-opt, source/AST checks,
 relevant runtime and host/profile checks, and linked delivery. The relevant
@@ -1129,7 +1129,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-02 DROP — closed 2026-10-04 | LC-STEP-64B | `LC-AC-62`: direct and parenthesized lists, arbitrary compound substitution, exposure, order and errors through the shared pool. Adrian's approved Regina invalid-word behavior is retained. |
 | LC-I-03 assignment — closed 2026-10-04 | LC-STEP-65B | `LC-AC-63`: scalar, stem and arbitrary compound targets, optional empty RHS and evaluation order through the shared pool. Shared profile, expression and condition obligations stay open in their own criteria. |
 | LC-I-04 NOP — closed 2026-10-04 | LC-STEP-66B | `LC-AC-64`: childless behavior and invalid tails in accepted statement contexts; shared label/TRACE lifecycle remains under its own open criteria. |
-| LC-I-05 OPTIONS | LC-STEP-67 | All processor option words, unknown-option policy and source/configuration behavior; programme initialization. |
+| LC-I-05 OPTIONS — closed 2026-10-04 | LC-STEP-67A–67D | `LC-AC-66`: static source header, executable expression at each source point, no-op empty form, unknown-word policy and configuration ownership. BYTE/UTF8 define no runtime words. Shared condition, TRACE and host obligations remain open in their own rows. |
 | LC-I-06 IF | LC-STEP-68 | Every legal instruction arm, nearest ELSE, condition/error and nesting behavior; shared statement dispatch. |
 | LC-I-07 SELECT | LC-STEP-69 | WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
 | LC-I-08 DO — closed 2026-10-04 | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. Shared NUMERIC/condition/TRACE/host lifecycle remains open in its own rows. |
@@ -1383,7 +1383,8 @@ DO form and timing rule must remain visible in the whole-instruction contract
 assignment and DROP. A count representation must avoid a compiler-specific
 32-bit cutoff; it must preserve the numeric values the chosen Classic profile
 can represent. This work precedes SIGNAL because loop AST and activation
-semantics are a high-risk foundation. IF, SELECT and OPTIONS remain open.
+semantics are a high-risk foundation. At this DO checkpoint, IF, SELECT and
+OPTIONS were still open.
 
 1. **LC-STEP-70A (LC-AC-61/65; complete review; depends on 66B):** inventory
    the DO parser and current validator/lowerer/emitter paths, run focused
@@ -1503,7 +1504,8 @@ of representing an extreme exponential count, and the decNumber source
 exponent limit, are recorded in the architecture document; neither is an
 approved language exception. Shared NUMERIC, condition, TRACE and host
 profile behavior remains open under its separate criteria and instruction
-rows. Resume LC-I-05 OPTIONS next, then IF and SELECT before SIGNAL.
+rows. At this checkpoint LC-I-05 OPTIONS was next, followed by IF and SELECT
+before SIGNAL.
 
 **LC-I-05 OPTIONS plan — vision and intended outcome.** A Classic programme
 must be able to request cREXX source-language defaults before parsing and to
@@ -1536,12 +1538,12 @@ configuration work as closed by this instruction.
    service that evaluates at runtime, handles applicable words in order and
    ignores unknown words. Generated Level B options/imports remain a private
    canonical header; source choices must not be silently overwritten.
-3. **LC-STEP-67C (LC-AC-66; open; depends on approved 67B):** implement the
+3. **LC-STEP-67C (LC-AC-66; complete at `8cd24c317`; depends on approved 67B):** implement the
    reviewed parser, validation, lowering and shared processor service in
    reviewable commits, with focused source/AST, opt/no-opt, runtime and
    negative tests. Keep the byte-length value model and profile ownership
    explicit; avoid separate per-word lowering branches.
-4. **LC-STEP-67D (LC-AC-59/61/66; open; depends on 67C):** reconcile all
+4. **LC-STEP-67D (LC-AC-59/61/66; complete; depends on 67C):** reconcile all
    legal and invalid forms, inspect source and canonical ownership/anchors,
    compare reference output, check source/CLI and option ordering, run focused
    Level B/RexxScript consumers and one relevant normal correctness suite,
@@ -1590,6 +1592,38 @@ switches may be used. `comments_slash` is rejected so `//` remains Classic
 remainder, and `numeric_common` is rejected so Level C keeps Classic numeric
 precedence. These rejected source switches require clear diagnostics rather
 than silent pre-scan acceptance. No new runtime profile option is implied.
+
+2026-10-04 LC-I-05 OPTIONS closure receipt, implementation
+`8cd24c317abdbf670128fd4d49925f5a1d4e36cd`: the first static bare-word
+clause is the sole file-level directive; the pre-scan only selects compatible
+source settings and does not share later validation's option-seen flags. The
+parser retains every source `REXX_OPTIONS` expression, including the first,
+and the canonical lowerer routes each one through a single source-anchored
+`RexxClassicConfig.applyOptions` call. The generated Level B header remains
+private. The service returns without parsing its exact-length argument because
+the approved BYTE and UTF8 profiles have no recognized runtime words; the
+expression still executes once and unknown words remain harmless. This is the
+approved present processor contract, not an exception to a supported option.
+Source `comments_hash`/`comments_dash` are honored, block-only comments are
+the Level C default, and `comments_slash`, `numeric_common`, and conflicting
+comment settings receive `INCOMPATIBLE_OPTIONS` diagnostics. Source and
+canonical `-d2` inspection showed the original nodes and generated calls at
+first, nested, loop and local-routine anchors
+(`/tmp/crexx-options-ast-final.pTGafi`); malformed-expression recovery retained a
+following SAY node (`/tmp/crexx-options-recovery.opjB4d`). Regina agreed on
+`levelc_options_instruction.rexx` (`6`, `1`) and the dynamic first-clause
+fixture (`1`). Focused OPTIONS CTest passed 11/11; direct
+`testRexxClassicBifs_{noopt,opt}` checks passed for unknown embedded-NUL
+values in both BYTE and UTF8 profiles; optimized/no-opt RexxScript consumers
+passed 10/10. The final Release Level C suite passed 346/346
+(`/tmp/crexx-options-levelc-closure.QqJHit`) after the final runtime edit.
+The 169/169 Release smoke run (`/tmp/crexx-options-smoke-final.5SoDsm`)
+qualified the final compiler pre-scan; the subsequent runtime no-op reduction
+was covered by the final focused and Level C runs. `rxc` → `rxas` → `rxlink`
+→ `rxvm` on the final source/runtime image exited zero and printed `6`, `1`
+(`/tmp/crexx-options-closure-link-log.PRQgPW`). `git diff --check` passed.
+No infeasible feature or approved compatibility exception was needed. Proceed
+to LC-I-06 IF; LC-AC-59/61 remain open until their remaining rows close.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
@@ -2118,7 +2152,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 
 | Contract | Feature | Current evidence level | Remaining proof |
 | --- | --- | --- | --- |
-| `SYN-CLASSIC-OPTIONS` | Classic `OPTIONS` clauses and Level C selection | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-OPTIONS` | Classic `OPTIONS` clauses and Level C selection | Whole instruction closed under LC-AC-66/LC-STEP-67D | Shared condition, TRACE and host proof remains open in its own criteria |
 | `SYN-CLASSIC-CLAUSES` | Semicolon/EOL clause model | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-CONTEXTUAL-KEYWORDS` | Instruction words usable as symbols outside instruction context | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-LABELS` | Labels and local routine names | Front end only | Execution and reference proof open |
