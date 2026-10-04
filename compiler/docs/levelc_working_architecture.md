@@ -383,6 +383,76 @@ relevant normal correctness suite once for the qualified input revision;
 reserve full Level C sweeps for changes with broad lowering impact and
 instruction integration checkpoints. Do not re-run unchanged valid evidence.
 
+## 2026-10-04 DO architecture decision proposal
+
+The whole-instruction contract is `LC-AC-65` in the
+[worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+This review advances DO ahead of OPTIONS, IF and SELECT because Adrian
+identified loop AST surgery as an early high-risk issue. It does not close
+those rows, DO, LEAVE or ITERATE. It precedes the separate SIGNAL
+label/activation decision.
+
+The current source `DO` tree has positional `REPEAT`, optional WHILE/UNTIL and
+body children. `levelc_do_supported` validates that topology and
+`levelc_lower_do` decodes it again. The controlled path repeats header checks,
+builds captured TO/BY/FOR values, a pool assignment, synthetic conditions and
+a `BLOCK_EXPR` to sequence the step. The canonical remap builder and flow
+emitter already own the resulting `DO` topology, loop fragments, and
+LEAVE/ITERATE associations. The current controlled validator rejects a
+compound name; `RexxValue.repeatCountValue` and `controlForCountValue`, plus
+the literal fast path, impose `int` conversion. A Regina probe confirmed that
+a compound control name is substituted again when stepped after its tail
+variable changes in the body. These are correctness and maintenance gaps,
+not reasons to exclude the forms.
+
+The Level C grammar currently parses grouping, an expression count, a
+control assignment followed by zero or more TO/BY/FOR items, a bare
+WHILE/UNTIL, and FOREVER; a repetition or FOREVER may also have one
+WHILE/UNTIL. It accepts those modifier items in source order and leaves
+duplicate-item rejection to validation. `END name` is checked by the
+source diagnostic walk, which compares it with the authored control symbol.
+The whole-instruction review must cover malformed and duplicated modifiers
+as well as valid headers; acceptance of a parser production alone does not
+prove Classic behavior.
+
+| Route | Additional machinery | Review judgment |
+| --- | --- | --- |
+| Extend the present per-form rewrite | More duplicated header decoding, captures, synthetic conditions and count special cases | Does not address the source of complexity. |
+| Add a dedicated Classic DO AST node and emitter | New node contracts through typing, scope, optimizer, cloning, tree validation, emitter, source mapping and transfer cleanup | Justified only if the existing canonical flow cannot express the required timing or ownership. No such need has been demonstrated. |
+| **Proposed:** checked header, shared loop-state helper, existing canonical DO emitter | One source-header description plus an `rxfnsc` service for count/control state and pool operations; ordinary canonical loop checks and step calls | Fewer compiler-owned semantic branches while preserving the established AST/emitter and transfer path. |
+
+The proposed boundary is:
+
+1. Parse and validate the source header once into a checked descriptor: loop
+   kind, control symbol, source-ordered TO/BY/FOR clauses, optional condition,
+   body and source anchors. Use the same descriptor for lowering. END-name
+   validation remains a source-level check.
+2. Evaluate source expressions in the Classic order at loop setup; pass their
+   values and the authored control symbol to one loop-state service. The
+   service validates numeric/count values and owns remaining count, fixed
+   TO/BY values, pool reads/writes and dynamic compound-name substitution.
+   Count representation must not silently narrow to a C or Level B `int`.
+3. Lower repetition to canonical DO with entry and end checks that call the
+   state service. The source WHILE or UNTIL expression stays lazy at its
+   required point; ITERATE reaches the end check and step, whereas LEAVE
+   bypasses them. The service must not cause a value to be stepped on an
+   UNTIL exit or after a failing entry check. Simple DO remains a one-pass
+   canonical block.
+4. Retain the existing source anchors and DO/LEAVE/ITERATE associations, then
+   inspect ownership, generated symbol scope and opt/no-opt behavior. A new
+   AST node is a fallback only if these checks show a concrete canonical
+   emitter limitation; it requires its own design review before implementation.
+
+Regina reports `26.2` for `DO 2147483648`, so its implementation cannot by
+itself prove behavior beyond that range. Characterize the chosen Classic
+numeric profile and its actual representation limits during implementation;
+do not turn the current `int` cutoff into an undocumented Level C rule.
+Exact mixed TO/BY/FOR and WHILE/UNTIL timing, including exceptional exits,
+requires reference probes before code removal. `LC-STEP-70A` records this
+comparison. `LC-STEP-70B/C` are gated by Adrian's approval of the proposed
+architecture under `AGENTS.md`; the document is a reviewable proposal, not
+approval or implementation evidence.
+
 ## Historical design record
 
 The numbered sections below capture the earlier parser and lowering design

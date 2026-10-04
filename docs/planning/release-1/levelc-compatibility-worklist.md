@@ -649,6 +649,21 @@ are verified against all affected consumers.
   source/canonical trees, optimized/no-opt, normal Level C correctness and
   linked execution. Shared label/TRACE/condition lifecycle stays explicitly
   open under `LC-AC-04/08` and `LC-I-23/24`, as for SAY.
+- [ ] **LC-AC-65 — complete DO instruction:** simple grouping and every valid
+  counted, FOREVER and controlled loop form execute with Classic setup,
+  entry, body, end-check and step order in main, nested and local contexts.
+  Scalar and compound control names use the shared variable pool, including
+  substitution again when a tail variable changes during a loop. TO, BY and
+  FOR modifiers are accepted in their legal orders and evaluated once in
+  source order; WHILE and UNTIL retain their distinct check points. Counts
+  have no compiler-imposed 32-bit bound; reference-dialect limits and actual
+  numeric representation limits must be characterized rather than silently
+  treated as a language rule. END name, LEAVE/ITERATE associations, invalid
+  forms and Classic error identities are checked. Verify with source and
+  canonical AST ownership/association inspections, Regina/IBM reference
+  cases, optimized/no-opt and normal correctness, focused shared-runtime
+  checks, and linked toolchain execution. Shared labels, traps, TRACE and
+  host configuration remain open under their own criteria.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1078,8 +1093,12 @@ evidenced; closed rows are marked explicitly, and current bounded behavior is
 retained in the coverage matrix.
 Work through the rows in order, with only one active row; changing the order
 requires a recorded reason and must not turn a partial row into a closure.
-Each
-step includes parser-form inventory, reference cases, invalid forms,
+On 2026-10-04 Adrian prioritized the high-risk DO AST work before the remaining
+prior-instruction audit and SIGNAL. LC-I-08 therefore becomes the one active
+review/implementation row after NOP. LC-I-05 through LC-I-07 remain open and
+retain their original order for completion after DO; this priority change
+does not count any of them as reviewed or closed.
+Each step includes parser-form inventory, reference cases, invalid forms,
 main/procedure/nested execution where legal, opt/no-opt, source/AST checks,
 relevant runtime and host/profile checks, and linked delivery. The relevant
 normal correctness suite runs once per coherent instruction checkpoint, with
@@ -1096,7 +1115,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-05 OPTIONS | LC-STEP-67 | All processor option words, unknown-option policy and source/configuration behavior; programme initialization. |
 | LC-I-06 IF | LC-STEP-68 | Every legal instruction arm, nearest ELSE, condition/error and nesting behavior; shared statement dispatch. |
 | LC-I-07 SELECT | LC-STEP-69 | WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. |
-| LC-I-08 DO | LC-STEP-70 | Simple, counted, controlled, FOREVER, WHILE/UNTIL and legal combinations without arbitrary count limit; reviewed loop representation. |
+| LC-I-08 DO — active architecture review | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. |
 | LC-I-09 LEAVE | LC-STEP-71 | Unnamed/named targets, nesting, value/state and errors across all legal loops; DO. |
 | LC-I-10 ITERATE | LC-STEP-72 | Unnamed/named targets, end-step timing, nesting and errors across all legal loops; DO. |
 | LC-I-11 ARG | LC-STEP-73 | Direct argument acquisition and Classic upper/template behavior, omitted positions and invocation modes; routine context and shared parse semantics. |
@@ -1338,7 +1357,58 @@ case-by-case emitter path was added. This closes `LC-AC-64` and `LC-I-04`;
 the shared label/fallthrough, TRACE, condition and host profile contracts
 remain open under `LC-AC-04/08` and their instruction rows.
 
-**Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
+**LC-I-08 DO plan — vision and outcome.** Replace the accumulated DO header
+cases with one checked description and one supportable loop-state path, while
+keeping the compiler's established canonical `DO` emitter and its transfer
+associations if that route survives the decision review. Every valid Classic
+DO form and timing rule must remain visible in the whole-instruction contract
+`LC-AC-65`. The shared pool must own control-name resolution, as it now owns
+assignment and DROP. A count representation must avoid a compiler-specific
+32-bit cutoff; it must preserve the numeric values the chosen Classic profile
+can represent. This work precedes SIGNAL because loop AST and activation
+semantics are a high-risk foundation. IF, SELECT and OPTIONS remain open.
+
+1. **LC-STEP-70A (LC-AC-61/65; complete review; depends on 66B):** inventory
+   the DO parser and current validator/lowerer/emitter paths, run focused
+   reference probes, compare a shared runtime-state design using canonical
+   `DO` with a dedicated AST/emitter node, and record the architecture gate.
+   This is a read-only implementation review, not DO closure.
+2. **LC-STEP-70B (LC-AC-65; pending Adrian's architecture approval; depends
+   on 70A):** normalize source DO headers once into a checked description used
+   by validation and lowering. Preserve source anchors, emitted loop-target
+   association and invalid-form diagnostics; add structural assertions where
+   they distinguish ownership or control timing.
+3. **LC-STEP-70C (LC-AC-65; pending approval; depends on 70B):** implement the
+   chosen common loop-state service in `rxfnsc`, route counted and controlled
+   forms through it and the shared pool, and remove redundant compiler header
+   branches and arbitrary `int` conversion. Qualify focused reference,
+   runtime, AST, optimizer and transfer cases in reviewable commits.
+4. **LC-STEP-70D (LC-AC-59/61/65; pending; depends on 70C):** reconcile all
+   valid parser forms and Classic errors, main/local/nested execution,
+   optimized/no-opt and canonical/source trees, normal Level C correctness,
+   RexxScript consumers of changed shared services and linked delivery. Close
+   LC-I-08 only when the whole contract passes; return to the skipped
+   instruction rows before the SIGNAL architecture decision.
+
+2026-10-04 LC-STEP-70A evidence and open questions: `levelc_do_supported`
+and `levelc_lower_do` independently decode the positional source children.
+`levelc_controlled_header_supported` accepts only scalar targets and is
+called again during lowering. The latter constructs captures, synthetic
+WHILE/UNTIL and a `BLOCK_EXPR` for sequencing, while
+`rxcp_remap_create_controlled_do` and `rxcp_emit_flow.c` already provide a
+canonical loop with LEAVE/ITERATE association and cleanup. `RexxValue` count
+methods and the literal fast path convert to `int` and reject values above
+2147483647. A Regina probe of `DO a.i=1 TO 2` that changes `i` in the body
+shows the later step writes the newly substituted control name: output
+`body=1` then `after=1|11`; the current compiler rejects the header
+(`/tmp/crexx-do-design.sjBeq8`). A
+Regina `DO 2147483648` probe reports `26.2`, establishing that Regina itself
+has a count limit, but this does not justify a compiler-imposed limit as the
+portable language contract. The exact reference/profile range and overflow
+diagnostics remain to be resolved in 70C. The design comparison and proposed
+invariants are in the [architecture review](../../../compiler/docs/levelc_working_architecture.md#2026-10-04-do-architecture-decision-proposal).
+
+**Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
 pool ownership supports a single `dropSymbol` route. `LC-STEP-64A` — complete
 (`LC-AC-58/62`, depends on 63F) removes the compiler's per-kind method
