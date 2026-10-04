@@ -1978,10 +1978,17 @@ template_list(L) ::= template(T).
     if (T) add_ast(L, T);
 }
 
+template_list(L) ::= CTK_COMMA template_opt(T).
+{
+    L = ast_ft(context, TEMPLATES);
+    add_ast(L, ast_ft(context, TEMPLATES));
+    add_ast(L, T ? T : ast_ft(context, TEMPLATES));
+}
+
 template_list(L) ::= template_list(L0) CTK_COMMA template_opt(T).
 {
     L = L0;
-    if (T) add_ast(L, T);
+    add_ast(L, T ? T : ast_ft(context, TEMPLATES));
 }
 
 template_opt(T) ::= template(T0).

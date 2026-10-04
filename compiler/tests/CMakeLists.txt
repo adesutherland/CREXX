@@ -6429,6 +6429,15 @@ add_test(NAME levelc_select_source_tree
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_select_source_tree.cmake)
 set_tests_properties(levelc_select_source_tree PROPERTIES LABELS "compiler;levelc")
 
+add_test(NAME levelc_arg_template_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_template_source_tree.cmake)
+set_tests_properties(levelc_arg_template_source_tree PROPERTIES LABELS "compiler;levelc")
+
 add_levelc_lowered_tree_shape_test(levelc_slice12_counted_do_tree_shape
         rexx_src/levelc_slice12_counted_do.rexx
         "DO"

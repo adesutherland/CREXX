@@ -2174,6 +2174,23 @@ frame, parser AST preservation and PARSE lowering consolidation are an
 architectural shift; AGENTS.md requires Adrian's approval before those
 compiler edits. No product code change for ARG has been made at this gate.
 
+2026-10-04 decision: Adrian approved LC-STEP-73B after reviewing reuse of the
+existing Level C PARSE capabilities. LC-STEP-73A and 73B are complete;
+LC-STEP-73C is active. The approved implementation extracts one Level C
+template lowering path from PARSE for both PARSE and ARG, using the existing
+VM `parseplan` executor for general templates. ARG supplies an activation
+argument source and Classic uppercasing; PARSE retains its source selection.
+The existing `RexxValue.parseWordTemplate` helper and its regression evidence
+must be checked for parity and external consumers before changing the
+compiler's word-only path or removing the method. This decision introduces no
+new source syntax or compatibility exception.
+
+LC-STEP-73C parser checkpoint: the Level C grammar now retains empty inner
+`TEMPLATES` nodes for middle, leading and trailing comma positions. The
+`levelc_arg_template_source_tree` regression proves all three source shapes;
+the focused PARSE syntax highlighting checks pass. ARG lowering and LC-AC-71
+remain open.
+
 Further read-only LC-STEP-73A reference evidence: Regina's main `ARG` given
 one command argument string `blue green` assigns `BLUE`/`GREEN`; an internal
 call with three positions including an omitted middle position gives

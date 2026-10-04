@@ -107,7 +107,9 @@ The executable `PARSE` slice accepts a `VAR` scalar source or a `VALUE`
 expression with one nonempty template containing direct scalar or `.` targets,
 static literal patterns, and static absolute or relative positions, with
 optional `UPPER`. The parser keeps the outer comma-template list and inner
-template as separate `TEMPLATES` nodes. The lowerer validates both levels,
+template as separate `TEMPLATES` nodes. Empty comma positions have empty inner
+`TEMPLATES` nodes, so `ARG x,,z`, leading commas and trailing commas retain
+their positional meaning in the source tree. The lowerer validates both levels,
 evaluates and captures the source before any target write, and emits canonical
 pool reads, result captures and ordered `setValue` calls. A dot consumes its
 field without a pool write. `UPPER` passes the source through the same shared
