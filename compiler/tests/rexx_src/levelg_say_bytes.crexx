@@ -1,0 +1,6 @@
+options levelg
+
+main: procedure = .int
+  say ('410042'x as .binary) as .string
+  say ('C3A9'x as .binary) as .string
+  return 0

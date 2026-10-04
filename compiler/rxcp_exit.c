@@ -2401,8 +2401,8 @@ static int rxcp_apply_exit_plan(Context *ctx,
     return diag_rc;
 }
 
-static void rxcp_say_exit(char* message) {
-    fprintf(stdout, "%s", message);
+static void rxcp_say_exit(const char* message, size_t length) {
+    if (length) (void)fwrite(message, 1, length, stdout);
     fflush(stdout);
 }
 
@@ -2480,7 +2480,7 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     }
 
     /* Set say exit to print to stderr */
-    rxvml_set_context_say_exit(vctx, rxcp_say_exit);
+    rxvml_set_context_say_exit_bytes(vctx, rxcp_say_exit);
 
     if (rxvml_load_module_file(vctx, "library") <= 0) {
         const char *detail = NULL;

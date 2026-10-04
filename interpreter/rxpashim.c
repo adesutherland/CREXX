@@ -60,7 +60,7 @@ rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger
 rxpa_attribute_value rxvm_insertattr(rxpa_attribute_value attributeValue, rxinteger index);
 void rxvm_removeattr(rxpa_attribute_value attributeValue, rxinteger index);
 void rxvm_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2);
-void rxvm_setsayexit(say_exit_func sayExitFunc);
+void rxvm_setsayexit_bytes(say_exit_bytes_func sayExitFunc);
 void rxvm_resetsayexit();
 
 /* Shims */
@@ -171,8 +171,8 @@ void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxint
     rxvm_swapattrs(attributeValue, index1, index2);
 }
 
-void rxpa_setsayexit(say_exit_func sayExitFunc) {
-    rxvm_setsayexit(sayExitFunc);
+void rxpa_setsayexit_bytes(say_exit_bytes_func sayExitFunc) {
+    rxvm_setsayexit_bytes(sayExitFunc);
 }
 
 void rxpa_resetsayexit() {

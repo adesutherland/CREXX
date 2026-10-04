@@ -2428,22 +2428,13 @@ unsigned int rxvml_get_debug_mode(rxvml_context* ctx) {
     return ctx->vm.debug_mode;
 }
 
-void rxvml_set_say_exit(rxvml_say_exit_func say_exit) {
-    rxvm_setsayexit((say_exit_func)say_exit);
-}
-
-void rxvml_set_context_say_exit(rxvml_context* ctx,
-                                rxvml_say_exit_func say_exit) {
-    if (ctx) {
-        ctx->vm.active.say_exit = (say_exit_func)say_exit;
-        ctx->vm.active.say_exit_bytes = 0;
-    }
+void rxvml_set_say_exit_bytes(rxvml_say_exit_bytes_func say_exit) {
+    rxvm_setsayexit_bytes((say_exit_bytes_func)say_exit);
 }
 
 void rxvml_set_context_say_exit_bytes(rxvml_context* ctx,
                                       rxvml_say_exit_bytes_func say_exit) {
     if (ctx) {
         ctx->vm.active.say_exit_bytes = say_exit;
-        ctx->vm.active.say_exit = 0;
     }
 }

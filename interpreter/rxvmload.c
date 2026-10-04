@@ -85,7 +85,7 @@ rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger
 rxpa_attribute_value rxvm_insertattr(rxpa_attribute_value attributeValue, rxinteger index);
 void rxvm_removeattr(rxpa_attribute_value attributeValue, rxinteger index);
 void rxvm_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2);
-void rxvm_setsayexit(say_exit_func sayExitFunc);
+void rxvm_setsayexit_bytes(say_exit_bytes_func sayExitFunc);
 void rxvm_resetsayexit();
 
 typedef struct rxpa_proc_policy {
@@ -433,7 +433,6 @@ static int rxinimod_common(rxvm_context *context,
     context->active.rxpa_context = 0;
     context->active.rxpa_pool_head = 0;
     context->active.crexx_command_state = 0;
-    context->active.say_exit = 0;
     context->active.say_exit_bytes = 0;
     context->active.pending_interrupts = 0;
     context->active.compatibility_interrupts = 0;
@@ -522,7 +521,6 @@ void rxfremod(rxvm_context *context) {
 #ifndef CREXX_VM_SINGLE_THREADED
     rxcrexxcmd_context_state_free(context);
 #endif
-    context->active.say_exit = 0;
     context->active.say_exit_bytes = 0;
 
     /* Free Symbol Search Trees */
@@ -1287,7 +1285,7 @@ static int rxldmod_internal(rxvm_context *context, char *file_name,
             rxpa_functions.swapattrs = rxvm_swapattrs;
 
             // Exit Function Management
-            rxpa_functions.setsayexit = rxvm_setsayexit;
+            rxpa_functions.setsayexit_bytes = rxvm_setsayexit_bytes;
             rxpa_functions.resetsayexit = rxvm_resetsayexit;
             rxpa_functions.isinitialized = rxvm_isinitialized;
             rxpa_functions.callmethod = rxvm_callmethod;
@@ -2751,7 +2749,7 @@ int rxldmodp(rxvm_context *context) {
     rxpa_functions.swapattrs = rxvm_swapattrs;
 
     // Exit Function Management
-    rxpa_functions.setsayexit = rxvm_setsayexit;
+    rxpa_functions.setsayexit_bytes = rxvm_setsayexit_bytes;
     rxpa_functions.resetsayexit = rxvm_resetsayexit;
     rxpa_functions.isinitialized = rxvm_isinitialized;
     rxpa_functions.callmethod = rxvm_callmethod;

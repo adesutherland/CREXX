@@ -559,8 +559,7 @@ typedef struct rxvm_active_state {
     void *rxpa_context;
     void *rxpa_pool_head;
     void *crexx_command_state;
-    say_exit_func say_exit;
-    void (*say_exit_bytes)(const char *message, size_t length);
+    say_exit_bytes_func say_exit_bytes;
     volatile sig_atomic_t *pending_interrupts;
     /* Immutable, worker-owned compatibility carrier selected before prepare.
      * NULL keeps the accepted ordinary/native owner; non-NULL selects the
@@ -878,7 +877,7 @@ void nullredr(value* redirect_reg);
 int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes);
 
 /* EXIT Function Support */
-void rxvm_setsayexit(say_exit_func sayExitFunc);
+void rxvm_setsayexit_bytes(say_exit_bytes_func sayExitFunc);
 void rxvm_resetsayexit();
 void rxvm_say_write(const char *message, size_t length, int newline);
 void rxvm_mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */

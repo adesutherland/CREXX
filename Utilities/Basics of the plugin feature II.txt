@@ -34,7 +34,7 @@ GETINT(ARG(x))
 SETFLOAT(ARG(x), value)
 RETURNFLOAT(value)
 GETFLOAT(ARG(x))
-SET_SAY_EXIT(func)
+SET_SAY_EXIT_BYTES(func)
 RESET_SAY_EXIT()
 ```
 - you can read rexx variables (passed as parameters), example:

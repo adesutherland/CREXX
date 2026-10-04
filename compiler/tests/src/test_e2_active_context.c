@@ -146,15 +146,17 @@ static int count_path_occurrences(const char *text, const char *path) {
 #endif
 }
 
-static void e2_say_a(char *message) {
+static void e2_say_a(const char *message, size_t length) {
     (void)message;
+    (void)length;
     shared_lock(say_shared);
     say_shared->say_count[0]++;
     shared_unlock(say_shared);
 }
 
-static void e2_say_b(char *message) {
+static void e2_say_b(const char *message, size_t length) {
     (void)message;
+    (void)length;
     shared_lock(say_shared);
     say_shared->say_count[1]++;
     shared_unlock(say_shared);
@@ -251,7 +253,7 @@ static void run_thread(e2_thread_state *state) {
     }
     shared_unlock(shared);
 
-    rxvml_set_context_say_exit(ctx, state->identity ? e2_say_b : e2_say_a);
+    rxvml_set_context_say_exit_bytes(ctx, state->identity ? e2_say_b : e2_say_a);
 
     if (rxvml_call_procedure_descriptor(
             ctx, "rxsig1|e2_active_context.run|.int|", 0, NULL,

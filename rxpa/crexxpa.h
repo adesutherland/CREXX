@@ -259,9 +259,10 @@ typedef void (*rxpa_func_removeattr)(rxpa_attribute_value attributeValue, rxinte
 /* Swap the nth child attribute with the mth child attribute */
 typedef void (*rxpa_func_swapattrs)(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2);
 
-// Exit Functions
-typedef void (*say_exit_func)(char* message);
-typedef void (*rxpa_set_say_exit)(say_exit_func sayExitFunc); /* Set Say exit function */
+// Exit Functions. SAY callbacks receive the exact span, including SAY's LF.
+// The former terminated-text callback ABI is no longer supported.
+typedef void (*say_exit_bytes_func)(const char* message, size_t length);
+typedef void (*rxpa_set_say_exit_bytes)(say_exit_bytes_func sayExitFunc); /* Set Say exit function */
 typedef void (*rxpa_reset_say_exit)(); /* Set Say exit function */
 
 // The initialization context struct
@@ -293,7 +294,7 @@ struct RXPA_INITCTX_TAG {
     rxpa_func_removeattr removeattr;
     rxpa_func_swapattrs swapattrs;
     // Exit Function Management
-    rxpa_set_say_exit setsayexit;
+    rxpa_set_say_exit_bytes setsayexit_bytes;
     rxpa_reset_say_exit resetsayexit;
     /* Appended so existing initializer-field offsets remain stable. */
     rxpa_func_isinitialized isinitialized;
@@ -379,7 +380,7 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define REMOVEATTR(attr, index) _rxpa_context->removeattr((attr),(index))
 #define SWAPATTRS(attr, index1, index2) _rxpa_context->swapattrs((attr),(index1),(index2))
 #define SWAPARRAY(attr, index1, index2) _rxpa_context->swapattrs((attr),(index1),(index2))
-#define SET_SAY_EXIT(func) _rxpa_context->setsayexit((func))
+#define SET_SAY_EXIT_BYTES(func) _rxpa_context->setsayexit_bytes((func))
 #define RESET_SAY_EXIT() _rxpa_context->resetsayexit()
 
 // The plugin is being built as a DLL
@@ -553,7 +554,7 @@ void rxpa_removeattr(rxpa_attribute_value attributeValue, rxinteger index); /* R
 void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2); /* Swap the nth child attribute with the mth child attribute */
 
 // Exit Functions
-void rxpa_setsayexit(say_exit_func sayExitFunc); /* Set Say exit function */
+void rxpa_setsayexit_bytes(say_exit_bytes_func sayExitFunc); /* Set Say exit function */
 void rxpa_resetsayexit(); /* Set Say exit function */
 #ifdef __cplusplus
 }
@@ -642,7 +643,7 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define INSERTATTR(attr, index) rxpa_insertattr((attr),(index))
 #define REMOVEATTR(attr, index) rxpa_removeattr((attr),(index))
 #define SWAPATTRS(attr, index1, index2) rxpa_swapattrs((attr),(index1),(index2))
-#define SET_SAY_EXIT(func) rxpa_setsayexit((func))
+#define SET_SAY_EXIT_BYTES(func) rxpa_setsayexit_bytes((func))
 #define RESET_SAY_EXIT() rxpa_resetsayexit()
 #define RETURNSTR(value) rxpa_setstring(RETURN,(value))
 #define RETURNSTRX(value) {rxpa_setstring(RETURN,(value));PROCRETURN}

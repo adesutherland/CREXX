@@ -33,9 +33,6 @@
 #include "rxvmintp.h"
 #include "platform.h"
 
-// Function Prototypes
-void say_exit_default(char* message); // Default say exit function
-
 #if defined(CREXX_VM_SINGLE_THREADED)
 #define RXVM_THREAD_LOCAL
 #elif defined(_MSC_VER)
@@ -44,55 +41,33 @@ void say_exit_default(char* message); // Default say exit function
 #define RXVM_THREAD_LOCAL __thread
 #endif
 
-/* Compatibility default for callers which configure output before VM entry. */
-static RXVM_THREAD_LOCAL say_exit_func thread_say_exit = say_exit_default;
+/* Callers may configure output before VM entry. NULL selects the console. */
+static RXVM_THREAD_LOCAL say_exit_bytes_func thread_say_exit_bytes;
 
 static void rxvm_say_output_error(void) {
     raise_signal(errno == EILSEQ ? RXSIGNAL_UNICODE_ERROR : RXSIGNAL_NOTREADY);
 }
 
-/* Default Say Exit Function - prints to stdout */
-void say_exit_default(char* message) {
-    /* Print the message to stdout without a newline or any formatting */
-    errno = 0;
-    if (platform_console_text_write(stdout, message, strlen(message))) {
-        rxvm_say_output_error();
-        return;
-    }
-    // Flush
-    if (fflush(stdout)) raise_signal(RXSIGNAL_NOTREADY);
-}
-
 /* Set the say exit function */
-void rxvm_setsayexit(say_exit_func sayExitFunc) {
+void rxvm_setsayexit_bytes(say_exit_bytes_func sayExitFunc) {
     rxvm_context *context = rxvm_active_context_current();
-    say_exit_func selected = sayExitFunc ? sayExitFunc : say_exit_default;
-    if (context) {
-        context->active.say_exit = selected;
-        context->active.say_exit_bytes = 0;
-    }
-    else thread_say_exit = selected;
+    if (context) context->active.say_exit_bytes = sayExitFunc;
+    else thread_say_exit_bytes = sayExitFunc;
 }
 
 /* Reset the say exit function */
 void rxvm_resetsayexit() {
     rxvm_context *context = rxvm_active_context_current();
-    if (context) {
-        context->active.say_exit = 0;
-        context->active.say_exit_bytes = 0;
-    }
-    else thread_say_exit = say_exit_default;
+    if (context) context->active.say_exit_bytes = 0;
+    else thread_say_exit_bytes = 0;
 }
 
-/* SAY and SAYX are byte spans in the VM. The legacy callback can only express
- * terminated text, so reject an embedded NUL before invoking it. */
+/* SAY and SAYX are byte spans in the VM. */
 void rxvm_say_write(const char *message, size_t length, int newline) {
     rxvm_context *context = rxvm_active_context_current();
-    void (*bytes_exit)(const char *, size_t) =
-        context ? context->active.say_exit_bytes : NULL;
-    say_exit_func legacy_exit = context && context->active.say_exit
-                                    ? context->active.say_exit
-                                    : thread_say_exit;
+    say_exit_bytes_func bytes_exit = context && context->active.say_exit_bytes
+                                         ? context->active.say_exit_bytes
+                                         : thread_say_exit_bytes;
     size_t output_length;
     char fixed_buffer[100];
     char *buffer;
@@ -108,7 +83,7 @@ void rxvm_say_write(const char *message, size_t length, int newline) {
         return;
     }
     output_length = length + (newline ? 1u : 0u);
-    if (!bytes_exit && (!legacy_exit || legacy_exit == say_exit_default)) {
+    if (!bytes_exit) {
         errno = 0;
         if ((length && platform_console_text_write(stdout, message, length)) ||
             (newline && platform_console_text_write(stdout, "\n", 1u))) {
@@ -118,12 +93,6 @@ void rxvm_say_write(const char *message, size_t length, int newline) {
         if (fflush(stdout)) raise_signal(RXSIGNAL_NOTREADY);
         return;
     }
-    if (!bytes_exit && length && memchr(message, 0, length)) {
-        errno = EINVAL;
-        rxvm_say_output_error();
-        return;
-    }
-
     buffer = output_length + 1u <= sizeof(fixed_buffer)
                  ? fixed_buffer
                  : rxvm_memory_alloc_bytes(rxvm_memory_current_worker(),
@@ -136,8 +105,7 @@ void rxvm_say_write(const char *message, size_t length, int newline) {
     if (length) memcpy(buffer, message, length);
     if (newline) buffer[length] = '\n';
     buffer[output_length] = 0;
-    if (bytes_exit) bytes_exit(buffer, output_length);
-    else legacy_exit(buffer);
+    bytes_exit(buffer, output_length);
     if (buffer != fixed_buffer) (void)rxvm_memory_release(buffer);
 }
 

@@ -605,7 +605,7 @@ are verified against all affected consumers.
   each existing bounded test as regression evidence. Verify against the
   compliance reference, parser grammar, reference-obligation appendix,
   tests and exact candidate revision.
-- [ ] **LC-AC-60 — one length-aware SAY output callback:** the VM, RXVML and
+- [x] **LC-AC-60 — one length-aware SAY output callback:** the VM, RXVML and
   RXPA expose only a `(const char *, size_t)` custom SAY callback. The compiler
   exit bridge and in-tree hosts use it; the terminated-text callback and its
   legacy-only test are removed. Default and custom output preserve embedded
@@ -1116,7 +1116,7 @@ unapproved design proposal for that later review, not a SAY closure gate.
 
 **Implementation steps:**
 
-1. **LC-STEP-63E (LC-AC-60; approved; depends on 63B):** replace the
+1. **LC-STEP-63E (LC-AC-60; complete; depends on 63B):** replace the
    terminated callback surface in VM, RXVML, RXPA and compiler exits with the
    existing byte-span signature. Migrate in-tree registrations, remove the
    legacy-only test branch, update host documentation, build and run focused
@@ -1142,12 +1142,13 @@ change supplies an empty string to that builder. The emitter uses the normal
 `SAY` opcode, and the VM routes output through its SAY exit callback. No new
 AST node or instruction-specific runtime helper is indicated by this review.
 
-Adrian approved the three architecture decisions on 2026-10-03: cREXX string
+Adrian approved three architecture decisions on 2026-10-03: cREXX string
 lengths must carry through the SAY output route; BIF validation failure should
 raise a signal through one shared check, preserving Classic `SYNTAX` identity;
-and general variable reads belong to `RexxVariablePool`. Keep the existing
-legacy SAY callback API for hosts while adding a length-aware route, and keep
-assignment's pre-RHS tail capture separate from the read consolidation.
+and general variable reads belong to `RexxVariablePool`. The 2026-10-03
+decision to retain the terminated SAY callback was explicitly superseded on
+2026-10-04 by `LC-STEP-63E`; assignment's pre-RHS tail capture remains
+separate from the read consolidation.
 
 The implementation sequence within active `LC-STEP-63` is:
 
@@ -1156,10 +1157,10 @@ The implementation sequence within active `LC-STEP-63` is:
    read limit. Prove substitution, case, exposure, defaults, source anchors,
    opt/no-opt, linked execution and the normal Level C suite; commit.
 2. **LC-STEP-63B (LC-AC-57; complete):** carry an explicit
-   byte length from SAY operands to default and configured output. Add a
-   length-aware per-context callback without breaking the old ABI. Test
-   embedded NUL, legacy callback failure, host isolation, UTF8, error and
-   linked behavior; commit.
+   byte length from SAY operands to default and configured output. Its
+   original legacy-callback compatibility proof is historical after
+   `LC-STEP-63E`; current output tests cover embedded NUL, host isolation,
+   UTF8, error and linked behavior.
 3. **LC-STEP-63C (LC-AC-57/06; in progress, depends on 63A):** use one direct-BIF
    selection table and one shared result/error check. Deliver BIF failures as
    a Classic `SYNTAX` signal distinct from command `ERROR`; preserve argument
@@ -1192,7 +1193,7 @@ marking the configuration part complete.
 | Invalid source forms | The seven existing highlighter fixtures cover stray comma/right parenthesis, trailing comparison/arithmetic/logical operators, bad prefix/leading operators, and unmatched left parenthesis with source-token anchors and next-clause recovery. Their `rxc` compile route rejects each with `37.1`, `37.2`, `35.1`, or `36` as expected | Current grammar's negative expression families proved; full source/encoding and expression reference matrix remains open |
 | Complete BIF, local and external function terms | A direct table reaches 57 of 70 recognised Classic BIF names plus LOWER/UPPER; a shared check raises distinct Classic SYNTAX. Nested, omitted, pool-mutating and local-procedure calls match Regina in focused proof. Activation-owned configuration reaches direct BIFs through internal functions and CALLs; seeded RANDOM lifecycle and pool isolation pass. Unhandled errors now report the authored main or local call site | Open: remaining BIF services, host-selected configuration, external resolution, Classic trap lifecycle and full reference proof |
 | General variable value terms | All validated variable reads now use shared pool `symbolValue`; Regina, opt/no-opt, local exposure/CALL, linked and normal Level C checks pass | Pool-read consolidation proved; complete expression domain remains open |
-| BYTE/UTF8 output, configured host route and failure | Length-aware default and per-context output pass embedded-NUL, UTF-8 byte, legacy-error, context-isolation, opt/no-opt and linked checks | Byte route proved; broader host/profile, trace and condition lifecycle remain open |
+| BYTE/UTF8 output, configured host route and failure | Length-aware default and per-context output pass embedded-NUL, UTF-8 byte, context-isolation, opt/no-opt and linked checks; the terminated callback was removed in LC-STEP-63E | Byte route proved; broader host/profile, trace and condition lifecycle remain open |
 | Trace/condition lifecycle | Existing canonical SAY opcode and source anchors | Open: clause hooks, trapped errors and finalization |
 
 Open before closure:
@@ -1368,6 +1369,23 @@ highlighter tests assert the fault token and following clause are preserved;
 their Regina mapping is recorded in the architecture document's expression
 review. This covers the known invalid SAY expression grammar families. It
 does not complete broader expression semantics or source/profile proof.
+
+2026-10-04 LC-STEP-63E callback consolidation: the VM, RXVML and RXPA now
+expose one `(const char *, size_t)` SAY callback signature. The compiler exit
+bridge, active-context test and mainframe console mock use it. The former
+terminated-text registration API, its NUL-rejection branch and the
+legacy-only host test branch were removed. Public RXPA macro and interpreter
+documentation reflect the native ABI change; external hosts using the old
+signature must rebuild. A permanent Level G byte-output fixture joins the
+Level C fixture to check `41 00 42 0a` and UTF-8 output under optimized and
+no-opt compilation. Eight focused callback, console, context, RXPA, Level G
+and Level C tests passed (`/tmp/crexx-say-byte-parity-tests.CbdcMM`); both
+Level G and Level C RXBINs produced the expected bytes through `rxtvm`.
+The normal Release Level C suite passed 308/308 on the changed code/test
+inputs (`/tmp/crexx-say-callback-levelc.6ijx8N`). One initial console test
+run lacked the separately built harness; after building it, the test passed
+(`/tmp/crexx-say-host-tests.ytj53z`). This completes `LC-AC-60`; SAY closure
+and the prior-instruction baseline remain separate steps.
 
 ### Pending architecture decision for LC-STEP-63T
 

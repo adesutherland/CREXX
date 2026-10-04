@@ -2780,8 +2780,8 @@ void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxint
     { disablerFunction("rxpa_swapattrs"); }
 
 // Exit Function Management
-void rxpa_setsayexit(say_exit_func sayExitFunc)  /* Set Say exit function */
-    { disablerFunction("rxpa_setsayexit"); }
+void rxpa_setsayexit_bytes(say_exit_bytes_func sayExitFunc)  /* Set Say exit function */
+    { disablerFunction("rxpa_setsayexit_bytes"); }
 
 void rxpa_resetsayexit()  /* Reset Say exit function */
     { disablerFunction("rxpa_resetsayexit"); }
@@ -2895,7 +2895,7 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     rxpa_context.insertattr = rxpa_insertattr;
     rxpa_context.removeattr = rxpa_removeattr;
     rxpa_context.swapattrs = rxpa_swapattrs;
-    rxpa_context.setsayexit = rxpa_setsayexit;
+    rxpa_context.setsayexit_bytes = rxpa_setsayexit_bytes;
     rxpa_context.resetsayexit = rxpa_resetsayexit;
     rxpa_context.isinitialized = rxpa_isinitialized;
     rxpa_context.callmethod = rxpa_callmethod;

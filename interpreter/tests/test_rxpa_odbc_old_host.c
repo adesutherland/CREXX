@@ -91,7 +91,7 @@ static void legacy_swapattrs(rxpa_attribute_value value, rxinteger first,
                              rxinteger second) {
     (void)value; (void)first; (void)second;
 }
-static void legacy_setsayexit(say_exit_func function) { (void)function; }
+static void legacy_setsayexit_bytes(say_exit_bytes_func function) { (void)function; }
 static void legacy_resetsayexit(void) {}
 
 int main(int argc, char **argv) {
@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
     helpers.insertattr = legacy_insertattr;
     helpers.removeattr = legacy_removeattr;
     helpers.swapattrs = legacy_swapattrs;
-    helpers.setsayexit = legacy_setsayexit;
+    helpers.setsayexit_bytes = legacy_setsayexit_bytes;
     helpers.resetsayexit = legacy_resetsayexit;
     rc = load_plugin(&helpers, argv[1], "rx_odbc.rxplugin");
     if (rc != 0 || !legacy_connect || !legacy_disconnect) {

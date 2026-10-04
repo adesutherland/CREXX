@@ -27,12 +27,13 @@ FWRITE/FWRITECDPT raise `UNICODE_ERROR` for conversion failure and `NOTREADY`
 for output/flush failure. SAY/SAYX carry the VM operand's explicit byte length
 to the default console writer. `rxvml_set_context_say_exit_bytes` installs a
 context-local callback receiving the complete byte span (including SAY's LF);
-the span remains valid for that callback only. It replaces the old context SAY
-callback, and setting either callback to NULL restores default routing. The
-legacy `rxvml_set_context_say_exit`/RXPA callback ABI remains terminated text;
-an embedded NUL raises `NOTREADY` before callback delivery, and an RXVML
-procedure call reports an unhandled signal as failure. Custom callbacks own
-their output policy. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md) for sequential stream and SDK limits.
+the span remains valid for that callback only. `rxvml_set_say_exit_bytes` and
+RXPA `SET_SAY_EXIT_BYTES` use the same `(const char *, size_t)` contract.
+Setting a callback to NULL restores normal routing. The former terminated-text
+callback API was removed on 2026-10-04; native hosts using it must rebuild
+against the current headers. Custom callbacks own their output policy. See
+[the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md) for
+sequential stream and SDK limits.
 
 The VM reserves signal code 28 as `CLASSIC_SYNTAX` for compiled Level C BIF
 validation failures. It is distinct from VM `ERROR` (code 3); existing Level B

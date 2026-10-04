@@ -18,7 +18,6 @@ typedef struct say_capture {
 
 static say_capture first;
 static say_capture second;
-static say_capture legacy;
 
 static void capture(say_capture *target, const char *text, size_t length) {
     target->calls++;
@@ -33,10 +32,6 @@ static void first_bytes(const char *text, size_t length) {
 
 static void second_bytes(const char *text, size_t length) {
     capture(&second, text, length);
-}
-
-static void legacy_text(char *text) {
-    capture(&legacy, text, strlen(text));
 }
 
 static int emit(rxvml_context *ctx, const char *text, size_t length) {
@@ -93,24 +88,6 @@ int main(void) {
         fprintf(stderr, "length-aware callbacks lost bytes or crossed contexts\n");
         failed = 1;
         goto done;
-    }
-
-    rxvml_set_context_say_exit(a, legacy_text);
-    if (emit(a, "plain", 5) != 0 || legacy.calls != 1 ||
-        legacy.length != 6 || memcmp(legacy.bytes, "plain\n", 6) != 0) {
-        fprintf(stderr, "legacy callback failed for terminated text\n");
-        failed = 1;
-        goto done;
-    }
-    if (emit(a, with_nul, sizeof(with_nul)) == 0 || legacy.calls != 1) {
-        fprintf(stderr, "legacy callback silently accepted embedded NUL\n");
-        failed = 1;
-    } else {
-        const char *error = NULL;
-        if (rxvml_last_error(a, &error) == 0 || !error) {
-            fprintf(stderr, "legacy callback failure has no host error\n");
-            failed = 1;
-        }
     }
 
 done:

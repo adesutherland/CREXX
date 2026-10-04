@@ -5325,7 +5325,7 @@ function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
 
-function(add_levelc_runtime_bytes_test NAME SOURCE_FILE EXPECTED_HEX)
+function(add_runtime_bytes_test NAME SOURCE_FILE EXPECTED_HEX LEVEL)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
     string(APPEND SCRIPT_CONTENT
@@ -5342,7 +5342,7 @@ function(add_levelc_runtime_bytes_test NAME SOURCE_FILE EXPECTED_HEX)
            "if(NOT actual STREQUAL \"${EXPECTED_HEX}\")\n  message(FATAL_ERROR \"Expected ${EXPECTED_HEX}; got ${RXAS_DIAG_DOLLAR}{actual}\")\nendif()\n")
     file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
     add_test(NAME ${NAME} COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}")
-    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;${LEVEL}")
 endfunction()
 
 function(add_levelc_runtime_syntax_signal_test NAME SOURCE_FILE EXPECTED_CODE EXPECTED_OUTPUT EXPECTED_SOURCE_LOCATION)
@@ -5368,12 +5368,18 @@ endfunction()
 add_levelc_runtime_slice_test(levelc_bare_stem_read
         rexx_src/levelc_bare_stem_read.rexx
         "ITEMS.\n")
-add_levelc_runtime_bytes_test(levelc_say_bytes
+add_runtime_bytes_test(levelc_say_bytes
         rexx_src/levelc_say_bytes.rexx
-        "4100420ac3a90a0a")
-add_levelc_runtime_bytes_test(levelc_say_bytes_noopt
+        "4100420ac3a90a0a" levelc)
+add_runtime_bytes_test(levelc_say_bytes_noopt
         rexx_src/levelc_say_bytes.rexx
-        "4100420ac3a90a0a" -n)
+        "4100420ac3a90a0a" levelc -n)
+add_runtime_bytes_test(levelg_say_bytes
+        rexx_src/levelg_say_bytes.crexx
+        "4100420ac3a90a" levelg)
+add_runtime_bytes_test(levelg_say_bytes_noopt
+        rexx_src/levelg_say_bytes.crexx
+        "4100420ac3a90a" levelg -n)
 add_levelc_runtime_syntax_signal_test(levelc_bif_missing_required
         rexx_src/levelc_bif_missing_required.rexx "40.3" ""
         "levelc_bif_missing_required.rexx:3:")
