@@ -751,6 +751,26 @@ are verified against all affected consumers.
   source/canonical trees, relevant normal and shared runtime checks, and
   linked execution. SIGNAL/INTERPRET invalidation, TRACE and condition
   traps remain under their own instruction rows and LC-AC-04/08.
+- [ ] **LC-AC-71 — complete ARG instruction:** Classic `ARG [template_list]`
+  behaves as `PARSE UPPER ARG`: it retrieves the active program or routine's
+  argument strings without changing them, uppercases each source before
+  parsing, and applies comma-separated templates in positional order.
+  Templates support the same variable/dot, blank-word, literal and position
+  patterns as PARSE, with no arbitrary template count limit. Repeated ARG
+  instructions reread the same activation arguments; missing or omitted
+  source positions parse as empty strings, while an explicit empty string
+  remains present for argument-existence queries. Preserve source-order
+  assignments through the visible pool, including compound targets and
+  PROCEDURE EXPOSE aliases. Support main-program and internal routine
+  activations, direct subroutine/function calls and any other invocation
+  modes that the compiler/runtime actually admits; record a CALL/host owner
+  for unsupported invocation paths without counting ARG itself complete.
+  Diagnose malformed templates and illegal instruction placement with
+  Classic identity and source position. Verify IBM/Regina examples and
+  omitted-versus-empty behavior, source/canonical AST, optimized/no-opt,
+  relevant normal/shared runtime checks and linked toolchain execution.
+  ARG built-in function behavior remains under the BIF row, but its shared
+  activation-state dependency must be reviewed here.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -2077,6 +2097,37 @@ support the end-step and inactive-routine contracts. No ITERATE-owned
 infeasible feature or further compatibility exception was found. LC-AC-70 and
 LC-I-10 close; shared SIGNAL/INTERPRET, TRACE and condition lifecycle remain
 open under LC-AC-04/08/59/61 and their instruction rows. Next is LC-I-11 ARG.
+
+**LC-I-11 ARG plan — vision and intended outcome.** Make Classic ARG a whole
+instruction rather than a fixed procedure-parameter binding. The user should
+be able to parse the active activation's unchanged argument strings with
+Classic uppercase behavior in a main program or routine, using the same
+template rules, variable pool and argument-presence semantics as PARSE ARG.
+Retain Level B's typed `arg` and RexxScript's distinct call interface. The
+source and canonical AST must remain explicit and supportable; no arbitrary
+template or argument count limit is acceptable.
+
+1. **LC-STEP-73A (LC-AC-59/71; active review; depends on ITERATE closure):**
+   inventory IBM/Regina forms, parser and raw AST shapes, current fixed
+   procedure ARG lowering, PARSE ARG plan/runtime, CALL activation storage,
+   main and routine invocation modes, omitted/empty arguments, errors and
+   source positions. Reproduce gaps and identify shared owners before edits.
+2. **LC-STEP-73B (LC-AC-71; pending 73A):** choose the simplest complete
+   lowering/runtime contract, preferring the existing PARSE plan and shared
+   activation state where they fit. If that choice changes architecture,
+   record the concrete design and pause for Adrian's required approval before
+   editing compiler logic. Do not classify substantial work as infeasible.
+3. **LC-STEP-73C (LC-AC-71; pending 73B and any decision gate):** implement
+   the whole instruction and remove obsolete fixed-template duplication;
+   cover main and routine forms, repeated reads, templates, ordering,
+   uppercasing, missing/omitted positions, and all admitted call modes.
+   Preserve Level B/G and RexxScript contracts.
+4. **LC-STEP-73D (LC-AC-59/61/71; pending 73C):** compare IBM/Regina,
+   inspect raw/canonical trees, run focused and relevant normal/shared
+   regressions, prove linked output, update reference/architecture docs, and
+   commit an exact-revision receipt. Close LC-I-11 only when all AC-71
+   behavior and error paths are verified; keep CALL/BIF/host lifecycle gaps
+   visibly open under their owners as well.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
