@@ -731,6 +731,26 @@ are verified against all affected consumers.
   Level C and shared runtime checks, and linked toolchain output. Shared
   SIGNAL/INTERPRET loop invalidation and TRACE lifecycle remain open under
   their own instruction rows and LC-AC-04/08.
+- [ ] **LC-AC-70 — complete ITERATE instruction:** childless `ITERATE`
+  continues the innermost active repetitive DO, and `ITERATE symbol`
+  continues the innermost active controlled DO whose authored control symbol
+  matches without compound-tail substitution. It ends any intervening inner
+  loops, skips the remainder of the selected body, and runs that loop's
+  normal end processing: an applicable UNTIL check before the visible
+  control step, count/step processing, then the next entry check. IF, SELECT
+  and simple DO wrappers do not change the target. Local routines cannot
+  iterate an inactive caller loop. Ordinary Level C diagnoses a
+  source-provable invalid target at compile time (`28.2` or `28.4`);
+  leading static `OPTIONS LEVELC STRICTC` defers a syntactically valid
+  invalid target to an Error 28 signal only if reached. Level B/G checks
+  remain unchanged. Malformed names and extra same-clause text fail at
+  compile time with Classic identity and source position. Preserve one
+  shared transfer/binding path, source/canonical AST ownership, and the
+  existing emitter. Verify IBM/Regina reference cases, optimized/no-opt
+  output for all loop kinds and nested/local contexts, invalid forms,
+  source/canonical trees, relevant normal and shared runtime checks, and
+  linked execution. SIGNAL/INTERPRET invalidation, TRACE and condition
+  traps remain under their own instruction rows and LC-AC-04/08.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1183,7 +1203,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-06 IF — closed 2026-10-04 | LC-STEP-68A–68C | `LC-AC-67`: all arm positions without IF-specific rejection, nearest ELSE, condition/error and nesting behavior. Each arm's instruction semantics remain with its owner row; shared condition/trap lifecycle remains open in its own criteria. |
 | LC-I-07 SELECT — closed 2026-10-04 | LC-STEP-69A–69C | `LC-AC-68`: WHEN/OTHERWISE forms, arm instructions, evaluation and no-match/error lifecycle; IF and statement dispatch. Shared helper-stack source reporting and TRACE/trap lifecycle remain open under LC-AC-08/04. |
 | LC-I-08 DO — closed 2026-10-04 | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. Shared NUMERIC/condition/TRACE/host lifecycle remains open in its own rows. |
-| LC-I-09 LEAVE | LC-STEP-71 | Unnamed/named targets, nesting, value/state and errors across all legal loops; DO. |
+| LC-I-09 LEAVE — closed 2026-10-04 | LC-STEP-71A–71C | `LC-AC-69`: unnamed/named targets, nesting, state and errors with the approved default/STRICTC timing distinction; DO. |
 | LC-I-10 ITERATE | LC-STEP-72 | Unnamed/named targets, end-step timing, nesting and errors across all legal loops; DO. |
 | LC-I-11 ARG | LC-STEP-73 | Direct argument acquisition and Classic upper/template behavior, omitted positions and invocation modes; routine context and shared parse semantics. |
 | LC-I-12 PROCEDURE | LC-STEP-74 | Pool creation and all direct/indirect EXPOSE forms with alias lifecycle; shared variable pool and routines. |
@@ -1988,6 +2008,33 @@ feature or exception remains beyond the explicitly accepted default-profile
 timing distinction. `LC-AC-69` and LC-I-09 close; shared SIGNAL/INTERPRET
 lifecycle and `LC-AC-04/08/59/61` remain open under their own owners. Next is
 LC-I-10 ITERATE for a separate whole-instruction review and closure.
+
+**LC-I-10 ITERATE plan — vision and intended outcome.** Complete the whole
+Classic instruction through the existing source-loop association and canonical
+loop emitter, so ITERATE consistently skips the selected body's remainder,
+ends inner loops, and performs the selected loop's ordinary end check and
+advance. Use the approved default/`STRICTC` timing policy from LEAVE and the
+shared runtime Error 28 service. Preserve Level B/G, DO, LEAVE and RexxScript
+behavior. Compare the [IBM ITERATE reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=instructions-iterate)
+and Regina, recording any true cross-cutting lifecycle gap under its owner.
+
+1. **LC-STEP-72A (LC-AC-59/70; active review; depends on LEAVE closure):**
+   inventory grammar and recovery, raw/canonical AST, transfer binding and
+   emitter, end-check/step order across counted, controlled, FOREVER,
+   WHILE/UNTIL and combinations, named nesting, routine isolation, default
+   and `STRICTC` errors. Reproduce any mismatch before editing and identify
+   its instruction owner and any new decision gate.
+2. **LC-STEP-72B (LC-AC-70; pending 72A):** repair ITERATE-owned gaps in one
+   coherent instruction increment using the established transfer machinery;
+   add a complete optimized/no-opt fixture and focused error/tree checks.
+   If the review finds no code gap, add only the missing whole-instruction
+   evidence and document that conclusion.
+3. **LC-STEP-72C (LC-AC-59/61/70; pending 72B):** compare IBM/Regina results,
+   inspect source/canonical ownership, run focused and relevant normal and
+   shared-consumer checks, prove linked execution, update architecture and
+   reference docs, and commit the exact-revision receipt. Close LC-I-10 only
+   when its own contract is proved. Shared SIGNAL/INTERPRET, TRACE and
+   condition lifecycle remain with their owner rows.
 
 **Earlier whole-instruction checkpoint: LC-I-02 DROP.** The October review
 identified duplicated compiler/runtime DROP selection. The approved shared
