@@ -621,6 +621,16 @@ are verified against all affected consumers.
   and normal/toolchain evidence are recorded, and list any remaining work
   explicitly. Verify the per-instruction receipts and code-path inventory;
   significant work does not count as an infeasible exception.
+- [ ] **LC-AC-62 — complete DROP instruction:** every parsed direct or
+  parenthesized DROP list item executes in authored order in main, nested and
+  local contexts. Direct scalar, stem and arbitrary-component compound names
+  use the same shared pool operation as indirect subsidiary words; exposed
+  aliases, substitution, dropped-tail/default lifecycle and source anchors
+  agree with Regina. Invalid subsidiary words are ignored as Adrian chose;
+  invalid source forms retain their compiler diagnostics. Verify multi-part
+  and mixed-list Regina probes, optimized/no-opt, source/canonical AST,
+  focused pool and RexxScript checks, normal Level C correctness and linked
+  toolchain execution. No fixed tail-component or list-length limit remains.
 - [x] **LC-AC-07 — scalar pool read and DROP slice:** an uninitialized or
   dropped scalar reads as its uppercase Classic symbol, direct scalar `DROP`
   affects the current visible pool (including a procedure's exposed alias),
@@ -1134,6 +1144,18 @@ unapproved design proposal for that later review, not a SAY closure gate.
    checkpoints. Record closed and still-open rows with exact evidence. Do not
    begin `LC-I-23 SIGNAL` until this baseline is clear and its architecture
    gate is approved.
+
+**Next whole-instruction checkpoint: LC-I-02 DROP.** The October review
+identified duplicated compiler/runtime DROP selection. The approved shared
+pool ownership supports a single `dropSymbol` route. `LC-STEP-64A`
+(`LC-AC-58/62`, depends on 63F) removes the compiler's per-kind method
+selection and the single-tail-component guard for DROP, retaining parser
+validation and ordered per-item evaluation. `LC-STEP-64B` (`LC-AC-59/62`,
+depends on 64A) checks the complete parser/reference matrix, invalid source,
+Regina substitution and exposure, opt/no-opt, AST, pool/RexxScript, normal
+correctness and linked delivery, then closes DROP only if all pass. Each step
+gets a separate reviewable commit and evidence receipt. The indirect-list
+invalid-word rule remains the previously approved Regina behavior.
 
 ### Closed review: LC-I-01 SAY
 
