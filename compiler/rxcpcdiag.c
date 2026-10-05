@@ -625,6 +625,10 @@ static int levelc_binary_digit(char ch) {
     return ch == '0' || ch == '1';
 }
 
+static int levelc_valid_suffix_group(int length, int group_size) {
+    return length == group_size || (group_size == 4 && length == 8);
+}
+
 static int levelc_validate_string_grouping(Context *context,
                                            Token *token,
                                            int raw_length,
@@ -659,7 +663,7 @@ static int levelc_validate_string_grouping(Context *context,
                 i++;
                 continue;
             }
-            if (group_length != group_size) {
+            if (!levelc_valid_suffix_group(group_length, group_size)) {
                 levelc_append_code_position(context, token, standard_code, i + 1);
                 return 0;
             }
@@ -674,7 +678,7 @@ static int levelc_validate_string_grouping(Context *context,
         i++;
     }
 
-    if (group_length != group_size) {
+    if (!levelc_valid_suffix_group(group_length, group_size)) {
         levelc_append_code_position(context, token, standard_code, raw_length + 1);
         return 0;
     }

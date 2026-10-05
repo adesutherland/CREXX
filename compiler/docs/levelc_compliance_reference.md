@@ -213,6 +213,9 @@ Token actions:
   the left. The shared parser may represent decoded data as `STRING` or
   `BINARY` according to UTF-8 validity; Level C lowering converts either
   source form through the fixed `U+00XX` ordinal mapping before emission;
+- binary-literal blanks may separate four- or eight-bit groups after the
+  initial group; a shorter initial group is left-padded. Invalid later groups
+  retain `15.2`. Quoted CALL names use the same decoded hex/binary text;
 - alternative negator characters normalize to backslash in operators;
 - blanks are remembered because they can infer concatenation.
 

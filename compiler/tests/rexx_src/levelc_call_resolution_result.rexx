@@ -11,6 +11,13 @@ call length 'abc'
 say 'shadow=' || result
 call 'LENGTH' 'abc'
 say 'quoted=' || result
+call '4C 45 4E 47 54 48'x 'abcd'
+say 'hex-target=' || result
+call '01001100 01000101 01001110 01000111 01010100 01001000'b 'abcde'
+say 'binary-target=' || result
+say 'grouped=' || c2x('0100 1100 01000101'b) || '|' || c2x('1 0000'b) || '|' || c2x('00001 0000'b)
+parse value '01001100 01000101'b with parsed_group
+say 'parsed=' || parsed_group
 call arg
 say 'main-argc=' || result
 call outer

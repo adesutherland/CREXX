@@ -26,8 +26,8 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-13`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The final code/test-input
-Debug Level C checkpoint for the period-starting CALL target increment passed
-618/618 with process memory monitoring. Its focused ASan and Level
+Debug Level C checkpoint for the encoded CALL target/binary-grouping increment
+passed 619/619 with process memory monitoring. Its focused ASan and Level
 B/G/RexxScript isolation checks also passed; the exact receipts are below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
@@ -3457,6 +3457,66 @@ and error matrix remains open under `LC-AC-04/08`; external CALL, real
 condition producers, runtime missing-target behavior and the rest of
 `LC-75-01–06` keep LC-I-13 open.
 
+**LC-STEP-75A encoded CALL target and binary-grouping plan, 2026-10-05
+(LC-75-01/02/06; complete).** A quoted hex or binary string is a Classic CALL
+name. Guarded Regina calls the shared `LENGTH` BIF through both encodings and
+returns `hex=3`/`binary=4` (`cmake-build-debug/levelc-call-encoded-regina.log`).
+With no embedded blanks, the current full cREXX toolchain gives the same
+output (`levelc-call-encoded-noblank-{rxc,assemble,link,run}.log`). The
+source-valid byte-grouped binary form instead fails at its second separator
+with `15.2` (`levelc-call-encoded-rxc.log`): the common lexical validator
+accepts four-bit groups only, while the [IBM token rule](https://www.ibm.com/docs/en/zvm/7.3.0?topic=syntax-tokens) admits four- or
+eight-bit groups and a shorter first group. This is a shared literal
+validation repair required by the active CALL target form, not a new syntax
+choice. A function/literal, PARSE and RexxScript isolation check must prevent
+cross-consumer fallout.
+Regina's guarded grouping matrix accepts nibble, byte, mixed and partial
+groups (`levelc-binary-grouping-regina.log`), also accepts a five-bit initial
+group (`levelc-binary-grouping-bad-first-regina.log`), and rejects a five-bit
+later group as `15.2` (`levelc-binary-grouping-bad-later-regina.log`). The
+initial group remains permissive, preserving its existing padding behavior.
+
+1. `75A-B1` (LC-75-01/02): establish Regina/reference valid and invalid
+   grouping cases, including byte, nibble, mixed, initial partial and bad
+   later five-to-seven-bit groups. Regina also accepts a five-bit initial
+   group, so retain the current first-group padding behavior. Keep hex
+   grouping and the existing `15.2`
+   source diagnostic stable.
+2. `75A-B2` (LC-75-01/02; depends on B1): use one reviewed binary grouping
+   validator for all Level C literal contexts, then add a permanent CALL
+   hex/binary target fixture with source-order arguments, opt/no-opt, linked
+   output and target-tree proof. Add negative source diagnostics and relevant
+   expression/PARSE checks without a CALL-specific decoding path.
+3. `75A-B3` (LC-75-06; depends on B2): run focused normal and maintained
+   sanitizer checks, final-input core build and normal Level C suite once,
+   plus affected Level B/G/RexxScript isolation; retain guard exit/memory
+   evidence, update docs and commit. Whole CALL stays open for external
+   resolution, missing targets and condition/source lifecycle.
+
+**75A-B1–B3 receipt, 2026-10-05.** One shared Level C source validator now
+accepts four- and eight-bit noninitial binary groups, including mixed groups,
+without changing hex pairs or the initial group's left padding. The
+source-invalid five- and six-bit later groups retain `15.2` at their literal
+positions in one recovered source. The expanded
+CALL fixture checks grouped hex and binary quoted BIF names, ordered actuals,
+mixed/partial literal expressions and PARSE VALUE through the same ordinal
+route. Its expected output matches guarded Regina byte-for-byte
+(`cmake-build-debug/levelc-call-encoded-final-regina.log`), with source,
+optimized/no-opt, linked and tree coverage. The final-input guarded normal
+Debug focused matrix passed **7/7** in
+`cmake-build-debug/levelc-call-encoded-final-focused.log`; maintained macOS
+ASan passed **7/7** with unsupported leak detection off in
+`cmake-build-debug/levelc-call-encoded-asan-focused-guard.log`. The guarded
+core build passed in `cmake-build-debug/levelc-call-encoded-final-core-build.log`.
+The normal Debug Level C suite passed **619/619** in
+`cmake-build-debug/levelc-call-encoded-final-levelc.log` (peak **5218.2 MiB**
+aggregate RSS); affected Level B/G/RexxScript isolation passed **10/10** in
+`cmake-build-debug/levelc-call-encoded-isolation.log`. All guarded processes
+exited without residual children. This closes the encoded direct CALL target
+and shared binary-grouping submatrix, not LC-I-13 or the full Level C literal
+matrix. External Level C/fixed-signature B/G resolution, missing targets and
+condition/source lifecycle remain open.
+
 **LC-STEP-75E local invocation coherence receipt, 2026-10-05.** Expression
 functions, ordinary CALL and delayed local handlers now use one
 `levelc_build_local_invocation` builder for frame creation, pool/config
@@ -3539,6 +3599,12 @@ The initial external CALL target set is these two programme types; the
 earlier host-registered native-routine extension is not part of this first
 stage. Host services used by a called Level C programme remain required by
 `LC-75-04`.
+When a reached CALL finds no local label, BIF or permitted provider, the
+Classic routine-not-found identity is `43.1` at that clause, as described by
+the [IBM routine-not-found reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=irx-irx0043i).
+The simplified target set supplies no OS command fallback. This establishes
+the diagnostic target for `LC-75-01/04`; its runtime implementation and
+source proof are still open.
 The external Classic search/load and shared host-state requirements in
 `LC-75-02/04` remain open. Specify and review the Level B/G entry signature
 and the same-context invocation API before implementing that boundary; the
@@ -5318,7 +5384,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-LABELS` | Labels and local routine names | One-body frame-label entry, source-order fallthrough, nested shared-pool and recursive CALL pass opt/no-opt; PROCEDURE 17.1 is source-anchored | Complete SIGNAL/CALL label and condition reference matrices remain open |
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Shared pool reads and closed assignment/DROP paths exercise scalar, stem and compound symbols | Constant-symbol and full condition/reference proof open |
 | `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Whole assignment, DROP and PROCEDURE paths cover stem and exact compound aliases | Shared condition and host/API alias proof remains open |
-| `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Hex/binary source literals use the fixed Latin-1 ordinal bridge in expressions, calls and PARSE patterns under LC-STEP-88C; opt/no-opt, tree and linked evidence; SAY host text output passes under LC-STEP-88D-1 | Remaining quoted forms, error/reference equivalence and other host text inputs remain open |
+| `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Hex/binary source literals use the fixed Latin-1 ordinal bridge in expressions, calls and PARSE patterns under LC-STEP-88C; four/eight-bit binary grouping, malformed later-group `15.2`, encoded CALL target, opt/no-opt, tree and linked evidence pass under LC-STEP-75A-B; SAY host text output passes under LC-STEP-88D-1 | Remaining quoted forms, error/reference equivalence and other host text inputs remain open |
 | `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-88D-3; byte-literal scalar values, Unicode compound tails, NUL in substituted tails and RHS-order/local exposure pass | Shared host/external API remains open under LC-AC-04/06 |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |

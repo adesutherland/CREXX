@@ -35,6 +35,8 @@ foreach(shape IN ITEMS
         [=[LITERAL : "."]=]
         [=[LITERAL : ".RESULT"]=]
         [=[STRING : "\'LENGTH\'"]=]
+        [=[STRING : "\'4C 45 4E 47 54 48\'x"]=]
+        [=[STRING : "\'01001100 01000101 01001110 01000111 01010100 01001000\'b"]=]
         [=[ARGS : ""]=]
         [=[NOVAL : ""]=])
     string(FIND "${raw}" "${shape}" position)

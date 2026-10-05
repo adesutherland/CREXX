@@ -148,6 +148,12 @@ patterns use the same decoder and map, so `C3A9` means two codepoints and
 node is needed. Classic ARG uppercases its fields; for example `U+00FF`
 becomes `U+0178`, which a later byte-valued BIF correctly rejects with
 `23.1` while ordinary Unicode operations may use it.
+The common Level C source validator accepts later binary-literal groups of
+four or eight bits, including mixed nibble/byte grouping; it retains first-
+group left padding and the `15.2` error for invalid later group lengths. The
+CALL target decoder already uses the same literal text, so grouped hex/binary
+quoted names reach the ordinary BIF/external resolver without a separate
+CALL decoding rule.
 
 **Historical, superseded LC-STEP-73H profile proposal:** The former design
 puts profile selection on the VM context so
