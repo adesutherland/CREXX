@@ -3157,7 +3157,9 @@ Before any code edit, check the proposed route against these observable gates:
   explicit canonical AST shape, validation, flow/optimizer behavior and RXAS
   emission. Direct and trapped transfers discard crossed loop/reference
   lifetimes without corrupting a later call or return. `RexxValue` remains a
-  value type; activation state owns argument and return presence.
+  value type; activation state owns argument and return presence. The source
+  AST separately identifies `SIGNAL VALUE expression` so decoding a quoted
+  expression cannot turn it into a static label target.
 
 Implement in this order: (1) prove label/fallthrough and
 invocation entry shape with a small Regina corpus; (2) add one reviewed
@@ -3176,6 +3178,10 @@ label into a separate generated procedure and requires immediate `PROCEDURE`
 and final `RETURN`; the existing canonical `SIGNAL_BLOCK` is lexical while
 Classic ON/OFF is activation-wide. The architecture companion records the
 approved one-frame replacement and new canonical AST/emitter requirement.
+`SIGNAL 'target'` and `SIGNAL VALUE 'target'` currently share a `STRING` child
+type, with only raw-token quoting distinguishing them. A temporary parser
+probe confirmed an explicit VALUE wrapper can preserve the source intent;
+the probe was removed until its full lowerer/emitter route is implemented.
 No product code changed in this review; LC-63T-01–04 remain open.
 
 ## Findings

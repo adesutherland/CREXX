@@ -447,6 +447,15 @@ Exact node names and child layouts are fixed by the first implementation
 checkpoint after a full emitter/flow review, with AST-to-RXAS tests. Avoid a
 per-label trampoline or a second token/branch interpreter in `rxfnsc`.
 
+The source AST also needs to preserve the authored `VALUE` form. Today
+`SIGNAL 'target'` and `SIGNAL VALUE 'target'` both have a `LEVELC_SIGNAL`
+with a `STRING` child; only incidental raw-token quoting differs. A temporary
+parser probe built successfully and distinguished the latter with a
+`LEVELC_SIGNAL_VALUE` wrapper, then was removed before this review commit.
+Retain that explicit source distinction in the full SIGNAL implementation and
+lower it to the reviewed frame-local branch/dispatch nodes. Do not infer
+static versus evaluated targets by inspecting token quotes after parsing.
+
 This architecture is approved direction, not implemented SIGNAL behavior.
 The [LC-STEP-63T gates](../../docs/planning/release-1/levelc-compatibility-worklist.md#approved-architecture-direction-for-lc-step-63t)
 cover direct and trapped conditions, label/PROCEDURE/CALL/RETURN lifetimes,
