@@ -95,8 +95,10 @@ add_custom_command(
         OUTPUT ${RXPP_MEMBER_RXBIN}
         BYPRODUCTS ${RXPP_MEMBER_SOURCE} ${RXPP_MEMBER_RXAS}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${RXPP_MEMBER_SOURCE_ROOT}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${CMAKE_CURRENT_SOURCE_DIR}/rxpp.crexx ${RXPP_MEMBER_SOURCE}
+        COMMAND ${CMAKE_COMMAND}
+                "-DRXPP_INPUT=${CMAKE_CURRENT_SOURCE_DIR}/rxpp.crexx"
+                "-DRXPP_OUTPUT=${RXPP_MEMBER_SOURCE}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/stamp_rxpp_build.cmake"
         COMMAND ${CMAKE_COMMAND} -E chdir ${RXPP_MEMBER_ROOT}
                 $<TARGET_FILE:rxc>
                 --no-exe-import
@@ -107,6 +109,7 @@ add_custom_command(
                 $<TARGET_FILE:rxas> rxpp
         DEPENDS
                 ${CMAKE_CURRENT_SOURCE_DIR}/rxpp.crexx
+                ${CMAKE_CURRENT_SOURCE_DIR}/stamp_rxpp_build.cmake
                 rxpp_compiler_imports
                 ${RXPP_IMPORT_RXFNSB}
                 ${RXPP_IMPORT_CLASSLIB}

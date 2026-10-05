@@ -33,7 +33,7 @@ This document combines the functionality of the RXPP macro preprocessor and the 
   - [`##DALIAS alias1 [, alias2 ...]`](#dalias-alias1--alias2-)
   - [`##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`](#relation-program-library-and-rule)
   - [`##SYSxxx`](#sysxxx)
-  - [`##CFLAG values`](#cflag-values)
+  - [`##CFLAG values` (RXPP flags)](#cflag-values-rxpp-flags)
   - [`##SET var value`](#set-var-value)
   - [`##UNSET var`](#unset-var)
   - [`##INCLUDE file`](#include-file)
@@ -250,7 +250,7 @@ Function-style invocation remains available for traditional macros.
 ### 🔤 Arguments & Replacement
 
 - **Positional arguments** map left-to-right to the definition’s parameters.
-- **Keyword parameters** are supported after all positionals, using `name=value` tokens—defaults work exactly as with function-style macros.
+- **Keyword parameters** are supported after all positionals. They can use `name=value`, TSO-style `name(value)`, or the command-style form `name value`. In the last form the value is one quote-aware word; quote values containing spaces. Defaults work exactly as with function-style macros.
 - **Variadics**: you can still declare `...` at the end of the parameter list; RXPP will repeat the macro body per extra argument using `$indx` and `arglist.$indx`, same as today.
 - **Replacement rules** (identifier boundaries and `param##suffix` joining) are unchanged.
 
@@ -259,7 +259,7 @@ Function-style invocation remains available for traditional macros.
 When a macro is defined with `CMD`/`COMMAND`, RXPP recognizes its invocations **without parentheses**:
 
 1. **Detection**: A known `CMD` macro name followed by at least one blank is considered a candidate invocation (previously, detection for function-style looked for `name(`).
-2. **Tokenization**: Arguments are split on blanks; quoted strings are kept intact. `name=value` tokens are treated as keyword arguments (after all positionals).
+2. **Tokenization**: Arguments are split on blanks with quote-aware word handling; quoted strings are kept intact. Declared keyword names followed by one token are treated as keyword arguments after the positionals, alongside `name=value` and `name(value)`.
 3. **Substitution**: RXPP copies the macro body and applies the same parameter replacement logic as with function-style macros.
 
 ### ⚠️ Errors & Diagnostics
@@ -305,11 +305,9 @@ they appear **after** all positional parameters and may have default values.
 
 1. **Ordering matters** — all positional parameters must be declared first, followed by all keyword parameters.
 2. **In a macro call**:
-- Remaining arguments must be supplied either as `name=value` pairs (matching keyword parameters) or in TSO-style notation.
-- In TSO-style syntax, a keyword argument is written as `name(value)`, with the value enclosed in parentheses.- Defaults can be quoted strings, numbers, or empty.
--TSO-style calls also allow passing subparameters as a single grouped value, e.g. keyword(subparm1 subparm2).
-- ⚠️ In the parameter list, keyword parameters must always be declared as keyword=default, even if you plan to call them later in TSO-style (keyword(value)).
-- Default values can be quoted strings, numbers, or empty.
+   - Function-style macros accept `name=value` or TSO-style `name(value)` keyword arguments. TSO-style parentheses can group subparameters, for example `keyword(subparm1 subparm2)`.
+   - Command-style (`CMD`) macros also accept `name value`, where `value` is one quote-aware word. Quote it to include spaces; the matching outer quotes delimit the value, and the other quote character may appear inside it.
+   - Keyword parameters are always declared as `keyword=default`, regardless of the call syntax. Defaults can be quoted strings, numbers, or empty.
 3. **Validation**:
 - Missing positional arguments cause a preprocessor error.
 - Unknown keyword names cause a preprocessor error.
@@ -781,12 +779,22 @@ These stem arrays can then be processed in your program as needed, similar to ho
 Use Case: Provides a concise method to define system input directly in the script, especially for batch-like workflows.
 
 ---
-### `##CFLAG values`
+### Preprocessing settings at a glance
 
-##CFLAG — Sets the preprocessor variable from compiler flags or external input during the earliest configuration pass, before normal preprocessing begins.
+| Setting | Purpose | When it takes effect | Example |
+| --- | --- | --- | --- |
+| `##CFLAG` (RXPP flags) | Select RXPP behavior and diagnostics for the preprocessing run. | Read during early setup; place it at the start of the source, before other `##` directives. | `##CFLAG 4buf nosrcmap` |
+| `##SET PRINTGEN` | Show or hide macro-generation comments in the generated REXX. | Applied when RXPP processes the directive; it controls subsequent generation comments. | `##SET PRINTGEN OFF` |
+| `##SET name value` | Define or update a value for RXPP substitutions such as `{name}`. | Applied when RXPP processes the directive; the value is available to subsequent preprocessing. | `##SET TRACE 1` |
+
+The detailed options and variable behavior are described below.
+
+### `##CFLAG values` (RXPP flags)
+
+`##CFLAG` sets RXPP's preprocessor flags from the source or external input during the earliest configuration pass, before normal preprocessing begins. These are RXPP options, not C compiler flags.
 The definition must be placed at the very beginning of the source file, before any other ## macro instructions appear.
 
-Use the following flags in `cflags` to control diagnostic output during the pre-compilation process:
+Use the following RXPP flags in `cflags` to control preprocessing behavior and diagnostic output:
 
 | Option       | Description                                                                                                                                                 |
 |--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -805,7 +813,7 @@ If a specific flag is not set, the corresponding option is disabled by default. 
 
 **Example:**
 ```rexx
-##cflags def set iflink nbuf 2buf 3buf vars nmaclist  /* set early stage compiler flags */
+##cflags def set iflink nbuf 2buf 3buf vars nmaclist  /* set early stage RXPP flags */
 ```
 
 
@@ -869,7 +877,7 @@ These values are substituted during preprocessing; they are not runtime
 variables. Variable names are case-insensitive. The `{syslib}` variable is
 the value form of the `&syslib/` prefix used by `##EXTERNAL`. The `cflags` and
 `printgen` variables are also initialized by RXPP and control preprocessing
-diagnostics; see the `##CFLAG` and `PRINTGEN` sections below. User-defined
+options and diagnostics; see the `##CFLAG` and `PRINTGEN` sections below. User-defined
 variables may be added with `##SET`.
 
 Normal comments are not expanded. To opt in for a generated metadata comment,
@@ -888,11 +896,11 @@ The **PRINTGEN** variable controls whether generation steps are logged as commen
 ```rexx
 ##SET PRINTGEN ALL
 ```
-Logs all generation steps, including nested ones, as comments in the generated REXX script.
+Logs all generation steps, including nested ones, as comments in the generated REXX script. `ON` is an alias for `ALL`.
 ```rexx
 ##SET PRINTGEN NONE
 ```
-No generation steps are logged as comments. The steps are still executed but leave no trace in the output.
+No generation steps are logged as comments. The steps are still executed but leave no trace in the output. `OFF` is an alias for `NONE`.
 ```rexx
 ##SET PRINTGEN NNEST
 ```

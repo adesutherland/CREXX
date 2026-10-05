@@ -77,6 +77,16 @@ add_test(NAME rxpp_loadmacro
 set_tests_properties(rxpp_loadmacro PROPERTIES
         LABELS "preprocessor;macros;regression")
 
+add_test(NAME rxpp_mcall_depth
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DSOURCE_ROOT=${CMAKE_SOURCE_DIR}
+             -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_mcall_depth
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_mcall_depth.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_mcall_depth PROPERTIES
+        LABELS "preprocessor;macros;regression")
+
 if (ENABLE_PARSER_MODE)
     add_test(NAME rxpp_sh_srcmap
              COMMAND ${CMAKE_COMMAND}
@@ -153,6 +163,7 @@ crexx_label_smoke_tests(
         rxpp_relative_include
         rxpp_script_macro_exact_match
         rxpp_loadmacro
+        rxpp_mcall_depth
         rxpp_sh_tokens
         rxpp_diagnostics
         PREP_TARGETS rxpp
@@ -160,6 +171,7 @@ crexx_label_smoke_tests(
 crexx_register_test_prep_targets(
         TESTS rxpp_smoke rxpp_srcmap rxpp_relative_include
               rxpp_script_macro_exact_match rxpp_loadmacro
+              rxpp_mcall_depth
         TARGETS rxc)
 if(ENABLE_PARSER_MODE)
     crexx_register_test_prep_targets(
