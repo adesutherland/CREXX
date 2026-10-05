@@ -274,13 +274,16 @@ it validates the source bytes and raises `UNICODE_ERROR` in UTF builds when they
 are not valid text. Most character and string opcodes still take string operands
 and assume valid UTF-8 in UTF builds.
 
-Level C text and binary behavior should be treated as design space, not as
-settled current compiler behavior. Classic Rexx is byte-oriented and commonly
-stores binary data in the same text values used for strings, while current
-Level B separates the intended surfaces as `.string` and `.binary`. Any Level C
-compatibility mode therefore has to choose where Classic byte-text semantics
-map: to UTF-8 `.string` semantics, to `.binary`, or to an explicit option such
-as `bytetext`. Classic Rexx BIFs will need to be audited against that decision.
+Classic Rexx is byte-oriented and commonly stores binary data in the same
+values used for strings, while Level B separates `.string` and `.binary`.
+Adrian's 2026-10-04 Level C decision settles the compiled scalar boundary:
+valid Unicode text in `.string`, codepoint character positions, and a fixed
+Latin-1 ordinal bridge for byte-valued Classic BIFs. A scalar above U+00FF
+signals when a byte-valued BIF needs to convert it. Raw binary I/O and explicit
+Unicode BIFs remain separate future designs; no implicit BYTE/UTF8 or
+`bytetext` Level C mode is planned. The
+[Level C worklist](../planning/release-1/levelc-compatibility-worklist.md)
+tracks qualification and the deliberate byte-exact Classic departures.
 Level G and library work use the explicit `rxunicode` extension path above the
 core codepoint-level VM string contract. The current Unicode 17.0.0 baseline
 provides normalization, full default case mapping, case folding, default
@@ -296,9 +299,10 @@ The architecture direction is:
 - `.binary` means arbitrary bytes.
 - Level B keeps those surfaces strict and typed; invalid byte streams should not
   silently become `.string` values.
-- Level C may provide Classic Rexx byte-text compatibility through an explicit
-  compatibility mode such as `bytetext`, but that mode must not weaken the
-  Level B/G `.string` contract.
+- Compiled Level C uses Unicode scalar text in `.string`; its fixed Latin-1
+  ordinal bridge handles byte-valued Classic operations without weakening the
+  Level B/G `.string` contract. Shared `RexxValue` retains binary storage for
+  RexxScript and future explicit binary facilities.
 - Level G's `rxunicode` module owns richer Unicode services. Its production
   executors are Level B codepoint algorithms over pinned, generated Unicode
   17.0.0 constants; they do not require an external Unicode provider or make
@@ -435,10 +439,10 @@ The remaining work has moved to its owning levels:
   further segmentation, locale services, and collation remain separately
   designed follow-on work. See `CREXX_UNICODE.md` and
   `performance/UNICODE-CERT-01-WORKLIST.md`.
-- Level C owns Classic Rexx migration and byte-text compatibility. Classic
-  byte-text behavior should be isolated behind an explicit compatibility option
-  such as `bytetext`; Classic BIFs then need auditing so users can choose UTF
-  text semantics, byte semantics, or explicit `.binary` operations predictably.
+- Level C owns Classic Rexx migration under the approved Unicode scalar and
+  Latin-1 ordinal boundary. Its BIFs need full reference and host qualification
+  against that boundary; raw binary and richer Unicode operations retain their
+  separate design and delivery decisions.
 
 ## Compiler Import Discovery
 

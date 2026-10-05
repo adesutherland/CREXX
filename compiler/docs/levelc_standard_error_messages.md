@@ -1,14 +1,14 @@
 # Level C Standard Error Messages
 
 Status: extracted reference for Level C diagnostics
-Last updated: 2026-05-10
+Last updated: 2026-10-05
 
 Source: publicly available Classic REXX language specification.
 
 This file records the standard `#ErrorText.` catalog in a normalized
-one-message-per-line form. It is intended to become the Level C diagnostic
-message catalog used by parser recovery, validation, `ERRORTEXT`, and later
-runtime condition reporting.
+one-message-per-line form. Parser recovery and validation use stable identities
+through the localized diagnostic catalogs. Full `ERRORTEXT` and runtime
+condition reporting remain open in the Level C worklist.
 
 The public language-specification source is the source of truth. An older
 repository copy exists under `docs/bifs/`, but it differs in several entries
@@ -16,7 +16,7 @@ and should not be used as the Level C baseline without reconciliation.
 
 ## Parser-Recovery Priority Subset
 
-The first Level C parser recovery work should target messages that help bad
+The initial Level C parser recovery work targeted messages that help bad
 input resynchronize at clause, group, expression, and template boundaries:
 
 - `6`, `6.1`, `6.2`, `6.3`: unmatched comment or quote.

@@ -1,7 +1,7 @@
 # Level C Classic BIF Implementation Notes
 
-Status: extracted implementation reference for Level C BIF migration
-Last updated: 2026-07-14
+Status: Classic BIF semantic reference with current cREXX boundary notes
+Last updated: 2026-10-05
 
 Source: publicly available Classic REXX language specification.
 
@@ -17,6 +17,14 @@ Related project notes:
 This note fills the BIF gap deliberately left out of the Level C working
 architecture note. It is a normalized implementation guide, not a verbatim copy
 of the specification pseudocode.
+The [compatibility worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md#individual-bif-inventory)
+owns live per-BIF implementation status. Earlier BYTE/UTF8 profile proposals
+and sequencing notes in this file are superseded by the approved Unicode-first
+compiled Level C contract: visible scalars are Unicode text; byte-valued BIFs
+use the fixed Latin-1 ordinal bridge and signal for unmappable scalars.
+`RexxValue` still has binary storage for direct clients and future facilities.
+No BIF is fully reference-qualified merely because its direct runtime entry
+exists.
 
 ## Fixed Direction
 
@@ -62,12 +70,13 @@ settings, current variable pool, source lines, condition state, trace state,
 stream state, and host/configuration adapters.
 
 `RexxBifCallContext` owns a default `RexxClassicConfig` or holds a reference to
-an evaluator/host-supplied one. Its `BYTE` profile is the default and uses exact
-bytes as Classic character units. Its opt-in `UTF8` profile requires valid
-UTF-8 and uses Unicode codepoints. The configuration also carries profile-
-typed character tables, scoped RANDOM state, and named external VALUE pools.
-Value flags describe a `RexxValue` representation; they never select the
-profile.
+an evaluator/host-supplied one. Compiled Level C passes its activation's
+Unicode text configuration through direct BIF calls; character positions use
+codepoints and byte-valued conversions use the fixed Latin-1 ordinal bridge.
+Direct binary clients may still select the shared runtime's BYTE mode; that is
+not a compiled Level C language profile. The configuration also carries
+character tables, scoped RANDOM state and named external VALUE pools. Value
+flags describe a `RexxValue` representation, not a Level C profile selector.
 
 ### Numeric Context
 
@@ -95,7 +104,7 @@ starts with `r` for required or `o` for optional, followed by a type rule.
 | Rule | Required behavior | Generic message codes |
 | --- | --- | --- |
 | Argument count | Too few, too many, or missing required arguments fail before function logic. | `40.3`, `40.4`, `40.5` |
-| `ANY` | BYTE accepts any exact byte value. UTF8 requires a valid text view. | `23.1` for invalid UTF8 data |
+| `ANY` | Compiled Level C requires valid Unicode text; direct binary consumers may use exact byte values through the shared runtime. | `23.1` for invalid text at the text boundary |
 | `NUM` | Argument must be numeric under caller settings; normalized numeric value replaces the argument copy. | `40.9`, `40.11` |
 | `WHOLE` | Whole number under BIF settings; normalized whole number replaces the argument copy. | `40.12` |
 | `WHOLE>=0` | Whole number greater than or equal to zero. | `40.12`, `40.13` |
@@ -103,7 +112,7 @@ starts with `r` for required or `o` for optional, followed by a type rule.
 | `WHOLENUM` | D2X-style whole number under caller settings. | `40.12` |
 | `WHOLENUM>=0` | D2X-style non-negative whole number under caller settings. | `40.12`, `40.13` |
 | `0_90` | `ERRORTEXT` message code in range `0` through `90.9`, without exponential notation. | `40.11`, source helper calls `40.16`; reconcile with catalog before implementation |
-| `PAD` | Exactly one BYTE byte or one UTF8 codepoint, according to the active profile. | `40.23` |
+| `PAD` | Exactly one Unicode codepoint in compiled Level C; direct binary clients use one byte. | `40.23` |
 | `HEX` | Hex string according to `DATATYPE(value, "X")`. | `40.25` |
 | `BIN` | Binary string according to `DATATYPE(value, "B")`. | `40.24` |
 | `SYM` | Valid symbol according to `DATATYPE(value, "S")`. | `40.26` |
@@ -127,9 +136,9 @@ compiler lowering or the common dispatcher.
 Standalone direct BIF modules:
 
 ```text
-ABBREV ABS ADDRESS B2X C2D C2X CENTER CHANGESTR COMPARE COPIES COUNTSTR
-D2C D2X DATE DATATYPE DELSTR DELWORD FORMAT INSERT LASTPOS LEFT LENGTH MAX
-MIN NUMERIC OVERLAY POS RANDOM REVERSE RIGHT SIGN SPACE STRIP SUBSTR
+ABBREV ABS ADDRESS ARG B2X BITAND BITOR BITXOR C2D C2X CENTER CHANGESTR
+COMPARE COPIES COUNTSTR D2C D2X DATE DATATYPE DELSTR DELWORD FORMAT INSERT
+LASTPOS LEFT LENGTH MAX MIN NUMERIC OVERLAY POS RANDOM REVERSE RIGHT SIGN SPACE STRIP SUBSTR
 SUBWORD SYMBOL TIME TRACE TRANSLATE TRUNC VALUE VERIFY WORD WORDINDEX
 WORDLENGTH WORDPOS WORDS X2B X2C X2D XRANGE
 ```
@@ -151,10 +160,10 @@ values, argument presence flags, a live caller `RexxVariablePool` reference,
 and the active `RexxClassicConfig` reference.
 The argument count is derived from the presence mask, not from the value array,
 so omitted positions such as `xxx(,a,,b)` can be represented faithfully. Level
-C compiler lowering is unchanged in this library programme; existing common-
-dispatcher artifacts are deprecated pending the later lowering rebuild. The
-future lowering should call standalone BIF entries directly and pass the
-current visible activation pool and configuration. RexxScript already calls
+C compiler lowering was unchanged by the original library programme. Current
+Level C lowering calls direct BIF entries with the visible activation pool,
+argument presence and configuration; the legacy dispatcher is no longer on
+its expression path. RexxScript calls
 the available standalone entries directly, passes only its sandbox/script pool,
 and adapts the returned `RexxValue` back to its public string result model.
 
@@ -165,7 +174,7 @@ ANY NUM WHOLE WHOLE>=0 WHOLE>0 PAD ABLMNSUWX LTB MN
 ```
 
 `RexxClassicDatatype.crexx` is the shared implementation for `NUM`, `WHOLE`,
-`BIN`, `HEX`, and `SYM`. It uses the call context's BYTE/UTF8 profile, configured
+`BIN`, `HEX`, and `SYM`. It uses the call context's character configuration, configured
 extra letter/digit maps, configured B/X blanks, and exponent-digit limit. The
 standalone public entry is `RexxClassicBifDatatype.crexx`; the same shared symbol
 classifier is used by `RexxClassicBifSymbol.crexx`. Strict Level C retains the
@@ -189,10 +198,9 @@ expected to be backward compatible. Keep the bridge centralized in
 and `_context_error`; do not spread one-off error formatting or signal
 decisions through individual BIF bodies.
 
-Future compiler lowering should materialise the reusable argument frame,
-including provided flags for omitted positions, then call the standalone
-function directly. This library work deliberately does not modify that
-lowering.
+The compiler now materialises a reusable BIF argument frame, including
+provided flags for omitted positions, and calls direct entries. The full
+argument, error and configured-context reference audit remains open.
 
 JavaDoc-style tags are present on the implemented BIF helpers for generated user
 documentation. The current tags are `@bif`, `@signature`, `@checkargs`,
@@ -222,8 +230,8 @@ the conversion in both `DATE` and `TIME`.
 through decimal, preserving binary/hex widths for `B2X` and `X2B`.
 
 This should become a shared Level B helper over `RexxValue` numeric/binary
-views. Do not route arbitrary encoded bytes through `.string` unless the Level C
-byte-text policy explicitly permits it.
+views. Compiled Level C string results must use the approved Latin-1 ordinal
+bridge; arbitrary encoded bytes are not valid Level C `.string` payloads.
 
 ### Raise Helper
 
@@ -239,18 +247,18 @@ the runtime condition model.
 The character configuration is implemented entirely in the library/runtime:
 
 - `RexxClassicConfig` keeps BYTE for direct binary consumers and supplies the
-  text configuration selected by compiled Level C, plus configured blanks;
-- `RexxClassicCharacterScan` supplies profile-aware word scans, retaining the
-  VM Unicode fast path when UTF8 has no extra blanks;
-- `RexxClassicEncoding` supplies exact byte/hex conversion, UTF-8 validity for
-  binary consumers, and the reversible Latin-1 ordinal bridge for Level C;
+  Unicode text configuration used by compiled Level C, plus configured blanks;
+- `RexxClassicCharacterScan` supplies configured word scans, retaining the
+  VM Unicode fast path when there are no extra blanks;
+- `RexxClassicEncoding` supplies exact byte/hex conversion for binary
+  consumers and the reversible Latin-1 ordinal bridge for Level C;
 - the Unicode data contract is pinned to Unicode 17.0.0;
 - Level C byte-valued BIFs map `U+00XX` to byte `XX` and back; a higher scalar
   reports `RXC-LC-23.1` through the normal BIF context.
 
 `XRANGE` uses the same ordinal mapping and wraps after `U+00FF`. It is not a
 general Unicode range operation. Compiled Level C initializes its text
-configuration explicitly; the shared BYTE default remains for direct clients.
+configuration explicitly; the shared BYTE default is for direct clients only.
 
 ### Configuration Dependencies
 
@@ -306,7 +314,7 @@ source for planning. This is implementation guidance, not a code copy.
 | `CENTER` | `CENTER(string, length [,pad])` | `rANY rWHOLE>=0 oPAD` | Centers or trims `string` to `length`, using `pad` or blank. | Alias target for `CENTRE`; preserve one-character pad rule. |
 | `CENTRE` | `CENTRE(string, length [,pad])` | same as `CENTER` | Alternative spelling of `CENTER`. | Implement as direct alias, not duplicate logic. |
 | `CHANGESTR` | `CHANGESTR(needle, haystack, replacement)` | `rANY rANY rANY` | Replaces all non-overlapping occurrences of `needle` in `haystack`. | Define empty-needle behavior from compatibility tests before optimizing. |
-| `COMPARE` | `COMPARE(left, right [,pad])` | `rANY rANY oPAD` | Returns `0` if equal, otherwise the first differing 1-based character position after padding the shorter side. | Character positions, not bytes, unless Level C byte-text mode says otherwise. |
+| `COMPARE` | `COMPARE(left, right [,pad])` | `rANY rANY oPAD` | Returns `0` if equal, otherwise the first differing 1-based character position after padding the shorter side. | Compiled Level C positions count Unicode codepoints. |
 | `COPIES` | `COPIES(string, count)` | `rANY rWHOLE>=0` | Concatenates `count` copies of `string`. | Guard resource exhaustion through normal string limits. |
 | `COUNTSTR` | `COUNTSTR(needle, haystack)` | `rANY rANY` | Counts non-overlapping appearances of `needle` in `haystack`. | Same search rules as `POS`; empty-needle behavior needs tests. |
 | `DATATYPE` | `DATATYPE(string [,type])` | `rANY oABLMNSUWX` | With no type, returns numeric/character classification. With type, tests alphanumeric, binary, lowercase, mixed letters, number, symbol, uppercase, whole, or hex. | This is a core helper for `CheckArgs`; it must match Classic syntax, not current Level B keyword rules. |
@@ -315,7 +323,7 @@ source for planning. This is implementation guidance, not a code copy.
 | `INSERT` | `INSERT(new, target [,before [,length [,pad]]])` | `rANY rANY oWHOLE>=0 oWHOLE>=0 oPAD` | Inserts `new` after `before` characters of `target`, padding/truncating inserted text to `length` when supplied. | The specification text says "before the insert"; behavior is the classic 0-based insertion point in a 1-based API. |
 | `LASTPOS` | `LASTPOS(needle, haystack [,start])` | `rANY rANY oWHOLE>0` | Finds the last occurrence of `needle`, optionally searching leftward from `start`. | Returns `0` on no match. |
 | `LEFT` | `LEFT(string, length [,pad])` | `rANY rWHOLE>=0 oPAD` | Returns leftmost `length` characters, padding on the right if needed. | Character indexing. |
-| `LENGTH` | `LENGTH(string)` | `rANY` | Returns the configuration character length. Raises `23.1` if the string is invalid for the configuration. | In normal Level B UTF builds, `.string` is already valid UTF-8; Level C byte-text mode still needs a policy. |
+| `LENGTH` | `LENGTH(string)` | `rANY` | Returns the configuration character length. Raises `23.1` if the string is invalid for the configuration. | Compiled Level C `.string` values are valid Unicode text and length counts codepoints. |
 | `OVERLAY` | `OVERLAY(new, target [,start [,length [,pad]]])` | `rANY rANY oWHOLE>0 oWHOLE>=0 oPAD` | Overlays `new` onto `target` at `start`, padding/truncating overlay text to `length` when supplied. | Similar shared helper with `INSERT`. |
 | `POS` | `POS(needle, haystack [,start])` | `rANY rANY oWHOLE>0` | Finds the first occurrence of `needle` at or after `start`; returns `0` if not found. | `needle == ""` returns `0` in the specification code. |
 | `REVERSE` | `REVERSE(string)` | `rANY` | Reverses the sequence of characters. | Must not reverse UTF-8 bytes in normal UTF builds. |
@@ -324,7 +332,7 @@ source for planning. This is implementation guidance, not a code copy.
 | `STRIP` | `STRIP(string [,option [,char]])` | `rANY oLTB oPAD` | Strips leading, trailing, or both occurrences of `char`; default is both blanks. | Option first letter: `L`, `T`, `B`. |
 | `SUBSTR` | `SUBSTR(string, start [,length [,pad]])` | `rANY rWHOLE>0 oWHOLE>=0 oPAD` | Returns substring from `start`, padding if requested length extends beyond input. | Standard checks that requested start can reference the string or raise invalid data as appropriate. |
 | `SUBWORD` | `SUBWORD(string, start [,count])` | `rANY rWHOLE>0 oWHOLE>=0` | Returns a substring made of words from word `start`, for `count` words or through the end. | Share word scanner with `WORD*` functions. |
-| `TRANSLATE` | `TRANSLATE(string [,outputTable [,inputTable [,pad]]])` | `rANY oANY oANY oPAD` | Uppercases by configuration when no tables are supplied; otherwise maps characters from input table to output table, using pad for missing output entries. | Direct BYTE/UTF8 implementation; output-with-omitted-input uses `00`–`FF` byte ordinals in BYTE and U+0000–U+00FF scalar ordinals in UTF8, leaving higher Unicode scalars unchanged. |
+| `TRANSLATE` | `TRANSLATE(string [,outputTable [,inputTable [,pad]]])` | `rANY oANY oANY oPAD` | Uppercases by configuration when no tables are supplied; otherwise maps characters from input table to output table, using pad for missing output entries. | Compiled Level C's implicit input table is U+0000–U+00FF in ordinal order; higher Unicode scalars remain unchanged. Direct BYTE consumers retain byte behavior. |
 | `VERIFY` | `VERIFY(string, reference [,option [,start]])` | `rANY rANY oMN oWHOLE>0` | With `M`, returns first character position in `string` that is in `reference`; with `N`, first position not in `reference`; `0` if no such character. | Default option is `N`, default start is `1`. |
 | `WORD` | `WORD(string, n)` | `rANY rWHOLE>0` | Returns word `n`, or null if absent. | Can delegate to `SUBWORD(string,n,1)`. |
 | `WORDINDEX` | `WORDINDEX(string, n)` | `rANY rWHOLE>0` | Returns the character index of word `n`, or `0` if absent. | Needs shared word scanner that preserves original spacing. |
@@ -402,7 +410,7 @@ Level C stream implementations without an audit.
 | `TIME` | `TIME([option [,time [,inoption]]])` | `oCEHLMNORS oANY oCHLMNS` | With no time, returns current local time, elapsed time, reset elapsed time, or offset. With time, converts from `inoption` to output option. | Conversion to `E`, `R`, or `O` is invalid (`40.29`). Uses frozen clause time. |
 | `VALUE` | `VALUE(name [,newvalue [,pool]])` | `rSYM oANY oANY`, or `rANY oANY oANY` with external pool | Returns old value of a variable and optionally assigns a new value. With external pool, calls configuration get/set. | Internal form must expand compound tails through `RexxVariablePool`; external form raises `40.36`/`40.37` from pool failures. |
 
-## Current cREXX Coverage Snapshot
+## Level B source material and Level C status
 
 Existing direct `lib/rxfnsb/rexx/*.crexx` modules correspond to many pure
 character, arithmetic, conversion, and other BIF names:
@@ -424,9 +432,10 @@ Grouped or partial Level B coverage exists for:
 
 Remaining Level C work items rather than complete standalone surfaces:
 
-- `ARG`, `ADDRESS`, `CONDITION`, `ERRORTEXT`, `QUEUED`, and `SOURCELINE`
-  as stateful BIFs.
-- `BITAND`, `BITOR`, `BITXOR`, `CHARS`, `QUALIFY`, and `STREAM`.
+- `CONDITION`, `ERRORTEXT`, `QUEUED`, and `SOURCELINE` as stateful BIFs;
+  `ADDRESS` and `ARG` have direct entries but retain open whole-context proof.
+- `CHARS`, `QUALIFY`, and `STREAM`; the three bit BIFs have direct runtime
+  entries and use the Latin-1 ordinal boundary in compiled Level C.
 - `CHARIN`/`CHAROUT`/`LINEIN`/`LINEOUT`/`LINES` as Classic stream functions rather
   than current Level B UTF text helpers.
 - A real `Raise`/condition bridge and `ERRORTEXT` catalog lookup.
@@ -434,15 +443,15 @@ Remaining Level C work items rather than complete standalone surfaces:
 ## Remaining Implementation Sequencing
 
 1. Complete the remaining stateful BIFs and the real condition/message bridge.
-2. Add the remaining bit BIFs on the approved BYTE/UTF8 configuration model.
+2. Finish reference and out-of-range qualification for byte-valued BIFs on
+   the approved Latin-1 ordinal bridge.
 3. Add stream and external data queue BIFs once the Level C configuration
    adapter surface is settled.
 4. Route the remaining RexxScript intrinsics through standalone entries where
    doing so does not grant extra authority to the sandbox.
-5. Replace deprecated compiler dispatcher artifacts in the separate lowering
-   rebuild, then remove the common proof dispatcher after compatibility tests
-   no longer require it.
+5. Retire the legacy proof dispatcher only after its remaining direct
+   consumers and compatibility tests have migrated.
 
-Do not weaken Level B `.string` UTF-8 guarantees while implementing Classic
-byte-oriented behavior. If Level C needs byte-text compatibility, keep it behind
-the explicit Level C policy described in the architecture notes.
+Keep Level B `.string` UTF-8 guarantees and the approved Level C Unicode scalar
+contract. Raw binary I/O and explicit Unicode BIFs have separate open design
+and qualification rows in the worklist.

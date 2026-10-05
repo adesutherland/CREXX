@@ -1,8 +1,13 @@
 # Level C Remapping And Tree Surgery Target
 
-Status: working design note. This document defines the intended remapping
-target and the first tracer-bullet path. It does not introduce approved source
-syntax or change compiler behaviour by itself.
+Status: historical early remapping design and tracer-slice record. Its
+first-slice limits and proposed implementation sequence are not current Level C
+status or an active delivery plan. Use the
+[compatibility worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
+for live coverage and the
+[working architecture](levelc_working_architecture.md) for the approved
+Unicode-first and one-frame label/SIGNAL design. This record does not
+introduce approved source syntax or change compiler behaviour by itself.
 
 ## Purpose
 
@@ -19,12 +24,12 @@ rewrites. The common problem is tree surgery:
   and debug metadata;
 - leave downstream compiler phases with ordinary validated AST nodes.
 
-The recommended tracer bullet is to express the existing inlining rewrite
+The original recommended tracer bullet was to express the existing inlining rewrite
 rules in the new remapping model before enabling Level C compilation. Inlining
 is already production compiler tree surgery with broad tests. If the remapping
 model cannot describe the current inliner, it is not strong enough for Level C.
 
-## Current Situation
+## Situation at the early tracer stage
 
 Level C has a Classic REXX scanner/glue/grammar path for syntax highlighting
 and parser diagnostics. Normal `rxc` compilation also accepts bounded,

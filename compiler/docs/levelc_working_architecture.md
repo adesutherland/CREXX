@@ -8,11 +8,14 @@ This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
 re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
-The first milestone is a Level C syntax highlighter through DSLSH. That
-milestone parses and validates Level C source, builds the user-facing source
-tree, emits diagnostics/highlighting, and stops before broad canonical lowering,
-optimization, assembly, or VM execution. A deliberately narrow set of
-runtime-backed lowering tracer slices is now enabled for ordinary compilation.
+The first DSLSH syntax-highlighting milestone is complete. Compiled Level C
+also has ten closed whole-instruction reviews and substantial ARG, PARSE and
+BIF foundations; the [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
+owns their exact status and evidence. The approved one-frame label/SIGNAL
+architecture is the next shared ARG/PROCEDURE/CALL dependency. Its reference
+review is complete, but the canonical AST/emitter and runtime route have not
+been implemented. Accepted shapes lower to the ordinary compiler and bytecode
+toolchain; unsupported shapes fail closed.
 
 ## Current architecture and product boundary
 
@@ -144,12 +147,12 @@ This proposal was superseded by the Unicode-first decision above; its probes
 record the deliberate departure from byte-exact Classic behavior.
 
 The 2026-10-04 byte-boundary review found that this proposed selector/unit-bit
-bridge cannot be implemented alone. The compiler currently copies BIF
-arguments and converts SAY and PARSE sources through `RexxValue.asString()`;
+bridge could not be implemented alone. At that review the compiler copied BIF
+arguments and converted SAY and PARSE sources through `RexxValue.asString()`;
 PARSE result storage is `.string[]`, and the VM `parseplan` emits `.string`
 spans. Exact BYTE fields may be invalid UTF8, so a profile-aware offset rule
 without byte-preserving operands/results would violate the documented BYTE
-contract. `C2X(X2C('FF'))` currently raises `UNICODE_ERROR` at the generated
+contract. `C2X(X2C('FF'))` then raised `UNICODE_ERROR` at the generated
 BIF argument copy. This finding motivated the superseding LC-STEP-88 design;
 its byte-preserving Level C route is no longer an active requirement.
 
@@ -245,19 +248,21 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
 
-The active `SAY` review exposed a control-flow dependency: a shared BIF can
+The completed `SAY` review exposed a control-flow dependency: a shared BIF can
 raise VM `CLASSIC_SYNTAX`, but current Level C lowering turns every top-level
 label into a separate procedure with mandatory `PROCEDURE` and final `RETURN`.
 That bounded model cannot directly use the VM's same-frame `sigbr` target for
-a Classic `SIGNAL ON SYNTAX` branch. The proposed LC-STEP-63T change would
-give each Classic invocation one labeled VM frame, with condition state owned
+a Classic `SIGNAL ON SYNTAX` branch. The approved LC-STEP-63T change gives
+each Classic invocation one labeled VM frame, with condition state owned
 by the invocation and configuration and variable storage kept in their
-existing separate objects. Adrian's approval is pending; the full proposal,
-observable gates and implementation order are in the worklist. No trap or
-general label compatibility is claimed yet.
+existing separate objects. Adrian approved this direction on 2026-10-05; the
+observable gates and implementation order are in the worklist. The frame-local
+AST/emitter route is not implemented, and no trap or general label
+compatibility is claimed yet.
 
-The current executable Level C surface is a set of bounded lowering slices; the
-complete Classic contract remains open in the worklist. No additional
+The current executable Level C surface includes ten closed whole instructions
+and bounded ARG, PARSE, routine and BIF slices; the complete Classic contract
+remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
 the references and this architecture. A new syntax rule, compatibility
 exception, or change to these ownership boundaries still requires Adrian's

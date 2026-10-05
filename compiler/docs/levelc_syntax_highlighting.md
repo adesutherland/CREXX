@@ -1,19 +1,22 @@
 # Level C Syntax Highlighting And Integration Plan
 
-Status: Milestone 1 syntax-highlighting baseline implemented; early
-runtime-backed lowering tracer slices implemented
-Last updated: 2026-06-23
+Status: historical Milestone 1 syntax-highlighting and early lowering record;
+its execution-slice limits are not current product status
+Snapshot date: 2026-06-23
 
-This document is the durable handoff for the current Level C Classic REXX
-front end. The working history and Classic extraction live in
-`levelc_working_architecture.md`, with a consolidated compliance reference in
-`levelc_compliance_reference.md`; this file records the implemented shape,
-manual test workflow, remaining parser gaps, and the planned route from
-highlighter-only parsing into canonical compiler integration.
+This document records the early Level C Classic REXX front-end milestone.
+Current execution coverage and instruction closure are in the
+[compatibility worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md);
+the active design is in the
+[working architecture](levelc_working_architecture.md). The consolidated
+Classic rules are in `levelc_compliance_reference.md`. This file preserves
+the milestone's implemented shape, manual test workflow, parser gaps at that
+date, and the original route into canonical compiler integration.
 
 ## Scope
 
-The main Level C path is a parser-mode and syntax-highlighting front end:
+At this milestone, the main Level C path was a parser-mode and
+syntax-highlighting front end:
 
 - it parses Classic REXX source selected by `OPTIONS LEVELC` or parser-mode
   defaulting;
@@ -23,8 +26,8 @@ The main Level C path is a parser-mode and syntax-highlighting front end:
 - it deliberately stops before broad canonical lowering, semantic execution
   support, assembly, or VM execution.
 
-Normal `rxc` compilation of Level C remains fail-closed outside the explicit
-tracer slices documented in `levelc_remapping_target.md`. The active lowering
+At this snapshot, normal `rxc` compilation of Level C was fail-closed outside the explicit
+tracer slices documented in `levelc_remapping_target.md`. The then-active lowering
 spine covers direct scalar and simple compound pool reads/writes,
 string/integer `RexxValue` literals, the current expression operator family,
 eager Classic `&` / `|`, `SAY`, selected Classic BIF call frames, local `CALL`,
@@ -34,8 +37,8 @@ statement in each arm and exact logical-value validation. Simple `DO ... END`
 groups lower as one-shot blocks, including nesting and empty groups. Controlled
 and repetitive `DO`, `SELECT`, and other control forms still fail closed until
 individually proved.
-Unsupported Level C compile inputs still fail with the existing unsupported
-diagnostic.
+Unsupported Level C compile inputs still fail closed, but the accepted set has
+expanded substantially since this snapshot; consult the worklist.
 
 ## Current Implementation Map
 

@@ -41,12 +41,15 @@ Use this authority split:
 - Level B is the principal implemented language surface. The initial Level G
   concurrency and provider layers are implemented development content, not a
   claim that the full Level G language contract is stable.
-- Level C has progressed beyond a parser-only proof. Ten fail-closed execution
-  lowering slices now cover scalar values, expressions, selected BIFs, internal
-  procedures/arguments/calls, stems, bounded `IF/THEN/ELSE`, simple
-  `DO ... END`, `NOP`, and direct scalar `DROP` through the Classic value and
-  variable-pool foundation.
-  Unsupported shapes still reject rather than silently changing semantics.
+- Level C has progressed beyond parser-only and early lowering slices. Whole
+  instruction reviews are closed for SAY, DROP, assignment, NOP, OPTIONS, IF,
+  SELECT, DO, LEAVE and ITERATE. ARG has substantial bounded execution proof
+  but remains open; the approved one-frame label/SIGNAL AST architecture is its
+  next shared dependency. PARSE has a shared template engine, while the other
+  Classic instructions and host/condition contracts remain open. The
+  [Level C worklist](planning/release-1/levelc-compatibility-worklist.md)
+  owns current status and evidence. Unsupported shapes still reject rather
+  than silently changing semantics.
 - RexxScript is already a distinct standalone and embedded interpreted product.
   It is sandboxed and string-first, shares Classic BIF foundations where
   appropriate, and remains separate from the compiled Level C path.
@@ -560,7 +563,8 @@ prototype has been qualified by this roadmap update.
 - Durable performance decisions:
   [`../performance/DECISIONS.md`](../performance/DECISIONS.md)
 - Level C implementation status:
-  [`../compiler/docs/levelc_remapping_target.md`](../compiler/docs/levelc_remapping_target.md)
+  [`planning/release-1/levelc-compatibility-worklist.md`](planning/release-1/levelc-compatibility-worklist.md)
+  (the remapping target is a historical early design note).
 - RexxScript product documentation:
   [`../rexxscript/doc/user-guide.md`](../rexxscript/doc/user-guide.md) and
   [`../rexxscript/doc/developer-guide.md`](../rexxscript/doc/developer-guide.md)

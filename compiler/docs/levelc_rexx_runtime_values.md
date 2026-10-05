@@ -1,7 +1,10 @@
 # Level C Rexx Runtime Values
 
-Status: initial `rxfnsc` runtime implementation in progress for
-Level C/RexxScript runtime foundation.
+Status: historical initial `rxfnsc` design record. Its first-slice sequencing
+is complete or superseded and is not current Level C status. Use the
+[compatibility worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
+and [working architecture](levelc_working_architecture.md) for live coverage
+and the approved Unicode-first compiled Level C scalar contract.
 
 This note records the first shared runtime layer for Classic Rexx-compatible
 execution. It is intentionally smaller than full Level C lowering. The goal is
@@ -10,7 +13,7 @@ the compiler depends on it for broad tree surgery.
 
 ## Scope
 
-The approved first slice covers:
+The approved initial slice covered:
 
 1. A design surface for scalar values, stems, and variable pools.
 2. Level B class attribute register-view support for the VM value slots needed
@@ -22,10 +25,10 @@ The approved first slice covers:
    stems.
 
 The shared runtime library lives in `lib/rxfnsc` and links to
-`bin/rxfnsc.rxbin`. Level C compiled code and RexxScript should import the
-needed namespaces from that library rather than carrying separate scalar,
-stem, or variable-pool implementations. BIF migration and Level C lowering
-remain follow-on slices once this runtime foundation is stable.
+`bin/rxfnsc.rxbin`. Level C compiled code and RexxScript import the needed
+namespaces from that library rather than carrying separate scalar, stem, or
+variable-pool implementations. BIF migration and Level C lowering followed
+this initial foundation; their current status is tracked in the worklist.
 
 ## Core Objects
 
@@ -240,9 +243,10 @@ the pool binding.
 - Materialization of a cached representation is not a source-level assignment.
   It may mutate the VM value slot to fill another representation and set the
   matching cache bit.
-- `.string` remains valid UTF-8 in normal Level B builds. Classic byte-text
-  compatibility is a later explicit Level C policy and must not weaken Level B
-  `.string`/`.binary`.
+- `.string` remains valid UTF-8 in Level B and compiled Level C. The approved
+  Level C scalar policy uses Unicode text and a fixed Latin-1 ordinal bridge
+  for byte-valued BIFs; direct binary storage remains available for RexxScript
+  and future facilities without weakening Level B `.string`/`.binary`.
 - A binary-to-string materializer must validate bytes before setting the string
   current/text-valid flags. A string-to-binary materializer may mark both the
   binary-current and text-valid flags because Level B strings are already valid

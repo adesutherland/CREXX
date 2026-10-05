@@ -2,13 +2,16 @@
 
 Status: extracted implementation reference for Level C syntax, evaluation,
 execution, configuration, and diagnostics
-Last updated: 2026-07-14
+Last updated: 2026-10-05
 
 Source: publicly available Classic REXX language specification, with BIF details
 separated into
 `compiler/docs/levelc_classic_bifs.md`.
 
-This is an implementation guide for cREXX Level C. It is intentionally not a
+This is an implementation guide for cREXX Level C. Current implementation
+status, exceptions and evidence are in the
+[compatibility worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+This guide is intentionally not a
 verbatim copy of the language-specification source. The goal is to capture the
 rules that compiler, lowering, runtime, and library code must respect while
 Level C is implemented in Level B.

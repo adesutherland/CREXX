@@ -1,6 +1,11 @@
 # Level C Remapping Tracer Worklog
 
-Status: active implementation log for the remapping/inlining tracer bullet.
+Status: historical implementation log for the remapping/inlining tracer bullet.
+Its dated slices and "remaining" notes record the state at each checkpoint,
+not current Level C coverage. Use the
+[compatibility worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
+for current status and the
+[working architecture](levelc_working_architecture.md) for active decisions.
 
 This file records the steps, issues, and resolutions needed to replay the
 tracer from clean code if the branch is rolled back. Keep entries factual and
