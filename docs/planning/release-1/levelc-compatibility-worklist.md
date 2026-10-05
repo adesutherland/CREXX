@@ -3172,6 +3172,138 @@ passed **10/10** in `cmake-build-debug/levelc-procedure-isolation.log`.
 full Level C and Release 1 criteria remain open. The next strict queue row
 is LC-I-13 CALL.
 
+**LC-I-13 CALL plan — vision and intended outcome, 2026-10-05.** A Classic
+`CALL` instruction invokes an internal label, shared built-in, or external
+Classic routine using one source-ordered argument and result contract. A
+quoted target bypasses internal labels. `CALL ON/OFF` installs the four
+callable condition traps; a delivered trap calls its target at a clause
+boundary, then resumes the interrupted activation with its caller's policy
+intact. The existing one-body frame, activation arguments, shared BIFs and
+condition event are the foundation. Preserve Unicode scalar arguments and
+results, the fixed Latin-1 ordinal bridge for byte BIFs, exact source
+positions, Level B/G and RexxScript isolation, and the agreed exclusion of
+cross-dialect Classic/non-Classic calls. This is one whole-instruction review;
+RETURN, EXIT, ADDRESS and SIGNAL retain their own instruction rows while
+their shared dependencies are implemented here where CALL needs them.
+
+1. **LC-75-01 — syntax and diagnostics:** direct symbol and quoted-string
+   targets, no arguments, arbitrary source-ordered expression/omission lists,
+   `ON/OFF ERROR|FAILURE|HALT|NOTREADY` and optional `ON ... NAME target`
+   retain the authored AST. Bare/bad CALL, malformed argument expressions,
+   bad condition/NAME tails and unavailable targets report the applicable
+   Classic identity at the causing clause. Verify parser/canonical trees,
+   source diagnostics, and the [IBM CALL reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=instructions-call).
+2. **LC-75-02 — routine resolution and arguments:** an unquoted target
+   resolves a callable local label before a shared BIF and then an external
+   Classic routine; a quoted target skips the local label. Evaluate each
+   supplied expression once, left to right, preserve omitted versus explicit
+   empty positions, and give each invoked Classic routine its own activation.
+   An internal call shares its caller's pool until PROCEDURE changes that
+   invocation; external Classic routines start an implicit private pool and
+   default internal settings while host services remain available. Test
+   collisions, missing targets, nested calls,
+   recursion, procedure exposure, Unicode/NUL and linked execution. A
+   cross-dialect adapter is outside this criterion by Adrian's decision.
+3. **LC-75-03 — result lifecycle:** internal, BIF and external subroutine
+   returns share one result-presence path. Returned text sets both `RESULT`
+   and `.RESULT`; a value-less completion drops them. An explicit empty
+   string counts as a result. CALL does not assign `RC`. Nested calls and
+   aliases must observe the correct sequence; expression calls still enforce
+   their separate required-value rule. Verify reference output and
+   optimized/no-opt, source and linked tests.
+4. **LC-75-04 — external Classic routine lifecycle:** locate and invoke a
+   separately compiled Classic routine through a defined search/load path,
+   pass the same argument frame and call-kind state, return its optional
+   result, and restore the caller's state and source/error identity across
+   success, missing target and nested external calls. Keep the active host
+   environment, streams, traps and variable-pool API available to the
+   external adapter without exposing ordinary caller variables to the new
+   Classic programme. Verify packaged and configured-host execution with
+   the full toolchain. Before editing a new
+   loader/VM boundary, present its exact API, ownership and search behavior
+   for Adrian's architectural decision; do not treat implementation effort
+   as an exclusion.
+5. **LC-75-05 — delayed condition calls:** `CALL ON/OFF` and `SIGNAL ON/OFF`
+   replace one another for a condition; the handler target defaults to the
+   condition name or follows `NAME`. ERROR, FAILURE, HALT and NOTREADY use
+   delayed clause-boundary delivery, suppression or buffering while a trap is
+   active as specified by the [IBM condition reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=reference-conditions-condition-traps).
+   A handler is an ordinary subroutine with correct ARG/RESULT, `SIGL`,
+   CONDITION data and caller-policy restoration. Prove re-enable/OFF,
+   nested/recursive calls, local/BIF/external handler targets, and the
+   available event producers; keep missing ADDRESS, I/O and host event
+   producers open with their owner rows rather than claiming them here.
+6. **LC-75-06 — coherent delivery:** replace overlapping CALL/BIF/function
+   dispatch and result paths with reviewed shared helpers, retain source
+   documentation tags, add a complete reference and negative matrix, and
+   run focused compiler/runtime tests during development. On final code/test
+   inputs run the core product build, relevant normal Debug Level C suite,
+   affected Level B/G/RexxScript checks, and opt/no-opt and linked cases
+   once. Record exact logs and process-memory/exit status, update the
+   architecture/reference/coverage rows, commit coherent increments and
+   close LC-I-13 only when LC-75-01–06 pass.
+
+1. **LC-STEP-75A (LC-75-01–05; active):** inventory every parser form,
+   resolution/result/error rule, existing lowerer/BIF/VM/host mechanism and
+   retained CALL evidence. Build guarded Regina reference probes for
+   collisions, omissions, results, conditions and external routines. Keep
+   the matrix and open owners in this worklist before product edits.
+2. **LC-STEP-75B (LC-75-02–04; depends on 75A):** design one invocation
+   resolver and result-presence path around the existing Classic activation.
+   Specify the external Classic search/load and call boundary, including
+   paths, source identity, Unicode lengths and lifetime. Reuse the existing
+   module system where it satisfies the contract. Obtain Adrian's decision
+   before a new loader or VM architecture; already approved frame/AST work
+   needs no repeat approval.
+3. **LC-STEP-75C (LC-75-01–04; depends on 75B and its decision gate):**
+   implement local/BIF/external calls, quoted bypass, ordered actuals,
+   optional result writes/drops and errors through shared compiler/runtime
+   paths. Add permanent source, AST, opt/no-opt and linked regressions.
+4. **LC-STEP-75D (LC-75-05; depends on 75C):** implement CALL ON/OFF and
+   delayed condition-call state on the same activation/frame model; exercise
+   available condition producers and handler lifetime without pre-emptively
+   closing ADDRESS, I/O, SIGNAL or host instruction owners.
+5. **LC-STEP-75E (LC-75-01–06; depends on 75C/75D):** audit the entire CALL
+   reference matrix, run the relevant normal suite once with guarded child
+   and memory monitoring, update documentation and evidence, commit the
+   coherent whole-instruction result, then start LC-I-14 RETURN. Keep full
+   Level C and Release 1 criteria open until their own proofs pass.
+
+**LC-STEP-75A reference and implementation inventory, in progress
+2026-10-05.** The [IBM CALL reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=instructions-call)
+confirms local/BIF/external order, quoted bypass of local labels, evaluated
+arguments and omission positions. The [IBM external-routine reference](https://www.ibm.com/docs/en/SSLTBW_2.3.0/pdf/ikja300_v2r3.pdf)
+specifies an implicit private procedure for an external Rexx programme,
+including hidden caller variables and default internal settings. The
+[IBM condition reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=reference-conditions-condition-traps)
+requires CALL traps at clause boundaries, a DELAY state during the handler,
+replacement by later CALL/SIGNAL ON/OFF, and restoration on internal return.
+The current parser has direct symbol/string targets, ordered structured
+argument expressions and omissions, and ON/OFF/NAME recovery nodes. The
+lowerer currently accepts only an unquoted local label as a direct CALL; its
+separate expression path chooses a local function or one of the shared BIF
+entries. The local path creates the approved activation frame but discards its
+optional return. `RexxActivationArguments` already holds argument presence,
+the call kind, return presence/value and inherited SIGNAL policy.
+
+| Reference probe, guarded in `cmake-build-debug/` | Observed behavior | Remaining implementation owner |
+| --- | --- | --- |
+| `levelc-call-reference-main.log`, `levelc-call-reference-dotresult.log` | Local `LENGTH` shadows the BIF; quoted uppercase `LENGTH` reaches the BIF; three positions include a middle omission and explicit empty value; a value return sets `RESULT` and `.RESULT`, bare RETURN drops both, and ordinary CALL leaves the pre-set `RC=77`. | Unified CALL resolver, BIF/local invocation and optional result update. |
+| `levelc-call-reference-quoted-case.log` | Quoted lowercase `length` does not resolve the uppercase built-in on Regina; quoted target spelling must not be blindly uppercased. | Preserve decoded quoted target spelling and check the configured external adapter. |
+| `levelc-call-reference-external.log` | A sibling `callext.rexx` receives a separate argument frame and returns `a-ok`/`b-ok` into `RESULT` for unquoted and quoted uppercase calls. | External Classic configuration adapter and entry ABI. |
+| `levelc-call-reference-external-state.log` | External entry sees `shared` as unassigned and default `DIGITS=9`; after it changes both, its caller still sees `shared=caller` and `DIGITS=20`, plus the returned result. | Private external programme state with preserved caller lifecycle. |
+| `levelc-call-reference-condition.log`, `levelc-call-reference-policy.log` | ERROR from a host command calls a no-argument handler at the clause boundary, reports CONDITION `C=ERROR`/`I=CALL` and the raising `SIGL`, then resumes. A nested call's OFF does not remove its caller's ON; the caller handler runs after return. | Delayed CALL ON/OFF state and clause-end delivery; ADDRESS remains the real command producer owner. |
+| `levelc-call-reference-quoted-handler.log` | Regina accepts a quoted `NAME 'HANDLER'`, consistent with the existing parser's target shape; platform reference variants may differ. | Preserve the accepted source form and test the named handler route. |
+
+Each guarded probe exited with zero residual child processes. These are
+reference receipts, not product tests or CALL closure. The VM can autoload
+precompiled bytecode from exact package stems and supports nested host calls;
+`crexxsaa` can compile/cache and run source. Neither existing top-level
+entry carries omitted positions and an optional Classic result across an
+external CALL, and ordinary bytecode autoload does not discover/compile
+Classic source. LC-STEP-75B must define that adapter before external product
+edits. `LC-I-13`, LC-75-01–06, full Level C and Release 1 remain open.
+
 **LC-STEP-73H historical profile bridge — superseded 2026-10-04.** The
 following proposal and `LC-73H-*` checks are retained as design history and
 probe evidence. They are not active implementation steps after Adrian's
