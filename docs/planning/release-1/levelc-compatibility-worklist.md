@@ -3108,6 +3108,16 @@ approved exclusion or a whole-Level-C completion claim.
 
 ### Approved architecture direction for LC-STEP-63T
 
+**Vision and intended outcome.** A compiled Classic invocation has one VM
+frame containing all of its targetable labels and source-order fallthrough.
+CALL enters that body in a fresh activation, while direct/VALUE SIGNAL and
+condition traps transfer within or unwind to the correct existing activation.
+PROCEDURE changes the visible pool only when executed; ARG and optional RETURN
+state belong to that activation. Existing Level B/G, RexxScript and toolchain
+behavior remain qualified. This is a cross-cutting prerequisite for closing
+ARG, PROCEDURE and CALL; it does not narrow the full SIGNAL instruction or
+Level C completion contract.
+
 The active lowerer treats each top-level label as a separate generated Level B
 procedure. It requires `PROCEDURE` immediately after the label and a final
 `RETURN`, and the main slice must `EXIT` before those routines. That bounded
@@ -3161,13 +3171,30 @@ Before any code edit, check the proposed route against these observable gates:
   AST separately identifies `SIGNAL VALUE expression` so decoding a quoted
   expression cannot turn it into a static label target.
 
-Implement in this order: (1) prove label/fallthrough and
-invocation entry shape with a small Regina corpus; (2) add one reviewed
-canonical branch/label representation and refactor current local calls onto
-it; (3) attach VM Classic condition handlers and activation state; (4) prove
-the gates and remove the old label/`PROCEDURE`/`RETURN` guards. Commit and
-report at coherent architecture checkpoints; do not claim SIGNAL closure from
-one trapped-error example.
+1. **LC-STEP-63T-1 (LC-63T-01/02/04; review complete 2026-10-05):** inventory all parsed
+   SIGNAL forms and Classic label, fallthrough, CALL, PROCEDURE, RETURN and
+   trap lifetimes; compare Regina, preserve direct versus VALUE in the source
+   AST, and fix the exact canonical node contract before product edits.
+2. **LC-STEP-63T-2 (LC-63T-02/04; depends on 63T-1):** add frame-local label,
+   branch and handler nodes through AST validation, flow/optimizer and RXAS
+   emission, with source anchors and structural tests. Reuse VM signal
+   instructions and existing scoped cleanup machinery where their contracts
+   match; no per-label trampoline or second token interpreter.
+3. **LC-STEP-63T-3 (LC-63T-02/03; depends on 63T-2):** refactor local CALL,
+   function entry, ARG, PROCEDURE and RETURN onto one compiled body per
+   invocation with activation-owned pool and optional result state. Preserve
+   once-only argument evaluation and recursive isolation; remove the old
+   immediate-PROCEDURE/final-RETURN/per-label guards when the replacement runs.
+4. **LC-STEP-63T-4 (LC-63T-01/02/04; depends on 63T-3):** implement direct and
+   VALUE SIGNAL, ON/OFF and named condition targets through the VM's frame
+   branch/handler path; map Classic condition identities, SIGL and source,
+   and discard crossed loop/reference state.
+5. **LC-STEP-63T-5 (LC-63T-01–04; depends on 63T-4):** qualify the complete
+   SIGNAL reference matrix, opt/no-opt, raw/canonical AST, linked toolchain,
+   relevant normal correctness and Level B/G/RexxScript isolation. Update
+   architecture/reference docs, commit coherent checkpoints and close the
+   instruction only if its own criteria pass. Full CALL and ARG obligations
+   retain their independent rows.
 
 **2026-10-05 architecture review checkpoint.** Regina probes in
 `/tmp/crexx-signal-design.vt0eqA` confirm a called label without
@@ -3183,6 +3210,19 @@ type, with only raw-token quoting distinguishing them. A temporary parser
 probe confirmed an explicit VALUE wrapper can preserve the source intent;
 the probe was removed until its full lowerer/emitter route is implemented.
 No product code changed in this review; LC-63T-01–04 remain open.
+
+**2026-10-05 LC-STEP-63T-1 reference receipt.** The parser admits static
+symbol/quoted targets, `VALUE expression`, `ON condition [NAME target]` and
+`OFF condition`, with targeted 19.x/25.x malformed-source diagnostics. The
+Regina corpus at `/tmp/crexx-signal-contract.oKKgov` confirms direct and
+VALUE branches, source-order fallthrough, missing-label Error 16.1, loop
+re-entry after transfer, optional RETURN presence, default/named SYNTAX
+labels, nested trap unwind to the installing activation, inherited pool
+mutation, causing SIGL, OFF behavior and automatic trap disable after one
+delivery. The VM supplies per-frame copy-on-write signal tables and `sigbrv`
+for branch delivery; current `SIGNAL_BLOCK` is lexical, so the approved
+canonical frame nodes and activation state remain necessary. `LC-STEP-63T-2`
+is next; no SIGNAL form is called executable or complete by this review.
 
 ## Findings
 

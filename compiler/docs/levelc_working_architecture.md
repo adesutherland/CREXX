@@ -426,6 +426,11 @@ ordinary label fallthrough, a `CALL` to a label without `PROCEDURE`, or a
 `SIGNAL jump` reaching another label in that call and returning to the caller,
 and `SIGNAL ON SYNTAX` catching `SUBSTR('abc',0)` with `RC=40` and the
 causing `SIGL=3`.
+The larger Regina corpus in `/tmp/crexx-signal-contract.oKKgov` also proves
+static/VALUE branches, source-order fallthrough, missing target Error 16.1,
+loop re-entry, optional RETURN presence, default/named traps, nested unwind,
+OFF restoration and automatic one-shot disable. These are implementation
+gates, not claims that the current compiler runs those forms.
 
 The approved replacement is one compiled routine body per Classic invocation,
 with labeled blocks in that frame. Entry selects main or a called label;
