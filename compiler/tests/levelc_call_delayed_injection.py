@@ -139,7 +139,7 @@ def main():
     if args.scenario == "policy":
         injected = inject_policy(assembly_path.read_text())
     else:
-        sites = ((3, "if"), (7, "when"), (12, "do")) if args.scenario == "boundaries" else (
+        sites = ((4, "if"), (9, "when"), (15, "do")) if args.scenario == "boundaries" else (
             (4, "leave"), (11, "exit"), (17, "return"))
         injected = inject_boundaries(assembly_path.read_text(), sites)
     injected_path.write_text(injected, encoding="utf-8")
@@ -154,11 +154,11 @@ def main():
         "caught=ERROR|Élan 😀|CALL|DELAY|3|0\n"
         "local-after=old|old|\n"
         "bif-after=old|old|\n") if args.scenario == "policy" else (
-        "trap=3|ERROR|if\n"
+        "trap=4|ERROR|if\n"
         "if-body\n"
-        "trap=7|ERROR|when\n"
+        "trap=9|ERROR|when\n"
         "when-body\n"
-        "trap=12|ERROR|do\n"
+        "trap=15|ERROR|do\n"
         "do-body\n") if args.scenario == "boundaries" else (
         "trap=4|ERROR|leave\n"
         "after-leave\n"

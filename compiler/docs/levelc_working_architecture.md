@@ -292,6 +292,15 @@ Missing-handler source identity, external trap targets, full clause/lifecycle
 matrix and host HALT capture remain open in the whole CALL review. No VM ISA
 or frame change was made.
 
+The CALL source grammar has explicit recovery for surplus policy tails. A
+token after `CALL OFF condition` becomes a `21.1` AST error at that token;
+one after `CALL ON condition NAME target` becomes `19.3`. Lemon's generic
+recovery previously discarded those tokens and emitted a valid policy. This
+retains the following clause and gives normal compilation the same anchored
+diagnostics as the source front end. The missing delayed-handler `16.1`
+remains a separate runtime-origin obligation: unlike the immediate SYNTAX
+trap's VM-bound event, the delayed queue currently keeps only a source line.
+
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including
 direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;

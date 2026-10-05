@@ -502,6 +502,7 @@ static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expressio
 %type bad_condition_start {Token*}
 %type bad_form_option_start {Token*}
 %type bad_instruction_tail_start {Token*}
+%type call_extra_tail_start {Token*}
 %type bad_name_target_start {Token*}
 %type bad_variable_ref_start {Token*}
 
@@ -800,6 +801,15 @@ call_instruction(I) ::= CTK_CALL(T) CTK_OFF(O) callable_condition(C).
     I = ast_f(context, CALL, T);
     add_ast(I, ast_f(context, LITERAL, O));
     add_ast(I, C);
+}
+
+call_instruction(I) ::= CTK_CALL(T) CTK_OFF(O) callable_condition(C) call_extra_tail_start(B) simple_tail(L).
+{
+    I = ast_f(context, CALL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, C);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "21.1", B));
+    if (L) add_ast(I, L);
 }
 
 call_instruction(I) ::= CTK_CALL(T) CTK_OFF(O) bad_condition_start(B) simple_tail(L).
@@ -1590,6 +1600,14 @@ call_name_opt(N) ::= CTK_NAME(T) call_target(C).
     add_ast(N, C);
 }
 
+call_name_opt(N) ::= CTK_NAME(T) call_target(C) call_extra_tail_start(B) simple_tail(L).
+{
+    N = ast_f(context, LITERAL, T);
+    add_ast(N, C);
+    add_ast(N, rxcp_levelc_ast_error_token(context, "19.3", B));
+    if (L) add_ast(N, L);
+}
+
 call_name_opt(N) ::= CTK_NAME(T) bad_name_target_start(B) simple_tail(L).
 {
     N = ast_f(context, LITERAL, T);
@@ -1786,6 +1804,10 @@ bad_instruction_tail_start(T) ::= CTK_S_LTE(S). { T = S; }
 bad_instruction_tail_start(T) ::= CTK_AND(S). { T = S; }
 bad_instruction_tail_start(T) ::= CTK_OR(S). { T = S; }
 bad_instruction_tail_start(T) ::= CTK_XOR(S). { T = S; }
+
+call_extra_tail_start(T) ::= CTK_VAR_SYMBOL(S). { T = S; }
+call_extra_tail_start(T) ::= CTK_NAME(S). { T = S; }
+call_extra_tail_start(T) ::= bad_instruction_tail_start(S). { T = S; }
 
 simple_tail(L) ::= simple_tail(L0) simple_tail_atom(A).
 {

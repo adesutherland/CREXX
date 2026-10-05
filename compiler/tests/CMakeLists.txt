@@ -5280,6 +5280,12 @@ add_levelc_invalid_compile_test(levelc_procedure_bad_forms
 add_levelc_invalid_compile_test(levelc_call_expression_malformed
         rexx_src/levelc_call_expression_malformed.rexx
         "RXC-LC-35\\.1" "levelc_call_expression_malformed\\.rexx @ 2:15")
+add_levelc_invalid_compile_test(levelc_call_surplus_policy_tails
+        rexx_src/levelc_call_surplus_policy_tails.rexx
+        "levelc_call_surplus_policy_tails\\.rexx @ 2:16 - #RXC-LC-21\\.1"
+        "levelc_call_surplus_policy_tails\\.rexx @ 3:24 - #RXC-LC-19\\.3"
+        "levelc_call_surplus_policy_tails\\.rexx @ 4:15 - #RXC-LC-21\\.1"
+        "levelc_call_surplus_policy_tails\\.rexx @ 5:28 - #RXC-LC-19\\.3")
 add_levelc_invalid_compile_test(levelc_if_missing_condition
         rexx_src/levelc_if_missing_condition.rexx
         "RXC-LC-35\\.1" "1 error")

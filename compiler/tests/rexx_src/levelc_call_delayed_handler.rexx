@@ -1,6 +1,6 @@
 options levelc
 call seed
-call on error name handler
+call on error name 'handler'
 say 'local-after=' || result || '|' || .result || '|' || condition('C')
 call on error name ARG
 say 'bif-after=' || result || '|' || .result || '|' || condition('C')
