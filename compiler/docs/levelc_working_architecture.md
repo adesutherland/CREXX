@@ -553,6 +553,13 @@ this path or another uppercase consumer needs it. This bounded route has
 optimized/no-opt and normal Debug evidence; complete SIGNAL condition policy
 and reference-matrix qualification remain open.
 
+The `63T-4D1` handler transport allows `FRAME_HANDLER_ON` to bind one
+`VAR_TARGET`. Its emitter selects VM `sigbrv` for that form, which writes a
+runtime signal object to the bound register on delivery before branching.
+The childless form still emits `sigbr`. The frame-control unit validates both
+canonical shapes and their RXAS output. Level C ON/OFF source lowering,
+handler-entry state updates and full condition policy remain open.
+
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.
 The [LC-STEP-63T gates](../../docs/planning/release-1/levelc-compatibility-worklist.md#approved-architecture-direction-for-lc-step-63t)

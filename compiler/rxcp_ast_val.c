@@ -105,7 +105,10 @@ static void validate_node(ASTNode *node, int *errors) {
     if (node->node_type == FRAME_LABEL || node->node_type == FRAME_BRANCH ||
         node->node_type == FRAME_HANDLER_ON || node->node_type == FRAME_HANDLER_OFF) {
         frame = ast_proc(node);
-        if (!frame || node->child || !node->parent ||
+        if (!frame || !node->parent ||
+            (node->node_type != FRAME_HANDLER_ON && node->child) ||
+            (node->node_type == FRAME_HANDLER_ON && node->child &&
+             (node->child->node_type != VAR_TARGET || node->child->sibling)) ||
             ((node->node_type == FRAME_LABEL) &&
              (node->parent->node_type != INSTRUCTIONS ||
               node->parent->parent != frame)) ||

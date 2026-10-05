@@ -3642,6 +3642,24 @@ separate names for Classic HALT, NOVALUE or LOSTDIGITS; their producer and
 mapping review remains open rather than being silently excluded. No handler
 product code changed in this review.
 
+**2026-10-05 LC-STEP-63T-4D1 event-binding AST checkpoint.** A canonical
+`FRAME_HANDLER_ON` may now own one `VAR_TARGET` binding for the delivered VM
+signal; childless registrations retain their prior `sigbr` form. Structural
+validation rejects other child shapes, and RXAS emission uses `sigbrv` with
+the bound register and the existing Classic SYNTAX mapping. The frame-control
+unit exercises both modes, structural validation and optimized/no-opt flow
+analysis. This establishes compiler-to-emitter event transport but does not
+yet lower a Level C ON/OFF source form or claim RC/SIGL and one-shot behavior.
+The guarded Debug compiler/unit build passed, focused tests passed 3/3, and
+the normal Debug Level C suite passed 512/512 on the exact code/test/build
+inputs. Peak aggregate descendant RSS was about 2400 MiB; the guard and
+post-run process inventory found zero residual build, test, compiler,
+assembler or VM processes. Evidence:
+`cmake-build-debug/levelc-63t4d1-build3.log`,
+`cmake-build-debug/levelc-63t4d1-focused2.log`, and
+`cmake-build-debug/levelc-63t4d1-debug-qual.log`. Checkpoint 4D1 is complete;
+4D2/4D3, LC-AC-76, ARG and full Level C/Release 1 remain open.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the

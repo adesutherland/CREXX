@@ -27,7 +27,8 @@ static void check_output(ASTNode *node, const char *expected,
 
 int main(void) {
     Context context;
-    ASTNode *root, *namespace_node, *procedure, *body, *branch, *label, *on, *off;
+    ASTNode *root, *namespace_node, *procedure, *body, *branch, *label, *on, *on_bound, *off;
+    ASTNode *binding;
     char source[] = "signal on syntax\nnext:\nsignal off syntax\n";
     memset(&context, 0, sizeof(context));
     context.file_name = "frame_control.crexx";
@@ -38,7 +39,13 @@ int main(void) {
     branch = ast_ft(&context, FRAME_BRANCH);
     label = ast_ft(&context, FRAME_LABEL);
     on = ast_ft(&context, FRAME_HANDLER_ON);
+    on_bound = ast_ft(&context, FRAME_HANDLER_ON);
     off = ast_ft(&context, FRAME_HANDLER_OFF);
+    binding = ast_ft(&context, VAR_TARGET);
+    ast_copy_str(binding, "caught_signal");
+    binding->register_type = 'r';
+    binding->register_num = 7;
+    add_ast(on_bound, binding);
     context.ast = root;
     add_ast(root, namespace_node);
     add_ast(namespace_node, procedure);
@@ -49,11 +56,14 @@ int main(void) {
     add_ast(body, branch);
     add_ast(body, label);
     add_ast(body, on);
+    add_ast(body, on_bound);
     add_ast(body, off);
     branch->association = label;
     on->association = label;
+    on_bound->association = label;
     ast_copy_str(label, "NEXT");
     ast_copy_str(on, "SYNTAX");
+    ast_copy_str(on_bound, "SYNTAX");
     ast_copy_str(off, "SYNTAX");
     label->line = 2;
     label->column = 1;
@@ -66,6 +76,7 @@ int main(void) {
     check_output(branch, "br l", NULL);
     check_output(label, "frame:", "frame_control.crexx");
     check_output(on, "sigbr l", "\"CLASSIC_SYNTAX\"");
+    check_output(on_bound, "sigbrv l", "r7,\"CLASSIC_SYNTAX\"");
     check_output(off, "sighalt \"CLASSIC_SYNTAX\"", NULL);
     rxcp_flow_free(&context);
     puts("PASS frame label, branch, handler AST flow and RXAS emission");

@@ -762,13 +762,27 @@ void emit_flow(ASTNode *node, void *pl) {
             node->output = output_fs(comment_meta);
             free(comment_meta);
             add_variable_metadata(node);
-            if (node->node_type == FRAME_HANDLER_ON)
+            if (node->node_type == FRAME_HANDLER_ON && node->child) {
+                ASTNode *binding = node->child;
+                int binding_register = binding->register_num;
+                char binding_register_type = binding->register_type;
+                if (binding->symbolNode && binding->symbolNode->symbol) {
+                    binding_register = binding->symbolNode->symbol->register_num;
+                    binding_register_type = binding->symbolNode->symbol->register_type;
+                }
+                temp1 = mprintf("   sigbrv l%dframe,%c%d,\"%s\"\n",
+                                node->association->node_number,
+                                binding_register_type,
+                                binding_register,
+                                frame_vm_condition_name(node));
+            } else if (node->node_type == FRAME_HANDLER_ON) {
                 temp1 = mprintf("   sigbr l%dframe,\"%s\"\n",
                                 node->association->node_number,
                                 frame_vm_condition_name(node));
-            else
+            } else {
                 temp1 = mprintf("   sighalt \"%s\"\n",
                                 frame_vm_condition_name(node));
+            }
             output_append_text(node->output, temp1);
             free(temp1);
             break;
