@@ -250,7 +250,11 @@ The active CALL review now routes an unquoted local label before the shared
 direct-BIF table, while a quoted uppercase name bypasses local labels and
 reaches its matching BIF. Quoted spelling is decoded without uppercasing.
 The BIF argument/context builder accepts both expression-function and CALL
-statement argument lists; local calls retain the same activation-frame actuals.
+statement argument lists. Local expression calls, ordinary CALL and delayed
+local handlers now use one `levelc_build_local_invocation` path for frame
+creation, source-ordered actuals, pool/config binding and the compiled body
+entry. Their result rules stay at the callers: a function requires a return,
+ordinary CALL applies optional RESULT state, and a trap ignores its return.
 After an ordinary CALL, one `RexxVariablePool.applyCallResult` operation sets
 both `RESULT` and `.RESULT` for an explicit value (including empty text), or
 drops both after a value-less return. The local frame's result-presence bit

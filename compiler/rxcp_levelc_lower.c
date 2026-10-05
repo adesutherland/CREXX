@@ -383,6 +383,10 @@ static int levelc_lower_plan_add_procedure(LevelCLowerPlan *plan,
 
 static char *levelc_upper_name(ASTNode *node);
 static char *levelc_static_signal_name(ASTNode *target);
+static int levelc_append_call_trap_state(Context *context,
+                                         ASTNode *call_node,
+                                         ASTNode *prelude,
+                                         const char *frame_name);
 static int levelc_append_call_trap_checkpoint(Context *context,
                                                ASTNode *instructions,
                                                ASTNode *source,
@@ -2616,91 +2620,96 @@ static int levelc_append_function_result_guard(Context *context,
     return result;
 }
 
-static ASTNode *levelc_lower_local_function_call(Context *context,
-                                                 ASTNode *expr,
-                                                 LevelCLowerPlan *plan,
-                                                 ASTNode *prelude) {
-    char *target_name;
-    LevelCProcedureSlice *procedure;
+static ASTNode *levelc_build_local_invocation(Context *context,
+                                               ASTNode *source,
+                                               LevelCLowerPlan *plan,
+                                               LevelCProcedureSlice *procedure,
+                                               ASTNode *actuals,
+                                               int function_call,
+                                               int condition_handler,
+                                               ASTNode *prelude,
+                                               char **frame_name_out) {
     ASTNode *args[4];
     ASTNode *pool_symbol;
-    ASTNode *arg;
     ASTNode *call;
     ASTNode *call_stmt;
-    ASTNode *result_receiver;
     char *frame_name;
     size_t entry;
 
-    if (!context || !expr || !plan) return NULL;
-
-    target_name = levelc_upper_name(expr);
-    procedure = target_name ? levelc_find_procedure(plan, target_name) : NULL;
-    if (!procedure) {
-        if (target_name) free(target_name);
-        return NULL;
-    }
-
+    if (!context || !source || !plan || !procedure || !prelude ||
+        !frame_name_out) return NULL;
     entry = (size_t)(procedure - plan->procedures) + 1;
-    if (entry > INT_MAX) {
-        free(target_name);
-        return NULL;
-    }
+    if (entry > INT_MAX) return NULL;
 
-    frame_name = levelc_begin_call_activation(context, expr, prelude, 1);
-    if (!frame_name) {
-        free(target_name);
-        return NULL;
-    }
+    frame_name = levelc_begin_call_activation(
+        context, source, prelude, function_call);
+    if (!frame_name) return NULL;
 
-    pool_symbol = levelc_pool_ref(context, expr, VAR_SYMBOL);
-    args[0] = rxcp_remap_create_reference_expr(context, expr, pool_symbol);
-    args[1] = levelc_config_ref(context, expr, VAR_SYMBOL);
+    pool_symbol = levelc_pool_ref(context, source, VAR_SYMBOL);
+    args[0] = rxcp_remap_create_reference_expr(context, source, pool_symbol);
+    args[1] = levelc_config_ref(context, source, VAR_SYMBOL);
     if (!pool_symbol || !args[0] || !args[1]) {
         free(frame_name);
-        free(target_name);
         return NULL;
     }
 
-    arg = expr->child;
-    if (arg && arg->node_type == NOVAL && !arg->sibling) arg = NULL;
-    if (!levelc_append_call_actuals(context, arg, plan, prelude, frame_name)) {
+    if (!levelc_append_call_actuals(context, actuals, plan, prelude,
+                                    frame_name) ||
+        (condition_handler && !levelc_append_call_trap_state(
+            context, source, prelude, frame_name))) {
         free(frame_name);
-        free(target_name);
         return NULL;
     }
 
-    args[2] = rxcp_remap_create_named_ref(context, expr,
+    args[2] = rxcp_remap_create_named_ref(context, source,
                                           VAR_SYMBOL, frame_name);
-    args[3] = rxcp_remap_create_integer_constant(context, expr, (int)entry,
+    args[3] = rxcp_remap_create_integer_constant(context, source, (int)entry,
                                                  TP_INTEGER);
     if (!args[2] || !args[3]) {
         free(frame_name);
-        free(target_name);
         return NULL;
     }
 
     call = rxcp_remap_create_function_call(context,
-                                           expr,
+                                           source,
                                            LEVELC_BODY_NAME,
                                            args,
                                            4);
-    call_stmt = call ? rxcp_remap_create_call_statement(context, expr, call) : NULL;
+    call_stmt = call ? rxcp_remap_create_call_statement(
+        context, source, call) : NULL;
     if (!call_stmt) {
         free(frame_name);
-        free(target_name);
         return NULL;
     }
+    *frame_name_out = frame_name;
+    return call_stmt;
+}
+
+static ASTNode *levelc_lower_local_function_call(Context *context,
+                                                 ASTNode *expr,
+                                                 LevelCLowerPlan *plan,
+                                                 LevelCProcedureSlice *procedure,
+                                                 const char *target_name,
+                                                 ASTNode *prelude) {
+    ASTNode *actuals = expr->child;
+    ASTNode *call_stmt;
+    ASTNode *result_receiver;
+    char *frame_name = NULL;
+
+    if (actuals && actuals->node_type == NOVAL && !actuals->sibling)
+        actuals = NULL;
+    call_stmt = levelc_build_local_invocation(
+        context, expr, plan, procedure, actuals, 1, 0, prelude, &frame_name);
+    if (!call_stmt) return NULL;
     add_ast(prelude, call_stmt);
     if (!levelc_append_function_result_guard(
             context, prelude, expr, frame_name, target_name)) {
         free(frame_name);
-        free(target_name);
         return NULL;
     }
     result_receiver = rxcp_remap_create_named_ref(context, expr,
                                                   VAR_SYMBOL, frame_name);
     free(frame_name);
-    free(target_name);
     return result_receiver ? rxcp_remap_create_member_call(
         context, expr, result_receiver, "returnValue", NULL, 0) : NULL;
 }
@@ -2727,8 +2736,14 @@ static ASTNode *levelc_lower_function_call(Context *context,
         free(name);
         return call;
     }
+    if (procedure) {
+        ASTNode *call = levelc_lower_local_function_call(
+            context, expr, plan, procedure, name, prelude);
+        free(name);
+        return call;
+    }
     free(name);
-    return levelc_lower_local_function_call(context, expr, plan, prelude);
+    return NULL;
 }
 
 static ASTNode *levelc_lower_expr(Context *context,
@@ -2988,68 +3003,18 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
                                                       LevelCProcedureSlice *procedure,
                                                       ASTNode *prelude,
                                                       int condition_handler) {
-    char *frame_name;
-    ASTNode *args[4];
-    ASTNode *actual;
-    ASTNode *pool_symbol;
-    ASTNode *call_expr;
+    ASTNode *args = call_node->child ? call_node->child->sibling : NULL;
+    ASTNode *actuals = args ? args->child : NULL;
     ASTNode *statement;
     ASTNode *receiver;
     ASTNode *present;
     ASTNode *value;
-    size_t entry;
+    char *frame_name = NULL;
 
-    if (!procedure) return NULL;
-    entry = (size_t)(procedure - plan->procedures) + 1;
-    if (entry > INT_MAX) return NULL;
-
-    frame_name = levelc_begin_call_activation(context, call_node, prelude, 0);
-    if (!frame_name) return NULL;
-
-    pool_symbol = levelc_pool_ref(context, call_node, VAR_SYMBOL);
-    args[0] = rxcp_remap_create_reference_expr(context, call_node, pool_symbol);
-    args[1] = levelc_config_ref(context, call_node, VAR_SYMBOL);
-    if (!pool_symbol || !args[0] || !args[1]) {
-        free(frame_name);
-        return NULL;
-    }
-
-    actual = call_node->child ? call_node->child->sibling : NULL;
-    actual = actual ? actual->child : NULL;
-    if (!levelc_append_call_actuals(context, actual, plan, prelude, frame_name)) {
-        free(frame_name);
-        return NULL;
-    }
-    if (condition_handler &&
-        !levelc_append_call_trap_state(context, call_node, prelude, frame_name)) {
-        free(frame_name);
-        return NULL;
-    }
-
-    args[2] = rxcp_remap_create_named_ref(context, call_node,
-                                          VAR_SYMBOL, frame_name);
-    args[3] = rxcp_remap_create_integer_constant(context, call_node, (int)entry,
-                                                 TP_INTEGER);
-    if (!args[2] || !args[3]) {
-        free(frame_name);
-        return NULL;
-    }
-
-    call_expr = rxcp_remap_create_function_call(context,
-                                                call_node,
-                                                LEVELC_BODY_NAME,
-                                                args,
-                                                4);
-    if (!call_expr) {
-        free(frame_name);
-        return NULL;
-    }
-
-    statement = rxcp_remap_create_call_statement(context, call_node, call_expr);
-    if (!statement) {
-        free(frame_name);
-        return NULL;
-    }
+    statement = levelc_build_local_invocation(
+        context, call_node, plan, procedure, actuals, 0, condition_handler,
+        prelude, &frame_name);
+    if (!statement) return NULL;
     if (condition_handler) {
         free(frame_name);
         return statement;

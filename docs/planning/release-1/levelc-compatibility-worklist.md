@@ -3330,6 +3330,24 @@ left zero residual children. Direct/external missing targets, dynamic trap
 source identity, real producers and the remaining CALL reference matrix still
 keep `LC-75-01–06` and LC-I-13 open.
 
+**LC-STEP-75E local invocation coherence receipt, 2026-10-05.** Expression
+functions, ordinary CALL and delayed local handlers now use one
+`levelc_build_local_invocation` builder for frame creation, pool/config
+binding, source-ordered actuals, entry selection and the compiled body call.
+Expression lowering reuses its already resolved local target. Distinct
+epilogues remain explicit: a function requires a returned value, ordinary
+CALL writes/drops `RESULT` and `.RESULT`, and a delayed handler ignores its
+return. The guarded focused normal Debug checks passed **15/15** in
+`cmake-build-debug/levelc-call-local-common-focused.log`; focused ASan with
+macOS leak detection off passed **8/8** in
+`cmake-build-debug/levelc-call-local-common-asan-focused-guard.log`.
+The final-input normal Debug Level C suite passed **613/613** in
+`cmake-build-debug/levelc-call-local-common-final-levelc.log` (peak
+**4642.1 MiB** aggregate RSS); Level B/G and RexxScript isolation passed
+**10/10** in `cmake-build-debug/levelc-call-local-common-isolation.log`.
+Every guarded build/test run left zero residual children. This closes one
+duplicate compiler path under `LC-75-06`, not the whole criterion or CALL.
+
 The missing-handler source review found an existing VM `signalorigin` route
 used by immediate SIGNAL ON SYNTAX. It requires a VM-bound runtime signal
 object carrying the raising module/address. The current delayed CALL queue
