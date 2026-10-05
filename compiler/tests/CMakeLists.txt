@@ -5219,9 +5219,6 @@ add_levelc_unsupported_compile_test(levelc_compile_unsupported
 add_levelc_unsupported_compile_test(levelc_slice4_omitted_call_unsupported
         rexx_src/levelc_slice4_omitted_call_unsupported.rexx)
 
-add_levelc_unsupported_compile_test(levelc_slice5_compound_expose_unsupported
-        rexx_src/levelc_slice5_compound_expose_unsupported.rexx)
-
 add_levelc_unsupported_compile_test(levelc_slice6_procedure_parse_unsupported
         rexx_src/levelc_slice6_procedure_parse_unsupported.rexx)
 
@@ -5274,6 +5271,12 @@ add_levelc_invalid_compile_test(levelc_arg_missing_positions
 add_levelc_invalid_compile_test(levelc_procedure_nested_invalid
         rexx_src/levelc_procedure_nested_invalid.rexx
         "RXC-LC-17\\.1" "levelc_procedure_nested_invalid\\.rexx @ 5:11")
+add_levelc_invalid_compile_test(levelc_procedure_bad_forms
+        rexx_src/levelc_procedure_bad_forms.rexx
+        "levelc_procedure_bad_forms\\.rexx @ 4:14 - #RXC-LC-20\\.1"
+        "levelc_procedure_bad_forms\\.rexx @ 6:22 - #RXC-LC-20\\.1"
+        "levelc_procedure_bad_forms\\.rexx @ 8:21 - #RXC-LC-20\\.1"
+        "levelc_procedure_bad_forms\\.rexx @ 10:14 - #RXC-LC-25\\.17")
 add_levelc_invalid_compile_test(levelc_call_expression_malformed
         rexx_src/levelc_call_expression_malformed.rexx
         "RXC-LC-35\\.1" "levelc_call_expression_malformed\\.rexx @ 2:15")
@@ -6198,6 +6201,57 @@ add_test(NAME levelc_arg_frame_linked
 set_tests_properties(levelc_arg_frame_linked PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_whole.expected"
+        "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_lifecycle.expected"
+        "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_unicode.expected")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_whole.expected"
+        LEVELC_PROCEDURE_WHOLE_EXPECTED)
+add_levelc_runtime_slice_test(levelc_procedure_whole
+        rexx_src/levelc_procedure_whole.rexx
+        "${LEVELC_PROCEDURE_WHOLE_EXPECTED}")
+add_levelc_runtime_slice_test(levelc_procedure_whole_noopt
+        rexx_src/levelc_procedure_whole.rexx
+        "${LEVELC_PROCEDURE_WHOLE_EXPECTED}" -n)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_lifecycle.expected"
+        LEVELC_PROCEDURE_LIFECYCLE_EXPECTED)
+add_levelc_runtime_slice_test(levelc_procedure_lifecycle
+        rexx_src/levelc_procedure_lifecycle.rexx
+        "${LEVELC_PROCEDURE_LIFECYCLE_EXPECTED}")
+add_levelc_runtime_slice_test(levelc_procedure_lifecycle_noopt
+        rexx_src/levelc_procedure_lifecycle.rexx
+        "${LEVELC_PROCEDURE_LIFECYCLE_EXPECTED}" -n)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_unicode.expected"
+        LEVELC_PROCEDURE_UNICODE_EXPECTED)
+add_levelc_runtime_slice_test(levelc_procedure_unicode
+        rexx_src/levelc_procedure_unicode.rexx
+        "${LEVELC_PROCEDURE_UNICODE_EXPECTED}")
+add_levelc_runtime_slice_test(levelc_procedure_unicode_noopt
+        rexx_src/levelc_procedure_unicode.rexx
+        "${LEVELC_PROCEDURE_UNICODE_EXPECTED}" -n)
+add_test(NAME levelc_procedure_whole_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_whole.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DNAME=levelc_procedure_whole_linked
+        -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_whole.expected
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_procedure_whole_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+add_test(NAME levelc_procedure_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_whole.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_procedure_source_tree.cmake)
+set_tests_properties(levelc_procedure_source_tree PROPERTIES LABELS "compiler;levelc")
 add_test(NAME levelc_function_result_linked
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>
@@ -6934,7 +6988,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         "OP_REFERENCE"
         "OP_DEREFERENCE"
         "RexxVariablePool"
-        "exposeValue"
+        "exposeSymbol"
         "setSymbolValue"
         "symbolValue"
         "add"
@@ -6981,7 +7035,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice5_stem_expose_tree_shape
         "RexxVariablePool"
         "setSymbolValue"
         "symbolValue"
-        "exposeStem"
+        "exposeSymbol"
         "ITEMS.I")
 
 add_levelc_lowered_tree_shape_test(levelc_nop_instruction_tree_shape

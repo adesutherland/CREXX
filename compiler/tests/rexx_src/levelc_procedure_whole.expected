@@ -1,0 +1,13 @@
+share=shared
+private=shared
+mixed-before=b|lower|1|2|GHOST
+mixed-dropped=A.b
+mixed-switch=A.B
+mixed-nested=deep
+mixed-after=b|deep|upper|X|Y|G
+reverse-after=deep|upper
+stem-after=deep|stem-change
+compound-stem-set=local-default|local-default
+compound-stem-drop=A.b|A.B
+compound-stem-after=restored|stem-change
+empty-indirect=changed

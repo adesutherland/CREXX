@@ -6,8 +6,8 @@ contract (`R1-AC-01/02`) and the roadmap owns portfolio order. This worklist
 records coverage, incremental evidence and Adrian-approved scope revisions;
 it does not change the 2026-11-30 target.
 
-**Current status, 2026-10-05.** `LC-I-01`–`LC-I-11` (SAY, DROP, assignment,
-NOP, OPTIONS, IF, SELECT, DO, LEAVE, ITERATE and ARG) have closed
+**Current status, 2026-10-05.** `LC-I-01`–`LC-I-12` (SAY, DROP, assignment,
+NOP, OPTIONS, IF, SELECT, DO, LEAVE, ITERATE, ARG and PROCEDURE) have closed
 whole-instruction reviews. ARG uses the shared PARSE template executor and
 one activation argument frame; the complete admitted Classic invocation and
 template matrix has passing evidence in the closure receipt below. Cross-dialect
@@ -18,14 +18,15 @@ approved `LC-STEP-63T`
 one-frame label and SIGNAL design has a
 canonical AST/emitter foundation and one-body invocation route, including
 first-instruction PROCEDURE eligibility, main fallthrough and a second
-PROCEDURE. Complete PROCEDURE source placement, CALL/RETURN/EXIT behavior and
-SIGNAL remain open.
+PROCEDURE. The whole PROCEDURE review now includes direct and indirect EXPOSE,
+exact compound aliases and private-pool lifecycle. CALL/RETURN/EXIT behavior
+and SIGNAL remain open.
 PARSE has a substantial shared template engine but no whole-instruction
-closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
+closure. `LC-I-13`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 594/594 with process memory monitoring after
-the SIGNAL source-form checkpoint below.
+Debug Level C checkpoint passed 602/602 with process memory monitoring after
+the whole PROCEDURE checkpoint below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 **2026-10-05 scope and VM decision.** Adrian clarified that an interface
@@ -1629,7 +1630,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-09 LEAVE — closed 2026-10-04 | LC-STEP-71A–71C | `LC-AC-69`: unnamed/named targets, nesting, state and errors with the approved default/STRICTC timing distinction; DO. |
 | LC-I-10 ITERATE — closed 2026-10-04 | LC-STEP-72A–72C | `LC-AC-70`: unnamed/named targets, end-step timing, nesting and errors across all legal loops through the shared DO/LEAVE path. |
 | LC-I-11 ARG — closed 2026-10-05 | LC-STEP-73A–73I | `LC-AC-71`: complete `PARSE UPPER ARG` semantics on admitted Classic activations, arbitrary comma templates, omitted/empty positions, Unicode and diagnostics through one shared PARSE executor and argument frame. Future CALL/INTERPRET and host modes have separate owners. |
-| LC-I-12 PROCEDURE | LC-STEP-74 | Pool creation and all direct/indirect EXPOSE forms with alias lifecycle; shared variable pool and routines. |
+| LC-I-12 PROCEDURE — closed 2026-10-05 | LC-STEP-74A–74D | `LC-74-01–05`: first-instruction and diagnostics, private pool, direct/indirect scalar/stem/exact compound EXPOSE, source order, nested/recursive alias lifetime, Unicode and isolation. CALL/RETURN/EXIT and shared full Level C lifecycle remain open under their own rows. |
 | LC-I-13 CALL | LC-STEP-75 | Internal/BIF/external resolution, arguments, results and ON/OFF traps; BIF registry, routines and conditions. |
 | LC-I-14 RETURN | LC-STEP-76 | Value/void, function/subroutine/outermost rules and pool/result lifecycle; CALL and PROCEDURE. |
 | LC-I-15 EXIT | LC-STEP-77 | Optional value, fallthrough equivalence, completion and finalization; programme lifecycle. |
@@ -3024,8 +3025,10 @@ external invocation remain open under their own rows.
    private and direct scalar/stem/compound EXPOSE aliases the caller's exact
    binding. Resolve compound tails at their source-list position, preserving
    Unicode and case in substituted tails; later changes to a tail variable
-   do not retarget the alias. Verify read, write, DROP, stem default/tail,
-   duplicate and source-order interactions against reference cases.
+   do not retarget the alias. A stem-wide assignment or DROP must also update
+   each individually exposed tail in the caller, while other tails stay
+   private. Verify read, write, DROP, stem default/tail, duplicate and
+   source-order interactions against reference cases.
 3. **LC-74-03 — indirect EXPOSE:** a `(symbol)` list exposes that symbol
    first, captures its current text, then validates and applies subsidiary
    words in order through the current private pool. Check empty, Unicode
@@ -3046,24 +3049,24 @@ external invocation remain open under their own rows.
    structural evidence, test logs, remaining adjacent instruction owners and
    a coherent commit before closing LC-I-12.
 
-1. **LC-STEP-74A (LC-74-01–04; active):** inventory the full grammar and
+1. **LC-STEP-74A (LC-74-01–04; complete 2026-10-05):** inventory the full grammar and
    current guard, source/canonical tree, shared pool alias operations and
    retained first-instruction evidence. Probe direct/indirect ordering,
    compound-tail identity and invalid forms in Regina before product edits.
-2. **LC-STEP-74B (LC-74-02/03; depends on 74A):** select one pool-owned
+2. **LC-STEP-74B (LC-74-02/03; complete 2026-10-05; depends on 74A):** select one pool-owned
    exposure path for direct and indirect names. The existing compiler guard
    accepts only direct scalar/stem targets; the existing pool alias methods
    normalize whole names and need review for case-preserved compound tails.
    If exact compound aliases require a new runtime representation or other
    architectural shift, record the design and obtain Adrian's approval
    before implementation. Preserve the completed DROP/assignment contracts.
-3. **LC-STEP-74C (LC-74-01–04; depends on 74B and any decision gate):**
+3. **LC-STEP-74C (LC-74-01–04; complete 2026-10-05; depends on 74B and its decision gate):**
    implement the complete source-ordered EXPOSE path, remove obsolete
    scalar/stem-only guards, and repair shared pool operations needed for
    exact aliases. Keep the first-processed-instruction runtime check in the
    existing activation frame. Add permanent positive and negative reference
    regressions, raw/canonical tree checks and linked proof.
-4. **LC-STEP-74D (LC-74-01–05; depends on 74C):** audit the whole instruction
+4. **LC-STEP-74D (LC-74-01–05; complete 2026-10-05; depends on 74C):** audit the whole instruction
    against the reference and AST matrix, run the relevant normal correctness
    suite once with guarded memory/process monitoring, update architecture and
    reference docs, commit one coherent PROCEDURE increment and close the row
@@ -3079,7 +3082,7 @@ private generation is selected, and a compound tail's resolved name remains
 the alias target if its substitution variable later changes. Guarded Regina
 probes in `cmake-build-debug/levelc-procedure-regina-reference.log` and
 `levelc-procedure-alias-reference.log` confirm indirect list words `one` and
-`two` alias the caller while invalid `#bad` is ignored; unexposed `ghost`
+`two` alias the caller while invalid `/` is ignored; unexposed `ghost`
 stays private. An exposed `A.b` survives DROP/reassignment without modifying
 distinct `A.B`; reversing `key A.key` to `A.key key` changes the alias target.
 Each guarded probe exited with zero residual processes. A guarded current
@@ -3111,6 +3114,63 @@ is unchanged. This is a
 shared pool representation change, so no product edit will implement it
 before Adrian's decision. The VM ISA and approved frame architecture need no
 change.
+**LC-STEP-74B decision, 2026-10-05:** after reviewing this concrete design,
+Adrian instructed the programme to continue. This approves the pool-owned
+case-preserving exact compound-alias map and one direct/indirect EXPOSE service
+described above. It does not approve a new VM operation or a change to the
+Classic/non-Classic invocation boundary. LC-STEP-74C may implement this
+representation; all LC-74 acceptance criteria remain open until qualified.
+Reusing an ordinary scalar alias would uppercase and merge `A.b` with
+`A.B`; exposing the whole stem would wrongly share every tail. The exact
+compound map is the smallest reviewed representation that preserves both
+existing scalar/stem aliases and the reference's per-tail behavior.
+Further guarded Regina probes in
+`cmake-build-debug/levelc-procedure-compound-stem-setall-reference.log` and
+`levelc-procedure-compound-stem-dropall-reference.log` show that assigning
+or dropping `A.` in the private procedure also assigns or drops the
+individually exposed caller tail `A.b`, while unexposed caller tail `A.B`
+remains unchanged. The same pool-owned alias map must participate in those
+stem-wide operations; alias lookup only on individual reads and writes would
+be incomplete. Both probes exited with zero residual processes.
+
+**LC-STEP-74D whole-PROCEDURE closure receipt, 2026-10-05.** The approved
+pool-owned exact compound-alias map preserves `A.b` separately from `A.B`,
+stores a fixed resolved caller name, and follows nested alias chains. One
+`exposeSymbol` method handles scalar, stem and compound direct entries;
+`exposeIndirect` exposes its own reference before reading and walking its
+captured list. Indirect EXPOSE and DROP use the same Unicode/configured-blank
+variable-list cursor and invalid-word classifier. Whole-stem assignment and
+DROP propagate to individually exposed caller tails. The compiler removed its
+compound/direct-only guard and emits source-anchored calls in list order from
+the existing raw `VAR_TARGET`/`VAR_REFERENCE` tree. No new VM operation or
+frame architecture change was needed. Inspection of the recursive
+`variable_list` grammar and unbounded ARGS walk found no fixed exposure count.
+
+The Regina-matched permanent matrix covers bare private and shared pools,
+direct and indirect lists (including empty, duplicate and invalid entries),
+source-order substitution, distinct case-preserved compound tails, stem
+defaults/reset/DROP, nested aliases, recursion, a same-frame SIGNAL transfer,
+ARG after the pool transition and a Unicode substituted tail. Guarded Regina
+receipts are `cmake-build-debug/levelc-procedure-whole-regina-final.log`,
+`levelc-procedure-lifecycle-regina.log` and
+`levelc-procedure-unicode-regina.log`; the earlier stem-wide and invalid-form
+reference logs above remain applicable. The permanent source/canonical tree
+test verifies direct and indirect shapes and no surviving Level C PROCEDURE
+node. Source-invalid forms report authored 20.1/25.17; existing main, late,
+second and nested execution tests retain 17.1 at their causing clauses.
+
+The guarded core product build passed in
+`cmake-build-debug/levelc-procedure-core-build.log`. The normal Debug Level C
+suite passed **602/602** in `cmake-build-debug/levelc-procedure-debug-final.log`
+after two legacy tree assertions were updated from the retired
+`exposeValue`/`exposeStem` compiler calls to `exposeSymbol`. The earlier
+600/602 run failed only those stale structural assertions; each passed alone
+after correction. The final suite peaked at **4962.9 MiB** aggregate RSS
+and left zero child processes. Affected Level B/G and RexxScript isolation
+passed **10/10** in `cmake-build-debug/levelc-procedure-isolation.log`.
+`LC-74-01–05` and `LC-I-12` are closed. CALL, RETURN, EXIT, PARSE, SIGNAL,
+full Level C and Release 1 criteria remain open. The next strict queue row
+is LC-I-13 CALL.
 
 **LC-STEP-73H historical profile bridge — superseded 2026-10-04.** The
 following proposal and `LC-73H-*` checks are retained as design history and
@@ -4522,15 +4582,15 @@ itself make its Classic shape executable.
 | Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: one generated body with frame-label entry dispatch and a main wrapper; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
-| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY, DROP, assignment and NOP instructions closed under LC-AC-57/62/63/64; bare main EXIT and procedure RETURN remain bounded slices | Wider lifecycle forms, indirect `PROCEDURE EXPOSE`, exit/return behavior and configuration proof remain open |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY, DROP, assignment and NOP instructions closed under LC-AC-57/62/63/64; bare main EXIT and procedure RETURN remain bounded slices | Wider exit/return lifecycle and configuration proof remain open under their own rows |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Whole IF and DO instructions closed; canonical branch/group builders cover accepted nested contexts | Shared condition/TRACE lifecycle and per-arm instruction owners remain open |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Whole SELECT instruction closed under LC-AC-68, including ordered/lazy arms and `34.2`/`7.3` errors | Shared condition/TRACE lifecycle remains open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Whole DO, LEAVE and ITERATE instructions closed under LC-AC-65/69/70 with one checked header, shared loop state, compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host proof remains open in their own rows |
-| `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | One generated callable body with frame labels, main/local ARG activation, omissions, templates and ARG BIF; direct CALL expression actuals; shared/private pool transitions, authored-line 17.1 and bounded RETURN | Missing function results, remaining ARG invocation audit, full CALL/PROCEDURE/RETURN and condition lifecycle open |
+| `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | One generated callable body with frame labels; whole ARG and PROCEDURE instructions closed, including source-ordered direct/indirect EXPOSE and exact compound aliases; direct CALL expression actuals and bounded RETURN | Remaining CALL/RETURN forms, missing results, condition and full shared lifecycle open |
 | `PARSE`, `PULL`, template/pattern/position nodes | Shared VM `parseplan` executes ARG and VAR/VALUE arbitrary target lists, comma templates, compound targets, static/dynamic patterns and positions, with ordered pool writes | Other PARSE sources and complete instruction/error/reference proof open |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
-| `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | Open: parser/front end only | Context changes, dynamic code, signal transfer, trace and error identity |
+| `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | SIGNAL has bounded frame-local direct/VALUE and ON/OFF paths; the other listed instruction families remain front-end or bounded foundations | Complete condition producer/handler, numeric context, dynamic code, trace and error identities remain open under their rows |
 
 The production post-lowering boundary verifier walks every accepted node,
 rejects a missing root, sibling cycle, mismatched parent pointer, or surviving
@@ -4562,16 +4622,16 @@ language boundaries; they do not excuse unfinished instruction or host work.
 | --- | --- | --- | --- |
 | Source | comments, clauses, literals, symbols, contextual keywords, labels, continuations, source characters | Front end: `levelc_syntax_highlighting.md` | Reference edge cases, configured character/length limits, diagnostics |
 | Expressions | precedence, arithmetic, comparisons, concatenation, prefix, eager logical `&`/`|` | Slice: `levelc_slice6_expressions`, `levelc_slice19_logical_eager`, empty quoted strings in `levelc_slice37_empty_string`, and adjacent function calls in `levelc_slice38_adjacent_call` | Full numeric context, remaining operator order, boundary/error and platform equivalence |
-| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Complete assignment and direct/indirect DROP have whole-instruction proof; scalar/stem EXPOSE and unset scalar reads have bounded proof | Indirect EXPOSE, configured profile, external/API operations and aliasing |
+| Variables | scalar read/write, drop, compound names, bare stems, exposure, API pool | Whole assignment, DROP and PROCEDURE reviews cover source-ordered direct/indirect scalar/stem/exact compound exposure and private-pool alias lifecycle | External/API pool behavior and full shared-runtime contract remain open |
 | Control | IF/THEN/ELSE | Whole IF instruction closed under LC-AC-67/LC-STEP-68C: comprehensive arm, nesting, error, opt/no-opt and linked evidence | Globally unsupported instructions in arms and shared trap/condition lifecycle retain their own open rows |
 | Control | simple, counted and controlled DO/END, FOREVER, WHILE/UNTIL | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls, arbitrary numeric counts, error paths and linked execution | Shared NUMERIC, condition, TRACE and host lifecycle remain open in their own rows |
 | Control | LEAVE/ITERATE | Both whole instructions closed under LC-AC-69/70, including named/unnamed transfers and default/STRICTC timing | Shared SIGNAL/TRACE and invocation lifecycle remain open |
 | Control | SELECT/WHEN/OTHERWISE | Whole SELECT instruction closed under LC-AC-68/LC-STEP-69C | Shared condition, TRACE and host lifecycle remain open |
 | Control | NOP | Whole instruction closed under LC-AC-64: childless opt/no-opt, nested SELECT/IF/DO/local, source anchors, invalid `21.1`, normal and linked proof | Shared labeled-clause, TRACE and host text lifecycle remains open under LC-AC-04/08 and later rows |
-| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | One generated body dispatches main/local labels with fresh CALL frames; ARG activation/presence, host entry, ARG BIF, templates, direct CALL expression actuals, shared/private pools, EXPOSE, bounded RETURN and source-anchored runtime 17.1 have opt/no-opt proof | ARG invocation audit, external calls, full pool/return/exit lifecycle and whole-instruction reviews |
+| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | One generated body dispatches main/local labels with fresh frames; ARG and PROCEDURE whole-instruction reviews are closed, including exact compound EXPOSE, private-pool lifetime and source-anchored 17.1 | External CALL, full RETURN/EXIT and shared invocation lifecycle retain their own open reviews |
 | PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Shared `parseplan` executes VAR/VALUE and ARG templates with arbitrary targets, comma positions, static/dynamic patterns and positions, compound targets and Classic 26.4 dynamic-position errors | Whole PARSE review, remaining source acquisition, configuration and errors |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
-| Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | Front end: selected parser forms | Trap lifecycle, delivery, messages and error identity |
+| Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | SYNTAX/NOVALUE producers and bounded SIGNAL handler delivery run on the one-frame model; other producers have separate owners | Full SIGNAL/CALL traps, producer delivery, messages and lifecycle remain open |
 | Numeric | DIGITS, FORM, FUZZ, decimal arithmetic, rounding, logical conversion | Runtime: `RexxValue` foundation | Full context, limits, signal and optimized parity |
 | Source/trace | TRACE, SOURCELINE, clause hooks, source preservation | Front end/runtime pieces | Visible source, tracing and clause lifecycle |
 | Host | commands, external routines, queues, streams, time/random, traps, API variable pools, initialization/termination | Runtime foundation only | Configuration adapters and supported-platform contract |
@@ -4585,17 +4645,17 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | Contract | Feature | Current evidence level | Remaining proof |
 | --- | --- | --- | --- |
 | `SYN-CLASSIC-OPTIONS` | Classic `OPTIONS` clauses and Level C selection | Whole instruction closed under LC-AC-66/LC-STEP-67D | Shared condition, TRACE and host proof remains open in its own criteria |
-| `SYN-CLASSIC-CLAUSES` | Semicolon/EOL clause model | Parser and eleven closed instruction execution paths | Full clause/TRACE and condition lifecycle open |
+| `SYN-CLASSIC-CLAUSES` | Semicolon/EOL clause model | Parser and twelve closed instruction execution paths | Full clause/TRACE and condition lifecycle open |
 | `SYN-CLASSIC-CONTEXTUAL-KEYWORDS` | Instruction words usable as symbols outside instruction context | Parser plus selected executable variable/expression contexts | Complete contextual reference matrix open |
-| `SYN-CLASSIC-LABELS` | Labels and local routine names | One-body frame-label entry, source-order fallthrough, nested shared-pool and recursive CALL pass opt/no-opt | SIGNAL targets, runtime PROCEDURE 17.1 and full reference matrix require LC-STEP-63T |
+| `SYN-CLASSIC-LABELS` | Labels and local routine names | One-body frame-label entry, source-order fallthrough, nested shared-pool and recursive CALL pass opt/no-opt; PROCEDURE 17.1 is source-anchored | Complete SIGNAL/CALL label and condition reference matrices remain open |
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Shared pool reads and closed assignment/DROP paths exercise scalar, stem and compound symbols | Constant-symbol and full condition/reference proof open |
-| `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Whole assignment/DROP paths and bounded stem EXPOSE/access | Remaining procedure, condition and host/API alias proof open |
+| `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Whole assignment, DROP and PROCEDURE paths cover stem and exact compound aliases | Shared condition and host/API alias proof remains open |
 | `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Hex/binary source literals use the fixed Latin-1 ordinal bridge in expressions, calls and PARSE patterns under LC-STEP-88C; opt/no-opt, tree and linked evidence; SAY host text output passes under LC-STEP-88D-1 | Remaining quoted forms, error/reference equivalence and other host text inputs remain open |
 | `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-88D-3; byte-literal scalar values, Unicode compound tails, NUL in substituted tails and RHS-order/local exposure pass | Shared host/external API remains open under LC-AC-04/06 |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL accepts expression actuals such as `CALL nested ARG(1),,ARG(2)` with omitted slots | One-frame label model, external resolution, result and ON/OFF trap lifecycle, errors and whole-instruction review open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL accepts expression actuals, omitted slots and fresh one-body frames | External resolution, results, ON/OFF trap lifecycle, errors and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
@@ -4606,20 +4666,20 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-NOP` | NOP instruction | Whole instruction closed under LC-AC-64/LC-STEP-66B | Shared label/TRACE and configuration proof remains open under LC-AC-04/08 |
 | `SYN-CLASSIC-NUMERIC` | NUMERIC DIGITS/FORM/FUZZ | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PARSE` | PARSE variants and templates | Shared `parseplan` supports arbitrary VAR/VALUE and ARG target sequences, comma templates, compound targets, static/dynamic patterns and positions, optional UPPER and selected Classic errors | Whole-instruction review and remaining PARSE source services open |
-| `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded scalar/stem EXPOSE plus first-instruction activation check and source-anchored main/late/second-entry 17.1 under 63T-3G | Remaining EXPOSE forms, syntax/error matrix and whole-instruction proof open |
+| `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Whole instruction closed under LC-74-01–05: private pool, direct/indirect scalar/stem/exact compound aliases, first-instruction 17.1, source/AST, opt/no-opt and linked proof | CALL/RETURN/EXIT and full host/condition lifecycle retain their own rows |
 | `SYN-CLASSIC-PULL` | PULL instruction/templates | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-QUEUE` | QUEUE instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-RETURN` | RETURN instruction | Bounded slice: value/void RETURN in local procedures | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-SAY` | SAY instruction | Whole-instruction closure under LC-AC-57/LC-STEP-88D-1; NUL, source hex ordinals, mapped high characters and non-Latin-1 text pass default, host, optimized/no-opt and linked output | Missing expression/BIF, TRACE and SIGNAL services remain shared work |
 | `SYN-CLASSIC-SELECT` | SELECT/WHEN/OTHERWISE | Whole instruction closed under LC-AC-68/LC-STEP-69C | Shared condition/TRACE lifecycle remains in its own rows |
-| `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Direct symbol/quoted and VALUE targets use frame branches with bounded opt/no-opt, SIGL, source and 16.1 evidence under 63T-4A–4C | ON/OFF condition policy, full reference matrix and whole-instruction qualification open |
+| `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Direct symbol/quoted and VALUE targets use frame branches; source-ordered ON/OFF, SYNTAX/NOVALUE delivery and condition state have bounded evidence under 63T-4A–4D | Remaining handler identities, full transfer/reference matrix and whole-instruction qualification open; absent producers stay with ADDRESS, host/I/O and NUMERIC |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-EXPRESSIONS` | Classic arithmetic, comparison, Boolean, and concatenation expressions | Bounded slice: documented operator family | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-BIF-CALL` | Recognised Classic BIF calls | Direct compiler table for 58 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and implicit TRANSLATE ordinals under LC-STEP-88E-1 | Remaining services, configured context and complete reference proof open |
 | `SYN-CLASSIC-LOCAL-CALL` | Direct local function/procedure calls | Direct local CALL accepts expression actuals and omitted positions in fresh one-body invocation frames; ARG activation proof is bounded | Remaining CALL forms, missing-result/error, return/pool lifecycle and configuration proof open |
 | `SYN-CLASSIC-DSLSH` | Source tree, diagnostics, and syntax-highlighting projection | Parser-mode milestone | Execution and full diagnostic conformance remain separate |
-| `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Structural verifier and accepted instruction lowering; ten whole-instruction reviews closed | Frame-local label/branch/handler nodes, remaining Classic forms and complete AST ownership/provenance proof open |
+| `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Structural verifier, frame-local label/branch/handler nodes and twelve closed whole-instruction reviews | Remaining Classic forms and complete AST ownership/provenance proof open |
 
 ### Individual BIF inventory
 

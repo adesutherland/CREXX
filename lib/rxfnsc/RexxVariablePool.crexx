@@ -42,14 +42,48 @@ rexxpool_constants: procedure expose RVP_BINDING_DROPPED RVP_BINDING_VALUE RVP_B
   constant RVP_BINDING_ALIAS_STEM = 4
   return
 
+/** Walk validated words in a captured Classic indirect variable list. */
+RexxVariableListCursor: class
+  source = .string
+  blanks = .string
+  config_ref = reference .RexxClassicConfig
+  position = .int
+
+  *: factory
+    arg list = .string, config = reference .RexxClassicConfig
+    source = list
+    config_ref = config
+    current = dereference config_ref
+    blanks = current.textOtherBlanks()
+    position = 0
+    return
+
+  nextName: method = .string
+    current = dereference config_ref
+    do while position < length(source)
+      word_start = rexxclassic_find_text_nonblank(source, position, blanks)
+      if word_start < 0 then do
+        position = length(source)
+        leave
+      end
+      word_end = rexxclassic_find_text_blank(source, word_start, blanks)
+      if word_end < 0 then word_end = length(source)
+      name = substr(source, word_start + 1, word_end - word_start)
+      position = word_end
+      if rexxclassic_datatype_symbol_kind(.RexxValue(name), current) = 1 then return name
+    end
+    return ""
+
 RexxPoolAlias: class
   parent_ref = reference .RexxVariablePool
   parent_name = .string
+  exact_compound = .boolean
 
   *: factory
-    arg parent = reference .RexxVariablePool, name = .string
+    arg parent = reference .RexxVariablePool, name = .string, compound = 0
     parent_ref = parent
     parent_name = name
+    exact_compound = compound
     return
 
   parent: method = .RexxVariablePool
@@ -61,15 +95,21 @@ RexxPoolAlias: class
 
   isDropped: method = .boolean
     pool = dereference parent_ref
+    if exact_compound then return \pool.resolvedHasValue(parent_name)
     return pool.isDropped(parent_name)
 
   value: method = .RexxValue
     pool = dereference parent_ref
+    if exact_compound then return pool.resolvedValue(parent_name)
     return pool.value(parent_name)
 
   setValue: method = .void
     arg item = .RexxValue
     pool = dereference parent_ref
+    if exact_compound then do
+      call pool.resolvedSetValue(parent_name, item)
+      return
+    end
     call pool.setValue(parent_name, item)
     return
 
@@ -91,6 +131,10 @@ RexxPoolAlias: class
 
   drop: method = .void
     pool = dereference parent_ref
+    if exact_compound then do
+      call pool.resolvedDrop(parent_name)
+      return
+    end
     call pool.drop(parent_name)
     return
 
@@ -100,6 +144,9 @@ RexxVariablePool: class
   values = .RexxValue[]
   stems = .RexxStem[]
   aliases = .RexxPoolAlias[]
+  compound_alias_slots = .StringHashMap
+  compound_aliases = .RexxPoolAlias[]
+  compound_alias_count = .int
   next_slot = .int
   address_state = .RexxAddressState
   trace_state = .RexxTraceState
@@ -108,6 +155,8 @@ RexxVariablePool: class
 
   *: factory
     slots = .StringHashMap()
+    compound_alias_slots = .StringHashMap()
+    compound_alias_count = 0
     next_slot = 0
     address_state = .RexxAddressState()
     trace_state = .RexxTraceState()
@@ -246,6 +295,30 @@ RexxVariablePool: class
     rc = slots.put(normalized, next_slot as .string)
     return next_slot
 
+  /** Look up one already expanded, case-preserved compound alias. */
+  hasCompoundAlias: method = .boolean
+    arg resolved = .string
+    return compound_alias_slots.containsKey(resolved)
+
+  compoundAlias: method = .RexxPoolAlias
+    arg resolved = .string
+    slot = compound_alias_slots.get(resolved) as .int
+    return compound_aliases[slot]
+
+  /** Apply a whole-stem assignment or DROP to its exposed tails. */
+  updateExposedStemTails: method = .void
+    arg stem_name = .string, item = .RexxValue, is_drop = .boolean
+    keys = compound_alias_slots.keyArray()
+    do i = 1 to compound_alias_count
+      resolved = keys[i]
+      if left(resolved, length(stem_name)) == stem_name then do
+        alias = compoundAlias(resolved)
+        if is_drop then call alias.drop()
+        else call alias.setValue(item)
+      end
+    end
+    return
+
   hasBinding: method = .boolean
     arg name = .string
     normalized = normalizeName(name)
@@ -312,8 +385,13 @@ RexxVariablePool: class
    */
   symbolValue: method = .RexxValue
     arg name = .string
+    return resolvedValue(resolveSymbolName(name))
+
+  /** Read a name whose compound tail has already been substituted. */
+  resolvedValue: method = .RexxValue
+    arg resolved = .string
     item_stem = .RexxStem
-    resolved = resolveSymbolName(name)
+    alias = .RexxPoolAlias
     resolved_length = length(resolved)
     stem_end = pos(".", resolved)
 
@@ -337,6 +415,11 @@ RexxVariablePool: class
       return .RexxValue(resolved)
     end
 
+    if hasCompoundAlias(resolved) then do
+      alias = compoundAlias(resolved)
+      return alias.value()
+    end
+
     if hasBinding(resolved) then do
       slot = .int
       slot = slotFor(resolved)
@@ -354,7 +437,6 @@ RexxVariablePool: class
       item_stem = stems[slot]
     end
     else if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
-      alias = .rexxpoolalias
       alias = aliases[slot]
       item_stem = alias.stem()
     end
@@ -368,8 +450,13 @@ RexxVariablePool: class
   /** Assign one Classic scalar, stem default, or expanded compound name. */
   setSymbolValue: method = .void
     arg name = .string, item = .RexxValue
+    call resolvedSetValue(resolveSymbolName(name), item)
+    return
+
+  /** Assign a name whose compound tail has already been substituted. */
+  resolvedSetValue: method = .void
+    arg resolved = .string, item = .RexxValue
     item_stem = .RexxStem
-    resolved = resolveSymbolName(name)
     resolved_length = length(resolved)
     stem_end = pos(".", resolved)
     if stem_end = 0 | stem_end = 1 then do
@@ -380,6 +467,7 @@ RexxVariablePool: class
       item_stem = stem(resolved)
       call item_stem.setDefault(item)
       call setStem(resolved, item_stem)
+      call updateExposedStemTails(resolved, item, 0)
       return
     end
     stem_name = substr(resolved, 1, stem_end)
@@ -395,12 +483,21 @@ RexxVariablePool: class
    */
   symbolHasValue: method = .boolean
     arg name = .string
+    return resolvedHasValue(resolveSymbolName(name))
+
+  /** Test a name whose compound tail has already been substituted. */
+  resolvedHasValue: method = .boolean
+    arg resolved = .string
     item_stem = .RexxStem
-    resolved = resolveSymbolName(name)
+    alias = .RexxPoolAlias
     resolved_length = length(resolved)
     stem_end = pos(".", resolved)
 
     if stem_end = 0 | stem_end = 1 | stem_end = resolved_length then return hasBinding(resolved)
+    if hasCompoundAlias(resolved) then do
+      alias = compoundAlias(resolved)
+      return \alias.isDropped()
+    end
     if hasBinding(resolved) then return 1
 
     stem_name = substr(resolved, 1, stem_end)
@@ -509,6 +606,11 @@ RexxVariablePool: class
   stemSymbolValue: method = .RexxValue
     arg name = .string, tail = .string
     normalized = normalizeStemName(name)
+    alias = .RexxPoolAlias
+    if hasCompoundAlias(normalized || tail) then do
+      alias = compoundAlias(normalized || tail)
+      return alias.value()
+    end
     item_stem = .RexxStem
     if \hasBinding(normalized) then return .RexxValue(normalized || tail)
     slot = slotFor(normalized)
@@ -526,6 +628,12 @@ RexxVariablePool: class
   setStemValue: method = .void
     arg name = .string, tail = .string, item = .RexxValue
     normalized = normalizeStemName(name)
+    alias = .RexxPoolAlias
+    if hasCompoundAlias(normalized || tail) then do
+      alias = compoundAlias(normalized || tail)
+      call alias.setValue(item)
+      return
+    end
     slot = .int
     item_stem = .RexxStem()
     if slots.containsKey(normalized) then do
@@ -586,6 +694,44 @@ RexxVariablePool: class
     aliases[slot] = .RexxPoolAlias(parent, parent_name)
     return
 
+  /** Expose one validated Classic symbol at its source-list position. */
+  exposeSymbol: method = .void
+    arg name = .string, parent = reference .RexxVariablePool
+    resolved = resolveSymbolName(name)
+    stem_end = pos(".", resolved)
+    slot = .int
+    if stem_end = 0 | stem_end = 1 then do
+      call exposeValue(resolved, parent, resolved)
+      return
+    end
+    if stem_end = length(resolved) then do
+      call exposeStem(resolved, parent, resolved)
+      return
+    end
+    if compound_alias_slots.containsKey(resolved) then do
+      slot = compound_alias_slots.get(resolved) as .int
+    end
+    else do
+      compound_alias_count = compound_alias_count + 1
+      slot = compound_alias_count
+      rc = compound_alias_slots.put(resolved, slot as .string)
+    end
+    compound_aliases[slot] = .RexxPoolAlias(parent, resolved, 1)
+    return
+
+  /** Expose an indirect list reference, then its validated words in order. */
+  exposeIndirect: method = .void
+    arg name = .string, parent = reference .RexxVariablePool, config_ref = reference .RexxClassicConfig
+    call exposeSymbol(name, parent)
+    list = symbolValue(name).asString()
+    cursor = .RexxVariableListCursor(list, config_ref)
+    do forever
+      word = cursor.nextName()
+      if word = "" then leave
+      call exposeSymbol(word, parent)
+    end
+    return
+
   drop: method = .void
     arg name = .string
     normalized = normalizeName(name)
@@ -608,12 +754,18 @@ RexxVariablePool: class
     arg name = .string
     normalized = normalizeStemName(name)
     call drop(normalized)
+    call updateExposedStemTails(normalized, .RexxValue(""), 1)
     return
 
   /** Drop one case-preserved compound tail through a local or exposed stem. */
   dropStemTail: method = .void
     arg name = .string, tail = .string
     normalized = normalizeStemName(name)
+    if hasCompoundAlias(normalized || tail) then do
+      alias = compoundAlias(normalized || tail)
+      call alias.drop()
+      return
+    end
     item_stem = .RexxStem
     alias = .RexxPoolAlias
     if \hasBinding(normalized) then return
@@ -641,7 +793,12 @@ RexxVariablePool: class
    */
   dropSymbol: method = .void
     arg name = .string
-    resolved = resolveSymbolName(name)
+    call resolvedDrop(resolveSymbolName(name))
+    return
+
+  /** Drop a name whose compound tail has already been substituted. */
+  resolvedDrop: method = .void
+    arg resolved = .string
     stem_end = pos(".", resolved)
     if stem_end = 0 | stem_end = 1 then do
       call drop(resolved)
@@ -667,18 +824,10 @@ RexxVariablePool: class
    */
   dropIndirectList: method = .void
     arg list = .string, config_ref = reference .RexxClassicConfig
-    config = dereference config_ref
-    blanks = config.textOtherBlanks()
-    list_length = length(list)
-    position = 0
-    do while position < list_length
-      word_start = rexxclassic_find_text_nonblank(list, position, blanks)
-      if word_start < 0 then leave
-      word_end = rexxclassic_find_text_blank(list, word_start, blanks)
-      if word_end < 0 then word_end = list_length
-      name = substr(list, word_start + 1, word_end - word_start)
-      position = word_end
-      if rexxclassic_datatype_symbol_kind(.RexxValue(name), config) <> 1 then iterate
+    cursor = .RexxVariableListCursor(list, config_ref)
+    do forever
+      name = cursor.nextName()
+      if name = "" then leave
       call dropSymbol(name)
     end
     return

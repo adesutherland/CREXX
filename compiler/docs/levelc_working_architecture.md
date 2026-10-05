@@ -9,7 +9,7 @@ Classic REXX compatibility, using the current cREXX compiler front-end style:
 re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
 The first DSLSH syntax-highlighting milestone is complete. Compiled Level C
-also has eleven closed whole-instruction reviews, including ARG, and substantial
+also has twelve closed whole-instruction reviews, including ARG and PROCEDURE, and substantial
 PARSE and BIF foundations; the [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
 owns their exact status and evidence. The approved one-frame label/SIGNAL
 architecture is the shared ARG/PROCEDURE/CALL foundation. Its reference
@@ -68,6 +68,18 @@ authored program must survive lowering for diagnostics and tracing.
   default reset, dropped-tail reads, and alias mutation. Each Level C
   activation uses its visible pool; a RexxScript evaluator creates a
   distinct sandbox pool from the same class.
+- In a private Classic `PROCEDURE`, direct and indirect `EXPOSE` entries now
+  call one pool-owned `exposeSymbol` route in source order. An indirect entry
+  first exposes its reference, reads that reference through the new visible
+  pool, and walks validated words using the same cursor as indirect `DROP`.
+  Scalar and stem aliases retain the existing case-insensitive slot map.
+  Individually exposed compound names use a separate exact map keyed by the
+  already substituted, case-preserved full name. The alias points to the
+  caller's fixed resolved name, so nested procedures follow the actual caller
+  chain without substituting the tail again. Whole-stem assignment and DROP
+  update those individually exposed caller tails while leaving other caller
+  tails private. The map expires with its activation; no VM operation was added
+  for this PROCEDURE work.
 - The pool's `dropSymbol` operation resolves and drops one validated Classic
   symbol, including arbitrary compound tail components. It serves direct
   `DROP` items and the runtime subsidiary lists in parenthesized references.
@@ -288,7 +300,7 @@ observable gates and implementation order are in the worklist. The frame-local
 AST/emitter foundation and one-body lowerer are wired into Level C; the full
 SIGNAL handler/reference matrix and adjacent instruction reviews remain open.
 
-The current executable Level C surface includes eleven closed whole instructions
+The current executable Level C surface includes twelve closed whole instructions
 and bounded PARSE, routine and BIF slices; the complete Classic contract
 remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
@@ -1613,9 +1625,10 @@ Validation/lowering consequences:
 - Parenthesized references evaluate one variable at their place in the source
   list; the shared pool splits its captured value into words. Each valid word
   is resolved against the then-visible pool, uppercasing source spelling while
-  preserving substituted tail text case, and dropped in order. Invalid words
-  are ignored for Regina parity. Other variable-list consumers, including
-  `PROCEDURE EXPOSE`, retain their own open lowering work.
+  preserving substituted tail text case. `DROP` drops words in order;
+  `PROCEDURE EXPOSE` first exposes the reference itself, then aliases its
+  captured subsidiary words in order. Both use one Unicode/configured-blank
+  cursor and ignore invalid words for Regina parity.
 
 ## 7. Canonical Lowering Requirements
 

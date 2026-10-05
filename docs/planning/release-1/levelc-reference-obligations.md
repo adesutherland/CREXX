@@ -86,7 +86,7 @@ instruction closure and detailed receipts.
 | LC-REF-062 | INTERPRET source, HALT, syntax and label restrictions | text | Front end; execution and `47.1` open |
 | LC-REF-063 | NUMERIC DIGITS/FORM/FUZZ validation and defaults | text | Front end/runtime pieces; instruction integration open |
 | LC-REF-064 | OPTIONS word handling and unknown-option policy | source | Whole OPTIONS instruction closed under LC-AC-66; shared condition/host work remains elsewhere |
-| LC-REF-065 | PROCEDURE pool creation and EXPOSE aliases | text | Bounded scalar/stem EXPOSE; indirect list and one-frame activation lifecycle open |
+| LC-REF-065 | PROCEDURE pool creation and EXPOSE aliases | text | Whole PROCEDURE instruction closed under LC-74-01–05: private pool, source-ordered direct/indirect scalar/stem/exact compound aliases, nested lifetime and first-instruction 17.1; adjacent CALL/RETURN/EXIT and full lifecycle remain open under their own rows |
 | LC-REF-066 | PUSH/QUEUE ordering and null-expression value | host | Front end; queue service open |
 | LC-REF-067 | RETURN function/subroutine/outermost lifecycle | text | Bounded local RETURN; invocation modes open |
 | LC-REF-068 | SAY default output and optional empty expression | host | Whole SAY instruction closed under LC-AC-57: expression/childless ordering, one length-aware default/configured host callback, embedded NUL and Unicode text, optimized/no-opt and linked evidence pass. Missing BIF, TRACE, SIGNAL and external-host services remain in their own rows. |

@@ -10,7 +10,7 @@
  * The active tracer slices deliberately accept only proven shapes: direct
  * scalar and compound pool reads/writes, string and integer literals, proven
  * expression operators, SAY, NOP, direct scalar DROP, nested IF, SELECT and
- * bounded DO forms, and local PROCEDURE EXPOSE over direct scalar or stem names.
+ * bounded DO forms, and local PROCEDURE EXPOSE over ordered variable lists.
  * Everything else reports an unsupported-shape diagnostic until its lowering
  * and runtime contract are implemented.
  */
@@ -963,18 +963,14 @@ static int levelc_procedure_tail_supported(ASTNode *procedure_node,
         return 0;
     }
     while (arg) {
-        if (arg->node_type != VAR_TARGET) {
+        if (arg->node_type != VAR_TARGET && arg->node_type != VAR_REFERENCE) {
             if (reason_out) *reason_out = "unsupported PROCEDURE EXPOSE target";
             return 0;
         }
         name = levelc_upper_name(arg);
-        if (!name) {
-            if (reason_out) *reason_out = "failed to normalize PROCEDURE EXPOSE target";
-            return 0;
-        }
-        if (levelc_name_is_compound(name)) {
+        if (!name || levelc_variable_name_kind(name) == LEVELC_VAR_NAME_INVALID) {
             free(name);
-            if (reason_out) *reason_out = "compound PROCEDURE EXPOSE is outside slice";
+            if (reason_out) *reason_out = "failed to normalize PROCEDURE EXPOSE target";
             return 0;
         }
         free(name);
@@ -2844,37 +2840,34 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
 }
 
 static ASTNode *levelc_expose_value_statement(Context *context,
-                                              ASTNode *procedure_node,
                                               ASTNode *expose_target) {
     ASTNode *receiver;
     ASTNode *args[3];
     ASTNode *parent_symbol;
-    char *name;
     const char *method_name;
-
-    name = levelc_upper_name(expose_target);
-    if (!name) return NULL;
+    int arg_count;
 
     receiver = levelc_pool_ref(context, expose_target, VAR_SYMBOL);
-    if (levelc_name_is_stem(name)) {
-        method_name = "exposeStem";
-        args[0] = rxcp_remap_create_string_constant(context, expose_target, name);
-    } else {
-        method_name = "exposeValue";
-        args[0] = levelc_name_string(context, expose_target);
-    }
+    args[0] = levelc_name_string(context, expose_target);
     parent_symbol = levelc_parent_pool_ref(context, expose_target, VAR_SYMBOL);
     args[1] = rxcp_remap_create_reference_expr(context, expose_target, parent_symbol);
-    args[2] = rxcp_remap_create_string_constant(context, expose_target, name);
-    free(name);
-    if (!receiver || !args[0] || !parent_symbol || !args[1] || !args[2]) return NULL;
+    if (expose_target->node_type == VAR_REFERENCE) {
+        method_name = "exposeIndirect";
+        args[2] = levelc_config_ref(context, expose_target, VAR_SYMBOL);
+        arg_count = 3;
+    } else {
+        method_name = "exposeSymbol";
+        arg_count = 2;
+    }
+    if (!receiver || !args[0] || !parent_symbol || !args[1] ||
+        (arg_count == 3 && !args[2])) return NULL;
 
     return rxcp_remap_create_member_call_statement(context,
-                                                   procedure_node,
+                                                   expose_target,
                                                    receiver,
                                                    method_name,
                                                    args,
-                                                   3);
+                                                   arg_count);
 }
 
 static ASTNode *levelc_body_header(Context *context, ASTNode *anchor) {
@@ -2952,7 +2945,6 @@ static int levelc_append_procedure_exposes(Context *context,
     expose_target = args->child;
     while (expose_target) {
         statement = levelc_expose_value_statement(context,
-                                                  procedure_node,
                                                   expose_target);
         if (!statement) {
             if (reason_out) *reason_out = "failed to create PROCEDURE EXPOSE statement";

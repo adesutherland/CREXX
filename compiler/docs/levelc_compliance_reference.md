@@ -581,9 +581,15 @@ not imply that every remaining Classic difference is already implemented.
 `PROCEDURE`:
 
 - valid only as the first instruction after internal routine initialization;
-- creates a new pool;
-- `EXPOSE` aliases listed variables or parenthesized uppercase word-list
-  entries to the previous pool.
+- creates a private pool while retaining the immediate caller's pool;
+- resolves direct scalar, stem and compound `EXPOSE` names in list order. A
+  compound alias binds its case-preserved substituted tail at that point, so
+  later tail-variable changes do not retarget it. Stem-wide assignment and
+  DROP also reach each individually exposed caller tail;
+- for `(symbol)`, exposes that symbol first, reads its value through the new
+  pool, then exposes its valid blank-delimited subsidiary names in order.
+  Invalid words are ignored; the approved Unicode scalar and configured
+  Unicode blank rules apply.
 
 `PUSH` and `QUEUE` place optional expression values on opposite ends of the
 external data queue. Missing expression means the null string.
