@@ -5821,6 +5821,18 @@ add_levelc_runtime_slice_test(levelc_signal_crossed_control
 add_levelc_runtime_slice_test(levelc_signal_crossed_control_noopt
         rexx_src/levelc_signal_crossed_control.rexx
         "branch=1|1|1|7\ncaught=40|15|SYNTAX|OFF\nlater=1\nlater=2\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_unicode_labels
+        rexx_src/levelc_signal_unicode_labels.rexx
+        "direct=2\ncall\nback\nvalue=8\n")
+add_levelc_runtime_slice_test(levelc_signal_unicode_labels_noopt
+        rexx_src/levelc_signal_unicode_labels.rexx
+        "direct=2\ncall\nback\nvalue=8\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_duplicate_labels
+        rexx_src/levelc_signal_duplicate_labels.rexx
+        "first\nsecond\nfirst\nsecond\nmain\nfirst\nsecond\n")
+add_levelc_runtime_slice_test(levelc_signal_duplicate_labels_noopt
+        rexx_src/levelc_signal_duplicate_labels.rexx
+        "first\nsecond\nfirst\nsecond\nmain\nfirst\nsecond\n" -n)
 add_levelc_runtime_syntax_signal_test(levelc_signal_missing
         rexx_src/levelc_signal_missing.rexx "16.1" "before\n"
         "levelc_signal_missing.rexx:3:")
@@ -6185,6 +6197,36 @@ add_test(NAME levelc_signal_crossed_control_linked
         -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_crossed_control.expected
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
 set_tests_properties(levelc_signal_crossed_control_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+add_test(NAME levelc_signal_unicode_labels_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_unicode_labels.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DNAME=levelc_signal_unicode_labels_linked
+        -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_unicode_labels.expected
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_signal_unicode_labels_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+add_test(NAME levelc_signal_duplicate_labels_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_duplicate_labels.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DNAME=levelc_signal_duplicate_labels_linked
+        -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_duplicate_labels.expected
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_signal_duplicate_labels_linked PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 add_levelc_runtime_slice_test(levelc_slice4_procedure_missing_arg

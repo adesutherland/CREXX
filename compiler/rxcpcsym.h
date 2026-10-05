@@ -16,6 +16,7 @@
 #ifndef RXCPCSYM_H
 #define RXCPCSYM_H
 
+#include <stddef.h>
 #include "rxcp_types.h"
 
 enum {
@@ -60,6 +61,8 @@ enum {
 };
 
 char *rxcp_levelc_upper_symbol_from_token(Token *token, int strip_label_colon);
+/* Match the VM's simple Unicode uppercase mapping for Classic names. */
+char *rxcp_levelc_upper_text(const char *text, size_t length);
 int rxcp_levelc_is_ansi_bif_name(const char *name);
 
 #endif

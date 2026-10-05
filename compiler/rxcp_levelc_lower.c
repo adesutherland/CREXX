@@ -780,7 +780,7 @@ static unsigned char *levelc_latin1_utf8(const unsigned char *ordinals,
 
 static char *levelc_upper_name(ASTNode *node) {
     char *name;
-    size_t i;
+    char *upper;
 
     if (!node) return NULL;
     if (node->token) {
@@ -790,14 +790,14 @@ static char *levelc_upper_name(ASTNode *node) {
 
     name = levelc_node_text_copy(node);
     if (!name) return NULL;
-    for (i = 0; name[i]; i++) {
-        name[i] = (char)toupper((unsigned char)name[i]);
-    }
-    return name;
+    upper = rxcp_levelc_upper_text(name, strlen(name));
+    free(name);
+    return upper;
 }
 
 static char *levelc_upper_label_name(ASTNode *node) {
     char *name;
+    char *upper;
     size_t length;
 
     if (!node) return NULL;
@@ -810,10 +810,10 @@ static char *levelc_upper_label_name(ASTNode *node) {
     if (!name) return NULL;
     length = strlen(name);
     if (length > 0 && name[length - 1] == ':') name[length - 1] = '\0';
-    for (length = 0; name[length]; length++) {
-        name[length] = (char)toupper((unsigned char)name[length]);
-    }
-    return name;
+    length = strlen(name);
+    upper = rxcp_levelc_upper_text(name, length);
+    free(name);
+    return upper;
 }
 
 static LevelCVariableNameKind levelc_variable_name_kind(const char *name) {
@@ -1597,11 +1597,6 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
         name = levelc_upper_label_name(label);
         if (!name) {
             if (reason_out) *reason_out = "failed to normalize local routine label";
-            return 0;
-        }
-        if (levelc_find_procedure(plan, name)) {
-            free(name);
-            if (reason_out) *reason_out = "duplicate local routine label";
             return 0;
         }
         if (!levelc_lower_plan_add_procedure(plan,
@@ -3444,6 +3439,7 @@ static int levelc_parseplan_literal(ASTNode *pattern,
             raw[index + 1] == raw[0]) index++;
         bytes[count++] = (unsigned char)raw[index];
     }
+    bytes[count] = 0;
 #ifndef NUTF8
     if (utf8nvalid_count(bytes, count, chars_out)) {
         free(bytes);
@@ -3978,15 +3974,17 @@ static int levelc_lower_direct_signal(Context *context,
     ASTNode *branch;
     LevelCProcedureSlice *destination;
     char *name;
-    size_t i;
 
-    /* STRING holds decoded text; its token still includes source quotes. */
-    name = target->node_type == STRING ? levelc_node_text_copy(target)
-                                       : levelc_upper_name(target);
+    /* STRING node text uses RXAS escapes; decode the source token first. */
+    if (target->node_type == STRING) {
+        unsigned char *decoded = NULL;
+        size_t length = 0;
+        size_t chars = 0;
+        name = levelc_parseplan_literal(target, &decoded, &length, &chars)
+            ? rxcp_levelc_upper_text((const char *)decoded, length) : NULL;
+        free(decoded);
+    } else name = levelc_upper_name(target);
     if (!name) goto fail;
-    if (target->node_type == STRING)
-        for (i = 0; name[i]; i++)
-            name[i] = (char)toupper((unsigned char)name[i]);
 
     if (!levelc_append_signal_sigl(context, instructions, stmt)) {
         free(name);

@@ -20,6 +20,9 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef NUTF8
+#include "utf.h"
+#endif
 #include "rxcp_token.h"
 #include "rxcpcsym.h"
 
@@ -106,25 +109,50 @@ static int levelc_name_equals(const char *left, const char *right) {
     return *left == '\0' && *right == '\0';
 }
 
-char *rxcp_levelc_upper_symbol_from_token(Token *token, int strip_label_colon) {
+char *rxcp_levelc_upper_text(const char *text, size_t length) {
     char *name;
-    int length;
-    int i;
-
-    if (!token || !token->token_string || token->length <= 0) return 0;
-    length = token->length;
-    if (strip_label_colon && length > 0 && token->token_string[length - 1] == ':') {
-        length--;
-    }
-    if (length <= 0) return 0;
-
-    name = malloc((size_t)length + 1);
-    if (!name) return 0;
-    for (i = 0; i < length; i++) {
-        name[i] = (char)toupper((unsigned char)token->token_string[i]);
-    }
+    if (!text || memchr(text, '\0', length)) return NULL;
+    name = malloc(length + 1);
+    if (!name) return NULL;
+    memcpy(name, text, length);
     name[length] = '\0';
+#ifdef NUTF8
+    for (size_t i = 0; i < length; i++) {
+        name[i] = (char)toupper((unsigned char)name[i]);
+    }
+#else
+    size_t chars = 0;
+    char *current = name;
+    char *end = name + length;
+    if (utf8nvalid_count(name, length, &chars)) {
+        free(name);
+        return NULL;
+    }
+    while (current < end) {
+        utf8_int32_t codepoint;
+        utf8_int32_t mapped;
+        char *next = utf8codepoint(current, &codepoint);
+        mapped = utf8uprcodepoint(codepoint);
+        if (mapped != codepoint &&
+            utf8catcodepoint(current, mapped, (size_t)(next - current)) != next) {
+            free(name);
+            return NULL;
+        }
+        current = next;
+    }
+#endif
     return name;
+}
+
+char *rxcp_levelc_upper_symbol_from_token(Token *token, int strip_label_colon) {
+    size_t length;
+
+    if (!token || !token->token_string || token->length <= 0) return NULL;
+    length = (size_t)token->length;
+    if (strip_label_colon && length > 0 && token->token_string[length - 1] == ':')
+        length--;
+    if (length == 0) return NULL;
+    return rxcp_levelc_upper_text(token->token_string, length);
 }
 
 int rxcp_levelc_is_ansi_bif_name(const char *name) {

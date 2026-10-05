@@ -4091,6 +4091,39 @@ zero residual processes). Level G signal and RexxScript isolation checks
 passed 10/10 in `cmake-build-debug/levelc-signal-inserts-isolation.log`.
 The whole SIGNAL matrix and ARG remain open.
 
+**Unicode label normalization finding, 2026-10-05.** A guarded Level C probe
+of `SIGNAL VALUE 'é'` to `é:` compiled but raised runtime 16.1: the VM's
+Unicode `TRANSLATE` produced `É`, while the compiler's source-label
+normalizer applied bytewise `toupper` and kept `é`. Use the VM's existing
+simple codepoint uppercase map for compiler-side source labels and static
+targets, then verify direct/quoted/VALUE SIGNAL, local CALL and duplicate
+labels with Unicode names, optimized/no-opt and linked. Keep the Unicode-first
+scalar contract; this is a normalization repair within the approved frame
+design, not a new language-design choice.
+
+The same Unicode-label matrix exposed a separate whole-SIGNAL/CALL label
+rule: [IBM's clause reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=concepts-clauses-instructions)
+allows duplicate labels, sends explicit transfers to the first occurrence,
+and permits ordinary fallthrough through later occurrences. Regina agrees
+for ASCII duplicates. The current one-body plan incorrectly rejects a
+second name. Remove that rejection while retaining a frame label at every
+source position; the existing first-match lookup should choose the target.
+Qualify CALL and direct/VALUE SIGNAL first-target selection, ordinary
+fallthrough, Unicode case variants, optimized/no-opt and linked output.
+
+The label-normalization and first-duplicate frame repair passes 15/15
+focused direct/VALUE/CALL/crossed-control checks in
+`cmake-build-debug/levelc-signal-duplicate-focused.log`; the guarded build
+is `cmake-build-debug/levelc-signal-duplicate-build.log`. Both left zero
+residual processes. The final guarded build
+`cmake-build-debug/levelc-signal-label-final-build.log` and normal Debug
+Level C suite in `cmake-build-debug/levelc-signal-label-debug-qual.log`
+passed on the exact code/test/build inputs, 579/579 (peak 4895 MiB, zero
+residual processes). Level G signal and RexxScript isolation passed 10/10
+in `cmake-build-debug/levelc-signal-label-isolation.log`. Duplicate labels
+remain ordinary source-order frame blocks; explicit target lookup selects
+the first. The full SIGNAL producer/extra-data matrix remains open.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the

@@ -578,6 +578,16 @@ this path or another uppercase consumer needs it. This bounded route has
 optimized/no-opt and normal Debug evidence; complete SIGNAL condition policy
 and reference-matrix qualification remain open.
 
+Source labels, static symbol/quoted targets and local CALL now use the same
+simple Unicode codepoint uppercase map as the VM's `strupper` path. Quoted
+SIGNAL targets are decoded from their Rexx source token before normalization;
+the generic STRING AST stores RXAS-escaped spelling for emission. Every
+source label retains a frame-local block, including duplicates. Explicit
+SIGNAL, VALUE and CALL lookup takes the first matching block, while ordinary
+execution can fall through later labels. This follows IBM's duplicate-label
+rule and is verified for Unicode case variants in optimized/no-opt and linked
+execution. It does not complete the whole SIGNAL or CALL instruction.
+
 The `63T-4D1` handler transport allows `FRAME_HANDLER_ON` to bind one
 `VAR_TARGET`. Its emitter selects VM `sigbrv` for that form, which writes a
 runtime signal object to the bound register on delivery before branching.
