@@ -13,8 +13,8 @@ also has ten closed whole-instruction reviews and substantial ARG, PARSE and
 BIF foundations; the [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
 owns their exact status and evidence. The approved one-frame label/SIGNAL
 architecture is the next shared ARG/PROCEDURE/CALL dependency. Its reference
-review is complete, but the canonical AST/emitter and runtime route have not
-been implemented. Accepted shapes lower to the ordinary compiler and bytecode
+review is complete, and canonical frame-control nodes are in progress; the
+one-body lowerer and runtime route have not been implemented. Accepted shapes lower to the ordinary compiler and bytecode
 toolchain; unsupported shapes fail closed.
 
 ## Current architecture and product boundary
@@ -257,7 +257,7 @@ each Classic invocation one labeled VM frame, with condition state owned
 by the invocation and configuration and variable storage kept in their
 existing separate objects. Adrian approved this direction on 2026-10-05; the
 observable gates and implementation order are in the worklist. The frame-local
-AST/emitter route is not implemented, and no trap or general label
+AST/emitter foundation is not wired into Level C lowering, and no trap or general label
 compatibility is claimed yet.
 
 The current executable Level C surface includes ten closed whole instructions
@@ -456,6 +456,21 @@ crossed DO/selection state and reference lifetimes before entering its target.
 Exact node names and child layouts are fixed by the first implementation
 checkpoint after a full emitter/flow review, with AST-to-RXAS tests. Avoid a
 per-label trampoline or a second token/branch interpreter in `rxfnsc`.
+
+The first LC-STEP-63T-2 checkpoint defines four canonical, childless statement
+nodes: `FRAME_LABEL`, `FRAME_BRANCH`, `FRAME_HANDLER_ON`, and
+`FRAME_HANDLER_OFF`. A label sits directly in a compiled procedure's
+`INSTRUCTIONS` list. A branch or ON node associates with a label in that same
+procedure; ON/OFF carry the condition name. Their AST identity survives
+type/structural validation and tree display. Flow analysis resolves branch
+edges after building the source-order sequence, treats every frame label as a
+possible fresh-call entry, and conservatively includes asynchronous handler
+edges. Emission uses procedure-local `lNframe` labels, `br`, `sigbr`, and
+`sighalt`; Classic `SYNTAX` maps to VM `CLASSIC_SYNTAX`. Explicit branches
+reuse crossed-scope cleanup before transfer. These nodes are currently an
+emitter/flow foundation only: the Level C lowerer still uses its bounded
+per-label procedure model, and handler delivery cleanup, one-shot policy,
+dynamic VALUE dispatch and invocation state remain in LC-STEP-63T-3/4.
 
 The source AST also needs to preserve the authored `VALUE` form. Today
 `SIGNAL 'target'` and `SIGNAL VALUE 'target'` both have a `LEVELC_SIGNAL`

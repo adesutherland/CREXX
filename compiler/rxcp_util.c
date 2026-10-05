@@ -1321,6 +1321,10 @@ const char* node_type_to_string(NodeType type) {
         case INSTRUCTIONS: return "INSTRUCTIONS";
         case ITERATE: return "ITERATE";
         case LABEL: return "LABEL";
+        case FRAME_LABEL: return "FRAME_LABEL";
+        case FRAME_BRANCH: return "FRAME_BRANCH";
+        case FRAME_HANDLER_ON: return "FRAME_HANDLER_ON";
+        case FRAME_HANDLER_OFF: return "FRAME_HANDLER_OFF";
         case LEAVE: return "LEAVE";
         case FLOAT: return "FLOAT";
         case INTEGER: return "INTEGER";

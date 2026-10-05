@@ -13,7 +13,8 @@ arguments, templates, the ARG BIF, host entry and direct CALL expression
 actuals have passing bounded evidence, but the full invocation and label
 lifecycle audit has not closed. The approved `LC-STEP-63T` one-frame label and
 SIGNAL design is the next shared prerequisite; its reference review is done,
-and its canonical AST/emitter and runtime implementation have not started.
+and its canonical AST/emitter foundation is in progress; the one-body runtime
+route has not started.
 PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
@@ -3201,7 +3202,7 @@ Before any code edit, check the proposed route against these observable gates:
    SIGNAL forms and Classic label, fallthrough, CALL, PROCEDURE, RETURN and
    trap lifetimes; compare Regina, preserve direct versus VALUE in the source
    AST, and fix the exact canonical node contract before product edits.
-2. **LC-STEP-63T-2 (LC-63T-02/04; depends on 63T-1):** add frame-local label,
+2. **LC-STEP-63T-2 (LC-63T-02/04; in progress; depends on 63T-1):** add frame-local label,
    branch and handler nodes through AST validation, flow/optimizer and RXAS
    emission, with source anchors and structural tests. Reuse VM signal
    instructions and existing scoped cleanup machinery where their contracts
@@ -3249,6 +3250,31 @@ delivery. The VM supplies per-frame copy-on-write signal tables and `sigbrv`
 for branch delivery; current `SIGNAL_BLOCK` is lexical, so the approved
 canonical frame nodes and activation state remain necessary. `LC-STEP-63T-2`
 is next; no SIGNAL form is called executable or complete by this review.
+
+**2026-10-05 LC-STEP-63T-2 node checkpoint.** Four childless canonical nodes
+now describe a top-level frame label, an associated static branch, and
+associated ON/unassociated OFF handler operations. The structural validator
+requires branch and ON targets to be labels in the same procedure; the AST
+display exposes their association. The flow overlay resolves forward/backward
+branch edges after sequence construction, includes every label as a possible
+fresh-call entry, and conservatively models asynchronous handler edges.
+Inlining refuses to clone a callable carrying these frame nodes until its
+association/activation semantics can be proved. RXAS emission writes a local
+label, branch, `sigbr` or `sighalt`, maps Classic SYNTAX to
+`CLASSIC_SYNTAX`, and uses crossed-scope cleanup for an explicit branch.
+The `frame_control_ast` test checks structural validation, optimized/no-opt
+flow analysis, source metadata and emitted RXAS. No Level C instruction is
+lowered to these nodes yet. Handler delivery cleanup and one-shot policy,
+VALUE dispatch, one-body invocation state, the full reference matrix and all
+LC-63T-01–04 gates remain open for the following checkpoints.
+The exact-input Debug `rxc` and unit target built; focused frame and Level
+B/G signal checks passed 5/5, and the normal Debug Level C suite passed
+463/463, including the new unit. Evidence:
+`/tmp/crexx-63t2-qual-build.log`,
+`/tmp/crexx-63t2-qual-focused.log`, and
+`/tmp/crexx-63t2-qual-levelc.log`. The earlier sweep was superseded after
+the crossed-scope cleanup review and is not counted as this checkpoint's
+qualification.
 
 ## Findings
 

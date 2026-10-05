@@ -442,6 +442,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case RANGE:
             case REPEAT:
             case RETURN:
+            case FRAME_BRANCH:
             case EXIT:
             case SAY:
             case UPPER:
@@ -550,6 +551,9 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
 
             case LABEL:
+            case FRAME_LABEL:
+            case FRAME_HANDLER_ON:
+            case FRAME_HANDLER_OFF:
                 attributes = "color=green4";
                 break;
 

@@ -32,6 +32,7 @@
 
 static void validate_node(ASTNode *node, int *errors) {
     ASTNode *child;
+    ASTNode *frame;
     if (!node) return;
 
     /* Check parent/child consistency */
@@ -86,6 +87,32 @@ static void validate_node(ASTNode *node, int *errors) {
         if (!node->scope->defining_node) {
             fprintf(stderr, "AST Error: Node %d (%s) points to scope %p which has no defining node\n",
                     node->node_number, ast_ndtp(node->node_type), (void*)node->scope);
+            (*errors)++;
+        }
+    }
+
+    /* Frame transfers are canonical statements. Their destination must be a
+     * label in the same callable body, never a source LABEL or a child frame. */
+    if (node->node_type == FRAME_LABEL || node->node_type == FRAME_BRANCH ||
+        node->node_type == FRAME_HANDLER_ON || node->node_type == FRAME_HANDLER_OFF) {
+        frame = ast_proc(node);
+        if (!frame || node->child || !node->parent ||
+            ((node->node_type == FRAME_LABEL) &&
+             (node->parent->node_type != INSTRUCTIONS ||
+              node->parent->parent != frame)) ||
+            ((node->node_type == FRAME_BRANCH ||
+              node->node_type == FRAME_HANDLER_ON) &&
+             (!node->association || node->association->node_type != FRAME_LABEL ||
+              ast_proc(node->association) != frame ||
+              !node->association->parent ||
+              node->association->parent->parent != frame)) ||
+            ((node->node_type == FRAME_LABEL ||
+              node->node_type == FRAME_HANDLER_OFF) && node->association) ||
+            ((node->node_type == FRAME_HANDLER_ON ||
+              node->node_type == FRAME_HANDLER_OFF) &&
+             (!node->node_string || !node->node_string_length))) {
+            fprintf(stderr, "AST Error: malformed frame control node %d (%s)\n",
+                    node->node_number, ast_ndtp(node->node_type));
             (*errors)++;
         }
     }

@@ -249,6 +249,8 @@ static int flow_node_produces_temporary(const ASTNode *node) {
         case PROCEDURE: case METHOD: case FACTORY: case MATCH:
         case ARGS: case ARG: case INSTRUCTIONS: case ASSIGN: case DEFINE:
         case IF: case DO: case SIGNAL_BLOCK: case SIGNAL_HANDLER:
+        case FRAME_LABEL: case FRAME_BRANCH:
+        case FRAME_HANDLER_ON: case FRAME_HANDLER_OFF:
         case RETURN: case LEAVE: case ITERATE: case LEAVE_WITH:
         case SELECT: case SWITCH: case WHEN: case OTHERWISE:
             return 0;
@@ -780,6 +782,11 @@ static int flow_build_statement(FlowBuilder *builder,
             return flow_build_do(builder, node, next, control);
         case SIGNAL_BLOCK:
             return flow_build_signal_block(builder, node, next, control);
+        case FRAME_BRANCH:
+            block = flow_new_block(procedure, node);
+            if (block < 0) return -1;
+            /* Resolve the target after reverse-order CFG construction. */
+            return block;
         case RETURN:
             block = flow_new_block(procedure, node);
             if (block < 0) return -1;
@@ -810,6 +817,41 @@ static int flow_build_statement(FlowBuilder *builder,
             flow_collect_statement(procedure, block, node, 0);
             return flow_add_edge(procedure, block, next) ? block : -1;
     }
+}
+
+/* A Classic label is also a possible fresh-invocation entry. Branches have
+ * exact targets; a registered handler can be reached asynchronously from any
+ * instruction while active. Adding all possible handler edges is conservative
+ * for liveness and copy propagation, including ON/OFF paths. */
+static int flow_complete_frame_edges(RxcpFlowProcedure *procedure) {
+    size_t i, j;
+    for (i = 0; i < procedure->block_count; i++) {
+        ASTNode *node = procedure->blocks[i].anchor;
+        if (!node || node->node_type != FRAME_LABEL) continue;
+        if (!flow_add_edge(procedure, procedure->entry_block, (int)i)) return 0;
+    }
+    for (i = 0; i < procedure->block_count; i++) {
+        ASTNode *node = procedure->blocks[i].anchor;
+        int target = -1;
+        if (!node || (node->node_type != FRAME_BRANCH &&
+                      node->node_type != FRAME_HANDLER_ON)) continue;
+        for (j = 0; j < procedure->block_count; j++) {
+            if (procedure->blocks[j].anchor == node->association) {
+                target = (int)j;
+                break;
+            }
+        }
+        if (target < 0) return 0;
+        if (node->node_type == FRAME_BRANCH) {
+            if (!flow_add_edge(procedure, (int)i, target)) return 0;
+        } else {
+            for (j = 0; j < procedure->block_count; j++) {
+                if (j == (size_t)procedure->exit_block) continue;
+                if (!flow_add_edge(procedure, (int)j, target)) return 0;
+            }
+        }
+    }
+    return 1;
 }
 
 static int flow_mark_reachable(RxcpFlowProcedure *procedure) {
@@ -1836,7 +1878,8 @@ static int flow_build_procedure(RxcpFlowProcedure *procedure, int apply_transfor
     body_entry = body ? flow_build_sequence(&builder, body->child,
                                             procedure->exit_block, 0) :
                         procedure->exit_block;
-    if (body_entry < 0 || !flow_add_edge(procedure, procedure->entry_block, body_entry)) return 0;
+    if (body_entry < 0 || !flow_add_edge(procedure, procedure->entry_block, body_entry) ||
+        !flow_complete_frame_edges(procedure)) return 0;
 
     if (!flow_mark_reachable(procedure) ||
         !flow_run_liveness(procedure) ||

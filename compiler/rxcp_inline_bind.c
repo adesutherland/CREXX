@@ -136,7 +136,10 @@ static int inline_callable_has_unstructured_entry(ASTNode *node,
 
     if (!node) return 0;
     if (node != callable && inline_node_is_callable_def(node)) return 0;
-    if (node->node_type == LABEL || node->node_type == LEVELC_SIGNAL) return 1;
+    if (node->node_type == LABEL || node->node_type == LEVELC_SIGNAL ||
+        node->node_type == FRAME_LABEL || node->node_type == FRAME_BRANCH ||
+        node->node_type == FRAME_HANDLER_ON ||
+        node->node_type == FRAME_HANDLER_OFF) return 1;
     for (child = node->child; child; child = child->sibling) {
         if (inline_callable_has_unstructured_entry(child, callable)) return 1;
     }
@@ -2412,7 +2415,9 @@ static int inline_subtree_contains_local_signal(ASTNode *node,
     if (!node) return 0;
     if (node != root_callable && inline_node_is_callable_def(node)) return 0;
     if (node->node_type == SIGNAL_BLOCK || node->node_type == SIGNAL_HANDLER ||
-        node->node_type == LEVELC_SIGNAL) {
+        node->node_type == LEVELC_SIGNAL ||
+        node->node_type == FRAME_HANDLER_ON ||
+        node->node_type == FRAME_HANDLER_OFF) {
         return 1;
     }
     for (child = node->child; child; child = child->sibling) {

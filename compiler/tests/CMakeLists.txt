@@ -27,6 +27,14 @@ add_test(NAME ast_allocation_failure COMMAND test_ast_allocation)
 set_tests_properties(ast_allocation_failure PROPERTIES
         LABELS "unit;compiler;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_ast_allocation)
 
+add_executable(test_frame_control_ast test_frame_control_ast.c)
+target_include_directories(test_frame_control_ast PRIVATE ${symbol_test_includes})
+target_link_libraries(test_frame_control_ast PRIVATE rxclib)
+add_test(NAME frame_control_ast COMMAND test_frame_control_ast)
+set_tests_properties(frame_control_ast PROPERTIES
+        LABELS "unit;compiler;levelc;control_flow" TIMEOUT 30
+        CREXX_PREP_TARGETS test_frame_control_ast)
+
 add_executable(test_import_directory_errors test_import_directory_errors.c)
 target_include_directories(test_import_directory_errors PRIVATE ${symbol_test_includes})
 target_link_libraries(test_import_directory_errors PRIVATE rxclib)

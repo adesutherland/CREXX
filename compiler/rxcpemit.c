@@ -1841,6 +1841,10 @@ static walker_result emit_walker(walker_direction direction,
                     break;
 
             case NOP:
+            case FRAME_LABEL:
+            case FRAME_BRANCH:
+            case FRAME_HANDLER_ON:
+            case FRAME_HANDLER_OFF:
                 emit_flow(node, pl);
                 break;
 

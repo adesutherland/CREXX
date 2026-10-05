@@ -466,6 +466,15 @@ static void signal_emit_unwind_for_control(OutputFragment *output,
     }
 }
 
+static const char *frame_vm_condition_name(ASTNode *node) {
+    if (!node || !node->node_string) return NULL;
+    /* Classic SYNTAX is a distinct VM signal from Level B ERROR. */
+    if (node->node_string_length == 6 &&
+        strncasecmp(node->node_string, "SYNTAX", 6) == 0)
+        return "CLASSIC_SYNTAX";
+    return node->node_string;
+}
+
 static void flow_append_output_copy(OutputFragment *output,
                                     OutputFragment *source) {
     if (!output || !source) return;
@@ -722,6 +731,46 @@ void emit_flow(ASTNode *node, void *pl) {
 
         case NOP:
             if (!node->output) node->output = output_f();
+            break;
+
+        case FRAME_LABEL:
+            comment_meta = get_metaline(node);
+            node->output = output_fs(comment_meta);
+            free(comment_meta);
+            temp1 = mprintf("l%dframe:\n", node->node_number);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            break;
+
+        case FRAME_BRANCH:
+            comment_meta = get_metaline(node);
+            node->output = output_fs(comment_meta);
+            free(comment_meta);
+            add_variable_metadata(node);
+            flow_emit_crossed_cleanups(node->output, node,
+                                       node->association->parent);
+            signal_emit_unwind_for_control(node->output, node,
+                                           node->association->parent);
+            temp1 = mprintf("   br l%dframe\n", node->association->node_number);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            break;
+
+        case FRAME_HANDLER_ON:
+        case FRAME_HANDLER_OFF:
+            comment_meta = get_metaline(node);
+            node->output = output_fs(comment_meta);
+            free(comment_meta);
+            add_variable_metadata(node);
+            if (node->node_type == FRAME_HANDLER_ON)
+                temp1 = mprintf("   sigbr l%dframe,\"%s\"\n",
+                                node->association->node_number,
+                                frame_vm_condition_name(node));
+            else
+                temp1 = mprintf("   sighalt \"%s\"\n",
+                                frame_vm_condition_name(node));
+            output_append_text(node->output, temp1);
+            free(temp1);
             break;
 
         case SAY:

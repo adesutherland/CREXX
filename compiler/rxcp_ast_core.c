@@ -1491,6 +1491,14 @@ const char *ast_ndtp(NodeType type) {
             return "ITERATE";
         case LABEL:
             return "LABEL";
+        case FRAME_LABEL:
+            return "FRAME_LABEL";
+        case FRAME_BRANCH:
+            return "FRAME_BRANCH";
+        case FRAME_HANDLER_ON:
+            return "FRAME_HANDLER_ON";
+        case FRAME_HANDLER_OFF:
+            return "FRAME_HANDLER_OFF";
         case LEAVE:
             return "LEAVE";
         case LITERAL:
