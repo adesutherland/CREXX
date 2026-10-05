@@ -324,6 +324,8 @@ static int levelc_lower_plan_add_procedure(LevelCLowerPlan *plan,
 static char *levelc_upper_name(ASTNode *node);
 static LevelCProcedureSlice *levelc_find_procedure(LevelCLowerPlan *plan,
                                                    const char *name);
+static ASTNode *levelc_frame_node(Context *context, ASTNode *source,
+                                  NodeType type, ASTNode *target);
 static int levelc_expr_supported(ASTNode *expr,
                                  LevelCLowerPlan *plan,
                                  const char **reason_out);
@@ -1434,6 +1436,9 @@ static int levelc_statement_supported(ASTNode *stmt,
     if (stmt->node_type == REXX_OPTIONS)
         return !stmt->child || levelc_expr_supported(stmt->child, plan, reason_out);
     if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, reason_out);
+    if (stmt->node_type == LEVELC_SIGNAL && stmt->child && !stmt->child->sibling &&
+        (stmt->child->node_type == LITERAL || stmt->child->node_type == STRING))
+        return 1;
     if (in_procedure && stmt->node_type == LEVELC_PROCEDURE)
         return levelc_procedure_tail_supported(stmt, reason_out);
     if (stmt->node_type == NOP) return stmt->child == NULL;
@@ -3574,6 +3579,84 @@ fail:
     return 0;
 }
 
+static int levelc_lower_direct_signal(Context *context,
+                                      ASTNode *instructions,
+                                      ASTNode *stmt,
+                                      LevelCLowerPlan *plan,
+                                      const char **reason_out) {
+    ASTNode *target = stmt->child;
+    ASTNode *line_value;
+    ASTNode *line_text;
+    ASTNode *receiver;
+    ASTNode *args[2];
+    ASTNode *set_sigl;
+    ASTNode *branch;
+    LevelCProcedureSlice *destination;
+    char line[32];
+    char *name;
+    size_t i;
+
+    /* STRING holds decoded text; its token still includes source quotes. */
+    name = target->node_type == STRING ? levelc_node_text_copy(target)
+                                       : levelc_upper_name(target);
+    if (!name) goto fail;
+    if (target->node_type == STRING)
+        for (i = 0; name[i]; i++)
+            name[i] = (char)toupper((unsigned char)name[i]);
+
+    snprintf(line, sizeof(line), "%d", stmt->token ? stmt->token->line + 1 : 0);
+    line_text = rxcp_remap_create_string_constant(context, stmt, line);
+    args[0] = rxcp_remap_create_string_constant(context, stmt, "SIGL");
+    {
+        ASTNode *value_args[1] = {line_text};
+        line_value = line_text ? rxcp_remap_create_factory_call(
+            context, stmt, LEVELC_REXX_VALUE_CLASS, value_args, 1) : NULL;
+    }
+    args[1] = line_value;
+    receiver = levelc_pool_ref(context, stmt, VAR_SYMBOL);
+    set_sigl = receiver && args[0] && args[1]
+        ? rxcp_remap_create_member_call_statement(context, stmt, receiver,
+                                                  "setSymbolValue", args, 2)
+        : NULL;
+    if (!set_sigl) {
+        free(name);
+        goto fail;
+    }
+    add_ast(instructions, set_sigl);
+
+    destination = levelc_find_procedure(plan, name);
+    if (destination && destination->frame_label) {
+        branch = levelc_frame_node(context, stmt, FRAME_BRANCH,
+                                   destination->frame_label);
+    } else {
+        size_t length = strlen(name) + 64;
+        char *detail = malloc(length);
+        ASTNode *condition = rxcp_remap_create_integer_constant(
+            context, stmt, 1, TP_BOOLEAN);
+        if (!detail || !condition) {
+            free(detail);
+            free(name);
+            goto fail;
+        }
+        snprintf(detail, length, "RXC-LC-16.1: Label not found: %s", name);
+        if (!levelc_append_classic_error_if(context, instructions, stmt,
+                                             condition, detail)) {
+            free(detail);
+            free(name);
+            goto fail;
+        }
+        free(detail);
+        branch = NULL;
+    }
+    free(name);
+    if (branch) add_ast(instructions, branch);
+    return 1;
+
+fail:
+    if (reason_out) *reason_out = "failed to lower direct Level C SIGNAL";
+    return 0;
+}
+
 static int levelc_lower_statement(Context *context,
                                   ASTNode *instructions,
                                   ASTNode *stmt,
@@ -3593,6 +3676,10 @@ static int levelc_lower_statement(Context *context,
     }
     if (stmt->node_type == LEVELC_ARG) {
         return levelc_lower_arg_instruction(context, instructions, stmt, reason_out);
+    }
+    if (stmt->node_type == LEVELC_SIGNAL) {
+        return levelc_lower_direct_signal(context, instructions, stmt, plan,
+                                          reason_out);
     }
     if (in_procedure && stmt->node_type == LEVELC_PROCEDURE) {
         if (!levelc_append_procedure_entry(context, instructions, stmt)) {

@@ -4504,7 +4504,6 @@ if (ENABLE_PARSER_MODE)
             syntaxhighlight_levelc_labels_validation
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_labels_validation.rexx
             MUST_MATCH
-            "RXC-LC-16\\.1 name=\"MISSING\""
             "RXC-LC-16\\.2 name=\"INNER\""
             "RXC-LC-16\\.3 name=\"INNER\""
             "RXC-LC-17\\.1"
@@ -4512,6 +4511,7 @@ if (ENABLE_PARSER_MODE)
             "Node: type=56 \\(LEXER_FUNCTION_IDENTIFIER\\), pos=[0-9]+, len=6, sev=48, text=\"inner:\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=9, sev=48, text=\"procedure\""
             MUST_NOT_MATCH
+            "RXC-LC-16\\.1 name=\"MISSING\""
             "RXC-LC-16\\.1 name=\"GOOD\""
             "RXC-LC-16\\.3 name=\"DATE\""
             "RXC-LC-16\\.3 name=\"EXTERNAL_PROC\""
@@ -5791,6 +5791,35 @@ add_levelc_runtime_slice_test(levelc_frame_empty_label_procedure
 add_levelc_runtime_slice_test(levelc_frame_empty_label_procedure_noopt
         rexx_src/levelc_frame_empty_label_procedure.rexx
         "private\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_direct
+        rexx_src/levelc_signal_direct.rexx
+        "before\ndone=3\n")
+add_levelc_runtime_slice_test(levelc_signal_direct_noopt
+        rexx_src/levelc_signal_direct.rexx
+        "before\ndone=3\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_if_reached
+        rexx_src/levelc_signal_if_reached.rexx
+        "jump=3\n")
+add_levelc_runtime_slice_test(levelc_signal_if_reached_noopt
+        rexx_src/levelc_signal_if_reached.rexx
+        "jump=3\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_quoted_local
+        rexx_src/levelc_signal_quoted_local.rexx
+        "start\nlater=8\nmain\n")
+add_levelc_runtime_slice_test(levelc_signal_quoted_local_noopt
+        rexx_src/levelc_signal_quoted_local.rexx
+        "start\nlater=8\nmain\n" -n)
+add_levelc_runtime_syntax_signal_test(levelc_signal_missing
+        rexx_src/levelc_signal_missing.rexx "16.1" "before\n"
+        "levelc_signal_missing.rexx:3:")
+add_levelc_runtime_syntax_signal_test(levelc_signal_missing_noopt
+        rexx_src/levelc_signal_missing.rexx "16.1" "before\n"
+        "levelc_signal_missing.rexx:3:" -n)
+add_levelc_lowered_tree_shape_test(levelc_signal_direct_frame_tree
+        rexx_src/levelc_signal_direct.rexx
+        "FRAME_BRANCH"
+        "FRAME_LABEL"
+        "setSymbolValue")
 
 add_levelc_runtime_slice_test(levelc_slice3_bif_length_target_shape
         rexx_src/levelc_slice3_bif_length_target_shape.crexx

@@ -1610,7 +1610,7 @@ signal_target(S) ::= CTK_VAR_SYMBOL(T).
 
 signal_target(S) ::= CTK_STRING(T).
 {
-    S = ast_f(context, STRING, T);
+    S = ast_fstr(context, T);
 }
 
 trace_target(C) ::= CTK_VAR_SYMBOL(T).

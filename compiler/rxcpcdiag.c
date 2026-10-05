@@ -1099,9 +1099,7 @@ static void levelc_validate_signal_target(Context *context,
     name = rxcp_levelc_upper_symbol_from_token(target, 0);
     if (!name) return;
     label = levelc_find_label(labels, label_count, name);
-    if (!label) {
-        levelc_append_code_name(context, target, "16.1", name);
-    } else if (label->group_depth > 0) {
+    if (label && label->group_depth > 0) {
         levelc_append_code_name(context, target, "16.2", name);
     }
     free(name);

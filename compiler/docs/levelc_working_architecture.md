@@ -535,8 +535,17 @@ checkpoint: SIGNAL lowering and execution remain open. The eventual
 frame-local branch/dispatch lowering should use this structural distinction,
 not infer static versus evaluated targets from token quoting.
 
-This architecture is approved direction; the source AST checkpoint does not
-implement SIGNAL behavior.
+Direct symbol and quoted SIGNAL now use that frame-local branch route. The
+source target resolves against the invocation's label plan; quoted targets
+pass through the ordinary string decoder before normalization. The lowering
+writes the authored clause line to the visible `SIGL` pool symbol, then emits
+an associated `FRAME_BRANCH`. The emitter performs crossed-scope cleanup on
+that branch. An absent direct target emits source-anchored runtime 16.1 when
+reached, so an untaken IF arm does not fail compilation. `SIGNAL VALUE` and
+activation-wide ON/OFF policy still need their distinct reviewed routes.
+
+This architecture is approved direction with bounded direct-SIGNAL behavior;
+the complete SIGNAL instruction remains open.
 The [LC-STEP-63T gates](../../docs/planning/release-1/levelc-compatibility-worklist.md#approved-architecture-direction-for-lc-step-63t)
 cover direct and trapped conditions, label/PROCEDURE/CALL/RETURN lifetimes,
 source and `SIGL`, optimized/no-opt parity, linked execution, and existing
