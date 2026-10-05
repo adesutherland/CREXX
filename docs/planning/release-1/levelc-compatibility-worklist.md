@@ -13,17 +13,17 @@ arguments, templates, the ARG BIF, host entry and direct CALL expression
 actuals have passing bounded evidence, but the full invocation and label
 lifecycle audit has not closed. The approved `LC-STEP-63T` one-frame label and
 SIGNAL design is the next shared prerequisite; its reference review is done,
-its canonical AST/emitter foundation is in progress, and the one-body runtime
-route has bounded passing checkpoints including first-instruction PROCEDURE
-eligibility, main fallthrough and a second PROCEDURE. Complete PROCEDURE source placement,
+its canonical AST/emitter foundation and one-body invocation route have bounded
+passing checkpoints, including first-instruction PROCEDURE eligibility, main
+fallthrough and a second PROCEDURE. Complete PROCEDURE source placement,
 CALL/RETURN/EXIT behavior and SIGNAL remain open.
 PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 512/512 with process memory monitoring after
-the evaluated SIGNAL VALUE checkpoint. This is a development checkpoint, not a
-Level C or Beta 4 qualification verdict.
+Debug Level C checkpoint passed 528/528 with process memory monitoring after
+the missing SIGNAL target source repair at `d809ab8da`. This is a development
+checkpoint, not a Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
 checkpoints. The status above, the whole-instruction queue and the current
@@ -3267,7 +3267,12 @@ Before any code edit, check the proposed route against these observable gates:
    event-binding node/emitter route; `63T-4D2`, source-order ON/OFF lowering
    with handler-entry trampolines, RC/SIGL and one-shot behavior; and
    `63T-4D3`, the full parsed condition-name and nested activation policy
-   matrix. These remain checkpoints of one open SIGNAL instruction.
+   matrix. Within 4D3, first establish a distinct Classic non-SYNTAX event
+   transport with a typed condition payload (`4D3-1`), then dispatch its
+   seven-name activation policy and one-shot handler selection through the
+   same frame path (`4D3-2`), then qualify available condition producers and
+   explicitly assign missing host/numeric producers to their instruction or
+   host rows (`4D3-3`). These remain checkpoints of one open SIGNAL instruction.
    Each checkpoint retains focused evidence and is not SIGNAL closure.
 5. **LC-STEP-63T-5 (LC-63T-01–04/LC-AC-76; depends on 63T-4):** qualify the complete
    SIGNAL reference matrix, opt/no-opt, raw/canonical AST, linked toolchain,
@@ -3768,6 +3773,38 @@ build and linked-image run also retained the line-4 source:
 `cmake-build-debug/levelc-63t4d2c-threaded-run.log`. Other condition names,
 complete handler cleanup, full SIGNAL matrix, LC-AC-76, ARG and full Level
 C/Release 1 remain open.
+
+**2026-10-05 LC-STEP-63T-4D3 reference and transport review (no product edit).**
+The guarded Regina matrices in
+`cmake-build-debug/levelc-63t4d3-regina-policy.log` and
+`cmake-build-debug/levelc-63t4d3-regina-default.log` accept ON/OFF with
+default or named labels for ERROR, FAILURE, HALT, NOTREADY, NOVALUE, SYNTAX
+and LOSTDIGITS. A NOVALUE read traps at its causing line with the unset symbol
+as `CONDITION('D')`; a numeric-digits-3 arithmetic operand traps LOSTDIGITS
+at its causing line with the over-precise operand as the description. In
+both reference cases an unset `RC` remains unset, so the SYNTAX `RC` rule
+must not be copied to other conditions. The
+[ANSI REXX standard](https://www.rexxla.org/rexxlang/standards/j18pub.pdf)
+defines LOSTDIGITS for significant nonzero digits discarded from an
+over-precise arithmetic operand; the
+[IBM z/OS condition reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=reference-conditions-condition-traps)
+describes the other six and the host command/error distinctions. Both
+references inform the matrix rather than silently omitting the ANSI name.
+
+The VM's `sig_atomic_t` mask admits codes 1–31, with 29 the only unused code;
+30 is OTHER and 31 is BREAKPOINT. Reusing VM ERROR/FAILURE/NOTREADY directly
+would trap unrelated Level B events, and widening the process/native signal
+mask would affect the VM's signal-safe publication path. The 4D3 implementation
+will use code 29 for a distinct Classic non-SYNTAX event carrying a typed
+condition name and description in its payload. One frame handler will dispatch
+to the activation's selected ON clause for that name; SYNTAX keeps its
+separate code 28 path. Compiler-generated producers will raise that event at
+the authored clause only when the Classic condition is enabled (or when HALT
+requires delivery), while the host-command, I/O, interrupt and numeric
+producer reviews remain explicit obligations. This stays within the approved
+VM branch/handler and activation-policy architecture, preserves Level B
+signal identities, and avoids conflating the seven Classic conditions.
+`LC-STEP-63T-4D3`, SIGNAL, ARG and full Level C/Release 1 remain open.
 
 ## Findings
 
