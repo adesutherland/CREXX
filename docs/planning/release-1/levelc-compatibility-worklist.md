@@ -3263,6 +3263,11 @@ Before any code edit, check the proposed route against these observable gates:
    frame branch path with the approved Unicode-first scalar and missing-label
    behavior; `63T-4D` installs ON/OFF and named/default condition handlers,
    including RC/SIGL, one-shot delivery, nested policy and handler cleanup.
+   The handler implementation review splits this into `63T-4D1`, a canonical
+   event-binding node/emitter route; `63T-4D2`, source-order ON/OFF lowering
+   with handler-entry trampolines, RC/SIGL and one-shot behavior; and
+   `63T-4D3`, the full parsed condition-name and nested activation policy
+   matrix. These remain checkpoints of one open SIGNAL instruction.
    Each checkpoint retains focused evidence and is not SIGNAL closure.
 5. **LC-STEP-63T-5 (LC-63T-01–04/LC-AC-76; depends on 63T-4):** qualify the complete
    SIGNAL reference matrix, opt/no-opt, raw/canonical AST, linked toolchain,
@@ -3620,6 +3625,23 @@ processes. Evidence: `cmake-build-debug/levelc-63t4c-build2.log`,
 ON/OFF and named/default condition handlers, LC-AC-76, ARG and full Level
 C/Release 1 qualification remain open.
 
+**2026-10-05 LC-STEP-63T-4D pre-edit handler review.** Fresh guarded Regina
+probes in `cmake-build-debug/levelc-signal-on-*-ref.rexx` and matching
+`-reference.log` show default `SYNTAX` and named targets, `RC=40` and causing
+`SIGL`, missing named label 16.1 only on delivery, OFF restoring the untrapped
+40.14 error, and one-shot delivery (a second fault in the handler is not
+trapped). Each reference process exited. The VM already has copy-on-write
+frame handler tables and `sigbrv` event binding; the current childless
+`FRAME_HANDLER_ON` emits only `sigbr`, so it cannot carry the causing line and
+error identity into Classic pool updates. Extend that canonical node with an
+explicit event binding, then enter a generated frame-local handler block that
+disables its condition, updates pool state, and branches to the user label.
+The raw event's line/message and the supported condition-name mapping require
+focused proof before claiming 4D2/4D3. The VM signal table currently has no
+separate names for Classic HALT, NOVALUE or LOSTDIGITS; their producer and
+mapping review remains open rather than being silently excluded. No handler
+product code changed in this review.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the
@@ -3800,7 +3822,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-RETURN` | RETURN instruction | Bounded slice: value/void RETURN in local procedures | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-SAY` | SAY instruction | Whole-instruction closure under LC-AC-57/LC-STEP-88D-1; NUL, source hex ordinals, mapped high characters and non-Latin-1 text pass default, host, optimized/no-opt and linked output | Missing expression/BIF, TRACE and SIGNAL services remain shared work |
 | `SYN-CLASSIC-SELECT` | SELECT/WHEN/OTHERWISE | Whole instruction closed under LC-AC-68/LC-STEP-69C | Shared condition/TRACE lifecycle remains in its own rows |
-| `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Parsed and reference contract reviewed under LC-STEP-63T-1; canonical frame AST/emitter nodes exist but Level C SIGNAL is not lowered | Direct/VALUE branch, traps, runtime conditions and whole-instruction qualification open |
+| `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Direct symbol/quoted and VALUE targets use frame branches with bounded opt/no-opt, SIGL, source and 16.1 evidence under 63T-4A–4C | ON/OFF condition policy, full reference matrix and whole-instruction qualification open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-EXPRESSIONS` | Classic arithmetic, comparison, Boolean, and concatenation expressions | Bounded slice: documented operator family | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-BIF-CALL` | Recognised Classic BIF calls | Direct compiler table for 58 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and implicit TRANSLATE ordinals under LC-STEP-88E-1 | Remaining services, configured context and complete reference proof open |
