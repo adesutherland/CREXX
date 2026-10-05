@@ -3,6 +3,7 @@ signal target
 signal 'target'
 signal value 'target'
 signal value target
+signal ('target')
 signal on syntax name caught
 signal off syntax
 target:

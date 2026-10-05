@@ -19,6 +19,7 @@ endif()
 string(REGEX MATCHALL "LEVELC_SIGNAL_VALUE : \"value\"" value_nodes "${output}")
 list(LENGTH value_nodes value_count)
 if(NOT value_count EQUAL 2 OR
+   NOT output MATCHES "LEVELC_SIGNAL_VALUE : \"\"[^\n]*\n[ ]+STRING : \"target\"" OR
    NOT output MATCHES "LEVELC_SIGNAL : \"signal\"[^\n]*\n[ ]+LITERAL : \"target\"" OR
    NOT output MATCHES "LEVELC_SIGNAL : \"signal\"[^\n]*\n[ ]+STRING : \"target\"" OR
    NOT output MATCHES "LEVELC_SIGNAL_VALUE : \"value\"[^\n]*\n[ ]+STRING : \"target\"" OR

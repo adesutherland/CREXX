@@ -448,6 +448,14 @@ static int levelc_token_expects_expression_rhs(int parser_token) {
     }
 }
 
+static int levelc_implicit_signal_value_start(int parser_token) {
+    return parser_token == CTK_PLUS ||
+           parser_token == CTK_MINUS ||
+           parser_token == CTK_HIGH_PRIORITY_MINUS ||
+           parser_token == CTK_NOT ||
+           parser_token == CTK_OPEN_BRACKET;
+}
+
 int rexcpars(Context *context) {
     Token *token;
     Token *peek_token;
@@ -464,6 +472,7 @@ int rexcpars(Context *context) {
     int do_header_first;
     int do_condition_expr;
     int paren_depth;
+    int implicit_signal_value;
     LevelCTailMode tail_mode;
     LevelCParseStage parse_stage;
     LevelCTailStage tail_stage;
@@ -602,6 +611,10 @@ int rexcpars(Context *context) {
             parser_token = CTK_BAD_ASSIGN_NUMBER;
         }
 
+        implicit_signal_value = tail_mode == LEVELC_TAIL_SIGNAL &&
+            tail_stage == LEVELC_TAIL_STAGE_HEAD &&
+            levelc_implicit_signal_value_start(parser_token);
+
         if (parser_token == CTK_EOC || parser_token == CTK_LABEL) {
             clause_start = 1;
             if_condition = 0;
@@ -735,6 +748,17 @@ int rexcpars(Context *context) {
                 RexxC(parser, CTK_MISSING_RPAREN, token, context);
                 paren_depth--;
             }
+        }
+        if (implicit_signal_value) {
+            /* The source starts with an operator or parenthesis, so Classic
+             * treats it as an evaluated target even without VALUE. Keep a
+             * zero-width token at the authored expression start, preserving
+             * source order and the ordinary VALUE AST/emission route. */
+            Token *value = tok_splt(context, token, 0);
+            value->token_type = TK_LEVELC_VALUE;
+            context->current_parser_token = value;
+            RexxC(parser, CTK_VALUE, value, context);
+            context->current_parser_token = token;
         }
         RexxC(parser, parser_token, token, context);
         if (parser_token == CTK_OPEN_BRACKET) {

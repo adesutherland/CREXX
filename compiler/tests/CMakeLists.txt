@@ -5851,12 +5851,35 @@ add_levelc_runtime_slice_test(levelc_signal_value_second_label
 add_levelc_runtime_slice_test(levelc_signal_value_second_label_noopt
         rexx_src/levelc_signal_value_second_label.rexx
         "before\nbeta=3\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_implicit_value
+        rexx_src/levelc_signal_implicit_value.rexx
+        "paren=4\n")
+add_levelc_runtime_slice_test(levelc_signal_implicit_value_noopt
+        rexx_src/levelc_signal_implicit_value.rexx
+        "paren=4\n" -n)
+foreach(form plus minus not)
+    add_levelc_runtime_syntax_signal_test(levelc_signal_implicit_value_${form}_missing
+            rexx_src/levelc_signal_implicit_value_${form}_missing.rexx "16.1" "before\n"
+            "levelc_signal_implicit_value_${form}_missing.rexx:3:")
+    add_levelc_runtime_syntax_signal_test(levelc_signal_implicit_value_${form}_missing_noopt
+            rexx_src/levelc_signal_implicit_value_${form}_missing.rexx "16.1" "before\n"
+            "levelc_signal_implicit_value_${form}_missing.rexx:3:" -n)
+endforeach()
+add_levelc_invalid_compile_test(levelc_signal_implicit_value_missing_expr
+        rexx_src/levelc_signal_implicit_value_missing_expr.rexx
+        "RXC-LC-35\\.1" "@ 2:8" "1 error")
 add_levelc_runtime_slice_test(levelc_signal_on_syntax
         rexx_src/levelc_signal_on_syntax.rexx
         "before\ncaught=40|4\n")
 add_levelc_runtime_slice_test(levelc_signal_on_syntax_noopt
         rexx_src/levelc_signal_on_syntax.rexx
         "before\ncaught=40|4\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_quoted_handler
+        rexx_src/levelc_signal_quoted_handler.rexx
+        "caught=40|3\n")
+add_levelc_runtime_slice_test(levelc_signal_quoted_handler_noopt
+        rexx_src/levelc_signal_quoted_handler.rexx
+        "caught=40|3\n" -n)
 add_levelc_runtime_slice_test(levelc_signal_on_default
         rexx_src/levelc_signal_on_default.rexx
         "before\ncaught=40|4\n")
@@ -6003,6 +6026,12 @@ add_levelc_runtime_syntax_signal_test(levelc_signal_on_missing
 add_levelc_runtime_syntax_signal_test(levelc_signal_on_missing_noopt
         rexx_src/levelc_signal_on_missing.rexx "16.1" "before\n"
         "levelc_signal_on_missing.rexx:4:" -n)
+add_levelc_runtime_syntax_signal_test(levelc_signal_quoted_handler_missing
+        rexx_src/levelc_signal_quoted_handler_missing.rexx "16.1" "before\n"
+        "levelc_signal_quoted_handler_missing.rexx:4:")
+add_levelc_runtime_syntax_signal_test(levelc_signal_quoted_handler_missing_noopt
+        rexx_src/levelc_signal_quoted_handler_missing.rexx "16.1" "before\n"
+        "levelc_signal_quoted_handler_missing.rexx:4:" -n)
 add_levelc_runtime_syntax_signal_test(levelc_signal_off_syntax
         rexx_src/levelc_signal_off_syntax.rexx "40.14" "before\n"
         "levelc_signal_off_syntax.rexx:5:")
@@ -6227,6 +6256,36 @@ add_test(NAME levelc_signal_duplicate_labels_linked
         -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_duplicate_labels.expected
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
 set_tests_properties(levelc_signal_duplicate_labels_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+add_test(NAME levelc_signal_quoted_handler_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_quoted_handler.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DNAME=levelc_signal_quoted_handler_linked
+        -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_quoted_handler.expected
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_signal_quoted_handler_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+add_test(NAME levelc_signal_implicit_value_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_implicit_value.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DNAME=levelc_signal_implicit_value_linked
+        -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_implicit_value.expected
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_signal_implicit_value_linked PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 add_levelc_runtime_slice_test(levelc_slice4_procedure_missing_arg

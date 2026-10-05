@@ -588,6 +588,20 @@ execution can fall through later labels. This follows IBM's duplicate-label
 rule and is verified for Unicode case variants in optimized/no-opt and linked
 execution. It does not complete the whole SIGNAL or CALL instruction.
 
+The source adapter also inserts a zero-width `VALUE` token immediately before
+`+`, `-`, logical NOT or `(` when one of these starts the target after
+`SIGNAL`. This follows the documented Classic omission rule and produces the
+same `LEVELC_SIGNAL_VALUE` expression subtree as an explicit `VALUE`, without
+changing the direct symbol or quoted-target paths. The token is spliced into
+source order at the authored expression start so tree ranges and diagnostics
+remain anchored to source. Regina rejected the parenthesized omission in a
+local probe; [IBM's documented syntax](https://www.ibm.com/docs/en/zvm/7.2.0?topic=instructions-signal)
+is the authority for this form. A named
+`SIGNAL ON ... NAME` target may be a symbol or quoted string; both use the
+source decoder and Unicode frame-label normalization before binding the
+handler. These source-form repairs do not establish the remaining condition
+producer, extra-data or host lifecycle contracts.
+
 The `63T-4D1` handler transport allows `FRAME_HANDLER_ON` to bind one
 `VAR_TARGET`. Its emitter selects VM `sigbrv` for that form, which writes a
 runtime signal object to the bound register on delivery before branching.

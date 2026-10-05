@@ -1505,7 +1505,8 @@ static int levelc_statement_supported(ASTNode *stmt,
               (!name_clause ||
                (name_clause->node_type == LITERAL && !name_clause->sibling &&
                 name_clause->child && !name_clause->child->sibling &&
-                name_clause->child->node_type == LITERAL))));
+                (name_clause->child->node_type == LITERAL ||
+                 name_clause->child->node_type == STRING)))));
         free(mode_name);
         free(condition_name);
         if (supported) return 1;
@@ -3453,6 +3454,19 @@ static int levelc_parseplan_literal(ASTNode *pattern,
     return 1;
 }
 
+static char *levelc_static_signal_name(ASTNode *target) {
+    unsigned char *decoded = NULL;
+    size_t length = 0;
+    size_t chars = 0;
+    char *name;
+    if (!target) return NULL;
+    if (target->node_type != STRING) return levelc_upper_name(target);
+    name = levelc_parseplan_literal(target, &decoded, &length, &chars)
+        ? rxcp_levelc_upper_text((const char *)decoded, length) : NULL;
+    free(decoded);
+    return name;
+}
+
 static ASTNode *levelc_parseplan_descriptor(Context *context,
                                             ASTNode *stmt,
                                             ASTNode *first,
@@ -3907,7 +3921,7 @@ static int levelc_lower_signal_policy(Context *context,
         LevelCSignalHandler *handlers;
         LevelCSignalHandler *handler;
         ASTNode *target = condition_node->sibling;
-        char *name = target ? levelc_upper_name(target->child)
+        char *name = target ? levelc_static_signal_name(target->child)
                             : strdup(condition);
         LevelCProcedureSlice *destination;
         ASTNode *binding;
@@ -3975,15 +3989,8 @@ static int levelc_lower_direct_signal(Context *context,
     LevelCProcedureSlice *destination;
     char *name;
 
-    /* STRING node text uses RXAS escapes; decode the source token first. */
-    if (target->node_type == STRING) {
-        unsigned char *decoded = NULL;
-        size_t length = 0;
-        size_t chars = 0;
-        name = levelc_parseplan_literal(target, &decoded, &length, &chars)
-            ? rxcp_levelc_upper_text((const char *)decoded, length) : NULL;
-        free(decoded);
-    } else name = levelc_upper_name(target);
+    /* Decode quoted source text before matching the Unicode frame label. */
+    name = levelc_static_signal_name(target);
     if (!name) goto fail;
 
     if (!levelc_append_signal_sigl(context, instructions, stmt)) {

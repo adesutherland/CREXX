@@ -22,8 +22,8 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 558/558 with process memory monitoring after
-the ARG coherence and host-transport checkpoint below.
+Debug Level C checkpoint passed 594/594 with process memory monitoring after
+the SIGNAL source-form checkpoint below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
@@ -4123,6 +4123,36 @@ residual processes). Level G signal and RexxScript isolation passed 10/10
 in `cmake-build-debug/levelc-signal-label-isolation.log`. Duplicate labels
 remain ordinary source-order frame blocks; explicit target lookup selects
 the first. The full SIGNAL producer/extra-data matrix remains open.
+
+**Remaining legal SIGNAL forms found in the whole review, 2026-10-05.**
+Regina accepts `SIGNAL ON SYNTAX NAME 'caught'` and transfers to that quoted
+trap name. The parser already emits a STRING target through its shared
+`call_name_opt`, but Level C validation admits only a symbol and the lowerer
+does not decode quoted text. Reuse the direct-SIGNAL source-literal decoder
+and Unicode normalization for both targets; qualify quoted handler delivery,
+missing-target source identity, optimized/no-opt and linked behavior.
+[IBM's SIGNAL reference](https://www.ibm.com/docs/en/zvm/7.2.0?topic=instructions-signal)
+also admits omission of `VALUE` when the evaluated expression starts with a
+special character. Regina rejected `SIGNAL ('done')` with 19.4 in the local
+probe. IBM's documented form governs this compatibility implementation. The
+source adapter now inserts a zero-width VALUE token before an initial unary
+operator or parenthesis, preserving source order and the same
+`LEVELC_SIGNAL_VALUE` AST/lowering route as explicit VALUE. The quoted NAME
+form uses the direct target's source-literal decoder and Unicode label lookup.
+
+Optimized/no-opt quoted handler delivery, reached missing quoted targets,
+parenthesized evaluated targets, unary `+`, `-` and logical NOT evaluated
+targets, malformed missing operands, raw AST, and linked execution passed
+20/20 focused checks in
+`cmake-build-debug/levelc-signal-forms-focused-final.log`. The final guarded
+product build passed in `cmake-build-debug/levelc-signal-implicit-final-build.log`.
+On those exact code/test/build inputs, the normal Debug Level C suite passed
+594/594 in `cmake-build-debug/levelc-signal-forms-debug-qual.log` (peak 4633
+MiB, zero residual processes), and Level G signal/RexxScript isolation passed
+10/10 in `cmake-build-debug/levelc-signal-forms-isolation.log`. The process
+inventory after each run was empty. This source-form checkpoint does not close
+LC-I-23 or LC-AC-76: missing condition producers, extra data, host delivery
+and the remaining whole-SIGNAL matrix retain their owners above.
 
 ## Findings
 
