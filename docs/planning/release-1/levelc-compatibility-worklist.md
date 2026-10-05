@@ -3660,6 +3660,41 @@ assembler or VM processes. Evidence:
 `cmake-build-debug/levelc-63t4d1-debug-qual.log`. Checkpoint 4D1 is complete;
 4D2/4D3, LC-AC-76, ARG and full Level C/Release 1 remain open.
 
+**2026-10-05 LC-STEP-63T-4D2 same-frame handler increment (4D2 remains
+open).** The Level C lowerer now accepts source-order `SIGNAL ON/OFF SYNTAX`,
+including the default `SYNTAX` label and explicit `NAME` target. ON registers
+the canonical event-binding frame handler; a generated frame-local entry
+disables the condition after delivery, writes the event's causing line to
+`SIGL` and its Classic major error code to `RC`, then branches to the selected
+label. OFF restores untrapped behavior. Direct BIF calls capture their result
+once, test the shared context and raise `CLASSIC_SYNTAX` at the authored call
+site; the exported `rexxclassicbif_checked` remains available to other
+callers. This corrects the former handler `SIGL=219` library-line error while
+retaining unhandled 40.14 source and output order. Permanent optimized and
+no-opt tests cover named/default catches; focused OFF and one-shot cases also
+pass. The guarded core/library build and focused 15/15 checks passed with
+zero residual child processes. Evidence:
+`cmake-build-debug/levelc-63t4d2a-final-build.log` and
+`cmake-build-debug/levelc-63t4d2a-focused.log`. The normal Debug Level C
+suite passed 518/518 on the same code/test/build inputs; its guarded peak
+aggregate RSS was about 2031 MiB, and all test/build/compiler/VM processes
+exited. Evidence: `cmake-build-debug/levelc-63t4d2a-debug-qual.log`.
+
+Two reference gaps remain explicit. A missing named target raises runtime
+16.1 only when the condition arrives, but the panic source is the ON clause
+(line 2) instead of Regina's faulting BIF clause (line 4); evidence:
+`cmake-build-debug/levelc-63t4d2-matrix-focused.log` and
+`cmake-build-debug/levelc-signal-on-missing-reference.log`. A parent ON policy
+inherited by a nested CALL currently unwinds to the installing parent frame.
+Regina handles it in the active called invocation: the exposed value and
+`RC|SIGL` agree (`inner|40|10`), then RETURN resumes the caller and prints
+`after`; the VM output currently omits `after`. Evidence:
+`cmake-build-debug/levelc-63t4d2-nested-focused2.log` and
+`cmake-build-debug/levelc-63t4d2-nested-regina2.log`. Resolve both source
+provenance and nested handler ownership before 4D2/4D3 or SIGNAL closure.
+Other condition names, complete reference matrix, LC-AC-76, ARG and full
+Level C/Release 1 qualification remain open.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the

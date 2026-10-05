@@ -52,13 +52,13 @@
 #define LEVELC_BIF_CONTEXT_PREFIX "__rxcp_levelc_bif_context_"
 #define LEVELC_EXPR_RESULT_PREFIX "__rxcp_levelc_expr_"
 #define LEVELC_SIGNAL_TARGET_PREFIX "__rxcp_levelc_signal_target_"
+#define LEVELC_SIGNAL_EVENT_SYMBOL "__rxcp_levelc_signal_event"
 #define LEVELC_PARSE_FIELDS_PREFIX "__rxcp_levelc_parse_fields_"
 #define LEVELC_PARSE_SOURCE_PREFIX "__rxcp_levelc_parse_source_"
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_DO_STATE_PREFIX "__rxcp_levelc_do_state_"
 #define LEVELC_BIF_TRANSLATE_HELPER "rexxclassicbif_translate"
 #define LEVELC_BIF_CONTEXT_CLASS "RexxBifCallContext"
-#define LEVELC_BIF_CHECKED_HELPER "rexxclassicbif_checked"
 #define LEVELC_REXX_VALUE_CLASS "RexxValue"
 #define LEVELC_REXX_VALUE_CLASS_TYPE ".RexxValue"
 #define LEVELC_INT_CLASS_TYPE ".int"
@@ -104,6 +104,14 @@ typedef struct {
     const char *module;
     const char *entry;
 } LevelCBifEntry;
+
+typedef struct {
+    ASTNode *source;
+    ASTNode *trampoline;
+    ASTNode *destination;
+    char *condition;
+    char *target_name;
+} LevelCSignalHandler;
 
 #define LEVELC_DIRECT_BIF(name, module, entry) \
     {name, module, module "." entry}
@@ -181,6 +189,8 @@ typedef struct {
     size_t procedure_count;
     LevelCDoHeader *do_headers;
     size_t do_header_count;
+    LevelCSignalHandler *signal_handlers;
+    size_t signal_handler_count;
     LevelCLoopBinding *active_loop;
     uint64_t used_direct_bifs;
 } LevelCLowerPlan;
@@ -294,8 +304,13 @@ static void levelc_lower_plan_free(LevelCLowerPlan *plan) {
     for (i = 0; i < plan->procedure_count; i++) {
         if (plan->procedures[i].name) free(plan->procedures[i].name);
     }
+    for (i = 0; i < plan->signal_handler_count; i++) {
+        free(plan->signal_handlers[i].condition);
+        free(plan->signal_handlers[i].target_name);
+    }
     if (plan->procedures) free(plan->procedures);
     free(plan->do_headers);
+    free(plan->signal_handlers);
     memset(plan, 0, sizeof(*plan));
 }
 
@@ -1444,6 +1459,26 @@ static int levelc_statement_supported(ASTNode *stmt,
             stmt->child->child && !stmt->child->child->sibling)
             return levelc_expr_supported(stmt->child->child, plan, reason_out);
     }
+    if (stmt->node_type == LEVELC_SIGNAL && stmt->child &&
+        stmt->child->node_type == LITERAL) {
+        ASTNode *mode = stmt->child;
+        ASTNode *condition = mode->sibling;
+        ASTNode *name_clause = condition ? condition->sibling : NULL;
+        char *mode_name = levelc_upper_name(mode);
+        char *condition_name = condition && condition->node_type == LITERAL
+            ? levelc_upper_name(condition) : NULL;
+        int supported = mode_name && condition_name &&
+            strcmp(condition_name, "SYNTAX") == 0 &&
+            ((strcmp(mode_name, "OFF") == 0 && !name_clause) ||
+             (strcmp(mode_name, "ON") == 0 &&
+              (!name_clause ||
+               (name_clause->node_type == LITERAL && !name_clause->sibling &&
+                name_clause->child && !name_clause->child->sibling &&
+                name_clause->child->node_type == LITERAL))));
+        free(mode_name);
+        free(condition_name);
+        if (supported) return 1;
+    }
     if (in_procedure && stmt->node_type == LEVELC_PROCEDURE)
         return levelc_procedure_tail_supported(stmt, reason_out);
     if (stmt->node_type == NOP) return stmt->child == NULL;
@@ -1750,16 +1785,14 @@ static int levelc_append_activation_method(Context *context,
     return 1;
 }
 
-static int levelc_append_classic_error_if(Context *context,
-                                          ASTNode *instructions,
-                                          ASTNode *anchor,
-                                          ASTNode *condition,
-                                          const char *detail) {
+static int levelc_append_classic_error_if_expr(Context *context,
+                                               ASTNode *instructions,
+                                               ASTNode *anchor,
+                                               ASTNode *condition,
+                                               ASTNode *signal_detail) {
     ASTNode *signal = ast_ftt(context, ASSEMBLER, strdup("signal"));
     ASTNode *signal_name = rxcp_remap_create_string_constant(
         context, anchor, "CLASSIC_SYNTAX");
-    ASTNode *signal_detail = rxcp_remap_create_string_constant(
-        context, anchor, detail);
     ASTNode *then_instructions = rxcp_remap_create_instruction_builder(
         context, anchor);
     ASTNode *then_block;
@@ -1779,6 +1812,17 @@ static int levelc_append_classic_error_if(Context *context,
     if (!branch) return 0;
     add_ast(instructions, branch);
     return 1;
+}
+
+static int levelc_append_classic_error_if(Context *context,
+                                          ASTNode *instructions,
+                                          ASTNode *anchor,
+                                          ASTNode *condition,
+                                          const char *detail) {
+    ASTNode *signal_detail = rxcp_remap_create_string_constant(
+        context, anchor, detail);
+    return signal_detail && levelc_append_classic_error_if_expr(
+        context, instructions, anchor, condition, signal_detail);
 }
 
 static int levelc_append_procedure_entry(Context *context,
@@ -2045,13 +2089,16 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     char *args_name;
     char *exists_name;
     char *context_name;
+    char *result_name;
     ASTNode *statement;
     ASTNode *receiver;
     ASTNode *member_args[2];
     ASTNode *call_args[1];
     ASTNode *function_args[2];
-    ASTNode *checked_args[2];
     ASTNode *direct_call;
+    ASTNode *condition;
+    ASTNode *detail;
+    ASTNode *result;
     ASTNode *arg;
     size_t arg_count;
     size_t index;
@@ -2063,10 +2110,12 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     args_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_ARGS_PREFIX, expr);
     exists_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_EXISTS_PREFIX, expr);
     context_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_CONTEXT_PREFIX, expr);
-    if (!args_name || !exists_name || !context_name) {
+    result_name = rxcp_remap_create_generated_node_name(LEVELC_EXPR_RESULT_PREFIX, expr);
+    if (!args_name || !exists_name || !context_name || !result_name) {
         if (args_name) free(args_name);
         if (exists_name) free(exists_name);
         if (context_name) free(context_name);
+        if (result_name) free(result_name);
         return NULL;
     }
 
@@ -2191,25 +2240,35 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
                                                   callee_name,
                                                   function_args,
                                                   activation_bif ? 2 : 1);
-    checked_args[0] = rxcp_remap_create_reference_expr(
-            context, expr,
-            rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name));
-    checked_args[1] = direct_call;
-    if (!direct_call || !checked_args[0]) goto fail;
+    statement = direct_call ? rxcp_remap_create_named_assignment(
+        context, expr, result_name, direct_call) : NULL;
+    if (!statement) goto fail;
+    add_ast(prelude, statement);
+
+    receiver = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name);
+    condition = receiver ? rxcp_remap_create_member_call(
+        context, expr, receiver, "hasError", NULL, 0) : NULL;
+    receiver = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name);
+    detail = receiver ? rxcp_remap_create_member_call(
+        context, expr, receiver, "errorDetail", NULL, 0) : NULL;
+    if (!condition || !detail ||
+        !levelc_append_classic_error_if_expr(context, prelude, expr,
+                                             condition, detail)) goto fail;
+
+    result = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, result_name);
+    if (!result) goto fail;
 
     free(args_name);
     free(exists_name);
     free(context_name);
-    return rxcp_remap_create_function_call(context,
-                                           expr,
-                                           LEVELC_BIF_CHECKED_HELPER,
-                                           checked_args,
-                                           2);
+    free(result_name);
+    return result;
 
 fail:
     free(args_name);
     free(exists_name);
     free(context_name);
+    free(result_name);
     return NULL;
 }
 
@@ -2762,6 +2821,7 @@ static int levelc_append_procedure_exposes(Context *context,
 static ASTNode *levelc_build_options(Context *context,
                                      ASTNode *anchor_node,
                                      int needs_translate,
+                                     int needs_signal_policy,
                                      const LevelCLowerPlan *plan) {
     ASTNode *options;
     ASTNode *levelb;
@@ -2774,6 +2834,7 @@ static ASTNode *levelc_build_options(Context *context,
     ASTNode *import_config;
     ASTNode *import_bifs;
     ASTNode *import_translate;
+    ASTNode *import_signal;
     size_t i;
     int needs_do_state = context->levelc_strict_classic;
 
@@ -2807,10 +2868,16 @@ static ASTNode *levelc_build_options(Context *context,
                                              anchor_node ? anchor_node : options,
                                              "rexxclassicbiftranslate")
         : NULL;
+    import_signal = needs_signal_policy
+        ? rxcp_remap_create_generated_import(context,
+                                             anchor_node ? anchor_node : options,
+                                             "rxfnsb")
+        : NULL;
     if (!levelb || !comments_dash || !numeric_classic || !import_value ||
         !import_pool || !import_activation || (needs_do_state && !import_do) ||
         !import_config || !import_bifs ||
-        (needs_translate && !import_translate)) return NULL;
+        (needs_translate && !import_translate) ||
+        (needs_signal_policy && !import_signal)) return NULL;
 
     add_ast(options, levelb);
     add_ast(options, comments_dash);
@@ -2822,6 +2889,7 @@ static ASTNode *levelc_build_options(Context *context,
     add_ast(options, import_config);
     add_ast(options, import_bifs);
     if (import_translate) add_ast(options, import_translate);
+    if (import_signal) add_ast(options, import_signal);
     for (i = 0; plan && i < LEVELC_DIRECT_BIF_COUNT; i++) {
         const char *module;
         ASTNode *import;
@@ -3613,6 +3681,88 @@ static int levelc_append_signal_sigl(Context *context,
     return 1;
 }
 
+static int levelc_signal_mode(ASTNode *stmt, const char *expected) {
+    char *mode = stmt && stmt->child ? levelc_upper_name(stmt->child) : NULL;
+    int equal = mode && strcmp(mode, expected) == 0;
+    free(mode);
+    return equal;
+}
+
+static ASTNode *levelc_signal_handler_node(Context *context,
+                                            ASTNode *source,
+                                            NodeType type,
+                                            char *condition,
+                                            ASTNode *destination) {
+    ASTNode *node = levelc_frame_node(context, source, type, destination);
+    if (!node) return NULL;
+    ast_copy_str(node, condition);
+    return node;
+}
+
+static int levelc_lower_signal_policy(Context *context,
+                                       ASTNode *instructions,
+                                       ASTNode *stmt,
+                                       LevelCLowerPlan *plan,
+                                       const char **reason_out) {
+    ASTNode *condition_node = stmt->child->sibling;
+    char *condition = levelc_upper_name(condition_node);
+    ASTNode *operation;
+
+    if (!condition) goto fail;
+    if (levelc_signal_mode(stmt, "OFF")) {
+        operation = levelc_signal_handler_node(context, stmt,
+                                                FRAME_HANDLER_OFF, condition,
+                                                NULL);
+        free(condition);
+        if (!operation) goto fail;
+        add_ast(instructions, operation);
+        return 1;
+    }
+    if (levelc_signal_mode(stmt, "ON")) {
+        LevelCSignalHandler *handlers;
+        LevelCSignalHandler *handler;
+        ASTNode *target = condition_node->sibling;
+        char *name = target ? levelc_upper_name(target->child)
+                            : strdup(condition);
+        LevelCProcedureSlice *destination;
+        ASTNode *binding;
+        if (!name) {
+            free(condition);
+            goto fail;
+        }
+        destination = levelc_find_procedure(plan, name);
+        handlers = realloc(plan->signal_handlers,
+                           sizeof(*handlers) * (plan->signal_handler_count + 1));
+        if (!handlers) {
+            free(condition);
+            free(name);
+            goto fail;
+        }
+        plan->signal_handlers = handlers;
+        handler = &handlers[plan->signal_handler_count++];
+        handler->source = stmt;
+        handler->trampoline = levelc_frame_node(context, stmt, FRAME_LABEL, NULL);
+        handler->destination = destination ? destination->frame_label : NULL;
+        handler->condition = condition;
+        handler->target_name = name;
+        operation = handler->trampoline
+            ? levelc_signal_handler_node(context, stmt, FRAME_HANDLER_ON,
+                                         condition, handler->trampoline)
+            : NULL;
+        binding = operation ? rxcp_remap_create_named_ref(
+            context, stmt, VAR_TARGET, LEVELC_SIGNAL_EVENT_SYMBOL) : NULL;
+        if (!operation || !binding) goto fail;
+        add_ast(operation, binding);
+        add_ast(instructions, operation);
+        return 1;
+    }
+    free(condition);
+
+fail:
+    if (reason_out) *reason_out = "failed to lower Level C SIGNAL condition policy";
+    return 0;
+}
+
 static int levelc_lower_direct_signal(Context *context,
                                       ASTNode *instructions,
                                       ASTNode *stmt,
@@ -3774,11 +3924,14 @@ static int levelc_lower_statement(Context *context,
         return levelc_lower_arg_instruction(context, instructions, stmt, reason_out);
     }
     if (stmt->node_type == LEVELC_SIGNAL) {
-        return stmt->child && stmt->child->node_type == LEVELC_SIGNAL_VALUE
-            ? levelc_lower_value_signal(context, instructions, stmt, plan,
-                                        reason_out)
-            : levelc_lower_direct_signal(context, instructions, stmt, plan,
-                                         reason_out);
+        if (stmt->child && stmt->child->node_type == LEVELC_SIGNAL_VALUE)
+            return levelc_lower_value_signal(context, instructions, stmt, plan,
+                                             reason_out);
+        if (levelc_signal_mode(stmt, "ON") || levelc_signal_mode(stmt, "OFF"))
+            return levelc_lower_signal_policy(context, instructions, stmt,
+                                              plan, reason_out);
+        return levelc_lower_direct_signal(context, instructions, stmt, plan,
+                                          reason_out);
     }
     if (in_procedure && stmt->node_type == LEVELC_PROCEDURE) {
         if (!levelc_append_procedure_entry(context, instructions, stmt)) {
@@ -4278,6 +4431,75 @@ static int levelc_tree_contains_signal_value(ASTNode *node) {
     return 0;
 }
 
+static int levelc_tree_contains_signal_on(ASTNode *node) {
+    while (node) {
+        if (node->node_type == LEVELC_SIGNAL &&
+            levelc_signal_mode(node, "ON")) return 1;
+        if (levelc_tree_contains_signal_on(node->child)) return 1;
+        node = node->sibling;
+    }
+    return 0;
+}
+
+static int levelc_append_signal_trampolines(Context *context,
+                                             ASTNode *instructions,
+                                             LevelCLowerPlan *plan,
+                                             const char **reason_out) {
+    size_t i;
+    for (i = 0; i < plan->signal_handler_count; i++) {
+        LevelCSignalHandler *handler = &plan->signal_handlers[i];
+        ASTNode *off = levelc_signal_handler_node(
+            context, handler->source, FRAME_HANDLER_OFF,
+            handler->condition, NULL);
+        ASTNode *pool = levelc_pool_ref(context, handler->source, VAR_SYMBOL);
+        ASTNode *args[2];
+        ASTNode *record;
+        ASTNode *branch;
+        if (!handler->trampoline || !off || !pool) goto fail;
+        add_ast(instructions, handler->trampoline);
+        add_ast(instructions, off);
+        args[0] = rxcp_remap_create_reference_expr(
+            context, handler->source, pool);
+        args[1] = rxcp_remap_create_named_ref(
+            context, handler->source, VAR_SYMBOL,
+            LEVELC_SIGNAL_EVENT_SYMBOL);
+        record = args[0] && args[1] ? rxcp_remap_create_function_call(
+            context, handler->source,
+            "rexxclassicbifs.rexxclassic_signal_record", args, 2) : NULL;
+        record = record ? rxcp_remap_create_call_statement(
+            context, handler->source, record) : NULL;
+        if (!record) goto fail;
+        add_ast(instructions, record);
+        if (handler->destination) {
+            branch = levelc_frame_node(context, handler->source,
+                                       FRAME_BRANCH, handler->destination);
+            if (!branch) goto fail;
+            add_ast(instructions, branch);
+        } else {
+            size_t length = strlen(handler->target_name) + 64;
+            char *detail = malloc(length);
+            ASTNode *condition = rxcp_remap_create_integer_constant(
+                context, handler->source, 1, TP_BOOLEAN);
+            int okay;
+            if (!detail || !condition) {
+                free(detail);
+                goto fail;
+            }
+            snprintf(detail, length, "RXC-LC-16.1: Label not found: %s",
+                     handler->target_name);
+            okay = levelc_append_classic_error_if(
+                context, instructions, handler->source, condition, detail);
+            free(detail);
+            if (!okay) goto fail;
+        }
+    }
+    return 1;
+
+fail:
+    if (reason_out) *reason_out = "failed to append Level C SIGNAL handler entries";
+    return 0;
+}
+
 static int levelc_append_main_activation(Context *context,
                                          ASTNode *instructions,
                                          ASTNode *anchor) {
@@ -4462,14 +4684,17 @@ static int levelc_rewrite_program(Context *context,
     ASTNode *stmt;
     size_t i;
     int needs_translate = 0;
+    int needs_signal_policy = 0;
     int has_procedure;
 
     anchor = old_instructions && old_instructions->child ? old_instructions->child : program_file;
     needs_translate = levelc_tree_contains_parse_upper(old_instructions) ||
                       levelc_tree_contains_arg(old_instructions) ||
                       levelc_tree_contains_signal_value(old_instructions);
+    needs_signal_policy = levelc_tree_contains_signal_on(old_instructions);
     has_procedure = levelc_tree_contains_procedure(old_instructions);
-    options = levelc_build_options(context, anchor, needs_translate, plan);
+    options = levelc_build_options(context, anchor, needs_translate,
+                                   needs_signal_policy, plan);
     instructions = rxcp_remap_create_instruction_builder(context, anchor);
     if (!options || !instructions) {
         if (reason_out) *reason_out = "failed to create Level C lowered program shell";
@@ -4512,6 +4737,20 @@ static int levelc_rewrite_program(Context *context,
     add_ast(instructions, body_args);
     add_ast(instructions, parent_setup);
     add_ast(instructions, inherited_pool);
+    if (needs_signal_policy) {
+        ASTNode *event_args[1] = {
+            rxcp_remap_create_string_constant(context, anchor, "")
+        };
+        ASTNode *factory = rxcp_remap_create_factory_call(
+            context, anchor, "runtime_signal", event_args, 1);
+        ASTNode *event_setup = factory ? rxcp_remap_create_named_assignment(
+            context, anchor, LEVELC_SIGNAL_EVENT_SYMBOL, factory) : NULL;
+        if (!event_setup) {
+            if (reason_out) *reason_out = "failed to create SIGNAL event storage";
+            return 0;
+        }
+        add_ast(instructions, event_setup);
+    }
     for (i = 0; plan && i < plan->procedure_count; i++) {
         plan->procedures[i].frame_label = levelc_frame_node(
             context, plan->procedures[i].label, FRAME_LABEL, NULL);
@@ -4566,6 +4805,8 @@ static int levelc_rewrite_program(Context *context,
     return_stmt = rxcp_remap_create_return_statement(context, anchor);
     if (!return_stmt) return 0;
     add_ast(instructions, return_stmt);
+    if (plan && !levelc_append_signal_trampolines(context, instructions,
+                                                  plan, reason_out)) return 0;
 
     old_instructions->parent = NULL;
     old_instructions->sibling = NULL;

@@ -5827,6 +5827,24 @@ add_levelc_runtime_slice_test(levelc_signal_value_second_label
 add_levelc_runtime_slice_test(levelc_signal_value_second_label_noopt
         rexx_src/levelc_signal_value_second_label.rexx
         "before\nbeta=3\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_on_syntax
+        rexx_src/levelc_signal_on_syntax.rexx
+        "before\ncaught=40|4\n")
+add_levelc_runtime_slice_test(levelc_signal_on_syntax_noopt
+        rexx_src/levelc_signal_on_syntax.rexx
+        "before\ncaught=40|4\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_on_default
+        rexx_src/levelc_signal_on_default.rexx
+        "before\ncaught=40|4\n")
+add_levelc_runtime_slice_test(levelc_signal_on_default_noopt
+        rexx_src/levelc_signal_on_default.rexx
+        "before\ncaught=40|4\n" -n)
+add_levelc_runtime_syntax_signal_test(levelc_signal_off_syntax
+        rexx_src/levelc_signal_off_syntax.rexx "40.14" "before\n"
+        "levelc_signal_off_syntax.rexx:5:")
+add_levelc_runtime_syntax_signal_test(levelc_signal_on_once
+        rexx_src/levelc_signal_on_once.rexx "40.14" "caught=40|3\n"
+        "levelc_signal_on_once.rexx:6:")
 add_levelc_runtime_syntax_signal_test(levelc_signal_value_missing
         rexx_src/levelc_signal_value_missing.rexx "16.1" "before\n"
         "levelc_signal_value_missing.rexx:3:")
@@ -6665,7 +6683,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice4_bif_substr_tree_shape
         "setArguments"
         "setCallerPool"
         "rexxclassicbifsubstr.rexxclassicbif_substr"
-        "rexxclassicbif_checked"
+        "errorDetail"
         "__rxcp_levelc_bif_args"
         "__rxcp_levelc_bif_exists"
         ".RexxValue"
@@ -7068,7 +7086,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice38_adjacent_call_tree_shape
         rexx_src/levelc_slice38_adjacent_call.rexx
         "rexxclassicbif_length"
         "rexxclassicbifsubstr.rexxclassicbif_substr"
-        "rexxclassicbif_checked"
+        "errorDetail"
         "__rxcp_levelc_body"
         "spaceConcat")
 add_levelc_lowered_tree_shape_test(levelc_slice39_arg_upper_tree_shape
@@ -7178,7 +7196,7 @@ add_levelc_lowered_tree_shape_test(levelc_say_pool_reads_tree_shape
 add_levelc_lowered_tree_shape_test(levelc_bif_syntax_signal_tree_shape
         rexx_src/levelc_bif_syntax_signal.rexx
         "SAY : .*\\(2:0\\)"
-        "rexxclassicbif_checked.*\\(2:4\\)"
+        "ASSEMBLER : .*signal.*\\(2:4\\)"
         "rexxclassicbifsubstr.rexxclassicbif_substr.*\\(2:4\\)")
 add_levelc_lowered_tree_shape_test(levelc_slice42_abuttal_tree_shape
         rexx_src/levelc_slice42_abuttal.rexx

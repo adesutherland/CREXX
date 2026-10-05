@@ -220,7 +220,7 @@ is the highest explicitly supplied position, so trailing omitted CALL slots
 do not increase the count. Its E/O options use each slot's presence bit; an
 explicit empty string is present. The standalone `rxfnsc` BIF module receives
 the activation frame in addition to the usual BIF call context. The compiler
-uses the same direct BIF argument builder and checked-result boundary, adding
+uses the same direct BIF argument builder and source-anchored result check, adding
 the activation argument only for this activation-scoped BIF.
 
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
@@ -557,8 +557,23 @@ The `63T-4D1` handler transport allows `FRAME_HANDLER_ON` to bind one
 `VAR_TARGET`. Its emitter selects VM `sigbrv` for that form, which writes a
 runtime signal object to the bound register on delivery before branching.
 The childless form still emits `sigbr`. The frame-control unit validates both
-canonical shapes and their RXAS output. Level C ON/OFF source lowering,
-handler-entry state updates and full condition policy remain open.
+canonical shapes and their RXAS output. The next bounded lowerer checkpoint
+handles source-order `SIGNAL ON/OFF SYNTAX` in one invocation. An ON clause
+installs a frame-local handler-entry block; that block disables SYNTAX for
+one-shot delivery, records the event's causing line in `SIGL` and its Classic
+major error code in `RC`, then branches to the named or default label. Direct
+Classic BIF calls now capture their result and test the context at the authored
+call site. Their `CLASSIC_SYNTAX` raise therefore carries that source line;
+`rexxclassicbif_checked` remains an exported library helper for other callers.
+The matching same-frame cases pass with and without optimization.
+
+The complete handler model remains open. A missing named label is raised only
+on delivery, but its 16.1 panic currently points to the ON clause rather than
+the causing clause. A trap inherited by a nested CALL currently branches in
+the installing frame, whereas the Regina reference continues through a
+handler in the active called invocation and then returns to the caller.
+Condition names beyond SYNTAX, nested policy, handler cleanup, linked proof
+and the complete SIGNAL matrix remain unqualified.
 
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.
@@ -594,7 +609,7 @@ not be added until these paths are assessed against the existing tests.
 | LC-REV-06: functional tests are stronger than structural assertions | The Level C suite contains reference-oriented, opt/no-opt, negative and tree probes. The production verifier checks parent ownership, sibling cycles and residual source-only nodes. Many tree CTests assert only that named nodes occur in debug output | Preserve all existing cases. Before aggressive AST refactoring, add a small number of decisive assertions for association targets, source anchors, generated scope/symbol ownership and evaluation order at the riskiest trees. Keep runtime equivalence and linked-image proof. Do not multiply tests merely to mirror implementation details. |
 | LC-REV-07: plan/evidence drift — status views reconciled 2026-10-05 | Earlier case-sized PARSE and DO criteria remain historical receipts. The worklist and reference appendix now distinguish closed whole instructions from shared open proof. | Keep the current status view and future whole-instruction receipts synchronized with code, tests and the reference matrix. |
 | LC-REV-08: SAY output lost embedded NUL — resolved in LC-STEP-63B | The former `rxvm_mprintf` and terminated callback path lost bytes after NUL despite length-bearing VM operands. `SAY`/`SAYX` now use `rxvm_say_write` with explicit lengths. | Default output and the single length-aware callback write the full span. The terminated callback and legacy-only test were removed in LC-STEP-63E with Adrian's approval; native hosts must rebuild. Regina, opt/no-opt, linked, UTF-8 byte, context-isolation and normal Level C checks supplied the original byte-route evidence. Whole SAY closure is tracked separately in LC-STEP-63F. |
-| LC-REV-09: BIF validation errors were dropped — core repair in LC-STEP-63C | One shared `rexxclassicbif_checked` boundary raises distinct VM `CLASSIC_SYNTAX` from `RexxBifCallContext` error state. `SAY SUBSTR('abc', 0)` stops before later output with `40.14`; direct BIF calls retain generic argument presence and caller-pool wiring. Unhandled panic output now includes the authored main or local call site through VM source metadata. | SAY direct error propagation closed in LC-STEP-63F. Host services and Classic trap behavior remain under LC-AC-04/06 and SIGNAL; focused RexxScript tests pass, but this is not full condition lifecycle proof. |
+| LC-REV-09: BIF validation errors were dropped — core repair in LC-STEP-63C, source repair in 63T-4D2 | Direct calls use one `RexxBifCallContext` result check and raise distinct VM `CLASSIC_SYNTAX` at the authored call site. `SAY SUBSTR('abc', 0)` stops before later output with `40.14`; direct BIF calls retain generic argument presence and caller-pool wiring. The exported `rexxclassicbif_checked` helper remains for library callers, but compiled Level C no longer routes through its library source line. | SAY direct error propagation closed in LC-STEP-63F. Same-frame SYNTAX catches have causing `SIGL`; missing-target source, nested policy, other conditions and full trap lifecycle remain open under SIGNAL. |
 | LC-REV-10: compiler-only variable read shape limit — resolved in LC-STEP-63A | The former guard rejected bare stems and multi-component compound tails, and the compiler split compound reads into stem/tail calls. All validated Level C variable reads now call `RexxVariablePool.symbolValue`. | Regina, opt/no-opt, linked and normal Level C proof covers substitution, case, exposure, missing/stem defaults and source anchors. Assignment and DROP are reviewed separately under LC-STEP-65A and LC-STEP-64B; shared expression and condition obligations remain open under LC-AC-04/06. |
 
 The review proposes these changes; it does not approve a new AST node, remove
