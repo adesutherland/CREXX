@@ -908,8 +908,7 @@ choice still require Adrian's approval.
    a CALL inside a local procedure, including nested arms, so ARG can read
    that callee's arguments. Prove source/canonical trees, opt/no-opt, linked
    execution and normal Level C correctness. `88E-2B` (LC-AC-08/59/71;
-   proposed after 88E-2A; **Adrian's grammar/AST approval required before
-   implementation**) replaces direct CALL's flat `simple_tail` token list
+   complete 2026-10-05 after 88E-2A) replaces direct CALL's flat `simple_tail` token list
    with the parser's existing expression/omission list, then uses the one
    general Level C expression validator and lowerer for actuals. Preserve
    omitted slots, once-only source-order evaluation, fresh frames, and CALL
@@ -1031,9 +1030,9 @@ unlinked output byte for byte (`/tmp/crexx-character-linked.6SjH5G`), and the
 Debug Level C suite passed 454/454 (`/tmp/crexx-character-levelc.jssCD8`).
 The character BIF text paths and direct BYTE isolation are evidenced, but
 `88E-1` stays open: `TRANSLATE(source, output_table)` currently reports
-`40.1` when its implicit input table is omitted. Adrian's approval is pending
-on whether that table should be mapped U+0000–U+00FF ordinals, leaving other
-Unicode scalars unchanged. No implementation of that choice is made here.
+`40.1` when its implicit input table is omitted. Adrian approved the implicit
+table as U+0000–U+00FF ordinals on 2026-10-05, leaving other Unicode scalars
+unchanged. Implement and qualify that contract in the next BIF increment.
 
 **2026-10-04 LC-STEP-88E-2A ARG checkpoint.** The Unicode ARG probe first
 exposed that a local procedure could read its own ARG frame but could not
@@ -1061,7 +1060,8 @@ ARG(1),,ARG(2)` and labels without PROCEDURE remain with the open CALL and
 PROCEDURE rows, with their ARG activation consequences to be reconciled before
 closure. LC-AC-59/61 remain open for the full instruction programme.
 
-**LC-STEP-88E-2B decision proposal (2026-10-04; awaiting Adrian).** The
+**LC-STEP-88E-2B approved design (proposed 2026-10-04; approved by Adrian
+2026-10-05).** The
 minimal `CALL relay ARG(1),,ARG(2)` probe in
 `/tmp/crexx-arg-call-expr.LTSEjA` fails with `unsupported CALL argument
 expression`. The raw tree shows why: direct CALL's `simple_tail` contains
@@ -1092,10 +1092,26 @@ removed. The prior qualified product code and tests remain intact.
    dependency separately. Keep external/condition CALL under LC-I-13.
 
 This is a source grammar/AST shape change even though it admits established
-Classic syntax rather than inventing a new rule. Under `AGENTS.md`, Adrian's
-approval is required. A lowerer-side token mini-parser would duplicate the
-existing expression grammar and create another special path; retaining the
-current guard would leave valid CALL/ARG activation behavior unfinished.
+Classic syntax rather than inventing a new rule. Adrian approved it on
+2026-10-05. A lowerer-side token mini-parser would duplicate the existing
+expression grammar and create another special path; retaining the current
+guard would leave valid CALL/ARG activation behavior unfinished. `RexxValue`
+has no absent-value state; `RexxActivationArguments` already records slot
+presence separately, so omitted actuals use that existing mechanism.
+
+**2026-10-05 LC-STEP-88E-2B receipt.** Direct CALL now parses an `ARGS` child
+of ordinary expression and `NOVAL` nodes; a call with no actuals has no `ARGS`
+child. The old flat-tail validator, comma scanner and literal decoder are
+removed. The general expression validator/lowerer populates the existing
+presence-flagged activation frame in source order. The permanent fixture
+proves nested `ARG(1)`, recursive frames, once-only side effects, middle and
+edge omissions, quoted and hex literals, arithmetic, and no-argument calls in
+optimized and no-opt modes. Raw/canonical tree inspection and `35.1` malformed
+expression diagnostics pass; the linked image produces the expected 14 lines
+(`/tmp/crexx-call-linked.6my6Ae`). Four focused CTests passed
+(`/tmp/crexx-call-tree-test3.wHgLoF`), and the normal Debug Level C suite
+passed 460/460 (`/tmp/crexx-call-levelc.YZ8tH7`). CALL's other forms and the
+remaining ARG invocation/reference audit stay open under LC-I-13 and LC-AC-71.
 
 1. **LC-STEP-01 (LC-AC-01):** reconcile the two references, the compiler's
    Classic BIF recognition inventory, runtime modules, compiler lowering,
@@ -3077,7 +3093,7 @@ expression/BIF/host-profile contract, Classic trap delivery and TRACE hooks
 remain open in `LC-AC-04/06/08` and their instruction rows; none is an
 approved exclusion or a whole-Level-C completion claim.
 
-### Pending architecture decision for LC-STEP-63T
+### Approved architecture direction for LC-STEP-63T
 
 The active lowerer treats each top-level label as a separate generated Level B
 procedure. It requires `PROCEDURE` immediately after the label and a final
@@ -3096,7 +3112,7 @@ the branch suppresses later source, labels can fall through without
 `PROCEDURE`, a called label without `PROCEDURE` shares the caller pool, and a
 trap installed outside an exposed nested procedure sees its pool mutation.
 
-**Proposed direction, awaiting Adrian's approval:** lower one Classic routine
+**Direction approved by Adrian on 2026-10-05:** lower one Classic routine
 invocation to one canonical VM frame with labeled basic blocks. Internal CALL
 enters that compiled routine at the requested label in a new invocation;
 `PROCEDURE` changes the invocation's visible pool when executed, not the
@@ -3104,11 +3120,13 @@ existence of a label. `SIGNAL` and `SIGNAL ON/OFF` use the VM branch/handler
 path with a mapping from Classic `SYNTAX` to VM `CLASSIC_SYNTAX`. Condition
 state belongs to the routine activation; the program-wide
 `RexxClassicConfig` remains configuration, and the variable pool remains
-variable storage. Add canonical AST label/branch nodes only if a reviewed
-emitter route is simpler and more supportable than existing remap builders.
+variable storage. Adrian accepts new AST node types for within-procedure
+labels and SIGNAL targets when the reviewed representation is simpler and
+reusable; carry them through validation and the emitter, rather than adding
+an ad hoc label trampoline.
 Retain the current passing BIF, pool, SAY, optimizer and linked tests while
-replacing the bounded label model. This is a proposed ownership/control-flow
-change, not an approved implementation or a completed feature.
+replacing the bounded label model. This approval settles the ownership and
+control-flow direction, not the exact node layout or a completed feature.
 
 Before any code edit, check the proposed route against these observable gates:
 
@@ -3123,7 +3141,7 @@ Before any code edit, check the proposed route against these observable gates:
   isolation pass. Full `SIGNAL`/`CALL` instruction obligations remain open
   until their separate reference matrices close.
 
-If approved, implement in this order: (1) prove label/fallthrough and
+Implement in this order: (1) prove label/fallthrough and
 invocation entry shape with a small Regina corpus; (2) add one reviewed
 canonical branch/label representation and refactor current local calls onto
 it; (3) attach VM Classic condition handlers and activation state; (4) prove

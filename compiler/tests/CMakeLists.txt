@@ -5260,6 +5260,9 @@ add_levelc_invalid_compile_test(levelc_compile_invalid_if_missing_then
 add_levelc_invalid_compile_test(levelc_arg_malformed
         rexx_src/levelc_arg_malformed.rexx
         "RXC-LC-46\\.1" "levelc_arg_malformed\\.rexx @ 2:7")
+add_levelc_invalid_compile_test(levelc_call_expression_malformed
+        rexx_src/levelc_call_expression_malformed.rexx
+        "RXC-LC-35\\.1" "levelc_call_expression_malformed\\.rexx @ 2:15")
 add_levelc_invalid_compile_test(levelc_if_missing_condition
         rexx_src/levelc_if_missing_condition.rexx
         "RXC-LC-35\\.1" "1 error")
@@ -5780,6 +5783,12 @@ add_levelc_runtime_slice_test(levelc_arg_frame_calls
 add_levelc_runtime_slice_test(levelc_arg_frame_calls_noopt
         rexx_src/levelc_arg_frame_calls.rexx
         "A /  / C\nA\n / B / \n\n / B / \n\n:B\nA:\n" -n)
+add_levelc_runtime_slice_test(levelc_call_expression_actuals
+        rexx_src/levelc_call_expression_actuals.rexx
+        "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|Ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n")
+add_levelc_runtime_slice_test(levelc_call_expression_actuals_noopt
+        rexx_src/levelc_call_expression_actuals.rexx
+        "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|Ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n" -n)
 add_levelc_runtime_slice_test(levelc_arg_static_templates
         rexx_src/levelc_arg_static_templates.rexx
         "first=AB|CD|ONE|TWO|\nrepeat=AB|CD|ONE TWO|\nmissing=|\nexposed=TAIL|\n")
@@ -6570,6 +6579,15 @@ add_test(NAME levelc_arg_template_source_tree
         -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_template_source_tree.cmake)
 set_tests_properties(levelc_arg_template_source_tree PROPERTIES LABELS "compiler;levelc")
+
+add_test(NAME levelc_call_expression_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_expression_actuals.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_call_expression_source_tree.cmake)
+set_tests_properties(levelc_call_expression_source_tree PROPERTIES LABELS "compiler;levelc")
 
 add_levelc_lowered_tree_shape_test(levelc_slice12_counted_do_tree_shape
         rexx_src/levelc_slice12_counted_do.rexx

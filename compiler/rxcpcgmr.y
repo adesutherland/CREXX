@@ -754,11 +754,19 @@ arg_instruction(I) ::= CTK_ARG(T) template_list_opt(L).
     if (L) add_ast(I, L);
 }
 
-call_instruction(I) ::= CTK_CALL(T) call_target(C) simple_tail(L).
+call_instruction(I) ::= CTK_CALL(T) call_target(C).
 {
     I = ast_f(context, CALL, T);
     add_ast(I, C);
-    if (L) add_ast(I, L);
+}
+
+call_instruction(I) ::= CTK_CALL(T) call_target(C) levelc_call_args(L).
+{
+    ASTNode *args = ast_ft(context, ARGS);
+    I = ast_f(context, CALL, T);
+    add_ast(I, C);
+    add_ast(args, L);
+    add_ast(I, args);
 }
 
 call_instruction(I) ::= CTK_CALL(T) CTK_ON(O) callable_condition(C) call_name_opt(N).

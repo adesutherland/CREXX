@@ -203,7 +203,11 @@ signature derived from its first ARG template has been removed. Current
 ARG lowering reads that frame at each execution, including repeated ARG
 instructions. Direct CALL from a local procedure, including one in a nested
 instruction arm, uses the same checked call frame and source-anchored canonical
-lowering as main. General templates share the PARSE executor.
+lowering as main. Its source `ARGS` children are parsed expressions or `NOVAL`
+omissions; both direct CALL and local function calls use the common expression
+validator/lowerer and append values in source order. A direct CALL with no
+actuals has no `ARGS` child. `RexxValue` has no absent-value state; omission is
+an activation-slot property. General templates share the PARSE executor.
 The native `rxvml_run()` entry supplies the same hidden array and starts a new
 frame on each run, including consecutive runs in one host context. Its C-string
 argument API does not carry embedded NUL bytes; internal calls and ARG values

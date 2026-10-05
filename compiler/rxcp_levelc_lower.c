@@ -1023,74 +1023,13 @@ static int levelc_arg_statement_supported(ASTNode *stmt,
     return 1;
 }
 
-static int levelc_call_tail_value_supported(ASTNode *node,
-                                            const char **reason_out) {
-    if (!node) return 0;
-    if (node->node_type == STRING || node->node_type == INTEGER ||
-        node->node_type == DECIMAL ||
-        node->node_type == CONST_SYMBOL) return 1;
-    if (node->node_type == LITERAL) {
-        return levelc_variable_value_supported(node, reason_out);
-    }
-    return 0;
-}
-
-static int levelc_call_tail_is_comma(ASTNode *node) {
-    char *text;
-    int result;
-
-    if (!node || node->node_type != TOKEN) return 0;
-    text = levelc_node_text_copy(node);
-    result = text && strcmp(text, ",") == 0;
-    free(text);
-    return result;
-}
-
-static int levelc_call_tail_supported(ASTNode *args,
-                                      size_t *arg_count_out,
-                                      const char **reason_out) {
-    ASTNode *node;
-    int expect_value;
-    size_t arg_count;
-
-    if (arg_count_out) *arg_count_out = 0;
-    if (!args) return 1;
-    if (args->node_type != ARGS) {
-        if (reason_out) *reason_out = "unsupported CALL argument tail";
-        return 0;
-    }
-
-    expect_value = 1;
-    arg_count = args->child ? 1 : 0;
-    node = args->child;
-    while (node) {
-        if (levelc_call_tail_is_comma(node)) {
-            expect_value = 1;
-            arg_count++;
-        } else if (levelc_call_tail_value_supported(node, reason_out)) {
-            if (!expect_value) {
-                if (reason_out) *reason_out = "CALL arguments must be comma separated";
-                return 0;
-            }
-            expect_value = 0;
-        } else {
-            if (reason_out) *reason_out = "unsupported CALL argument expression";
-            return 0;
-        }
-        node = node->sibling;
-    }
-
-    if (arg_count_out) *arg_count_out = arg_count;
-    return 1;
-}
-
 static int levelc_call_statement_supported(ASTNode *stmt,
                                            LevelCLowerPlan *plan,
                                            const char **reason_out) {
     char *target_name;
     LevelCProcedureSlice *procedure;
     ASTNode *args;
-    size_t arg_count;
+    ASTNode *arg;
 
     target_name = levelc_call_target_name(stmt);
     procedure = target_name ? levelc_find_procedure(plan, target_name) : NULL;
@@ -1101,8 +1040,15 @@ static int levelc_call_statement_supported(ASTNode *stmt,
     }
 
     args = stmt->child ? stmt->child->sibling : NULL;
-    if (!levelc_call_tail_supported(args, &arg_count, reason_out)) return 0;
-    (void)arg_count;
+    if (!args) return 1;
+    if (args->node_type != ARGS || args->sibling || !args->child) {
+        if (reason_out) *reason_out = "unsupported CALL argument list";
+        return 0;
+    }
+    for (arg = args->child; arg; arg = arg->sibling) {
+        if (levelc_argument_exists(arg) &&
+            !levelc_expr_supported(arg, plan, reason_out)) return 0;
+    }
     return 1;
 }
 
@@ -2542,27 +2488,6 @@ static ASTNode *levelc_parent_pool_setup_statement(Context *context,
     return assign;
 }
 
-static ASTNode *levelc_lower_call_tail_value(Context *context,
-                                             ASTNode *node,
-                                             LevelCLowerPlan *plan,
-                                             ASTNode *prelude) {
-    (void)plan;
-    (void)prelude;
-
-    if (!node) return NULL;
-    if (node->node_type == LITERAL) return levelc_pool_value(context, node);
-    if ((node->node_type == STRING || node->node_type == BINARY) && node->token) {
-        ASTNode *decoded = ast_fstr(context, node->token);
-        return decoded && (decoded->node_type == STRING || decoded->node_type == BINARY)
-            ? levelc_rexxvalue_from_literal(context, decoded) : NULL;
-    }
-    if (node->node_type == INTEGER ||
-        node->node_type == DECIMAL ||
-        node->node_type == CONST_SYMBOL)
-        return levelc_rexxvalue_from_literal(context, node);
-    return NULL;
-}
-
 static ASTNode *levelc_call_local_procedure_statement(Context *context,
                                                       ASTNode *call_node,
                                                       LevelCLowerPlan *plan,
@@ -2572,12 +2497,10 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
     char *frame_name;
     LevelCProcedureSlice *procedure;
     ASTNode *args[3];
-    ASTNode *tail;
-    ASTNode *tail_node;
+    ASTNode *actual;
     ASTNode *pool_symbol;
     ASTNode *call_expr;
     ASTNode *statement;
-    int expects_value;
 
     target_name = levelc_call_target_name(call_node);
     procedure = target_name ? levelc_find_procedure(plan, target_name) : NULL;
@@ -2605,46 +2528,20 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
         return NULL;
     }
 
-    tail = call_node->child ? call_node->child->sibling : NULL;
-    tail_node = tail ? tail->child : NULL;
-    expects_value = 1;
-    while (tail_node) {
-        if (levelc_call_tail_is_comma(tail_node)) {
-            if (expects_value &&
-                !levelc_append_call_argument(context, tail_node, prelude,
-                                             frame_name, NULL, 0)) {
-                free(function_name);
-                free(frame_name);
-                return NULL;
-            }
-            expects_value = 1;
-            tail_node = tail_node->sibling;
-            continue;
+    actual = call_node->child ? call_node->child->sibling : NULL;
+    actual = actual ? actual->child : NULL;
+    while (actual) {
+        int exists = levelc_argument_exists(actual);
+        ASTNode *actual_value = exists
+            ? levelc_lower_expr(context, actual, plan, prelude) : NULL;
+        if ((exists && !actual_value) ||
+            !levelc_append_call_argument(context, actual, prelude, frame_name,
+                                         actual_value, exists)) {
+            free(function_name);
+            free(frame_name);
+            return NULL;
         }
-        {
-            ASTNode *actual_value;
-
-            actual_value = levelc_lower_call_tail_value(context,
-                                                        tail_node,
-                                                        plan,
-                                                        prelude);
-            if (!actual_value ||
-                !levelc_append_call_argument(context, tail_node, prelude,
-                                             frame_name, actual_value, 1)) {
-                free(function_name);
-                free(frame_name);
-                return NULL;
-            }
-        }
-        expects_value = 0;
-        tail_node = tail_node->sibling;
-    }
-    if (tail && tail->child && expects_value &&
-        !levelc_append_call_argument(context, tail, prelude,
-                                     frame_name, NULL, 0)) {
-        free(function_name);
-        free(frame_name);
-        return NULL;
+        actual = actual->sibling;
     }
 
     args[2] = rxcp_remap_create_named_ref(context, call_node,
