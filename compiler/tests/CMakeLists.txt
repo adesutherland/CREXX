@@ -6131,6 +6131,17 @@ add_levelc_runtime_slice_test(levelc_call_expression_actuals
 add_levelc_runtime_slice_test(levelc_call_expression_actuals_noopt
         rexx_src/levelc_call_expression_actuals.rexx
         "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|Ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n" -n)
+set(_levelc_call_resolution_expected
+        "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_resolution_result.expected")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        "${_levelc_call_resolution_expected}")
+file(READ "${_levelc_call_resolution_expected}" _levelc_call_resolution_output)
+add_levelc_runtime_slice_test(levelc_call_resolution_result
+        rexx_src/levelc_call_resolution_result.rexx
+        "${_levelc_call_resolution_output}")
+add_levelc_runtime_slice_test(levelc_call_resolution_result_noopt
+        rexx_src/levelc_call_resolution_result.rexx
+        "${_levelc_call_resolution_output}" -n)
 add_levelc_runtime_slice_test(levelc_arg_static_templates
         rexx_src/levelc_arg_static_templates.rexx
         "first=AB|CD|ONE|TWO|\nrepeat=AB|CD|ONE TWO|\nmissing=|\nexposed=TAIL|\n")
@@ -6199,6 +6210,21 @@ add_test(NAME levelc_arg_frame_linked
         -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_frame_lifecycle.expected
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
 set_tests_properties(levelc_arg_frame_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+add_test(NAME levelc_call_resolution_result_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_resolution_result.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DNAME=levelc_call_resolution_result_linked
+        -DEXPECTED_FILE=${_levelc_call_resolution_expected}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_call_resolution_result_linked PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
@@ -7136,6 +7162,14 @@ add_test(NAME levelc_call_expression_source_tree
         -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_call_expression_source_tree.cmake)
 set_tests_properties(levelc_call_expression_source_tree PROPERTIES LABELS "compiler;levelc")
+add_test(NAME levelc_call_resolution_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_resolution_result.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_call_resolution_source_tree.cmake)
+set_tests_properties(levelc_call_resolution_source_tree PROPERTIES LABELS "compiler;levelc")
 
 add_levelc_lowered_tree_shape_test(levelc_slice12_counted_do_tree_shape
         rexx_src/levelc_slice12_counted_do.rexx

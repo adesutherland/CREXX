@@ -1,0 +1,9 @@
+args=3|1|0|1|A||
+local=done|done|VAR|77
+void=LIT|LIT|RESULT
+empty=[]|VAR
+shadow=local-length
+quoted=3
+main-argc=0
+inner=inner-result
+outer=outer-result|outer-result

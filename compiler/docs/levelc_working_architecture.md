@@ -246,6 +246,19 @@ explicit empty string is present. The standalone `rxfnsc` BIF module receives
 the activation frame in addition to the usual BIF call context. The compiler
 uses the same direct BIF argument builder and source-anchored result check, adding
 the activation argument only for this activation-scoped BIF.
+The active CALL review now routes an unquoted local label before the shared
+direct-BIF table, while a quoted uppercase name bypasses local labels and
+reaches its matching BIF. Quoted spelling is decoded without uppercasing.
+The BIF argument/context builder accepts both expression-function and CALL
+statement argument lists; local calls retain the same activation-frame actuals.
+After an ordinary CALL, one `RexxVariablePool.applyCallResult` operation sets
+both `RESULT` and `.RESULT` for an explicit value (including empty text), or
+drops both after a value-less return. The local frame's result-presence bit
+drives that operation; BIF calls always supply a value. CALL does not assign
+`RC`. This is bounded local/BIF evidence within the open whole CALL review.
+External Classic resolution and delayed CALL ON/OFF have not yet been lowered;
+their proposed configuration-owned host/VM boundary and reference matrix are
+in `docs/planning/release-1/levelc-compatibility-worklist.md` under LC-STEP-75.
 
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including

@@ -25,8 +25,8 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-13`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 602/602 with process memory monitoring after
-the whole PROCEDURE checkpoint below.
+Debug Level C checkpoint passed 606/606 with process memory monitoring after
+the bounded CALL local/BIF/result checkpoint below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 **2026-10-05 scope and VM decision.** Adrian clarified that an interface
@@ -1631,7 +1631,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-10 ITERATE — closed 2026-10-04 | LC-STEP-72A–72C | `LC-AC-70`: unnamed/named targets, end-step timing, nesting and errors across all legal loops through the shared DO/LEAVE path. |
 | LC-I-11 ARG — closed 2026-10-05 | LC-STEP-73A–73I | `LC-AC-71`: complete `PARSE UPPER ARG` semantics on admitted Classic activations, arbitrary comma templates, omitted/empty positions, Unicode and diagnostics through one shared PARSE executor and argument frame. Future CALL/INTERPRET and host modes have separate owners. |
 | LC-I-12 PROCEDURE — closed 2026-10-05 | LC-STEP-74A–74D | `LC-74-01–05`: first-instruction and diagnostics, private pool, direct/indirect scalar/stem/exact compound EXPOSE, source order, nested/recursive alias lifetime, Unicode and isolation. CALL/RETURN/EXIT and shared full Level C lifecycle remain open under their own rows. |
-| LC-I-13 CALL | LC-STEP-75 | Internal/BIF/external resolution, arguments, results and ON/OFF traps; BIF registry, routines and conditions. |
+| LC-I-13 CALL — open | LC-STEP-75 | Internal/BIF/external resolution, arguments, results and ON/OFF traps; BIF registry, routines and conditions. Local/BIF resolution and ordinary RESULT handling have bounded passing evidence; external routines and delayed traps remain open. |
 | LC-I-14 RETURN | LC-STEP-76 | Value/void, function/subroutine/outermost rules and pool/result lifecycle; CALL and PROCEDURE. |
 | LC-I-15 EXIT | LC-STEP-77 | Optional value, fallthrough equivalence, completion and finalization; programme lifecycle. |
 | LC-I-16 PULL | LC-STEP-78 | Queue/default input, optional template and empty/error behavior; host queue and PARSE source service. |
@@ -3304,6 +3304,84 @@ external CALL, and ordinary bytecode autoload does not discover/compile
 Classic source. LC-STEP-75B must define that adapter before external product
 edits. `LC-I-13`, LC-75-01–06, full Level C and Release 1 remain open.
 
+**LC-STEP-75B proposed external architecture, pending Adrian's decision.**
+Keep one compiler-side resolver: an unquoted local label wins, otherwise an
+exact-case shared BIF wins, otherwise route to `Config_ExternalRoutine`;
+quoted targets skip only the local search. Capture arguments and omission
+flags once in the existing activation frame. Local and external Classic
+subroutines report optional return presence through that frame; the BIF
+adapter always supplies a result. One CALL epilogue updates or drops
+`RESULT`/`.RESULT`; a condition-handler call deliberately preserves the
+prior RESULT instead. The guarded Regina
+`levelc-call-reference-trap-result.log` confirms that a handler returning
+`handled` leaves its caller's existing `RESULT=old` intact.
+
+Add a **configuration-owned external routine service** with a versioned
+length-aware request/result contract: exact target UTF8 bytes and length,
+source location, subroutine/function kind, ordered argument UTF8 spans and
+presence bits, caller environment/stream and variable-pool access handle;
+response distinguishes not found, optional returned Unicode text, and
+condition/error. The C-string convenience surfaces do not define this ABI.
+The default Classic provider would search the current program's directory,
+then configured module roots in order, for exact-name precompiled `.rxbin`
+and `.rexx` source, without falling back to an OS command. A source hit uses
+the existing `crexxsaa` compiler/cache path; both source and bytecode hits
+load into the current VM context and invoke a dedicated Classic entry with
+the same presence-bearing frame. That entry creates its own pool and default
+internal settings, while host services remain available, then records the
+optional result. Host-registered providers can supply a native external
+routine ahead of file search without changing CALL syntax. Reuse existing
+module load and nested-call machinery; add no RXAS opcode. Both the ordinary
+`rxvm` driver and `crexxsaa` must register the same core service, with the
+source compiler/cache configured when available. An independent VM context
+or `rxvml_run()` string-only argv would lose omissions, return presence or
+host state, so neither is the proposed call path. If a safe same-context
+nested load/call needs a new VM contract after prototype, return that exact
+change for a separate decision before editing it. This proposal implements
+the already specified `Config_ExternalRoutine` boundary but adds a public
+runtime/host entry ABI and default search policy, so approval is required
+under `AGENTS.md`; no product edit has implemented it yet.
+
+**LC-STEP-75C local/BIF/result foundation receipt, 2026-10-05.** The initial
+guarded linked reproducer in `cmake-build-debug/levelc-call-result-repro-product.log`
+showed `result=RESULT|RESULT` after an internal `RETURN 'done'`.
+`RexxVariablePool.applyCallResult` now owns the ordinary CALL epilogue:
+an explicitly returned value sets both `RESULT` and `.RESULT`, including an
+empty value; value-less completion drops both. The local one-body call reads
+the existing frame's presence/value after the callee returns. The compiler
+resolves unquoted local labels before the direct BIF table, decodes quoted
+targets without uppercasing, and lets direct CALL and expression functions
+use one BIF argument/context/error builder. BIF CALL always supplies a value;
+CALL leaves `RC` untouched. The same epilogue can accept the planned external
+provider's optional result, while CALL ON handler returns deliberately skip
+it. No VM ISA or frame architecture change was made.
+
+The permanent Regina-matched `levelc_call_resolution_result.rexx` matrix
+checks local/BIF collision, quoted bypass, source-ordered omitted/present
+arguments, zero-argument ARG BIF, empty/value-less/ordinary returns,
+`RESULT`/`.RESULT`, `RC` and nested calls. Its authored/canonical tree test
+keeps the quoted source and omission shape, and checks the result operation
+and direct BIF entry after lowering. Guarded Regina output is
+`cmake-build-debug/levelc-call-resolution-result-regina-final.log`; the
+new focused optimized/no-opt, linked and AST tests passed **4/4** in
+`cmake-build-debug/levelc-call-final-focused.log`, and 22 existing CALL,
+ARG, BIF and function-result tests passed in
+`cmake-build-debug/levelc-call-local-bif-focused.log`. The guarded core
+product build passed in `cmake-build-debug/levelc-call-resolution-final-build.log`.
+The normal Debug Level C suite passed **606/606** in
+`cmake-build-debug/levelc-call-normal-debug.log`, peaked at **5024.3 MiB**
+aggregate RSS, and left zero child processes. Level B/G and RexxScript
+isolation passed **10/10** in `cmake-build-debug/levelc-call-isolation.log`.
+The post-fix linked reproducer passed in
+`cmake-build-debug/levelc-call-result-repro-product-after.log`.
+
+This is an implementation increment within LC-I-13, not its closure.
+LC-75-01–06 remain open until external Classic dispatch, delayed CALL ON/OFF,
+full error/reference cases and host lifecycle pass. The external service
+proposal above is awaiting Adrian's decision; no external product edit has
+begun. RETURN, EXIT, ADDRESS, SIGNAL, PARSE, full Level C and Release 1
+retain their own open criteria.
+
 **LC-STEP-73H historical profile bridge — superseded 2026-10-04.** The
 following proposal and `LC-73H-*` checks are retained as design history and
 probe evidence. They are not active implementation steps after Adrian's
@@ -4760,7 +4838,7 @@ language boundaries; they do not excuse unfinished instruction or host work.
 | Control | LEAVE/ITERATE | Both whole instructions closed under LC-AC-69/70, including named/unnamed transfers and default/STRICTC timing | Shared SIGNAL/TRACE and invocation lifecycle remain open |
 | Control | SELECT/WHEN/OTHERWISE | Whole SELECT instruction closed under LC-AC-68/LC-STEP-69C | Shared condition, TRACE and host lifecycle remain open |
 | Control | NOP | Whole instruction closed under LC-AC-64: childless opt/no-opt, nested SELECT/IF/DO/local, source anchors, invalid `21.1`, normal and linked proof | Shared labeled-clause, TRACE and host text lifecycle remains open under LC-AC-04/08 and later rows |
-| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | One generated body dispatches main/local labels with fresh frames; ARG and PROCEDURE whole-instruction reviews are closed, including exact compound EXPOSE, private-pool lifetime and source-anchored 17.1 | External CALL, full RETURN/EXIT and shared invocation lifecycle retain their own open reviews |
+| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | One generated body dispatches main/local labels with fresh frames; ARG and PROCEDURE whole-instruction reviews are closed. CALL local/BIF resolution and ordinary result presence/drop have bounded proof. | External CALL, delayed traps, full RETURN/EXIT and shared invocation lifecycle retain their own open reviews |
 | PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Shared `parseplan` executes VAR/VALUE and ARG templates with arbitrary targets, comma positions, static/dynamic patterns and positions, compound targets and Classic 26.4 dynamic-position errors | Whole PARSE review, remaining source acquisition, configuration and errors |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
 | Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | SYNTAX/NOVALUE producers and bounded SIGNAL handler delivery run on the one-frame model; other producers have separate owners | Full SIGNAL/CALL traps, producer delivery, messages and lifecycle remain open |
@@ -4787,7 +4865,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL accepts expression actuals, omitted slots and fresh one-body frames | External resolution, results, ON/OFF trap lifecycle, errors and whole-instruction review open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop; opt/no-opt, AST and linked bounded proof under LC-STEP-75C | External resolution, delayed ON/OFF trap lifecycle, full errors and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |

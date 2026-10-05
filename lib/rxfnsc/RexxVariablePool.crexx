@@ -453,6 +453,25 @@ RexxVariablePool: class
     call resolvedSetValue(resolveSymbolName(name), item)
     return
 
+  /**
+   * Apply one ordinary Classic CALL result to both visible result names.
+   * A bare RETURN or other value-less completion removes any prior values.
+   * Condition-handler calls skip this method because their result is ignored.
+   * @param present whether the invoked routine returned a value
+   * @param item the returned Unicode scalar, including an explicit empty value
+   */
+  applyCallResult: method = .void
+    arg present = .boolean, item = .RexxValue
+    if present then do
+      call setSymbolValue("RESULT", item)
+      call setSymbolValue(".RESULT", item)
+    end
+    else do
+      call dropSymbol("RESULT")
+      call dropSymbol(".RESULT")
+    end
+    return
+
   /** Assign a name whose compound tail has already been substituted. */
   resolvedSetValue: method = .void
     arg resolved = .string, item = .RexxValue

@@ -7,12 +7,11 @@
 /**
  * Level C Classic REXX lowering tracer.
  *
- * The active tracer slices deliberately accept only proven shapes: direct
- * scalar and compound pool reads/writes, string and integer literals, proven
- * expression operators, SAY, NOP, direct scalar DROP, nested IF, SELECT and
- * bounded DO forms, and local PROCEDURE EXPOSE over ordered variable lists.
- * Everything else reports an unsupported-shape diagnostic until its lowering
- * and runtime contract are implemented.
+ * The active lowering accepts only reviewed Classic instruction and
+ * expression shapes. The one-body frame, argument activation, variable pool,
+ * direct BIF table and condition scaffolding are shared across those shapes.
+ * Unreviewed external CALL and delayed CALL ON/OFF still report an explicit
+ * unsupported-shape diagnostic until their contracts are implemented.
  */
 
 #include <ctype.h>
@@ -369,6 +368,10 @@ static int levelc_lower_plan_add_procedure(LevelCLowerPlan *plan,
 }
 
 static char *levelc_upper_name(ASTNode *node);
+static int levelc_parseplan_literal(ASTNode *pattern,
+                                    unsigned char **bytes_out,
+                                    size_t *length_out,
+                                    size_t *chars_out);
 static LevelCProcedureSlice *levelc_find_procedure(LevelCLowerPlan *plan,
                                                    const char *name);
 static ASTNode *levelc_frame_node(Context *context, ASTNode *source,
@@ -908,11 +911,21 @@ static int levelc_assignment_target_supported(ASTNode *node,
 
 static char *levelc_call_target_name(ASTNode *call_node) {
     ASTNode *target;
+    unsigned char *decoded = NULL;
+    size_t length = 0;
+    size_t chars = 0;
 
     if (!call_node || call_node->node_type != CALL) return NULL;
     target = call_node->child;
-    if (!target || target->node_type != LITERAL) return NULL;
-    return levelc_upper_name(target);
+    if (!target) return NULL;
+    if (target->node_type == LITERAL) return levelc_upper_name(target);
+    if (target->node_type != STRING ||
+        !levelc_parseplan_literal(target, &decoded, &length, &chars)) return NULL;
+    if (!length || strlen((const char *)decoded) != length) {
+        free(decoded);
+        return NULL;
+    }
+    return (char *)decoded;
 }
 
 static LevelCProcedureSlice *levelc_find_procedure(LevelCLowerPlan *plan,
@@ -926,6 +939,22 @@ static LevelCProcedureSlice *levelc_find_procedure(LevelCLowerPlan *plan,
         }
     }
     return NULL;
+}
+
+static char *levelc_resolve_call_target(ASTNode *call_node,
+                                        LevelCLowerPlan *plan,
+                                        LevelCProcedureSlice **procedure_out,
+                                        const LevelCBifEntry **bif_out,
+                                        size_t *bif_index_out) {
+    char *name = levelc_call_target_name(call_node);
+    ASTNode *target = call_node ? call_node->child : NULL;
+    LevelCProcedureSlice *procedure = name && target &&
+        target->node_type == LITERAL ? levelc_find_procedure(plan, name) : NULL;
+    const LevelCBifEntry *bif = name && !procedure
+        ? levelc_find_direct_bif(name, bif_index_out) : NULL;
+    if (procedure_out) *procedure_out = procedure;
+    if (bif_out) *bif_out = bif;
+    return name;
 }
 
 static int levelc_procedure_tail_supported(ASTNode *procedure_node,
@@ -1061,19 +1090,24 @@ static int levelc_call_statement_supported(ASTNode *stmt,
                                            const char **reason_out) {
     char *target_name;
     LevelCProcedureSlice *procedure;
+    const LevelCBifEntry *bif;
+    size_t bif_index = 0;
     ASTNode *args;
     ASTNode *arg;
 
-    target_name = levelc_call_target_name(stmt);
-    procedure = target_name ? levelc_find_procedure(plan, target_name) : NULL;
+    target_name = levelc_resolve_call_target(stmt, plan, &procedure, &bif,
+                                              &bif_index);
     if (target_name) free(target_name);
-    if (!procedure) {
+    if (!procedure && !bif) {
         if (reason_out) *reason_out = "unsupported CALL target";
         return 0;
     }
 
     args = stmt->child ? stmt->child->sibling : NULL;
-    if (!args) return 1;
+    if (!args) {
+        if (bif && plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+        return 1;
+    }
     if (args->node_type != ARGS || args->sibling || !args->child) {
         if (reason_out) *reason_out = "unsupported CALL argument list";
         return 0;
@@ -1082,6 +1116,7 @@ static int levelc_call_statement_supported(ASTNode *stmt,
         if (levelc_argument_exists(arg) &&
             !levelc_expr_supported(arg, plan, reason_out)) return 0;
     }
+    if (bif && plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
     return 1;
 }
 
@@ -2238,6 +2273,8 @@ fail:
 
 static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
                                                ASTNode *expr,
+                                               ASTNode *first_argument,
+                                               size_t argument_count,
                                                const char *bif_name,
                                                LevelCLowerPlan *plan,
                                                ASTNode *prelude,
@@ -2287,9 +2324,9 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
         if (!rxcp_remap_begin_argument_frame(context, prelude, expr, &frame)) goto fail;
     }
 
-    arg_count = levelc_function_argument_count(expr);
+    arg_count = argument_count;
     if (single_value_override && arg_count != 1) goto fail;
-    arg = expr->child;
+    arg = first_argument;
     index = 1;
     while (index <= arg_count) {
         ASTNode *value_rhs;
@@ -2566,8 +2603,9 @@ static ASTNode *levelc_lower_function_call(Context *context,
     procedure = plan ? levelc_find_procedure(plan, name) : NULL;
     bif = procedure ? NULL : levelc_find_direct_bif(name, NULL);
     if (bif) {
-        ASTNode *call = levelc_lower_bif_dispatch_call(context, expr, name, plan,
-                                                       prelude, bif->entry, NULL);
+        ASTNode *call = levelc_lower_bif_dispatch_call(
+            context, expr, expr->child, levelc_function_argument_count(expr),
+            name, plan, prelude, bif->entry, NULL);
         free(name);
         return call;
     }
@@ -2775,28 +2813,35 @@ static ASTNode *levelc_parent_pool_setup_statement(Context *context,
     return assign;
 }
 
+static ASTNode *levelc_apply_call_result_statement(Context *context,
+                                                   ASTNode *call_node,
+                                                   ASTNode *present,
+                                                   ASTNode *value) {
+    ASTNode *pool = levelc_pool_ref(context, call_node, VAR_SYMBOL);
+    ASTNode *args[2] = { present, value };
+    return pool && present && value
+        ? rxcp_remap_create_member_call_statement(
+            context, call_node, pool, "applyCallResult", args, 2)
+        : NULL;
+}
+
 static ASTNode *levelc_call_local_procedure_statement(Context *context,
                                                       ASTNode *call_node,
                                                       LevelCLowerPlan *plan,
+                                                      LevelCProcedureSlice *procedure,
                                                       ASTNode *prelude) {
-    char *target_name;
     char *frame_name;
-    LevelCProcedureSlice *procedure;
     ASTNode *args[4];
     ASTNode *actual;
     ASTNode *pool_symbol;
     ASTNode *call_expr;
     ASTNode *statement;
+    ASTNode *receiver;
+    ASTNode *present;
+    ASTNode *value;
     size_t entry;
 
-    target_name = levelc_call_target_name(call_node);
-    procedure = target_name ? levelc_find_procedure(plan, target_name) : NULL;
-    if (!target_name || !procedure) {
-        if (target_name) free(target_name);
-        return NULL;
-    }
-
-    free(target_name);
+    if (!procedure) return NULL;
     entry = (size_t)(procedure - plan->procedures) + 1;
     if (entry > INT_MAX) return NULL;
 
@@ -2832,11 +2877,65 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
                                                 LEVELC_BODY_NAME,
                                                 args,
                                                 4);
-    free(frame_name);
-    if (!call_expr) return NULL;
+    if (!call_expr) {
+        free(frame_name);
+        return NULL;
+    }
 
     statement = rxcp_remap_create_call_statement(context, call_node, call_expr);
-    return statement;
+    if (!statement) {
+        free(frame_name);
+        return NULL;
+    }
+    add_ast(prelude, statement);
+    receiver = rxcp_remap_create_named_ref(context, call_node, VAR_SYMBOL,
+                                           frame_name);
+    present = receiver ? rxcp_remap_create_member_call(
+        context, call_node, receiver, "hasReturnValue", NULL, 0) : NULL;
+    receiver = rxcp_remap_create_named_ref(context, call_node, VAR_SYMBOL,
+                                           frame_name);
+    value = receiver ? rxcp_remap_create_member_call(
+        context, call_node, receiver, "returnValue", NULL, 0) : NULL;
+    free(frame_name);
+    return levelc_apply_call_result_statement(context, call_node, present, value);
+}
+
+static ASTNode *levelc_call_bif_statement(Context *context,
+                                         ASTNode *call_node,
+                                         LevelCLowerPlan *plan,
+                                         ASTNode *prelude,
+                                         const char *name,
+                                         const LevelCBifEntry *bif) {
+    ASTNode *args = call_node->child ? call_node->child->sibling : NULL;
+    ASTNode *arg = args ? args->child : NULL;
+    ASTNode *cursor;
+    ASTNode *result;
+    ASTNode *present;
+    size_t count = 0;
+    for (cursor = arg; cursor; cursor = cursor->sibling) count++;
+    result = levelc_lower_bif_dispatch_call(
+        context, call_node, arg, count, name, plan, prelude, bif->entry, NULL);
+    present = rxcp_remap_create_integer_constant(
+        context, call_node, 1, TP_BOOLEAN);
+    return levelc_apply_call_result_statement(context, call_node,
+                                              present, result);
+}
+
+static ASTNode *levelc_lower_call_statement(Context *context,
+                                           ASTNode *call_node,
+                                           LevelCLowerPlan *plan,
+                                           ASTNode *prelude) {
+    LevelCProcedureSlice *procedure = NULL;
+    const LevelCBifEntry *bif = NULL;
+    char *name = levelc_resolve_call_target(call_node, plan, &procedure,
+                                             &bif, NULL);
+    ASTNode *result = procedure
+        ? levelc_call_local_procedure_statement(
+            context, call_node, plan, procedure, prelude)
+        : bif ? levelc_call_bif_statement(
+            context, call_node, plan, prelude, name, bif) : NULL;
+    free(name);
+    return result;
 }
 
 static ASTNode *levelc_expose_value_statement(Context *context,
@@ -3645,9 +3744,10 @@ static int levelc_lower_template_segment(Context *context,
         ASTNode *function_arg = ast_f(context, VAR_SYMBOL, stmt->token);
         if (!function || !function_arg) goto fail;
         add_ast(function, function_arg);
-        value = levelc_lower_bif_dispatch_call(context, function, "TRANSLATE", NULL,
-                                               prelude, LEVELC_BIF_TRANSLATE_HELPER,
-                                               value);
+        value = levelc_lower_bif_dispatch_call(
+            context, function, function->child,
+            levelc_function_argument_count(function), "TRANSLATE", NULL,
+            prelude, LEVELC_BIF_TRANSLATE_HELPER, value);
         if (!value) goto fail;
     }
 
@@ -4047,9 +4147,10 @@ static int levelc_lower_value_signal(Context *context,
     function_arg = ast_f(context, VAR_SYMBOL, value_form->token);
     if (!value || !function || !function_arg) goto fail;
     add_ast(function, function_arg);
-    upper = levelc_lower_bif_dispatch_call(context, function, "TRANSLATE", plan,
-                                            prelude, LEVELC_BIF_TRANSLATE_HELPER,
-                                            value);
+    upper = levelc_lower_bif_dispatch_call(
+        context, function, function->child,
+        levelc_function_argument_count(function), "TRANSLATE", plan,
+        prelude, LEVELC_BIF_TRANSLATE_HELPER, value);
     as_string = upper ? rxcp_remap_create_member_call(
         context, stmt, upper, "asString", NULL, 0) : NULL;
     capture = as_string ? rxcp_remap_create_named_assignment(
@@ -4176,7 +4277,7 @@ static int levelc_lower_statement(Context *context,
     } else if (stmt->node_type == SAY) {
         lowered = levelc_say_statement(context, stmt, plan, prelude);
     } else if (stmt->node_type == CALL) {
-        lowered = levelc_call_local_procedure_statement(context, stmt, plan, prelude);
+        lowered = levelc_lower_call_statement(context, stmt, plan, prelude);
     } else if (!in_procedure && stmt->node_type == EXIT) {
         lowered = rxcp_remap_create_return_statement(context, stmt);
     } else if (in_procedure && stmt->node_type == RETURN) {

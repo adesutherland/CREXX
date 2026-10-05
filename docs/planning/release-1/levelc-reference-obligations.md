@@ -76,7 +76,7 @@ instruction closure and detailed receipts.
 | LC-REF-052 | Constant symbols, reserved pool 0 and SIGL/.SIGL updates | text | Front end/runtime pieces; state and label-search proof open |
 | LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | text | RexxValue foundation; full context and condition proof open |
 | LC-REF-054 | Exact logical values and contextual `34.*` identities | text | IF/SELECT/DO checks pass; other contexts open |
-| LC-REF-055 | Function/CALL omitted arguments and resolution order | host | Direct local CALL expression actuals and omitted slots pass bounded proof; BIF/external resolution and whole CALL lifecycle open |
+| LC-REF-055 | Function/CALL omitted arguments and resolution order | host | Direct local CALL expression actuals/omissions, local-before-BIF resolution, quoted BIF bypass and ordinary RESULT presence/drop pass bounded proof under LC-STEP-75C; external resolution, delayed traps and whole CALL lifecycle open |
 | LC-REF-056 | Function RETURN value, `45.1` and RESULT/.RESULT lifecycle | text | Bounded local RETURN; complete call state open |
 | LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | host | Open: processor lifecycle |
 | LC-REF-058 | ADDRESS selection/swap, transient command and WITH redirection | host | Front end; configured execution open |
