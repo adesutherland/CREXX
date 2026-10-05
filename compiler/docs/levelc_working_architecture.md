@@ -12,9 +12,9 @@ The first DSLSH syntax-highlighting milestone is complete. Compiled Level C
 also has ten closed whole-instruction reviews and substantial ARG, PARSE and
 BIF foundations; the [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
 owns their exact status and evidence. The approved one-frame label/SIGNAL
-architecture is the next shared ARG/PROCEDURE/CALL dependency. Its reference
-review is complete, and canonical frame-control nodes are in progress; the
-one-body lowerer and runtime route have not been implemented. Accepted shapes lower to the ordinary compiler and bytecode
+architecture is the active shared ARG/PROCEDURE/CALL dependency. Its reference
+review and canonical frame-control nodes are complete, and the one-body
+lowerer has bounded passing invocation and SIGNAL checkpoints. Accepted shapes lower to the ordinary compiler and bytecode
 toolchain; unsupported shapes fail closed.
 
 ## Current architecture and product boundary
@@ -583,8 +583,24 @@ cleanup, linked proof for the full matrix and SIGNAL closure remain open.
 The `63T-4D3-1` transport reserves VM signal 29 as `CLASSIC_CONDITION` with a
 typed `RexxClassicConditionEvent` payload holding a non-SYNTAX condition ID
 and Unicode description. A guarded linked test proves payload and source
-transport with and without optimization; the compiler's dispatcher and
-condition producers remain open.
+transport with and without optimization. The `63T-4D3-2` lowerer now installs
+one frame-local handler for that event when any non-SYNTAX ON clause exists.
+The handler reads the typed condition ID and the current activation's policy
+selection, then branches to that ON clause's trampoline. A one-shot trap
+clears only the selected condition; child calls inherit a copy, so child OFF,
+override and delivery leave the parent's policy intact. Malformed or
+unmatched typed events disable the generic handler before raising an error,
+avoiding a recursive trap. SYNTAX retains its separate VM handler and `RC`
+rule; non-SYNTAX delivery records `SIGL` without changing `RC`.
+
+The first bounded producer is NOVALUE at authored variable reads. When that
+policy is enabled, the compiler asks the shared `RexxVariablePool` whether
+the symbol has a value, respecting compound-tail substitution and stem
+defaults. A missing value raises a typed event with the resolved symbol as
+its Unicode description at the read's source node. Focused default/OFF,
+one-shot, nested policy, compound and missing-target tests pass in optimized
+and no-opt modes. Host, I/O, interrupt and numeric producers, `CONDITION()`
+state, and the complete SIGNAL matrix remain open under the worklist.
 
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.

@@ -5861,6 +5861,46 @@ add_levelc_runtime_slice_test(levelc_signal_on_recursive
 add_levelc_runtime_slice_test(levelc_signal_on_recursive_noopt
         rexx_src/levelc_signal_on_recursive.rexx
         "caught=40|14\nup=0\nup=0\nafter\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_policy_names
+        rexx_src/levelc_signal_policy_names.rexx "all names\n")
+add_levelc_runtime_slice_test(levelc_signal_policy_names_noopt
+        rexx_src/levelc_signal_policy_names.rexx "all names\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_novalue_lifecycle
+        rexx_src/levelc_signal_novalue_lifecycle.rexx
+        "before\ncaught=4|RC\nAFTER_FIRST\nagain=11|RC\n")
+add_levelc_runtime_slice_test(levelc_signal_novalue_lifecycle_noopt
+        rexx_src/levelc_signal_novalue_lifecycle.rexx
+        "before\ncaught=4|RC\nAFTER_FIRST\nagain=11|RC\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_novalue_default_off
+        rexx_src/levelc_signal_novalue_default_off.rexx
+        "UNBOUND\ndefault=6\n")
+add_levelc_runtime_slice_test(levelc_signal_novalue_default_off_noopt
+        rexx_src/levelc_signal_novalue_default_off.rexx
+        "UNBOUND\ndefault=6\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_novalue_nested
+        rexx_src/levelc_signal_novalue_nested.rexx
+        "inner=8|RC\nafter\n")
+add_levelc_runtime_slice_test(levelc_signal_novalue_nested_noopt
+        rexx_src/levelc_signal_novalue_nested.rexx
+        "inner=8|RC\nafter\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_novalue_nested_override
+        rexx_src/levelc_signal_novalue_nested_override.rexx
+        "UNBOUND\ninner=11|RC\nouter=4|RC\n")
+add_levelc_runtime_slice_test(levelc_signal_novalue_nested_override_noopt
+        rexx_src/levelc_signal_novalue_nested_override.rexx
+        "UNBOUND\ninner=11|RC\nouter=4|RC\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_novalue_compound
+        rexx_src/levelc_signal_novalue_compound.rexx
+        "0\ncaught=5\n")
+add_levelc_runtime_slice_test(levelc_signal_novalue_compound_noopt
+        rexx_src/levelc_signal_novalue_compound.rexx
+        "0\ncaught=5\n" -n)
+add_levelc_runtime_syntax_signal_test(levelc_signal_novalue_missing
+        rexx_src/levelc_signal_novalue_missing.rexx "16.1" "before\n"
+        "levelc_signal_novalue_missing.rexx:4:")
+add_levelc_runtime_syntax_signal_test(levelc_signal_novalue_missing_noopt
+        rexx_src/levelc_signal_novalue_missing.rexx "16.1" "before\n"
+        "levelc_signal_novalue_missing.rexx:4:" -n)
 add_levelc_runtime_syntax_signal_test(levelc_signal_on_missing
         rexx_src/levelc_signal_on_missing.rexx "16.1" "before\n"
         "levelc_signal_on_missing.rexx:4:")

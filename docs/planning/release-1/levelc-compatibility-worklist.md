@@ -21,9 +21,9 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 528/528 with process memory monitoring after
-the missing SIGNAL target source repair at `d809ab8da`. This is a development
-checkpoint, not a Level C or Beta 4 qualification verdict.
+Debug Level C checkpoint passed 542/542 with process memory monitoring after
+the seven-name SIGNAL policy and bounded NOVALUE producer checkpoint below.
+This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
 checkpoints. The status above, the whole-instruction queue and the current
@@ -3833,6 +3833,43 @@ or test processes. Evidence:
 The compiler has not yet dispatched that event to seven-name policy or added
 condition producers. `LC-STEP-63T-4D3-2/3`, whole SIGNAL and ARG reviews,
 and Level C/Release 1 qualification remain open.
+
+**2026-10-05 LC-STEP-63T-4D3-2 and bounded 4D3-3 checkpoint.** The lowerer
+accepts ON/OFF with default and named handlers for all seven parsed Classic
+condition names. SYNTAX retains its distinct VM event; the other six use one
+frame-local `CLASSIC_CONDITION` handler, a typed event ID, and the active
+invocation's policy table to select the source-order ON clause. One-shot
+delivery disables only that condition in the current activation. Internal
+calls copy the parent's policy; child OFF, override and delivery do not alter
+the parent's selection. A missing named target raises 16.1 at the causing
+source clause. Neither non-SYNTAX delivery nor OFF changes `RC`; the bounded
+NOVALUE producer guards authored variable reads and raises a typed event
+containing the resolved symbol name only when NOVALUE is enabled. Compound
+stem defaults and tail substitution use the existing shared pool operations.
+
+Regina probes for default/OFF, one-shot re-enabling, nested inheritance,
+child OFF/override, compound default and a missing target agree with the
+compiled results. The source files include a leading `OPTIONS LEVELC` line,
+so their compiled `SIGL` values are one line greater than the stripped Regina
+probes. Optimized/no-opt CTests passed 14/14; the affected activation,
+condition-event and Classic-BIF runtime tests passed 6/6. The guarded core
+build and normal Debug Level C suite passed 542/542. The broad run peaked at
+about 2707 MiB aggregate descendant RSS and left no child processes; the
+post-run process inventory was empty. Evidence:
+`cmake-build-debug/levelc-63t4d3b-override-build.log`,
+`cmake-build-debug/levelc-63t4d3b-override-focused.log`,
+`cmake-build-debug/levelc-63t4d3b-runtime-focused.log`,
+`cmake-build-debug/levelc-63t4d3b-debug-qual.log`,
+`cmake-build-debug/levelc-63t4d3b-regina-novalue.log`, and
+`cmake-build-debug/levelc-novalue-nested-override-regina.log`.
+
+This closes the policy-dispatch checkpoint and one available producer, not
+`LC-STEP-63T-4D3-3` or SIGNAL. ERROR, FAILURE, HALT and NOTREADY need their
+host, I/O and interrupt producer ownership and reference matrices;
+LOSTDIGITS needs numeric-context integration. `CONDITION()` needs current
+event name/description/state behavior for trap handlers. Full SIGNAL error,
+source, linked, optimized/no-opt and Level B/G/RexxScript isolation under
+`63T-5`, the ARG review and all Level C/Release 1 criteria remain open.
 
 ## Findings
 
