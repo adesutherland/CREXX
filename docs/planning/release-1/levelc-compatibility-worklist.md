@@ -3208,7 +3208,7 @@ Before any code edit, check the proposed route against these observable gates:
    emission, with source anchors and structural tests. Reuse VM signal
    instructions and existing scoped cleanup machinery where their contracts
    match; no per-label trampoline or second token interpreter.
-3. **LC-STEP-63T-3 (LC-63T-02/03; in progress; depends on 63T-2):** refactor local CALL,
+3. **LC-STEP-63T-3 (LC-63T-02/03; one-body implementation complete 2026-10-05; depends on 63T-2):** refactor local CALL,
    function entry, ARG, PROCEDURE and RETURN onto one compiled body per
    invocation with activation-owned pool and optional result state. Preserve
    once-only argument evaluation and recursive isolation; remove the old
@@ -3478,7 +3478,39 @@ Regina's bare-RETURN probe reported 44.1 instead; this difference is
 recorded as reference behavior, while the worklist's existing 45.1
 contract follows the IBM instruction/error definition. The minimal probe
 and diagnostics are retained at `cmake-build-debug/levelc-function-bare-return-*.log`.
-The repair and qualification of 3H remain open.
+At this review point, the repair and qualification of 3H remained open.
+
+**2026-10-05 LC-STEP-63T-3H function-result checkpoint.** The obsolete
+per-label `returns_value` scan and admission guard are removed. A fresh
+activation records whether a local entry is a function or subroutine;
+either may run ARG and traverse labels before returning. A reached bare
+function RETURN emits 45.1 at its authored instruction. A function frame
+that finishes without setting a result emits 44.1 at the invoking expression.
+An explicit empty-string RETURN is present, while a bare subroutine RETURN
+remains legal. One shared compiler helper emits the anchored Classic signal
+for these guards and the existing PROCEDURE 17.1 check. Optimized/no-opt
+regressions cover both error paths and the positive empty/fallthrough/
+recursive/subroutine matrix; linked execution covers the positive matrix.
+The direct RexxActivationArguments test checks that the call kind is local
+to its activation. The positive output matches Regina, while bare function
+RETURN intentionally uses IBM 45.1 instead of Regina 44.1 as reviewed above.
+
+On the exact code/test/build inputs for this checkpoint, the guarded Debug
+build passed, focused function/activation/RexxScript tests passed 11/11,
+and the normal Debug Level C suite passed 495/495. The Release build and
+normal Release Level C suite passed 495/495. Peak aggregate descendant RSS
+was about 2068 MiB in Debug and 1702 MiB in Release; every guard and the
+post-run process inventory found zero residual compiler, assembler, VM,
+build or test processes. Evidence:
+`cmake-build-debug/levelc-63t3h-final-build.log`,
+`cmake-build-debug/levelc-63t3h-final-focused.log`,
+`cmake-build-debug/levelc-63t3h-debug-qual.log`,
+`cmake-build-debug/levelc-63t3h-release-build.log`, and
+`cmake-build-debug/levelc-63t3h-release-qual.log`.
+LC-STEP-63T-3D/3H and the bounded one-body implementation step are complete;
+LC-63T-01–04, SIGNAL, ARG and the whole CALL/PROCEDURE/RETURN/EXIT
+instruction reviews remain open. The next shared dependency is
+LC-STEP-63T-4 SIGNAL on the frame model.
 
 ## Findings
 

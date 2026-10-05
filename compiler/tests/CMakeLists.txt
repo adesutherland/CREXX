@@ -5853,6 +5853,12 @@ add_levelc_runtime_slice_test(levelc_arg_recursive_private
 add_levelc_runtime_slice_test(levelc_arg_recursive_private_noopt
         rexx_src/levelc_arg_recursive_private.rexx
         "enter=3:A B||Z|0\nenter=2:A BX||Z|0\nenter=1:A BXX||Z|0\nleave=1:A BXX|0\nleave=2:A BX|0\nleave=3:A B|0\n" -n)
+add_levelc_runtime_slice_test(levelc_function_result_lifecycle
+        rexx_src/levelc_function_result_lifecycle.rexx
+        "empty=[]\nfall=Xy\nrecursive=321\ndone\n")
+add_levelc_runtime_slice_test(levelc_function_result_lifecycle_noopt
+        rexx_src/levelc_function_result_lifecycle.rexx
+        "empty=[]\nfall=Xy\nrecursive=321\ndone\n" -n)
 add_levelc_runtime_slice_test(levelc_call_expression_actuals
         rexx_src/levelc_call_expression_actuals.rexx
         "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|Ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n")
@@ -5921,6 +5927,21 @@ add_test(NAME levelc_arg_frame_linked
         -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_frame_lifecycle.expected
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
 set_tests_properties(levelc_arg_frame_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+add_test(NAME levelc_function_result_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_function_result_lifecycle.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DNAME=levelc_function_result_linked
+        -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_function_result_lifecycle.expected
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_function_result_linked PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 add_levelc_runtime_slice_test(levelc_slice4_procedure_missing_arg
@@ -6415,6 +6436,20 @@ add_levelc_invalid_runtime_test(levelc_frame_called_late_procedure_17_1
         rexx_src/levelc_frame_called_late_procedure_17_1.rexx RXC-LC-17.1 "before")
 add_levelc_invalid_runtime_test(levelc_frame_called_late_procedure_17_1_noopt
         rexx_src/levelc_frame_called_late_procedure_17_1.rexx RXC-LC-17.1 -n)
+add_levelc_invalid_runtime_test(levelc_function_bare_return_45_1
+        rexx_src/levelc_function_bare_return_45_1.rexx RXC-LC-45.1 "before")
+add_levelc_invalid_runtime_test(levelc_function_bare_return_45_1_noopt
+        rexx_src/levelc_function_bare_return_45_1.rexx RXC-LC-45.1 -n)
+set_tests_properties(levelc_function_bare_return_45_1
+        levelc_function_bare_return_45_1_noopt PROPERTIES
+        ENVIRONMENT "LEVELC_EXPECTED_FRAGMENT=source: levelc_function_bare_return_45_1.rexx:7:")
+add_levelc_invalid_runtime_test(levelc_function_falloff_44_1
+        rexx_src/levelc_function_falloff_44_1.rexx RXC-LC-44.1 "before\ninside=ARG")
+add_levelc_invalid_runtime_test(levelc_function_falloff_44_1_noopt
+        rexx_src/levelc_function_falloff_44_1.rexx RXC-LC-44.1 -n)
+set_tests_properties(levelc_function_falloff_44_1
+        levelc_function_falloff_44_1_noopt PROPERTIES
+        ENVIRONMENT "LEVELC_EXPECTED_FRAGMENT=source: levelc_function_falloff_44_1.rexx:3:")
 set_tests_properties(levelc_frame_main_procedure_17_1
         levelc_frame_main_procedure_17_1_noopt PROPERTIES
         ENVIRONMENT "LEVELC_EXPECTED_FRAGMENT=source: levelc_slice2_procedure_expose_unsupported.rexx:8:")

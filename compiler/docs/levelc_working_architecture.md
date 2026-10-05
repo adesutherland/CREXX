@@ -516,6 +516,16 @@ the nested caller runs through `rxlink`. A compile regression also requires
 authored-line 17.1 for nested `IF 1 THEN PROCEDURE`. These checks expand
 the one-body evidence; they do not close ARG, PROCEDURE or CALL.
 
+The `63T-3H` result checkpoint removes the former per-label scan for an
+explicit value RETURN. Any local label can be entered as a function; the
+activation marks that call kind separately from result presence. A reached
+bare RETURN raises Classic 45.1 at the RETURN clause. If the compiled body
+finishes with no result, the function expression raises 44.1 at its call
+site. `RETURN ''` is present, and a subroutine's bare RETURN remains legal.
+This permits ARG, nested branches, label fallthrough and recursion before
+the return decision. The full CALL/RETURN instruction and trap contracts
+remain under their own rows.
+
 The source AST also needs to preserve the authored `VALUE` form. Today
 `SIGNAL 'target'` and `SIGNAL VALUE 'target'` both have a `LEVELC_SIGNAL`
 with a `STRING` child; only incidental raw-token quoting differs. A temporary

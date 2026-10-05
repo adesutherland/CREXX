@@ -68,7 +68,6 @@ typedef struct {
     ASTNode *body_first;
     ASTNode *body_end;
     char *name;
-    int returns_value;
 } LevelCProcedureSlice;
 
 typedef struct LevelCLoopBinding {
@@ -302,8 +301,7 @@ static int levelc_lower_plan_add_procedure(LevelCLowerPlan *plan,
                                            ASTNode *label,
                                            ASTNode *body_first,
                                            ASTNode *body_end,
-                                           char *name,
-                                           int returns_value) {
+                                           char *name) {
     LevelCProcedureSlice *procedures;
 
     if (!plan || !label || !name) return 0;
@@ -318,7 +316,6 @@ static int levelc_lower_plan_add_procedure(LevelCLowerPlan *plan,
     plan->procedures[plan->procedure_count].body_first = body_first;
     plan->procedures[plan->procedure_count].body_end = body_end;
     plan->procedures[plan->procedure_count].name = name;
-    plan->procedures[plan->procedure_count].returns_value = returns_value;
     plan->procedure_count++;
     return 1;
 }
@@ -484,10 +481,6 @@ static int levelc_local_function_supported(ASTNode *expr,
     if (name) free(name);
     if (!procedure) {
         if (reason_out) *reason_out = "unsupported Level C function call";
-        return 0;
-    }
-    if (!procedure->returns_value) {
-        if (reason_out) *reason_out = "local function has no return value";
         return 0;
     }
     arg = expr->child;
@@ -1499,7 +1492,6 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
     ASTNode *body_stmt;
     char *name;
     size_t i;
-    int returns_value;
 
     if (reason_out) *reason_out = NULL;
     if (!instructions || instructions->node_type != INSTRUCTIONS || !plan) {
@@ -1525,13 +1517,6 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
         body_end = body_first;
         while (body_end && body_end->node_type != LABEL) body_end = body_end->sibling;
 
-        returns_value = 0;
-        body_stmt = body_first;
-        while (body_stmt && body_stmt != body_end) {
-            if (body_stmt->node_type == RETURN && body_stmt->child) returns_value = 1;
-            body_stmt = body_stmt->sibling;
-        }
-
         name = levelc_upper_label_name(label);
         if (!name) {
             if (reason_out) *reason_out = "failed to normalize local routine label";
@@ -1546,8 +1531,7 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
                                              label,
                                              body_first,
                                              body_end,
-                                             name,
-                                             returns_value)) {
+                                             name)) {
             free(name);
             if (reason_out) *reason_out = "failed to record local routine plan";
             return 0;
@@ -1712,7 +1696,8 @@ static ASTNode *levelc_copy_rexxvalue(Context *context,
 
 static char *levelc_begin_call_activation(Context *context,
                                           ASTNode *call_node,
-                                          ASTNode *prelude) {
+                                          ASTNode *prelude,
+                                          int is_function) {
     char *name;
     ASTNode *factory;
     ASTNode *assignment;
@@ -1729,7 +1714,9 @@ static char *levelc_begin_call_activation(Context *context,
     receiver = assignment ? rxcp_remap_create_named_ref(
         context, call_node, VAR_SYMBOL, name) : NULL;
     begin = receiver ? rxcp_remap_create_member_call_statement(
-        context, call_node, receiver, "beginInternalCall", NULL, 0) : NULL;
+        context, call_node, receiver,
+        is_function ? "beginInternalFunction" : "beginInternalCall",
+        NULL, 0) : NULL;
     if (!assignment || !begin) {
         free(name);
         return NULL;
@@ -1752,6 +1739,37 @@ static int levelc_append_activation_method(Context *context,
     return 1;
 }
 
+static int levelc_append_classic_error_if(Context *context,
+                                          ASTNode *instructions,
+                                          ASTNode *anchor,
+                                          ASTNode *condition,
+                                          const char *detail) {
+    ASTNode *signal = ast_ftt(context, ASSEMBLER, strdup("signal"));
+    ASTNode *signal_name = rxcp_remap_create_string_constant(
+        context, anchor, "CLASSIC_SYNTAX");
+    ASTNode *signal_detail = rxcp_remap_create_string_constant(
+        context, anchor, detail);
+    ASTNode *then_instructions = rxcp_remap_create_instruction_builder(
+        context, anchor);
+    ASTNode *then_block;
+    ASTNode *branch;
+
+    if (!instructions || !anchor || !condition || !signal || !signal_name ||
+        !signal_detail || !then_instructions) return 0;
+    signal->free_node_string = 1;
+    signal->is_compiler_added = 1;
+    rxcp_remap_anchor_synthetic(signal, anchor);
+    add_ast(signal, signal_name);
+    add_ast(signal, signal_detail);
+    add_ast(then_instructions, signal);
+    then_block = rxcp_remap_create_do_block(context, anchor, then_instructions);
+    branch = then_block ? rxcp_remap_create_if_statement(
+        context, anchor, condition, then_block, NULL) : NULL;
+    if (!branch) return 0;
+    add_ast(instructions, branch);
+    return 1;
+}
+
 static int levelc_append_procedure_entry(Context *context,
                                          ASTNode *instructions,
                                          ASTNode *stmt) {
@@ -1762,32 +1780,13 @@ static int levelc_append_procedure_entry(Context *context,
     ASTNode *condition = ast_f(context, OP_COMPARE_EQUAL, stmt->token);
     ASTNode *zero = rxcp_remap_create_integer_constant(
         context, stmt, 0, TP_BOOLEAN);
-    ASTNode *signal = ast_ftt(context, ASSEMBLER, strdup("signal"));
-    ASTNode *signal_name = rxcp_remap_create_string_constant(
-        context, stmt, "CLASSIC_SYNTAX");
-    ASTNode *signal_detail = rxcp_remap_create_string_constant(
-        context, stmt, "RXC-LC-17.1: PROCEDURE is valid only as the first instruction of an internal call");
-    ASTNode *then_instructions = rxcp_remap_create_instruction_builder(
-        context, stmt);
-    ASTNode *then_block;
-    ASTNode *branch;
-
-    if (!eligible || !condition || !zero || !signal || !signal_name ||
-        !signal_detail || !then_instructions) return 0;
+    if (!eligible || !condition || !zero) return 0;
     rxcp_remap_anchor_synthetic(condition, stmt);
     add_ast(condition, eligible);
     add_ast(condition, zero);
-    signal->free_node_string = 1;
-    signal->is_compiler_added = 1;
-    rxcp_remap_anchor_synthetic(signal, stmt);
-    add_ast(signal, signal_name);
-    add_ast(signal, signal_detail);
-    add_ast(then_instructions, signal);
-    then_block = rxcp_remap_create_do_block(context, stmt, then_instructions);
-    branch = then_block ? rxcp_remap_create_if_statement(
-        context, stmt, condition, then_block, NULL) : NULL;
-    if (!branch) return 0;
-    add_ast(instructions, branch);
+    if (!levelc_append_classic_error_if(context, instructions, stmt, condition,
+            "RXC-LC-17.1: PROCEDURE is valid only as the first instruction of an internal call"))
+        return 0;
     return levelc_append_activation_method(context, instructions, stmt,
                                            "enterProcedure");
 }
@@ -2203,6 +2202,37 @@ fail:
     return NULL;
 }
 
+static int levelc_append_function_result_guard(Context *context,
+                                               ASTNode *prelude,
+                                               ASTNode *call_node,
+                                               const char *frame_name,
+                                               const char *target_name) {
+    static const char prefix[] = "RXC-LC-44.1: No data returned from function ";
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, call_node, VAR_SYMBOL, frame_name);
+    ASTNode *present = receiver ? rxcp_remap_create_member_call(
+        context, call_node, receiver, "hasReturnValue", NULL, 0) : NULL;
+    ASTNode *condition = ast_f(context, OP_COMPARE_EQUAL, call_node->token);
+    ASTNode *zero = rxcp_remap_create_integer_constant(
+        context, call_node, 0, TP_BOOLEAN);
+    size_t length = strlen(prefix) + strlen(target_name) + 1;
+    char *detail = malloc(length);
+    int result;
+
+    if (!present || !condition || !zero || !detail) {
+        free(detail);
+        return 0;
+    }
+    snprintf(detail, length, "%s%s", prefix, target_name);
+    rxcp_remap_anchor_synthetic(condition, call_node);
+    add_ast(condition, present);
+    add_ast(condition, zero);
+    result = levelc_append_classic_error_if(
+        context, prelude, call_node, condition, detail);
+    free(detail);
+    return result;
+}
+
 static ASTNode *levelc_lower_local_function_call(Context *context,
                                                  ASTNode *expr,
                                                  LevelCLowerPlan *plan,
@@ -2222,23 +2252,29 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
 
     target_name = levelc_upper_name(expr);
     procedure = target_name ? levelc_find_procedure(plan, target_name) : NULL;
-    if (!procedure || !procedure->returns_value) {
+    if (!procedure) {
         if (target_name) free(target_name);
         return NULL;
     }
 
-    free(target_name);
     entry = (size_t)(procedure - plan->procedures) + 1;
-    if (entry > INT_MAX) return NULL;
+    if (entry > INT_MAX) {
+        free(target_name);
+        return NULL;
+    }
 
-    frame_name = levelc_begin_call_activation(context, expr, prelude);
-    if (!frame_name) return NULL;
+    frame_name = levelc_begin_call_activation(context, expr, prelude, 1);
+    if (!frame_name) {
+        free(target_name);
+        return NULL;
+    }
 
     pool_symbol = levelc_pool_ref(context, expr, VAR_SYMBOL);
     args[0] = rxcp_remap_create_reference_expr(context, expr, pool_symbol);
     args[1] = levelc_config_ref(context, expr, VAR_SYMBOL);
     if (!pool_symbol || !args[0] || !args[1]) {
         free(frame_name);
+        free(target_name);
         return NULL;
     }
 
@@ -2252,6 +2288,7 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
             !levelc_append_call_argument(context, arg, prelude, frame_name,
                                          actual_value, exists)) {
             free(frame_name);
+            free(target_name);
             return NULL;
         }
         arg = arg->sibling;
@@ -2263,6 +2300,7 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
                                                  TP_INTEGER);
     if (!args[2] || !args[3]) {
         free(frame_name);
+        free(target_name);
         return NULL;
     }
 
@@ -2272,13 +2310,24 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
                                            args,
                                            4);
     call_stmt = call ? rxcp_remap_create_call_statement(context, expr, call) : NULL;
+    if (!call_stmt) {
+        free(frame_name);
+        free(target_name);
+        return NULL;
+    }
+    add_ast(prelude, call_stmt);
+    if (!levelc_append_function_result_guard(
+            context, prelude, expr, frame_name, target_name)) {
+        free(frame_name);
+        free(target_name);
+        return NULL;
+    }
     result_receiver = rxcp_remap_create_named_ref(context, expr,
                                                   VAR_SYMBOL, frame_name);
     free(frame_name);
-    if (!call_stmt || !result_receiver) return NULL;
-    add_ast(prelude, call_stmt);
-    return rxcp_remap_create_member_call(context, expr, result_receiver,
-                                         "returnValue", NULL, 0);
+    free(target_name);
+    return result_receiver ? rxcp_remap_create_member_call(
+        context, expr, result_receiver, "returnValue", NULL, 0) : NULL;
 }
 
 static ASTNode *levelc_lower_function_call(Context *context,
@@ -2531,7 +2580,7 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
     entry = (size_t)(procedure - plan->procedures) + 1;
     if (entry > INT_MAX) return NULL;
 
-    frame_name = levelc_begin_call_activation(context, call_node, prelude);
+    frame_name = levelc_begin_call_activation(context, call_node, prelude, 0);
     if (!frame_name) return NULL;
 
     pool_symbol = levelc_pool_ref(context, call_node, VAR_SYMBOL);
@@ -2792,6 +2841,10 @@ static ASTNode *levelc_proc_return_statement(Context *context,
     ASTNode *return_stmt;
     ASTNode *return_value;
     ASTNode *receiver;
+    ASTNode *function_receiver;
+    ASTNode *function_call;
+    ASTNode *function_condition;
+    ASTNode *one;
     ASTNode *args[1];
     ASTNode *record;
 
@@ -2810,6 +2863,20 @@ static ASTNode *levelc_proc_return_statement(Context *context,
         record = rxcp_remap_create_member_call_statement(context, stmt, receiver,
                                                          "setReturnValue", args, 1);
     } else {
+        function_receiver = rxcp_remap_create_named_ref(
+            context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+        function_call = function_receiver ? rxcp_remap_create_member_call(
+            context, stmt, function_receiver, "isFunctionCall", NULL, 0) : NULL;
+        function_condition = ast_f(context, OP_COMPARE_EQUAL, stmt->token);
+        one = rxcp_remap_create_integer_constant(context, stmt, 1, TP_BOOLEAN);
+        if (!function_call || !function_condition || !one) return NULL;
+        rxcp_remap_anchor_synthetic(function_condition, stmt);
+        add_ast(function_condition, function_call);
+        add_ast(function_condition, one);
+        if (!levelc_append_classic_error_if(
+                context, prelude, stmt, function_condition,
+                "RXC-LC-45.1: Data expected on RETURN instruction because this routine was called as a function"))
+            return NULL;
         record = rxcp_remap_create_member_call_statement(context, stmt, receiver,
                                                          "clearReturnValue", NULL, 0);
     }

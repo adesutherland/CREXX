@@ -445,7 +445,12 @@ Resolution order for a routine/function name:
 3. external routine adapter.
 
 Internal function invocation must return a value from `RETURN expression`.
-Returning without an expression from a function raises `45.1`.
+Executing a bare `RETURN` in a function raises `45.1` at that instruction;
+finishing the function body without returning data raises `44.1` at the
+invoking expression. The activation records the call kind and result
+presence separately, so an explicit empty string is still a returned value.
+Regina reports `44.1` for the bare-RETURN probe; the `45.1` rule follows
+the IBM RETURN/error references used by this Level C contract.
 
 `CALL` discards function syntax and invokes a subroutine. If the routine returns
 a value, assign `RESULT` and `.RESULT`; if not, drop them.

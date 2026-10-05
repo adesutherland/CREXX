@@ -34,7 +34,9 @@ import rexxvalue
  * separate return-presence flag distinguishes bare RETURN from an explicit
  * empty-string result without changing RexxValue's value contract. A fresh
  * internal call also records whether PROCEDURE may be the first instruction
- * processed in that invocation. A different first instruction consumes it.
+ * processed in that invocation and whether the entry was a function call.
+ * A different first instruction consumes PROCEDURE eligibility; result
+ * presence remains separate from the function-call kind.
  */
 RexxActivationArguments: class
   values = .RexxValue[]
@@ -44,6 +46,7 @@ RexxActivationArguments: class
   returned_value = .RexxValue
   return_present = .boolean
   procedure_eligible = .boolean
+  function_call = .boolean
 
   *: factory
     slot_count = 0
@@ -51,6 +54,7 @@ RexxActivationArguments: class
     returned_value = .RexxValue("")
     return_present = 0
     procedure_eligible = 0
+    function_call = 0
     return
 
   /**
@@ -127,7 +131,18 @@ RexxActivationArguments: class
   /** Mark this internal CALL/function activation before label entry. */
   beginInternalCall: method = .void
     procedure_eligible = 1
+    function_call = 0
     return
+
+  /** Mark this activation as an internal function call. */
+  beginInternalFunction: method = .void
+    procedure_eligible = 1
+    function_call = 1
+    return
+
+  /** @return true only when this activation was entered as a function */
+  isFunctionCall: method = .boolean
+    return function_call
 
   /** Consume the PROCEDURE right when another instruction executes first. */
   consumeFirstInstruction: method = .void
