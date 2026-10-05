@@ -3510,6 +3510,59 @@ may avoid a new VM opcode, but bare enumeration does not verify the fixed
 Level B/G signature and ordinary providers still collide on `.main`.
 The exact safe descriptor check, callable entry and search/ownership contract
 remain the architectural decision gate; no new loader API is assumed here.
+Guarded prototype evidence now narrows that gate. A Level B/G module exposing
+`levelcextprobe.callentry` as `.void(frame=.RexxActivationArguments)` compiled,
+assembled and linked beside an ordinary Level C image without a second
+`.main` (`cmake-build-debug/levelc-bg-signature-compile-v2.log`,
+`levelc-bg-signature-assemble-v2.log`, `levelc-bg-signature-link.log`). A
+hand-isolated Level C body with a unique generated symbol and no `.main`
+assembled and linked beside that image; executing the linked main retained
+its expected output (`levelc-provider-shape-assemble.log`,
+`levelc-provider-shape-link.log`, `levelc-provider-shape-run.log`). Finally,
+a hand-authored RXAS probe used `metaloadmodule`, `metaloadedprocs` and
+`dcall` to invoke the fixed-signature Level B/G entry during execution in
+the same VM; its observable `callentry/entered/called` output is retained in
+`levelc-bg-dynamic-call-run-v2.log`. These artifacts live only in the ignored
+build directory. They prove VM primitive feasibility, not a compiler CALL
+path, safe runtime signature validation, source discovery, or external
+activation semantics. The production resolver must verify the descriptor
+before calling a selected pointer.
+
+**LC-STEP-75B descriptor-safe selection proposal — new VM contract decision
+pending.** Reuse the existing `metaloadmodule`, exposed-procedure enumeration
+and `dcall` operations. At a reached CALL clause, the generated resolver
+searches the selected provider module's *exposed* entries for the exact target
+name. Before `dcall`, a proposed `metacheckproc` operation takes that
+VM-owned procedure pointer and an exact `rxsig1` descriptor, verifies that
+the pointer belongs to a loaded module and that its declared name, return
+type and one activation-frame argument match, and returns a boolean. It does
+not load a module, invoke the procedure or change a frame. A missing name
+and a present name with the wrong signature remain distinct resolver
+outcomes; neither may enter `dcall`. This reuses the runtime's descriptor
+parser and signature comparator, already used by
+`rxvml_call_procedure_descriptor`, while keeping CALL's argument/result
+owner in `RexxActivationArguments`. The exact exposed name, package search
+and source-discovery policy still depend on Adrian's provider decision.
+
+1. `75B-S1` (`LC-75-02/04`): prove the operation rejects an absent, wrong-
+   type, wrong-arity, foreign or stale pointer without invoking it, and
+   accepts an exposed `.void(frame=.RexxActivationArguments)` procedure;
+   verify both VMs and optimized/no-opt RXAS behavior.
+2. `75B-S2` (`LC-75-01–04`; depends on S1 and provider policy): resolve only
+   when CALL executes, enumerate exposed entries from the selected
+   same-context provider, check the descriptor, then invoke via existing
+   `dcall`; map absence/mismatch to source-anchored Classic/host diagnostics.
+3. `75B-S3` (`LC-75-02–06`; depends on S2): use the same checked selection for
+   Level C generated wrappers and admitted Level B/G entries, then qualify
+   arguments, optional result, nested calls, host state, traps and packaged
+   execution before any whole-CALL verdict.
+
+Adding `metacheckproc` is an architectural VM contract change, so no product
+edit for it precedes Adrian's decision under `AGENTS.md`. The alternative is
+a new configuration-owned native host service that calls the existing RXVML
+descriptor API; it avoids an opcode but needs a larger public host ABI and
+ordinary `rxvm` registration path. The guarded raw-pointer prototype is not
+an acceptable final signature check.
 An initial exact-stem bytecode provider stage should use that same resolver
 and frame contract so later source discovery does not create a second CALL
 implementation. The proposed fixed Level B/G entry is a `.void` procedure
