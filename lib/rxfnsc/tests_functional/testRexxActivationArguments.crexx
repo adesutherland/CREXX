@@ -21,6 +21,16 @@ main: procedure = .int
   call args.append(.RexxValue("ignored trailing"), 0)
   errors = errors + check(args.argumentCount() = 3, "trailing omission does not count")
   errors = errors + check(\args.argumentExists(4), "trailing omission remains absent")
+  errors = errors + check(\args.hasReturnValue(), "initial return absent")
+  call args.setReturnValue(.RexxValue("é"))
+  errors = errors + check(args.hasReturnValue(), "explicit return present")
+  errors = errors + check(args.returnValue().asString() = "é", "Unicode return value")
+  errors = errors + check(args.argument(1).asString() = "first", "return keeps arguments")
+  other = .RexxActivationArguments()
+  errors = errors + check(\other.hasReturnValue(), "fresh invocation return absent")
+  call args.clearReturnValue()
+  errors = errors + check(\args.hasReturnValue(), "bare return absent")
+  errors = errors + check(args.returnValue().asString() = "", "cleared return value")
   if errors = 0 then say "ok"
   return errors
 

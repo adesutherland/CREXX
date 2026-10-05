@@ -3212,6 +3212,13 @@ Before any code edit, check the proposed route against these observable gates:
    invocation with activation-owned pool and optional result state. Preserve
    once-only argument evaluation and recursive isolation; remove the old
    immediate-PROCEDURE/final-RETURN/per-label guards when the replacement runs.
+   The implementation checkpoints are `63T-3A`, one generated callable body
+   plus main wrapper and label-entry dispatch; `63T-3B`, source-position
+   PROCEDURE pool transition and exposure with labels that share the parent
+   pool; `63T-3C`, fresh CALL/function argument frames and optional RETURN
+   state; and `63T-3D`, full main/local/nested/recursive, opt/no-opt, source,
+   linked and normal-suite qualification before retiring the old partition.
+   Each checkpoint serves `LC-63T-02/03`; none alone closes ARG or SIGNAL.
 4. **LC-STEP-63T-4 (LC-63T-01/02/04; depends on 63T-3):** implement direct and
    VALUE SIGNAL, ON/OFF and named condition targets through the VM's frame
    branch/handler path; map Classic condition identities, SIGL and source,
@@ -3275,6 +3282,21 @@ B/G signal checks passed 5/5, and the normal Debug Level C suite passed
 `/tmp/crexx-63t2-qual-levelc.log`. The earlier sweep was superseded after
 the crossed-scope cleanup review and is not counted as this checkpoint's
 qualification.
+
+**2026-10-05 LC-STEP-63T-3C state checkpoint.**
+`RexxActivationArguments` now carries an optional return result with a
+separate presence flag. A fresh frame starts absent; explicit Unicode
+`RexxValue` results and bare-return clearing preserve captured ARG slots and
+recursive isolation. This supplies state for the approved one-body route but
+does not yet change Level C CALL/RETURN lowering or close `63T-3C`.
+The exact-input Debug `testRexxActivationArguments` target built; its opt and
+no-opt functional cases passed 2/2, the Classic ARG and RexxScript consumers
+passed 6/6, and the normal Debug Level C suite passed 463/463. Evidence:
+`/tmp/crexx-63t3-return-build.log`,
+`/tmp/crexx-63t3-return-focused.log`,
+`/tmp/crexx-63t3-return-consumers-build.log`,
+`/tmp/crexx-63t3-return-consumers.log`, and
+`/tmp/crexx-63t3-return-levelc.log`. All `LC-63T-01–04` gates remain open.
 
 ## Findings
 

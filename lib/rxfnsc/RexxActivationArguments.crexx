@@ -27,20 +27,26 @@ namespace rexxactivation expose RexxActivationArguments
 import rexxvalue
 
 /**
- * Positional arguments captured once for a Classic program or routine call.
+ * Positional arguments and optional result state for one Classic activation.
  * An omitted position occupies a slot but is not present to ARG existence
  * queries. A missing position returns an empty value without extending the
- * frame. Repeated ARG instructions read the same captured values.
+ * frame. Repeated ARG instructions read the same captured values. The
+ * separate return-presence flag distinguishes bare RETURN from an explicit
+ * empty-string result without changing RexxValue's value contract.
  */
 RexxActivationArguments: class
   values = .RexxValue[]
   presence = .int[]
   slot_count = .int
   supplied_count = .int
+  returned_value = .RexxValue
+  return_present = .boolean
 
   *: factory
     slot_count = 0
     supplied_count = 0
+    returned_value = .RexxValue("")
+    return_present = 0
     return
 
   /**
@@ -89,3 +95,27 @@ RexxActivationArguments: class
     if index < 1 | index > slot_count then return .RexxValue("")
     if presence[index] = 0 then return .RexxValue("")
     return values[index]
+
+  /**
+   * Record an explicit Classic RETURN result in this invocation.
+   * @param value the returned scalar value
+   */
+  setReturnValue: method = .void
+    arg value = .RexxValue
+    returned_value = value
+    return_present = 1
+    return
+
+  /** Clear the optional result for a bare RETURN or fresh dispatch. */
+  clearReturnValue: method = .void
+    returned_value = .RexxValue("")
+    return_present = 0
+    return
+
+  /** @return true only when this invocation explicitly returned a value */
+  hasReturnValue: method = .boolean
+    return return_present
+
+  /** @return the result value, or an empty value when none was supplied */
+  returnValue: method = .RexxValue
+    return returned_value
