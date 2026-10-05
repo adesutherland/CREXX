@@ -9,20 +9,20 @@ it does not change the 2026-11-30 target.
 **Current status, 2026-10-05.** `LC-I-01`–`LC-I-10` (SAY, DROP, assignment,
 NOP, OPTIONS, IF, SELECT, DO, LEAVE and ITERATE) have closed whole-instruction
 reviews. `LC-I-11` ARG is open: activation frames, omission/presence, Unicode
-arguments, templates, the ARG BIF, host entry and direct CALL expression
-actuals have passing bounded evidence, but the full invocation and label
-lifecycle audit has not closed. The approved `LC-STEP-63T` one-frame label and
-SIGNAL design is the next shared prerequisite; its reference review is done,
-its canonical AST/emitter foundation and one-body invocation route have bounded
-passing checkpoints, including first-instruction PROCEDURE eligibility, main
-fallthrough and a second PROCEDURE. Complete PROCEDURE source placement,
-CALL/RETURN/EXIT behavior and SIGNAL remain open.
+arguments, templates, the ARG BIF, host entry, direct CALL expression actuals,
+the one-body frame model and authored template diagnostics have passing
+evidence. The applicable host-interface and remaining invocation audit has
+not closed. The approved `LC-STEP-63T` one-frame label and SIGNAL design has a
+canonical AST/emitter foundation and one-body invocation route, including
+first-instruction PROCEDURE eligibility, main fallthrough and a second
+PROCEDURE. Complete PROCEDURE source placement, CALL/RETURN/EXIT behavior and
+SIGNAL remain open.
 PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 554/554 with process memory monitoring after
-the bounded activation-local `CONDITION()` checkpoint below.
+Debug Level C checkpoint passed 557/557 with process memory monitoring after
+the ARG invocation and template-diagnostic checkpoint below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
@@ -2548,6 +2548,57 @@ template or argument count limit is acceptable.
    do not count the ARG instruction closed until LC-AC-71 has its full
    applicable invocation and character evidence.
 
+2026-10-05 LC-I-11 whole-instruction audit refresh: the current compiler
+admits main execution from the CLI or `rxvml_run()`, direct internal CALL,
+local function calls, nested/recursive invocations, and frame-local label
+transfers. External routine resolution, indirect CALL and INTERPRET remain
+unimplemented under their owning instruction/host rows. IBM defines ARG as
+`PARSE UPPER ARG` and permits it wherever an ordinary instruction is legal;
+it has no PROCEDURE-like first-instruction restriction. Its legal templates
+include blank words, dots, literal and variable patterns, static and dynamic
+positions, empty and arbitrarily many comma segments. The existing source
+tree, shared `parseplan` executor, activation-local arguments/BIF, exact-length
+internal strings, Unicode codepoints, compound/exposed writes, opt/no-opt,
+linked and host checks cover these categories. A fresh Regina/compiled probe
+also agrees for IF/SELECT ARG, label fallthrough, `SIGNAL` within the frame,
+zero-argument CALL, function entry and `ARG(sep)` keyword adjacency; make
+this permanent before closure. The C-string host API's embedded-NUL limit
+remains an open host-interface obligation, not an ARG exception.
+
+The invalid-template audit found a specific gap: `ARG x =`, `ARG x +` and
+`ARG x -` report a compiler 21.1 at the following clause instead of Classic
+38.1 at the authored template. Empty or unclosed parenthesized patterns also
+currently use 19.7/46.1 where Regina and IBM's invalid-template category
+report Error 38. Repair the shared ARG/PARSE grammar diagnostics and add
+source-anchored negative checks, then run the relevant parser and Level C
+correctness suite once for the coherent code/test checkpoint. Keep LC-AC-71
+and LC-I-11 open until this and the invocation matrix are verified.
+
+**2026-10-05 LC-STEP-73D invocation and diagnostic checkpoint.** The
+`levelc_arg_instruction_invocation*` optimized/no-opt fixture matches Regina
+for IF/SELECT placement, repeated reads after label fallthrough and SIGNAL,
+omitted and explicit-empty positions, zero-argument CALL, local function entry
+and `ARG(sep)` keyword adjacency. The shared ARG/PARSE grammar now reports
+38.1 at the authored operator for incomplete `=`, `+` and `-` positional
+patterns. Empty, non-symbol and unclosed parenthesized patterns also use
+Classic invalid-template 38.1 rather than the earlier 19.7/46.1 forms.
+Regina and compiler probes for these error categories are retained in
+`cmake-build-debug/levelc-arg-error-audit-after.log`; permanent source-position
+checks are `levelc_arg_missing_positions`, `levelc_arg_malformed` and the
+affected syntax-highlighting fixtures. The focused affected checks passed
+10/10, the four core product targets built, and the normal Debug Level C
+suite passed 557/557 on the code/test inputs of this checkpoint. The guarded
+broad run peaked at about 2227 MiB descendant RSS and left no processes;
+the post-run process inventory was empty. Logs are
+`cmake-build-debug/levelc-arg-audit-focused.log`,
+`cmake-build-debug/levelc-arg-audit-final-focused.log`,
+`cmake-build-debug/levelc-arg-audit-product-build.log` and
+`cmake-build-debug/levelc-arg-audit-debug-qual.log`.
+This is a coherent ARG review increment, not LC-AC-71 closure. The public
+`rxvml_run()` C-string argument vector still cannot carry embedded NUL and
+the applicable host-interface and unresolved invocation audit remain open;
+external CALL and INTERPRET have their later instruction owners.
+
 2026-10-04 LC-STEP-73A initial audit: IBM defines ARG as `PARSE UPPER ARG`;
 comma-separated templates consume successive argument strings, each call
 reads the active activation again, and missing templates/sources are legal.
@@ -4075,7 +4126,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-88D-3; byte-literal scalar values, Unicode compound tails, NUL in substituted tails and RHS-order/local exposure pass | Shared host/external API remains open under LC-AC-04/06 |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, omitted/present values, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, Unicode arguments, ARG BIF, host `rxvml_run()` entry and linked output | Full invocation/reference and shared label lifecycle audit remain open under LC-AC-71/LC-STEP-63T; the C-string host entry cannot carry embedded NUL |
+| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, omitted/present values, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, Unicode arguments, ARG BIF, host `rxvml_run()` entry, linked output, IF/SELECT/SIGNAL frame placement and authored 38.1 template diagnostics | Applicable host/invocation closure remains open under LC-AC-71; the C-string host entry cannot carry embedded NUL, while external CALL and INTERPRET retain their instruction owners |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL accepts expression actuals such as `CALL nested ARG(1),,ARG(2)` with omitted slots | One-frame label model, external resolution, result and ON/OFF trap lifecycle, errors and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |

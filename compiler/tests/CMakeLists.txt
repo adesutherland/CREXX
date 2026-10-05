@@ -4491,8 +4491,8 @@ if (ENABLE_PARSER_MODE)
             "RXC-LC-20\\.1 token=\"end-of-clause\""
             "RXC-LC-20\\.1 token=\"\\)\""
             "RXC-LC-20\\.1 token=\"10\""
-            "RXC-LC-19\\.7 token=\"\\)\""
-            "RXC-LC-46\\.1"
+            "RXC-LC-38\\.1 token=\"\\)\""
+            "RXC-LC-38\\.1"
             "RXC-LC-19\\.4 token=\"end-of-clause\""
             "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=24, sev=48, text=\"afterAddressValueBadExpr\""
             MUST_NOT_MATCH
@@ -4623,7 +4623,7 @@ if (ENABLE_PARSER_MODE)
             "RXC-LC-25\\.13"
             "RXC-LC-38\\.3"
             "RXC-LC-38\\.2"
-            "RXC-LC-19\\.7"
+            "RXC-LC-38\\.1"
             MUST_NOT_MATCH
             "PARSE_FAILURE"
     )
@@ -5264,7 +5264,13 @@ add_levelc_invalid_compile_test(levelc_compile_invalid_if_missing_then
         "RXC-LC-18\\.1")
 add_levelc_invalid_compile_test(levelc_arg_malformed
         rexx_src/levelc_arg_malformed.rexx
-        "RXC-LC-46\\.1" "levelc_arg_malformed\\.rexx @ 2:7")
+        "RXC-LC-38\\.1" "levelc_arg_malformed\\.rexx @ 2:7")
+add_levelc_invalid_compile_test(levelc_arg_missing_positions
+        rexx_src/levelc_arg_missing_positions.rexx
+        "levelc_arg_missing_positions\\.rexx @ 2:7 - #RXC-LC-38\\.1"
+        "levelc_arg_missing_positions\\.rexx @ 3:7 - #RXC-LC-38\\.1"
+        "levelc_arg_missing_positions\\.rexx @ 4:7 - #RXC-LC-38\\.1"
+        "levelc_arg_missing_positions\\.rexx @ 5:8 - #RXC-LC-38\\.1")
 add_levelc_invalid_compile_test(levelc_procedure_nested_invalid
         rexx_src/levelc_procedure_nested_invalid.rexx
         "RXC-LC-17\\.1" "levelc_procedure_nested_invalid\\.rexx @ 5:11")
@@ -6075,6 +6081,12 @@ add_levelc_runtime_slice_test(levelc_arg_bif
 add_levelc_runtime_slice_test(levelc_arg_bif_noopt
         rexx_src/levelc_arg_bif.rexx
         "main=0\ncount=3\nvalues=a|||\nexists=1010\nomitted=0101\nagain=a|A\nfunction=1:xy\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_instruction_invocation
+        rexx_src/levelc_arg_instruction_invocation.rexx
+        "initial=A|B||0|1\nrepeat=A B|A B|A B\nnoargs=0|\nfunction=mixed\nadjacency=Y\nmain=0\n")
+add_levelc_runtime_slice_test(levelc_arg_instruction_invocation_noopt
+        rexx_src/levelc_arg_instruction_invocation.rexx
+        "initial=A|B||0|1\nrepeat=A B|A B|A B\nnoargs=0|\nfunction=mixed\nadjacency=Y\nmain=0\n" -n)
 add_test(NAME levelc_arg_linked
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>

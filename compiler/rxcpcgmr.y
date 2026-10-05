@@ -2056,10 +2056,20 @@ template_item(I) ::= CTK_EQUAL(T) parse_position(P).
     add_ast(I, P);
 }
 
+template_item(I) ::= CTK_EQUAL(T) CTK_MISSING_EXPR.
+{
+    I = rxcp_levelc_ast_error_token(context, "38.1", T);
+}
+
 template_item(I) ::= CTK_PLUS(T) parse_position(P).
 {
     I = ast_f(context, REL_POS, T);
     add_ast(I, P);
+}
+
+template_item(I) ::= CTK_PLUS(T) CTK_MISSING_EXPR.
+{
+    I = rxcp_levelc_ast_error_token(context, "38.1", T);
 }
 
 template_item(I) ::= CTK_MINUS(T) parse_position(P).
@@ -2068,10 +2078,20 @@ template_item(I) ::= CTK_MINUS(T) parse_position(P).
     add_ast(I, P);
 }
 
+template_item(I) ::= CTK_MINUS(T) CTK_MISSING_EXPR.
+{
+    I = rxcp_levelc_ast_error_token(context, "38.1", T);
+}
+
 template_item(I) ::= CTK_HIGH_PRIORITY_MINUS(T) parse_position(P).
 {
     I = ast_f(context, REL_POS, T);
     add_ast(I, P);
+}
+
+template_item(I) ::= CTK_HIGH_PRIORITY_MINUS(T) CTK_MISSING_EXPR.
+{
+    I = rxcp_levelc_ast_error_token(context, "38.1", T);
 }
 
 template_item(I) ::= CTK_UNKNOWN(T).
@@ -2108,19 +2128,19 @@ parse_pattern_variable(V) ::= CTK_OPEN_BRACKET(O) CTK_VAR_SYMBOL(T) CTK_CLOSE_BR
 parse_pattern_variable(V) ::= CTK_OPEN_BRACKET(O) CTK_VAR_SYMBOL(T).
 {
     V = ast_f(context, VAR_REFERENCE, T);
-    add_ast(V, rxcp_levelc_ast_error(context, "46.1", O));
+    add_ast(V, rxcp_levelc_ast_error(context, "38.1", O));
 }
 
 parse_pattern_variable(V) ::= CTK_OPEN_BRACKET(O) CTK_CLOSE_BRACKET(C).
 {
     V = ast_f(context, TOKEN, O);
-    add_ast(V, rxcp_levelc_ast_error_token(context, "19.7", C));
+    add_ast(V, rxcp_levelc_ast_error_token(context, "38.1", C));
 }
 
 parse_pattern_variable(V) ::= CTK_OPEN_BRACKET(O) CTK_STRING(S) CTK_CLOSE_BRACKET.
 {
     V = ast_f(context, TOKEN, O);
-    add_ast(V, rxcp_levelc_ast_error_token(context, "19.7", S));
+    add_ast(V, rxcp_levelc_ast_error_token(context, "38.1", S));
 }
 
 assignment(A) ::= CTK_VAR_SYMBOL(V) CTK_EQUAL(T) expression(E).
