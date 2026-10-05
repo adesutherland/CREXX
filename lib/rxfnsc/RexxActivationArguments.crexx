@@ -32,7 +32,9 @@ import rexxvalue
  * queries. A missing position returns an empty value without extending the
  * frame. Repeated ARG instructions read the same captured values. The
  * separate return-presence flag distinguishes bare RETURN from an explicit
- * empty-string result without changing RexxValue's value contract.
+ * empty-string result without changing RexxValue's value contract. A fresh
+ * internal call also records whether PROCEDURE has been entered in that
+ * invocation. Labels and ordinary instructions do not consume this state.
  */
 RexxActivationArguments: class
   values = .RexxValue[]
@@ -41,12 +43,14 @@ RexxActivationArguments: class
   supplied_count = .int
   returned_value = .RexxValue
   return_present = .boolean
+  procedure_eligible = .boolean
 
   *: factory
     slot_count = 0
     supplied_count = 0
     returned_value = .RexxValue("")
     return_present = 0
+    procedure_eligible = 0
     return
 
   /**
@@ -119,3 +123,23 @@ RexxActivationArguments: class
   /** @return the result value, or an empty value when none was supplied */
   returnValue: method = .RexxValue
     return returned_value
+
+  /** Mark this internal CALL/function activation before label entry. */
+  beginInternalCall: method = .void
+    procedure_eligible = 1
+    return
+
+  /**
+   * Enter PROCEDURE once in an internal call, even after ordinary clauses.
+   * @signal CLASSIC_SYNTAX Error 17.1 for main or a second PROCEDURE
+   */
+  enterProcedure: method = .void
+    if \procedure_eligible then do
+      assembler signal "CLASSIC_SYNTAX", "RXC-LC-17.1: Unexpected PROCEDURE outside a fresh internal call or after an earlier PROCEDURE"
+    end
+    procedure_eligible = 0
+    return
+
+  /** @return whether a fresh internal call may execute PROCEDURE next */
+  procedureEligible: method = .boolean
+    return procedure_eligible

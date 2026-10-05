@@ -14,14 +14,15 @@ actuals have passing bounded evidence, but the full invocation and label
 lifecycle audit has not closed. The approved `LC-STEP-63T` one-frame label and
 SIGNAL design is the next shared prerequisite; its reference review is done,
 its canonical AST/emitter foundation is in progress, and the one-body runtime
-route now has a bounded passing checkpoint. Runtime PROCEDURE 17.1, complete
+route has bounded passing checkpoints including runtime PROCEDURE 17.1 for
+main fallthrough and a second PROCEDURE. Complete PROCEDURE source placement,
 CALL/RETURN/EXIT behavior and SIGNAL remain open.
 PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 473/473 with process memory monitoring after
-the shared-frame tests were added. This is a development checkpoint, not a
+Debug Level C checkpoint passed 478/478 with process memory monitoring after
+the PROCEDURE lifecycle tests were added. This is a development checkpoint, not a
 Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
@@ -3216,8 +3217,11 @@ Before any code edit, check the proposed route against these observable gates:
    plus main wrapper and label-entry dispatch; `63T-3B`, source-position
    PROCEDURE pool transition and exposure with labels that share the parent
    pool; `63T-3C`, fresh CALL/function argument frames and optional RETURN
-   state; and `63T-3D`, full main/local/nested/recursive, opt/no-opt, source,
-   linked and normal-suite qualification before retiring the old partition.
+   state; `63T-3E`, activation entry eligibility and runtime PROCEDURE 17.1
+   for main fallthrough or a second PROCEDURE in one invocation (while
+   retaining the source placement check pending whole-PROCEDURE review); and
+   `63T-3D`, full main/local/nested/recursive, opt/no-opt, source, linked and
+   normal-suite qualification before retiring the old partition.
    Each checkpoint serves `LC-63T-02/03`; none alone closes ARG or SIGNAL.
 4. **LC-STEP-63T-4 (LC-63T-01/02/04; depends on 63T-3):** implement direct and
    VALUE SIGNAL, ON/OFF and named condition targets through the VM's frame
@@ -3336,6 +3340,36 @@ missing-result contract. CALL/RETURN/EXIT, SIGNAL, handler cleanup, condition
 identity, linked/reference matrices and host interfaces need their remaining
 instruction gates. A machine reboot removed older `/tmp` test logs; this
 checkpoint's evidence is retained under the ignored Debug build tree.
+
+**2026-10-05 LC-STEP-63T-3E PROCEDURE lifecycle checkpoint.** Each internal
+CALL/function activation now records permission to execute one `PROCEDURE`;
+main has no such permission. `PROCEDURE` validates before creating its private
+pool. The old static main-`EXIT`/`PROCEDURE` fallthrough guard is gone.
+Regina reference probes confirm that ordinary instructions and label
+fallthrough do not consume a called invocation's first `PROCEDURE` right,
+whereas a second `PROCEDURE` raises 17.1. New optimized/no-opt tests cover
+called fallthrough after SAY, main fallthrough after prior output, and a
+second `PROCEDURE` after prior output. The prior compile-negative main
+fallthrough fixture is now a runtime 17.1 test.
+
+The exact-input Debug core/runtime build succeeded. Focused frame and
+activation tests passed 8/8; RexxScript runtime isolation passed 2/2; the
+normal Debug Level C suite passed 478/478. The guarded suite peaked at about
+2008 MiB aggregate descendant RSS and left no child processes. Evidence:
+`cmake-build-debug/levelc-63t3e-build.log`,
+`cmake-build-debug/levelc-63t3e-focused.log`,
+`cmake-build-debug/levelc-63t3e-rexxscript.log`,
+`cmake-build-debug/levelc-63t3e-qual.log`, and
+`cmake-build-debug/levelc-63t3e-reference-*.log`.
+
+`LC-STEP-63T-3D`, the whole PROCEDURE review and all `LC-63T-01–04` gates
+remain open. The source scanner still rejects a same-label PROCEDURE after
+ordinary statements as source 17.1, but the same source succeeds in Regina
+(`levelc-63t3e-parser-gap*.log`). Runtime 17.1 currently reports the
+`RexxActivationArguments` library line and main wrapper source rather than
+the authored PROCEDURE line (`levelc-63t3e-diagnostic.log`); source
+provenance needs repair. Full CALL/RETURN/EXIT and SIGNAL lifecycles, linked
+and host matrices retain their own gates.
 
 ## Findings
 
@@ -3472,7 +3506,7 @@ language boundaries; they do not excuse unfinished instruction or host work.
 | Control | LEAVE/ITERATE | Both whole instructions closed under LC-AC-69/70, including named/unnamed transfers and default/STRICTC timing | Shared SIGNAL/TRACE and invocation lifecycle remain open |
 | Control | SELECT/WHEN/OTHERWISE | Whole SELECT instruction closed under LC-AC-68/LC-STEP-69C | Shared condition, TRACE and host lifecycle remain open |
 | Control | NOP | Whole instruction closed under LC-AC-64: childless opt/no-opt, nested SELECT/IF/DO/local, source anchors, invalid `21.1`, normal and linked proof | Shared labeled-clause, TRACE and host text lifecycle remains open under LC-AC-04/08 and later rows |
-| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | One generated body dispatches main/local labels with fresh CALL frames; ARG activation/presence, host entry, ARG BIF, templates, direct CALL expression actuals, shared/private pools, EXPOSE and bounded RETURN have opt/no-opt proof | Runtime 17.1 fallthrough, ARG invocation audit, external calls, full pool/return/exit lifecycle and whole-instruction reviews |
+| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | One generated body dispatches main/local labels with fresh CALL frames; ARG activation/presence, host entry, ARG BIF, templates, direct CALL expression actuals, shared/private pools, EXPOSE, bounded RETURN and runtime 17.1 for main/second PROCEDURE have opt/no-opt proof | Authored PROCEDURE source position, ARG invocation audit, external calls, full pool/return/exit lifecycle and whole-instruction reviews |
 | PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Shared `parseplan` executes VAR/VALUE and ARG templates with arbitrary targets, comma positions, static/dynamic patterns and positions, compound targets and Classic 26.4 dynamic-position errors | Whole PARSE review, remaining source acquisition, configuration and errors |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
 | Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | Front end: selected parser forms | Trap lifecycle, delivery, messages and error identity |
@@ -3510,7 +3544,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-NOP` | NOP instruction | Whole instruction closed under LC-AC-64/LC-STEP-66B | Shared label/TRACE and configuration proof remains open under LC-AC-04/08 |
 | `SYN-CLASSIC-NUMERIC` | NUMERIC DIGITS/FORM/FUZZ | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PARSE` | PARSE variants and templates | Shared `parseplan` supports arbitrary VAR/VALUE and ARG target sequences, comma templates, compound targets, static/dynamic patterns and positions, optional UPPER and selected Classic errors | Whole-instruction review and remaining PARSE source services open |
-| `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded slice: scalar/stem PROCEDURE EXPOSE | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded scalar/stem EXPOSE plus runtime main/second-entry 17.1 under 63T-3E | Same-label late PROCEDURE source mismatch, authored runtime error location, remaining EXPOSE forms and whole-instruction proof open |
 | `SYN-CLASSIC-PULL` | PULL instruction/templates | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-QUEUE` | QUEUE instruction | Front end only | Execution and reference proof open |

@@ -488,14 +488,19 @@ into the linked active register would overwrite the caller's pool and could
 make an exposed variable alias itself. Explicit and bare RETURN now record
 value presence in `RexxActivationArguments` independently of `RexxValue`.
 
-This is still a bounded frame checkpoint. Main fallthrough into a
-`PROCEDURE` label remains compile-time unsupported until the runtime can
-raise Classic 17.1 based on whether that activation entered through an
-internal call. The source parser continues to reject a `PROCEDURE` after an
-earlier executed clause with 17.1. Missing function results, CALL result
-semantics, SIGNAL handlers and dynamic VALUE dispatch retain their separate
-worklist gates. No ARG, CALL, PROCEDURE or SIGNAL instruction is closed by
-this checkpoint.
+The following `63T-3E` checkpoint moves `PROCEDURE` eligibility into the
+activation. Main starts ineligible; an internal CALL/function frame starts
+eligible; executing `PROCEDURE` consumes that right. Regina accepts ordinary
+instructions and label fallthrough before the first `PROCEDURE` in a called
+invocation, then raises 17.1 on a second `PROCEDURE`. The runtime now raises
+17.1 for main fallthrough or a second `PROCEDURE` and creates the private
+pool only after that check. The compiler's older source check still rejects
+`PROCEDURE` after an ordinary clause in the same label, although Regina
+accepts it. That mismatch and the runtime panic's library-source diagnostic
+anchor remain open for whole-PROCEDURE/source qualification. Missing function
+results, CALL result semantics, SIGNAL handlers and dynamic VALUE dispatch
+retain their separate worklist gates. No ARG, CALL, PROCEDURE or SIGNAL
+instruction is closed by this checkpoint.
 
 The source AST also needs to preserve the authored `VALUE` form. Today
 `SIGNAL 'target'` and `SIGNAL VALUE 'target'` both have a `LEVELC_SIGNAL`

@@ -5216,9 +5216,6 @@ endfunction()
 add_levelc_unsupported_compile_test(levelc_compile_unsupported
         rexx_src/levelc_unsupported.rexx)
 
-add_levelc_unsupported_compile_test(levelc_slice2_procedure_expose_unsupported
-        rexx_src/levelc_slice2_procedure_expose_unsupported.rexx)
-
 add_levelc_unsupported_compile_test(levelc_slice4_omitted_call_unsupported
         rexx_src/levelc_slice4_omitted_call_unsupported.rexx)
 
@@ -5784,6 +5781,13 @@ add_levelc_runtime_slice_test(levelc_frame_recursive_call
 add_levelc_runtime_slice_test(levelc_frame_recursive_call_noopt
         rexx_src/levelc_frame_recursive_call.rexx
         "3\n" -n)
+
+add_levelc_runtime_slice_test(levelc_frame_called_late_procedure
+        rexx_src/levelc_frame_called_late_procedure.rexx
+        "before\nafter\n")
+add_levelc_runtime_slice_test(levelc_frame_called_late_procedure_noopt
+        rexx_src/levelc_frame_called_late_procedure.rexx
+        "before\nafter\n" -n)
 
 add_levelc_runtime_slice_test(levelc_slice3_bif_length_target_shape
         rexx_src/levelc_slice3_bif_length_target_shape.crexx
@@ -6362,6 +6366,15 @@ function(add_levelc_invalid_runtime_test NAME SOURCE_FILE EXPECTED_DIAGNOSTIC)
             -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_invalid_runtime.cmake)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
+
+add_levelc_invalid_runtime_test(levelc_frame_main_procedure_17_1
+        rexx_src/levelc_slice2_procedure_expose_unsupported.rexx RXC-LC-17.1 "3")
+add_levelc_invalid_runtime_test(levelc_frame_main_procedure_17_1_noopt
+        rexx_src/levelc_slice2_procedure_expose_unsupported.rexx RXC-LC-17.1 -n)
+add_levelc_invalid_runtime_test(levelc_frame_second_procedure_17_1
+        rexx_src/levelc_frame_second_procedure_17_1.rexx RXC-LC-17.1 "one")
+add_levelc_invalid_runtime_test(levelc_frame_second_procedure_17_1_noopt
+        rexx_src/levelc_frame_second_procedure_17_1.rexx RXC-LC-17.1 -n)
 
 add_levelc_invalid_runtime_test(levelc_strictc_leave_outside
         rexx_src/levelc_strictc_leave_outside.rexx RXC-LC-28.1)

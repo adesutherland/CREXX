@@ -1489,30 +1489,6 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
     return levelc_statement_supported(stmt, plan, 1, reason_out);
 }
 
-static int levelc_plan_has_main_exit(const LevelCLowerPlan *plan) {
-    ASTNode *stmt;
-    if (!plan) return 0;
-    for (stmt = plan->main_first; stmt && stmt != plan->main_end;
-         stmt = stmt->sibling) {
-        if (stmt->node_type == EXIT && !stmt->child) return 1;
-    }
-    return 0;
-}
-
-static int levelc_plan_has_procedure_clause(const LevelCLowerPlan *plan) {
-    size_t i;
-    if (!plan) return 0;
-    for (i = 0; i < plan->procedure_count; i++) {
-        ASTNode *stmt;
-        for (stmt = plan->procedures[i].body_first;
-             stmt && stmt != plan->procedures[i].body_end;
-             stmt = stmt->sibling) {
-            if (stmt->node_type == LEVELC_PROCEDURE) return 1;
-        }
-    }
-    return 0;
-}
-
 static int levelc_collect_lower_plan(ASTNode *instructions,
                                      LevelCLowerPlan *plan,
                                      const char **reason_out) {
@@ -1596,16 +1572,6 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
 
     if (!plan->main_first && plan->procedure_count == 0) {
         if (reason_out) *reason_out = "no supported executable Level C statements";
-        return 0;
-    }
-
-    /* A fallthrough from main to PROCEDURE must raise 17.1 at execution time.
-     * Keep that shape out of this checkpoint until activation entry state
-     * distinguishes a fresh internal CALL from source-order fallthrough. */
-    if (levelc_plan_has_procedure_clause(plan) &&
-        !levelc_plan_has_main_exit(plan)) {
-        if (reason_out) *reason_out =
-            "main fallthrough to PROCEDURE requires runtime 17.1 handling";
         return 0;
     }
 
@@ -1750,6 +1716,8 @@ static char *levelc_begin_call_activation(Context *context,
     char *name;
     ASTNode *factory;
     ASTNode *assignment;
+    ASTNode *receiver;
+    ASTNode *begin;
 
     if (!context || !call_node || !prelude) return NULL;
     name = rxcp_remap_create_generated_node_name(
@@ -1758,12 +1726,30 @@ static char *levelc_begin_call_activation(Context *context,
         context, call_node, LEVELC_ACTIVATION_CLASS, NULL, 0) : NULL;
     assignment = factory ? rxcp_remap_create_named_assignment(
         context, call_node, name, factory) : NULL;
-    if (!assignment) {
+    receiver = assignment ? rxcp_remap_create_named_ref(
+        context, call_node, VAR_SYMBOL, name) : NULL;
+    begin = receiver ? rxcp_remap_create_member_call_statement(
+        context, call_node, receiver, "beginInternalCall", NULL, 0) : NULL;
+    if (!assignment || !begin) {
         free(name);
         return NULL;
     }
     add_ast(prelude, assignment);
+    add_ast(prelude, begin);
     return name;
+}
+
+static int levelc_append_activation_method(Context *context,
+                                           ASTNode *instructions,
+                                           ASTNode *anchor,
+                                           const char *method) {
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, anchor, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *call = receiver ? rxcp_remap_create_member_call_statement(
+        context, anchor, receiver, method, NULL, 0) : NULL;
+    if (!call) return 0;
+    add_ast(instructions, call);
+    return 1;
 }
 
 static int levelc_append_call_argument(Context *context,
@@ -3501,6 +3487,11 @@ static int levelc_lower_statement(Context *context,
         return levelc_lower_arg_instruction(context, instructions, stmt, reason_out);
     }
     if (in_procedure && stmt->node_type == LEVELC_PROCEDURE) {
+        if (!levelc_append_activation_method(context, instructions, stmt,
+                                              "enterProcedure")) {
+            if (reason_out) *reason_out = "failed to validate PROCEDURE activation";
+            return 0;
+        }
         if (!levelc_append_private_pool_transition(context, instructions, stmt)) {
             if (reason_out) *reason_out = "failed to create PROCEDURE pool transition";
             return 0;
