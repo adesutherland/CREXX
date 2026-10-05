@@ -4460,7 +4460,7 @@ if (ENABLE_PARSER_MODE)
             "RXC-LC-20\\.1 token=\"10\""
             "RXC-LC-25\\.12 keywords=\"ARG PULL SOURCE LINEIN VERSION VALUE VAR\" token=\"10\""
             "RXC-LC-25\\.13 keywords=\"ARG PULL SOURCE LINEIN VERSION VALUE VAR\" token=\"10\""
-            "RXC-LC-19\\.2 token=\"10\""
+            "RXC-LC-19\\.2 token=\"\\+\""
             "RXC-LC-19\\.4 token=\"10\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"arg\""
             "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=1, sev=48, text=\"a\""
@@ -5286,6 +5286,16 @@ add_levelc_invalid_compile_test(levelc_call_surplus_policy_tails
         "levelc_call_surplus_policy_tails\\.rexx @ 3:24 - #RXC-LC-19\\.3"
         "levelc_call_surplus_policy_tails\\.rexx @ 4:15 - #RXC-LC-21\\.1"
         "levelc_call_surplus_policy_tails\\.rexx @ 5:28 - #RXC-LC-19\\.3")
+add_levelc_invalid_compile_test(levelc_call_diagnostic_matrix
+        rexx_src/levelc_call_diagnostic_matrix.rexx
+        "levelc_call_diagnostic_matrix\\.rexx @ 2:1 - #RXC-LC-19\\.2.*end-of-clause"
+        "levelc_call_diagnostic_matrix\\.rexx @ 3:6 - #RXC-LC-19\\.2"
+        "levelc_call_diagnostic_matrix\\.rexx @ 4:8 - #RXC-LC-25\\.1"
+        "levelc_call_diagnostic_matrix\\.rexx @ 5:9 - #RXC-LC-25\\.1"
+        "levelc_call_diagnostic_matrix\\.rexx @ 6:9 - #RXC-LC-25\\.2"
+        "levelc_call_diagnostic_matrix\\.rexx @ 7:10 - #RXC-LC-25\\.2"
+        "levelc_call_diagnostic_matrix\\.rexx @ 8:15 - #RXC-LC-19\\.3"
+        "levelc_call_diagnostic_matrix\\.rexx @ 9:20 - #RXC-LC-19\\.3")
 add_levelc_invalid_compile_test(levelc_if_missing_condition
         rexx_src/levelc_if_missing_condition.rexx
         "RXC-LC-35\\.1" "1 error")

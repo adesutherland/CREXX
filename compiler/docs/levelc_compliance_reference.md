@@ -483,6 +483,9 @@ activity.
 `CALL`:
 
 - invokes internal, built-in, or external routines;
+- an unquoted constant-symbol name, including integer, decimal and other
+  digit-starting symbols, may resolve a local label of the same spelling;
+  a quoted name bypasses local labels;
 - `CALL ON/OFF ERROR|FAILURE|HALT|NOTREADY [NAME target]` controls delayed
   condition handlers.
 

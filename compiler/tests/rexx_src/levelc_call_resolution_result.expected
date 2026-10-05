@@ -7,3 +7,10 @@ quoted=3
 main-argc=0
 inner=inner-result
 outer=outer-result|outer-result
+integer
+decimal
+leading-dot
+exponent
+constant
+loose
+fallthrough=LIT|RESULT

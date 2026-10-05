@@ -13,7 +13,7 @@ parse upper 10 template
 say afterParseUpper
 drop 10
 say afterDrop
-call 10
+call +
 say afterCall
 signal 10
 say afterSignal

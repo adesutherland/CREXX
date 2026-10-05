@@ -135,7 +135,7 @@ regular:
     "|" { RET(TK_OR); }
     not { RET(TK_NOT); }
 
-    lcsimple ob ":" { RET(TK_LABEL); }
+    (lcsimple | integer | fraction | constsym) ob ":" { RET(TK_LABEL); }
     numeric_exp { RET(TK_DECIMAL); }
     fraction { RET(TK_DECIMAL); }
     integer { RET(TK_INTEGER); }

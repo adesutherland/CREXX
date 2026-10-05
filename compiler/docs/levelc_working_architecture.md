@@ -250,6 +250,16 @@ the activation argument only for this activation-scoped BIF.
 The active CALL review now routes an unquoted local label before the shared
 direct-BIF table, while a quoted uppercase name bypasses local labels and
 reaches its matching BIF. Quoted spelling is decoded without uppercasing.
+The source scanner recognizes integer, decimal, leading-dot fraction,
+unsigned exponent and other digit-starting constant-symbol labels as
+targetable Classic labels. Direct CALL accepts those constant-symbol targets
+through the same literal-label resolution path as ordinary symbols. `CALL 7` can therefore
+reach a local `7:` label; a quoted `'7'` still bypasses local resolution.
+An exponent containing `+` or `-` can name an external CALL target but is
+not a local label; Regina rejects a corresponding `7E+2:` label.
+The ON/NAME handler-target grammar remains separate and rejects a numeric
+NAME target with `19.3`. Invalid punctuation after direct CALL reports
+`19.2`, while bare CALL fills the diagnostic's token as `end-of-clause`.
 The BIF argument/context builder accepts both expression-function and CALL
 statement argument lists. Local expression calls, ordinary CALL and delayed
 local handlers now use one `levelc_build_local_invocation` path for frame
@@ -2691,8 +2701,11 @@ Level C parse/instruction completion slice on 2026-05-12:
   offending token rather than allowing the next clause to be blamed. The smoke
   case `NUMERIC 10` followed by `ARG a b` now reports `25.15` on `10`, while
   `ARG` and its template targets remain clean. The same boundary fixture covers
-  `DROP 10`, `CALL 10`, `SIGNAL 10`, `PROCEDURE 10`,
+  `DROP 10`, `CALL +`, `SIGNAL 10`, `PROCEDURE 10`,
   `PROCEDURE EXPOSE 10`, `PARSE 10`, and `PARSE UPPER 10`.
+  The older `CALL 10` negative was corrected when the whole CALL review
+  confirmed that constant-symbol routine names and matching numeric labels
+  are valid Classic syntax.
 - Silent accepts are a first-class highlighter failure. The recovery/warning
   tightening pass adds explicit recovery for malformed instruction tails that
   previously flattened into ordinary tokens: `CALL ON/OFF` condition tails,

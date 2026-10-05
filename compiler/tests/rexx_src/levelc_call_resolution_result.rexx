@@ -15,6 +15,13 @@ call arg
 say 'main-argc=' || result
 call outer
 say 'outer=' || result || '|' || .result
+call 7
+call 1.2
+call .5
+call 7E2
+call 7dogs
+call loose
+say 'fallthrough=' || symbol('RESULT') || '|' || result
 exit
 
 setter:
@@ -38,3 +45,26 @@ outer:
 
 inner:
   return 'inner-result'
+
+7:
+  say 'integer'
+  return
+
+1.2:
+  say 'decimal'
+  return
+
+.5:
+  say 'leading-dot'
+  return
+
+7E2:
+  say 'exponent'
+  return
+
+7dogs:
+  say 'constant'
+  return
+
+loose:
+  say 'loose'

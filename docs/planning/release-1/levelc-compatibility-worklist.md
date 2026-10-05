@@ -25,9 +25,11 @@ and SIGNAL remain open.
 PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-13`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
-open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 617/617 with process memory monitoring after
-the bounded CALL trap lifecycle/source checkpoint below.
+open even where a supporting slice or helper passes. The final code/test-input
+Debug Level C checkpoint for the CALL diagnostic, constant-symbol and
+fallthrough increment passed 618/618 with process memory monitoring. Its
+focused ASan and Level B/G/RexxScript isolation checks also passed; the exact
+receipts are below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 **2026-10-05 scope and VM decision.** Adrian initially excluded a general
@@ -3301,6 +3303,7 @@ the call kind, return presence/value and inherited SIGNAL policy.
 | `levelc-call-reference-quoted-handler.log` | Regina accepts a quoted `NAME 'HANDLER'`, consistent with the existing parser's target shape; platform reference variants may differ. | Preserve the accepted source form and test the named handler route. |
 | `levelc-call-reference-delay-state.log`, `levelc-call-reference-delay-nested.log` | A CALL trap sees `CONDITION('S')=DELAY`, `CONDITION('I')=CALL`, zero arguments and the causing `SIGL`; its returned value leaves the prior `RESULT` intact. The trap handles a later ERROR again, suppresses ERROR raised while already handling it, and a later SIGNAL ON replaces CALL ON with immediate transfer. The interrupted caller's prior CONDITION state is restored after the handler returns. | Per-activation delayed state, source-preserving clause checkpoint, handler activation and CALL/SIGNAL replacement. |
 | `levelc-call-reference-missing-trap.log` | A missing delayed `CALL ON ERROR NAME` target raises `16.1` at the condition-raising `ADDRESS` clause (line 2), not at the preceding policy clause (line 1). | The compiled dispatcher must retain dynamic causing-clause source identity when its selected handler is absent; this remains open. |
+| `levelc-call-fallthrough-full-regina.log`, `levelc-call-fallthrough-matrix-focused-v2.log` | A local CALL whose label has no PROCEDURE or explicit RETURN falls through to end-of-programme and returns without a value; the caller drops RESULT. The permanent resolution/result fixture now includes this case. Its full expected output matches Regina byte for byte and the focused source/linked/opt/no-opt matrix passes 4/4 after CMake regeneration. | Retain it in the complete CALL result lifecycle; whole CALL and external routines remain open. |
 | `levelc-call-reference-off-name.log`, `levelc-call-reference-on-extra.log` | `CALL OFF ERROR NAME foo` fails with `21.1` at NAME; `CALL ON ERROR NAME foo bar` fails with `19.3` at the extra symbol. | The Level C parser must reject surplus CALL policy tails instead of silently recovering and emitting a valid policy. |
 
 Each guarded probe exited with zero residual child processes. These are
@@ -3315,6 +3318,36 @@ clause. Retain a normal compile-diagnostic regression for both forms, check
 the neighbouring valid policy forms and optimizer-independent runtime cases,
 then qualify the final code/test inputs with the normal Level C suite. This is
 a parser diagnostic repair under `LC-75-01`, not a new language form.
+
+**LC-STEP-75A remaining diagnostic matrix plan (LC-75-01; active).** Inventory
+the grammar's missing/bad direct target, malformed expression list, missing
+or invalid ON/OFF condition, missing/bad/extra ON NAME target and OFF tail
+forms against guarded Classic reference probes. Add one permanent compile
+fixture that checks each Classic identity and authored source location while
+retaining following-clause recovery; repair any mismatched grammar path
+without adding a new CALL form. Check adjacent valid policy and call forms,
+then qualify with focused compiler tests and the relevant normal correctness
+suite once at the coherent code/test checkpoint. This completes the syntax
+and diagnostic submatrix but cannot close `LC-75-01` until runtime external
+missing-target errors are also source-anchored.
+
+**LC-STEP-75A constant-symbol correction plan (LC-75-01/02; complete as a
+CALL grammar checkpoint, not CALL closure).** The
+reference audit found that `CALL 7` is a legal direct target: Regina calls a
+local `7:` label, and the IBM CALL reference allows a constant symbol as the
+routine name. Guarded Regina also calls local `1.2:`, `.5:`, `7E2:` and `7dogs:`
+labels from their unquoted CALLs. The initial diagnostic fixture incorrectly
+treated `CALL 7` as `19.2`; the earlier source-recovery fixture has the same
+outdated assumption. Before a product edit, split direct routine targets from
+the stricter ON/NAME handler-target grammar so integer, decimal and
+digit-starting constant symbols enter the existing local/BIF/external
+resolution path, while numeric `NAME` still reports `19.3`. Preserve literal
+spelling, quoted local bypass and source order. Replace the invalid numeric
+case with a genuinely invalid punctuation target, add permanent positive
+local-target reference/opt/no-opt/linked proof, retain following-clause
+diagnostic recovery, and run focused checks before one final normal Debug
+Level C checkpoint. This is a correction to the reference-defined CALL form,
+not a new language direction or a numeric-only dispatch implementation.
 
 **LC-STEP-75A surplus-tail receipt, 2026-10-05.** The Level C grammar now
 retains unexpected text after `CALL OFF condition` as an authored `21.1` AST
@@ -3334,6 +3367,41 @@ aggregate RSS); Level B/G and RexxScript isolation passed **10/10** in
 left zero residual children. Direct/external missing targets, dynamic trap
 source identity, real producers and the remaining CALL reference matrix still
 keep `LC-75-01–06` and LC-I-13 open.
+
+**LC-STEP-75A direct diagnostic, constant-symbol and fallthrough checkpoint,
+2026-10-05.** The single compile fixture
+`levelc_call_diagnostic_matrix.rexx` checks eight source-anchored errors in
+one recovered programme: bare CALL, invalid punctuation target, missing and
+invalid ON/OFF conditions, and missing or invalid ON/NAME targets. Bare CALL
+now fills its existing `19.2` token detail with
+`end-of-clause`; it previously printed the unexpanded `{token}` placeholder.
+The separate surplus-tail and malformed-expression tests retain the other
+CALL grammar errors. Regina confirms these identities and locations. The
+earlier numeric `19.2` expectation was removed: the scanner now recognizes
+numeric and digit-starting constant-symbol labels, and direct CALL routes
+integer, decimal, leading-dot, exponent and other constant-symbol targets
+through the ordinary local-label resolver. ON/NAME retains its distinct
+numeric `19.3` error. A signed-exponent CALL may resolve externally, but a
+signed-exponent label is not admitted; Regina likewise rejects `7E+2:`.
+The permanent local-result fixture also covers a label without PROCEDURE or
+RETURN: falling through to the programme end drops RESULT. Its expected
+output, including all five constant-symbol local calls, matches guarded
+Regina byte for byte in `cmake-build-debug/levelc-call-constant-full-regina-v3.log`.
+Source, linked, optimized and no-opt focused execution pass. The guarded
+focused normal Debug matrix passed **8/8** in
+`cmake-build-debug/levelc-call-constant-focused-v3.log`; focused ASan passed
+**8/8** with macOS leak detection off in
+`cmake-build-debug/levelc-call-constant-asan-focused-v3-guard.log`.
+The guarded final-input core product build passed in
+`cmake-build-debug/levelc-call-constant-final-core-build.log`.
+The normal Debug Level C suite passed **618/618** in
+`cmake-build-debug/levelc-call-constant-final-levelc.log` (peak **5115.0 MiB**
+aggregate RSS). Affected Level B/G and RexxScript isolation passed **10/10**
+in `cmake-build-debug/levelc-call-constant-isolation.log`. All guarded runs
+left zero residual child processes. Only documentation changed after the
+final code/test checkpoint. Runtime
+missing-target diagnostics, external routines and the rest of CALL remain
+open.
 
 **LC-STEP-75E local invocation coherence receipt, 2026-10-05.** Expression
 functions, ordinary CALL and delayed local handlers now use one
@@ -3413,10 +3481,66 @@ CALL to reach other Level C routines and Level B/G routines with a specific
 signature. This supersedes the earlier blanket cross-dialect exclusion only
 for that explicitly typed Level B/G entry; arbitrary Level B/G calls and a
 general Classic/non-Classic adapter remain outside this instruction review.
+The initial external CALL target set is these two programme types; the
+earlier host-registered native-routine extension is not part of this first
+stage. Host services used by a called Level C programme remain required by
+`LC-75-04`.
 The external Classic search/load and shared host-state requirements in
 `LC-75-02/04` remain open. Specify and review the Level B/G entry signature
 and the same-context invocation API before implementing that boundary; the
 proposal above is not yet an approved loader or VM contract.
+
+**LC-STEP-75B module identity probe.** A guarded `rxlink` attempt with two
+ordinary compiled Level C images stopped before execution with `conflicting
+callable .main` in
+`cmake-build-debug/levelc-external-link-probe.log`; both images export the
+same generated main and body names. Existing bytecode autoload resolves an
+unresolved callable from an exact packaged `.rxbin` stem, but cannot solve
+duplicate exports or discover/compile `.rexx` source. An external Level C
+provider therefore needs a distinct routine entry and unique generated
+symbols, with a stated source/package naming rule and private activation
+setup. This is design evidence, not external CALL acceptance.
+The existing VM resolves ordinary callable imports during module linking;
+compiling an unknown CALL as a mandatory direct import would fail before an
+unreached clause could be skipped. The whole CALL error contract therefore
+also needs a reached-clause resolver that can report absence at runtime.
+The VM already has `metaloadmodule`, `metaloadedprocs` and `dcall` for
+same-context runtime loading, procedure enumeration and pointer calls. These
+may avoid a new VM opcode, but bare enumeration does not verify the fixed
+Level B/G signature and ordinary providers still collide on `.main`.
+The exact safe descriptor check, callable entry and search/ownership contract
+remain the architectural decision gate; no new loader API is assumed here.
+An initial exact-stem bytecode provider stage should use that same resolver
+and frame contract so later source discovery does not create a second CALL
+implementation. The proposed fixed Level B/G entry is a `.void` procedure
+with one `.RexxActivationArguments` argument; it reads source-ordered values
+and presence through the frame and calls `setReturnValue` only when returning
+a Classic value. This proposed signature and the provider load/search policy
+await Adrian's decision before product edits.
+
+**LC-STEP-75B external implementation order (proposal, decision gate open).**
+1. `75B-1` (`LC-75-02/04`): fix the one-argument frame ABI, exact target-name
+   encoding and a Level C routine build mode whose exported entry and helper
+   symbols are unique and whose provider image does not export ordinary
+   `.main`. Require the same ABI from an explicitly exposed Level B/G entry.
+2. `75B-2` (`LC-75-01–04`): make the single CALL resolver select local, exact
+   BIF, then the external entry only when the clause executes. Reuse the
+   activation's captured arguments and optional return state, and preserve
+   the ordinary CALL versus expression versus delayed-handler epilogues.
+3. `75B-3` (`LC-75-02/04`): load and call a packaged provider in the current
+   VM context from explicit linked modules or configured exact-stem roots;
+   distinguish absent target from a target that raises a condition. Establish
+   ownership, reentrancy, source and host-state behavior with opt/no-opt,
+   linked and hosted regressions. Runtime source discovery remains an open
+   `LC-75-04` stage unless Adrian selects it for the first implementation.
+4. `75B-4` (`LC-75-01–06`): reconcile quoted/unquoted names, unreachable
+   missing CALL, recursion, external private pools/default settings,
+   Unicode/NUL argument transport, optional results, nested host state and
+   trap targets against the reference matrix. Keep CALL open until every
+   applicable criterion passes or Adrian explicitly revises it.
+
+These steps specify review order, not an approved new loader, CLI or VM API.
+The exact API and package/source policy are the pending architectural gate.
 
 **LC-STEP-75D missing-handler source repair plan (LC-75-01/05; active).**
 The controlled trap producer and Regina reference show that a missing delayed
@@ -3462,6 +3586,16 @@ delivery. The guarded Regina probes above establish the concrete observable
 matrix for this implementation. HALT host capture may require a separate VM
 boundary review when that producer is implemented; no such change is approved
 by this CALL plan.
+
+| CALL condition | Producer owner still open | CALL-owned proof now available |
+| --- | --- | --- |
+| ERROR, FAILURE | ADDRESS and implicit command completion through `Config_Command` | Controlled typed event, policy, handler and clause checkpoint only |
+| NOTREADY | Stream and I/O operations, including PULL/PARSE input | Controlled typed event and trap state only |
+| HALT | VM/host interrupt capture and buffering | Activation buffering unit and controlled clause delivery; real interrupt source remains open |
+
+CALL and SIGNAL consume these conditions according to their active policy;
+the producer rows must wire and qualify actual event creation. This keeps
+whole-instruction CALL and full Level C completion distinct.
 
 **LC-STEP-75D bounded implementation receipt, 2026-10-05.** `CALL ON/OFF`
 now selects per-activation ERROR/FAILURE/HALT/NOTREADY CALL policies in the
@@ -3547,7 +3681,8 @@ aggregate RSS); Level B/G and RexxScript isolation passed **10/10** in
 product/runtime build passed in
 `cmake-build-debug/levelc-call-origin-final-product-build.log`. All guarded runs had
 zero residual child processes. Real ADDRESS/I/O/HALT producers, external
-targets, remaining condition/reference forms and whole CALL remain open.
+targets, a buffered nested event's runtime source origin, remaining
+condition/reference forms and whole CALL remain open.
 
 **LC-STEP-75C local/BIF/result foundation receipt, 2026-10-05.** The initial
 guarded linked reproducer in `cmake-build-debug/levelc-call-result-repro-product.log`
@@ -5073,7 +5208,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; surplus policy tails report reference `21.1/19.3` under LC-STEP-75A | External Level C and fixed-signature Level B/G resolution, real condition producers and their source identity, remaining clause/lifecycle matrix, full errors and whole-instruction review open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL, including numeric/constant-symbol labels, and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; direct and policy diagnostics have source-anchored matrix coverage under LC-STEP-75A | External Level C and fixed-signature Level B/G resolution, real condition producers and their source identity, remaining clause/lifecycle matrix, runtime missing-target errors and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |

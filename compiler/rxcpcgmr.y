@@ -504,6 +504,7 @@ static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expressio
 %type bad_instruction_tail_start {Token*}
 %type call_extra_tail_start {Token*}
 %type bad_name_target_start {Token*}
+%type bad_call_target_start {Token*}
 %type bad_variable_ref_start {Token*}
 
 %stack_size 0
@@ -755,13 +756,13 @@ arg_instruction(I) ::= CTK_ARG(T) template_list_opt(L).
     if (L) add_ast(I, L);
 }
 
-call_instruction(I) ::= CTK_CALL(T) call_target(C).
+call_instruction(I) ::= CTK_CALL(T) call_routine_target(C).
 {
     I = ast_f(context, CALL, T);
     add_ast(I, C);
 }
 
-call_instruction(I) ::= CTK_CALL(T) call_target(C) levelc_call_args(L).
+call_instruction(I) ::= CTK_CALL(T) call_routine_target(C) levelc_call_args(L).
 {
     ASTNode *args = ast_ft(context, ARGS);
     I = ast_f(context, CALL, T);
@@ -830,7 +831,7 @@ call_instruction(I) ::= CTK_CALL(T) CTK_OFF(O).
                                         "ERROR FAILURE HALT NOTREADY"));
 }
 
-call_instruction(I) ::= CTK_CALL(T) bad_name_target_start(B) simple_tail(L).
+call_instruction(I) ::= CTK_CALL(T) bad_call_target_start(B) simple_tail(L).
 {
     I = ast_f(context, CALL, T);
     add_ast(I, rxcp_levelc_ast_error_token(context, "19.2", B));
@@ -840,7 +841,7 @@ call_instruction(I) ::= CTK_CALL(T) bad_name_target_start(B) simple_tail(L).
 call_instruction(I) ::= CTK_CALL(T).
 {
     I = ast_f(context, CALL, T);
-    add_ast(I, rxcp_levelc_ast_error(context, "19.2", T));
+    add_ast(I, levelc_current_token_error(context, "19.2", T));
 }
 
 drop_instruction(I) ::= CTK_DROP(T) variable_list(L).
@@ -1549,6 +1550,11 @@ call_target(T) ::= CTK_STRING(S).
     T = ast_f(context, STRING, S);
 }
 
+call_routine_target(T) ::= call_target(S). { T = S; }
+call_routine_target(T) ::= CTK_INTEGER(S). { T = ast_f(context, LITERAL, S); }
+call_routine_target(T) ::= CTK_DECIMAL(S). { T = ast_f(context, LITERAL, S); }
+call_routine_target(T) ::= CTK_CONST_SYMBOL(S). { T = ast_f(context, LITERAL, S); }
+
 callable_condition(C) ::= CTK_ERROR(T).
 {
     C = ast_f(context, LITERAL, T);
@@ -1741,35 +1747,36 @@ bad_variable_ref_start(T) ::= CTK_XOR(S). { T = S; }
 bad_name_target_start(T) ::= CTK_INTEGER(S). { T = S; }
 bad_name_target_start(T) ::= CTK_DECIMAL(S). { T = S; }
 bad_name_target_start(T) ::= CTK_CONST_SYMBOL(S). { T = S; }
-bad_name_target_start(T) ::= CTK_DOT(S). { T = S; }
-bad_name_target_start(T) ::= CTK_OPEN_BRACKET(S). { T = S; }
-bad_name_target_start(T) ::= CTK_CLOSE_BRACKET(S). { T = S; }
-bad_name_target_start(T) ::= CTK_COMMA(S). { T = S; }
-bad_name_target_start(T) ::= CTK_EQUAL(S). { T = S; }
-bad_name_target_start(T) ::= CTK_PLUS(S). { T = S; }
-bad_name_target_start(T) ::= CTK_MINUS(S). { T = S; }
-bad_name_target_start(T) ::= CTK_HIGH_PRIORITY_MINUS(S). { T = S; }
-bad_name_target_start(T) ::= CTK_NOT(S). { T = S; }
-bad_name_target_start(T) ::= CTK_CONCAT(S). { T = S; }
-bad_name_target_start(T) ::= CTK_MULT(S). { T = S; }
-bad_name_target_start(T) ::= CTK_DIV(S). { T = S; }
-bad_name_target_start(T) ::= CTK_IDIV(S). { T = S; }
-bad_name_target_start(T) ::= CTK_MOD(S). { T = S; }
-bad_name_target_start(T) ::= CTK_POWER(S). { T = S; }
-bad_name_target_start(T) ::= CTK_NEQ(S). { T = S; }
-bad_name_target_start(T) ::= CTK_GT(S). { T = S; }
-bad_name_target_start(T) ::= CTK_LT(S). { T = S; }
-bad_name_target_start(T) ::= CTK_GTE(S). { T = S; }
-bad_name_target_start(T) ::= CTK_LTE(S). { T = S; }
-bad_name_target_start(T) ::= CTK_S_EQ(S). { T = S; }
-bad_name_target_start(T) ::= CTK_S_NEQ(S). { T = S; }
-bad_name_target_start(T) ::= CTK_S_GT(S). { T = S; }
-bad_name_target_start(T) ::= CTK_S_LT(S). { T = S; }
-bad_name_target_start(T) ::= CTK_S_GTE(S). { T = S; }
-bad_name_target_start(T) ::= CTK_S_LTE(S). { T = S; }
-bad_name_target_start(T) ::= CTK_AND(S). { T = S; }
-bad_name_target_start(T) ::= CTK_OR(S). { T = S; }
-bad_name_target_start(T) ::= CTK_XOR(S). { T = S; }
+bad_name_target_start(T) ::= bad_call_target_start(S). { T = S; }
+bad_call_target_start(T) ::= CTK_DOT(S). { T = S; }
+bad_call_target_start(T) ::= CTK_OPEN_BRACKET(S). { T = S; }
+bad_call_target_start(T) ::= CTK_CLOSE_BRACKET(S). { T = S; }
+bad_call_target_start(T) ::= CTK_COMMA(S). { T = S; }
+bad_call_target_start(T) ::= CTK_EQUAL(S). { T = S; }
+bad_call_target_start(T) ::= CTK_PLUS(S). { T = S; }
+bad_call_target_start(T) ::= CTK_MINUS(S). { T = S; }
+bad_call_target_start(T) ::= CTK_HIGH_PRIORITY_MINUS(S). { T = S; }
+bad_call_target_start(T) ::= CTK_NOT(S). { T = S; }
+bad_call_target_start(T) ::= CTK_CONCAT(S). { T = S; }
+bad_call_target_start(T) ::= CTK_MULT(S). { T = S; }
+bad_call_target_start(T) ::= CTK_DIV(S). { T = S; }
+bad_call_target_start(T) ::= CTK_IDIV(S). { T = S; }
+bad_call_target_start(T) ::= CTK_MOD(S). { T = S; }
+bad_call_target_start(T) ::= CTK_POWER(S). { T = S; }
+bad_call_target_start(T) ::= CTK_NEQ(S). { T = S; }
+bad_call_target_start(T) ::= CTK_GT(S). { T = S; }
+bad_call_target_start(T) ::= CTK_LT(S). { T = S; }
+bad_call_target_start(T) ::= CTK_GTE(S). { T = S; }
+bad_call_target_start(T) ::= CTK_LTE(S). { T = S; }
+bad_call_target_start(T) ::= CTK_S_EQ(S). { T = S; }
+bad_call_target_start(T) ::= CTK_S_NEQ(S). { T = S; }
+bad_call_target_start(T) ::= CTK_S_GT(S). { T = S; }
+bad_call_target_start(T) ::= CTK_S_LT(S). { T = S; }
+bad_call_target_start(T) ::= CTK_S_GTE(S). { T = S; }
+bad_call_target_start(T) ::= CTK_S_LTE(S). { T = S; }
+bad_call_target_start(T) ::= CTK_AND(S). { T = S; }
+bad_call_target_start(T) ::= CTK_OR(S). { T = S; }
+bad_call_target_start(T) ::= CTK_XOR(S). { T = S; }
 
 bad_instruction_tail_start(T) ::= CTK_INTEGER(S). { T = S; }
 bad_instruction_tail_start(T) ::= CTK_DECIMAL(S). { T = S; }
