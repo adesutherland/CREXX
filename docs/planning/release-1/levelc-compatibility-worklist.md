@@ -21,8 +21,8 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 505/505 with process memory monitoring after
-the direct SIGNAL frame-branch checkpoint. This is a development checkpoint, not a
+Debug Level C checkpoint passed 512/512 with process memory monitoring after
+the evaluated SIGNAL VALUE checkpoint. This is a development checkpoint, not a
 Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
@@ -3595,6 +3595,30 @@ processes. Evidence: `cmake-build-debug/levelc-63t4b-build4.log`,
 `cmake-build-debug/levelc-63t4b-debug-qual.log`. Checkpoint 4B is complete.
 VALUE dispatch, ON/OFF handlers, LC-AC-76, ARG and full Level C/Release 1
 qualification remain open.
+
+**2026-10-05 LC-STEP-63T-4C evaluated-target checkpoint.** The explicit
+`LEVELC_SIGNAL_VALUE` child now lowers its expression once into the shared
+Classic `TRANSLATE` uppercase BIF and captures the resulting Unicode text.
+Source-order comparisons against the invocation's labels use the same
+associated `FRAME_BRANCH` nodes as direct SIGNAL; the fallback emits a
+source-anchored runtime 16.1 with the evaluated target. SIGL records the
+authored SIGNAL clause after evaluation and before dispatch. The generated
+body imports TRANSLATE when a VALUE form needs it. Permanent opt/no-opt
+tests cover one-time function side effects, mixed-case targeting, a later
+label, and a missing target; canonical-tree evidence checks the frame branch,
+uppercase BIF and fallback signal. Fresh Regina outputs agree for the
+one-time and later-label cases, and its missing-label run reports 16.1.
+
+The guarded Debug core build passed, focused tests passed 9/9, and the normal
+Debug Level C suite passed 512/512 on the exact code/test/build inputs. Peak
+aggregate descendant RSS was about 1955 MiB; every guard and the post-run
+process inventory found zero residual compiler, assembler, VM, build or test
+processes. Evidence: `cmake-build-debug/levelc-63t4c-build2.log`,
+`cmake-build-debug/levelc-63t4c-focused2.log`,
+`cmake-build-debug/levelc-63t4c-debug-qual.log`, and
+`cmake-build-debug/levelc-63t4c-regina-*.log`. Checkpoint 4C is complete.
+ON/OFF and named/default condition handlers, LC-AC-76, ARG and full Level
+C/Release 1 qualification remain open.
 
 ## Findings
 

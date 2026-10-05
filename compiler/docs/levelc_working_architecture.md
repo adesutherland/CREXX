@@ -541,8 +541,17 @@ pass through the ordinary string decoder before normalization. The lowering
 writes the authored clause line to the visible `SIGL` pool symbol, then emits
 an associated `FRAME_BRANCH`. The emitter performs crossed-scope cleanup on
 that branch. An absent direct target emits source-anchored runtime 16.1 when
-reached, so an untaken IF arm does not fail compilation. `SIGNAL VALUE` and
-activation-wide ON/OFF policy still need their distinct reviewed routes.
+reached, so an untaken IF arm does not fail compilation. Activation-wide
+ON/OFF policy still needs its reviewed handler route.
+
+The VALUE path evaluates its expression once, passes the result through the
+shared Classic Unicode `TRANSLATE` uppercase BIF, and captures text before
+dispatch. It compares that text with the invocation's normalized labels and
+uses the same associated `FRAME_BRANCH` for a match. A fallback emits runtime
+16.1 with the evaluated name. The generated body imports TRANSLATE only when
+this path or another uppercase consumer needs it. This bounded route has
+optimized/no-opt and normal Debug evidence; complete SIGNAL condition policy
+and reference-matrix qualification remain open.
 
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.

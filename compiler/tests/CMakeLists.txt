@@ -5815,11 +5815,34 @@ add_levelc_runtime_syntax_signal_test(levelc_signal_missing
 add_levelc_runtime_syntax_signal_test(levelc_signal_missing_noopt
         rexx_src/levelc_signal_missing.rexx "16.1" "before\n"
         "levelc_signal_missing.rexx:3:" -n)
+add_levelc_runtime_slice_test(levelc_signal_value_once
+        rexx_src/levelc_signal_value_once.rexx
+        "count=1 sigl=3\n")
+add_levelc_runtime_slice_test(levelc_signal_value_once_noopt
+        rexx_src/levelc_signal_value_once.rexx
+        "count=1 sigl=3\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_value_second_label
+        rexx_src/levelc_signal_value_second_label.rexx
+        "before\nbeta=3\n")
+add_levelc_runtime_slice_test(levelc_signal_value_second_label_noopt
+        rexx_src/levelc_signal_value_second_label.rexx
+        "before\nbeta=3\n" -n)
+add_levelc_runtime_syntax_signal_test(levelc_signal_value_missing
+        rexx_src/levelc_signal_value_missing.rexx "16.1" "before\n"
+        "levelc_signal_value_missing.rexx:3:")
+add_levelc_runtime_syntax_signal_test(levelc_signal_value_missing_noopt
+        rexx_src/levelc_signal_value_missing.rexx "16.1" "before\n"
+        "levelc_signal_value_missing.rexx:3:" -n)
 add_levelc_lowered_tree_shape_test(levelc_signal_direct_frame_tree
         rexx_src/levelc_signal_direct.rexx
         "FRAME_BRANCH"
         "FRAME_LABEL"
         "setSymbolValue")
+add_levelc_lowered_tree_shape_test(levelc_signal_value_frame_tree
+        rexx_src/levelc_signal_value_once.rexx
+        "FRAME_BRANCH"
+        "rexxclassicbif_translate"
+        "CLASSIC_SYNTAX")
 
 add_levelc_runtime_slice_test(levelc_slice3_bif_length_target_shape
         rexx_src/levelc_slice3_bif_length_target_shape.crexx
