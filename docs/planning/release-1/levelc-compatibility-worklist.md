@@ -88,6 +88,11 @@ conflict, alternatives, affected behavior and evidence; the instruction
 remains open until Adrian decides and approves the specific disposition.
 Cross-cutting repairs are made when required by the active instruction and
 are verified against all affected consumers.
+On 2026-10-05 the LC-I-11 ARG invocation audit identified the per-label
+procedure partition as a shared blocker for Classic labels without
+`PROCEDURE`. The approved LC-STEP-63T frame/label architecture is therefore
+an ARG/PROCEDURE/CALL dependency that may be built before their rows close;
+this does not mark LC-I-23 SIGNAL complete or skip the remaining ARG audit.
 
 ## Acceptance criteria
 
@@ -3148,6 +3153,11 @@ Before any code edit, check the proposed route against these observable gates:
   linked execution, existing Release Level C correctness and RexxScript
   isolation pass. Full `SIGNAL`/`CALL` instruction obligations remain open
   until their separate reference matrices close.
+- `LC-63T-04`: frame-local label, transfer and handler operations have
+  explicit canonical AST shape, validation, flow/optimizer behavior and RXAS
+  emission. Direct and trapped transfers discard crossed loop/reference
+  lifetimes without corrupting a later call or return. `RexxValue` remains a
+  value type; activation state owns argument and return presence.
 
 Implement in this order: (1) prove label/fallthrough and
 invocation entry shape with a small Regina corpus; (2) add one reviewed
@@ -3156,6 +3166,17 @@ it; (3) attach VM Classic condition handlers and activation state; (4) prove
 the gates and remove the old label/`PROCEDURE`/`RETURN` guards. Commit and
 report at coherent architecture checkpoints; do not claim SIGNAL closure from
 one trapped-error example.
+
+**2026-10-05 architecture review checkpoint.** Regina probes in
+`/tmp/crexx-signal-design.vt0eqA` confirm a called label without
+`PROCEDURE` shares the caller pool, direct `SIGNAL` branches inside that
+invocation and returns to the caller, and `SIGNAL ON SYNTAX` catches
+`SUBSTR('abc',0)` with `RC=40`, `SIGL=3`. Current lowerer partitions each
+label into a separate generated procedure and requires immediate `PROCEDURE`
+and final `RETURN`; the existing canonical `SIGNAL_BLOCK` is lexical while
+Classic ON/OFF is activation-wide. The architecture companion records the
+approved one-frame replacement and new canonical AST/emitter requirement.
+No product code changed in this review; LC-63T-01–04 remain open.
 
 ## Findings
 

@@ -2,7 +2,7 @@
 
 Status: active Level C architecture design; the original parser design record
 is retained below for implementation history
-Last updated: 2026-10-04
+Last updated: 2026-10-05
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
@@ -414,6 +414,46 @@ Adrian permits new AST node types when they simplify the supported compiler
 path through validation and emission. The existing WHILE, BLOCK_EXPR and
 LEAVE_WITH nodes express the required timing and scope for direct WHILE/UNTIL
 and count setup, so these increments add no new emitter shape.
+
+## 2026-10-05 Classic label and SIGNAL frame review
+
+The current lowerer cuts the source at each top-level `LABEL`, requires an
+immediate `PROCEDURE` and a final `RETURN`, and emits one generated Level B
+procedure per label. This is a temporary bounded shape. It cannot represent
+ordinary label fallthrough, a `CALL` to a label without `PROCEDURE`, or a
+`SIGNAL` branch to a label in the *current* invocation. Regina probes in
+`/tmp/crexx-signal-design.vt0eqA` show a called label sharing the caller pool,
+`SIGNAL jump` reaching another label in that call and returning to the caller,
+and `SIGNAL ON SYNTAX` catching `SUBSTR('abc',0)` with `RC=40` and the
+causing `SIGL=3`.
+
+The approved replacement is one compiled routine body per Classic invocation,
+with labeled blocks in that frame. Entry selects main or a called label;
+fallthrough is ordinary instruction order. Executing `PROCEDURE` changes the
+visible pool at that source point, while a label alone does not. A fresh
+activation owns arguments, pool selection, optional return result, condition
+policy, and `SIGL`; the shared `RexxClassicConfig` remains configuration.
+Argument and return presence are separate state, not a new “no value” variant
+of `RexxValue`.
+
+The canonical tree needs explicit frame-local label, transfer, and handler
+operations. Reusable node types should make the target and source anchor
+visible to validation, flow analysis, optimizer and emitter. The emitter must
+produce RXAS labels/branches and VM `sigbr` registration in the same frame;
+the existing lexical `SIGNAL_BLOCK` may inform its cleanup logic but cannot
+stand in for activation-wide Classic `SIGNAL ON/OFF`. A transfer must discard
+crossed DO/selection state and reference lifetimes before entering its target.
+Exact node names and child layouts are fixed by the first implementation
+checkpoint after a full emitter/flow review, with AST-to-RXAS tests. Avoid a
+per-label trampoline or a second token/branch interpreter in `rxfnsc`.
+
+This architecture is approved direction, not implemented SIGNAL behavior.
+The [LC-STEP-63T gates](../../docs/planning/release-1/levelc-compatibility-worklist.md#approved-architecture-direction-for-lc-step-63t)
+cover direct and trapped conditions, label/PROCEDURE/CALL/RETURN lifetimes,
+source and `SIGL`, optimized/no-opt parity, linked execution, and existing
+Level C and RexxScript regressions. The ARG row remains open until its
+applicable invocation audit can use this common frame; the architectural
+dependency does not close SIGNAL ahead of its whole-instruction review.
 
 ## 2026-10-03 implementation review: simplify before expansion
 
