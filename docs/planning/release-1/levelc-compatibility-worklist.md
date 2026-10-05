@@ -2567,6 +2567,91 @@ template or argument count limit is acceptable.
    repeated context use and legacy calls with focused host tests; update the
    public host guide and reference obligation. This is an additive C API, not
    a new Classic invocation model.
+   **LC-STEP-73G.3 — host invocation compatibility design gate (LC-AC-06/71;
+   review active 2026-10-05):** the length-aware entries complete transport of
+   *present* Unicode arguments for today's command-style main entry, but they
+   do not implement the larger Classic host start contract. In particular,
+   `rxvml_run_internal()` builds an array in which every position is present;
+   a null pointer with zero length becomes an explicit empty string. The
+   generated Level C main copies each item using `appendText`, receives no
+   command/function/subroutine call kind, and its wrapper discards the body
+   result. The body currently has a void return and main `EXIT expression` is
+   still an open LC-I-15 shape. `crexxsaa` exposes source/RXBIN execution and
+   command-environment callbacks, with no `RexxStart()`-style result/condition
+   or in-store source entry. These are real host and cross-instruction gaps;
+   the C-string interface's NUL limit remains an obligation, not an exclusion.
+
+   **Vision:** a C host can start a Level C program in each agreed Classic
+   invocation mode with exact Unicode argument spans and omitted-slot state,
+   receive a typed completion/result or condition, and reuse one context
+   without leaking activation state. The implementation should use the same
+   activation, pool, config and source-cache paths as CLI/internal calls and
+   preserve existing `rxvml`/`crexxsaa` consumers. The public compatibility
+   ABI choice is pending Adrian's clarification; do not infer historical
+   `RexxStart()` source compatibility from the current `crexxsaa` name.
+
+   1. **LC-73H-01:** host supplied omitted, empty and nonempty positions are
+      distinguishable by ARG(), ARG templates and nested calls, including
+      embedded NUL and Unicode; verify source/RXBIN, cache miss/hit and repeat
+      runs against reference and host C fixtures.
+   2. **LC-73H-02:** command, function and subroutine entry carry their mode to
+      Classic source services and return obligations; verify `PARSE SOURCE`,
+      ARG, optional versus required result, EXIT/RETURN behavior and error
+      identity at authored source positions.
+   3. **LC-73H-03:** the agreed public host entry exposes result text and
+      condition/completion state with explicit lengths and ownership; verify
+      success, untrapped error, invalid input and resource/lifecycle paths.
+   4. **LC-73H-04:** existing C-string and length-aware entries, cache behavior,
+      ADDRESS callbacks, Level B/G, RexxScript and the installed ABI remain
+      compatible; verify focused C consumers and relevant normal correctness.
+
+   1. **LC-STEP-73G.3A (LC-73H-01–04; active):** inventory the local REXXSAA
+      header, IBM/Regina invocation behavior, current `rxvml`/`crexxsaa`
+      ownership, main-frame lowering and EXIT/RETURN dependencies; retain a
+      reference matrix before product edits.
+   2. **LC-STEP-73G.3B (LC-73H-01–04; decision gate after 3A):** settle whether
+      the public target is an extended modern `crexxsaa` facade with Classic
+      equivalent semantics or historical source-compatible `RexxStart`/
+      `RXSTRING` entry points, including result ownership and any callback
+      scope. Record Adrian's choice before changing the public ABI or main
+      frame contract.
+   3. **LC-STEP-73G.3C (LC-73H-01/02; depends on 3B):** carry typed host
+      argument presence and entry mode through one VM main activation without
+      a parallel ARG engine; implement needed shared RETURN/EXIT result state
+      with their instruction owners.
+   4. **LC-STEP-73G.3D (LC-73H-03/04; depends on 3C):** implement the selected
+      host facade over the same source-cache/load/run path, preserving legacy
+      entries and explicit buffer ownership.
+   5. **LC-STEP-73G.3E (LC-73H-01–04; depends on 3D):** compare reference
+      modes, run focused host/AST/linked tests, the relevant normal correctness
+      suite once on exact inputs, update the public guide, and commit a
+      coherent receipt. Keep LC-AC-71 open until this and other applicable
+      invocation paths pass; keep broader host callbacks under LC-AC-06.
+
+   **2026-10-05 73G.3A reference receipt.** A guarded C `RexxStart` probe
+   against installed Regina, retained as ignored
+   `cmake-build-debug/levelc_arg_regina_host_probe.c` and
+   `cmake-build-debug/levelc-arg-regina-host-reference.log`, used one command
+   argument and three function/subroutine positions with the middle position
+   omitted. Command entry reported `PARSE SOURCE` mode COMMAND, ARG count 1
+   and existence `100`; function/subroutine entries reported their respective
+   modes, ARG count 3 and existence `101`. Each successful entry returned an
+   exact three-byte `RET` result. A three-argument COMMAND call was rejected
+   by Regina with status 3, so mode-specific host argument constraints need
+   explicit reference qualification. The bundled legacy `rexxsaa.h` defines
+   call-kind constants `1/2/4`, while the installed Regina header uses
+   `0/1/2`; a public historical ABI requires a specified compatibility
+   target and must not copy constants casually. A second guarded Regina probe
+   of bare `RETURN` supplied no result in any mode but returned success even
+   for RXFUNCTION; [IBM's function reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=functions-subroutines)
+   requires a function result, as the Level C compliance reference does.
+   Preserve this divergence in the host matrix and follow the agreed IBM
+   function contract unless Adrian approves a different choice. All guarded
+   runs left zero processes. The second probe is retained in
+   `cmake-build-debug/levelc-arg-regina-host-bare-reference.log`.
+   [ooRexx's API reference](https://www.oorexx.org/docs/pdf/rexxapi.pdf)
+   also documents mode and result ownership. This is reference evidence, not
+   cREXX product qualification.
 8. **LC-STEP-73I (LC-AC-71; complete as a coherence review 2026-10-05;
    depends on 73C/63T-3):**
    review ARG as one compiler-to-host contract before closure. Trace every
