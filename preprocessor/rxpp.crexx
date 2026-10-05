@@ -59,6 +59,7 @@ arg command=.string[]
   cnext   = .string
   dalias  = .string
   rexx_version = .string
+  rxpp_build_timestamp = 'RXPP_BUILD_TIMESTAMP'
   rxpp_timing_mark = .int
   rxpp_timing_elapsed = .int
   rxpp_timing_seconds = .float
@@ -81,7 +82,7 @@ arg command=.string[]
      else if command.i='-VERBOSE' then verbose=command.j
   end
   verbose=1
-  if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
+  if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started RXPP build 'rxpp_build_timestamp
   
   if internal_testing=1 then do
      infile  = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/system/treemap_test.rxpp'
@@ -934,11 +935,73 @@ return 0
 ConcParms: Procedure=.string
    arg inparm=.string
    sargs=''
-   do i=1 to words(inparm)
-      sargs=sargs','word(inparm,i)
+   do i=1 to qwords(inparm)
+      parm=qword(inparm,i)
+      if sargs='' then sargs=parm
+      else sargs=sargs','parm
    end
-   if sargs='' then return ''
-return substr(sargs,2)
+return sargs
+/* ------------------------------------------------------------------
+ * isCommandKeyword: Tests whether a command-style argument token names a
+ * keyword declared by the macro. Accept bare, key=value, and key(value)
+ * spellings so the caller can distinguish a new bare keyword from its value.
+ * ------------------------------------------------------------------
+ */
+isCommandKeyword: procedure=.int
+   arg token=.string,parmdef=.string
+   candidate=token
+   equal_pos=pos('=',candidate)
+   paren_pos=pos('(',candidate)
+   if equal_pos>0 then candidate=substr(candidate,1,equal_pos-1)
+   else if paren_pos>1 then candidate=substr(candidate,1,paren_pos-1)
+   if candidate='' then return 0
+
+   deftext=changestr(',',parmdef,' ')
+   do i=1 to qwords(deftext)
+      declaration=qword(deftext,i)
+      equal_pos=pos('=',declaration)
+      if equal_pos=0 then iterate
+      if upper(candidate)=upper(substr(declaration,1,equal_pos-1)) then return 1
+   end
+return 0
+/* ------------------------------------------------------------------
+ * normalizeCommandKeywords: Rewrites a declared bare keyword followed by
+ * one quote-aware value token into key=value before normal argument parsing.
+ * ------------------------------------------------------------------
+ */
+normalizeCommandKeywords: procedure=.string
+   arg argtext=.string,parmdef=.string
+   deftext=changestr(',',parmdef,' ')
+   positional_count=0
+   saw_keyword=0
+   do i=1 to qwords(deftext)
+      declaration=qword(deftext,i)
+      if pos('=',declaration)>0 then saw_keyword=1
+      else if saw_keyword=0 then positional_count=positional_count+1
+   end
+
+   result=''
+   argc=qwords(argtext)
+   i=1
+   do while i<=argc
+      token=qword(argtext,i)
+      if i>positional_count & isCommandKeyword(token,parmdef) then do
+         /* Already-supported key=value and key(value) forms pass unchanged. */
+         if pos('=',token)=0 & pos('(',token)=0 then do
+            if i<argc then do
+               next_token=qword(argtext,i+1)
+               if isCommandKeyword(next_token,parmdef)=0 then do
+                  token=token'='next_token
+                  i=i+1
+               end
+            end
+         end
+      end
+      if result='' then result=token
+      else result=result' 'token
+      i=i+1
+   end
+return result
 /* ------------------------------------------------------------------
  * Formats pre-compiler statements/macros into annotated comment lines for traceability.
  * ------------------------------------------------------------------
@@ -1748,7 +1811,7 @@ expandRecursive:  procedure=.string
   macname=rxpp_script_macro_name(line)
   if macname\='' then do
      line=rxpp_srcmap_unwrap(line)
-     return newmacros(macname,line,linnum,1)
+     return newmacros(macname,line,linnum,1,0)
   end
   expandlevel=0
   do until old = line | line=''   /* No change → stop */
@@ -1760,7 +1823,10 @@ expandRecursive:  procedure=.string
      macname=rxpp_script_macro_name(line)
      if macname\='' then do
         line=rxpp_srcmap_unwrap(line)
-        return newmacros(macname,line,linnum,1)
+        /* A C-style macro may already have emitted the source-call comment.
+         * Avoid having the nested script macro emit the same call again. */
+        macro_call_logged = (printgen_flags='all' | (printgen_flags='nnest' & expandLevel=0))
+        return newmacros(macname,line,linnum,1,macro_call_logged)
      end
   end
 return line
@@ -1888,7 +1954,7 @@ return line
  * ------------------------------------------------------------------
  */
 newMacros:  procedure=.string
-  arg macname=.string,line=.string,linnum=.int,ipi=.int
+  arg macname=.string,line=.string,linnum=.int,ipi=.int,suppress_call_comment=.int
   original_call=.string
   source_len=.int
   if scriptMacro.macname.error='error' then return line' ## File not available: 'syspath||macname'.rxpm'
@@ -1915,8 +1981,12 @@ newMacros:  procedure=.string
   subparm=translate(subparm,,',')
   inparms=''
   original_call=source[linnum]
-  stype[linnum]='D'
-  source[linnum]='/* 'source[linnum]' */'
+  if printgen_flags='none' then suppress_call_comment=1
+  if suppress_call_comment then stype[linnum]='X'
+  else do
+     stype[linnum]='D'
+     source[linnum]='/* 'source[linnum]' */'
+  end
   do kk=1 to words(scriptMacro.macname.parms)
      sword=qword(subparm,kk)
      if grouped_script_args then do
@@ -2050,6 +2120,7 @@ newMacros:  procedure=.string
      inew=inject2Source(inew+1,3,out[kk])
      source_mcall_depth[inew] = generated_mcall_depth[kk]
   end
+  if suppress_call_comment then return ''
 return source[linnum]
 
 add_section: procedure
@@ -2121,7 +2192,10 @@ resolveMacro: procedure=.string
        remain  = substr(line, callPos + length(name))    ## set to parameter part, macro has format name( +length positions into it
     ## extract argument list
        argtext = fetchArguments(remain)
-       if mspace=1 then argtext=ConcParms(argtext)
+       if mspace=1 then do
+          argtext=normalizeCommandKeywords(argtext,args)
+          argtext=ConcParms(argtext)
+       end
        callargcount = parseArgList(argtext)
        bodyExp = body
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
@@ -2194,7 +2268,7 @@ injectVariable: procedure=.string
 replaceFixArg: Procedure=.string
   arg bodyexp=.string,macname=.string, xargs=.string,callargcount=.int,source_base=.int
   iargs=xargs
-  preserveScriptGroups=pos('##_',bodyExp)>0
+  preserveScriptGroups=pos('##_',bodyExp)>0    /* check if the expansion contains a script macro call */
 
   xargs   = translate(xargs, , ',')
   wrds=words(xargs)
@@ -2319,7 +2393,8 @@ return out
  */
 tso2func: procedure=.string
   arg inparm=.string,preserve_group=.int
-  pp1=pos('(',inparm)
+  /* Ignore parentheses inside quoted keyword values. */
+  pp1=qpos('(',inparm)
   if pp1=0 then return inparm
   pp2=lastpos(')',inparm)
   if pp2<pp1 then return inparm
@@ -2652,7 +2727,12 @@ return vvalue
 setvar: procedure=.int
   arg varname=.string,varvalue=.string
   varname='{'lower(varname)'}'
-  if varname='{printgen}' then printgen_flags=varvalue
+  if varname='{printgen}' then do
+     varvalue=lower(strip(varvalue))
+     if varvalue='on' then varvalue='all'
+     else if varvalue='off' then varvalue='none'
+     printgen_flags=varvalue
+  end
   i=getvarindx(varname)
   if i=0 then i=macros_varname.0+1
   macros_varname.i=varname
