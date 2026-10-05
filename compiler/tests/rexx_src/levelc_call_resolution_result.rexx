@@ -20,6 +20,13 @@ call 1.2
 call .5
 call 7E2
 call 7dogs
+call .foo
+call ..foo
+call .5abc
+call .
+call .RESULT
+call on error name .RESULT
+call off error
 call loose
 say 'fallthrough=' || symbol('RESULT') || '|' || result
 exit
@@ -64,6 +71,26 @@ inner:
 
 7dogs:
   say 'constant'
+  return
+
+.foo:
+  say 'dot-letter'
+  return
+
+..foo:
+  say 'two-dots'
+  return
+
+.5abc:
+  say 'dot-digit-symbol'
+  return
+
+.:
+  say 'single-dot'
+  return
+
+.RESULT:
+  say 'reserved-dot'
   return
 
 loose:

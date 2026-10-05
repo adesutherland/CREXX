@@ -12,5 +12,10 @@ decimal
 leading-dot
 exponent
 constant
+dot-letter
+two-dots
+dot-digit-symbol
+single-dot
+reserved-dot
 loose
 fallthrough=LIT|RESULT

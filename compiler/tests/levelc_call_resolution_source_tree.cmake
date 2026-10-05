@@ -29,6 +29,11 @@ string(SUBSTRING "${output}" ${lowered_start} ${lowered_length} lowered)
 
 foreach(shape IN ITEMS
         [=[LITERAL : "length"]=]
+        [=[LITERAL : ".foo"]=]
+        [=[LITERAL : "..foo"]=]
+        [=[LITERAL : ".5abc"]=]
+        [=[LITERAL : "."]=]
+        [=[LITERAL : ".RESULT"]=]
         [=[STRING : "\'LENGTH\'"]=]
         [=[ARGS : ""]=]
         [=[NOVAL : ""]=])
@@ -40,6 +45,11 @@ endforeach()
 foreach(shape IN ITEMS
         [=[MEMBER_CALL : "applyCallResult"]=]
         [=[MEMBER_CALL : "hasReturnValue"]=]
+        [=[FRAME_LABEL : ".foo:"]=]
+        [=[FRAME_LABEL : "..foo:"]=]
+        [=[FRAME_LABEL : ".5abc:"]=]
+        [=[FRAME_LABEL : ".:"]=]
+        [=[FRAME_LABEL : ".RESULT:"]=]
         [=[FUNCTION : "rexxclassicbiflength.rexxclassicbif_length"]=])
     string(FIND "${lowered}" "${shape}" position)
     if(position EQUAL -1)

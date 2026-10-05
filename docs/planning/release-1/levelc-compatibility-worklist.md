@@ -26,10 +26,9 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-13`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The final code/test-input
-Debug Level C checkpoint for the CALL diagnostic, constant-symbol and
-fallthrough increment passed 618/618 with process memory monitoring. Its
-focused ASan and Level B/G/RexxScript isolation checks also passed; the exact
-receipts are below.
+Debug Level C checkpoint for the period-starting CALL target increment passed
+618/618 with process memory monitoring. Its focused ASan and Level
+B/G/RexxScript isolation checks also passed; the exact receipts are below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 **2026-10-05 scope and VM decision.** Adrian initially excluded a general
@@ -3403,6 +3402,61 @@ final code/test checkpoint. Runtime
 missing-target diagnostics, external routines and the rest of CALL remain
 open.
 
+**LC-STEP-75A leading-period CALL correction plan, 2026-10-05
+(LC-75-01/02/06; complete).** IBM's token rules classify period-starting
+symbols as constants. Guarded Regina execution accepts local `CALL .foo`,
+`CALL ..foo`, `CALL .5abc` and `CALL .`, with corresponding labels
+(`cmake-build-debug/levelc-call-period-matrix-regina.log`). The current `rxc`
+rejects `.foo` at the CALL and label (`levelc-call-leading-period-rxc-v3.log`).
+Regina rejects `CALL ON ERROR NAME .foo` as `19.3`
+(`levelc-call-period-name-regina.log`), so the existing stricter NAME grammar
+must remain. This fills a legal direct CALL target within the approved Classic
+contract; it does not introduce a new language form.
+
+1. `75A-P1` (LC-75-01): recognize the complete period-starting symbol as one
+   token, including repeated periods and a single-period label, while
+   retaining numeric `.5`, PARSE's placeholder `.`, and NAME rejection.
+   Preserve the five reserved period symbols (`.MN`, `.RESULT`, `.RC`, `.RS`,
+   `.SIGL`) as pool-valued symbols in expression contexts; a plain constant
+   classification would break the existing `.RESULT` CALL result contract.
+   Admit the standalone `.` token only as a direct CALL routine target.
+2. `75A-P2` (LC-75-01/02; depends on P1): route those target spellings through
+   the existing local-label resolver and source-order fallthrough path; prove
+   Regina-matched optimized/no-opt and linked output, raw/canonical shape,
+   and negative NAME/placeholder behavior with permanent regressions.
+3. `75A-P3` (LC-75-06; depends on P2): run focused Debug and maintained
+   sanitizer checks, core build and the relevant normal Level C suite on the
+   final code/test inputs, plus affected Level B/G and RexxScript isolation;
+   retain guard memory/child receipts, update architecture and commit the
+   coherent CALL correction. Keep whole CALL open for external resolution and
+   remaining trap/reference obligations.
+
+**75A-P1–P3 receipt, 2026-10-05.** The scanner now keeps period-starting
+routine/label spellings whole, with `.5` still numeric and the single `.`
+still a PARSE placeholder outside direct CALL. The five reserved period
+symbols remain pool-valued; the initial focused run exposed and repaired a
+`.RESULT` classification regression before qualification. Direct CALL's
+standalone `.` uses the same literal-label resolver as `.foo`, `..foo`,
+`.5abc` and reserved `.RESULT`. The stricter ON/NAME grammar rejects ordinary
+period constants, while Regina accepts reserved `.RESULT` there. The expanded
+source, opt/no-opt, linked and raw/canonical tree fixtures match Regina
+byte-for-byte (`cmake-build-debug/levelc-call-period-full-regina-v2.log`).
+The negative matrix also retains following-clause recovery and source
+locations. PARSE dot tests were included to check the shared scanner.
+The final-input guarded Debug focused run passed **11/11** in
+`cmake-build-debug/levelc-call-period-focused-v4.log`; the maintained macOS
+ASan focused run passed **11/11** with unsupported leak detection off in
+`cmake-build-debug/levelc-call-period-asan-focused-guard.log`. The guarded
+core build passed in `cmake-build-debug/levelc-call-period-reconfigure.log`.
+The normal Debug Level C suite passed **618/618** in
+`cmake-build-debug/levelc-call-period-final-levelc.log` (peak **4894.2 MiB**
+aggregate RSS), and affected Level B/G/RexxScript checks passed **10/10** in
+`cmake-build-debug/levelc-call-period-isolation.log`. Every guarded build and
+test left zero residual child processes. The wider period-symbol expression
+and error matrix remains open under `LC-AC-04/08`; external CALL, real
+condition producers, runtime missing-target behavior and the rest of
+`LC-75-01–06` keep LC-I-13 open.
+
 **LC-STEP-75E local invocation coherence receipt, 2026-10-05.** Expression
 functions, ordinary CALL and delayed local handlers now use one
 `levelc_build_local_invocation` builder for frame creation, pool/config
@@ -3527,6 +3581,14 @@ build directory. They prove VM primitive feasibility, not a compiler CALL
 path, safe runtime signature validation, source discovery, or external
 activation semantics. The production resolver must verify the descriptor
 before calling a selected pointer.
+An exposed-only enumeration variant also invoked that B/G entry and reported
+its qualified key `levelcextprobe.callentry` in
+`cmake-build-debug/levelc-bg-exposed-dynamic-run.log`. Compiling the same
+provider with uppercase authored namespace/procedure spelling still emitted
+the lowercase qualified metadata key
+(`cmake-build-debug/levelc-bg-uppercase-compile.log`); the resolver must
+distinguish Classic quoted target spelling for file search from the compiler's
+normalized callable key.
 
 **LC-STEP-75B descriptor-safe selection proposal — new VM contract decision
 pending.** Reuse the existing `metaloadmodule`, exposed-procedure enumeration
@@ -5261,7 +5323,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL, including numeric/constant-symbol labels, and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; direct and policy diagnostics have source-anchored matrix coverage under LC-STEP-75A | External Level C and fixed-signature Level B/G resolution, real condition producers and their source identity, remaining clause/lifecycle matrix, runtime missing-target errors and whole-instruction review open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL, including numeric, digit-starting and period-starting constant-symbol labels, and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; direct and policy diagnostics have source-anchored matrix coverage under LC-STEP-75A | External Level C and fixed-signature Level B/G resolution, real condition producers and their source identity, remaining clause/lifecycle matrix, runtime missing-target errors and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |

@@ -260,6 +260,14 @@ not a local label; Regina rejects a corresponding `7E+2:` label.
 The ON/NAME handler-target grammar remains separate and rejects a numeric
 NAME target with `19.3`. Invalid punctuation after direct CALL reports
 `19.2`, while bare CALL fills the diagnostic's token as `end-of-clause`.
+The direct CALL scanner also accepts period-starting constant-symbol labels,
+including `.foo`, `..foo`, `.5abc` and the single `.`. Its standalone `.`
+stays a PARSE template placeholder outside the direct CALL target grammar.
+The five Classic reserved period names stay pool-valued in expressions, so
+`.RESULT` still reads CALL's optional result. ON/NAME rejects an ordinary
+period-starting constant such as `.foo` with `19.3`; reserved `.RESULT` is a
+legal NAME symbol. The wider reserved-symbol expression/error review remains
+under the Level C syntax criteria.
 The BIF argument/context builder accepts both expression-function and CALL
 statement argument lists. Local expression calls, ordinary CALL and delayed
 local handlers now use one `levelc_build_local_invocation` path for frame

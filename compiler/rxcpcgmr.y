@@ -1554,6 +1554,7 @@ call_routine_target(T) ::= call_target(S). { T = S; }
 call_routine_target(T) ::= CTK_INTEGER(S). { T = ast_f(context, LITERAL, S); }
 call_routine_target(T) ::= CTK_DECIMAL(S). { T = ast_f(context, LITERAL, S); }
 call_routine_target(T) ::= CTK_CONST_SYMBOL(S). { T = ast_f(context, LITERAL, S); }
+call_routine_target(T) ::= CTK_DOT(S). { T = ast_f(context, LITERAL, S); }
 
 callable_condition(C) ::= CTK_ERROR(T).
 {
@@ -1747,8 +1748,8 @@ bad_variable_ref_start(T) ::= CTK_XOR(S). { T = S; }
 bad_name_target_start(T) ::= CTK_INTEGER(S). { T = S; }
 bad_name_target_start(T) ::= CTK_DECIMAL(S). { T = S; }
 bad_name_target_start(T) ::= CTK_CONST_SYMBOL(S). { T = S; }
+bad_name_target_start(T) ::= CTK_DOT(S). { T = S; }
 bad_name_target_start(T) ::= bad_call_target_start(S). { T = S; }
-bad_call_target_start(T) ::= CTK_DOT(S). { T = S; }
 bad_call_target_start(T) ::= CTK_OPEN_BRACKET(S). { T = S; }
 bad_call_target_start(T) ::= CTK_CLOSE_BRACKET(S). { T = S; }
 bad_call_target_start(T) ::= CTK_COMMA(S). { T = S; }

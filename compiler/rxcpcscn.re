@@ -77,6 +77,9 @@ regular:
   exponent = [eE] [+-]? digit+;
   numeric_exp = (integer | fraction) exponent;
   constsym = digit (lcfsymchr | digit | ".")+;
+  periodconst = "." lcsymchr+;
+  periodlabel = "." lcsymchr*;
+  periodreserved = "." ([mM][nN] | [rR][eE][sS][uU][lL][tT] | [rR][cC] | [rR][sS] | [sS][iI][gG][lL]);
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
   badsqstr = ['] ((any\['\n\r])|(['][']))*;
@@ -135,11 +138,13 @@ regular:
     "|" { RET(TK_OR); }
     not { RET(TK_NOT); }
 
-    (lcsimple | integer | fraction | constsym) ob ":" { RET(TK_LABEL); }
+    (lcsimple | integer | fraction | constsym | periodlabel) ob ":" { RET(TK_LABEL); }
     numeric_exp { RET(TK_DECIMAL); }
     fraction { RET(TK_DECIMAL); }
     integer { RET(TK_INTEGER); }
     constsym { RET(TK_LEVELC_CONST_SYMBOL); }
+    periodreserved { RET(TK_VAR_SYMBOL); }
+    periodconst { RET(TK_LEVELC_CONST_SYMBOL); }
     str { RET(TK_STRING); }
     str [bBxX] / (any\(lcfsymchr | digit | [.])) { RET(TK_STRING); }
     badsqstr { RET(TK_UNKNOWN); }

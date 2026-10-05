@@ -165,10 +165,12 @@ headerless parser-mode defaulting.
 The remaining front-end gaps are deliberately documented here so tree surgery
 does not begin on shaky input:
 
-- non-integer numeric token forms need a full Classic lexer pass, including
-  exponent and period-start constants;
-- period-start reserved symbols such as `.RC`, `.RESULT`, and invalid
-  constant symbols still need scanner/parser support;
+- numeric exponent, digit-starting constant and period-starting symbol tokens
+  are scanned; remaining context-specific Classic diagnostics and source
+  character classes still need a complete lexer review;
+- reserved period symbols such as `.RC` and `.RESULT` are distinguished from
+  other period-starting constants; their complete expression, assignment and
+  error behavior still needs parser/runtime review;
 - function-call syntax in expressions is not complete enough for BIF/external
   function validation;
 - continuation and nested-comment edge cases need another language-specification pass, especially

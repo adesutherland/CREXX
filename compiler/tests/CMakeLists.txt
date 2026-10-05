@@ -5295,7 +5295,9 @@ add_levelc_invalid_compile_test(levelc_call_diagnostic_matrix
         "levelc_call_diagnostic_matrix\\.rexx @ 6:9 - #RXC-LC-25\\.2"
         "levelc_call_diagnostic_matrix\\.rexx @ 7:10 - #RXC-LC-25\\.2"
         "levelc_call_diagnostic_matrix\\.rexx @ 8:15 - #RXC-LC-19\\.3"
-        "levelc_call_diagnostic_matrix\\.rexx @ 9:20 - #RXC-LC-19\\.3")
+        "levelc_call_diagnostic_matrix\\.rexx @ 9:20 - #RXC-LC-19\\.3"
+        "levelc_call_diagnostic_matrix\\.rexx @ 10:20 - #RXC-LC-19\\.3"
+        "levelc_call_diagnostic_matrix\\.rexx @ 11:20 - #RXC-LC-19\\.3")
 add_levelc_invalid_compile_test(levelc_if_missing_condition
         rexx_src/levelc_if_missing_condition.rexx
         "RXC-LC-35\\.1" "1 error")
