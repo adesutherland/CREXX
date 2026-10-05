@@ -4064,6 +4064,33 @@ passed 10/10 in `cmake-build-debug/levelc-signal-catalog-isolation.log`.
 The whole SIGNAL matrix remains pending; this
 checkpoint does not close SIGNAL or ARG.
 
+**Next whole-SIGNAL finding, 2026-10-05.** A reference probe of trapped
+`SUBSTR('abc','')` requires `CONDITION('D')` to end with `found ""`.
+The current shared BIF diagnostic builder omits an empty `value` insert and
+therefore falls back to raw field names. A catalog/call-site audit also found
+that 40.19/40.32/40.33 require two distinct `value` inserts, while the
+current builder labels the second `optionslist`. Preserve named-insert
+presence and order from the catalog for these shared BIF errors, including
+empty values. Qualify exact reference wording for empty SUBSTR, two-value
+RANDOM and DATE cases in optimized/no-opt, then run the normal correctness
+suite. Invalid byte-data 23.1 still needs its separate hex-encoding producer;
+this is not SIGNAL or BIF instruction closure.
+
+The shared builder/renderer repair passes Regina wording for those three
+discovered shapes in optimized/no-opt mode. A permanent crossed-control
+SIGNAL case also branches out of nested DO groups, enters fresh loop control,
+then traps SYNTAX and checks `SIGL` and one-shot state. Optimized, no-opt and
+linked execution pass with the description group, 20/20 focused. Guarded
+logs are `cmake-build-debug/levelc-signal-inserts-build.log`,
+`cmake-build-debug/levelc-signal-inserts-rebuild.log`, and
+`cmake-build-debug/levelc-signal-inserts-focused2.log`, all with zero
+residual processes. The normal Debug Level C suite passed 573/573 on these
+code/test/build inputs in
+`cmake-build-debug/levelc-signal-inserts-debug-qual.log` (peak 4899 MiB,
+zero residual processes). Level G signal and RexxScript isolation checks
+passed 10/10 in `cmake-build-debug/levelc-signal-inserts-isolation.log`.
+The whole SIGNAL matrix and ARG remain open.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the

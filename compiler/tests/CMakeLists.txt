@@ -5815,6 +5815,12 @@ add_levelc_runtime_slice_test(levelc_signal_quoted_local
 add_levelc_runtime_slice_test(levelc_signal_quoted_local_noopt
         rexx_src/levelc_signal_quoted_local.rexx
         "start\nlater=8\nmain\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_crossed_control
+        rexx_src/levelc_signal_crossed_control.rexx
+        "branch=1|1|1|7\ncaught=40|15|SYNTAX|OFF\nlater=1\nlater=2\n")
+add_levelc_runtime_slice_test(levelc_signal_crossed_control_noopt
+        rexx_src/levelc_signal_crossed_control.rexx
+        "branch=1|1|1|7\ncaught=40|15|SYNTAX|OFF\nlater=1\nlater=2\n" -n)
 add_levelc_runtime_syntax_signal_test(levelc_signal_missing
         rexx_src/levelc_signal_missing.rexx "16.1" "before\n"
         "levelc_signal_missing.rexx:3:")
@@ -5900,6 +5906,24 @@ add_levelc_runtime_slice_test(levelc_condition_syntax_description_escapes
         "1\n")
 add_levelc_runtime_slice_test(levelc_condition_syntax_description_escapes_noopt
         rexx_src/levelc_condition_syntax_description_escapes.rexx
+        "1\n" -n)
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_empty
+        rexx_src/levelc_condition_syntax_description_empty.rexx
+        "1\n")
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_empty_noopt
+        rexx_src/levelc_condition_syntax_description_empty.rexx
+        "1\n" -n)
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_random
+        rexx_src/levelc_condition_syntax_description_random.rexx
+        "1\n")
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_random_noopt
+        rexx_src/levelc_condition_syntax_description_random.rexx
+        "1\n" -n)
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_date
+        rexx_src/levelc_condition_syntax_description_date.rexx
+        "1\n")
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_date_noopt
+        rexx_src/levelc_condition_syntax_description_date.rexx
         "1\n" -n)
 add_levelc_runtime_slice_test(levelc_condition_nested_restore
         rexx_src/levelc_condition_nested_restore.rexx
@@ -6146,6 +6170,21 @@ add_test(NAME levelc_function_result_linked
         -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_function_result_lifecycle.expected
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
 set_tests_properties(levelc_function_result_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+add_test(NAME levelc_signal_crossed_control_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_crossed_control.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DNAME=levelc_signal_crossed_control_linked
+        -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_crossed_control.expected
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_signal_crossed_control_linked PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 add_levelc_runtime_slice_test(levelc_slice4_procedure_missing_arg

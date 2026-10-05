@@ -306,8 +306,15 @@ _classic_syntax_description: procedure = .string
     if closing = 0 | separator = 0 then return detail
     rendered = rendered || substr(template,cursor,opening - cursor)
     name = substr(template,opening + 1,closing - opening - 1)
+    insert = "{" || name || "}"
+    occurrence = 1
+    previous = pos(insert,template)
+    do while previous > 0 & previous < opening
+      occurrence = occurrence + 1
+      previous = pos(insert,template,previous + 1)
+    end
     found = 0
-    value = _classic_named_insert(detail,separator + 1,name,found)
+    value = _classic_named_insert(detail,separator + 1,name,occurrence,found)
     if \found then return detail
     rendered = rendered || value
     cursor = closing + 1
@@ -316,7 +323,7 @@ _classic_syntax_description: procedure = .string
 
 /** Decode one named diagnostic insert without reinterpreting its content. */
 _classic_named_insert: procedure = .string
-  arg detail = .string, start = .int, target = .string, expose found = .int
+  arg detail = .string, start = .int, target = .string, occurrence = .int, expose found = .int
   found = 0
   cursor = start
   do while cursor <= length(detail)
@@ -352,8 +359,11 @@ _classic_named_insert: procedure = .string
     end
     if \closed then return ""
     if name = target then do
-      found = 1
-      return value
+      occurrence = occurrence - 1
+      if occurrence = 0 then do
+        found = 1
+        return value
+      end
     end
   end
   return ""
@@ -1423,10 +1433,19 @@ _set_bif_error: procedure = .void
   arg context_ref = reference .RexxBifCallContext, code = .string, argnum = .int, value = .string, extra = .string
   context = dereference context_ref
   identity = "RXC-LC-" || code
+  template = rexxclassicdiagnostic_template(identity)
   message = identity || " bif=" || _quote_insert(context.name())
-  if argnum > 0 then message = message || " argnumber=" || _quote_insert(argnum || "")
-  if length(value) > 0 then message = message || " value=" || _quote_insert(value)
-  if length(extra) > 0 then message = message || " optionslist=" || _quote_insert(extra)
+  if argnum > 0 | pos("{argnumber}",template) > 0 then
+    message = message || " argnumber=" || _quote_insert(argnum || "")
+  if pos("{name}",template) > 0 then
+    message = message || " name=" || _quote_insert(value)
+  if length(value) > 0 | pos("{value}",template) > 0 then
+    message = message || " value=" || _quote_insert(value)
+  first_value = pos("{value}",template)
+  if first_value > 0 & pos("{value}",template,first_value + 1) > 0 then
+    message = message || " value=" || _quote_insert(extra)
+  else if length(extra) > 0 | pos("{optionslist}",template) > 0 then
+    message = message || " optionslist=" || _quote_insert(extra)
   call context.setError(identity, message)
   return
 

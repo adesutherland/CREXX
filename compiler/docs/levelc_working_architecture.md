@@ -645,11 +645,22 @@ uses that lookup to expand named inserts in the raw `RXC-LC-` diagnostic and
 records the complete `Error n.s: ...` text for `CONDITION('D')`. The renderer
 scans the template once and decodes each quoted insert separately, so braces,
 quotes and backslashes in an argument value remain literal. A missing template
-or insert uses the earlier error-prefix and raw-remainder fallback. The catalog input is a CMake
-configure dependency; generated Level B source is build-local. Regina-derived
+or insert uses the earlier error-prefix and raw-remainder fallback. The catalog
+input is a CMake configure dependency; generated Level B source is build-local. Regina-derived
 40.14 and 40.12 wording cases pass in optimized and no-opt compilation. This
 only qualifies available SYNTAX producers; other condition producers, full
 `CONDITION` extra data and the whole SIGNAL matrix remain open.
+
+The shared BIF error builder now retains required inserts even when their
+values are empty. It emits repeated `value` inserts in catalog order for
+two-value diagnostics such as DATE 40.19 and RANDOM 40.33; the renderer
+selects the corresponding occurrence while scanning the template. This
+preserves the input text rather than substituting into a previously inserted
+value. Regina-derived empty and two-value descriptions pass in optimized
+and no-opt mode. Invalid data 23.1 still needs a hex-encoding producer.
+The permanent crossed-control case branches out of nested DO groups, enters a
+new loop, then traps a later SYNTAX error; optimized, no-opt and linked
+execution agree on `SIGL`, `RC` and one-shot condition state.
 
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.

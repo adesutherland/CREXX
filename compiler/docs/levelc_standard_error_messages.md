@@ -68,8 +68,11 @@ The Level C runtime generates its English template lookup from the same
 `en_GB` catalog when building `rxfnsc`. A trapped `RXC-LC-` SYNTAX event with
 complete named inserts records the expanded `Error n.s: ...` text for
 `CONDITION('D')`; an unknown or incomplete entry uses the earlier
-`Error n.s: <raw remainder>` fallback. This bounds current runtime reporting and does not complete
-`ERRORTEXT`, all condition producers, or locale selection for trapped events.
+`Error n.s: <raw remainder>` fallback. This bounds current runtime reporting
+and does not complete `ERRORTEXT`, all condition producers, or locale selection
+for trapped events. Required empty inserts and repeated `value` inserts retain
+their catalog order in shared BIF error records; invalid-data 23.1 still needs
+a hex-encoding producer before its full description can be rendered.
 
 ## Output Prefixes
 
