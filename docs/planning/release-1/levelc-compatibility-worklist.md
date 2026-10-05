@@ -3552,7 +3552,12 @@ external CALL, and ordinary bytecode autoload does not discover/compile
 Classic source. LC-STEP-75B must define that adapter before external product
 edits. `LC-I-13`, LC-75-01–06, full Level C and Release 1 remain open.
 
-**LC-STEP-75B proposed external architecture, pending Adrian's decision.**
+**LC-STEP-75B historical broad external architecture proposal, superseded for
+the initial target set.** The following configuration-owned native provider
+and source-cache proposal predates Adrian's fixed-signature Level B/G scope
+clarification. It is retained as design history and is not the active CALL
+implementation route; the descriptor-safe same-context proposal below is the
+current decision gate.
 Keep one compiler-side resolver: an unquoted local label wins, otherwise an
 exact-case shared BIF wins, otherwise route to `Config_ExternalRoutine`;
 quoted targets skip only the local search. Capture arguments and omission
@@ -3595,6 +3600,11 @@ CALL to reach other Level C routines and Level B/G routines with a specific
 signature. This supersedes the earlier blanket cross-dialect exclusion only
 for that explicitly typed Level B/G entry; arbitrary Level B/G calls and a
 general Classic/non-Classic adapter remain outside this instruction review.
+Adrian reconfirmed this as the initial CALL target boundary on 2026-10-05;
+the proposed callable uses the same presence-bearing Classic activation frame,
+so argument omission, explicit empty values and optional results can retain
+one contract across local and admitted external calls. The exact B/G signature,
+provider lookup and VM check below remain a separate architectural decision.
 The initial external CALL target set is these two programme types; the
 earlier host-registered native-routine extension is not part of this first
 stage. Host services used by a called Level C programme remain required by
@@ -3671,6 +3681,17 @@ parser and signature comparator, already used by
 `rxvml_call_procedure_descriptor`, while keeping CALL's argument/result
 owner in `RexxActivationArguments`. The exact exposed name, package search
 and source-discovery policy still depend on Adrian's provider decision.
+The compiled B/G probe emits `.meta` return `.void` and argument
+`frame=.rexxactivationarguments`; for its exposed name the corresponding
+descriptor is `rxsig1|levelcextprobe.callentry|.void|frame=.rexxactivationarguments`.
+The check must establish pointer membership in a loaded module before reading
+its runtime fields, then compare the actual exposed name and metadata
+signature by return type, argument count, type and value/reference mode. The
+source-level argument identifier is not part of the call ABI. The existing
+host matcher permits some type compatibility; that permissive mode is not the
+proposed fixed-signature CALL ABI. `RexxValue.asString()` is the text boundary
+for a returned frame value; a B/G provider may retain binary `RexxValue`
+internally, but a visible Level C result must pass valid UTF-8 conversion.
 
 1. `75B-S1` (`LC-75-02/04`): prove the operation rejects an absent, wrong-
    type, wrong-arity, foreign or stale pointer without invoking it, and
