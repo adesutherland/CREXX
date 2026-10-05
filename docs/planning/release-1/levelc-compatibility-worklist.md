@@ -1631,7 +1631,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-10 ITERATE — closed 2026-10-04 | LC-STEP-72A–72C | `LC-AC-70`: unnamed/named targets, end-step timing, nesting and errors across all legal loops through the shared DO/LEAVE path. |
 | LC-I-11 ARG — closed 2026-10-05 | LC-STEP-73A–73I | `LC-AC-71`: complete `PARSE UPPER ARG` semantics on admitted Classic activations, arbitrary comma templates, omitted/empty positions, Unicode and diagnostics through one shared PARSE executor and argument frame. Future CALL/INTERPRET and host modes have separate owners. |
 | LC-I-12 PROCEDURE — closed 2026-10-05 | LC-STEP-74A–74D | `LC-74-01–05`: first-instruction and diagnostics, private pool, direct/indirect scalar/stem/exact compound EXPOSE, source order, nested/recursive alias lifetime, Unicode and isolation. CALL/RETURN/EXIT and shared full Level C lifecycle remain open under their own rows. |
-| LC-I-13 CALL — open | LC-STEP-75 | Internal/BIF/external resolution, arguments, results and ON/OFF traps; BIF registry, routines and conditions. Local/BIF resolution and ordinary RESULT handling have bounded passing evidence; external routines and delayed traps remain open. |
+| LC-I-13 CALL — open | LC-STEP-75 | Internal/BIF/external resolution, arguments, results and ON/OFF traps; BIF registry, routines and conditions. Local/BIF resolution and ordinary RESULT handling have bounded passing evidence; delayed local/BIF traps have controlled event-injection proof. External routines, real producers, exact clause boundaries and whole CALL remain open. |
 | LC-I-14 RETURN | LC-STEP-76 | Value/void, function/subroutine/outermost rules and pool/result lifecycle; CALL and PROCEDURE. |
 | LC-I-15 EXIT | LC-STEP-77 | Optional value, fallthrough equivalence, completion and finalization; programme lifecycle. |
 | LC-I-16 PULL | LC-STEP-78 | Queue/default input, optional template and empty/error behavior; host queue and PARSE source service. |
@@ -3294,6 +3294,7 @@ the call kind, return presence/value and inherited SIGNAL policy.
 | `levelc-call-reference-external-state.log` | External entry sees `shared` as unassigned and default `DIGITS=9`; after it changes both, its caller still sees `shared=caller` and `DIGITS=20`, plus the returned result. | Private external programme state with preserved caller lifecycle. |
 | `levelc-call-reference-condition.log`, `levelc-call-reference-policy.log` | ERROR from a host command calls a no-argument handler at the clause boundary, reports CONDITION `C=ERROR`/`I=CALL` and the raising `SIGL`, then resumes. A nested call's OFF does not remove its caller's ON; the caller handler runs after return. | Delayed CALL ON/OFF state and clause-end delivery; ADDRESS remains the real command producer owner. |
 | `levelc-call-reference-quoted-handler.log` | Regina accepts a quoted `NAME 'HANDLER'`, consistent with the existing parser's target shape; platform reference variants may differ. | Preserve the accepted source form and test the named handler route. |
+| `levelc-call-reference-delay-state.log`, `levelc-call-reference-delay-nested.log` | A CALL trap sees `CONDITION('S')=DELAY`, `CONDITION('I')=CALL`, zero arguments and the causing `SIGL`; its returned value leaves the prior `RESULT` intact. The trap handles a later ERROR again, suppresses ERROR raised while already handling it, and a later SIGNAL ON replaces CALL ON with immediate transfer. The interrupted caller's prior CONDITION state is restored after the handler returns. | Per-activation delayed state, source-preserving clause checkpoint, handler activation and CALL/SIGNAL replacement. |
 
 Each guarded probe exited with zero residual child processes. These are
 reference receipts, not product tests or CALL closure. The VM can autoload
@@ -3342,6 +3343,73 @@ the already specified `Config_ExternalRoutine` boundary but adds a public
 runtime/host entry ABI and default search policy, so approval is required
 under `AGENTS.md`; no product edit has implemented it yet.
 
+**LC-STEP-75D delayed trap design review, 2026-10-05.** The existing
+`FRAME_HANDLER_ON`/`sigbrv` route transfers control immediately and cannot
+resume the interrupted clause after a CALL handler returns. Keep that route
+for SIGNAL. A condition producer that belongs to an implemented instruction
+will record a typed pending event in the current Classic activation when the
+selected policy is CALL ON; a generated checkpoint at the completed source
+clause delivers it through the same local/BIF/external CALL resolver, but
+without the ordinary RESULT epilogue. The handler receives a fresh zero-argument
+activation and a temporary DELAY status; its caller's policy and prior
+CONDITION data remain intact. ERROR, FAILURE and NOTREADY raised while their
+handler is delayed are suppressed; the separate HALT buffering rule stays
+explicit. CALL/SIGNAL ON or OFF for one condition replaces the previous mode.
+The policy, pending event and delivery state live in `RexxActivationArguments`
+and retain Unicode descriptions and the raising source line. This uses the
+approved one-body invocation frame and existing CALL resolver. It does not
+change the VM ISA. The current Level C compiler has no ADDRESS, stream or
+host-interrupt producer; those instruction/host owners must connect to this
+delivery path and are not silently treated as completed CALL evidence. The
+[IBM condition reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=reference-conditions-condition-traps)
+and [IBM CONDITION reference](https://www.ibm.com/docs/en/zvm/7.2.0?topic=control-condition-function)
+specify DELAY, replacement, subroutine restoration and clause-boundary
+delivery. The guarded Regina probes above establish the concrete observable
+matrix for this implementation. HALT host capture may require a separate VM
+boundary review when that producer is implemented; no such change is approved
+by this CALL plan.
+
+**LC-STEP-75D bounded implementation receipt, 2026-10-05.** `CALL ON/OFF`
+now selects per-activation ERROR/FAILURE/HALT/NOTREADY CALL policies in the
+same table as SIGNAL. A queued event is delivered by one generated dispatcher
+called after completed source statements and before a RETURN transfer, with a
+fresh zero-argument Classic handler frame and shared local/BIF resolver.
+The called frame sees `CONDITION('C')`, Unicode `D`, `I=CALL`, `S=DELAY`,
+causing `SIGL` and `ARG()=0`; handler RETURN data does not change the
+interrupted caller's `RESULT`. A nested ERROR/FAILURE/NOTREADY in its own
+delayed handler is suppressed; one extra HALT is buffered on the interrupted
+caller through nested frames for replay after the handler returns. The
+dispatcher is one helper function, so clauses contain a single call rather
+than a copy of every handler branch. No VM ISA or frame architecture changed.
+
+The permanent `levelc_call_delayed_injection.py` test compiles ordinary Level C
+source, inserts only a controlled queue call after two authored CALL ON clauses
+in RXAS, then assembles and runs the product-generated handler path. It is
+explicitly a producer surrogate, not evidence that ADDRESS, I/O or OS HALT
+already raise Classic conditions. The optimized/no-opt test covers local and
+ARG BIF handlers, Unicode description, DELAY, SIGL, argument count, caller
+CONDITION restoration and both `RESULT` and `.RESULT` preservation; the
+activation unit also checks nested policy isolation, suppression and one
+buffered HALT. The final-input focused Debug receipt is
+`cmake-build-debug/levelc-call-delayed-checkpoint-focused.log` (6/6);
+the final-input ASan receipt with macOS leak detection off is
+`cmake-build-debug/levelc-call-delayed-final-asan-ctest-guard.log` (4/4).
+The first macOS sanitizer build stopped on unsupported LeakSanitizer mode;
+the guarded rerun built the same source successfully with leak detection off.
+The guarded normal Debug Level C suite passed **608/608** in
+`cmake-build-debug/levelc-call-delayed-checkpoint-levelc.log` (peak
+**5040.1 MiB** aggregate RSS); affected Level B/G and RexxScript isolation
+passed **10/10** in
+`cmake-build-debug/levelc-call-delayed-checkpoint-isolation.log`. Every
+guarded final-input build/test process exited with zero residual children.
+
+`LC-75-05` and whole CALL remain **open**: the unimplemented ADDRESS, stream
+and host-interrupt producers must connect and qualify their own source events;
+exact clause checkpoints inside IF, SELECT and DO and source identity for a
+missing delayed handler still need proof; external handler targets depend on
+the external Classic service decision. The controlled surrogate is not a
+substitute for those tests or the whole CALL reference and negative matrix.
+
 **LC-STEP-75C local/BIF/result foundation receipt, 2026-10-05.** The initial
 guarded linked reproducer in `cmake-build-debug/levelc-call-result-repro-product.log`
 showed `result=RESULT|RESULT` after an internal `RETURN 'done'`.
@@ -3376,8 +3444,9 @@ The post-fix linked reproducer passed in
 `cmake-build-debug/levelc-call-result-repro-product-after.log`.
 
 This is an implementation increment within LC-I-13, not its closure.
-LC-75-01–06 remain open until external Classic dispatch, delayed CALL ON/OFF,
-full error/reference cases and host lifecycle pass. The external service
+LC-75-01–06 remain open until external Classic dispatch, real delayed CALL
+condition production and exact clause delivery, full error/reference cases
+and host lifecycle pass. The external service
 proposal above is awaiting Adrian's decision; no external product edit has
 begun. RETURN, EXIT, ADDRESS, SIGNAL, PARSE, full Level C and Release 1
 retain their own open criteria.
@@ -4865,7 +4934,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop; opt/no-opt, AST and linked bounded proof under LC-STEP-75C | External resolution, delayed ON/OFF trap lifecycle, full errors and whole-instruction review open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; delayed local/BIF handlers have controlled event-injection and activation-state proof under LC-STEP-75D | External resolution, real condition producers, exact clause boundaries, full errors and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |

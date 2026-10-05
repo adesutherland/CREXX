@@ -48,6 +48,15 @@ RexxActivationArguments: class
   procedure_eligible = .boolean
   function_call = .boolean
   signal_policy = .int[]
+  parent_activation_ref = reference .RexxActivationArguments
+  has_parent_activation = .boolean
+  delayed_condition = .int
+  pending_condition = .int
+  pending_description = .string
+  pending_line = .int
+  dispatch_condition = .int
+  dispatch_description = .string
+  dispatch_line = .int
   current_condition = .int
   condition_description = .string
   condition_extra = .string
@@ -60,6 +69,14 @@ RexxActivationArguments: class
     return_present = 0
     procedure_eligible = 0
     function_call = 0
+    has_parent_activation = 0
+    delayed_condition = 0
+    pending_condition = 0
+    pending_description = ""
+    pending_line = 0
+    dispatch_condition = 0
+    dispatch_description = ""
+    dispatch_line = 0
     current_condition = 0
     condition_description = ""
     condition_extra = ""
@@ -77,6 +94,8 @@ RexxActivationArguments: class
   inheritSignalPolicy: method = .void
     arg parent_ref = reference .RexxActivationArguments
     parent = dereference parent_ref
+    parent_activation_ref = parent_ref
+    has_parent_activation = 1
     do index = 1 to 7
       signal_policy[index] = parent.signalPolicy(index)
     end
@@ -84,6 +103,7 @@ RexxActivationArguments: class
     condition_description = parent.currentConditionDescription()
     condition_extra = parent.currentConditionExtra()
     condition_instruction = parent.currentConditionInstruction()
+    delayed_condition = parent.delayedConditionId()
     return
 
   /** Record the condition currently visible to CONDITION(). */
@@ -123,6 +143,18 @@ RexxActivationArguments: class
   currentConditionInstruction: method = .string
     return condition_instruction
 
+  /** @return the condition currently delayed by a CALL trap, or zero */
+  delayedConditionId: method = .int
+    return delayed_condition
+
+  /** Mark the called handler's temporary condition without changing its caller. */
+  beginCallTrap: method = .void
+    arg condition = .int, description = .string
+    if condition < 2 | condition > 5 then return
+    delayed_condition = condition
+    call recordCondition(condition, description, "", "CALL")
+    return
+
   /**
    * Select the ON clause active for one Classic condition in this invocation.
    * Zero disables the condition after OFF or one-shot delivery.
@@ -133,7 +165,87 @@ RexxActivationArguments: class
     arg condition = .int, handler = .int
     if condition < 1 | condition > 7 then return
     signal_policy[condition] = handler
+    if delayed_condition = condition then delayed_condition = 0
     return
+
+  /** Select a delayed CALL trap; negative policy distinguishes its mode. */
+  setCallPolicy: method = .void
+    arg condition = .int, handler = .int
+    if condition < 2 | condition > 5 | handler < 1 then return
+    signal_policy[condition] = -handler
+    if delayed_condition = condition then delayed_condition = 0
+    return
+
+  /** @return the selected CALL handler identity, or zero in another mode */
+  callPolicy: method = .int
+    arg condition = .int
+    if condition < 2 | condition > 5 then return 0
+    if signal_policy[condition] >= 0 then return 0
+    return -signal_policy[condition]
+
+  /**
+   * Queue a source-identified condition for clause-end CALL delivery.
+   * A second ERROR, FAILURE or NOTREADY in its own handler is suppressed.
+   * @return true only if the active CALL policy accepted the event
+   */
+  queueCallCondition: method = .boolean
+    arg condition = .int, description = .string, line = .int
+    if callPolicy(condition) = 0 then return 0
+    if delayed_condition = condition then do
+      if condition = 4 & has_parent_activation then do
+        parent = dereference parent_activation_ref
+        return parent.bufferHaltOutsideDelay(description, line)
+      end
+      return 0
+    end
+    if pending_condition <> 0 then return 0
+    pending_condition = condition
+    pending_description = description
+    pending_line = line
+    return 1
+
+  /** Retain one extra HALT on the interrupted activation while its trap runs. */
+  bufferHaltOutsideDelay: method = .boolean
+    arg description = .string, line = .int
+    if delayed_condition = 4 & has_parent_activation then do
+      parent = dereference parent_activation_ref
+      return parent.bufferHaltOutsideDelay(description, line)
+    end
+    if callPolicy(4) = 0 | pending_condition <> 0 then return 0
+    pending_condition = 4
+    pending_description = description
+    pending_line = line
+    return 1
+
+  /** @return true when a deferred event remains after a handler returns */
+  hasPendingCallCondition: method = .boolean
+    return pending_condition <> 0
+
+  /**
+   * Move a queued event into stable dispatch fields at a clause boundary.
+   * @return the handler identity selected by the current CALL policy
+   */
+  takeCallCondition: method = .int
+    if pending_condition = 0 then return 0
+    dispatch_condition = pending_condition
+    dispatch_description = pending_description
+    dispatch_line = pending_line
+    pending_condition = 0
+    pending_description = ""
+    pending_line = 0
+    return callPolicy(dispatch_condition)
+
+  /** @return the condition selected by the last clause checkpoint */
+  dispatchedConditionId: method = .int
+    return dispatch_condition
+
+  /** @return the description selected by the last clause checkpoint */
+  dispatchedConditionDescription: method = .string
+    return dispatch_description
+
+  /** @return the causing source line selected by the last clause checkpoint */
+  dispatchedConditionLine: method = .int
+    return dispatch_line
 
   /**
    * Read the selected ON clause for one Classic condition.

@@ -256,9 +256,36 @@ both `RESULT` and `.RESULT` for an explicit value (including empty text), or
 drops both after a value-less return. The local frame's result-presence bit
 drives that operation; BIF calls always supply a value. CALL does not assign
 `RC`. This is bounded local/BIF evidence within the open whole CALL review.
-External Classic resolution and delayed CALL ON/OFF have not yet been lowered;
-their proposed configuration-owned host/VM boundary and reference matrix are
+External Classic resolution remains unlowered; its proposed
+configuration-owned host/VM boundary and the CALL reference matrix are
 in `docs/planning/release-1/levelc-compatibility-worklist.md` under LC-STEP-75.
+
+The active CALL review now also lowers `CALL ON/OFF` for ERROR, FAILURE, HALT
+and NOTREADY into the per-activation condition policy. A negative policy slot
+identifies a delayed CALL handler; positive slots retain immediate SIGNAL
+handlers, so later ON/OFF replaces the previous mode. A producer can queue a
+Unicode condition description and causing line on that activation. Each
+completed source statement calls one generated dispatcher; the dispatcher
+takes at most one pending event, then invokes the selected local label through
+the same compiled Classic body or a direct BIF through its shared argument
+builder. It gives the handler a fresh zero-argument frame, records CALL and
+DELAY for CONDITION(), writes SIGL, ignores the handler's returned value and
+preserves the caller's prior CONDITION and RESULT state. The dispatcher is
+compiled once per programme, rather than expanding every handler at every
+clause. A second queued HALT during a delayed HALT handler is retained on the
+interrupted caller and delivered when the handler returns; queued ERROR,
+FAILURE and NOTREADY during their own delayed handler are suppressed.
+
+The controlled test inserts only a `queueCallCondition` call after authored
+CALL ON clauses in the generated RXAS; all policy, checkpoint, handler and
+return behavior remains product generated code. Optimized and no-opt tests
+cover a local handler and a BIF handler with a Unicode description. ADDRESS,
+stream and host-interrupt producers are still owned by their later rows, so
+this is bounded CALL infrastructure rather than complete delayed-condition
+delivery. Checkpoints are currently after complete source statements, plus
+before a RETURN transfer. Exact clause boundaries inside IF, SELECT and DO,
+missing-handler source identity, external trap targets and host HALT capture
+remain open in the whole CALL review. No VM ISA or frame change was made.
 
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including

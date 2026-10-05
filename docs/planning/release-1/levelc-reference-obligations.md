@@ -76,11 +76,11 @@ instruction closure and detailed receipts.
 | LC-REF-052 | Constant symbols, reserved pool 0 and SIGL/.SIGL updates | text | Front end/runtime pieces; state and label-search proof open |
 | LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | text | RexxValue foundation; full context and condition proof open |
 | LC-REF-054 | Exact logical values and contextual `34.*` identities | text | IF/SELECT/DO checks pass; other contexts open |
-| LC-REF-055 | Function/CALL omitted arguments and resolution order | host | Direct local CALL expression actuals/omissions, local-before-BIF resolution, quoted BIF bypass and ordinary RESULT presence/drop pass bounded proof under LC-STEP-75C; external resolution, delayed traps and whole CALL lifecycle open |
+| LC-REF-055 | Function/CALL omitted arguments and resolution order | host | Direct local CALL expression actuals/omissions, local-before-BIF resolution, quoted BIF bypass and ordinary RESULT presence/drop pass bounded proof under LC-STEP-75C; delayed local/BIF handler frames have controlled producer-surrogate proof under LC-STEP-75D; external resolution and whole CALL lifecycle open |
 | LC-REF-056 | Function RETURN value, `45.1` and RESULT/.RESULT lifecycle | text | Bounded local RETURN; complete call state open |
 | LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | host | Open: processor lifecycle |
 | LC-REF-058 | ADDRESS selection/swap, transient command and WITH redirection | host | Front end; configured execution open |
-| LC-REF-059 | CALL ON/OFF delayed condition handlers | host | Front end; condition delivery open |
+| LC-REF-059 | CALL ON/OFF delayed condition handlers | host | Per-activation policy and one generated local/BIF dispatcher have opt/no-opt controlled event-injection proof under LC-STEP-75D; real producer integration, exact clause checkpoints, external targets and whole CALL review open |
 | LC-REF-060 | DROP direct and parenthesized variable lists | text | Whole DROP instruction closed under LC-AC-62, including arbitrary compounds, indirect lists and Regina invalid-word skip; external pool API open elsewhere |
 | LC-REF-061 | EXIT value, fallthrough and finalization | host | Empty EXIT slice; value/finalization open |
 | LC-REF-062 | INTERPRET source, HALT, syntax and label restrictions | text | Front end; execution and `47.1` open |
@@ -94,6 +94,6 @@ instruction closure and detailed receipts.
 | LC-REF-070 | TRACE options, interactive mode, skip/inhibit and source/result tracing | host | Front end/runtime pieces; complete trace contract open |
 | LC-REF-071 | SYNTAX, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS | host | Open: Classic condition state and delivery |
 | LC-REF-072 | Message catalog, .MN, source/line traceback and trap handling | host | Open: Classic diagnostic/condition bridge |
-| LC-REF-073 | Immediate SIGNAL ON, delayed CALL ON and HALT buffering | host | Open: clause/lifecycle behavior |
+| LC-REF-073 | Immediate SIGNAL ON, delayed CALL ON and HALT buffering | host | SIGNAL and CALL policy replacement plus one buffered nested HALT pass bounded activation proof; real event delivery, clause boundaries and host HALT lifecycle open |
 | LC-REF-074 | CONDITION BIF state fields | host | BIF name recognized; condition state integration open |
 | LC-REF-075 | NOP as a statement with no visible effect | text | Whole NOP instruction closed under LC-AC-64; shared label/TRACE lifecycle remains elsewhere |

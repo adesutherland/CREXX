@@ -472,6 +472,12 @@ RexxVariablePool: class
     end
     return
 
+  /** Set the visible SIGL from a source line retained by delayed CALL. */
+  setCallTrapSigl: method = .void
+    arg line = .int
+    call setSymbolValue("SIGL", .RexxValue.fromInt(line))
+    return
+
   /** Assign a name whose compound tail has already been substituted. */
   resolvedSetValue: method = .void
     arg resolved = .string, item = .RexxValue

@@ -54,5 +54,6 @@ rexxclassicbif_condition: procedure = .RexxValue
   if option = "I" then return .RexxValue(activation.currentConditionInstruction())
   condition_id = activation.currentConditionId()
   if condition_id = 0 then return .RexxValue("")
-  if activation.signalPolicy(condition_id) > 0 then return .RexxValue("ON")
+  if activation.delayedConditionId() = condition_id then return .RexxValue("DELAY")
+  if activation.signalPolicy(condition_id) <> 0 then return .RexxValue("ON")
   return .RexxValue("OFF")
