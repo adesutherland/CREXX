@@ -488,19 +488,22 @@ into the linked active register would overwrite the caller's pool and could
 make an exposed variable alias itself. Explicit and bare RETURN now record
 value presence in `RexxActivationArguments` independently of `RexxValue`.
 
-The following `63T-3E` checkpoint moves `PROCEDURE` eligibility into the
-activation. Main starts ineligible; an internal CALL/function frame starts
-eligible; executing `PROCEDURE` consumes that right. Regina accepts ordinary
-instructions and label fallthrough before the first `PROCEDURE` in a called
-invocation, then raises 17.1 on a second `PROCEDURE`. The runtime now raises
-17.1 for main fallthrough or a second `PROCEDURE` and creates the private
-pool only after that check. The compiler's older source check still rejects
-`PROCEDURE` after an ordinary clause in the same label, although Regina
-accepts it. That mismatch and the runtime panic's library-source diagnostic
-anchor remain open for whole-PROCEDURE/source qualification. Missing function
-results, CALL result semantics, SIGNAL handlers and dynamic VALUE dispatch
-retain their separate worklist gates. No ARG, CALL, PROCEDURE or SIGNAL
-instruction is closed by this checkpoint.
+The `63T-3E` checkpoint moved `PROCEDURE` eligibility into the activation.
+Main starts ineligible; an internal CALL/function frame starts eligible;
+executing `PROCEDURE` consumes that right. The follow-up `63T-3E2` correction
+consumes it when any other instruction executes first, including before
+source-order fallthrough to another label. An empty label does not consume it.
+This follows the [IBM REXX PROCEDURE reference](https://www.ibm.com/docs/en/zos/3.1.0?topic=instructions-procedure),
+which requires `PROCEDURE` to be the first instruction processed after the
+internal invocation. Regina permits later and nested placements in probes,
+so its acceptance of those forms is not the compatibility oracle for this
+rule. The source scanner retains its first-after-label check; runtime 17.1
+handles main fallthrough and a second `PROCEDURE` after another label. Runtime
+panic source currently points to the library check rather than the authored
+`PROCEDURE`; source provenance remains open. Missing function results, CALL
+result semantics, SIGNAL handlers and dynamic VALUE dispatch retain their
+separate worklist gates. No ARG, CALL, PROCEDURE or SIGNAL instruction is
+closed by these checkpoints.
 
 The source AST also needs to preserve the authored `VALUE` form. Today
 `SIGNAL 'target'` and `SIGNAL VALUE 'target'` both have a `LEVELC_SIGNAL`

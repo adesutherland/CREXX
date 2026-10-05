@@ -14,15 +14,15 @@ actuals have passing bounded evidence, but the full invocation and label
 lifecycle audit has not closed. The approved `LC-STEP-63T` one-frame label and
 SIGNAL design is the next shared prerequisite; its reference review is done,
 its canonical AST/emitter foundation is in progress, and the one-body runtime
-route has bounded passing checkpoints including runtime PROCEDURE 17.1 for
-main fallthrough and a second PROCEDURE. Complete PROCEDURE source placement,
+route has bounded passing checkpoints including first-instruction PROCEDURE
+eligibility, main fallthrough and a second PROCEDURE. Complete PROCEDURE source placement,
 CALL/RETURN/EXIT behavior and SIGNAL remain open.
 PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 478/478 with process memory monitoring after
-the PROCEDURE lifecycle tests were added. This is a development checkpoint, not a
+Debug Level C checkpoint passed 480/480 with process memory monitoring after
+the documented first-instruction correction. This is a development checkpoint, not a
 Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
@@ -3219,7 +3219,10 @@ Before any code edit, check the proposed route against these observable gates:
    pool; `63T-3C`, fresh CALL/function argument frames and optional RETURN
    state; `63T-3E`, activation entry eligibility and runtime PROCEDURE 17.1
    for main fallthrough or a second PROCEDURE in one invocation (while
-   retaining the source placement check pending whole-PROCEDURE review); and
+   retaining the source placement check pending whole-PROCEDURE review);
+   `63T-3E2`, correct eligibility to the documented first processed
+   instruction rule, including nonfresh label fallthrough, and replace the
+   permissive Regina-only success oracle; and
    `63T-3D`, full main/local/nested/recursive, opt/no-opt, source, linked and
    normal-suite qualification before retiring the old partition.
    Each checkpoint serves `LC-63T-02/03`; none alone closes ARG or SIGNAL.
@@ -3345,12 +3348,13 @@ checkpoint's evidence is retained under the ignored Debug build tree.
 CALL/function activation now records permission to execute one `PROCEDURE`;
 main has no such permission. `PROCEDURE` validates before creating its private
 pool. The old static main-`EXIT`/`PROCEDURE` fallthrough guard is gone.
-Regina reference probes confirm that ordinary instructions and label
-fallthrough do not consume a called invocation's first `PROCEDURE` right,
-whereas a second `PROCEDURE` raises 17.1. New optimized/no-opt tests cover
-called fallthrough after SAY, main fallthrough after prior output, and a
-second `PROCEDURE` after prior output. The prior compile-negative main
-fallthrough fixture is now a runtime 17.1 test.
+Regina probes accepted ordinary instructions and label fallthrough before
+`PROCEDURE`, and this checkpoint incorrectly used that permissive behavior as
+the compatibility oracle. The [IBM PROCEDURE reference](https://www.ibm.com/docs/en/zos/3.1.0?topic=instructions-procedure)
+requires it to be the first instruction processed after the internal call.
+The late-success assertion in this checkpoint is superseded by `63T-3E2`;
+the passing suite below does not qualify that incorrect expectation.
+Main fallthrough and a second `PROCEDURE` were tested as runtime 17.1.
 
 The exact-input Debug core/runtime build succeeded. Focused frame and
 activation tests passed 8/8; RexxScript runtime isolation passed 2/2; the
@@ -3363,13 +3367,38 @@ normal Debug Level C suite passed 478/478. The guarded suite peaked at about
 `cmake-build-debug/levelc-63t3e-reference-*.log`.
 
 `LC-STEP-63T-3D`, the whole PROCEDURE review and all `LC-63T-01–04` gates
-remain open. The source scanner still rejects a same-label PROCEDURE after
-ordinary statements as source 17.1, but the same source succeeds in Regina
-(`levelc-63t3e-parser-gap*.log`). Runtime 17.1 currently reports the
+remain open. The source scanner rejects a same-label PROCEDURE after ordinary
+statements as source 17.1; Regina's acceptance is a reference divergence,
+not a reason to lift this check. Runtime 17.1 currently reports the
 `RexxActivationArguments` library line and main wrapper source rather than
 the authored PROCEDURE line (`levelc-63t3e-diagnostic.log`); source
 provenance needs repair. Full CALL/RETURN/EXIT and SIGNAL lifecycles, linked
 and host matrices retain their own gates.
+
+**2026-10-05 LC-STEP-63T-3E2 first-instruction correction.** The
+[IBM REXX PROCEDURE reference](https://www.ibm.com/docs/en/zos/3.1.0?topic=instructions-procedure)
+requires PROCEDURE to be the first instruction processed after an internal
+invocation. Regina's acceptance of later and `IF ... THEN PROCEDURE` forms
+was a permissive interpreter behavior, not a reason to change that rule.
+The uncommitted attempt to lift the source check was withdrawn; its new
+nested test failed at compiler validation before this correction. The source
+scanner's first-after-label check remains in place. The activation now loses
+PROCEDURE eligibility on the first different executed instruction, including
+SAY before source-order fallthrough to another label. An empty label does not
+consume it. The former Regina-only late-success test now expects runtime
+17.1 after the preceding output.
+
+The guarded Debug build passed; focused opt/no-opt frame and activation tests
+passed 12/12, RexxScript runtime passed 2/2, and the normal Debug Level C
+suite passed 480/480. The suite peaked at about 1947 MiB aggregate descendant
+RSS and left no child processes. Evidence:
+`cmake-build-debug/levelc-63t3e2-build.log`,
+`cmake-build-debug/levelc-63t3e2-focused.log`,
+`cmake-build-debug/levelc-63t3e2-rexxscript.log`, and
+`cmake-build-debug/levelc-63t3e2-qual.log`.
+`LC-STEP-63T-3D` and all `LC-63T-01–04` gates remain open; authored-line
+runtime 17.1, function/CALL/RETURN lifecycle, SIGNAL and the linked/host
+matrix still need their respective qualification.
 
 ## Findings
 
@@ -3544,7 +3573,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-NOP` | NOP instruction | Whole instruction closed under LC-AC-64/LC-STEP-66B | Shared label/TRACE and configuration proof remains open under LC-AC-04/08 |
 | `SYN-CLASSIC-NUMERIC` | NUMERIC DIGITS/FORM/FUZZ | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PARSE` | PARSE variants and templates | Shared `parseplan` supports arbitrary VAR/VALUE and ARG target sequences, comma templates, compound targets, static/dynamic patterns and positions, optional UPPER and selected Classic errors | Whole-instruction review and remaining PARSE source services open |
-| `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded scalar/stem EXPOSE plus runtime main/second-entry 17.1 under 63T-3E | Same-label late PROCEDURE source mismatch, authored runtime error location, remaining EXPOSE forms and whole-instruction proof open |
+| `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Bounded scalar/stem EXPOSE plus first-instruction activation check, main/late/second-entry 17.1 under 63T-3E2 | Authored runtime error location, remaining EXPOSE forms and whole-instruction proof open |
 | `SYN-CLASSIC-PULL` | PULL instruction/templates | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-QUEUE` | QUEUE instruction | Front end only | Execution and reference proof open |

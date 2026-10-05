@@ -3967,6 +3967,15 @@ static int levelc_tree_contains_arg(ASTNode *node) {
     return 0;
 }
 
+static int levelc_tree_contains_procedure(ASTNode *node) {
+    while (node) {
+        if (node->node_type == LEVELC_PROCEDURE ||
+            levelc_tree_contains_procedure(node->child)) return 1;
+        node = node->sibling;
+    }
+    return 0;
+}
+
 static int levelc_append_main_activation(Context *context,
                                          ASTNode *instructions,
                                          ASTNode *anchor) {
@@ -4151,10 +4160,12 @@ static int levelc_rewrite_program(Context *context,
     ASTNode *stmt;
     size_t i;
     int needs_translate = 0;
+    int has_procedure;
 
     anchor = old_instructions && old_instructions->child ? old_instructions->child : program_file;
     needs_translate = levelc_tree_contains_parse_upper(old_instructions) ||
                       levelc_tree_contains_arg(old_instructions);
+    has_procedure = levelc_tree_contains_procedure(old_instructions);
     options = levelc_build_options(context, anchor, needs_translate, plan);
     instructions = rxcp_remap_create_instruction_builder(context, anchor);
     if (!options || !instructions) {
@@ -4228,6 +4239,13 @@ static int levelc_rewrite_program(Context *context,
             add_ast(instructions, plan->procedures[i].frame_label);
 
             stmt = plan->procedures[i].body_first;
+            if (has_procedure && stmt && stmt != plan->procedures[i].body_end &&
+                stmt->node_type != LEVELC_PROCEDURE &&
+                !levelc_append_activation_method(context, instructions, stmt,
+                                                  "consumeFirstInstruction")) {
+                if (reason_out) *reason_out = "failed to consume PROCEDURE entry window";
+                return 0;
+            }
             while (stmt && stmt != plan->procedures[i].body_end) {
                 if (!levelc_lower_proc_statement(context,
                                                 instructions,
