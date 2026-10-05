@@ -25,7 +25,7 @@ instruction closure and detailed receipts.
 | LC-REF-001 | Invocation modes COMMAND, FUNCTION, SUBROUTINE | host | Open: `API_Start`-equivalent entry and lifecycle |
 | LC-REF-002 | Initial source identity and line inventory | source | Open: diagnostics, PARSE SOURCE, SOURCELINE |
 | LC-REF-003 | Initial environment and stream selection | host | Open: configuration adapter |
-| LC-REF-004 | Invocation arguments and omitted positions | host | Activation frames, omitted/present distinction, Unicode ARG, ARG BIF, host `rxvml_run()` entry and direct CALL expression actuals have bounded proof; full invocation and label lifecycle audit open under LC-I-11/LC-STEP-63T |
+| LC-REF-004 | Invocation arguments and omitted positions | host | Activation frames, omitted/present distinction, Unicode ARG and ARG BIF, explicit-length `rxvml` and `crexxsaa` main entries, and direct CALL expression actuals have bounded proof; full invocation and label lifecycle audit open under LC-I-11/LC-STEP-63T and the broader host-service rows |
 | LC-REF-005 | Caller-provided trap overrides | host | Open: trap/configuration lifecycle |
 | LC-REF-006 | Completion classes: no value, result, condition, resource failure, unable to continue | host | Open: observable result/error contract |
 | LC-REF-007 | Source characters, EOL/EOS and invalid-encoding `22.1` | source | Front end; configured source service and error proof open |

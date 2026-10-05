@@ -59,6 +59,16 @@ API successfully compiled, loaded, and ran the program. The Rexx program status
 is returned separately through `program_rc`: an integer `main` return value and
 a top-level `exit n` both set `program_rc` to `n`.
 
+The `argv` values in those two calls are terminated C strings. For valid UTF-8
+text containing an embedded NUL, use `crexxsaa_run_source_with_lengths()` or
+`crexxsaa_run_rxbin_with_lengths()` and pass one byte length per argument.
+The explicit-length calls use the same source cache and VM argument array;
+the length is a UTF-8 byte count, while Rexx character positions use Unicode
+codepoints. A null data pointer is valid only with a zero length. Invalid
+UTF-8 and missing argument lengths return a host API error. This entry is an
+argument transport option for the existing host model; the broader Classic
+invocation and REXXSAA compatibility services remain separate work.
+
 The cache namespace argument, `"THE"` in this example, is part of the cache
 identity. Different hosts can compile the same source path without sharing a
 cache bucket accidentally.
@@ -135,8 +145,9 @@ provide arbitrary access to unexposed cRexx locals.
 
 ## Source cache
 
-`crexxsaa_run_source()` compiles source through `rxc` and `rxas`, then stores the
-resulting `.rxbin` in a disposable cache. Normal source edits, cRexx rebuilds,
+`crexxsaa_run_source()` and `crexxsaa_run_source_with_lengths()` compile source
+through `rxc` and `rxas`, then store the resulting `.rxbin` in a disposable
+shared cache. Normal source edits, cRexx rebuilds,
 compiler path changes, and library rebuilds cause a recompile without manual
 cache clearing.
 

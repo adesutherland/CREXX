@@ -7666,6 +7666,28 @@ target_compile_definitions(test_crexxsaa_status PRIVATE
         CREXX_TEST_CREXXSAA_RETURN7_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_return7_hosted.crexx")
 add_dependencies(test_crexxsaa_status library crexxsaa rxc rxas compiler_exit_bin)
 
+add_custom_command(
+        OUTPUT crexxsaa_arg_length_hosted.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o crexxsaa_arg_length_hosted ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_arg_length_hosted.crexx
+        COMMAND $<TARGET_FILE:rxas> crexxsaa_arg_length_hosted
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_arg_length_hosted.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling crexxsaa_arg_length_hosted.crexx ...")
+add_custom_target(crexxsaa_arg_length_hosted_bin DEPENDS crexxsaa_arg_length_hosted.rxbin)
+add_executable(test_crexxsaa_arg_lengths src/test_crexxsaa_arg_lengths.c)
+target_link_libraries(test_crexxsaa_arg_lengths PRIVATE crexxsaa)
+target_include_directories(test_crexxsaa_arg_lengths PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
+target_compile_definitions(test_crexxsaa_arg_lengths PRIVATE
+        CREXX_TEST_LOCATION="${CMAKE_BINARY_DIR}/bin"
+        CREXX_TEST_LIBRARY_RXBIN="${CMAKE_BINARY_DIR}/bin/library.rxbin"
+        CREXX_TEST_RXC="$<TARGET_FILE:rxc>"
+        CREXX_TEST_RXAS="$<TARGET_FILE:rxas>"
+        CREXX_TEST_IMPORT_DIR="${CMAKE_BINARY_DIR}/bin"
+        CREXX_TEST_ARG_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_arg_length_hosted.crexx"
+        CREXX_TEST_ARG_MODULE="${CMAKE_CURRENT_BINARY_DIR}/crexxsaa_arg_length_hosted.rxbin"
+        CREXX_TEST_ARG_CACHE="${CMAKE_CURRENT_BINARY_DIR}/crexxsaa-arg-length-cache")
+add_dependencies(test_crexxsaa_arg_lengths crexxsaa_arg_length_hosted_bin crexxsaa library rxc rxas compiler_exit_bin)
+
 add_executable(test_source_provenance src/test_source_provenance.c)
 target_link_libraries(test_source_provenance PRIVATE rxclib)
 target_include_directories(test_source_provenance PRIVATE
@@ -7817,8 +7839,12 @@ set_tests_properties(crexxsaa_variables PROPERTIES
         LABELS "compiler;stage3"
         ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_BINARY_DIR}/bin")
 add_test(NAME crexxsaa_status COMMAND test_crexxsaa_status)
+add_test(NAME crexxsaa_arg_lengths COMMAND test_crexxsaa_arg_lengths)
 set_tests_properties(crexxsaa_status PROPERTIES
         LABELS "compiler;stage3"
+        ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_BINARY_DIR}/bin")
+set_tests_properties(crexxsaa_arg_lengths PROPERTIES
+        LABELS "compiler;stage3;levelc"
         ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_BINARY_DIR}/bin")
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
@@ -8106,6 +8132,7 @@ crexx_register_test_prep_targets(
             dynamic_load
             crexxsaa_variables
             crexxsaa_status
+            crexxsaa_arg_lengths
             source_provenance levelc_tree_boundary
         TARGETS
             test_address_bridge
@@ -8113,6 +8140,7 @@ crexx_register_test_prep_targets(
             test_dynamic_load
             test_crexxsaa_variables
             test_crexxsaa_status
+            test_crexxsaa_arg_lengths
             test_source_provenance test_levelc_tree_boundary)
 if(ENABLE_PARSER_MODE)
     crexx_register_test_prep_targets(

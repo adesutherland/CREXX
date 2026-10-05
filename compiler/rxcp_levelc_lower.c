@@ -2020,6 +2020,23 @@ static int levelc_append_call_argument(Context *context,
     return 1;
 }
 
+static int levelc_append_call_actuals(Context *context,
+                                      ASTNode *actual,
+                                      LevelCLowerPlan *plan,
+                                      ASTNode *prelude,
+                                      const char *frame_name) {
+    while (actual) {
+        int exists = levelc_argument_exists(actual);
+        ASTNode *value = exists
+            ? levelc_lower_expr(context, actual, plan, prelude) : NULL;
+        if ((exists && !value) ||
+            !levelc_append_call_argument(context, actual, prelude, frame_name,
+                                         value, exists)) return 0;
+        actual = actual->sibling;
+    }
+    return 1;
+}
+
 static ASTNode *levelc_lower_binary_method(Context *context,
                                            ASTNode *expr,
                                            LevelCLowerPlan *plan,
@@ -2499,18 +2516,10 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
 
     arg = expr->child;
     if (arg && arg->node_type == NOVAL && !arg->sibling) arg = NULL;
-    while (arg) {
-        int exists = levelc_argument_exists(arg);
-        ASTNode *actual_value = exists
-            ? levelc_lower_expr(context, arg, plan, prelude) : NULL;
-        if ((exists && !actual_value) ||
-            !levelc_append_call_argument(context, arg, prelude, frame_name,
-                                         actual_value, exists)) {
-            free(frame_name);
-            free(target_name);
-            return NULL;
-        }
-        arg = arg->sibling;
+    if (!levelc_append_call_actuals(context, arg, plan, prelude, frame_name)) {
+        free(frame_name);
+        free(target_name);
+        return NULL;
     }
 
     args[2] = rxcp_remap_create_named_ref(context, expr,
@@ -2812,17 +2821,9 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
 
     actual = call_node->child ? call_node->child->sibling : NULL;
     actual = actual ? actual->child : NULL;
-    while (actual) {
-        int exists = levelc_argument_exists(actual);
-        ASTNode *actual_value = exists
-            ? levelc_lower_expr(context, actual, plan, prelude) : NULL;
-        if ((exists && !actual_value) ||
-            !levelc_append_call_argument(context, actual, prelude, frame_name,
-                                         actual_value, exists)) {
-            free(frame_name);
-            return NULL;
-        }
-        actual = actual->sibling;
+    if (!levelc_append_call_actuals(context, actual, plan, prelude, frame_name)) {
+        free(frame_name);
+        return NULL;
     }
 
     args[2] = rxcp_remap_create_named_ref(context, call_node,

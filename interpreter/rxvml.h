@@ -137,6 +137,14 @@ int rxvml_run(
     const char** argv,
     int* program_rc);
 
+/* UTF-8 argument spans may contain embedded NUL; lengths are bytes. */
+int rxvml_run_with_lengths(
+    rxvml_context* ctx,
+    int argc,
+    const char** argv,
+    const size_t* argv_lengths,
+    int* program_rc);
+
 int rxvml_call_factory_descriptor(
     rxvml_context* ctx,
     const char* class_name,

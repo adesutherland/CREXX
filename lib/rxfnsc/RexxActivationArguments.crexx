@@ -159,8 +159,8 @@ RexxActivationArguments: class
     return
 
   /**
-   * Append one command-line argument string.
-   * @param text exact argument bytes supplied by the host
+   * Append one main-entry argument without changing its Unicode text.
+   * @param text exact valid Unicode argument text supplied by the host
    */
   appendText: method = .void
     arg text = .string

@@ -116,6 +116,15 @@ CREXXSAA_API int crexxsaa_run_rxbin(
     const char** argv,
     int* program_rc);
 
+/* UTF-8 argument spans may contain embedded NUL; lengths are bytes. */
+CREXXSAA_API int crexxsaa_run_rxbin_with_lengths(
+    crexxsaa_context* ctx,
+    const char* rxbin_path,
+    int argc,
+    const char** argv,
+    const size_t* argv_lengths,
+    int* program_rc);
+
 CREXXSAA_API int crexxsaa_run_source(
     crexxsaa_context* ctx,
     const char* source_path,
@@ -123,6 +132,17 @@ CREXXSAA_API int crexxsaa_run_source(
     unsigned flags,
     int argc,
     const char** argv,
+    int* program_rc);
+
+/* Uses the same source cache as crexxsaa_run_source(). */
+CREXXSAA_API int crexxsaa_run_source_with_lengths(
+    crexxsaa_context* ctx,
+    const char* source_path,
+    const char* cache_namespace,
+    unsigned flags,
+    int argc,
+    const char** argv,
+    const size_t* argv_lengths,
     int* program_rc);
 
 CREXXSAA_API int crexxsaa_invalidate_source(

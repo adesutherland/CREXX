@@ -1106,11 +1106,20 @@ static int crexxsaa_compile_source(
     return 0;
 }
 
+static int crexxsaa_run_rxbin_internal(
+    crexxsaa_context* ctx,
+    const char* rxbin_path,
+    int argc,
+    const char** argv,
+    const size_t* argv_lengths,
+    int* program_rc);
+
 static int crexxsaa_run_uncached_source(
     crexxsaa_context* ctx,
     const char* source_path,
     int argc,
     const char** argv,
+    const size_t* argv_lengths,
     int* program_rc) {
 
     char suffix[96];
@@ -1138,7 +1147,8 @@ static int crexxsaa_run_uncached_source(
     if (crexxsaa_compile_source(ctx, source_path, output_base, &rxas_path, &rxbin_path) != 0)
         goto cleanup;
 
-    rc = crexxsaa_run_rxbin(ctx, rxbin_path, argc, argv, program_rc);
+    rc = crexxsaa_run_rxbin_internal(ctx, rxbin_path, argc, argv,
+                                     argv_lengths, program_rc);
 
 cleanup:
     if (rxas_path) CREXXSAA_UNLINK(rxas_path);
@@ -1527,11 +1537,12 @@ void crexxsaa_free(void* ptr) {
     free(ptr);
 }
 
-int crexxsaa_run_rxbin(
+static int crexxsaa_run_rxbin_internal(
     crexxsaa_context* ctx,
     const char* rxbin_path,
     int argc,
     const char** argv,
+    const size_t* argv_lengths,
     int* program_rc) {
 
     if (program_rc) *program_rc = 0;
@@ -1545,7 +1556,10 @@ int crexxsaa_run_rxbin(
         return -1;
     }
 
-    if (rxvml_run(ctx->rxvml, argc, argv, program_rc) != 0) {
+    if ((argv_lengths
+         ? rxvml_run_with_lengths(ctx->rxvml, argc, argv, argv_lengths,
+                                  program_rc)
+         : rxvml_run(ctx->rxvml, argc, argv, program_rc)) != 0) {
         crexxsaa_copy_rxvml_error(ctx, "Failed to run CREXX program");
         return -1;
     }
@@ -1553,13 +1567,40 @@ int crexxsaa_run_rxbin(
     return 0;
 }
 
-int crexxsaa_run_source(
+int crexxsaa_run_rxbin(
+    crexxsaa_context* ctx,
+    const char* rxbin_path,
+    int argc,
+    const char** argv,
+    int* program_rc) {
+    return crexxsaa_run_rxbin_internal(ctx, rxbin_path, argc, argv, NULL,
+                                       program_rc);
+}
+
+int crexxsaa_run_rxbin_with_lengths(
+    crexxsaa_context* ctx,
+    const char* rxbin_path,
+    int argc,
+    const char** argv,
+    const size_t* argv_lengths,
+    int* program_rc) {
+    if (argc > 0 && !argv_lengths) {
+        if (program_rc) *program_rc = 0;
+        crexxsaa_set_error(ctx, "Missing CREXXSAA run argument lengths");
+        return -1;
+    }
+    return crexxsaa_run_rxbin_internal(ctx, rxbin_path, argc, argv,
+                                       argv_lengths, program_rc);
+}
+
+static int crexxsaa_run_source_internal(
     crexxsaa_context* ctx,
     const char* source_path,
     const char* cache_namespace,
     unsigned flags,
     int argc,
     const char** argv,
+    const size_t* argv_lengths,
     int* program_rc) {
 
     crexxsaa_file_digest digest;
@@ -1591,7 +1632,8 @@ int crexxsaa_run_source(
     }
 
     if (crexxsaa_has_suffix(source_path, ".rxbin"))
-        return crexxsaa_run_rxbin(ctx, source_path, argc, argv, program_rc);
+        return crexxsaa_run_rxbin_internal(ctx, source_path, argc, argv,
+                                           argv_lengths, program_rc);
 
     if (crexxsaa_env_truthy("CREXXSAA_CACHE_DISABLE"))
         flags |= CREXXSAA_CACHE_DISABLE;
@@ -1600,7 +1642,8 @@ int crexxsaa_run_source(
 
     if (flags & CREXXSAA_CACHE_DISABLE) {
         crexxsaa_cache_trace("disabled", source_path, NULL);
-        return crexxsaa_run_uncached_source(ctx, source_path, argc, argv, program_rc);
+        return crexxsaa_run_uncached_source(ctx, source_path, argc, argv,
+                                            argv_lengths, program_rc);
     }
 
     if (crexxsaa_file_digest_read(ctx, source_path, &digest) != 0)
@@ -1654,7 +1697,8 @@ int crexxsaa_run_source(
         && strcmp(manifest.config_hash, config_hash) == 0
         && crexxsaa_path_exists(manifest.rxbin_path)) {
         crexxsaa_cache_trace("hit", source_path, manifest.rxbin_path);
-        rc = crexxsaa_run_rxbin(ctx, manifest.rxbin_path, argc, argv, program_rc);
+        rc = crexxsaa_run_rxbin_internal(ctx, manifest.rxbin_path, argc, argv,
+                                         argv_lengths, program_rc);
         goto cleanup;
     }
 
@@ -1698,7 +1742,8 @@ int crexxsaa_run_source(
         CREXXSAA_UNLINK(manifest.rxbin_path);
     }
 
-    rc = crexxsaa_run_rxbin(ctx, final_rxbin_path, argc, argv, program_rc);
+    rc = crexxsaa_run_rxbin_internal(ctx, final_rxbin_path, argc, argv,
+                                     argv_lengths, program_rc);
 
 cleanup:
     if (temp_rxas_path) CREXXSAA_UNLINK(temp_rxas_path);
@@ -1714,6 +1759,37 @@ cleanup:
     free(cache_root);
     free(canonical_path);
     return rc;
+}
+
+int crexxsaa_run_source(
+    crexxsaa_context* ctx,
+    const char* source_path,
+    const char* cache_namespace,
+    unsigned flags,
+    int argc,
+    const char** argv,
+    int* program_rc) {
+    return crexxsaa_run_source_internal(ctx, source_path, cache_namespace,
+                                        flags, argc, argv, NULL, program_rc);
+}
+
+int crexxsaa_run_source_with_lengths(
+    crexxsaa_context* ctx,
+    const char* source_path,
+    const char* cache_namespace,
+    unsigned flags,
+    int argc,
+    const char** argv,
+    const size_t* argv_lengths,
+    int* program_rc) {
+    if (argc > 0 && !argv_lengths) {
+        if (program_rc) *program_rc = 0;
+        crexxsaa_set_error(ctx, "Missing CREXXSAA run argument lengths");
+        return -1;
+    }
+    return crexxsaa_run_source_internal(ctx, source_path, cache_namespace,
+                                        flags, argc, argv, argv_lengths,
+                                        program_rc);
 }
 
 int crexxsaa_invalidate_source(

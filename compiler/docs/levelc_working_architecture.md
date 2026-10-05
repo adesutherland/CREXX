@@ -215,6 +215,15 @@ The native `rxvml_run()` entry supplies the same hidden array and starts a new
 frame on each run, including consecutive runs in one host context. Its C-string
 argument API does not carry embedded NUL bytes; internal calls and ARG values
 retain exact lengths independently of that host entry limit.
+The additive `rxvml_run_with_lengths()` entry accepts explicit UTF8 byte
+lengths, validates each argument as Unicode text, and feeds that same hidden
+array and main frame. Both public entries use one `rxvml_run_internal()` path;
+the terminated-string entry remains a convenience wrapper. The higher
+`crexxsaa_run_source_with_lengths()` and `crexxsaa_run_rxbin_with_lengths()`
+entries pass the same lengths through the existing cache/load paths and VM
+array; the original C-string entries remain convenience wrappers. This is
+argument transport within the existing host model, not a Classic
+`RexxStart()`-equivalent invocation adapter.
 The Classic `ARG()` BIF reads that same unchanged frame. Its no-operand count
 is the highest explicitly supplied position, so trailing omitted CALL slots
 do not increase the count. Its E/O options use each slot's presence bit; an
@@ -238,6 +247,22 @@ Classic policy bit to raise `CLASSIC_SYNTAX` with `RXC-LC-26.4` for Level C
 ARG/PARSE. Unflagged plans retain the VM `CONVERSION_ERROR` contract used by
 Level B. The shared VM executor and Level C template lowering remain single
 paths; only the selected error identity differs.
+
+The 2026-10-05 ARG coherence review follows one argument owner from each
+admitted producer to both consumers. Main CLI and native host entry create a
+VM `.string[]` with explicit string lengths; the generated main appends each
+item as present to `RexxActivationArguments`. Direct local CALL and function
+calls share `levelc_append_call_actuals()`, which evaluates supplied actuals
+once in source order, appends absent slots without evaluation, and uses the
+same activation type. ARG instructions reread `argument(index)` and feed
+nonempty comma templates to the PARSE-owned executor with uppercase enabled;
+the ARG BIF reads the unchanged values and presence bits from that frame.
+There is no first-ARG signature binding, parallel word-only template path, or
+separate function-argument presence model. The source tree retains authored
+templates and omissions; the canonical tree contains the explicit activation,
+parseplan and pool operations. External CALL and INTERPRET invocation, and
+broader host invocation services, remain separate open owner contracts; they
+do not create an alternate ARG execution engine.
 
 The intended direction is one implementation of each overlapping Classic BIF
 in `rxfnsc`, called by both products with product-specific dispatch and

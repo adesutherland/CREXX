@@ -10,9 +10,10 @@ it does not change the 2026-11-30 target.
 NOP, OPTIONS, IF, SELECT, DO, LEAVE and ITERATE) have closed whole-instruction
 reviews. `LC-I-11` ARG is open: activation frames, omission/presence, Unicode
 arguments, templates, the ARG BIF, host entry, direct CALL expression actuals,
-the one-body frame model and authored template diagnostics have passing
-evidence. The applicable host-interface and remaining invocation audit has
-not closed. The approved `LC-STEP-63T` one-frame label and SIGNAL design has a
+the one-body frame model, authored template diagnostics, and exact-length
+native host transport have passing evidence. The broader host-interface and
+remaining invocation audit has not closed. The approved `LC-STEP-63T`
+one-frame label and SIGNAL design has a
 canonical AST/emitter foundation and one-body invocation route, including
 first-instruction PROCEDURE eligibility, main fallthrough and a second
 PROCEDURE. Complete PROCEDURE source placement, CALL/RETURN/EXIT behavior and
@@ -21,8 +22,8 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 557/557 with process memory monitoring after
-the ARG invocation and template-diagnostic checkpoint below.
+Debug Level C checkpoint passed 558/558 with process memory monitoring after
+the ARG coherence and host-transport checkpoint below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
@@ -2547,6 +2548,70 @@ template or argument count limit is acceptable.
    CALL/host entry modes with their owning instruction or host-service row;
    do not count the ARG instruction closed until LC-AC-71 has its full
    applicable invocation and character evidence.
+   **LC-STEP-73G.1 (LC-AC-06/71; complete 2026-10-05):** add a length-aware
+   native main-entry argument variant over the existing `rxvml` value array,
+   keeping `rxvml_run()` as the terminated-string convenience route. Accept
+   valid Unicode text including embedded NUL, preserve exact lengths into
+   `ARG(n)` and uppercase template parsing, reject malformed UTF8 and invalid
+   pointer/length pairs, and prove consecutive runs on one host context.
+   This is an additive host entry using the current activation and
+   `rxvml_set_str()` paths; it changes no source syntax or frame architecture.
+   Keep the C-string route's inherent limit explicit and audit higher host
+   wrappers under LC-AC-06 rather than calling it an exclusion.
+   **LC-STEP-73G.2 (LC-AC-06/71; complete 2026-10-05; depends on 73G.1):**
+   carry exact UTF8 byte lengths through both public `crexxsaa` source and
+   RXBIN entries, including uncached, cache-miss and cache-hit execution,
+   using the same `rxvml` argument array and one source-cache implementation.
+   Retain the existing C-string entries as convenience wrappers. Verify
+   embedded NUL, Unicode, malformed UTF8, invalid pointer/length pairs,
+   repeated context use and legacy calls with focused host tests; update the
+   public host guide and reference obligation. This is an additive C API, not
+   a new Classic invocation model.
+8. **LC-STEP-73I (LC-AC-71; complete as a coherence review 2026-10-05;
+   depends on 73C/63T-3):**
+   review ARG as one compiler-to-host contract before closure. Trace every
+   admitted argument producer through one activation frame, both ARG
+   consumers, the common PARSE executor, source/canonical AST, diagnostics,
+   and lifecycle. Consolidate the duplicate direct-CALL/local-function
+   actual-argument binding loops so omission and once-only source-order
+   evaluation have one implementation. Verify the resulting opt/no-opt,
+   recursive, linked, host, parser and shared-runtime evidence once on the
+   coherent code/test checkpoint. Give LC-AC-71 an explicit pass/fail verdict;
+   keep any unproved invocation or host boundary open with its owning step.
+
+**2026-10-05 LC-STEP-73G.1/73G.2/73I coherence verdict.** One activation
+object owns ordered text values and omission bits. Main execution from CLI,
+`rxvml` and `crexxsaa` reaches the same VM `.string[]` and generated main
+frame; direct CALL and local function expressions now share one actual-binding
+loop. ARG and ARG() read that unchanged frame, and ARG uses the PARSE-owned
+template executor and visible pool writes. The public native run entries have
+additive byte-length variants, so valid Unicode arguments with embedded NUL
+reach the same activation without truncation. The two `crexxsaa` source
+entries share one cache/miss/hit implementation, and the two RXBIN entries
+share one load/run implementation. The older terminated-string APIs remain
+convenience entries. This is argument transport in the current host model;
+Classic `RexxStart()`-equivalent invocation modes and services remain open.
+
+| LC-AC-71 facet | Review verdict / retained evidence |
+| --- | --- |
+| Templates, repeat reads, positional omission and Unicode uppercasing | Passing optimized/no-opt, parser, codepoint, linked and shared-runtime fixtures from the prior ARG checkpoints; the 2026-10-05 558-test normal Debug suite includes them. |
+| Main, direct CALL, local function and frame-local label paths | Passing invocation fixture, one-body frame tests, source/canonical tree and linked evidence; the duplicate actual-binding loops were consolidated in `levelc_append_call_actuals()`. |
+| Native host exact lengths and lifecycle | Passing `levelc_arg_host_entry` and `crexxsaa_arg_lengths`: embedded NUL, Unicode, invalid UTF8/pointer/length, uncached source, cache miss/hit, direct RXBIN, legacy entry and consecutive context use. |
+| Other invocation and host modes | **Open:** external routine/indirect CALL and INTERPRET remain unimplemented under their instruction owners; Classic host invocation classes, trap overrides and pool APIs remain under LC-AC-06/LC-REF-001/005/016/021–024. They are not ARG exclusions. |
+
+Therefore **LC-AC-71 and LC-I-11 remain open**. The coherent implementation
+for admitted current paths passes; the whole instruction cannot close while
+its applicable invocation contract is unproved. The final guarded product
+build (`rxc`, `rxas`, `rxlink`, `rxvm`, `crexxsaa` and host fixtures) passed,
+focused `crexxsaa_arg_lengths`, `crexxsaa_status`, `crexxsaa_variables` and
+`levelc_arg_host_entry` passed 4/4, and the normal Debug Level C suite passed 558/558 on these
+code/test/build inputs. Logs are
+`cmake-build-debug/levelc-arg-coherence-final-build.log`,
+`cmake-build-debug/levelc-arg-coherence-final-focused.log` and
+`cmake-build-debug/levelc-arg-coherence-final2-debug-qual.log`.
+The guarded broad run peaked at about 4366 MiB descendant RSS, left zero
+processes, and the post-run process inventory was empty. This evidence is a
+development checkpoint, not full Level C qualification.
 
 2026-10-05 LC-I-11 whole-instruction audit refresh: the current compiler
 admits main execution from the CLI or `rxvml_run()`, direct internal CALL,

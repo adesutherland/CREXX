@@ -1,0 +1,4 @@
+options levelb
+import rxfnsb
+
+return length(arg[1])

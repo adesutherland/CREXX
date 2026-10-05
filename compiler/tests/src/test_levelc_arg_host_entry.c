@@ -31,18 +31,23 @@ static void capture_say(const char *text, size_t length) {
     capture.length += length;
 }
 
-static int run_case(rxvml_context *ctx, int argc, const char **argv,
-                    const char *expected) {
+static int run_case_bytes(rxvml_context *ctx, int argc, const char **argv,
+                          const size_t *lengths, const char *expected,
+                          size_t expected_length) {
     const char *error = NULL;
     int program_rc = -1;
+    int run_rc;
     memset(&capture, 0, sizeof(capture));
-    if (rxvml_run(ctx, argc, argv, &program_rc) != 0) {
+    run_rc = lengths
+        ? rxvml_run_with_lengths(ctx, argc, argv, lengths, &program_rc)
+        : rxvml_run(ctx, argc, argv, &program_rc);
+    if (run_rc != 0) {
         rxvml_last_error(ctx, &error);
         fprintf(stderr, "rxvml_run failed: %s\n", error ? error : "unknown error");
         return 1;
     }
     if (program_rc != 0 || capture.overflow ||
-        capture.length != strlen(expected) ||
+        capture.length != expected_length ||
         memcmp(capture.bytes, expected, capture.length) != 0) {
         fprintf(stderr, "ARG host entry mismatch: program_rc=%d, overflow=%d, length=%zu\n",
                 program_rc, capture.overflow, capture.length);
@@ -51,11 +56,25 @@ static int run_case(rxvml_context *ctx, int argc, const char **argv,
     return 0;
 }
 
+static int run_case(rxvml_context *ctx, int argc, const char **argv,
+                    const char *expected) {
+    return run_case_bytes(ctx, argc, argv, NULL, expected, strlen(expected));
+}
+
 int main(void) {
     static const char *two_args[] = {"blue green", "tail"};
     static const char *unicode_args[] = {"é🙂", "ÿ"};
     static const char *one_arg[] = {"red"};
     static const char *empty_arg[] = {""};
+    static const char nul_arg[] = {'a', '\0', 'b'};
+    static const char *nul_args[] = {nul_arg};
+    static const size_t nul_lengths[] = {sizeof(nul_arg)};
+    static const char nul_expected[] =
+        "count=1\nexists=1|0\nraw=a\0b|\nparsed=A\0B|\n";
+    static const char invalid_utf8[] = {'a', (char)0xff};
+    static const char *invalid_args[] = {invalid_utf8};
+    static const size_t invalid_lengths[] = {sizeof(invalid_utf8)};
+    static const char *missing_args[] = {NULL};
     rxvml_context *ctx = rxvml_create(NULL, 0);
     int failed = 0;
     if (!ctx) {
@@ -82,8 +101,39 @@ int main(void) {
                  "count=1\nexists=1|0\nraw=red|\nparsed=RED|\n") ||
         run_case(ctx, 1, empty_arg,
                  "count=1\nexists=1|0\nraw=|\nparsed=|\n") ||
+        run_case_bytes(ctx, 1, nul_args, nul_lengths,
+                       nul_expected, sizeof(nul_expected) - 1) ||
         run_case(ctx, 0, NULL,
                  "count=0\nexists=0|0\nraw=|\nparsed=|\n")) failed = 1;
+    if (!failed) {
+        const char *error = NULL;
+        int program_rc = -1;
+        if (rxvml_run_with_lengths(ctx, 1, invalid_args, invalid_lengths,
+                                   &program_rc) == 0 ||
+            rxvml_last_error(ctx, &error) == 0 || !error ||
+            !strstr(error, "Invalid UTF-8")) {
+            fprintf(stderr, "invalid UTF-8 host ARG was accepted\n");
+            failed = 1;
+        }
+        error = NULL;
+        if (rxvml_run_with_lengths(ctx, 1, missing_args, invalid_lengths,
+                                   &program_rc) == 0 ||
+            rxvml_last_error(ctx, &error) == 0 || !error ||
+            !strstr(error, "Missing rxvml run argument data")) {
+            fprintf(stderr, "missing host ARG data was accepted\n");
+            failed = 1;
+        }
+        error = NULL;
+        if (rxvml_run_with_lengths(ctx, 1, one_arg, NULL,
+                                   &program_rc) == 0 ||
+            rxvml_last_error(ctx, &error) == 0 || !error ||
+            !strstr(error, "Missing rxvml run argument lengths")) {
+            fprintf(stderr, "missing host ARG lengths were accepted\n");
+            failed = 1;
+        }
+        if (run_case(ctx, 1, one_arg,
+                     "count=1\nexists=1|0\nraw=red|\nparsed=RED|\n")) failed = 1;
+    }
 done:
     rxvml_destroy(ctx);
     return failed;

@@ -1995,10 +1995,11 @@ static proc_runtime* rxvml_find_last_module_procedure(rxvm_context* vm, const ch
     return NULL;
 }
 
-int rxvml_run(
+static int rxvml_run_internal(
     rxvml_context* ctx,
     int argc,
     const char** argv,
+    const size_t* argv_lengths,
     int* program_rc) {
 
     proc_runtime* main_proc;
@@ -2023,12 +2024,19 @@ int rxvml_run(
         goto cleanup;
     }
     for (i = 0; i < argc; i++) {
-        rxvml_value* arg_value = rxvml_value_new(ctx);
+        const char* arg_data = argv[i];
+        size_t arg_length = argv_lengths ? argv_lengths[i] : strlen(arg_data ? arg_data : "");
+        rxvml_value* arg_value;
+        if (!arg_data && arg_length != 0) {
+            ctx->last_error = "Missing rxvml run argument data";
+            goto cleanup;
+        }
+        arg_value = rxvml_value_new(ctx);
         if (!arg_value) {
             ctx->last_error = "Failed to allocate rxvml run argument";
             goto cleanup;
         }
-        if (rxvml_set_str(arg_value, argv[i] ? argv[i] : "", strlen(argv[i] ? argv[i] : "")) != 0) {
+        if (rxvml_set_str(arg_value, arg_data ? arg_data : "", arg_length) != 0) {
             rxvml_value_free(arg_value);
             ctx->last_error = "Invalid UTF-8 in rxvml run argument";
             goto cleanup;
@@ -2068,6 +2076,28 @@ cleanup:
     if (result) rxvml_value_free(result);
     if (arg_array) rxvml_value_free(arg_array);
     return rc;
+}
+
+int rxvml_run(
+    rxvml_context* ctx,
+    int argc,
+    const char** argv,
+    int* program_rc) {
+    return rxvml_run_internal(ctx, argc, argv, NULL, program_rc);
+}
+
+int rxvml_run_with_lengths(
+    rxvml_context* ctx,
+    int argc,
+    const char** argv,
+    const size_t* argv_lengths,
+    int* program_rc) {
+    if (argc > 0 && !argv_lengths) {
+        if (ctx) ctx->last_error = "Missing rxvml run argument lengths";
+        if (program_rc) *program_rc = 0;
+        return -1;
+    }
+    return rxvml_run_internal(ctx, argc, argv, argv_lengths, program_rc);
 }
 
 int rxvml_call_method_descriptor(
