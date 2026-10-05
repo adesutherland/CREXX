@@ -45,6 +45,7 @@
 #define LEVELC_ACTIVATION_SYMBOL "__rxcp_levelc_activation"
 #define LEVELC_CALL_ACTIVATION_PREFIX "__rxcp_levelc_call_activation_"
 #define LEVELC_CALL_TRAP_SELECTED_PREFIX "__rxcp_levelc_call_trap_selected_"
+#define LEVELC_CALL_CLAUSE_RESULT_PREFIX "__rxcp_levelc_call_clause_result_"
 #define LEVELC_MAIN_ARG_INDEX_PREFIX "__rxcp_levelc_main_arg_index_"
 #define LEVELC_ACTIVATION_CLASS "RexxActivationArguments"
 #define LEVELC_ACTIVATION_CLASS_TYPE ".RexxActivationArguments"
@@ -382,6 +383,10 @@ static int levelc_lower_plan_add_procedure(LevelCLowerPlan *plan,
 
 static char *levelc_upper_name(ASTNode *node);
 static char *levelc_static_signal_name(ASTNode *target);
+static int levelc_append_call_trap_checkpoint(Context *context,
+                                               ASTNode *instructions,
+                                               ASTNode *source,
+                                               LevelCLowerPlan *plan);
 static int levelc_parseplan_literal(ASTNode *pattern,
                                     unsigned char **bytes_out,
                                     size_t *length_out,
@@ -2199,6 +2204,32 @@ static ASTNode *levelc_do_condition_logical_value(Context *context,
                                          0);
 }
 
+/* Finish an evaluated source clause before entering its controlled body. */
+static ASTNode *levelc_clause_checkpoint_value(Context *context,
+                                                ASTNode *source,
+                                                LevelCLowerPlan *plan,
+                                                ASTNode *prelude,
+                                                ASTNode *value) {
+    char *name;
+    ASTNode *capture;
+    ASTNode *result;
+
+    if (!value || !prelude) return NULL;
+    if (!plan || !plan->call_handler_count) return value;
+    name = rxcp_remap_create_generated_node_name(
+        LEVELC_CALL_CLAUSE_RESULT_PREFIX, source);
+    capture = name ? rxcp_remap_create_named_assignment(
+        context, source, name, value) : NULL;
+    result = name ? rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, name) : NULL;
+    free(name);
+    if (!capture || !result) return NULL;
+    add_ast(prelude, capture);
+    if (!levelc_append_call_trap_checkpoint(context, prelude, source, plan))
+        return NULL;
+    return result;
+}
+
 static ASTNode *levelc_controlled_while_entry(Context *context,
                                                ASTNode *condition_node,
                                                LevelCLowerPlan *plan,
@@ -2218,6 +2249,8 @@ static ASTNode *levelc_controlled_while_entry(Context *context,
 
     condition_value = levelc_do_condition_logical_value(context, condition_node,
                                                         condition_value);
+    condition_value = levelc_clause_checkpoint_value(
+        context, condition_node, plan, prelude, condition_value);
     if (!condition_value) return NULL;
     if (!to_guard) {
         return prelude->child
@@ -2242,6 +2275,8 @@ static ASTNode *levelc_controlled_while_entry(Context *context,
     add_ast(then_instructions, true_leave);
     add_ast(false_leave, rxcp_remap_create_integer_constant(context, condition_node,
                                                              0, TP_BOOLEAN));
+    if (!levelc_append_call_trap_checkpoint(context, else_instructions,
+                                             condition_node, plan)) return NULL;
     add_ast(else_instructions, false_leave);
     then_block = rxcp_remap_create_do_block(context, condition_node, then_instructions);
     else_block = rxcp_remap_create_do_block(context, condition_node, else_instructions);
@@ -2273,6 +2308,8 @@ static ASTNode *levelc_controlled_until_end(Context *context,
 
     condition_value = levelc_do_condition_logical_value(context, condition_node,
                                                         condition_value);
+    condition_value = levelc_clause_checkpoint_value(
+        context, condition_node, plan, condition_prelude, condition_value);
     if (!condition_value || !step_prelude || !step_prelude->child) return NULL;
     end_instructions = rxcp_remap_create_instruction_builder(context, condition_node);
     step_instructions = rxcp_remap_create_instruction_builder(context, condition_node);
@@ -3587,6 +3624,11 @@ static int levelc_lower_transfer(Context *context,
     }
     rxcp_remap_anchor_synthetic(lowered, stmt);
     add_ast(lowered, target);
+    if (!levelc_append_call_trap_checkpoint(
+            context, instructions, stmt, plan)) {
+        if (reason_out) *reason_out = "failed to lower CALL checkpoint before loop transfer";
+        return 0;
+    }
     add_ast(instructions, lowered);
     return 1;
 }
@@ -4633,9 +4675,9 @@ static int levelc_lower_statement(Context *context,
     }
 
     rxcp_remap_append_builder_children(instructions, prelude);
-    if (stmt->node_type == RETURN &&
+    if ((stmt->node_type == RETURN || stmt->node_type == EXIT) &&
         !levelc_append_call_trap_checkpoint(context, instructions, stmt, plan)) {
-        if (reason_out) *reason_out = "failed to lower CALL checkpoint before RETURN";
+        if (reason_out) *reason_out = "failed to lower CALL checkpoint before completion";
         return 0;
     }
     add_ast(instructions, lowered);
@@ -4649,7 +4691,8 @@ static int levelc_lower_main_statement(Context *context,
                                        const char **reason_out) {
     if (!levelc_lower_statement(context, instructions, stmt, plan,
                                 NULL, 0, reason_out)) return 0;
-    if (stmt->node_type == EXIT) return 1;
+    if (stmt->node_type == EXIT || stmt->node_type == LEAVE ||
+        stmt->node_type == ITERATE) return 1;
     if (!levelc_append_call_trap_checkpoint(context, instructions, stmt, plan)) {
         if (reason_out) *reason_out = "failed to lower CALL clause checkpoint";
         return 0;
@@ -4665,7 +4708,8 @@ static int levelc_lower_proc_statement(Context *context,
                                        const char **reason_out) {
     if (!levelc_lower_statement(context, instructions, stmt, plan,
                                 procedure, 1, reason_out)) return 0;
-    if (stmt->node_type == RETURN) return 1;
+    if (stmt->node_type == RETURN || stmt->node_type == LEAVE ||
+        stmt->node_type == ITERATE) return 1;
     if (!levelc_append_call_trap_checkpoint(context, instructions, stmt, plan)) {
         if (reason_out) *reason_out = "failed to lower CALL clause checkpoint";
         return 0;
@@ -4695,6 +4739,8 @@ static int levelc_lower_if_statement(Context *context,
     if (!prelude || !then_instructions || (else_node && !else_instructions)) goto fail;
     condition = levelc_lower_expr(context, condition_node, plan, prelude);
     condition = levelc_if_logical_value(context, condition_node, condition);
+    condition = levelc_clause_checkpoint_value(context, stmt, plan,
+                                                prelude, condition);
     if (!condition) goto fail;
 
     if (in_procedure) {
@@ -4860,6 +4906,8 @@ static ASTNode *levelc_lower_state_do(Context *context,
             while_source, entry, until_source, until_value);
     if (!lowered) goto fail;
     rxcp_remap_append_builder_children(instructions, setup);
+    if (!levelc_append_call_trap_checkpoint(
+            context, instructions, stmt, plan)) goto fail;
     *loop_name_out = loop_name;
     free(state_name);
     return lowered;
@@ -4904,6 +4952,8 @@ static int levelc_lower_do(Context *context,
                                                 plan, prelude);
             condition_value = levelc_do_condition_logical_value(
                     context, condition, condition_value);
+            condition_value = levelc_clause_checkpoint_value(
+                    context, condition, plan, prelude, condition_value);
             if (!condition_value) goto fail;
             if (prelude->child) {
                 condition_value = rxcp_remap_create_prelude_block_expr(
@@ -4938,6 +4988,9 @@ static int levelc_lower_do(Context *context,
             goto fail;
         }
     }
+    if (header->kind != LEVELC_DO_GROUP && !header->body->child &&
+        !levelc_append_call_trap_checkpoint(
+            context, lowered_body, stmt, plan)) goto fail;
     if (header->kind == LEVELC_DO_GROUP)
         lowered = rxcp_remap_create_do_block(context, stmt, lowered_body);
     if (!lowered) goto fail;
@@ -5032,6 +5085,8 @@ static int levelc_lower_select_statement(Context *context,
         condition = levelc_lower_expr(context, condition_node, plan, prelude);
         condition = condition ? rxcp_remap_create_member_call(context, condition_node,
                                                                condition, "logicalWhenValue", NULL, 0) : NULL;
+        condition = levelc_clause_checkpoint_value(context, when, plan,
+                                                    prelude, condition);
         if (!condition) goto fail_free;
         if (!levelc_lower_select_body_statement(context, then_instructions, body_node,
                                                 plan, procedure, in_procedure, reason_out)) goto fail_free;

@@ -3295,6 +3295,7 @@ the call kind, return presence/value and inherited SIGNAL policy.
 | `levelc-call-reference-condition.log`, `levelc-call-reference-policy.log` | ERROR from a host command calls a no-argument handler at the clause boundary, reports CONDITION `C=ERROR`/`I=CALL` and the raising `SIGL`, then resumes. A nested call's OFF does not remove its caller's ON; the caller handler runs after return. | Delayed CALL ON/OFF state and clause-end delivery; ADDRESS remains the real command producer owner. |
 | `levelc-call-reference-quoted-handler.log` | Regina accepts a quoted `NAME 'HANDLER'`, consistent with the existing parser's target shape; platform reference variants may differ. | Preserve the accepted source form and test the named handler route. |
 | `levelc-call-reference-delay-state.log`, `levelc-call-reference-delay-nested.log` | A CALL trap sees `CONDITION('S')=DELAY`, `CONDITION('I')=CALL`, zero arguments and the causing `SIGL`; its returned value leaves the prior `RESULT` intact. The trap handles a later ERROR again, suppresses ERROR raised while already handling it, and a later SIGNAL ON replaces CALL ON with immediate transfer. The interrupted caller's prior CONDITION state is restored after the handler returns. | Per-activation delayed state, source-preserving clause checkpoint, handler activation and CALL/SIGNAL replacement. |
+| `levelc-call-reference-missing-trap.log` | A missing delayed `CALL ON ERROR NAME` target raises `16.1` at the condition-raising `ADDRESS` clause (line 2), not at the preceding policy clause (line 1). | The compiled dispatcher must retain dynamic causing-clause source identity when its selected handler is absent; this remains open. |
 
 Each guarded probe exited with zero residual child processes. These are
 reference receipts, not product tests or CALL closure. The VM can autoload
@@ -3405,10 +3406,30 @@ guarded final-input build/test process exited with zero residual children.
 
 `LC-75-05` and whole CALL remain **open**: the unimplemented ADDRESS, stream
 and host-interrupt producers must connect and qualify their own source events;
-exact clause checkpoints inside IF, SELECT and DO and source identity for a
-missing delayed handler still need proof; external handler targets depend on
+the complete clause/lifecycle matrix and source identity for a missing delayed
+handler still need proof; external handler targets depend on
 the external Classic service decision. The controlled surrogate is not a
 substitute for those tests or the whole CALL reference and negative matrix.
+
+**LC-STEP-75D clause-boundary implementation receipt, 2026-10-05.** The IF
+test, each evaluated WHEN test, and each evaluated DO header now capture their
+logical result before using the same generated CALL dispatcher; a handler
+cannot change the branch decision already made. Counted/controlled DO setup
+checks before the first body, empty repetitive bodies check each iteration,
+and LEAVE/ITERATE/RETURN/EXIT check before transfer. The controlled RXAS
+injection fixture places pending events after authored CALL ON clauses and
+observes handler output before IF, WHEN, DO and transfer continuations in both
+optimization modes. The guarded final-input focused Debug receipt is
+`cmake-build-debug/levelc-call-boundary-all-focused.log` (**6/6**); the
+maintained ASan receipt with macOS leak detection off is
+`cmake-build-debug/levelc-call-boundary-asan-focused-guard.log` (**6/6**).
+The guarded normal Debug Level C suite passed **612/612** in
+`cmake-build-debug/levelc-call-boundary-final-levelc.log` (peak **4837.0 MiB**
+aggregate RSS); affected Level B/G and RexxScript isolation passed **10/10**
+in `cmake-build-debug/levelc-call-boundary-isolation.log`. Every guarded
+build/test process exited with zero residual children. Branch-value mutation,
+the remaining clause/lifecycle matrix, real producers, external handler targets
+and exact missing-handler source identity remain open before whole CALL closure.
 
 **LC-STEP-75C local/BIF/result foundation receipt, 2026-10-05.** The initial
 guarded linked reproducer in `cmake-build-debug/levelc-call-result-repro-product.log`
@@ -4934,7 +4955,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; delayed local/BIF handlers have controlled event-injection and activation-state proof under LC-STEP-75D | External resolution, real condition producers, exact clause boundaries, full errors and whole-instruction review open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; delayed local/BIF handlers and selected IF/WHEN/DO/transfer boundaries have controlled event-injection proof under LC-STEP-75D | External resolution, real condition producers, complete clause/lifecycle matrix, dynamic missing-handler source identity, full errors and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |

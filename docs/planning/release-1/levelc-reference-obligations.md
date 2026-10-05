@@ -80,7 +80,7 @@ instruction closure and detailed receipts.
 | LC-REF-056 | Function RETURN value, `45.1` and RESULT/.RESULT lifecycle | text | Bounded local RETURN; complete call state open |
 | LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | host | Open: processor lifecycle |
 | LC-REF-058 | ADDRESS selection/swap, transient command and WITH redirection | host | Front end; configured execution open |
-| LC-REF-059 | CALL ON/OFF delayed condition handlers | host | Per-activation policy and one generated local/BIF dispatcher have opt/no-opt controlled event-injection proof under LC-STEP-75D; real producer integration, exact clause checkpoints, external targets and whole CALL review open |
+| LC-REF-059 | CALL ON/OFF delayed condition handlers | host | Per-activation policy and one generated local/BIF dispatcher have opt/no-opt controlled event-injection proof under LC-STEP-75D; IF/WHEN/DO and transfer checkpoint cases pass in both modes. Real producers, the complete clause/lifecycle matrix, external targets, dynamic missing-handler source identity and whole CALL remain open |
 | LC-REF-060 | DROP direct and parenthesized variable lists | text | Whole DROP instruction closed under LC-AC-62, including arbitrary compounds, indirect lists and Regina invalid-word skip; external pool API open elsewhere |
 | LC-REF-061 | EXIT value, fallthrough and finalization | host | Empty EXIT slice; value/finalization open |
 | LC-REF-062 | INTERPRET source, HALT, syntax and label restrictions | text | Front end; execution and `47.1` open |

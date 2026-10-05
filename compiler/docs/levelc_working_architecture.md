@@ -276,16 +276,21 @@ clause. A second queued HALT during a delayed HALT handler is retained on the
 interrupted caller and delivered when the handler returns; queued ERROR,
 FAILURE and NOTREADY during their own delayed handler are suppressed.
 
-The controlled test inserts only a `queueCallCondition` call after authored
-CALL ON clauses in the generated RXAS; all policy, checkpoint, handler and
-return behavior remains product generated code. Optimized and no-opt tests
-cover a local handler and a BIF handler with a Unicode description. ADDRESS,
-stream and host-interrupt producers are still owned by their later rows, so
-this is bounded CALL infrastructure rather than complete delayed-condition
-delivery. Checkpoints are currently after complete source statements, plus
-before a RETURN transfer. Exact clause boundaries inside IF, SELECT and DO,
-missing-handler source identity, external trap targets and host HALT capture
-remain open in the whole CALL review. No VM ISA or frame change was made.
+The controlled tests insert only `queueCallCondition` calls after authored
+CALL ON clauses in generated RXAS; all policy, checkpoint, handler and return
+behavior remains product generated code. Optimized and no-opt tests cover a
+local handler and a BIF handler with a Unicode description. The IF condition,
+each evaluated WHEN condition, and evaluated DO header condition capture
+their logical result before a checkpoint, so a delayed handler cannot alter
+the branch decision already made. Counted/controlled DO setup checks before
+the first body; empty repetitive bodies check on each iteration. LEAVE,
+ITERATE, RETURN and EXIT check before their transfer. These checks use the
+same generated dispatcher as ordinary completed statements. ADDRESS, stream
+and host-interrupt producers are still owned by their later rows, so this is
+bounded CALL infrastructure rather than complete delayed-condition delivery.
+Missing-handler source identity, external trap targets, full clause/lifecycle
+matrix and host HALT capture remain open in the whole CALL review. No VM ISA
+or frame change was made.
 
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including
