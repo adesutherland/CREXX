@@ -6379,6 +6379,15 @@ add_levelc_invalid_runtime_test(levelc_frame_called_late_procedure_17_1
         rexx_src/levelc_frame_called_late_procedure_17_1.rexx RXC-LC-17.1 "before")
 add_levelc_invalid_runtime_test(levelc_frame_called_late_procedure_17_1_noopt
         rexx_src/levelc_frame_called_late_procedure_17_1.rexx RXC-LC-17.1 -n)
+set_tests_properties(levelc_frame_main_procedure_17_1
+        levelc_frame_main_procedure_17_1_noopt PROPERTIES
+        ENVIRONMENT "LEVELC_EXPECTED_FRAGMENT=source: levelc_slice2_procedure_expose_unsupported.rexx:8:")
+set_tests_properties(levelc_frame_second_procedure_17_1
+        levelc_frame_second_procedure_17_1_noopt PROPERTIES
+        ENVIRONMENT "LEVELC_EXPECTED_FRAGMENT=source: levelc_frame_second_procedure_17_1.rexx:9:")
+set_tests_properties(levelc_frame_called_late_procedure_17_1
+        levelc_frame_called_late_procedure_17_1_noopt PROPERTIES
+        ENVIRONMENT "LEVELC_EXPECTED_FRAGMENT=source: levelc_frame_called_late_procedure_17_1.rexx:8:")
 
 add_levelc_invalid_runtime_test(levelc_strictc_leave_outside
         rexx_src/levelc_strictc_leave_outside.rexx RXC-LC-28.1)

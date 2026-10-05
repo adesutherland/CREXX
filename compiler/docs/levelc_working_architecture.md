@@ -498,9 +498,11 @@ which requires `PROCEDURE` to be the first instruction processed after the
 internal invocation. Regina permits later and nested placements in probes,
 so its acceptance of those forms is not the compatibility oracle for this
 rule. The source scanner retains its first-after-label check; runtime 17.1
-handles main fallthrough and a second `PROCEDURE` after another label. Runtime
-panic source currently points to the library check rather than the authored
-`PROCEDURE`; source provenance remains open. Missing function results, CALL
+handles main fallthrough and a second `PROCEDURE` after another label. In
+`63T-3G`, the compiler emits an anchored eligibility check and canonical
+`signal CLASSIC_SYNTAX` at the authored `PROCEDURE` clause. The activation
+method retains its direct-call guard. Optimized and no-opt runtime tests
+require the authored source line in the error. Missing function results, CALL
 result semantics, SIGNAL handlers and dynamic VALUE dispatch retain their
 separate worklist gates. No ARG, CALL, PROCEDURE or SIGNAL instruction is
 closed by these checkpoints.

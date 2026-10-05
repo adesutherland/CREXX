@@ -1752,6 +1752,46 @@ static int levelc_append_activation_method(Context *context,
     return 1;
 }
 
+static int levelc_append_procedure_entry(Context *context,
+                                         ASTNode *instructions,
+                                         ASTNode *stmt) {
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *eligible = receiver ? rxcp_remap_create_member_call(
+        context, stmt, receiver, "procedureEligible", NULL, 0) : NULL;
+    ASTNode *condition = ast_f(context, OP_COMPARE_EQUAL, stmt->token);
+    ASTNode *zero = rxcp_remap_create_integer_constant(
+        context, stmt, 0, TP_BOOLEAN);
+    ASTNode *signal = ast_ftt(context, ASSEMBLER, strdup("signal"));
+    ASTNode *signal_name = rxcp_remap_create_string_constant(
+        context, stmt, "CLASSIC_SYNTAX");
+    ASTNode *signal_detail = rxcp_remap_create_string_constant(
+        context, stmt, "RXC-LC-17.1: PROCEDURE is valid only as the first instruction of an internal call");
+    ASTNode *then_instructions = rxcp_remap_create_instruction_builder(
+        context, stmt);
+    ASTNode *then_block;
+    ASTNode *branch;
+
+    if (!eligible || !condition || !zero || !signal || !signal_name ||
+        !signal_detail || !then_instructions) return 0;
+    rxcp_remap_anchor_synthetic(condition, stmt);
+    add_ast(condition, eligible);
+    add_ast(condition, zero);
+    signal->free_node_string = 1;
+    signal->is_compiler_added = 1;
+    rxcp_remap_anchor_synthetic(signal, stmt);
+    add_ast(signal, signal_name);
+    add_ast(signal, signal_detail);
+    add_ast(then_instructions, signal);
+    then_block = rxcp_remap_create_do_block(context, stmt, then_instructions);
+    branch = then_block ? rxcp_remap_create_if_statement(
+        context, stmt, condition, then_block, NULL) : NULL;
+    if (!branch) return 0;
+    add_ast(instructions, branch);
+    return levelc_append_activation_method(context, instructions, stmt,
+                                           "enterProcedure");
+}
+
 static int levelc_append_call_argument(Context *context,
                                        ASTNode *source_node,
                                        ASTNode *prelude,
@@ -3487,8 +3527,7 @@ static int levelc_lower_statement(Context *context,
         return levelc_lower_arg_instruction(context, instructions, stmt, reason_out);
     }
     if (in_procedure && stmt->node_type == LEVELC_PROCEDURE) {
-        if (!levelc_append_activation_method(context, instructions, stmt,
-                                              "enterProcedure")) {
+        if (!levelc_append_procedure_entry(context, instructions, stmt)) {
             if (reason_out) *reason_out = "failed to validate PROCEDURE activation";
             return 0;
         }
