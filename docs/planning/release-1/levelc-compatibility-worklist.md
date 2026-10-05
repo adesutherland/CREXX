@@ -3225,7 +3225,15 @@ Before any code edit, check the proposed route against these observable gates:
    permissive Regina-only success oracle; `63T-3G`, emit runtime 17.1 at the
    authored PROCEDURE clause and retain the activation's direct-call guard; and
    `63T-3D`, full main/local/nested/recursive, opt/no-opt, source, linked and
-   normal-suite qualification before retiring the old partition.
+   normal-suite qualification before retiring the old partition; and
+   `63T-3H`, runtime function-result presence and missing-result errors
+   discovered by the frame matrix. Remove the old per-label static
+   value-RETURN admission test so a function call can enter any local
+   label, execute ARG and branch normally, then diagnose a reached bare
+   RETURN or missing result with Classic identity and source. Keep
+   subroutine RETURN and explicit empty-string results distinct, including
+   nested/recursive calls. The existing optional-result activation state
+   owns this distinction; complete CALL/RETURN reviews remain separate.
    Each checkpoint serves `LC-63T-02/03`; none alone closes ARG or SIGNAL.
 4. **LC-STEP-63T-4 (LC-63T-01/02/04; depends on 63T-3):** implement direct and
    VALUE SIGNAL, ON/OFF and named condition targets through the VM's frame
@@ -3439,9 +3447,38 @@ processes; the post-run process inventory was empty. Evidence:
 `cmake-build-debug/levelc-63t3d-matrix-focused.log`,
 `cmake-build-debug/levelc-63t3d-matrix-qual.log`, and the three ignored
 `cmake-build-debug/levelc-arg-*-reference.log` Regina probes.
+At exact code/test commit `3713800a4`, the Release product build passed.
+The first Release Level C sweep passed 485 tests and reported three Not Run
+because their test executables were absent from the Release tree; it found
+no product-test failure. Building those three targets and running the same
+three tests passed 3/3 on unchanged inputs, completing the 488-test
+partition without repeating the 485 passed cases. Guards reported no
+remaining children. Evidence: `cmake-build-debug/levelc-63t3d-release-build.log`,
+`cmake-build-debug/levelc-63t3d-release-qual.log`,
+`cmake-build-debug/levelc-63t3d-release-missing-build.log`, and
+`cmake-build-debug/levelc-63t3d-release-missing-tests.log`. The earlier
+RexxScript runtime 2/2 evidence remains applicable: this checkpoint changed
+only Level C test inputs, CTest registration and documentation, not shared
+runtime code.
 This is frame and ARG coverage, not LC-I-11 closure: remaining admitted
 invocation modes, full error/reference review, and the shared SIGNAL and
 CALL lifecycles remain open under LC-AC-71 and LC-63T-01–04.
+
+**2026-10-05 LC-STEP-63T-3H review finding.** A local function whose label
+contains only bare `RETURN` currently fails compilation as an unsupported
+main statement, before its invocation can execute ARG. The static
+`returns_value` bit examines only direct statements in a label segment;
+it cannot represent a reached RETURN, fallthrough to another label, or
+optional result per invocation. [IBM's RETURN instruction](https://www.ibm.com/docs/en/zos/2.5.0?topic=instructions-return)
+requires a result for a function, and its
+[compiler runtime errors](https://www.ibm.com/docs/SSLTBW_3.2.0/pdf/h1981606.pdf)
+distinguish an attempted bare function RETURN (45) from a function that
+finishes without data (44).
+Regina's bare-RETURN probe reported 44.1 instead; this difference is
+recorded as reference behavior, while the worklist's existing 45.1
+contract follows the IBM instruction/error definition. The minimal probe
+and diagnostics are retained at `cmake-build-debug/levelc-function-bare-return-*.log`.
+The repair and qualification of 3H remain open.
 
 ## Findings
 
