@@ -17,13 +17,15 @@ XRANGE, calculated directly without allocating the table. ASCII lowercase is
 the BYTE uppercase mapping.
 
 In UTF8, tables, PAD, and positions are Unicode codepoints and no normalization
-occurs. Output-with-omitted-input currently reports `RXC-LC-40.1`; the
-Unicode-first treatment of its implicit table is pending a language decision.
+occurs. With output supplied and input omitted, the implicit input table is
+U+0000 through U+00FF by codepoint ordinal; source scalars above U+00FF remain
+unchanged. Missing output positions use PAD as for an explicit input table.
 Invalid UTF-8 reports `23.1`; an invalid profile-sized PAD reports
 `40.23`; standard presence/count errors use `40.3`, `40.4`, and `40.5`.
 
 The direct optimized/unoptimized RexxValue harness covers uppercase, duplicate
 table entries, missing output padding, implicit BYTE XRANGE, Unicode mapping,
-arbitrary bytes, profile rejection, and standard errors. The native Level B
+arbitrary bytes, implicit Unicode ordinals, profile rejection, and standard
+errors. The native Level B
 codepoint API is documented separately in
 [`lib/rxfnsb/rexx/translate.md`](../rxfnsb/rexx/translate.md).

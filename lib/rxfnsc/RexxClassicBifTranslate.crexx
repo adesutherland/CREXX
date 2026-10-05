@@ -95,11 +95,6 @@ rexxclassicbif_translate: procedure = .RexxValue
     return .RexxValue.fromBinary(result)
   end
 
-  if output_supplied & \input_supplied then do
-    call rexxclassicbif_set_error(context_ref, "40.1", 0, "", "")
-    return .RexxValue("")
-  end
-
   source_text = context.argumentText(1)
   if \output_supplied & \input_supplied then do
     result_text = ""
@@ -130,7 +125,9 @@ rexxclassicbif_translate: procedure = .RexxValue
     assembler strchar source_codepoint,source_text,source_index
     table_position = .int
     table_position = -1
-    assembler poschar table_position,input_text,source_codepoint
+    if input_supplied then
+      assembler poschar table_position,input_text,source_codepoint
+    else if source_codepoint <= 255 then table_position = source_codepoint
     replacement_codepoint = source_codepoint
     if table_position >= 0 then do
       if table_position < output_length then

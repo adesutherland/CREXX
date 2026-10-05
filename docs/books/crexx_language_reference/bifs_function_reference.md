@@ -1587,11 +1587,11 @@ The default *pad* is a blank.
 
 When both tables are omitted, compiled Level C applies Unicode uppercase
 mapping. Direct `rxfnsc` BYTE callers retain their ASCII uppercase route.
-When the output table is supplied and the input table is omitted, Level B uses
-its fixed U+0000 through U+00FF codepoint domain; direct BYTE callers use
-their exact `00` through `FF` XRANGE. The current compiled Level C text route
-reports `40.1` for this form. Its treatment under the approved Unicode-first
-model is a pending language decision, not a settled compatibility exception.
+When the output table is supplied and the input table is omitted, compiled
+Level C and Level B use U+0000 through U+00FF codepoint ordinals as the implicit
+input table. A source character above U+00FF is unchanged. An ordinal beyond
+the output table uses the supplied pad, or blank by default. Direct BYTE
+callers use their exact `00` through `FF` XRANGE.
 Explicit Level C tables use codepoints. See the separate
 [Level B API](../../../lib/rxfnsb/rexx/translate.md) and
 [Level C BIF contract](../../../lib/rxfnsc/translate.md).

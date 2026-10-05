@@ -898,7 +898,7 @@ choice still require Adrian's approval.
    Unicode character BIF and ARG/PARSE audit, then continue the strict
    instruction queue. Use one codepoint template engine; remove obsolete
    profile-selection assumptions and qualify affected shared consumers.
-   `88E-1` audits the complete implemented character BIF family as one
+   `88E-1` (complete 2026-10-05) audits the complete implemented character BIF family as one
    Unicode text boundary, with codepoint positions, mapped ordinals, return
    types and RexxScript isolation. `88E-2` reviews ARG as a whole instruction
    for Unicode uppercasing, codepoint templates, activation modes and host
@@ -1029,10 +1029,19 @@ no-opt modes. Eight focused checks passed
 unlinked output byte for byte (`/tmp/crexx-character-linked.6SjH5G`), and the
 Debug Level C suite passed 454/454 (`/tmp/crexx-character-levelc.jssCD8`).
 The character BIF text paths and direct BYTE isolation are evidenced, but
-`88E-1` stays open: `TRANSLATE(source, output_table)` currently reports
-`40.1` when its implicit input table is omitted. Adrian approved the implicit
-table as U+0000–U+00FF ordinals on 2026-10-05, leaving other Unicode scalars
-unchanged. Implement and qualify that contract in the next BIF increment.
+`TRANSLATE(source, output_table)` was the remaining implemented character-BIF
+gap: the Unicode route reported `40.1` for the omitted input table. Adrian
+approved U+0000–U+00FF implicit input ordinals on 2026-10-05, with higher
+Unicode scalars unchanged. The text route now calculates the ordinal position
+without allocating a table and uses the existing output/pad codepoint path.
+The direct shared BIF harness covers NUL, U+0001, U+00FF, higher scalars,
+short/empty outputs and BYTE isolation in optimized/no-opt modes; four
+focused checks passed (`/tmp/crexx-translate-focused.ZaCYsL`). The compiled
+Level C fixture passes both modes and a linked image with identical expected
+output (`/tmp/crexx-translate-linked.fivHuQ`). The normal Debug Level C suite
+passed 462/462 (`/tmp/crexx-translate-levelc.GcQqMo`). `88E-1` completes
+the implemented character-BIF Unicode audit; unimplemented BIF services,
+full reference semantics and host configuration remain open under LC-AC-04/06.
 
 **2026-10-04 LC-STEP-88E-2A ARG checkpoint.** The Unicode ARG probe first
 exposed that a local procedure could read its own ARG frame but could not
@@ -2666,12 +2675,11 @@ separately by `levelc_arg_exact_bytes*`. `RexxClassicConfig` already owns BYTE
 and UTF8 modes, but generated Level C main constructs a BYTE-default owner
 without a host/profile selector. Opt-in UTF8 qualification remains open under
 LC-AC-71 and the shared LC-AC-04/06 configuration contract.
-The host fixture initially used `CALL nested ARG(1),,ARG(2)`; Regina accepts
-that expression shape, but Level C currently reports `unsupported CALL
-argument expression`. The host regression now isolates ARG entry behavior.
-Completing expressions as CALL actuals belongs to the open `SYN-CLASSIC-CALL`
-row; this unsupported CALL form is not counted as a working ARG invocation
-mode.
+The host fixture initially used `CALL nested ARG(1),,ARG(2)` and was narrowed
+to isolate host ARG entry behavior while direct CALL expressions were open.
+LC-STEP-88E-2B now admits that expression/omission shape in compiled Level C,
+including recursive frames; it remains a CALL dependency receipt rather than
+a completed host or full ARG invocation audit.
 
 **LC-STEP-73H historical profile bridge — superseded 2026-10-04.** The
 following proposal and `LC-73H-*` checks are retained as design history and
@@ -3331,7 +3339,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-EXPRESSIONS` | Classic arithmetic, comparison, Boolean, and concatenation expressions | Bounded slice: documented operator family | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-BIF-CALL` | Recognised ANSI BIF calls | Direct compiler table for 57 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and shared direct sweep under LC-STEP-88E-1 | TRANSLATE implicit-table decision, remaining services, configured context and complete reference proof open |
+| `SYN-CLASSIC-BIF-CALL` | Recognised ANSI BIF calls | Direct compiler table for 57 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and implicit TRANSLATE ordinals under LC-STEP-88E-1 | Remaining services, configured context and complete reference proof open |
 | `SYN-CLASSIC-LOCAL-CALL` | Direct local function/procedure calls | Bounded slice: direct local function and procedure calls | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-DSLSH` | Source tree, diagnostics, and syntax-highlighting projection | Parser-mode milestone | Execution and full diagnostic conformance remain separate |
 | `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Bounded slice: ten proven slices | Remaining Classic forms, errors and configuration proof open |
