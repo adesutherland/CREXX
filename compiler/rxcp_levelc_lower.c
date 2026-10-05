@@ -157,6 +157,7 @@ static const LevelCBifEntry levelc_direct_bifs[] = {
     LEVELC_DIRECT_BIF("CENTRE", "rexxclassicbifcenter", "rexxclassicbif_centre"),
     LEVELC_DIRECT_BIF("CHANGESTR", "rexxclassicbifchangestr", "rexxclassicbif_changestr"),
     LEVELC_DIRECT_BIF("COMPARE", "rexxclassicbifcompare", "rexxclassicbif_compare"),
+    LEVELC_DIRECT_BIF("CONDITION", "rexxclassicbifcondition", "rexxclassicbif_condition"),
     LEVELC_DIRECT_BIF("COPIES", "rexxclassicbifcopies", "rexxclassicbif_copies"),
     LEVELC_DIRECT_BIF("COUNTSTR", "rexxclassicbifcountstr", "rexxclassicbif_countstr"),
     LEVELC_DIRECT_BIF("D2C", "rexxclassicbifd2c", "rexxclassicbif_d2c"),
@@ -2252,7 +2253,8 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     int activation_bif;
 
     if (!context || !expr || !bif_name || !prelude) return NULL;
-    activation_bif = strcmp(bif_name, "ARG") == 0;
+    activation_bif = strcmp(bif_name, "ARG") == 0 ||
+                     strcmp(bif_name, "CONDITION") == 0;
 
     args_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_ARGS_PREFIX, expr);
     exists_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_EXISTS_PREFIX, expr);
@@ -4675,7 +4677,7 @@ static int levelc_append_signal_trampolines(Context *context,
                                          handler->condition, NULL)
             : NULL;
         ASTNode *pool = levelc_pool_ref(context, handler->source, VAR_SYMBOL);
-        ASTNode *args[2];
+        ASTNode *args[3];
         ASTNode *record;
         ASTNode *branch;
         if (!handler->trampoline ||
@@ -4688,12 +4690,17 @@ static int levelc_append_signal_trampolines(Context *context,
                 handler->condition_id, 0)) goto fail;
         args[0] = rxcp_remap_create_reference_expr(
             context, handler->source, pool);
-        args[1] = rxcp_remap_create_named_ref(
+        args[1] = rxcp_remap_create_reference_expr(
+            context, handler->source,
+            rxcp_remap_create_named_ref(
+                context, handler->source, VAR_SYMBOL,
+                LEVELC_ACTIVATION_SYMBOL));
+        args[2] = rxcp_remap_create_named_ref(
             context, handler->source, VAR_SYMBOL,
             LEVELC_SIGNAL_EVENT_SYMBOL);
-        record = args[0] && args[1] ? rxcp_remap_create_function_call(
+        record = args[0] && args[1] && args[2] ? rxcp_remap_create_function_call(
             context, handler->source,
-            "rexxclassicbifs.rexxclassic_signal_record", args, 2) : NULL;
+            "rexxclassicbifs.rexxclassic_signal_record", args, 3) : NULL;
         record = record ? rxcp_remap_create_call_statement(
             context, handler->source, record) : NULL;
         if (!record) goto fail;

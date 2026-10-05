@@ -599,8 +599,19 @@ the symbol has a value, respecting compound-tail substitution and stem
 defaults. A missing value raises a typed event with the resolved symbol as
 its Unicode description at the read's source node. Focused default/OFF,
 one-shot, nested policy, compound and missing-target tests pass in optimized
-and no-opt modes. Host, I/O, interrupt and numeric producers, `CONDITION()`
-state, and the complete SIGNAL matrix remain open under the worklist.
+and no-opt modes. Host, I/O, interrupt and numeric producers and the complete
+SIGNAL matrix remain open under the worklist.
+
+The `63T-4D3-3` state checkpoint records a delivered condition in the
+activation alongside its policy. Internal calls copy both; a child trap
+updates only the child, so the parent's last condition reappears on return.
+The direct `CONDITION()` BIF reads the activation's C/D/E/I/S fields and
+current policy state, using the common argument checker. NOVALUE records its
+resolved symbol and an empty ANSI extra field; Regina's `0` extra result is
+a documented reference divergence. SYNTAX records its full numeric identity
+and an error-prefixed description, but catalog-expanded wording remains
+open. Host, I/O, interrupt and numeric producers, exact description/extra
+data, and the complete SIGNAL matrix remain worklist obligations.
 
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.

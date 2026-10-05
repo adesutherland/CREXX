@@ -32,6 +32,7 @@ import rexxclassicbitfunctions
 import rexxclassiccharacterscan
 import rexxclassicencoding
 import rexxclassicconditionevent
+import rexxactivation
 import rxfnsb
 
 /**
@@ -233,22 +234,45 @@ rexxclassicbif_checked: procedure = .RexxValue
  * Record the visible Classic condition fields when a VM branch trap lands.
  *
  * @param pool_ref the installing activation's visible variable pool
+ * @param activation_ref the current Classic invocation
  * @param condition the VM event bound by sigbrv
  * @return no value; SIGL and a SYNTAX RC are written to the pool
  */
 rexxclassic_signal_record: procedure = .void
-  arg pool_ref = reference .RexxVariablePool, condition = .runtime_signal
+  arg pool_ref = reference .RexxVariablePool, activation_ref = reference .RexxActivationArguments, condition = .runtime_signal
   pool = dereference pool_ref
+  activation = dereference activation_ref
   call pool.setSymbolValue("SIGL", .RexxValue.fromInt(condition.line()))
   if condition.name() = "CLASSIC_SYNTAX" then do
     detail = condition.message()
     number = "0"
+    code = ""
+    description = detail
     if left(detail, 7) = "RXC-LC-" then do
       tail = substr(detail, 8)
-      point = pos(".", tail)
-      if point > 1 then number = substr(tail, 1, point - 1)
+      space_pos = pos(" ", tail)
+      colon = pos(":", tail)
+      separator = space_pos
+      if separator = 0 | (colon > 0 & colon < separator) then separator = colon
+      if separator > 1 then do
+        code = substr(tail, 1, separator - 1)
+        remainder = strip(substr(tail, separator + 1))
+        description = "Error " || code
+        if remainder <> "" then description = description || ": " || remainder
+      end
+      else code = tail
+      point = pos(".", code)
+      if point > 1 then number = substr(code, 1, point - 1)
     end
     call pool.setSymbolValue("RC", .RexxValue(number))
+    call activation.recordCondition(1, description, code, "SIGNAL")
+  end
+  else if condition.name() = "CLASSIC_CONDITION" then do
+    payload = condition.payload()
+    if payload is .RexxClassicConditionEvent then do
+      event = payload as .RexxClassicConditionEvent
+      call activation.recordCondition(event.conditionId(), event.description(), "", "SIGNAL")
+    end
   end
   return
 
@@ -534,7 +558,7 @@ _check_arg_type: procedure = .int
     return 1
   end
 
-  if rule = "ABLMNSUWX" | rule = "EINO" | rule = "EO" | rule = "LTB" | rule = "MN" |,
+  if rule = "ABLMNSUWX" | rule = "CDEIS" | rule = "EINO" | rule = "EO" | rule = "LTB" | rule = "MN" |,
      rule = "BDEMNOSUW" | rule = "BDENOSU" |,
      rule = "CEHLMNORS" | rule = "CHLMNS" then do
     if length(value) = 0 then do

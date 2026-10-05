@@ -358,7 +358,7 @@ source for planning. This is implementation guidance, not a code copy.
 | --- | --- | --- | --- | --- |
 | `ADDRESS` | `ADDRESS([option])` | `oEINO` | Returns current command environment name, or input/output target position/type/resource for option `E`, `I`, or `O`. | Use current `ADDRESS` runtime state, not command dispatch. |
 | `ARG` | `ARG([n [,option]])` | `oWHOLE>0 oENO`, or required both when option supplied | No args returns argument count. One arg returns argument `n`. With option, returns existence/omission state. | Needs routine/program argument vector and existence flags. |
-| `CONDITION` | `CONDITION([option])` | `oCDEIS` | Returns current condition name, description, extra data, instruction, or enabled state. Null when no current condition. | Depends on real condition runtime. |
+| `CONDITION` | `CONDITION([option])` | `oCDEIS` | Returns current condition name, description, extra data, instruction, or enabled state. Null when no current condition. | Direct activation-local BIF covers trapped SYNTAX/NOVALUE and validation; exact catalog description, extra data and other producers remain open. |
 | `DIGITS` | `DIGITS()` | none | Returns current `NUMERIC DIGITS`. | Existing `numeric.crexx` is relevant but Level C must use Classic current frame settings. |
 | `ERRORTEXT` | `ERRORTEXT(code [,option])` | `r0_90 oSN` | Returns unexpanded message text; `S` requests specification English, `N` allows localized text. | Backed by `levelc_standard_error_messages.md`; reconcile `0_90` subcode issue. |
 | `FORM` | `FORM()` | none | Returns current `NUMERIC FORM`. | Must return Classic form wording. |

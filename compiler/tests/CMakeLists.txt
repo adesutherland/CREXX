@@ -5865,6 +5865,42 @@ add_levelc_runtime_slice_test(levelc_signal_policy_names
         rexx_src/levelc_signal_policy_names.rexx "all names\n")
 add_levelc_runtime_slice_test(levelc_signal_policy_names_noopt
         rexx_src/levelc_signal_policy_names.rexx "all names\n" -n)
+add_levelc_runtime_slice_test(levelc_condition_state
+        rexx_src/levelc_condition_state.rexx
+        "pre=|||||\ncaught=SIGNAL|NOVALUE|MISSING||SIGNAL|OFF\nnested=NOVALUE|MISSING|OFF\nrestored=NOVALUE|MISSING|OFF\nenabled=ON\n")
+add_levelc_runtime_slice_test(levelc_condition_state_noopt
+        rexx_src/levelc_condition_state.rexx
+        "pre=|||||\ncaught=SIGNAL|NOVALUE|MISSING||SIGNAL|OFF\nnested=NOVALUE|MISSING|OFF\nrestored=NOVALUE|MISSING|OFF\nenabled=ON\n" -n)
+add_levelc_runtime_slice_test(levelc_condition_syntax_state
+        rexx_src/levelc_condition_syntax_state.rexx
+        "name=SYNTAX\ncode=40.14\ndescription=Error 40.14\ninstruction=SIGNAL\nstate=OFF\nrc=40\n")
+add_levelc_runtime_slice_test(levelc_condition_syntax_state_noopt
+        rexx_src/levelc_condition_syntax_state.rexx
+        "name=SYNTAX\ncode=40.14\ndescription=Error 40.14\ninstruction=SIGNAL\nstate=OFF\nrc=40\n" -n)
+add_levelc_runtime_slice_test(levelc_condition_nested_restore
+        rexx_src/levelc_condition_nested_restore.rexx
+        "outer=NOVALUE|MISSING\ninner=SYNTAX|40.14\nafter=NOVALUE|MISSING|OFF\n")
+add_levelc_runtime_slice_test(levelc_condition_nested_restore_noopt
+        rexx_src/levelc_condition_nested_restore.rexx
+        "outer=NOVALUE|MISSING\ninner=SYNTAX|40.14\nafter=NOVALUE|MISSING|OFF\n" -n)
+add_levelc_runtime_syntax_signal_test(levelc_condition_bad_option
+        rexx_src/levelc_condition_bad_option.rexx "40.28" "before\n"
+        "levelc_condition_bad_option.rexx:3:")
+add_levelc_runtime_syntax_signal_test(levelc_condition_bad_option_noopt
+        rexx_src/levelc_condition_bad_option.rexx "40.28" "before\n"
+        "levelc_condition_bad_option.rexx:3:" -n)
+add_levelc_runtime_syntax_signal_test(levelc_condition_bad_empty
+        rexx_src/levelc_condition_bad_empty.rexx "40.21" "before\n"
+        "levelc_condition_bad_empty.rexx:3:")
+add_levelc_runtime_syntax_signal_test(levelc_condition_bad_empty_noopt
+        rexx_src/levelc_condition_bad_empty.rexx "40.21" "before\n"
+        "levelc_condition_bad_empty.rexx:3:" -n)
+add_levelc_runtime_syntax_signal_test(levelc_condition_bad_arity
+        rexx_src/levelc_condition_bad_arity.rexx "40.4" "before\n"
+        "levelc_condition_bad_arity.rexx:3:")
+add_levelc_runtime_syntax_signal_test(levelc_condition_bad_arity_noopt
+        rexx_src/levelc_condition_bad_arity.rexx "40.4" "before\n"
+        "levelc_condition_bad_arity.rexx:3:" -n)
 add_levelc_runtime_slice_test(levelc_signal_novalue_lifecycle
         rexx_src/levelc_signal_novalue_lifecycle.rexx
         "before\ncaught=4|RC\nAFTER_FIRST\nagain=11|RC\n")

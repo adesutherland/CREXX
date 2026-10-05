@@ -1,0 +1,58 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifcondition expose rexxclassicbif_condition
+import rexxclassicbifs
+import rexxactivation
+import rexxvalue
+
+/**
+ * Read the current Classic invocation's last trapped condition.
+ *
+ * @bif CONDITION
+ * @signature CONDITION([option])
+ * @checkargs oCDEIS
+ * @param context_ref BIF operands and diagnostic context
+ * @param activation_ref active Classic invocation
+ * @return condition name, description, extra data, trapping instruction, or current state
+ * @sandbox activation-local
+ */
+rexxclassicbif_condition: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext, activation_ref = reference .RexxActivationArguments
+  context = dereference context_ref
+  activation = dereference activation_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "oCDEIS") = 0 then return .RexxValue("")
+
+  option = "I"
+  if context.argumentExists(1) then option = context.argumentText(1)
+  if option = "C" then return .RexxValue(activation.currentConditionName())
+  if option = "D" then return .RexxValue(activation.currentConditionDescription())
+  if option = "E" then return .RexxValue(activation.currentConditionExtra())
+  if option = "I" then return .RexxValue(activation.currentConditionInstruction())
+  condition_id = activation.currentConditionId()
+  if condition_id = 0 then return .RexxValue("")
+  if activation.signalPolicy(condition_id) > 0 then return .RexxValue("ON")
+  return .RexxValue("OFF")

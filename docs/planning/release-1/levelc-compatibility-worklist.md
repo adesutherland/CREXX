@@ -21,8 +21,8 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 542/542 with process memory monitoring after
-the seven-name SIGNAL policy and bounded NOVALUE producer checkpoint below.
+Debug Level C checkpoint passed 554/554 with process memory monitoring after
+the bounded activation-local `CONDITION()` checkpoint below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
@@ -3271,8 +3271,11 @@ Before any code edit, check the proposed route against these observable gates:
    transport with a typed condition payload (`4D3-1`), then dispatch its
    seven-name activation policy and one-shot handler selection through the
    same frame path (`4D3-2`), then qualify available condition producers and
-   explicitly assign missing host/numeric producers to their instruction or
-   host rows (`4D3-3`). These remain checkpoints of one open SIGNAL instruction.
+   activation-local `CONDITION()` state, and explicitly assign missing
+   host/numeric producers to their instruction or host rows (`4D3-3`).
+   The `4D3-3` reference matrix checks `CONDITION` C/D/E/I/S and omission,
+   source-order policy changes, nested save/restore, and invalid options
+   before a product edit. These remain checkpoints of one open SIGNAL instruction.
    Each checkpoint retains focused evidence and is not SIGNAL closure.
 5. **LC-STEP-63T-5 (LC-63T-01–04/LC-AC-76; depends on 63T-4):** qualify the complete
    SIGNAL reference matrix, opt/no-opt, raw/canonical AST, linked toolchain,
@@ -3870,6 +3873,46 @@ LOSTDIGITS needs numeric-context integration. `CONDITION()` needs current
 event name/description/state behavior for trap handlers. Full SIGNAL error,
 source, linked, optimized/no-opt and Level B/G/RexxScript isolation under
 `63T-5`, the ARG review and all Level C/Release 1 criteria remain open.
+
+**2026-10-05 LC-STEP-63T-4D3-3 condition-state checkpoint.** A trapped
+condition now records its name, description, extra field and trapping
+instruction in the Classic activation. An internal call copies those fields
+with its policy; a trap in the child changes only the child's current
+condition, and the caller's state is restored on return. The direct
+`CONDITION([option])` BIF reads C/D/E/I/S, defaults to I, normalizes valid
+option initials and uses the shared argument checker for invalid option,
+empty option and excess arguments. `S` reads the current policy, so one-shot
+delivery reports OFF and a later ON reports ON. The bounded NOVALUE path
+records the resolved symbol description and an empty ANSI extra field;
+Regina returned `0` for `CONDITION('E')` in the retained probe, so that
+implementation-specific difference is explicit. SYNTAX supplies the
+major/minor error identity and an error-prefixed diagnostic description,
+but the exact catalog-expanded `CONDITION('D')` text remains open.
+
+Regina reference probes cover all five selectors, omission, nested
+save/restore and 40.21/40.28/40.4 validation. The optimized/no-opt new cases
+passed 12/12; adjacent SIGNAL and runtime cases passed 20/20. The guarded
+core/library build passed, and the normal Debug Level C suite passed 554/554
+on these code/test/build inputs. The broad run peaked at about 1979 MiB
+aggregate descendant RSS and left no child processes; the post-run inventory
+was empty. Evidence:
+`cmake-build-debug/levelc-condition-reference.log`,
+`cmake-build-debug/levelc-condition-syntax-reference.log`,
+`cmake-build-debug/levelc-condition-nested-restore-reference.log`,
+`cmake-build-debug/levelc-condition-empty-reference.log`,
+`cmake-build-debug/levelc-condition-extra-reference.log`,
+`cmake-build-debug/levelc-63t4d3c-build2.log`,
+`cmake-build-debug/levelc-63t4d3c-rebuild.log`,
+`cmake-build-debug/levelc-63t4d3c-rebuild2.log`,
+`cmake-build-debug/levelc-63t4d3c-focused5.log`,
+`cmake-build-debug/levelc-63t4d3c-adjacent-focused.log`, and
+`cmake-build-debug/levelc-63t4d3c-debug-qual.log`.
+
+`LC-STEP-63T-4D3-3` and SIGNAL remain open: complete SYNTAX description
+rendering, ERROR/FAILURE/HALT/NOTREADY host and I/O producers, LOSTDIGITS
+numeric producer, full condition extra-data behavior and the 63T-5 reference,
+linked and isolation matrix still need proof. ARG and full Level C/Release 1
+criteria remain open.
 
 ## Findings
 

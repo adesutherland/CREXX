@@ -48,6 +48,10 @@ RexxActivationArguments: class
   procedure_eligible = .boolean
   function_call = .boolean
   signal_policy = .int[]
+  current_condition = .int
+  condition_description = .string
+  condition_extra = .string
+  condition_instruction = .string
 
   *: factory
     slot_count = 0
@@ -56,13 +60,18 @@ RexxActivationArguments: class
     return_present = 0
     procedure_eligible = 0
     function_call = 0
+    current_condition = 0
+    condition_description = ""
+    condition_extra = ""
+    condition_instruction = ""
     do index = 1 to 7
       signal_policy[index] = 0
     end
     return
 
   /**
-   * Copy the caller's Classic condition policy into a new invocation.
+   * Copy the caller's Classic condition policy and last trapped condition
+   * into a new invocation. Local changes are restored when it returns.
    * @param parent_ref the caller activation
    */
   inheritSignalPolicy: method = .void
@@ -71,7 +80,48 @@ RexxActivationArguments: class
     do index = 1 to 7
       signal_policy[index] = parent.signalPolicy(index)
     end
+    current_condition = parent.currentConditionId()
+    condition_description = parent.currentConditionDescription()
+    condition_extra = parent.currentConditionExtra()
+    condition_instruction = parent.currentConditionInstruction()
     return
+
+  /** Record the condition currently visible to CONDITION(). */
+  recordCondition: method = .void
+    arg condition = .int, description = .string, extra = .string, instruction = .string
+    if condition < 1 | condition > 7 then return
+    current_condition = condition
+    condition_description = description
+    condition_extra = extra
+    condition_instruction = instruction
+    return
+
+  /** @return Classic ID of the last trapped condition, or zero. */
+  currentConditionId: method = .int
+    return current_condition
+
+  /** @return Classic name of the last trapped condition, or null. */
+  currentConditionName: method = .string
+    if current_condition = 1 then return "SYNTAX"
+    if current_condition = 2 then return "ERROR"
+    if current_condition = 3 then return "FAILURE"
+    if current_condition = 4 then return "HALT"
+    if current_condition = 5 then return "NOTREADY"
+    if current_condition = 6 then return "NOVALUE"
+    if current_condition = 7 then return "LOSTDIGITS"
+    return ""
+
+  /** @return description of the last trapped condition. */
+  currentConditionDescription: method = .string
+    return condition_description
+
+  /** @return extra data of the last trapped condition. */
+  currentConditionExtra: method = .string
+    return condition_extra
+
+  /** @return instruction that trapped the last condition. */
+  currentConditionInstruction: method = .string
+    return condition_instruction
 
   /**
    * Select the ON clause active for one Classic condition in this invocation.
