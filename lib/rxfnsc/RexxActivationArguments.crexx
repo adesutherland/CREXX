@@ -57,6 +57,7 @@ RexxActivationArguments: class
   dispatch_condition = .int
   dispatch_description = .string
   dispatch_line = .int
+  call_dispatch_error = .string
   current_condition = .int
   condition_description = .string
   condition_extra = .string
@@ -77,6 +78,7 @@ RexxActivationArguments: class
     dispatch_condition = 0
     dispatch_description = ""
     dispatch_line = 0
+    call_dispatch_error = ""
     current_condition = 0
     condition_description = ""
     condition_extra = ""
@@ -246,6 +248,22 @@ RexxActivationArguments: class
   /** @return the causing source line selected by the last clause checkpoint */
   dispatchedConditionLine: method = .int
     return dispatch_line
+
+  /**
+   * Retain a delayed CALL resolution error until the authored clause
+   * checkpoint can raise it with that clause's source location.
+   * @param detail complete Classic diagnostic detail
+   */
+  recordCallDispatchError: method = .void
+    arg detail = .string
+    call_dispatch_error = detail
+    return
+
+  /** @return the pending delayed CALL error, consuming it once */
+  takeCallDispatchError: method = .string
+    detail = call_dispatch_error
+    call_dispatch_error = ""
+    return detail
 
   /**
    * Read the selected ON clause for one Classic condition.

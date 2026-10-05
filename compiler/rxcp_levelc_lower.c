@@ -45,6 +45,7 @@
 #define LEVELC_ACTIVATION_SYMBOL "__rxcp_levelc_activation"
 #define LEVELC_CALL_ACTIVATION_PREFIX "__rxcp_levelc_call_activation_"
 #define LEVELC_CALL_TRAP_SELECTED_PREFIX "__rxcp_levelc_call_trap_selected_"
+#define LEVELC_CALL_TRAP_ERROR_PREFIX "__rxcp_levelc_call_trap_error_"
 #define LEVELC_CALL_CLAUSE_RESULT_PREFIX "__rxcp_levelc_call_clause_result_"
 #define LEVELC_MAIN_ARG_INDEX_PREFIX "__rxcp_levelc_main_arg_index_"
 #define LEVELC_ACTIVATION_CLASS "RexxActivationArguments"
@@ -3071,16 +3072,11 @@ static ASTNode *levelc_lower_call_statement(Context *context,
     return result;
 }
 
-static int levelc_append_call_trap_checkpoint(Context *context,
-                                               ASTNode *instructions,
-                                               ASTNode *source,
-                                               LevelCLowerPlan *plan) {
+static ASTNode *levelc_call_trap_dispatch_expr(Context *context,
+                                                ASTNode *source) {
     ASTNode *args[4];
     ASTNode *pool;
-    ASTNode *call;
-    ASTNode *statement;
 
-    if (!plan || !plan->call_handler_count) return 1;
     pool = levelc_pool_ref(context, source, VAR_SYMBOL);
     args[0] = pool ? rxcp_remap_create_reference_expr(context, source, pool) : NULL;
     args[1] = levelc_config_ref(context, source, VAR_SYMBOL);
@@ -3088,13 +3084,59 @@ static int levelc_append_call_trap_checkpoint(Context *context,
         context, source, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
     args[3] = rxcp_remap_create_integer_constant(
         context, source, 0, TP_INTEGER);
-    call = args[0] && args[1] && args[2] && args[3]
+    return args[0] && args[1] && args[2] && args[3]
         ? rxcp_remap_create_function_call(
             context, source, LEVELC_CALL_TRAP_DISPATCH_NAME, args, 4) : NULL;
+}
+
+static int levelc_append_call_trap_checkpoint(Context *context,
+                                               ASTNode *instructions,
+                                               ASTNode *source,
+                                               LevelCLowerPlan *plan) {
+    ASTNode *call;
+    ASTNode *statement;
+    ASTNode *receiver;
+    ASTNode *error;
+    ASTNode *assignment;
+    ASTNode *condition;
+    ASTNode *detail;
+    char *error_name;
+
+    if (!plan || !plan->call_handler_count) return 1;
+    call = levelc_call_trap_dispatch_expr(context, source);
     statement = call ? rxcp_remap_create_call_statement(
         context, source, call) : NULL;
     if (!statement) return 0;
     add_ast(instructions, statement);
+
+    error_name = rxcp_remap_create_generated_node_name(
+        LEVELC_CALL_TRAP_ERROR_PREFIX, source);
+    receiver = rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    error = receiver ? rxcp_remap_create_member_call(
+        context, source, receiver, "takeCallDispatchError", NULL, 0) : NULL;
+    assignment = error && error_name
+        ? rxcp_remap_create_named_assignment(
+            context, source, error_name, error) : NULL;
+    condition = ast_f(context, OP_COMPARE_NEQ, source->token);
+    detail = error_name ? rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, error_name) : NULL;
+    if (!assignment || !condition || !detail) {
+        free(error_name);
+        return 0;
+    }
+    rxcp_remap_anchor_synthetic(condition, source);
+    add_ast(condition, rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, error_name));
+    add_ast(condition, rxcp_remap_create_string_constant(
+        context, source, ""));
+    add_ast(instructions, assignment);
+    if (!levelc_append_classic_error_if_expr(
+            context, instructions, source, condition, detail)) {
+        free(error_name);
+        return 0;
+    }
+    free(error_name);
     return 1;
 }
 
@@ -3168,22 +3210,26 @@ static int levelc_append_call_trap_dispatch_body(Context *context,
         } else {
             size_t length = strlen(handler->target_name) + 64;
             char *detail = malloc(length);
-            ASTNode *signal = ast_ftt(context, ASSEMBLER, strdup("signal"));
-            if (!detail || !signal) {
+            ASTNode *activation;
+            ASTNode *detail_arg[1];
+            ASTNode *record;
+            if (!detail) {
                 free(detail);
                 goto fail;
             }
             snprintf(detail, length, "RXC-LC-16.1: Label not found: %s",
                      handler->target_name);
-            signal->free_node_string = 1;
-            signal->is_compiler_added = 1;
-            rxcp_remap_anchor_synthetic(signal, source);
-            add_ast(signal, rxcp_remap_create_string_constant(
-                context, source, "CLASSIC_SYNTAX"));
-            add_ast(signal, rxcp_remap_create_string_constant(
-                context, source, detail));
-            add_ast(then_instructions, signal);
+            activation = rxcp_remap_create_named_ref(
+                context, source, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+            detail_arg[0] = rxcp_remap_create_string_constant(
+                context, source, detail);
+            record = activation && detail_arg[0]
+                ? rxcp_remap_create_member_call_statement(
+                    context, source, activation, "recordCallDispatchError",
+                    detail_arg, 1) : NULL;
             free(detail);
+            if (!record) goto fail;
+            add_ast(then_instructions, record);
         }
         then_block = rxcp_remap_create_do_block(
             context, source, then_instructions);
@@ -3200,11 +3246,15 @@ static int levelc_append_call_trap_dispatch_body(Context *context,
             : NULL;
         ASTNode *then_instructions = rxcp_remap_create_instruction_builder(
             context, source);
+        ASTNode *recursive_call = levelc_call_trap_dispatch_expr(
+            context, source);
+        ASTNode *recursive_statement = recursive_call
+            ? rxcp_remap_create_call_statement(
+                context, source, recursive_call) : NULL;
         ASTNode *then_block;
         ASTNode *branch;
-        if (!pending || !then_instructions ||
-            !levelc_append_call_trap_checkpoint(
-                context, then_instructions, source, plan)) goto fail;
+        if (!pending || !then_instructions || !recursive_statement) goto fail;
+        add_ast(then_instructions, recursive_statement);
         then_block = rxcp_remap_create_do_block(
             context, source, then_instructions);
         branch = then_block ? rxcp_remap_create_if_statement(

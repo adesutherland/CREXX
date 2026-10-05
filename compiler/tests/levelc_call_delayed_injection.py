@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Exercise compiled CALL traps with a controlled pending event in RXAS.
 
-ADDRESS and host HALT producers have separate Level C owners. This test adds
-only the queue operation at two authored CALL ON clauses; all handler policy,
+ADDRESS and host HALT producers have separate Level C owners. These tests add
+only controlled queue operations near authored clauses; handler policy,
 clause-end delivery, invocation, CONDITION and RESULT behavior is product code.
 """
 
@@ -12,7 +12,7 @@ import re
 import subprocess
 
 
-def run(command, cwd, log_path):
+def run(command, cwd, log_path, expect_failure=False):
     process = subprocess.Popen(
         command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
@@ -22,7 +22,7 @@ def run(command, cwd, log_path):
         process.communicate()
         raise RuntimeError(f"timed out: {command[0]}")
     log_path.write_bytes(output)
-    if process.returncode:
+    if (process.returncode != 0) != expect_failure:
         raise RuntimeError(
             f"{command[0]} exited {process.returncode}; see {log_path}: "
             + output[-2000:].decode("utf-8", errors="replace"))
@@ -111,11 +111,49 @@ def inject_boundaries(assembly, sites_description):
     return append_queue_import(assembly[:body_start] + body + assembly[body_end:])
 
 
+def inject_lifecycle(assembly):
+    body_start = assembly.index("__rxcp_levelc_body() .locals=")
+    body_end = assembly.index(
+        "__rxcp_levelc_call_trap_dispatch() .locals=", body_start)
+    body = assembly[body_start:body_end]
+    on = re.search(
+        r"   call r\d+,§rexxactivation\.rexxactivationarguments\.setcallpolicy\(\),r\d+\n"
+        r"   swap a3,r\d+\n", body)
+    off = re.search(
+        r"   call r\d+,§rexxactivation\.rexxactivationarguments\.setsignalpolicy\(\),r\d+\n"
+        r"   swap a3,r\d+\n", body)
+    first = re.search(r'   load r\d+,"first"\n', body)
+    after_first = first and re.search(r"   say r\d+\n", body[first.end():])
+    body_calls = list(re.finditer(
+        r"   call4 r\d+,__rxcp_levelc_body\(\),[^\n]*\n", body))
+    after_child = len(body_calls) == 2 and re.search(
+        r"   call4 r\d+,__rxcp_levelc_call_trap_dispatch\(\),[^\n]*\n",
+        body[body_calls[1].end():])
+    if not on or not off or not first or not after_first or not after_child:
+        raise RuntimeError("expected CALL ON, first SAY, CALL OFF and child CALL sites")
+    child_checkpoint = body_calls[1].end() + after_child.start()
+    sites = (on.end(), first.end() + after_first.end(), off.end(), child_checkpoint)
+    if list(sites) != sorted(sites):
+        raise RuntimeError("lifecycle sites are not in source order")
+    maximum = max(int(value) for value in re.findall(r"\br(\d+)\b", body))
+    details = ((3, "first"), (4, "again"), (6, "off"), (9, "parent"))
+    for ordinal in reversed(range(len(sites))):
+        base = maximum + 1 + ordinal * 6
+        line, description = details[ordinal]
+        site = sites[ordinal]
+        body = body[:site] + queue_snippet(base, line, description) + body[site:]
+    body = re.sub(
+        r"(__rxcp_levelc_body\(\) \.locals=)\d+",
+        lambda match: match.group(1) + str(maximum + len(sites) * 6 + 1),
+        body, count=1)
+    return append_queue_import(assembly[:body_start] + body + assembly[body_end:])
+
+
 def main():
     parser = argparse.ArgumentParser()
     for name in ("rxc", "rxas", "rxvm", "bindir", "source", "workdir", "mode"):
         parser.add_argument(f"--{name}", required=True)
-    parser.add_argument("--scenario", choices=("policy", "boundaries", "transfers"),
+    parser.add_argument("--scenario", choices=("policy", "boundaries", "transfers", "lifecycle", "missing"),
                         default="policy")
     args = parser.parse_args()
     args.rxc = str(Path(args.rxc).resolve())
@@ -138,6 +176,10 @@ def main():
     run(compile_command, workdir, workdir / f"{stem}_compile.log")
     if args.scenario == "policy":
         injected = inject_policy(assembly_path.read_text())
+    elif args.scenario == "lifecycle":
+        injected = inject_lifecycle(assembly_path.read_text())
+    elif args.scenario == "missing":
+        injected = inject_boundaries(assembly_path.read_text(), ((3, "missing"),))
     else:
         sites = ((4, "if"), (9, "when"), (15, "do")) if args.scenario == "boundaries" else (
             (4, "leave"), (11, "exit"), (17, "return"))
@@ -149,22 +191,44 @@ def main():
                   str(Path(args.bindir) / "library"),
                   str(Path(args.bindir) / "classlib"),
                   str(Path(args.bindir) / "rxfnsc")],
-                 workdir, workdir / f"{stem}_run.log")
-    expected = ((
-        "caught=ERROR|Élan 😀|CALL|DELAY|3|0\n"
-        "local-after=old|old|\n"
-        "bif-after=old|old|\n") if args.scenario == "policy" else (
-        "trap=4|ERROR|if\n"
-        "if-body\n"
-        "trap=9|ERROR|when\n"
-        "when-body\n"
-        "trap=15|ERROR|do\n"
-        "do-body\n") if args.scenario == "boundaries" else (
-        "trap=4|ERROR|leave\n"
-        "after-leave\n"
-        "trap=17|ERROR|return\n"
-        "after-return\n"
-        "trap=11|ERROR|exit\n")).encode("utf-8")
+                 workdir, workdir / f"{stem}_run.log",
+                 expect_failure=args.scenario == "missing")
+    if args.scenario == "missing":
+        decoded = output.decode("utf-8", errors="replace")
+        if "RXC-LC-16.1: Label not found: ABSENT" not in decoded:
+            raise RuntimeError(f"missing delayed handler did not report 16.1: {decoded!r}")
+        if "source: levelc_call_missing_delayed_handler.rexx:3:1: nop" not in decoded:
+            raise RuntimeError(f"missing delayed handler source was not line 3: {decoded!r}")
+        return
+    expected_by_scenario = {
+        "policy": (
+            "caught=ERROR|Élan 😀|CALL|DELAY|3|0\n"
+            "local-after=old|old|\n"
+            "bif-after=old|old|\n"),
+        "boundaries": (
+            "trap=4|ERROR|if\n"
+            "if-body\n"
+            "trap=9|ERROR|when\n"
+            "when-body\n"
+            "trap=15|ERROR|do\n"
+            "do-body\n"),
+        "transfers": (
+            "trap=4|ERROR|leave\n"
+            "after-leave\n"
+            "trap=17|ERROR|return\n"
+            "after-return\n"
+            "trap=11|ERROR|exit\n"),
+        "lifecycle": (
+            "caught=ERROR|first|DELAY|CALL|0|old|3\n"
+            "first\n"
+            "caught=ERROR|again|DELAY|CALL|0|old|4\n"
+            "second\n"
+            "off\n"
+            "caught=ERROR|parent|DELAY|CALL|0|old|9\n"
+            "after-child\n"
+            "parent=|old\n"),
+    }
+    expected = expected_by_scenario[args.scenario].encode("utf-8")
     if output != expected:
         raise RuntimeError(f"unexpected output: {output!r}; expected {expected!r}")
 

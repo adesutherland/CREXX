@@ -119,8 +119,9 @@ callee's visible pool receives the resulting fields. The approved Unicode
 contract requires codepoint template and uppercase behavior; the whole ARG
 instruction closed under LC-AC-71 after this shared path and its admitted
 Classic invocation matrix passed. Future external CALL/INTERPRET must reuse
-the same activation frame under their own instruction rows. Cross-dialect
-Classic/non-Classic calls are outside the agreed Level C scope.
+the same activation frame under their own instruction rows. Adrian later
+permitted Level C CALL to reach Level B/G routines through a fixed signature;
+general cross-dialect invocation remains outside this review.
 
 **Approved 2026-10-04 Unicode-first direction.** Level C visible scalar
 strings are valid text. Existing Level B `.string` and codepoint PARSE/SAY
@@ -279,6 +280,11 @@ compiled once per programme, rather than expanding every handler at every
 clause. A second queued HALT during a delayed HALT handler is retained on the
 interrupted caller and delivered when the handler returns; queued ERROR,
 FAILURE and NOTREADY during their own delayed handler are suppressed.
+An unresolved selected handler records its Classic `16.1` detail on that
+activation. The completed authored clause checkpoint consumes the detail
+once and raises `CLASSIC_SYNTAX` at the clause source; a recursive dispatch
+returns to the outer checkpoint before this check. No VM source-origin
+transport is required for this synchronous delayed delivery path.
 
 The controlled tests insert only `queueCallCondition` calls after authored
 CALL ON clauses in generated RXAS; all policy, checkpoint, handler and return
@@ -292,8 +298,11 @@ ITERATE, RETURN and EXIT check before their transfer. These checks use the
 same generated dispatcher as ordinary completed statements. ADDRESS, stream
 and host-interrupt producers are still owned by their later rows, so this is
 bounded CALL infrastructure rather than complete delayed-condition delivery.
-Missing-handler source identity, external trap targets, full clause/lifecycle
-matrix and host HALT capture remain open in the whole CALL review. No VM ISA
+The controlled four-event lifecycle also covers repeated ON delivery, OFF,
+re-ON and isolation of a child CALL OFF from its caller. A missing handler
+reports at the raising `NOP` clause in both optimization modes. External
+trap targets, real producer source identity, remaining clause/lifecycle
+forms and host HALT capture remain open in the whole CALL review. No VM ISA
 or frame change was made.
 
 The CALL source grammar has explicit recovery for surplus policy tails. A
@@ -301,9 +310,10 @@ token after `CALL OFF condition` becomes a `21.1` AST error at that token;
 one after `CALL ON condition NAME target` becomes `19.3`. Lemon's generic
 recovery previously discarded those tokens and emitted a valid policy. This
 retains the following clause and gives normal compilation the same anchored
-diagnostics as the source front end. The missing delayed-handler `16.1`
-remains a separate runtime-origin obligation: unlike the immediate SYNTAX
-trap's VM-bound event, the delayed queue currently keeps only a source line.
+diagnostics as the source front end. The delayed-handler `16.1` source
+obligation is now met for a controlled synchronous producer through the
+authored clause checkpoint; real producers still need their own integration
+and source proof.
 
 This path does not call the certified `compiler/exits/parse/Parse.crexx` exit.
 That exit consumes tokens and generates Level B replacement code, including
