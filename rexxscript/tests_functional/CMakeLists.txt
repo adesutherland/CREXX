@@ -47,7 +47,8 @@ foreach(_binfile ${REXXBINS})
 endforeach()
 
 set_tests_properties(testRexxScriptRuntime_noopt testRexxScriptRuntime_opt
-        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: RexxScript runtime")
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: RexxScript runtime"
+                   RESOURCE_LOCK rexxscript_lineio_files)
 set_tests_properties(testRexxScriptCompat_noopt testRexxScriptCompat_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: evaluate helpers")
 
