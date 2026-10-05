@@ -375,6 +375,31 @@ RXVM_HANDLER(SIGNAL_STRING_REG, VM_ADVANCE(2);
             SET_SIGNAL_PAYLOAD_FROM_NAME(op1S->string, op2R);
             DISPATCH;
 
+        /* Raise with the source location carried by a bound runtime signal. */
+
+)
+
+RXVM_HANDLER(SIGNALORIGIN_STRING_REG_REG, VM_ADVANCE(3);
+            {
+                rxinteger source_module;
+                rxinteger source_address;
+                unsigned char signal_name = string_to_interrupt(op1S->string);
+                if (signal_name == RXSIGNAL_MAX) {
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                } else if (!rxsignal_runtime_origin(op3R, &source_module,
+                                                    &source_address)) {
+                    SET_SIGNAL(RXSIGNAL_INVALID_ARGUMENTS);
+                } else {
+                    REQUIRE_VALID_UTF8_REGISTER(op2R);
+                    null_terminate_string_buffer(op2R);
+                    SET_SIGNAL_MSG(signal_name, op2R->string_value);
+                    last_interrupted_module[signal_name] = source_module;
+                    last_interrupted_address[signal_name] = source_address;
+                    origin_override[signal_name] = 1;
+                }
+            }
+            DISPATCH;
+
         /* SIGNAL_REG_REG Signal type op1 (payload op2) */
 
 )

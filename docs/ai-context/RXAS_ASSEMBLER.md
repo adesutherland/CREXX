@@ -1283,6 +1283,10 @@ Signal support adds action-aware and dynamic-name forms:
   interrupt object as a Level B `.signal` value in `rSignal` before branching
 - `signal rName` raises a signal whose name is read from a string register
 - `signal rName,rPayload` raises a dynamic-name signal with a payload object
+- `signalorigin "NAME",rMessage,rSignal` raises with the message in the
+  string register and the module/address from a VM-bound `.runtime_signal`
+  created by `sigbrv`. An invalid origin raises `INVALID_ARGUMENTS`; ordinary
+  `signal` keeps its existing source and payload behavior
 
 Unknown dynamic names raise `INVALID_SIGNAL_CODE`. Literal `signal "NAME"`
 forms are still assembled directly against the static signal table.

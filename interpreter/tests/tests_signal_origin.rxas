@@ -1,0 +1,14 @@
+/* A source-preserving signal requires a VM-bound runtime event. */
+.globals=0
+
+main() .locals=2
+    sigbr invalid_origin,"INVALID_ARGUMENTS"
+    load r0,"bad origin"
+    load r1,"not an event"
+    signalorigin "OTHER",r0,r1
+    signal "FAILURE","invalid origin was accepted"
+
+invalid_origin:
+    sighalt "INVALID_ARGUMENTS"
+    say "invalid-origin-rejected"
+    ret 0

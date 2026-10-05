@@ -575,10 +575,11 @@ SYNTAX event branch in the active called invocation. Its handler RETURN resumes
 the caller, while child override and OFF changes leave the parent policy
 intact. Nested and recursive Regina probes pass with and without optimization.
 
-The complete handler model remains open. A missing named label is raised only
-on delivery, but its 16.1 panic currently points to the ON clause rather than
-the causing clause. Condition names beyond SYNTAX, complete handler cleanup,
-linked proof and the full SIGNAL matrix remain unqualified.
+For a missing named handler target, the generated entry raises runtime 16.1
+with `signalorigin` using the bound event's module/address. The optimized,
+no-opt and linked cases now point to the faulting clause, while an invalid
+origin is rejected by the VM. Condition names beyond SYNTAX, complete handler
+cleanup, linked proof for the full matrix and SIGNAL closure remain open.
 
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.

@@ -682,3 +682,4 @@ X(PSETI_REG_REG_REG, 656, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxinteger write 
 X(PGETF_REG_REG_REG, 657, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxfloat read op1=op2[item op3]")
 X(PSETF_REG_REG_REG, 658, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxfloat write op1[item op2]=op3")
 X(CHANRELEASE_REG_REG_REG, 659, FMT_R_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Release observed channel request op1=status op2=channel op3=ticket")
+X(SIGNALORIGIN_STRING_REG_REG, 660, FMT_S_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Raise op1 with message op2 at bound runtime signal origin op3")

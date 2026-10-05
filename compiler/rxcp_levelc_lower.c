@@ -52,6 +52,7 @@
 #define LEVELC_BIF_CONTEXT_PREFIX "__rxcp_levelc_bif_context_"
 #define LEVELC_EXPR_RESULT_PREFIX "__rxcp_levelc_expr_"
 #define LEVELC_SIGNAL_TARGET_PREFIX "__rxcp_levelc_signal_target_"
+#define LEVELC_SIGNAL_DETAIL_PREFIX "__rxcp_levelc_signal_detail_"
 #define LEVELC_SIGNAL_EVENT_SYMBOL "__rxcp_levelc_signal_event"
 #define LEVELC_PARSE_FIELDS_PREFIX "__rxcp_levelc_parse_fields_"
 #define LEVELC_PARSE_SOURCE_PREFIX "__rxcp_levelc_parse_source_"
@@ -4528,19 +4529,39 @@ static int levelc_append_signal_trampolines(Context *context,
         } else {
             size_t length = strlen(handler->target_name) + 64;
             char *detail = malloc(length);
-            ASTNode *condition = rxcp_remap_create_integer_constant(
-                context, handler->source, 1, TP_BOOLEAN);
-            int okay;
-            if (!detail || !condition) {
+            char *detail_name = rxcp_remap_create_generated_node_name(
+                LEVELC_SIGNAL_DETAIL_PREFIX, handler->source);
+            ASTNode *detail_assignment;
+            ASTNode *signal;
+            if (!detail || !detail_name) {
                 free(detail);
+                free(detail_name);
                 goto fail;
             }
             snprintf(detail, length, "RXC-LC-16.1: Label not found: %s",
                      handler->target_name);
-            okay = levelc_append_classic_error_if(
-                context, instructions, handler->source, condition, detail);
+            detail_assignment = rxcp_remap_create_named_assignment(
+                context, handler->source, detail_name,
+                rxcp_remap_create_string_constant(
+                    context, handler->source, detail));
+            signal = ast_ftt(context, ASSEMBLER, strdup("signalorigin"));
+            if (signal) {
+                signal->free_node_string = 1;
+                signal->is_compiler_added = 1;
+                rxcp_remap_anchor_synthetic(signal, handler->source);
+                add_ast(signal, rxcp_remap_create_string_constant(
+                    context, handler->source, "CLASSIC_SYNTAX"));
+                add_ast(signal, rxcp_remap_create_named_ref(
+                    context, handler->source, VAR_SYMBOL, detail_name));
+                add_ast(signal, rxcp_remap_create_named_ref(
+                    context, handler->source, VAR_SYMBOL,
+                    LEVELC_SIGNAL_EVENT_SYMBOL));
+            }
             free(detail);
-            if (!okay) goto fail;
+            free(detail_name);
+            if (!detail_assignment || !signal) goto fail;
+            add_ast(instructions, detail_assignment);
+            add_ast(instructions, signal);
         }
     }
     return 1;

@@ -3729,6 +3729,46 @@ zero residual child processes. Evidence:
 16.1 still reports the ON clause instead of the faulting clause; other
 conditions, linked proof and complete SIGNAL qualification remain open.
 
+**Next 63T-4D2 source-provenance repair (LC-63T-01/02/04).** A handler-entry
+16.1 needs the delivered event's module/address, which ordinary `signal`
+currently replaces with the trampoline's static source. Add a VM/RXAS signal
+form with an explicit bound `.runtime_signal` origin and message operand,
+validate that origin before use, and carry its source only for that raised
+condition. The compiler will emit this form for a missing named handler label
+after one-shot disable and visible RC/SIGL update. Prove the exact Regina
+missing-label case with optimized/no-opt execution and authored panic source,
+plus invalid-origin isolation and unaffected ordinary signal handling. Keep
+the opcode semantics explicit in the shared ISA effect/signal descriptions.
+This is an implementation of the approved frame-handler transport, not a
+change to Classic SIGNAL syntax or scalar semantics.
+
+**2026-10-05 LC-STEP-63T-4D2 missing-target source checkpoint (4D2 remains
+open).** The canonical ISA now has `signalorigin "NAME",rMessage,rSignal`:
+RXAS effect/signal metadata classifies its source operands and barrier, and
+the VM accepts only a bound runtime event, records its module/address for that
+new condition in the current run, and otherwise raises `INVALID_ARGUMENTS`.
+Ordinary `signal` source and payload handling is unchanged. A generated
+missing named-target handler disables one-shot policy, records RC/SIGL, then
+uses this form to raise 16.1 at the delivered event's causing clause. The
+Regina probe and compiled optimized/no-opt cases all locate the SUBSTR fault
+at line 4. An explicit RXAS invalid-origin regression and existing `sigbrv`
+transport checks pass. A linked image preserves 16.1, prior output and the
+faulting source. The guarded core, origin fixture and linker builds passed;
+focused checks passed 12/12 and the normal Debug Level C suite passed 528/528
+on the exact code/test/build inputs. The broad guard peaked at about 1944 MiB
+aggregate RSS and all guarded children exited. Evidence:
+`cmake-build-debug/levelc-63t4d2c-build.log`,
+`cmake-build-debug/levelc-63t4d2c-origin-build.log`,
+`cmake-build-debug/levelc-63t4d2c-focused.log`,
+`cmake-build-debug/levelc-63t4d2c-linked-build.log`,
+`cmake-build-debug/levelc-63t4d2c-linked-run.log`, and
+`cmake-build-debug/levelc-63t4d2c-debug-qual.log`. The separate threaded VM
+build and linked-image run also retained the line-4 source:
+`cmake-build-debug/levelc-63t4d2c-threaded-build.log` and
+`cmake-build-debug/levelc-63t4d2c-threaded-run.log`. Other condition names,
+complete handler cleanup, full SIGNAL matrix, LC-AC-76, ARG and full Level
+C/Release 1 remain open.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the

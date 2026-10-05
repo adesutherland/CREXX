@@ -5151,16 +5151,35 @@ static void rxsignal_populate_raw_interrupt(value *raw,
     move_value(raw->attributes[4], payload);
 }
 
+static const RxGraphTypeRef rxvm_runtime_signal_type = {
+    .name = "rxfnsb.runtime_signal",
+    .name_length = sizeof("rxfnsb.runtime_signal") - 1u,
+    .id = RX_GRAPH_NONE
+};
+
+static int rxsignal_runtime_origin(const value *condition,
+                                   rxinteger *module_number,
+                                   rxinteger *address) {
+    const value *raw;
+    if (!condition || condition->object_type != &rxvm_runtime_signal_type ||
+        condition->num_attributes < 5 || !condition->attributes ||
+        !condition->attributes[0] || condition->attributes[0]->int_value != 1 ||
+        !condition->attributes[4]) return 0;
+    raw = condition->attributes[4];
+    if (raw->num_attributes < 3 || !raw->attributes ||
+        !raw->attributes[1] || !raw->attributes[2] ||
+        raw->attributes[1]->int_value < 0 ||
+        raw->attributes[2]->int_value < 0) return 0;
+    *module_number = raw->attributes[1]->int_value;
+    *address = raw->attributes[2]->int_value;
+    return 1;
+}
+
 static void rxsignal_populate_runtime_signal(value *dest, value *raw) {
-    static const RxGraphTypeRef runtime_signal_type = {
-        .name = "rxfnsb.runtime_signal",
-        .name_length = sizeof("rxfnsb.runtime_signal") - 1u,
-        .id = RX_GRAPH_NONE
-    };
 
     value_zero(dest);
     set_num_attributes(dest, 6);
-    dest->object_type = &runtime_signal_type;
+    dest->object_type = &rxvm_runtime_signal_type;
     dest->attributes[0]->int_value = 1;
     copy_value(dest->attributes[4], raw);
 }
@@ -5538,6 +5557,7 @@ typedef struct rxvm_handler_state {
     value **interrupt_object;
     rxinteger *last_interrupted_address;
     rxinteger *last_interrupted_module;
+    unsigned char *origin_override;
     stack_frame **current_frame;
     stack_frame **temp_frame;
     bin_space **current_binary_space;
@@ -5581,6 +5601,7 @@ typedef struct rxvm_handler_state {
     value **interrupt_object;
     rxinteger *last_interrupted_address;
     rxinteger *last_interrupted_module;
+    unsigned char *origin_override;
     stack_frame *current_frame;
     stack_frame *temp_frame;
     bin_space *current_binary_space;
@@ -5649,6 +5670,7 @@ typedef struct rxvm_handler_state {
         (state_).interrupt_object = interrupt_object;                       \
         (state_).last_interrupted_address = last_interrupted_address;       \
         (state_).last_interrupted_module = last_interrupted_module;         \
+        (state_).origin_override = origin_override;                         \
         (state_).current_frame = current_frame;                             \
         (state_).temp_frame = temp_frame;                                   \
         (state_).current_binary_space = current_binary_space;               \
@@ -5715,6 +5737,7 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #define interrupt_object (rxvm_state->interrupt_object)
 #define last_interrupted_address (rxvm_state->last_interrupted_address)
 #define last_interrupted_module (rxvm_state->last_interrupted_module)
+#define origin_override (rxvm_state->origin_override)
 #define current_frame (*rxvm_state->current_frame)
 #define temp_frame (*rxvm_state->temp_frame)
 #define current_binary_space (*rxvm_state->current_binary_space)
@@ -5741,6 +5764,7 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #define interrupt_object (rxvm_state->interrupt_object)
 #define last_interrupted_address (rxvm_state->last_interrupted_address)
 #define last_interrupted_module (rxvm_state->last_interrupted_module)
+#define origin_override (rxvm_state->origin_override)
 #define current_frame (rxvm_state->current_frame)
 #define temp_frame (rxvm_state->temp_frame)
 #define current_binary_space (rxvm_state->current_binary_space)
@@ -5938,6 +5962,7 @@ rxvm_handler_inline_placements[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #undef current_frame
 #undef last_interrupted_module
 #undef last_interrupted_address
+#undef origin_override
 #undef interrupt_object
 #undef arguments_array
 #undef interrupt_action_value
@@ -6137,6 +6162,8 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     rxinteger last_interrupted_address[RXSIGNAL_MAX] = {0};
     /* Array of modules that were last interrupted by interrupt number */
     rxinteger last_interrupted_module[RXSIGNAL_MAX] = {0};
+    /* Explicit origin for a source-preserving re-raise, scoped to this run. */
+    unsigned char origin_override[RXSIGNAL_MAX] = {0};
 #if RXVM_HANDLER_USE_POINTER_FACADE
     stack_frame *current_frame = 0, *temp_frame;
 #else
@@ -6238,6 +6265,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     handler_state.interrupt_object = interrupt_object;
     handler_state.last_interrupted_address = last_interrupted_address;
     handler_state.last_interrupted_module = last_interrupted_module;
+    handler_state.origin_override = origin_override;
     handler_state.current_frame = &current_frame;
     handler_state.temp_frame = &temp_frame;
     handler_state.current_binary_space = &current_binary_space;
@@ -6475,9 +6503,14 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
         sig_atomic_t signal_mask = rxsignal_mask(signal_code + 1);
         if (pending_interrupts & signal_mask) {
             bin_code *signal_pc = (interrupted_pc && signal_code + 1 != RXSIGNAL_BREAKPOINT) ? interrupted_pc : pc;
-            last_interrupted_module[signal_code + 1] = (rxinteger) current_module->module_number;
-            last_interrupted_address[signal_code + 1] =
-                    (rxinteger) VM_CANONICAL_INDEX(signal_pc);
+            if (origin_override[signal_code + 1]) {
+                origin_override[signal_code + 1] = 0;
+            } else {
+                last_interrupted_module[signal_code + 1] =
+                        (rxinteger) current_module->module_number;
+                last_interrupted_address[signal_code + 1] =
+                        (rxinteger) VM_CANONICAL_INDEX(signal_pc);
+            }
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
                 rxvm_signal_pending_and(&pending_interrupts, ~signal_mask);
@@ -7188,6 +7221,7 @@ START_OF_INSTRUCTIONS
 #undef current_frame
 #undef last_interrupted_module
 #undef last_interrupted_address
+#undef origin_override
 #undef interrupt_object
 #undef arguments_array
 #undef interrupt_action_value

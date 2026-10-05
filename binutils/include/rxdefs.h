@@ -91,6 +91,7 @@ typedef const char *OpFormat;
 #define FMT_R_S_S "RSS"
 #define FMT_S "S"
 #define FMT_S_R "SR"
+#define FMT_S_R_R "SRR"
 #define FMT_S_S "SS"
 #define FMT_S_S_R "SSR"
 

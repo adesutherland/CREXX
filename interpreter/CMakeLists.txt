@@ -1428,6 +1428,9 @@ crexx_add_vm_test(NAME rxassignalbrvrawtests RXVM_ARGS tests_signal_branch_value
 crexx_add_vm_test(NAME rxassignalbrvnametests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-name: OTHER.*brv-payload: value payload")
 crexx_add_vm_test(NAME rxassignalbrvpayloadtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-payload: value payload")
 
+crexx_add_rxas_vm_binary(tests_signal_origin "source-preserving signal validation")
+crexx_add_vm_test(NAME rxassignalorigininvalidtests RXVM_ARGS tests_signal_origin PASS_REGULAR_EXPRESSION "invalid-origin-rejected")
+
 # NR-09 large-instruction batch
 crexx_add_rxas_vm_binary(tests_nr09_superinstructions "NR-09 large instructions")
 crexx_add_vm_test(NAME rxasnr09superinstructiontests RXVM_ARGS tests_nr09_superinstructions PASS_REGULAR_EXPRESSION "PASS: NR-09 Superinstructions")

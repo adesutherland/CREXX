@@ -408,6 +408,15 @@ handlers installed with `sigbrv` perform the same wrapping in the VM before
 branching to the handler label, so compiler-generated block handlers can bind an
 `as name` local directly as a user-facing `.signal` value.
 
+`signalorigin "NAME",rMessage,rSignal` raises a new signal using the source
+module and address carried by that VM-bound runtime event. It validates the
+bound-event representation before reading its raw slots, and an invalid input
+raises `INVALID_ARGUMENTS` at the current instruction. The source override is
+per raised condition within one VM run; the normal `signal` forms keep their
+ordinary current-instruction source. Level C uses this form when a delivered
+SYNTAX handler finds its named target missing, so the resulting 16.1 points
+to the faulting clause rather than the generated handler entry.
+
 Address semantics matter. VM-raised fault signals stamp the faulting
 instruction address before dispatch advances. `BREAKPOINT` and native or
 asynchronous interrupts use the next-instruction/resume address. Panic/error

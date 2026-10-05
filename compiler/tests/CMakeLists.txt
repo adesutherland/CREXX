@@ -5861,6 +5861,12 @@ add_levelc_runtime_slice_test(levelc_signal_on_recursive
 add_levelc_runtime_slice_test(levelc_signal_on_recursive_noopt
         rexx_src/levelc_signal_on_recursive.rexx
         "caught=40|14\nup=0\nup=0\nafter\n" -n)
+add_levelc_runtime_syntax_signal_test(levelc_signal_on_missing
+        rexx_src/levelc_signal_on_missing.rexx "16.1" "before\n"
+        "levelc_signal_on_missing.rexx:4:")
+add_levelc_runtime_syntax_signal_test(levelc_signal_on_missing_noopt
+        rexx_src/levelc_signal_on_missing.rexx "16.1" "before\n"
+        "levelc_signal_on_missing.rexx:4:" -n)
 add_levelc_runtime_syntax_signal_test(levelc_signal_off_syntax
         rexx_src/levelc_signal_off_syntax.rexx "40.14" "before\n"
         "levelc_signal_off_syntax.rexx:5:")
