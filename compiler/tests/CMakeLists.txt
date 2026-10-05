@@ -6721,6 +6721,14 @@ add_test(NAME levelc_arg_template_source_tree
         -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_template_source_tree.cmake)
 set_tests_properties(levelc_arg_template_source_tree PROPERTIES LABELS "compiler;levelc")
+add_test(NAME levelc_signal_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_source_forms.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_signal_source_tree.cmake)
+set_tests_properties(levelc_signal_source_tree PROPERTIES LABELS "compiler;levelc")
 
 add_test(NAME levelc_call_expression_source_tree
         COMMAND ${CMAKE_COMMAND}

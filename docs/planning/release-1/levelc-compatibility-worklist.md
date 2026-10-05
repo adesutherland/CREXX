@@ -21,8 +21,8 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-12`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The current exact-input
-Debug Level C checkpoint passed 480/480 with process memory monitoring after
-the authored PROCEDURE error-source check. This is a development checkpoint, not a
+Debug Level C checkpoint passed 496/496 with process memory monitoring after
+the SIGNAL VALUE source-AST checkpoint. This is a development checkpoint, not a
 Level C or Beta 4 qualification verdict.
 
 Dated plans and receipts below preserve the state and proposals at their own
@@ -880,6 +880,23 @@ this does not mark LC-I-23 SIGNAL complete or skip the remaining ARG audit.
   values/I/O as a separately planned future facility with no implicit
   conversion into Level C text. Verify the accepted BIF design and explicit
   binary deferral in architecture, language and release documents.
+- [ ] **LC-AC-76 — complete SIGNAL instruction:** direct symbol and quoted
+  label targets, evaluated `VALUE expression`, and ON/OFF condition forms
+  with default or named labels follow Classic clause, label and invocation
+  rules. Evaluate a VALUE expression once, resolve label spelling without
+  losing Unicode text, raise source-anchored 16.1 for a reached missing
+  target, and diagnose malformed forms with Classic identity and location.
+  Direct and trapped transfers update SIGL to the causing clause; SYNTAX
+  traps set RC to the error number and preserve the underlying diagnostic.
+  Install, disable, inherit and restore condition policy per activation;
+  delivery is one-shot until re-enabled. Transfers discard crossed DO,
+  selection, reference and handler state while preserving caller frames and
+  the visible variable pool. Verify IBM/Regina reference cases, all admitted
+  conditions and legal nested contexts, raw/canonical AST, optimized/no-opt,
+  source metadata, linked output, normal Debug/Release Level C and Level
+  B/G/RexxScript isolation. Keep unimplemented host/condition producers
+  explicitly open under their owning rows rather than treating them as
+  SIGNAL exclusions.
 
 ## Implementation steps
 
@@ -3235,11 +3252,19 @@ Before any code edit, check the proposed route against these observable gates:
    nested/recursive calls. The existing optional-result activation state
    owns this distinction; complete CALL/RETURN reviews remain separate.
    Each checkpoint serves `LC-63T-02/03`; none alone closes ARG or SIGNAL.
-4. **LC-STEP-63T-4 (LC-63T-01/02/04; depends on 63T-3):** implement direct and
+4. **LC-STEP-63T-4 (LC-63T-01/02/04/LC-AC-76; depends on 63T-3):** implement direct and
    VALUE SIGNAL, ON/OFF and named condition targets through the VM's frame
    branch/handler path; map Classic condition identities, SIGL and source,
-   and discard crossed loop/reference state.
-5. **LC-STEP-63T-5 (LC-63T-01–04; depends on 63T-4):** qualify the complete
+   and discard crossed loop/reference state. Reviewable implementation
+   checkpoints: `63T-4A` preserves VALUE intent explicitly in the source
+   AST, validation and tree display; `63T-4B` lowers direct static branches
+   onto FRAME_BRANCH with runtime missing-label 16.1, SIGL and crossed-scope
+   cleanup; `63T-4C` evaluates VALUE once and dispatches through the same
+   frame branch path with the approved Unicode-first scalar and missing-label
+   behavior; `63T-4D` installs ON/OFF and named/default condition handlers,
+   including RC/SIGL, one-shot delivery, nested policy and handler cleanup.
+   Each checkpoint retains focused evidence and is not SIGNAL closure.
+5. **LC-STEP-63T-5 (LC-63T-01–04/LC-AC-76; depends on 63T-4):** qualify the complete
    SIGNAL reference matrix, opt/no-opt, raw/canonical AST, linked toolchain,
    relevant normal correctness and Level B/G/RexxScript isolation. Update
    architecture/reference docs, commit coherent checkpoints and close the
@@ -3511,6 +3536,41 @@ LC-STEP-63T-3D/3H and the bounded one-body implementation step are complete;
 LC-63T-01–04, SIGNAL, ARG and the whole CALL/PROCEDURE/RETURN/EXIT
 instruction reviews remain open. The next shared dependency is
 LC-STEP-63T-4 SIGNAL on the frame model.
+
+**2026-10-05 LC-STEP-63T-4 pre-edit review.** Fresh guarded Regina
+programs retained under `cmake-build-debug/levelc-signal-*-ref.rexx` and
+`levelc-signal-*-reference.log` show direct SIGNAL setting SIGL to its
+clause line, VALUE evaluating a variable target and setting SIGL, a reached
+missing target raising 16.1 after preceding output, SYNTAX trapping a
+`SUBSTR` error with `RC=40` and `SIGL` at the causing clause, and a direct
+SIGNAL inside a called label followed by an explicit RETURN to the caller.
+Each process exited. The detailed
+[IBM z/VM reference](https://www.ibm.com/support/pages/zvm/library/710pdfs/71631400.pdf)
+also gives a `SIGNAL VALUE` multiway internal CALL that returns explicitly
+and says a SIGNAL inside a subroutine ends only that subroutine's active DO
+loops. Shorter IBM user-guide wording that SIGNAL itself does not return to
+the caller therefore does not overturn the approved same-invocation frame
+model. LC-AC-76 and the `63T-4A–4D` checkpoints above preserve the full
+instruction and its condition lifecycle as open; no SIGNAL product code had
+changed at this pre-edit review.
+
+**2026-10-05 LC-STEP-63T-4A source-AST checkpoint.** The parser now places
+the authored `VALUE` expression in a `LEVELC_SIGNAL_VALUE` child of
+`LEVELC_SIGNAL`; validation checks its shape, and raw-tree regression checks
+direct, VALUE, ON and OFF source forms. The missing-expression source error
+remains 19.4. This preserves intent for the later static branch and evaluated
+dispatch paths without changing SIGNAL execution or admitting an incomplete
+runtime form. The guarded core compiler build passed, focused tree and
+syntax-highlighting tests passed 3/3, and the normal Debug Level C suite
+passed 496/496 on the same code/test/build inputs. Peak aggregate descendant
+RSS was about 2461 MiB, and the guard and process inventory found zero
+residual compiler, assembler, VM, build or test processes. Evidence:
+`cmake-build-debug/levelc-63t4a-build.log`,
+`cmake-build-debug/levelc-63t4a-focused.log`,
+`cmake-build-debug/levelc-63t4a-debug-qual.log`, and
+`cmake-build-debug/compiler/tests/levelc_signal_source_tree.log`.
+Checkpoint 4A is complete. Direct and VALUE transfers, ON/OFF handlers,
+LC-AC-76, ARG and full Level C/Release 1 qualification remain open.
 
 ## Findings
 

@@ -215,6 +215,7 @@ static int levelc_node_is_source_only(NodeType type) {
         case LEVELC_PUSH:
         case LEVELC_QUEUE:
         case LEVELC_SIGNAL:
+        case LEVELC_SIGNAL_VALUE:
         case LEVELC_TRACE:
         case PARSE:
         case PULL:

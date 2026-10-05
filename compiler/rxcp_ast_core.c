@@ -1767,6 +1767,8 @@ const char *ast_ndtp(NodeType type) {
             return "LEVELC_QUEUE";
         case LEVELC_SIGNAL:
             return "LEVELC_SIGNAL";
+        case LEVELC_SIGNAL_VALUE:
+            return "LEVELC_SIGNAL_VALUE";
         case LEVELC_TRACE:
             return "LEVELC_TRACE";
         default: return "*UNKNOWN*";

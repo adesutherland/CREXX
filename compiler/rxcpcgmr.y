@@ -1259,17 +1259,20 @@ signal_instruction(I) ::= CTK_SIGNAL(T) CTK_OFF(O).
                                         "ERROR FAILURE HALT NOTREADY NOVALUE SYNTAX LOSTDIGITS"));
 }
 
-signal_instruction(I) ::= CTK_SIGNAL(T) CTK_VALUE expression(E).
+signal_instruction(I) ::= CTK_SIGNAL(T) CTK_VALUE(V) expression(E).
 {
     I = ast_f(context, LEVELC_SIGNAL, T);
-    add_ast(I, E);
+    ASTNode *value_form = ast_f(context, LEVELC_SIGNAL_VALUE, V);
+    add_ast(value_form, E);
+    add_ast(I, value_form);
 }
 
 signal_instruction(I) ::= CTK_SIGNAL(T) CTK_VALUE(V).
 {
     I = ast_f(context, LEVELC_SIGNAL, T);
-    add_ast(I, ast_f(context, LITERAL, V));
-    add_ast(I, levelc_current_token_error(context, "19.4", V));
+    ASTNode *value_form = ast_f(context, LEVELC_SIGNAL_VALUE, V);
+    add_ast(value_form, levelc_current_token_error(context, "19.4", V));
+    add_ast(I, value_form);
 }
 
 signal_instruction(I) ::= CTK_SIGNAL(T) bad_name_target_start(B) simple_tail(L).

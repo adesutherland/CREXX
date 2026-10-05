@@ -91,6 +91,15 @@ static void validate_node(ASTNode *node, int *errors) {
         }
     }
 
+    /* VALUE remains an explicit source form until Level C SIGNAL lowering. */
+    if (node->node_type == LEVELC_SIGNAL_VALUE &&
+        (!node->parent || node->parent->node_type != LEVELC_SIGNAL ||
+         node->sibling || !node->child || node->child->sibling)) {
+        fprintf(stderr, "AST Error: malformed Level C SIGNAL VALUE node %d\n",
+                node->node_number);
+        (*errors)++;
+    }
+
     /* Frame transfers are canonical statements. Their destination must be a
      * label in the same callable body, never a source LABEL or a child frame. */
     if (node->node_type == FRAME_LABEL || node->node_type == FRAME_BRANCH ||

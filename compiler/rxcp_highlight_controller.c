@@ -1330,6 +1330,7 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
             *type = PARSE_TREE_STATEMENT;
             return 1;
         case BLOCK_EXPR:
+        case LEVELC_SIGNAL_VALUE:
         case OP_ADD:
         case OP_MINUS:
         case OP_MULT:

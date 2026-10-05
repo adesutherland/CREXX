@@ -1463,6 +1463,7 @@ const char* node_type_to_string(NodeType type) {
         case LEVELC_PUSH: return "LEVELC_PUSH";
         case LEVELC_QUEUE: return "LEVELC_QUEUE";
         case LEVELC_SIGNAL: return "LEVELC_SIGNAL";
+        case LEVELC_SIGNAL_VALUE: return "LEVELC_SIGNAL_VALUE";
         case LEVELC_TRACE: return "LEVELC_TRACE";
     }
     return "UNKNOWN";

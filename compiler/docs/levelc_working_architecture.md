@@ -526,16 +526,17 @@ This permits ARG, nested branches, label fallthrough and recursion before
 the return decision. The full CALL/RETURN instruction and trap contracts
 remain under their own rows.
 
-The source AST also needs to preserve the authored `VALUE` form. Today
-`SIGNAL 'target'` and `SIGNAL VALUE 'target'` both have a `LEVELC_SIGNAL`
-with a `STRING` child; only incidental raw-token quoting differs. A temporary
-parser probe built successfully and distinguished the latter with a
-`LEVELC_SIGNAL_VALUE` wrapper, then was removed before this review commit.
-Retain that explicit source distinction in the full SIGNAL implementation and
-lower it to the reviewed frame-local branch/dispatch nodes. Do not infer
-static versus evaluated targets by inspecting token quotes after parsing.
+The source AST now preserves the authored `VALUE` form. `SIGNAL 'target'`
+keeps its direct target under `LEVELC_SIGNAL`, while `SIGNAL VALUE 'target'`
+has an explicit `LEVELC_SIGNAL_VALUE` child that owns the expression.
+Validation requires the wrapper to have exactly one child, and raw-tree
+regression checks the direct, VALUE, ON and OFF forms. This is a source-tree
+checkpoint: SIGNAL lowering and execution remain open. The eventual
+frame-local branch/dispatch lowering should use this structural distinction,
+not infer static versus evaluated targets from token quoting.
 
-This architecture is approved direction, not implemented SIGNAL behavior.
+This architecture is approved direction; the source AST checkpoint does not
+implement SIGNAL behavior.
 The [LC-STEP-63T gates](../../docs/planning/release-1/levelc-compatibility-worklist.md#approved-architecture-direction-for-lc-step-63t)
 cover direct and trapped conditions, label/PROCEDURE/CALL/RETURN lifetimes,
 source and `SIGL`, optimized/no-opt parity, linked execution, and existing
