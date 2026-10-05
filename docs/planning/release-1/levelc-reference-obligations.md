@@ -76,7 +76,7 @@ instruction closure and detailed receipts.
 | LC-REF-052 | Constant symbols, reserved pool 0 and SIGL/.SIGL updates | text | Front end/runtime pieces; state and label-search proof open |
 | LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | text | RexxValue foundation; full context and condition proof open |
 | LC-REF-054 | Exact logical values and contextual `34.*` identities | text | IF/SELECT/DO checks pass; other contexts open |
-| LC-REF-055 | Function/CALL omitted arguments and resolution order | host | Bounded local-call slice including adjacent calls after another operand; BIF/external order open |
+| LC-REF-055 | Function/CALL omitted arguments and resolution order | host | Direct local CALL expression actuals and omitted slots pass bounded proof; BIF/external resolution and whole CALL lifecycle open |
 | LC-REF-056 | Function RETURN value, `45.1` and RESULT/.RESULT lifecycle | text | Bounded local RETURN; complete call state open |
 | LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | host | Open: processor lifecycle |
 | LC-REF-058 | ADDRESS selection/swap, transient command and WITH redirection | host | Front end; configured execution open |
@@ -90,7 +90,7 @@ instruction closure and detailed receipts.
 | LC-REF-066 | PUSH/QUEUE ordering and null-expression value | host | Front end; queue service open |
 | LC-REF-067 | RETURN function/subroutine/outermost lifecycle | text | Bounded local RETURN; invocation modes open |
 | LC-REF-068 | SAY default output and optional empty expression | host | Whole SAY instruction closed under LC-AC-57: expression/childless ordering, one length-aware default/configured host callback, embedded NUL and Unicode text, optimized/no-opt and linked evidence pass. Missing BIF, TRACE, SIGNAL and external-host services remain in their own rows. |
-| LC-REF-069 | SIGNAL branch/trap modes and loop-state clearing | host | Front end; runtime state and conditions open |
+| LC-REF-069 | SIGNAL branch/trap modes and loop-state clearing | host | Parser and Regina reference contract reviewed under LC-STEP-63T-1; approved frame-local AST/emitter and runtime implementation open |
 | LC-REF-070 | TRACE options, interactive mode, skip/inhibit and source/result tracing | host | Front end/runtime pieces; complete trace contract open |
 | LC-REF-071 | SYNTAX, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS | host | Open: Classic condition state and delivery |
 | LC-REF-072 | Message catalog, .MN, source/line traceback and trap handling | host | Open: Classic diagnostic/condition bridge |
