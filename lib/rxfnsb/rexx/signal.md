@@ -13,6 +13,9 @@ to `INVALID_SIGNAL_CODE` (code 13). Raising an unknown dynamic name causes the
 VM to deliver `INVALID_SIGNAL_CODE`. The concurrency runtime uses
 `CHANNEL_ERROR` (code 26) for catchable channel/class lifecycle failures and
 `TASK_FAILURE` (code 27) for typed task-result demand failures.
+The compiled Classic runtime reserves `CLASSIC_SYNTAX` (code 28) and
+`CLASSIC_CONDITION` (code 29). The latter carries a typed condition payload;
+neither name changes Level B's `SYNTAX` alias for `ERROR` (code 3).
 
 The `.signal` methods are:
 

@@ -35,12 +35,16 @@ against the current headers. Custom callbacks own their output policy. See
 [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md) for
 sequential stream and SDK limits.
 
-The VM reserves signal code 28 as `CLASSIC_SYNTAX` for compiled Level C BIF
-validation failures. It is distinct from VM `ERROR` (code 3); existing Level B
+The VM reserves signal code 28 as `CLASSIC_SYNTAX` for compiled Level C syntax
+conditions and code 29 as `CLASSIC_CONDITION` for the other six Classic
+condition names. Both are distinct from VM `ERROR` (code 3); existing Level B
 `SYNTAX` source spelling still aliases `ERROR`. The shared Classic BIF result
-bridge raises code 28 with its recorded `RXC-LC-40.*` identity. Level C
-condition traps and authored runtime diagnostic location remain under the
-whole-instruction compatibility review.
+bridge raises code 28 with its recorded `RXC-LC-40.*` identity. Code 29 carries
+a typed `RexxClassicConditionEvent` payload with condition ID and Unicode
+description; the VM event supplies its source. This uses the remaining free
+code in the existing `sig_atomic_t` mask without reclassifying Level B errors.
+The Level C condition dispatcher and producers remain under the whole-SIGNAL
+instruction review.
 
 ## 1. VM Lifecycle
 

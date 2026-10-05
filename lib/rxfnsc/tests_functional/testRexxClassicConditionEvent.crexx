@@ -1,0 +1,43 @@
+options levelb comments_dash numeric_classic
+import rxfnsb
+import rexxclassicconditionevent
+
+main: procedure = .int expose failures handled stripped
+  arg test_args = .string[]
+  failures = 0
+  handled = 0
+  stripped = test_args[0] > 0 & test_args[1] = "testRexxClassicConditionEvent_opt"
+  event = .RexxClassicConditionEvent(6, "Élan 😀")
+  failures = failures + check(event.conditionId() = 6, "NOVALUE identity")
+  failures = failures + check(event.description() = "Élan 😀", "Unicode description")
+
+  assembler sigcalla caught(),"CLASSIC_CONDITION"
+  assembler signal "CLASSIC_CONDITION",event
+  failures = failures + check(handled = 1, "typed VM event delivered")
+
+  if failures = 0 then say "ok"
+  return failures
+
+caught: procedure = .string expose failures handled stripped
+  arg raw = .runtime_signal_raw
+  condition = .runtime_signal("")
+  call condition.set_raw(raw)
+  handled = handled + 1
+  failures = failures + check(condition.name() = "CLASSIC_CONDITION", "VM event name")
+  failures = failures + check(condition.code() = 29, "VM event code")
+  if stripped then failures = failures + check(condition.line() = 0, "stripped source line")
+  else failures = failures + check(condition.line() > 0, "causing source line")
+  payload = condition.payload()
+  failures = failures + check(payload is .RexxClassicConditionEvent, "typed payload")
+  if payload is .RexxClassicConditionEvent then do
+    typed = payload as .RexxClassicConditionEvent
+    failures = failures + check(typed.conditionId() = 6, "delivered NOVALUE identity")
+    failures = failures + check(typed.description() = "Élan 😀", "delivered Unicode description")
+  end
+  return "__rxsignal_skip"
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL" label
+  return 1

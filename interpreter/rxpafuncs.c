@@ -316,6 +316,8 @@ char* rxvm_getsignaltext(rxsignal signal) {
              return "INVALID_ARGUMENTS";
          case SIGNAL_CLASSIC_SYNTAX:
              return "CLASSIC_SYNTAX";
+         case SIGNAL_CLASSIC_CONDITION:
+             return "CLASSIC_CONDITION";
          case SIGNAL_OTHER:
              return "OTHER";
          default:;
@@ -353,6 +355,8 @@ char* rxvm_getsignaltext(rxsignal signal) {
             return SIGNAL_INVALID_ARGUMENTS;
         } else if (strcmp(signalText, "CLASSIC_SYNTAX") == 0) {
             return SIGNAL_CLASSIC_SYNTAX;
+        } else if (strcmp(signalText, "CLASSIC_CONDITION") == 0) {
+            return SIGNAL_CLASSIC_CONDITION;
         } else if (strcmp(signalText, "OTHER") == 0) {
             return SIGNAL_OTHER;
         }

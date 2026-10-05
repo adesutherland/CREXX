@@ -69,6 +69,7 @@ set(RXFNSC_MODULES
   RexxClassicState
   RexxVariablePool
   RexxActivationArguments
+  RexxClassicConditionEvent
   RexxDoState
   RexxClassicBifs
   RexxClassicBitFunctions

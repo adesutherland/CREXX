@@ -205,6 +205,7 @@ typedef enum rxsignal {
     SIGNAL_DIVISION_BY_ZERO = 5,     /* Triggered when the REXX program attempts to divide by zero */
     SIGNAL_UNICODE_ERROR = 9,        /* Triggered when an unicode error occurs */
     SIGNAL_CLASSIC_SYNTAX = 28,      /* Classic REXX SYNTAX condition */
+    SIGNAL_CLASSIC_CONDITION = 29,   /* Typed non-SYNTAX Classic REXX condition */
     SIGNAL_OTHER = 30                /* Triggered when an unknown error occurs */
 } rxsignal;
 

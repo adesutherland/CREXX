@@ -3806,6 +3806,34 @@ VM branch/handler and activation-policy architecture, preserves Level B
 signal identities, and avoids conflating the seven Classic conditions.
 `LC-STEP-63T-4D3`, SIGNAL, ARG and full Level C/Release 1 remain open.
 
+**2026-10-05 LC-STEP-63T-4D3-1 typed event checkpoint.** VM signal 29 is now
+`CLASSIC_CONDITION`, separate from Level B ERROR/FAILURE/NOTREADY and Classic
+SYNTAX. Its `RexxClassicConditionEvent` payload carries one of the six
+non-SYNTAX policy IDs and a Unicode description; the bound VM runtime event
+continues to own causing source metadata. The VM, RXPA, compiler signal
+validation and Level B signal-object name/code tables agree on code 29. A
+linked runtime test raises a typed NOVALUE event and verifies its identity,
+Unicode payload and source behavior in optimized and no-opt modes; the Level B
+signal-object table and the signal-mask uniqueness test also pass. The initial
+focused run exposed a harness mistake: the optimized test needs the opt-mode
+argument to expect stripped source metadata. Correcting that test input made
+the focused 4/4 pass without a product change.
+
+The guarded core/library build completed, `test_signal_mask` passed 1/1, and
+the normal Debug Level C suite passed 528/528 on these code/test/build inputs.
+The broad guard peaked at about 2062 MiB aggregate RSS; every guard and the
+post-run process inventory found zero residual compiler, assembler, VM, build
+or test processes. Evidence:
+`cmake-build-debug/levelc-63t4d3a-build.log`,
+`cmake-build-debug/levelc-63t4d3a-build2.log`,
+`cmake-build-debug/levelc-63t4d3a-focused3.log`,
+`cmake-build-debug/levelc-63t4d3a-mask-build.log`,
+`cmake-build-debug/levelc-63t4d3a-mask-test.log`, and
+`cmake-build-debug/levelc-63t4d3a-debug-qual.log`.
+The compiler has not yet dispatched that event to seven-name policy or added
+condition producers. `LC-STEP-63T-4D3-2/3`, whole SIGNAL and ARG reviews,
+and Level C/Release 1 qualification remain open.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the

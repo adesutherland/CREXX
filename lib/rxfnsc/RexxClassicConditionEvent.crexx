@@ -1,0 +1,59 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicconditionevent expose RexxClassicConditionEvent
+
+/**
+ * Typed payload of VM CLASSIC_CONDITION (code 29). The VM event supplies the
+ * causing source; this value supplies the Classic condition and description.
+ * SYNTAX remains a separate VM event (code 28). Condition IDs match the
+ * activation's seven-slot policy: 2 ERROR, 3 FAILURE, 4 HALT, 5 NOTREADY,
+ * 6 NOVALUE, 7 LOSTDIGITS.
+ */
+RexxClassicConditionEvent: class
+  event_condition = .int
+  event_description = .string
+
+  /**
+   * @param condition_id one of the six non-SYNTAX Classic condition IDs
+   * @param detail condition description, kept as valid Unicode text
+   * @signal INVALID_ARGUMENTS if the condition ID is outside 2..7
+   */
+  *: factory
+    arg condition_id = .int, detail = .string
+    if condition_id < 2 | condition_id > 7 then do
+      assembler signal "INVALID_ARGUMENTS", "Invalid Classic condition ID"
+    end
+    event_condition = condition_id
+    event_description = detail
+    return
+
+  /** @return the one-based Classic condition ID */
+  conditionId: method = .int
+    return event_condition
+
+  /** @return the condition description without altering Unicode text */
+  description: method = .string
+    return event_description

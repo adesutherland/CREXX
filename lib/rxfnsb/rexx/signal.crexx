@@ -230,6 +230,8 @@ _signal_code: procedure = .int
     when "NOTREADY" then return 15
     when "CHANNEL_ERROR" then return 26
     when "TASK_FAILURE" then return 27
+    when "CLASSIC_SYNTAX" then return 28
+    when "CLASSIC_CONDITION" then return 29
     when "OBJECT_NOT_INITIALIZED" then return 16
     when "RXBIN_CORRUPTION" then return 17
     when "QUIT" then return 19

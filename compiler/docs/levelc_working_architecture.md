@@ -580,6 +580,11 @@ with `signalorigin` using the bound event's module/address. The optimized,
 no-opt and linked cases now point to the faulting clause, while an invalid
 origin is rejected by the VM. Condition names beyond SYNTAX, complete handler
 cleanup, linked proof for the full matrix and SIGNAL closure remain open.
+The `63T-4D3-1` transport reserves VM signal 29 as `CLASSIC_CONDITION` with a
+typed `RexxClassicConditionEvent` payload holding a non-SYNTAX condition ID
+and Unicode description. A guarded linked test proves payload and source
+transport with and without optimization; the compiler's dispatcher and
+condition producers remain open.
 
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.

@@ -4382,6 +4382,8 @@ const char *interrupt_to_string(unsigned char interrupt) {
             return "TASK_FAILURE";
         case RXSIGNAL_CLASSIC_SYNTAX:
             return "CLASSIC_SYNTAX";
+        case RXSIGNAL_CLASSIC_CONDITION:
+            return "CLASSIC_CONDITION";
         case RXSIGNAL_BREAKPOINT:
             return "BREAKPOINT";
         case RXSIGNAL_OTHER:
@@ -4421,6 +4423,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
     if (strcmp(interrupt, "CHANNEL_ERROR") == 0) return RXSIGNAL_CHANNEL_ERROR;
     if (strcmp(interrupt, "TASK_FAILURE") == 0) return RXSIGNAL_TASK_FAILURE;
     if (strcmp(interrupt, "CLASSIC_SYNTAX") == 0) return RXSIGNAL_CLASSIC_SYNTAX;
+    if (strcmp(interrupt, "CLASSIC_CONDITION") == 0) return RXSIGNAL_CLASSIC_CONDITION;
     if (strcmp(interrupt, "BREAKPOINT") == 0) return RXSIGNAL_BREAKPOINT;
     if (strcmp(interrupt, "OTHER") == 0) return RXSIGNAL_OTHER;
     return RXSIGNAL_MAX; // Invalid Signal Code
@@ -4828,6 +4831,7 @@ RX_INLINE stack_frame *frame_f(
         this->interrupt_table[RXSIGNAL_CHANNEL_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_TASK_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_CLASSIC_SYNTAX-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_CLASSIC_CONDITION-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_IGNORE;
         this->interrupt_table[RXSIGNAL_OTHER-1].response = RXSIGNAL_RESPONSE_HALT;
         this->is_interrupt = 0; // No signals pending

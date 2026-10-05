@@ -10,6 +10,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 set(REXXBINS
   testRexxValue
   testRexxActivationArguments
+  testRexxClassicConditionEvent
   testRexxRuntimePools
   testRexxDoState
   testRexxClassicBifs
@@ -90,6 +91,10 @@ foreach(_binfile ${REXXBINS})
     add_custom_target(${_basename})
     add_dependencies(testrxfnsc ${_basename} rxfnsc)
     set(_rxc_flags -x)
+    set(_pass_test_name_argument)
+    if(_basename STREQUAL "testRexxClassicConditionEvent")
+        set(_pass_test_name_argument PASS_TEST_NAME_ARGUMENT)
+    endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
             SOURCE ${_rexx_file}
@@ -98,6 +103,7 @@ foreach(_binfile ${REXXBINS})
             RXC_FLAGS ${_rxc_flags}
             DEPENDS library classlib rxfnsc ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} ${_rexx_dep}
             RUNTIME_ARGS ${RXFNSC_RUNTIMES}
+            ${_pass_test_name_argument}
     )
 endforeach()
 
