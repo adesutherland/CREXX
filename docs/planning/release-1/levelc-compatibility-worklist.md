@@ -2998,6 +2998,120 @@ cross-dialect calls are out of scope, and host invocation-mode expansion has
 a separate owner. PARSE, PROCEDURE, CALL, RETURN, SIGNAL, full Level C and
 Release 1 remain open.
 
+**LC-I-12 PROCEDURE plan — vision and intended outcome, 2026-10-05.** A
+Classic internal call may execute `PROCEDURE [EXPOSE variable-list]` as its
+first processed instruction. It then has a private variable generation while
+each exposed scalar, stem or exact compound variable aliases the immediate
+caller's pool. A parenthesized list reference exposes its own variable first,
+reads its value in the newly visible pool, then exposes the named words in
+source order. Nested and recursive calls must bind to their actual callers;
+RETURN restores the caller's view. Preserve the approved Unicode scalar and
+case-preserved substituted-tail model and the separate Level B/G and
+RexxScript contracts. This is one whole-instruction review; CALL/RETURN and
+external invocation remain open under their own rows.
+
+1. **LC-74-01 — legal source and diagnostics:** bare PROCEDURE and EXPOSE
+   lists of direct simple, stem, compound and parenthesized names have the
+   documented raw/canonical AST and no arbitrary list-length limit. Empty
+   EXPOSE, malformed parentheses, nonvariable items, invalid tail keywords,
+   main-program execution, a late or second execution and nested instruction
+   placement report the applicable Classic identity at the authored clause.
+   Verify parser trees, compiler diagnostics and runtime 17.1 against the
+   [IBM PROCEDURE reference](https://www.ibm.com/docs/en/zos/3.1.0?topic=instructions-procedure)
+   and [Regina manual](https://rexxinfo.org/reference/articles/regina.pdf).
+2. **LC-74-02 — private pool and direct aliases:** without PROCEDURE an
+   internal call shares its caller's pool; with it, unexposed values are
+   private and direct scalar/stem/compound EXPOSE aliases the caller's exact
+   binding. Resolve compound tails at their source-list position, preserving
+   Unicode and case in substituted tails; later changes to a tail variable
+   do not retarget the alias. Verify read, write, DROP, stem default/tail,
+   duplicate and source-order interactions against reference cases.
+3. **LC-74-03 — indirect EXPOSE:** a `(symbol)` list exposes that symbol
+   first, captures its current text, then validates and applies subsidiary
+   words in order through the current private pool. Check empty, Unicode
+   blanks, invalid names, direct/indirect mixtures and compound dependencies
+   with a reference matrix. Reuse the shared variable-list classifier and
+   pool machinery; do not add a PROCEDURE-only token parser.
+4. **LC-74-04 — invocation lifetime:** main fallthrough cannot execute
+   PROCEDURE; an internal activation may execute it only as its first
+   processed instruction and at most once. Labels and comments before it,
+   nested calls, recursion, source-order fallthrough, SIGNAL and RETURN keep
+   the correct pool and source/error lifetimes. Verify optimized/no-opt and
+   linked execution with authored 17.1 and no state leakage.
+5. **LC-74-05 — delivery and isolation:** simplify any duplicated direct or
+   indirect exposure path, retain source documentation tags, qualify focused
+   pool/compiler cases during development, then run the core product build,
+   relevant normal Debug Level C suite and affected Level B/G/RexxScript
+   checks once on exact code/test/build inputs. Record the reference matrix,
+   structural evidence, test logs, remaining adjacent instruction owners and
+   a coherent commit before closing LC-I-12.
+
+1. **LC-STEP-74A (LC-74-01–04; active):** inventory the full grammar and
+   current guard, source/canonical tree, shared pool alias operations and
+   retained first-instruction evidence. Probe direct/indirect ordering,
+   compound-tail identity and invalid forms in Regina before product edits.
+2. **LC-STEP-74B (LC-74-02/03; depends on 74A):** select one pool-owned
+   exposure path for direct and indirect names. The existing compiler guard
+   accepts only direct scalar/stem targets; the existing pool alias methods
+   normalize whole names and need review for case-preserved compound tails.
+   If exact compound aliases require a new runtime representation or other
+   architectural shift, record the design and obtain Adrian's approval
+   before implementation. Preserve the completed DROP/assignment contracts.
+3. **LC-STEP-74C (LC-74-01–04; depends on 74B and any decision gate):**
+   implement the complete source-ordered EXPOSE path, remove obsolete
+   scalar/stem-only guards, and repair shared pool operations needed for
+   exact aliases. Keep the first-processed-instruction runtime check in the
+   existing activation frame. Add permanent positive and negative reference
+   regressions, raw/canonical tree checks and linked proof.
+4. **LC-STEP-74D (LC-74-01–05; depends on 74C):** audit the whole instruction
+   against the reference and AST matrix, run the relevant normal correctness
+   suite once with guarded memory/process monitoring, update architecture and
+   reference docs, commit one coherent PROCEDURE increment and close the row
+   only when every LC-74 criterion passes. Keep CALL/RETURN/SIGNAL and full
+   Level C/Release 1 visibly open under their own criteria.
+
+**LC-STEP-74A initial reference and implementation receipt, 2026-10-05.**
+The [Regina language reference](https://rexxinfo.org/reference/articles/regina.pdf)
+specifies `PROCEDURE [EXPOSE varref ...]`, where each `varref` is a symbol or
+parenthesized symbol. It says an indirect reference is itself exposed before
+its value is split into names, all entries bind left-to-right after the new
+private generation is selected, and a compound tail's resolved name remains
+the alias target if its substitution variable later changes. Guarded Regina
+probes in `cmake-build-debug/levelc-procedure-regina-reference.log` and
+`levelc-procedure-alias-reference.log` confirm indirect list words `one` and
+`two` alias the caller while invalid `#bad` is ignored; unexposed `ghost`
+stays private. An exposed `A.b` survives DROP/reassignment without modifying
+distinct `A.B`; reversing `key A.key` to `A.key key` changes the alias target.
+Each guarded probe exited with zero residual processes. A guarded current
+compiler probe fails at its explicit `compound PROCEDURE EXPOSE is outside
+slice` guard. The raw parser tree already retains direct `VAR_TARGET` and
+indirect `VAR_REFERENCE` entries in source order under one `ARGS` node;
+`cmake-build-debug/levelc-procedure-source-tree.log` retains the tree.
+The shared pool's current `exposeValue`/`exposeStem` helpers normalize whole
+names, which would merge case-distinct substituted compound tails. The
+[IBM IRX0017I description](https://www.ibm.com/docs/en/zos/3.1.0?topic=irx-irx0017i)
+also confirms that `PROCEDURE` must be the first instruction executed after
+an internal call. Thus `IF 1 THEN PROCEDURE` has already executed IF and is
+invalid in this programme's IBM-led contract, even though Regina permits
+some later placements; the existing source-position 17.1 fixture covers it.
+The
+proposed `74B` path adds an exact compound-alias lookup owned by
+`RexxVariablePool`, extends `RexxPoolAlias` to target the caller's exact
+stem/tail, and makes direct/indirect EXPOSE use one pool service. Pool
+`symbolValue`, `symbolHasValue`, `setSymbolValue` and `dropSymbol` will consult
+that map using the fully resolved case-preserved compound name before the
+ordinary local stem. Fixed-stem/tail parent operations must follow an alias
+chain in nested procedures without re-substituting its tail. A separate
+compound map avoids changing the existing case-insensitive scalar/stem keys;
+the alias belongs only to the new private pool and expires with its
+activation. A third guarded Regina probe in
+`cmake-build-debug/levelc-procedure-nested-reference.log` confirms two nested
+EXPOSE levels update the original lowercase tail while the uppercase tail
+is unchanged. This is a
+shared pool representation change, so no product edit will implement it
+before Adrian's decision. The VM ISA and approved frame architecture need no
+change.
+
 **LC-STEP-73H historical profile bridge — superseded 2026-10-04.** The
 following proposal and `LC-73H-*` checks are retained as design history and
 probe evidence. They are not active implementation steps after Adrian's
