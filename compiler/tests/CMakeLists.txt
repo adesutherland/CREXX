@@ -5883,6 +5883,24 @@ add_levelc_runtime_slice_test(levelc_condition_syntax_state
 add_levelc_runtime_slice_test(levelc_condition_syntax_state_noopt
         rexx_src/levelc_condition_syntax_state.rexx
         "name=SYNTAX\ncode=40.14\ndescription=Error 40.14\ninstruction=SIGNAL\nstate=OFF\nrc=40\n" -n)
+add_levelc_runtime_slice_test(levelc_condition_syntax_description
+        rexx_src/levelc_condition_syntax_description.rexx
+        "1\n")
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_noopt
+        rexx_src/levelc_condition_syntax_description.rexx
+        "1\n" -n)
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_braces
+        rexx_src/levelc_condition_syntax_description_braces.rexx
+        "1\n")
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_braces_noopt
+        rexx_src/levelc_condition_syntax_description_braces.rexx
+        "1\n" -n)
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_escapes
+        rexx_src/levelc_condition_syntax_description_escapes.rexx
+        "1\n")
+add_levelc_runtime_slice_test(levelc_condition_syntax_description_escapes_noopt
+        rexx_src/levelc_condition_syntax_description_escapes.rexx
+        "1\n" -n)
 add_levelc_runtime_slice_test(levelc_condition_nested_restore
         rexx_src/levelc_condition_nested_restore.rexx
         "outer=NOVALUE|MISSING\ninner=SYNTAX|40.14\nafter=NOVALUE|MISSING|OFF\n")

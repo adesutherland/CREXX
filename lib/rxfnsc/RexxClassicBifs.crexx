@@ -32,6 +32,7 @@ import rexxclassicbitfunctions
 import rexxclassiccharacterscan
 import rexxclassicencoding
 import rexxclassicconditionevent
+import rexxclassicdiagnostic
 import rexxactivation
 import rxfnsb
 
@@ -247,7 +248,7 @@ rexxclassic_signal_record: procedure = .void
     detail = condition.message()
     number = "0"
     code = ""
-    description = detail
+    description = _classic_syntax_description(detail)
     if left(detail, 7) = "RXC-LC-" then do
       tail = substr(detail, 8)
       space_pos = pos(" ", tail)
@@ -257,8 +258,10 @@ rexxclassic_signal_record: procedure = .void
       if separator > 1 then do
         code = substr(tail, 1, separator - 1)
         remainder = strip(substr(tail, separator + 1))
-        description = "Error " || code
-        if remainder <> "" then description = description || ": " || remainder
+        if description = detail then do
+          description = "Error " || code
+          if remainder <> "" then description = description || ": " || remainder
+        end
       end
       else code = tail
       point = pos(".", code)
@@ -275,6 +278,85 @@ rexxclassic_signal_record: procedure = .void
     end
   end
   return
+
+/**
+ * Render a Classic SYNTAX event from the installed standard message catalog.
+ * Unrecognized or incomplete raw inserts retain their original diagnostic.
+ */
+_classic_syntax_description: procedure = .string
+  arg detail = .string
+  if left(detail,7) \= "RXC-LC-" then return detail
+  space = pos(" ",detail)
+  colon = pos(":",detail)
+  separator = space
+  if separator = 0 | (colon > 0 & colon < separator) then separator = colon
+  if separator = 0 then code = detail
+  else code = substr(detail,1,separator - 1)
+  template = rexxclassicdiagnostic_template(code)
+  if template = "" then return detail
+  rendered = ""
+  cursor = 1
+  do while cursor <= length(template)
+    opening = pos("{",template,cursor)
+    if opening = 0 then do
+      rendered = rendered || substr(template,cursor)
+      leave
+    end
+    closing = pos("}",template,opening + 1)
+    if closing = 0 | separator = 0 then return detail
+    rendered = rendered || substr(template,cursor,opening - cursor)
+    name = substr(template,opening + 1,closing - opening - 1)
+    found = 0
+    value = _classic_named_insert(detail,separator + 1,name,found)
+    if \found then return detail
+    rendered = rendered || value
+    cursor = closing + 1
+  end
+  return "Error " || substr(code,8) || ": " || rendered
+
+/** Decode one named diagnostic insert without reinterpreting its content. */
+_classic_named_insert: procedure = .string
+  arg detail = .string, start = .int, target = .string, expose found = .int
+  found = 0
+  cursor = start
+  do while cursor <= length(detail)
+    do while cursor <= length(detail) & substr(detail,cursor,1) = " "
+      cursor = cursor + 1
+    end
+    if cursor > length(detail) then leave
+    name_start = cursor
+    do while cursor <= length(detail) & substr(detail,cursor,1) \= "="
+      cursor = cursor + 1
+    end
+    if cursor > length(detail) then leave
+    name = substr(detail,name_start,cursor - name_start)
+    cursor = cursor + 1
+    if substr(detail,cursor,1) \= '"' then leave
+    cursor = cursor + 1
+    value = ""
+    escaped = 0
+    closed = 0
+    do while cursor <= length(detail)
+      character = substr(detail,cursor,1)
+      cursor = cursor + 1
+      if escaped then do
+        value = value || character
+        escaped = 0
+      end
+      else if character = "\" then escaped = 1
+      else if character = '"' then do
+        closed = 1
+        leave
+      end
+      else value = value || character
+    end
+    if \closed then return ""
+    if name = target then do
+      found = 1
+      return value
+    end
+  end
+  return ""
 
 /**
  * Identify a typed non-SYNTAX Classic condition from a bound VM event.

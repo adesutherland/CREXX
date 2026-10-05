@@ -634,9 +634,22 @@ The direct `CONDITION()` BIF reads the activation's C/D/E/I/S fields and
 current policy state, using the common argument checker. NOVALUE records its
 resolved symbol and an empty ANSI extra field; Regina's `0` extra result is
 a documented reference divergence. SYNTAX records its full numeric identity
-and an error-prefixed description, but catalog-expanded wording remains
-open. Host, I/O, interrupt and numeric producers, exact description/extra
+and an error-prefixed description. Host, I/O, interrupt and numeric producers,
+exact description/extra
 data, and the complete SIGNAL matrix remain worklist obligations.
+
+The shared `rxfnsc` build now generates a Level B template lookup from
+`messages/diagnostics.en_GB.msg`, which remains the single maintained English
+diagnostic catalog. On a trapped Classic SYNTAX event, `rexxclassic_signal_record`
+uses that lookup to expand named inserts in the raw `RXC-LC-` diagnostic and
+records the complete `Error n.s: ...` text for `CONDITION('D')`. The renderer
+scans the template once and decodes each quoted insert separately, so braces,
+quotes and backslashes in an argument value remain literal. A missing template
+or insert uses the earlier error-prefix and raw-remainder fallback. The catalog input is a CMake
+configure dependency; generated Level B source is build-local. Regina-derived
+40.14 and 40.12 wording cases pass in optimized and no-opt compilation. This
+only qualifies available SYNTAX producers; other condition producers, full
+`CONDITION` extra data and the whole SIGNAL matrix remain open.
 
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.

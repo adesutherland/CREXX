@@ -1,5 +1,55 @@
 cmake_minimum_required(VERSION 3.24)
 
+# Keep the runtime's Classic wording generated from the same English catalog
+# used by compiler diagnostics. No second hand-maintained message table.
+set(RXFNSC_CLASSIC_CATALOG_SOURCE
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/RexxClassicDiagnosticCatalog.crexx")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  "${CMAKE_SOURCE_DIR}/messages/diagnostics.en_GB.msg")
+file(READ "${CMAKE_SOURCE_DIR}/messages/diagnostics.en_GB.msg"
+  _rxfnsc_classic_catalog_text)
+string(REPLACE "\r\n" "\n" _rxfnsc_classic_catalog_text
+  "${_rxfnsc_classic_catalog_text}")
+string(CONCAT _rxfnsc_classic_catalog_source
+  "options levelb\n"
+  "namespace rexxclassicdiagnostic expose rexxclassicdiagnostic_template\n\n"
+  "/** Return the standard English Level C message template by identity.\n"
+  " * Generated from messages/diagnostics.en_GB.msg at configure time.\n"
+  " */\n"
+  "rexxclassicdiagnostic_template: procedure = .string\n"
+  "  arg code = .string\n"
+  "  select\n")
+while(NOT _rxfnsc_classic_catalog_text STREQUAL "")
+  string(FIND "${_rxfnsc_classic_catalog_text}" "\n" _rxfnsc_catalog_eol)
+  if(_rxfnsc_catalog_eol EQUAL -1)
+    set(_rxfnsc_catalog_line "${_rxfnsc_classic_catalog_text}")
+    set(_rxfnsc_classic_catalog_text "")
+  else()
+    string(SUBSTRING "${_rxfnsc_classic_catalog_text}" 0
+      ${_rxfnsc_catalog_eol} _rxfnsc_catalog_line)
+    math(EXPR _rxfnsc_catalog_next "${_rxfnsc_catalog_eol} + 1")
+    string(SUBSTRING "${_rxfnsc_classic_catalog_text}"
+      ${_rxfnsc_catalog_next} -1 _rxfnsc_classic_catalog_text)
+  endif()
+  if(_rxfnsc_catalog_line MATCHES "^(RXC-LC-[^ =]+) *= *(.*)$")
+    set(_rxfnsc_catalog_code "${CMAKE_MATCH_1}")
+    set(_rxfnsc_catalog_template "${CMAKE_MATCH_2}")
+    string(REPLACE "'" "''" _rxfnsc_catalog_template
+      "${_rxfnsc_catalog_template}")
+    string(APPEND _rxfnsc_classic_catalog_source
+      "    when code = '${_rxfnsc_catalog_code}' then return '${_rxfnsc_catalog_template}'\n")
+  endif()
+endwhile()
+string(APPEND _rxfnsc_classic_catalog_source
+  "    otherwise return ''\n"
+  "  end\n"
+  "  return ''\n")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated")
+file(WRITE "${RXFNSC_CLASSIC_CATALOG_SOURCE}.tmp"
+  "${_rxfnsc_classic_catalog_source}")
+configure_file("${RXFNSC_CLASSIC_CATALOG_SOURCE}.tmp"
+  "${RXFNSC_CLASSIC_CATALOG_SOURCE}" COPYONLY)
+
 set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifAbbrev
   RexxClassicBifAbs
@@ -71,6 +121,7 @@ set(RXFNSC_MODULES
   RexxVariablePool
   RexxActivationArguments
   RexxClassicConditionEvent
+  RexxClassicDiagnosticCatalog
   RexxDoState
   RexxClassicBifs
   RexxClassicBitFunctions
@@ -132,7 +183,7 @@ set(RXFNSC_DEPS_RexxClassicState RexxValue)
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan)
 set(RXFNSC_DEPS_RexxActivationArguments RexxValue)
 set(RXFNSC_DEPS_RexxDoState RexxValue RexxVariablePool)
-set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxClassicConditionEvent RexxActivationArguments RexxVariablePool)
+set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxClassicConditionEvent RexxClassicDiagnosticCatalog RexxActivationArguments RexxVariablePool)
 set(RXFNSC_DEPS_RexxClassicConfig RexxValue)
 set(RXFNSC_DEPS_RexxClassicDatatype RexxValue RexxClassicConfig)
 set(RXFNSC_DEPS_RexxClassicCharacterOps RexxValue RexxClassicConfig RexxClassicCharacterScan)
@@ -206,7 +257,11 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
     "${_member_dir}/sources-${_rxfnsc_dep_signature_short}")
   set(_member_source "${_member_source_root}/${_basename}.crexx")
   foreach(_dep IN LISTS _rxfnsc_dep_closure)
-    set(_rxfnsc_dep_source "${CMAKE_CURRENT_SOURCE_DIR}/${_dep}.crexx")
+    if(_dep STREQUAL "RexxClassicDiagnosticCatalog")
+      set(_rxfnsc_dep_source "${RXFNSC_CLASSIC_CATALOG_SOURCE}")
+    else()
+      set(_rxfnsc_dep_source "${CMAKE_CURRENT_SOURCE_DIR}/${_dep}.crexx")
+    endif()
     set(_rxfnsc_staged_source "${_member_source_root}/${_dep}.crexx")
     list(APPEND _rxfnsc_source_deps "${_rxfnsc_dep_source}")
     list(APPEND _rxfnsc_staged_sources "${_rxfnsc_staged_source}")
@@ -215,6 +270,11 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
         "${_rxfnsc_dep_source}"
         "${_rxfnsc_staged_source}")
   endforeach()
+  if(_basename STREQUAL "RexxClassicDiagnosticCatalog")
+    set(_rxfnsc_primary_source "${RXFNSC_CLASSIC_CATALOG_SOURCE}")
+  else()
+    set(_rxfnsc_primary_source "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
+  endif()
   add_custom_command(
     OUTPUT "${_binfile}"
     BYPRODUCTS
@@ -223,7 +283,7 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
       ${_rxfnsc_staged_sources}
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_member_source_root}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+      "${_rxfnsc_primary_source}"
       "${_member_source}"
     ${_rxfnsc_stage_source_commands}
     COMMAND $<TARGET_FILE:rxc>
@@ -233,7 +293,7 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
     "${_member_source}"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
-      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+      "${_rxfnsc_primary_source}"
       rxfnsc_imports
       "${RXFNSC_IMPORT_LIBRARY}"
       "${RXFNSC_IMPORT_CLASSLIB}"

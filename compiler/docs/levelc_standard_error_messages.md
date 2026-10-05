@@ -64,6 +64,13 @@ Tests that compare diagnostic goldens force raw diagnostics. User-facing CLI
 and DSLSH output defaults to localized text, using `CREXX_DIAGNOSTIC_LOCALE`,
 the platform locale environment, and finally `en_GB`.
 
+The Level C runtime generates its English template lookup from the same
+`en_GB` catalog when building `rxfnsc`. A trapped `RXC-LC-` SYNTAX event with
+complete named inserts records the expanded `Error n.s: ...` text for
+`CONDITION('D')`; an unknown or incomplete entry uses the earlier
+`Error n.s: <raw remainder>` fallback. This bounds current runtime reporting and does not complete
+`ERRORTEXT`, all condition producers, or locale selection for trapped events.
+
 ## Output Prefixes
 
 | Code | Standard message text |

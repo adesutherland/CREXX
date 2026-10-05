@@ -4030,6 +4030,40 @@ numeric producer, full condition extra-data behavior and the 63T-5 reference,
 linked and isolation matrix still need proof. ARG and full Level C/Release 1
 criteria remain open.
 
+**LC-STEP-63T-5 whole-SIGNAL review in progress, 2026-10-05.** Treat the
+following as one instruction contract before another SIGNAL closure claim:
+
+| Contract area | Current implementation and decisive remaining check |
+| --- | --- |
+| Direct symbol/quoted and evaluated VALUE | One frame-local branch route, once-only VALUE evaluation and runtime 16.1 exist. Complete source, Unicode-label, nested-call, crossed-DO and re-entry reference cases in optimized/no-opt and linked output. A fresh Regina/compiled crossed-loop and subsequent SYNTAX trap probe agrees; its ignored evidence is `cmake-build-debug/levelc-signal-whole-probe-*.log`. |
+| ON/OFF for seven parsed names | Activation policy, source-order override, one-shot delivery, nested inheritance and named/default labels exist. Audit malformed tails and reached missing targets together with the actual condition-producer matrix. |
+| Condition state and descriptions | `CONDITION()` reads activation-local C/D/E/I/S and SYNTAX/NOVALUE state. Complete catalog-expanded SYNTAX description from the one standard diagnostic catalog and review extra data against the reference, without a second hand-maintained message table. |
+| Producer ownership | SYNTAX and NOVALUE are live. ERROR/FAILURE belong to ADDRESS and command completion (LC-I-20/21), HALT to host interrupt lifecycle (LC-AC-06), NOTREADY to host streams and input (LC-I-16/20), and LOSTDIGITS to numeric context (LC-I-22). Preserve their full contracts as open; a parsed ON/OFF form alone is not producer evidence. |
+| Crossed control and adjacent instructions | Check loop/reference/handler cleanup on branch or trap and source-order label fallthrough. An `EXIT` inside a local target currently fails as an unsupported procedure statement; that is an open LC-I-15 EXIT shape, not an approved SIGNAL exclusion. |
+| Delivery and isolation | Verify raw/canonical AST, authored source and errors, full `rxc`→`rxas`→`rxlink`→`rxvm`, optimized/no-opt, normal correctness, and Level B/G/RexxScript isolation on the final code/test inputs. |
+
+The current probe is a reference and implementation audit, not a new closed
+instruction or a reason to move the strict whole-instruction queue. The
+approved frame design remains the shared prerequisite for ARG, PROCEDURE and
+CALL; LC-AC-76 and LC-I-23 remain open pending this whole review.
+
+**SYNTAX description checkpoint, 2026-10-05.** `rxfnsc` generates a build-local
+template module from the existing `messages/diagnostics.en_GB.msg` catalog.
+The activation's trapped SYNTAX record now expands raw named inserts once,
+without reinterpreting argument text that contains braces, quotes or
+backslashes. Three Regina-derived `CONDITION('D')` wording cases (40.14,
+40.12 with braces, and 40.12 with escapes) pass optimized and no-opt; the
+shared BIF harness and existing SYNTAX state tests pass in the same focused
+group, 11/11. The unchanged code/test/build inputs passed the normal Debug
+Level C suite 564/564. Guarded evidence is
+`cmake-build-debug/levelc-signal-catalog-final-build.log`,
+`cmake-build-debug/levelc-signal-renderer-focused2.log`, and
+`cmake-build-debug/levelc-signal-catalog-debug-qual.log` (peak 4973 MiB,
+zero residual processes). Level G signal and RexxScript isolation checks
+passed 10/10 in `cmake-build-debug/levelc-signal-catalog-isolation.log`.
+The whole SIGNAL matrix remains pending; this
+checkpoint does not close SIGNAL or ARG.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the
