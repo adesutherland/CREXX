@@ -567,13 +567,18 @@ call site. Their `CLASSIC_SYNTAX` raise therefore carries that source line;
 `rexxclassicbif_checked` remains an exported library helper for other callers.
 The matching same-frame cases pass with and without optimization.
 
+An activation now owns a copied condition-policy table. Source-order ON/OFF
+and one-shot delivery update both that table and the VM frame handler; an
+internal CALL or function call copies the table, and the common body prologue
+rebinds the selected handler into the new VM frame. This lets an inherited
+SYNTAX event branch in the active called invocation. Its handler RETURN resumes
+the caller, while child override and OFF changes leave the parent policy
+intact. Nested and recursive Regina probes pass with and without optimization.
+
 The complete handler model remains open. A missing named label is raised only
 on delivery, but its 16.1 panic currently points to the ON clause rather than
-the causing clause. A trap inherited by a nested CALL currently branches in
-the installing frame, whereas the Regina reference continues through a
-handler in the active called invocation and then returns to the caller.
-Condition names beyond SYNTAX, nested policy, handler cleanup, linked proof
-and the complete SIGNAL matrix remain unqualified.
+the causing clause. Condition names beyond SYNTAX, complete handler cleanup,
+linked proof and the full SIGNAL matrix remain unqualified.
 
 This architecture is approved direction with bounded direct-SIGNAL behavior;
 the complete SIGNAL instruction remains open.

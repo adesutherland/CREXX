@@ -47,6 +47,7 @@ RexxActivationArguments: class
   return_present = .boolean
   procedure_eligible = .boolean
   function_call = .boolean
+  signal_policy = .int[]
 
   *: factory
     slot_count = 0
@@ -55,7 +56,44 @@ RexxActivationArguments: class
     return_present = 0
     procedure_eligible = 0
     function_call = 0
+    do index = 1 to 7
+      signal_policy[index] = 0
+    end
     return
+
+  /**
+   * Copy the caller's Classic condition policy into a new invocation.
+   * @param parent_ref the caller activation
+   */
+  inheritSignalPolicy: method = .void
+    arg parent_ref = reference .RexxActivationArguments
+    parent = dereference parent_ref
+    do index = 1 to 7
+      signal_policy[index] = parent.signalPolicy(index)
+    end
+    return
+
+  /**
+   * Select the ON clause active for one Classic condition in this invocation.
+   * Zero disables the condition after OFF or one-shot delivery.
+   * @param condition one-based Classic condition code
+   * @param handler one-based ON clause identity, or zero
+   */
+  setSignalPolicy: method = .void
+    arg condition = .int, handler = .int
+    if condition < 1 | condition > 7 then return
+    signal_policy[condition] = handler
+    return
+
+  /**
+   * Read the selected ON clause for one Classic condition.
+   * @param condition one-based Classic condition code
+   * @return the ON clause identity, or zero when disabled
+   */
+  signalPolicy: method = .int
+    arg condition = .int
+    if condition < 1 | condition > 7 then return 0
+    return signal_policy[condition]
 
   /**
    * Append one evaluated argument position.

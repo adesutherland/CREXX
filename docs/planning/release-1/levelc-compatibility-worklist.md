@@ -3695,6 +3695,40 @@ provenance and nested handler ownership before 4D2/4D3 or SIGNAL closure.
 Other condition names, complete reference matrix, LC-AC-76, ARG and full
 Level C/Release 1 qualification remain open.
 
+**Next 63T-4D2 frame-lifetime repair (LC-63T-01/02/04).** An activation will
+own the selected ON-clause identity for each Classic condition. A local CALL
+or function invocation copies that policy at entry, and the common body
+prologue rebinds its selected handler to the new VM frame. Source-order ON,
+OFF and one-shot delivery update both the activation policy and VM handler;
+the variable pool remains variable storage. Verify parent-to-child delivery,
+child override/OFF isolation, RETURN continuation, recursion, opt/no-opt and
+event line/RC against Regina before closing nested policy. Separately repair
+runtime missing named-label 16.1 to retain the event's causing source. These
+are repairs within the approved one-body-per-invocation architecture.
+
+**2026-10-05 LC-STEP-63T-4D2 nested SYNTAX policy checkpoint (4D2 remains
+open).** `RexxActivationArguments` now owns a seven-condition policy table.
+An internal CALL/function activation copies it independently, and the common
+compiled body rebinds the selected ON-clause handler into its own VM frame
+before label dispatch. ON, OFF and one-shot delivery update activation and VM
+state together. The SYNTAX reference matrix now covers a parent policy caught
+in an exposed child procedure, child ON override with parent restoration,
+child OFF isolation and recursive calls with shared-pool argument mutation.
+Regina and compiled opt/no-opt outputs agree, including `SIGL`, `RC`, handler
+RETURN and caller continuation. The activation library unit verifies fresh,
+copied and independent policy state. The guarded core/library and activation
+test builds passed; combined focused checks passed 15/15 and the normal Debug
+Level C suite passed 526/526 on the exact code/test/build inputs. Guarded
+aggregate RSS peaked at about 2465 MiB in the broad run; each guard found
+zero residual child processes. Evidence:
+`cmake-build-debug/levelc-63t4d2b-build.log`,
+`cmake-build-debug/levelc-63t4d2b-activation-build.log`,
+`cmake-build-debug/levelc-63t4d2b-combined-focused.log`,
+`cmake-build-debug/levelc-63t4d2b-debug-qual.log`, and the
+`cmake-build-debug/levelc-63t4d2b-*-regina*.log` probes. Missing named-label
+16.1 still reports the ON clause instead of the faulting clause; other
+conditions, linked proof and complete SIGNAL qualification remain open.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the

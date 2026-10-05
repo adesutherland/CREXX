@@ -5839,6 +5839,28 @@ add_levelc_runtime_slice_test(levelc_signal_on_default
 add_levelc_runtime_slice_test(levelc_signal_on_default_noopt
         rexx_src/levelc_signal_on_default.rexx
         "before\ncaught=40|4\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_on_nested
+        rexx_src/levelc_signal_on_nested.rexx
+        "inner|40|10\nafter\n")
+add_levelc_runtime_slice_test(levelc_signal_on_nested_noopt
+        rexx_src/levelc_signal_on_nested.rexx
+        "inner|40|10\nafter\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_on_child_override
+        rexx_src/levelc_signal_on_child_override.rexx
+        "inner=40|10\nparent\nouter=40|5\n")
+add_levelc_runtime_slice_test(levelc_signal_on_child_override_noopt
+        rexx_src/levelc_signal_on_child_override.rexx
+        "inner=40|10\nparent\nouter=40|5\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_child_off
+        rexx_src/levelc_signal_child_off.rexx "40|4\n")
+add_levelc_runtime_slice_test(levelc_signal_child_off_noopt
+        rexx_src/levelc_signal_child_off.rexx "40|4\n" -n)
+add_levelc_runtime_slice_test(levelc_signal_on_recursive
+        rexx_src/levelc_signal_on_recursive.rexx
+        "caught=40|14\nup=0\nup=0\nafter\n")
+add_levelc_runtime_slice_test(levelc_signal_on_recursive_noopt
+        rexx_src/levelc_signal_on_recursive.rexx
+        "caught=40|14\nup=0\nup=0\nafter\n" -n)
 add_levelc_runtime_syntax_signal_test(levelc_signal_off_syntax
         rexx_src/levelc_signal_off_syntax.rexx "40.14" "before\n"
         "levelc_signal_off_syntax.rexx:5:")
