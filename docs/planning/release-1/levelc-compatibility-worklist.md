@@ -6,13 +6,15 @@ contract (`R1-AC-01/02`) and the roadmap owns portfolio order. This worklist
 records coverage, incremental evidence and Adrian-approved scope revisions;
 it does not change the 2026-11-30 target.
 
-**Current status, 2026-10-05.** `LC-I-01`–`LC-I-10` (SAY, DROP, assignment,
-NOP, OPTIONS, IF, SELECT, DO, LEAVE and ITERATE) have closed whole-instruction
-reviews. `LC-I-11` ARG is open: activation frames, omission/presence, Unicode
-arguments, templates, the ARG BIF, host entry, direct CALL expression actuals,
-the one-body frame model, authored template diagnostics, and exact-length
-native host transport have passing evidence. The broader host-interface and
-remaining invocation audit has not closed. The approved `LC-STEP-63T`
+**Current status, 2026-10-05.** `LC-I-01`–`LC-I-11` (SAY, DROP, assignment,
+NOP, OPTIONS, IF, SELECT, DO, LEAVE, ITERATE and ARG) have closed
+whole-instruction reviews. ARG uses the shared PARSE template executor and
+one activation argument frame; the complete admitted Classic invocation and
+template matrix has passing evidence in the closure receipt below. Cross-dialect
+Classic/non-Classic invocation is outside this programme's scope by Adrian's
+2026-10-05 clarification. Future external CALL/INTERPRET and broader C host
+interfaces retain their own open owners; they are not ARG closure gates. The
+approved `LC-STEP-63T`
 one-frame label and SIGNAL design has a
 canonical AST/emitter foundation and one-body invocation route, including
 first-instruction PROCEDURE eligibility, main fallthrough and a second
@@ -25,6 +27,21 @@ open even where a supporting slice or helper passes. The current exact-input
 Debug Level C checkpoint passed 594/594 with process memory monitoring after
 the SIGNAL source-form checkpoint below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
+
+**2026-10-05 scope and VM decision.** Adrian clarified that an interface
+between Classic and non-Classic Rexx is outside this compatibility programme.
+`LC-AC-71` therefore closes on the complete ARG instruction behavior for
+admitted Classic activations; future Classic external CALL/INTERPRET forms
+must use the same frame when their own instruction reviews reach them. The
+larger `RexxStart`-like host invocation-mode proposal `73G.3` is separate
+host work and does not gate ARG. Preserve the C-string `rxvml_run()` embedded-
+NUL obligation in host-interface tracking; the already qualified length-aware
+entry supplies the exact-length path. In response to an explicit VM review,
+Adrian approved retaining the `signalorigin` RXAS/VM operation from
+`d809ab8da` and dedicated VM `CLASSIC_CONDITION` signal 29 from `2a7ebf657`
+as implementations of the approved one-frame SIGNAL direction. These are VM
+contract changes, not merely compiler AST nodes. Any further architectural
+shift still requires its own decision before a product edit.
 
 Dated plans and receipts below preserve the state and proposals at their own
 checkpoints. The status above, the whole-instruction queue and the current
@@ -114,9 +131,10 @@ Cross-cutting repairs are made when required by the active instruction and
 are verified against all affected consumers.
 On 2026-10-05 the LC-I-11 ARG invocation audit identified the per-label
 procedure partition as a shared blocker for Classic labels without
-`PROCEDURE`. The approved LC-STEP-63T frame/label architecture is therefore
-an ARG/PROCEDURE/CALL dependency that may be built before their rows close;
-this does not mark LC-I-23 SIGNAL complete or skip the remaining ARG audit.
+`PROCEDURE`. The approved LC-STEP-63T frame/label architecture was therefore
+an ARG/PROCEDURE/CALL dependency. Its one-body implementation enabled the
+later ARG closure; it does not mark LC-I-23 SIGNAL complete or close the
+PROCEDURE/CALL rows.
 
 ## Acceptance criteria
 
@@ -814,7 +832,7 @@ this does not mark LC-I-23 SIGNAL complete or skip the remaining ARG audit.
   source/canonical trees, relevant normal and shared runtime checks, and
   linked execution. SIGNAL/INTERPRET invalidation, TRACE and condition
   traps remain under their own instruction rows and LC-AC-04/08.
-- [ ] **LC-AC-71 — complete ARG instruction:** Classic `ARG [template_list]`
+- [x] **LC-AC-71 — complete ARG instruction:** Classic `ARG [template_list]`
   behaves as `PARSE UPPER ARG`: it retrieves the active program or routine's
   argument strings without changing them, uppercases each source before
   parsing, and applies comma-separated templates in positional order.
@@ -825,9 +843,12 @@ this does not mark LC-I-23 SIGNAL complete or skip the remaining ARG audit.
   remains present for argument-existence queries. Preserve source-order
   assignments through the visible pool, including compound targets and
   PROCEDURE EXPOSE aliases. Support main-program and internal routine
-  activations, direct subroutine/function calls and any other invocation
-  modes that the compiler/runtime actually admits; record a CALL/host owner
-  for unsupported invocation paths without counting ARG itself complete.
+  activations and direct Classic subroutine/function calls that the compiler
+  currently admits. Later external CALL and INTERPRET implementations must
+  populate the same activation argument frame and qualify their own invocation
+  paths under their instruction rows. Broader C host invocation modes retain
+  a separate host owner; cross-dialect Classic/non-Classic calls are outside
+  the agreed programme scope. Neither is an ARG instruction closure gate.
   Diagnose malformed templates and illegal instruction placement with
   Classic identity and source position. Verify IBM/Regina examples,
   omitted-versus-empty behavior, exact-length strings and Unicode codepoint
@@ -895,9 +916,10 @@ this does not mark LC-I-23 SIGNAL complete or skip the remaining ARG audit.
   the visible variable pool. Verify IBM/Regina reference cases, all admitted
   conditions and legal nested contexts, raw/canonical AST, optimized/no-opt,
   source metadata, linked output, normal Debug/Release Level C and Level
-  B/G/RexxScript isolation. Keep unimplemented host/condition producers
-  explicitly open under their owning rows rather than treating them as
-  SIGNAL exclusions.
+  B/G/RexxScript isolation. Exercise each condition handler with a controlled
+  typed event where its real producer is not yet available. Keep unimplemented
+  ADDRESS, host/I/O and numeric condition producers explicitly open under
+  their owning rows; their absence does not block SIGNAL instruction closure.
 
 ## Implementation steps
 
@@ -1582,7 +1604,8 @@ requires a recorded reason and must not turn a partial row into a closure.
 On 2026-10-04 Adrian prioritized the high-risk DO AST work before the remaining
 prior-instruction audit and SIGNAL. LC-I-08 closed after its whole-instruction
 review; LC-I-05 OPTIONS, LC-I-06 IF and LC-I-07 SELECT subsequently closed.
-LC-I-09 LEAVE and LC-I-10 ITERATE then closed; LC-I-11 ARG is active. The
+LC-I-09 LEAVE and LC-I-10 ITERATE then closed; LC-I-11 ARG closed after the
+2026-10-05 whole-instruction receipt below. The
 priority change did not count any row as reviewed or closed before its own
 evidence receipt.
 Each step includes parser-form inventory, reference cases, invalid forms,
@@ -1605,7 +1628,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-08 DO — closed 2026-10-04 | LC-STEP-70A–70D | `LC-AC-65`: simple, counted, controlled scalar/compound, FOREVER, WHILE/UNTIL and legal combinations without an arbitrary count limit; one checked header and reviewed loop representation. Shared NUMERIC/condition/TRACE/host lifecycle remains open in its own rows. |
 | LC-I-09 LEAVE — closed 2026-10-04 | LC-STEP-71A–71C | `LC-AC-69`: unnamed/named targets, nesting, state and errors with the approved default/STRICTC timing distinction; DO. |
 | LC-I-10 ITERATE — closed 2026-10-04 | LC-STEP-72A–72C | `LC-AC-70`: unnamed/named targets, end-step timing, nesting and errors across all legal loops through the shared DO/LEAVE path. |
-| LC-I-11 ARG | LC-STEP-73 | Direct argument acquisition and Classic upper/template behavior, omitted positions and invocation modes; routine context and shared parse semantics. |
+| LC-I-11 ARG — closed 2026-10-05 | LC-STEP-73A–73I | `LC-AC-71`: complete `PARSE UPPER ARG` semantics on admitted Classic activations, arbitrary comma templates, omitted/empty positions, Unicode and diagnostics through one shared PARSE executor and argument frame. Future CALL/INTERPRET and host modes have separate owners. |
 | LC-I-12 PROCEDURE | LC-STEP-74 | Pool creation and all direct/indirect EXPOSE forms with alias lifecycle; shared variable pool and routines. |
 | LC-I-13 CALL | LC-STEP-75 | Internal/BIF/external resolution, arguments, results and ON/OFF traps; BIF registry, routines and conditions. |
 | LC-I-14 RETURN | LC-STEP-76 | Value/void, function/subroutine/outermost rules and pool/result lifecycle; CALL and PROCEDURE. |
@@ -2508,46 +2531,46 @@ Retain Level B's typed `arg` and RexxScript's distinct call interface. The
 source and canonical AST must remain explicit and supportable; no arbitrary
 template or argument count limit is acceptable.
 
-1. **LC-STEP-73A (LC-AC-59/71; active review; depends on ITERATE closure):**
+1. **LC-STEP-73A (LC-AC-59/71; complete; depends on ITERATE closure):**
    inventory IBM/Regina forms, parser and raw AST shapes, current fixed
    procedure ARG lowering, PARSE ARG plan/runtime, CALL activation storage,
    main and routine invocation modes, omitted/empty arguments, errors and
    source positions. Reproduce gaps and identify shared owners before edits.
-2. **LC-STEP-73B (LC-AC-71; pending 73A):** choose the simplest complete
+2. **LC-STEP-73B (LC-AC-71; complete after approved design; depends on 73A):** choose the simplest complete
    lowering/runtime contract, preferring the existing PARSE plan and shared
    activation state where they fit. If that choice changes architecture,
    record the concrete design and pause for Adrian's required approval before
    editing compiler logic. Do not classify substantial work as infeasible.
-3. **LC-STEP-73C (LC-AC-71; pending 73B and any decision gate):** implement
+3. **LC-STEP-73C (LC-AC-71; complete; depends on 73B and its decision gate):** implement
    the whole instruction and remove obsolete fixed-template duplication;
    cover main and routine forms, repeated reads, templates, ordering,
    uppercasing, missing/omitted positions, and all admitted call modes.
    Preserve Level B/G and RexxScript contracts.
-4. **LC-STEP-73D (LC-AC-59/61/71; pending 73C):** compare IBM/Regina,
+4. **LC-STEP-73D (LC-AC-59/61/71; complete; depends on 73C):** compare IBM/Regina,
    inspect raw/canonical trees, run focused and relevant normal/shared
    regressions, prove linked output, update reference/architecture docs, and
    commit an exact-revision receipt. Close LC-I-11 only when all AC-71
    behavior and error paths are verified; keep CALL/BIF/host lifecycle gaps
    visibly open under their owners as well.
-5. **LC-STEP-73E (LC-AC-06/71; after the activation frame, may precede 73D):**
+5. **LC-STEP-73E (LC-AC-06/71; complete after the activation frame):**
    implement the adjacent Classic `ARG()` BIF against that same activation
    state, with zero/one/two-argument forms, E/O existence tests, omissions,
    and standard BIF errors. Compare IBM and Regina, exercise main/routine and
    optimized/noopt calls, and retain shared `rxfnsc` regression evidence.
    Keep the BIF inventory row separate from ARG instruction closure.
-6. **LC-STEP-73F (LC-AC-71; decision gate after 73D error audit):** map a
+6. **LC-STEP-73F (LC-AC-71; complete after approved decision gate):** map a
    failed dynamic numeric PARSE/ARG position to Classic Error 26.4 while
    preserving the existing Level B `parseplan` conversion signal. The proposed
    version-2 descriptor flag and VM handler change below require Adrian's
    approval before implementation.
-7. **LC-STEP-73G (LC-AC-71; active after 73F):** qualify supported host ARG
+7. **LC-STEP-73G (LC-AC-71; complete for ARG after 73F):** qualify supported host ARG
    entry and repeated activation lifecycles, audit the actual invocation and
    approved Unicode-first boundary, including codepoint templates and
    Latin-1 ordinals. The earlier BYTE/UTF8 profile-selection proposal was
    superseded by the 2026-10-04 character-model decision. Keep non-admitted
-   CALL/host entry modes with their owning instruction or host-service row;
-   do not count the ARG instruction closed until LC-AC-71 has its full
-   applicable invocation and character evidence.
+   CALL/host entry modes with their owning instruction or host-service row.
+   The 2026-10-05 scope clarification below supersedes the former rule that
+   those future modes prevented ARG instruction closure.
    **LC-STEP-73G.1 (LC-AC-06/71; complete 2026-10-05):** add a length-aware
    native main-entry argument variant over the existing `rxvml` value array,
    keeping `rxvml_run()` as the terminated-string convenience route. Accept
@@ -2567,8 +2590,8 @@ template or argument count limit is acceptable.
    repeated context use and legacy calls with focused host tests; update the
    public host guide and reference obligation. This is an additive C API, not
    a new Classic invocation model.
-   **LC-STEP-73G.3 — host invocation compatibility design gate (LC-AC-06/71;
-   review active 2026-10-05):** the length-aware entries complete transport of
+   **LC-STEP-73G.3 — separate host invocation design proposal (LC-AC-06;
+   review parked 2026-10-05, outside ARG closure):** the length-aware entries complete transport of
    *present* Unicode arguments for today's command-style main entry, but they
    do not implement the larger Classic host start contract. In particular,
    `rxvml_run_internal()` builds an array in which every position is present;
@@ -2627,6 +2650,14 @@ template or argument count limit is acceptable.
       suite once on exact inputs, update the public guide, and commit a
       coherent receipt. Keep LC-AC-71 open until this and other applicable
       invocation paths pass; keep broader host callbacks under LC-AC-06.
+
+   **Scope disposition, 2026-10-05:** `73G.3A–E` and `LC-73H-01–04` are
+   retained as a historical host proposal and reference inventory, not active
+   ARG implementation steps or `LC-AC-71` gates. No public host ABI or main
+   frame-mode work follows from this proposal without a separate decision.
+   Cross-dialect Classic/non-Classic invocation is outside the agreed scope;
+   external Classic CALL/INTERPRET and actual host-interface obligations keep
+   their separate programme owners.
 
    **2026-10-05 73G.3A reference receipt.** A guarded C `RexxStart` probe
    against installed Regina, retained as ignored
@@ -2930,6 +2961,42 @@ to isolate host ARG entry behavior while direct CALL expressions were open.
 LC-STEP-88E-2B now admits that expression/omission shape in compiled Level C,
 including recursive frames; it remains a CALL dependency receipt rather than
 a completed host or full ARG invocation audit.
+
+**2026-10-05 LC-I-11 whole-instruction closure receipt (supersedes the
+earlier open verdict).** Adrian separated cross-dialect and future host
+invocation work from the Classic ARG instruction on 2026-10-05. The complete
+ARG source form is `ARG [template_list]`, semantically `PARSE UPPER ARG`.
+The parser retains every empty comma position; validation and lowering walk
+arbitrarily many segments and use the same `parseplan` executor as PARSE.
+There is one `RexxActivationArguments` owner per main or direct internal
+subroutine/function invocation; ARG rereads its values without consuming
+them, and `ARG()` checks the same presence bits. The compiler has one
+actual-argument binding loop and no first-ARG signature binding or separate
+word-only template lowerer. This is the coherence review for the whole
+instruction, not another ARG implementation slice.
+
+| ARG obligation | Closure evidence |
+| --- | --- |
+| Bare form, word/dot/variable/literal/dynamic patterns, absolute/relative positions, empty/many comma segments | `levelc_arg_patterns*`, `levelc_arg_static_templates*`, `levelc_arg_dynamic_templates*`, `levelc_arg_nested_long*`, source-tree and canonical-tree fixtures pass; shared PARSE `parseplan` path inspected. |
+| Uppercasing, Unicode codepoint positions, exact values, omitted versus explicit empty, repeat reads and pool writes | `levelc_arg_unicode*`, `levelc_arg_exact_bytes*`, `levelc_arg_bif*`, `testRexxActivationArguments*`, frame and EXPOSE fixtures pass; `ARG(n)` retains original case while ARG fields uppercase. |
+| Main, local CALL/function, nested/recursive and legal statement placement | `levelc_arg_frame_main_*`, `levelc_arg_instruction_invocation*`, `levelc_arg_frame_lifecycle*`, recursive shared/private and direct expression-actual fixtures pass optimized/no-opt; linked ARG and frame tests pass. |
+| Malformed templates and reached dynamic position errors | Authored 38.1 template checks and `levelc_arg_bad_dynamic_position*` 26.4 source checks pass; IBM/Regina error categories and instruction placement were reviewed. |
+| Native transport for admitted main entry | `levelc_arg_host_entry` and `crexxsaa_arg_lengths` pass Unicode, embedded NUL, invalid UTF8/pointer-length, repeated context and cache paths; the old C-string convenience entry's NUL limit remains tracked under the host interface. |
+
+The guarded product build and focused ARG/host checks passed at the
+`9bbdc740f` code checkpoint. Later code/test changes through `3a8c3399a`
+passed the normal Debug Level C suite **594/594**, including the ARG, AST and
+linked fixtures, plus Level G/RexxScript isolation **10/10**; exact-input
+logs are `cmake-build-debug/levelc-signal-implicit-final-build.log`,
+`cmake-build-debug/levelc-signal-forms-debug-qual.log` and
+`cmake-build-debug/levelc-signal-forms-isolation.log`. The subsequent `45cc83ec4` commit and
+this receipt change documentation only. The guarded qualification peaked at
+about 4633 MiB aggregate RSS and left zero child processes. `LC-AC-71` and
+`LC-I-11` are **closed** for the agreed Classic ARG instruction. External
+Classic CALL/INTERPRET must integrate the same frame under their later rows;
+cross-dialect calls are out of scope, and host invocation-mode expansion has
+a separate owner. PARSE, PROCEDURE, CALL, RETURN, SIGNAL, full Level C and
+Release 1 remain open.
 
 **LC-STEP-73H historical profile bridge — superseded 2026-10-04.** The
 following proposal and `LC-73H-*` checks are retained as design history and
@@ -4123,7 +4190,7 @@ following as one instruction contract before another SIGNAL closure claim:
 | Direct symbol/quoted and evaluated VALUE | One frame-local branch route, once-only VALUE evaluation and runtime 16.1 exist. Complete source, Unicode-label, nested-call, crossed-DO and re-entry reference cases in optimized/no-opt and linked output. A fresh Regina/compiled crossed-loop and subsequent SYNTAX trap probe agrees; its ignored evidence is `cmake-build-debug/levelc-signal-whole-probe-*.log`. |
 | ON/OFF for seven parsed names | Activation policy, source-order override, one-shot delivery, nested inheritance and named/default labels exist. Audit malformed tails and reached missing targets together with the actual condition-producer matrix. |
 | Condition state and descriptions | `CONDITION()` reads activation-local C/D/E/I/S and SYNTAX/NOVALUE state. Complete catalog-expanded SYNTAX description from the one standard diagnostic catalog and review extra data against the reference, without a second hand-maintained message table. |
-| Producer ownership | SYNTAX and NOVALUE are live. ERROR/FAILURE belong to ADDRESS and command completion (LC-I-20/21), HALT to host interrupt lifecycle (LC-AC-06), NOTREADY to host streams and input (LC-I-16/20), and LOSTDIGITS to numeric context (LC-I-22). Preserve their full contracts as open; a parsed ON/OFF form alone is not producer evidence. |
+| Producer ownership | SYNTAX and NOVALUE are live. ERROR/FAILURE belong to ADDRESS and command completion (LC-I-20/21), HALT to host interrupt lifecycle (LC-AC-06), NOTREADY to host streams and input (LC-I-16/20), and LOSTDIGITS to numeric context (LC-I-22). Their absence does not block the SIGNAL instruction if each handler path is exercised through a controlled typed event and its real producer remains open with its owner. A parsed ON/OFF form alone is not delivery evidence. |
 | Crossed control and adjacent instructions | Check loop/reference/handler cleanup on branch or trap and source-order label fallthrough. An `EXIT` inside a local target currently fails as an unsupported procedure statement; that is an open LC-I-15 EXIT shape, not an approved SIGNAL exclusion. |
 | Delivery and isolation | Verify raw/canonical AST, authored source and errors, full `rxc`→`rxas`→`rxlink`→`rxvm`, optimized/no-opt, normal correctness, and Level B/G/RexxScript isolation on the final code/test inputs. |
 
@@ -4131,6 +4198,17 @@ The current probe is a reference and implementation audit, not a new closed
 instruction or a reason to move the strict whole-instruction queue. The
 approved frame design remains the shared prerequisite for ARG, PROCEDURE and
 CALL; LC-AC-76 and LC-I-23 remain open pending this whole review.
+
+**2026-10-05 SIGNAL closure-boundary correction.** Adrian clarified that
+SIGNAL responds to conditions; ADDRESS, host/I/O and NUMERIC own the missing
+ERROR/FAILURE, HALT/NOTREADY and LOSTDIGITS producers. Qualify SIGNAL's
+ON/OFF, named/default dispatch, one-shot and nested policy for each parsed
+condition identity with controlled typed events plus available live
+SYNTAX/NOVALUE producers. Close SIGNAL when its own complete handler, direct
+branch, error and lifecycle matrix passes. Keep each absent real producer
+open under its owning row until separately implemented and tested; do not
+label the SIGNAL instruction incomplete solely because those producers are
+absent. Full Level C and Release 1 criteria remain open.
 
 **SYNTAX description checkpoint, 2026-10-05.** `rxfnsc` generates a build-local
 template module from the existing `messages/diagnostics.en_GB.msg` catalog.
@@ -4207,7 +4285,8 @@ passed on the exact code/test/build inputs, 579/579 (peak 4895 MiB, zero
 residual processes). Level G signal and RexxScript isolation passed 10/10
 in `cmake-build-debug/levelc-signal-label-isolation.log`. Duplicate labels
 remain ordinary source-order frame blocks; explicit target lookup selects
-the first. The full SIGNAL producer/extra-data matrix remains open.
+the first. The SIGNAL handler/condition-state matrix remains open; real
+producer-specific extra data remains with each producer's owning row.
 
 **Remaining legal SIGNAL forms found in the whole review, 2026-10-05.**
 Regina accepts `SIGNAL ON SYNTAX NAME 'caught'` and transfers to that quoted
@@ -4236,8 +4315,9 @@ On those exact code/test/build inputs, the normal Debug Level C suite passed
 MiB, zero residual processes), and Level G signal/RexxScript isolation passed
 10/10 in `cmake-build-debug/levelc-signal-forms-isolation.log`. The process
 inventory after each run was empty. This source-form checkpoint does not close
-LC-I-23 or LC-AC-76: missing condition producers, extra data, host delivery
-and the remaining whole-SIGNAL matrix retain their owners above.
+LC-I-23 or LC-AC-76: the remaining handler, condition-state and transfer
+matrix still needs its whole-instruction review. Missing real producers and
+their extra data retain their separate owners above.
 
 ## Findings
 
@@ -4391,7 +4471,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | Contract | Feature | Current evidence level | Remaining proof |
 | --- | --- | --- | --- |
 | `SYN-CLASSIC-OPTIONS` | Classic `OPTIONS` clauses and Level C selection | Whole instruction closed under LC-AC-66/LC-STEP-67D | Shared condition, TRACE and host proof remains open in its own criteria |
-| `SYN-CLASSIC-CLAUSES` | Semicolon/EOL clause model | Parser and ten closed instruction execution paths | Full clause/TRACE and condition lifecycle open |
+| `SYN-CLASSIC-CLAUSES` | Semicolon/EOL clause model | Parser and eleven closed instruction execution paths | Full clause/TRACE and condition lifecycle open |
 | `SYN-CLASSIC-CONTEXTUAL-KEYWORDS` | Instruction words usable as symbols outside instruction context | Parser plus selected executable variable/expression contexts | Complete contextual reference matrix open |
 | `SYN-CLASSIC-LABELS` | Labels and local routine names | One-body frame-label entry, source-order fallthrough, nested shared-pool and recursive CALL pass opt/no-opt | SIGNAL targets, runtime PROCEDURE 17.1 and full reference matrix require LC-STEP-63T |
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Shared pool reads and closed assignment/DROP paths exercise scalar, stem and compound symbols | Constant-symbol and full condition/reference proof open |
@@ -4400,7 +4480,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-ASSIGNMENT` | Simple, stem and compound assignment with expression or empty RHS | Whole instruction closed under LC-AC-63/LC-STEP-88D-3; byte-literal scalar values, Unicode compound tails, NUL in substituted tails and RHS-order/local exposure pass | Shared host/external API remains open under LC-AC-04/06 |
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-ARG` | Classic ARG instruction | Main and routine activation frames, omitted/present values, comma templates, static/dynamic patterns and positions, compound/exposed targets, repeated reads, Unicode arguments, ARG BIF, host `rxvml_run()` entry, linked output, IF/SELECT/SIGNAL frame placement and authored 38.1 template diagnostics | Applicable host/invocation closure remains open under LC-AC-71; the C-string host entry cannot carry embedded NUL, while external CALL and INTERPRET retain their instruction owners |
+| `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL accepts expression actuals such as `CALL nested ARG(1),,ARG(2)` with omitted slots | One-frame label model, external resolution, result and ON/OFF trap lifecycle, errors and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |

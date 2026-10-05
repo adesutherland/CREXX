@@ -9,10 +9,10 @@ Classic REXX compatibility, using the current cREXX compiler front-end style:
 re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
 The first DSLSH syntax-highlighting milestone is complete. Compiled Level C
-also has ten closed whole-instruction reviews and substantial ARG, PARSE and
-BIF foundations; the [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
+also has eleven closed whole-instruction reviews, including ARG, and substantial
+PARSE and BIF foundations; the [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
 owns their exact status and evidence. The approved one-frame label/SIGNAL
-architecture is the active shared ARG/PROCEDURE/CALL dependency. Its reference
+architecture is the shared ARG/PROCEDURE/CALL foundation. Its reference
 review and canonical frame-control nodes are complete, and the one-body
 lowerer has bounded passing invocation and SIGNAL checkpoints. Accepted shapes lower to the ordinary compiler and bytecode
 toolchain; unsupported shapes fail closed.
@@ -104,8 +104,11 @@ Level C `ARG` uses Classic `PARSE UPPER ARG` behavior. Each nonempty comma
 segment reads its position from the activation frame and passes its value
 through the shared Classic TRANSLATE call before template execution. The
 callee's visible pool receives the resulting fields. The approved Unicode
-contract requires codepoint template and uppercase behavior; its ARG
-qualification remains open.
+contract requires codepoint template and uppercase behavior; the whole ARG
+instruction closed under LC-AC-71 after this shared path and its admitted
+Classic invocation matrix passed. Future external CALL/INTERPRET must reuse
+the same activation frame under their own instruction rows. Cross-dialect
+Classic/non-Classic calls are outside the agreed Level C scope.
 
 **Approved 2026-10-04 Unicode-first direction.** Level C visible scalar
 strings are valid text. Existing Level B `.string` and codepoint PARSE/SAY
@@ -274,19 +277,19 @@ explicit adapter or configuration, not in duplicate BIF algorithms. The
 its evaluator and sandbox boundary.
 
 The completed `SAY` review exposed a control-flow dependency: a shared BIF can
-raise VM `CLASSIC_SYNTAX`, but current Level C lowering turns every top-level
-label into a separate procedure with mandatory `PROCEDURE` and final `RETURN`.
-That bounded model cannot directly use the VM's same-frame `sigbr` target for
+raise VM `CLASSIC_SYNTAX`, while the former Level C lowering put each label
+in a separate procedure with mandatory `PROCEDURE` and final `RETURN`.
+That bounded model could not use the VM's same-frame `sigbr` target for
 a Classic `SIGNAL ON SYNTAX` branch. The approved LC-STEP-63T change gives
 each Classic invocation one labeled VM frame, with condition state owned
 by the invocation and configuration and variable storage kept in their
 existing separate objects. Adrian approved this direction on 2026-10-05; the
 observable gates and implementation order are in the worklist. The frame-local
-AST/emitter foundation is not wired into Level C lowering, and no trap or general label
-compatibility is claimed yet.
+AST/emitter foundation and one-body lowerer are wired into Level C; the full
+SIGNAL handler/reference matrix and adjacent instruction reviews remain open.
 
-The current executable Level C surface includes ten closed whole instructions
-and bounded ARG, PARSE, routine and BIF slices; the complete Classic contract
+The current executable Level C surface includes eleven closed whole instructions
+and bounded PARSE, routine and BIF slices; the complete Classic contract
 remains open in the worklist. No additional
 language-direction decision is needed to continue an increment that follows
 the references and this architecture. A new syntax rule, compatibility
@@ -691,9 +694,10 @@ the complete SIGNAL instruction remains open.
 The [LC-STEP-63T gates](../../docs/planning/release-1/levelc-compatibility-worklist.md#approved-architecture-direction-for-lc-step-63t)
 cover direct and trapped conditions, label/PROCEDURE/CALL/RETURN lifetimes,
 source and `SIGL`, optimized/no-opt parity, linked execution, and existing
-Level C and RexxScript regressions. The ARG row remains open until its
-applicable invocation audit can use this common frame; the architectural
-dependency does not close SIGNAL ahead of its whole-instruction review.
+Level C and RexxScript regressions. ARG is closed on the admitted Classic
+activation model. SIGNAL remains open for its own complete handler and
+transfer matrix; absent ADDRESS, host/I/O and NUMERIC condition producers
+retain their separate owners and do not by themselves block SIGNAL closure.
 
 ## 2026-10-03 implementation review: simplify before expansion
 
