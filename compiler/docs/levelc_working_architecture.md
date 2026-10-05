@@ -472,6 +472,31 @@ emitter/flow foundation only: the Level C lowerer still uses its bounded
 per-label procedure model, and handler delivery cleanup, one-shot policy,
 dynamic VALUE dispatch and invocation state remain in LC-STEP-63T-3/4.
 
+The following LC-STEP-63T-3 checkpoint replaces the per-label procedures in
+the active Level C lowerer with one generated callable body. The main wrapper
+captures host arguments in a fresh activation and enters that body at entry
+zero. Local CALL and function expressions capture each actual once, create a
+fresh activation, and pass a label-entry ordinal. The body dispatches through
+canonical `FRAME_BRANCH`/`FRAME_LABEL` nodes, so source-order fallthrough and
+recursive label calls execute in separate VM frames without extra generated
+procedures. Main and local statements share one validator and lowerer.
+
+The active pool initially links to the caller's pool. At `PROCEDURE`, a
+separate private pool is created before the active link is rebound; `EXPOSE`
+retains a reference to the caller's pool. Creating the private pool directly
+into the linked active register would overwrite the caller's pool and could
+make an exposed variable alias itself. Explicit and bare RETURN now record
+value presence in `RexxActivationArguments` independently of `RexxValue`.
+
+This is still a bounded frame checkpoint. Main fallthrough into a
+`PROCEDURE` label remains compile-time unsupported until the runtime can
+raise Classic 17.1 based on whether that activation entered through an
+internal call. The source parser continues to reject a `PROCEDURE` after an
+earlier executed clause with 17.1. Missing function results, CALL result
+semantics, SIGNAL handlers and dynamic VALUE dispatch retain their separate
+worklist gates. No ARG, CALL, PROCEDURE or SIGNAL instruction is closed by
+this checkpoint.
+
 The source AST also needs to preserve the authored `VALUE` form. Today
 `SIGNAL 'target'` and `SIGNAL VALUE 'target'` both have a `LEVELC_SIGNAL`
 with a `STRING` child; only incidental raw-token quoting differs. A temporary

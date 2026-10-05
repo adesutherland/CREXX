@@ -5754,6 +5754,37 @@ add_levelc_runtime_slice_test(levelc_slice2_procedure_expose
         rexx_src/levelc_slice2_procedure_expose.rexx
         "3\n")
 
+add_levelc_runtime_slice_test(levelc_frame_fallthrough
+        rexx_src/levelc_frame_fallthrough.rexx
+        "first\nalpha\nbeta\n")
+add_levelc_runtime_slice_test(levelc_frame_fallthrough_noopt
+        rexx_src/levelc_frame_fallthrough.rexx
+        "first\nalpha\nbeta\n" -n)
+add_levelc_runtime_slice_test(levelc_frame_shared_pool
+        rexx_src/levelc_frame_shared_pool.rexx
+        "changed-inner\n")
+add_levelc_runtime_slice_test(levelc_frame_shared_pool_noopt
+        rexx_src/levelc_frame_shared_pool.rexx
+        "changed-inner\n" -n)
+add_levelc_runtime_slice_test(levelc_frame_called_fallthrough
+        rexx_src/levelc_frame_called_fallthrough.rexx
+        "first-second\n")
+add_levelc_runtime_slice_test(levelc_frame_called_fallthrough_noopt
+        rexx_src/levelc_frame_called_fallthrough.rexx
+        "first-second\n" -n)
+add_levelc_runtime_slice_test(levelc_frame_private_pool
+        rexx_src/levelc_frame_private_pool.rexx
+        "private\nouter\n")
+add_levelc_runtime_slice_test(levelc_frame_private_pool_noopt
+        rexx_src/levelc_frame_private_pool.rexx
+        "private\nouter\n" -n)
+add_levelc_runtime_slice_test(levelc_frame_recursive_call
+        rexx_src/levelc_frame_recursive_call.rexx
+        "3\n")
+add_levelc_runtime_slice_test(levelc_frame_recursive_call_noopt
+        rexx_src/levelc_frame_recursive_call.rexx
+        "3\n" -n)
+
 add_levelc_runtime_slice_test(levelc_slice3_bif_length_target_shape
         rexx_src/levelc_slice3_bif_length_target_shape.crexx
         "6\n")
@@ -6493,7 +6524,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice4_bif_substr_tree_shape
 
 add_levelc_lowered_tree_shape_test(levelc_slice4_procedure_args_return_tree_shape
         rexx_src/levelc_slice4_procedure_args_return.rexx
-        "__rxcp_levelc_proc_DOUBLE"
+        "__rxcp_levelc_body"
         "__rxcp_levelc_activation"
         "RexxActivationArguments"
         "append"
@@ -6881,7 +6912,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice38_adjacent_call_tree_shape
         "rexxclassicbif_length"
         "rexxclassicbifsubstr.rexxclassicbif_substr"
         "rexxclassicbif_checked"
-        "__rxcp_levelc_proc_ECHO"
+        "__rxcp_levelc_body"
         "spaceConcat")
 add_levelc_lowered_tree_shape_test(levelc_slice39_arg_upper_tree_shape
         rexx_src/levelc_slice39_arg_upper.rexx
@@ -6901,7 +6932,7 @@ add_levelc_lowered_tree_shape_test(levelc_slice40_parse_single_tree_shape
         "rexxclassicbif_translate"
         "symbolValue"
         "setSymbolValue"
-        "__rxcp_levelc_proc_LOCAL")
+        "__rxcp_levelc_body")
 add_levelc_lowered_tree_shape_test(levelc_slice41_parse_three_tree_shape
         rexx_src/levelc_slice41_parse_three.rexx
         "parseplan"
@@ -6959,7 +6990,7 @@ add_levelc_lowered_tree_shape_test(levelc_assignment_instruction_tree_shape
         rexx_src/levelc_assignment_instruction.rexx
         "setSymbolValue.*\\(16:0\\)"
         "ITEMS.KEY.PART"
-        "__rxcp_levelc_proc_CHANGE.*\\(16:15\\)"
+        "FRAME_LABEL.*\\(16:15\\)"
         "setSymbolValue.*\\(32:0\\)"
         "STRING : .*\\(32:0\\)"
         "setSymbolValue.*\\(58:0\\)"

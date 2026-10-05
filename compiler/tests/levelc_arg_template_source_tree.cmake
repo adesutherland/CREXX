@@ -39,11 +39,11 @@ foreach(case IN ITEMS instruction patterns unicode)
         string(SUBSTRING "${output}" ${lowered_start} ${lowered_length} lowered)
         string(FIND "${raw}" "LABEL : \"probe:\"" probe_start)
         string(FIND "${raw}" "LABEL : \"dot:\"" dot_start)
-        string(FIND "${lowered}" "PROCEDURE : \"__rxcp_levelc_proc_PROBE:\"" lowered_probe_start)
-        string(FIND "${lowered}" "PROCEDURE : \"__rxcp_levelc_proc_DOT:\"" lowered_dot_start)
+        string(FIND "${lowered}" "FRAME_LABEL : \"probe:\"" lowered_probe_start)
+        string(FIND "${lowered}" "FRAME_LABEL : \"dot:\"" lowered_dot_start)
         if(probe_start EQUAL -1 OR dot_start LESS probe_start OR
            lowered_probe_start EQUAL -1 OR lowered_dot_start LESS lowered_probe_start)
-            message(FATAL_ERROR "Unicode ARG procedure ownership is missing; see ${log}")
+            message(FATAL_ERROR "Unicode ARG frame ownership is missing; see ${log}")
         endif()
         math(EXPR raw_length "${dot_start} - ${probe_start}")
         string(SUBSTRING "${raw}" ${probe_start} ${raw_length} raw_probe)
@@ -54,7 +54,7 @@ foreach(case IN ITEMS instruction patterns unicode)
             message(FATAL_ERROR "Nested source CALL is missing from probe; see ${log}")
         endif()
         if(NOT lowered_probe MATCHES "CALL : \"call\" \\(11:10\\)" OR
-           NOT lowered_probe MATCHES "FUNCTION : \"__rxcp_levelc_proc_DOT\"" OR
+           NOT lowered_probe MATCHES "FUNCTION : \"__rxcp_levelc_body\"" OR
            NOT lowered_probe MATCHES "VAR_SYMBOL : \"__rxcp_levelc_config_ref\"" OR
            NOT lowered_probe MATCHES "VAR_SYMBOL : \"__rxcp_levelc_call_activation_[0-9]+\"" OR
            lowered_probe MATCHES "LEVELC_ARG :")

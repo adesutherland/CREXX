@@ -37,7 +37,7 @@ if(relay_pos EQUAL -1 OR side_pos EQUAL -1 OR
    empty_pos LESS edges_pos OR NOT raw_token_pos EQUAL -1)
     message(FATAL_ERROR "CALL source tree lost expression or omitted-slot structure; see ${log}")
 endif()
-string(FIND "${lowered}" __rxcp_levelc_proc_RELAY procedure_pos)
+string(FIND "${lowered}" [=[FRAME_LABEL : "relay:"]=] procedure_pos)
 string(FIND "${lowered}" RexxActivationArguments frame_pos)
 string(FIND "${lowered}" [=[MEMBER_CALL : "append"]=] append_pos)
 if(procedure_pos EQUAL -1 OR frame_pos EQUAL -1 OR append_pos EQUAL -1)
