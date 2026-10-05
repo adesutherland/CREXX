@@ -507,6 +507,15 @@ result semantics, SIGNAL handlers and dynamic VALUE dispatch retain their
 separate worklist gates. No ARG, CALL, PROCEDURE or SIGNAL instruction is
 closed by these checkpoints.
 
+The `63T-3D` ARG/frame matrix exercises a no-PROCEDURE caller that falls
+through an empty label and rereads its own argument frame after a nested
+`PROCEDURE EXPOSE` call. Recursive calls prove that ARG slots remain local
+to each activation while variable writes follow the selected shared or
+private pool. The corresponding programs run optimized and no-opt, and
+the nested caller runs through `rxlink`. A compile regression also requires
+authored-line 17.1 for nested `IF 1 THEN PROCEDURE`. These checks expand
+the one-body evidence; they do not close ARG, PROCEDURE or CALL.
+
 The source AST also needs to preserve the authored `VALUE` form. Today
 `SIGNAL 'target'` and `SIGNAL VALUE 'target'` both have a `LEVELC_SIGNAL`
 with a `STRING` child; only incidental raw-token quoting differs. A temporary

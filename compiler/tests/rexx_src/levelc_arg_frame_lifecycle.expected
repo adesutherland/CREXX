@@ -1,0 +1,4 @@
+outer=A B||C D|0
+inner=X||Z
+repeat=A B|0
+main=X

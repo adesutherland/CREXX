@@ -5265,6 +5265,9 @@ add_levelc_invalid_compile_test(levelc_compile_invalid_if_missing_then
 add_levelc_invalid_compile_test(levelc_arg_malformed
         rexx_src/levelc_arg_malformed.rexx
         "RXC-LC-46\\.1" "levelc_arg_malformed\\.rexx @ 2:7")
+add_levelc_invalid_compile_test(levelc_procedure_nested_invalid
+        rexx_src/levelc_procedure_nested_invalid.rexx
+        "RXC-LC-17\\.1" "levelc_procedure_nested_invalid\\.rexx @ 5:11")
 add_levelc_invalid_compile_test(levelc_call_expression_malformed
         rexx_src/levelc_call_expression_malformed.rexx
         "RXC-LC-35\\.1" "levelc_call_expression_malformed\\.rexx @ 2:15")
@@ -5832,6 +5835,24 @@ add_levelc_runtime_slice_test(levelc_arg_frame_calls
 add_levelc_runtime_slice_test(levelc_arg_frame_calls_noopt
         rexx_src/levelc_arg_frame_calls.rexx
         "A /  / C\nA\n / B / \n\n / B / \n\n:B\nA:\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_frame_lifecycle
+        rexx_src/levelc_arg_frame_lifecycle.rexx
+        "outer=A B||C D|0\ninner=X||Z\nrepeat=A B|0\nmain=X\n")
+add_levelc_runtime_slice_test(levelc_arg_frame_lifecycle_noopt
+        rexx_src/levelc_arg_frame_lifecycle.rexx
+        "outer=A B||C D|0\ninner=X||Z\nrepeat=A B|0\nmain=X\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_recursive_shared
+        rexx_src/levelc_arg_recursive_shared.rexx
+        "enter=3:A B||Z|0\nenter=2:A BX||Z|0\nenter=1:A BXX||Z|0\nleave=1:A BXX|0\nleave=1:A BX|0\nleave=1:A B|0\n")
+add_levelc_runtime_slice_test(levelc_arg_recursive_shared_noopt
+        rexx_src/levelc_arg_recursive_shared.rexx
+        "enter=3:A B||Z|0\nenter=2:A BX||Z|0\nenter=1:A BXX||Z|0\nleave=1:A BXX|0\nleave=1:A BX|0\nleave=1:A B|0\n" -n)
+add_levelc_runtime_slice_test(levelc_arg_recursive_private
+        rexx_src/levelc_arg_recursive_private.rexx
+        "enter=3:A B||Z|0\nenter=2:A BX||Z|0\nenter=1:A BXX||Z|0\nleave=1:A BXX|0\nleave=2:A BX|0\nleave=3:A B|0\n")
+add_levelc_runtime_slice_test(levelc_arg_recursive_private_noopt
+        rexx_src/levelc_arg_recursive_private.rexx
+        "enter=3:A B||Z|0\nenter=2:A BX||Z|0\nenter=1:A BXX||Z|0\nleave=1:A BXX|0\nleave=2:A BX|0\nleave=3:A B|0\n" -n)
 add_levelc_runtime_slice_test(levelc_call_expression_actuals
         rexx_src/levelc_call_expression_actuals.rexx
         "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|Ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n")
@@ -5885,6 +5906,21 @@ add_test(NAME levelc_arg_linked
         -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
 set_tests_properties(levelc_arg_linked PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+add_test(NAME levelc_arg_frame_linked
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_frame_lifecycle.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DNAME=levelc_arg_frame_linked
+        -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_frame_lifecycle.expected
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+set_tests_properties(levelc_arg_frame_linked PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 add_levelc_runtime_slice_test(levelc_slice4_procedure_missing_arg

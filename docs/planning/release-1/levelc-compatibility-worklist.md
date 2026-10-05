@@ -3420,6 +3420,29 @@ lowering and tests.
 authored error family; full PROCEDURE forms, CALL/RETURN/EXIT lifetimes,
 SIGNAL, linked/reference and host matrices need their remaining reviews.
 
+**2026-10-05 LC-STEP-63T-3D ARG/frame invocation matrix checkpoint.**
+Regina and compiled probes agree for a no-PROCEDURE caller that rereads its
+omitted ARG slot after falling through an empty label, a nested
+`PROCEDURE EXPOSE` callee that changes the caller's pool, and recursive
+ARG activations with shared and private pools. In the shared-pool case,
+earlier frames observe the deepest call's final `depth`; private PROCEDURE
+frames retain their own `depth`. Each activation retains its own argument
+slots in both cases. Permanent optimized/no-opt tests cover all three
+programs, and linked execution covers the nested caller and callee. A
+separate compile test requires source-anchored 17.1 for `IF 1 THEN
+PROCEDURE`, following the documented first-processed-instruction rule
+despite Regina accepting that form. Focused results and the exact-input
+normal Debug Level C suite passed 8/8 and 488/488 respectively. The guarded
+suite peaked at about 1899 MiB aggregate descendant RSS and left no child
+processes; the post-run process inventory was empty. Evidence:
+`cmake-build-debug/levelc-63t3d-matrix-build.log`,
+`cmake-build-debug/levelc-63t3d-matrix-focused.log`,
+`cmake-build-debug/levelc-63t3d-matrix-qual.log`, and the three ignored
+`cmake-build-debug/levelc-arg-*-reference.log` Regina probes.
+This is frame and ARG coverage, not LC-I-11 closure: remaining admitted
+invocation modes, full error/reference review, and the shared SIGNAL and
+CALL lifecycles remain open under LC-AC-71 and LC-63T-01–04.
+
 ## Findings
 
 - **LC-FIND-08 — resolved indirect DROP invalid words:** the
@@ -3514,7 +3537,7 @@ itself make its Classic shape executable.
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Whole IF and DO instructions closed; canonical branch/group builders cover accepted nested contexts | Shared condition/TRACE lifecycle and per-arm instruction owners remain open |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Whole SELECT instruction closed under LC-AC-68, including ordered/lazy arms and `34.2`/`7.3` errors | Shared condition/TRACE lifecycle remains open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Whole DO, LEAVE and ITERATE instructions closed under LC-AC-65/69/70 with one checked header, shared loop state, compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host proof remains open in their own rows |
-| `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | One generated callable body with frame labels, main/local ARG activation, omissions, templates and ARG BIF; direct CALL expression actuals; shared/private pool transitions and bounded RETURN | Runtime 17.1 on main fallthrough, missing function results, remaining ARG invocation audit, full CALL/PROCEDURE/RETURN and condition lifecycle open |
+| `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | One generated callable body with frame labels, main/local ARG activation, omissions, templates and ARG BIF; direct CALL expression actuals; shared/private pool transitions, authored-line 17.1 and bounded RETURN | Missing function results, remaining ARG invocation audit, full CALL/PROCEDURE/RETURN and condition lifecycle open |
 | `PARSE`, `PULL`, template/pattern/position nodes | Shared VM `parseplan` executes ARG and VAR/VALUE arbitrary target lists, comma templates, compound targets, static/dynamic patterns and positions, with ordered pool writes | Other PARSE sources and complete instruction/error/reference proof open |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
 | `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | Open: parser/front end only | Context changes, dynamic code, signal transfer, trace and error identity |
