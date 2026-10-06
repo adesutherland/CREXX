@@ -4524,10 +4524,8 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_numeric_validation.rexx
             MUST_MATCH
             "RXC-LC-26\\.5 value=\"0\""
-            "RXC-LC-26\\.5 value=\"buzz\""
             "RXC-LC-6\\.3"
             "RXC-LC-26\\.6 value=\"-1\""
-            "RXC-LC-26\\.6 value=\"buzz\""
             "RXC-LC-6\\.2"
             "RXC-LC-33\\.6 value=\"bad\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"numeric\""
@@ -4535,7 +4533,9 @@ if (ENABLE_PARSER_MODE)
             "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=12, sev=48, text=\"'scientific'\""
             MUST_NOT_MATCH
             "RXC-LC-26\\.5 value=\"9\""
+            "RXC-LC-26\\.5 value=\"buzz\""
             "RXC-LC-26\\.6 value=\"0\""
+            "RXC-LC-26\\.6 value=\"buzz\""
             "RXC-LC-33\\.6 value=\"engineering\""
             "RXC-LC-33\\.6 value=\"scientific\""
             "PARSE_FAILURE"
@@ -6633,7 +6633,7 @@ foreach(_address_mode IN ITEMS opt noopt)
             -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_address_external.expected
             -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
             ${_address_noopt}
-            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_address_external.cmake)
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_signed_external.cmake)
     set_tests_properties(levelc_address_external_${_address_mode} PROPERTIES
             LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
@@ -8804,6 +8804,59 @@ set_tests_properties(levelc_say_host_output PROPERTIES LABELS "compiler;levelc"
 add_test(NAME levelc_address_host_callback COMMAND test_levelc_address_host_callback)
 set_tests_properties(levelc_address_host_callback PROPERTIES LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "test_levelc_address_host_callback")
+foreach(_numeric_mode IN ITEMS opt noopt)
+    if(_numeric_mode STREQUAL "noopt")
+        set(_numeric_noopt -DNOOPT=1)
+    else()
+        set(_numeric_noopt)
+    endif()
+    foreach(_numeric_stem IN ITEMS levelc_numeric_whole levelc_numeric_lostdigits
+            levelc_numeric_invalid_context)
+        add_test(NAME ${_numeric_stem}_${_numeric_mode}
+                COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXLINK=$<TARGET_FILE:rxlink>
+                -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                -DBINDIR=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${_numeric_stem}.rexx
+                -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${_numeric_stem}.expected
+                -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+                -DNAME=${_numeric_stem}_${_numeric_mode}
+                ${_numeric_noopt}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+        set_tests_properties(${_numeric_stem}_${_numeric_mode} PROPERTIES
+                LABELS "compiler;levelc"
+                CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    endforeach()
+    add_test(NAME levelc_numeric_external_${_numeric_mode}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_numeric_external.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            -DNAME=levelc_numeric_external
+            -DPROVIDER=levelc_numeric_ext_provider
+            -DCONSUMER=levelc_numeric_ext_consumer
+            ${_numeric_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_signed_external.cmake)
+    set_tests_properties(levelc_numeric_external_${_numeric_mode} PROPERTIES
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()
+add_levelc_runtime_syntax_signal_test(levelc_numeric_digits_huge
+        rexx_src/levelc_numeric_digits_huge.rexx "33.2" "before\n"
+        "levelc_numeric_digits_huge.rexx:4:1")
+add_levelc_runtime_syntax_signal_test(levelc_numeric_fuzz_huge
+        rexx_src/levelc_numeric_fuzz_huge.rexx "33.1" "before\n"
+        "levelc_numeric_fuzz_huge.rexx:4:1")
+add_levelc_runtime_syntax_signal_test(levelc_numeric_form_bad
+        rexx_src/levelc_numeric_form_bad.rexx "33.6" "before\n"
+        "levelc_numeric_form_bad.rexx:4:1")
 add_test(NAME levelc_arg_host_entry COMMAND test_levelc_arg_host_entry)
 set_tests_properties(levelc_arg_host_entry PROPERTIES
         LABELS "compiler;levelc"

@@ -714,27 +714,6 @@ static void levelc_validate_string_token(Context *context, Token *token) {
     }
 }
 
-static int levelc_simple_string_operand(Token *head,
-                                        char **value_text,
-                                        Token **anchor) {
-    Token *first;
-    Token *after;
-
-    if (value_text) *value_text = 0;
-    if (anchor) *anchor = 0;
-
-    first = levelc_next_clause_token(head);
-    if (!first || first->token_type != TK_STRING) return 0;
-    after = levelc_next_clause_token(first);
-    if (after) return 0;
-    if (anchor) *anchor = first;
-    if (value_text) {
-        *value_text = levelc_simple_string_value(first);
-        if (!*value_text) return 0;
-    }
-    return 1;
-}
-
 static int levelc_trace_letter_ok(char ch) {
     ch = (char)toupper((unsigned char)ch);
     return ch == 'A' || ch == 'C' || ch == 'E' || ch == 'F' ||
@@ -1151,12 +1130,8 @@ static void levelc_validate_numeric_instruction(Context *context, Token *numeric
         if (levelc_simple_integer_operand(head, &value, &value_text, &anchor)) {
             if (value <= 0) levelc_append_code_value(context, anchor, "26.5", value_text);
             if (value_text) free(value_text);
-        } else if (levelc_simple_string_operand(head, &value_text, &anchor)) {
-            if (!levelc_parse_long_text(value_text, &value) || value <= 0) {
-                levelc_append_code_value(context, anchor, "26.5", value_text);
-            }
-            free(value_text);
         }
+        /* Quoted values use the configured Classic numeric alphabet at run time. */
         return;
     }
 
@@ -1164,12 +1139,8 @@ static void levelc_validate_numeric_instruction(Context *context, Token *numeric
         if (levelc_simple_integer_operand(head, &value, &value_text, &anchor)) {
             if (value < 0) levelc_append_code_value(context, anchor, "26.6", value_text);
             if (value_text) free(value_text);
-        } else if (levelc_simple_string_operand(head, &value_text, &anchor)) {
-            if (!levelc_parse_long_text(value_text, &value) || value < 0) {
-                levelc_append_code_value(context, anchor, "26.6", value_text);
-            }
-            free(value_text);
         }
+        /* The activation validates strings once, with its current configuration. */
         return;
     }
 

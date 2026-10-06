@@ -116,7 +116,10 @@ Implemented coverage includes:
 - parse-template diagnostics: `38.*`, `46.1`;
 - loop-control validation: `27.1`, `28.*`;
 - label/procedure validation: `16.*`, `17.1`;
-- numeric validation for known constants: `26.5`, `26.6`, `33.6`;
+- numeric validation for bare integer DIGITS/FUZZ operands (`26.5`, `26.6`)
+  and literal FORM VALUE operands (`33.6`); quoted and dynamic DIGITS/FUZZ
+  values are validated at execution under the configured Classic numeric
+  alphabet;
 - hex/binary string validation: `15.1`, `15.2`, `15.3`, `15.4`;
 - static `TRACE` request validation: `24.1`;
 - invalid number assignment: `31.1`;

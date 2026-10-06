@@ -48,7 +48,8 @@ rexxclassicbif_format: procedure = .RexxValue
   value = context.argumentText(1)
   number_text = .string
   converted = .string
-  converted = value as .string
+  rounded_value = .RexxValue.fromDecimal(value)
+  converted = rounded_value.asString(1)
   number_text = converted || ""
   if context.argumentCount() = 1 then return .RexxValue(number_text)
 

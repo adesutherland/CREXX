@@ -40,27 +40,39 @@ RexxDoState: class
 
   /** Capture a control start before the other header operands are evaluated. */
   setStart: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     arg value = .RexxValue
-    start_value = .RexxValue(value.asString())
+    start_value = .RexxValue(value.asString(1))
     return
 
   /** Validate and capture the fixed TO value at its authored position. */
   setTo: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     arg value = .RexxValue
     checked = value.controlToValue()
-    to_value = .RexxValue(checked.asString())
+    to_value = .RexxValue(checked.asString(1))
     has_to = 1
     return
 
   /** Validate and capture the fixed BY value at its authored position. */
   setBy: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     arg value = .RexxValue
     checked = value.controlByValue()
-    by_value = .RexxValue(checked.asString())
+    by_value = .RexxValue(checked.asString(1))
     return
 
   /** Validate and capture a simple repetitive DO count. */
   setRepeatCount: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     arg value = .RexxValue
     remaining = countDigits(value, "26.2")
     has_count = 1
@@ -68,6 +80,9 @@ RexxDoState: class
 
   /** Validate and capture the controlled DO FOR count. */
   setForCount: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     arg value = .RexxValue
     remaining = countDigits(value, "26.3")
     has_count = 1
@@ -75,6 +90,9 @@ RexxDoState: class
 
   /** Assign the initial control value only after all header expressions. */
   startControl: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     if symbol = "" then return
     pool = dereference pool_ref
     checked = start_value.controlStartValue()
@@ -84,6 +102,9 @@ RexxDoState: class
 
   /** Test count and fixed endpoint before a source WHILE expression. */
   entryAllowed: method = .boolean
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     if has_count & remaining = "0" then return 0
     if symbol = "" | \has_to then return 1
     pool = dereference pool_ref
@@ -92,6 +113,9 @@ RexxDoState: class
 
   /** Advance after an iteration unless a source UNTIL condition ended it. */
   advance: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     if symbol \= "" then do
       pool = dereference pool_ref
       current = pool.symbolValue(symbol)
@@ -103,12 +127,15 @@ RexxDoState: class
 
   /** Return a canonical non-negative whole count without an integer cast. */
   countDigits: method = .string
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     arg item = .RexxValue, code = .string
     digits = .string
-    original = item.asString()
+    original = item.asString(1)
     if datatype(original, "N") <> "1" then call _rd_invalid_count(code, original)
-    rounded = item.add(.RexxValue.fromInt(0))
-    text = strip(rounded.asString())
+    rounded = item.add(.RexxValue.fromInt(0), 1)
+    text = strip(rounded.asString(1))
     if datatype(text, "W") <> "1" then call _rd_invalid_count(code, original)
 
     negative = 0

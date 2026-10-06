@@ -1888,6 +1888,24 @@ static int levelc_statement_supported(ASTNode *stmt,
         if (plan) plan->has_address = 1;
         return 1;
     }
+    if (stmt->node_type == LEVELC_NUMERIC) {
+        ASTNode *kind = stmt->child;
+        ASTNode *operand = kind ? kind->sibling : NULL;
+        char *name = kind && kind->node_type == LITERAL
+            ? levelc_upper_name(kind) : NULL;
+        int valid = name && kind &&
+            ((strcmp(name, "DIGITS") == 0 || strcmp(name, "FUZZ") == 0)
+                ? (!operand || (!operand->sibling &&
+                                levelc_expr_supported(operand, plan, reason_out)))
+                : (strcmp(name, "FORM") == 0 && operand &&
+                   !operand->sibling &&
+                   (operand->node_type == LITERAL ||
+                    levelc_expr_supported(operand, plan, reason_out))));
+        free(name);
+        if (!valid && reason_out && !*reason_out)
+            *reason_out = "invalid NUMERIC source shape";
+        return valid;
+    }
     if (stmt->node_type == IMPLICIT_CMD) {
         ASTNode *expression = stmt->child;
         ASTNode *warning = expression ? expression->sibling : NULL;
@@ -2017,6 +2035,15 @@ static ASTNode *levelc_lower_expr(Context *context,
                                   ASTNode *expr,
                                   LevelCLowerPlan *plan,
                                   ASTNode *prelude);
+
+static ASTNode *levelc_classic_as_string(Context *context,
+                                         ASTNode *source,
+                                         ASTNode *value) {
+    ASTNode *args[1] = {rxcp_remap_create_integer_constant(
+        context, source, 1, TP_INTEGER)};
+    return value && args[0] ? rxcp_remap_create_member_call(
+        context, source, value, "asString", args, 1) : NULL;
+}
 
 static ASTNode *levelc_rexxvalue_from_text(Context *context,
                                            ASTNode *source_node,
@@ -2234,12 +2261,8 @@ static ASTNode *levelc_copy_rexxvalue(Context *context,
 
     if (!context || !source_node || !value_expr) return NULL;
 
-    factory_args[0] = rxcp_remap_create_member_call(context,
-                                                    source_node,
-                                                    value_expr,
-                                                    "asString",
-                                                    NULL,
-                                                    0);
+    factory_args[0] = levelc_classic_as_string(context, source_node,
+                                               value_expr);
     if (!factory_args[0]) return NULL;
 
     return rxcp_remap_create_factory_call(context,
@@ -2468,20 +2491,171 @@ static char *levelc_prepare_call_activation(Context *context,
     return frame_name;
 }
 
+static int levelc_append_lostdigits_guard(Context *context,
+                                         ASTNode *prelude,
+                                         ASTNode *source,
+                                         const char *value_name,
+                                         const char *detail_prefix,
+                                         const char *event_prefix) {
+    char *detail_name = rxcp_remap_create_generated_node_name(detail_prefix, source);
+    char *event_name = rxcp_remap_create_generated_node_name(event_prefix, source);
+    ASTNode *activation = rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *policy_args[1] = {rxcp_remap_create_integer_constant(
+        context, source, LEVELC_SIGNAL_LOSTDIGITS_ID, TP_INTEGER)};
+    ASTNode *policy = activation && policy_args[0]
+        ? rxcp_remap_create_member_call(context, source, activation,
+                                        "signalPolicy", policy_args, 1) : NULL;
+    ASTNode *enabled = ast_f(context, OP_COMPARE_GT, source->token);
+    ASTNode *enabled_instructions = rxcp_remap_create_instruction_builder(
+        context, source);
+    ASTNode *value = rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, value_name);
+    ASTNode *detail_call = value ? rxcp_remap_create_member_call(
+        context, source, value, "lostDigitsDescription", NULL, 0) : NULL;
+    ASTNode *detail_assignment = detail_call && detail_name
+        ? rxcp_remap_create_named_assignment(
+            context, source, detail_name, detail_call) : NULL;
+    ASTNode *detail_condition = ast_f(context, OP_COMPARE_S_NEQ, source->token);
+    ASTNode *event_args[2];
+    ASTNode *event;
+    ASTNode *event_assignment;
+    ASTNode *signal = ast_ftt(context, ASSEMBLER, strdup("signal"));
+    ASTNode *raise_instructions = rxcp_remap_create_instruction_builder(
+        context, source);
+    ASTNode *raise_block;
+    ASTNode *raise_if;
+    ASTNode *enabled_block;
+    ASTNode *enabled_if;
+    int ok = 0;
+
+    if (!detail_name || !event_name || !policy || !enabled ||
+        !enabled_instructions || !detail_assignment || !detail_condition ||
+        !signal || !raise_instructions) goto done;
+    rxcp_remap_anchor_synthetic(enabled, source);
+    add_ast(enabled, policy);
+    add_ast(enabled, rxcp_remap_create_integer_constant(
+        context, source, 0, TP_INTEGER));
+    add_ast(enabled_instructions, detail_assignment);
+    rxcp_remap_anchor_synthetic(detail_condition, source);
+    add_ast(detail_condition, rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, detail_name));
+    add_ast(detail_condition, rxcp_remap_create_string_constant(
+        context, source, ""));
+    event_args[0] = rxcp_remap_create_integer_constant(
+        context, source, LEVELC_SIGNAL_LOSTDIGITS_ID, TP_INTEGER);
+    event_args[1] = rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, detail_name);
+    event = event_args[0] && event_args[1]
+        ? rxcp_remap_create_factory_call(
+            context, source, "RexxClassicConditionEvent", event_args, 2)
+        : NULL;
+    event_assignment = event ? rxcp_remap_create_named_assignment(
+        context, source, event_name, event) : NULL;
+    if (!event_assignment) goto done;
+    signal->free_node_string = 1;
+    signal->is_compiler_added = 1;
+    rxcp_remap_anchor_synthetic(signal, source);
+    add_ast(signal, rxcp_remap_create_string_constant(
+        context, source, "CLASSIC_CONDITION"));
+    add_ast(signal, rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, event_name));
+    add_ast(raise_instructions, event_assignment);
+    add_ast(raise_instructions, signal);
+    raise_block = rxcp_remap_create_do_block(
+        context, source, raise_instructions);
+    raise_if = raise_block ? rxcp_remap_create_if_statement(
+        context, source, detail_condition, raise_block, NULL) : NULL;
+    if (!raise_if) goto done;
+    add_ast(enabled_instructions, raise_if);
+    enabled_block = rxcp_remap_create_do_block(
+        context, source, enabled_instructions);
+    enabled_if = enabled_block ? rxcp_remap_create_if_statement(
+        context, source, enabled, enabled_block, NULL) : NULL;
+    if (!enabled_if) goto done;
+    add_ast(prelude, enabled_if);
+    ok = 1;
+
+done:
+    free(detail_name);
+    free(event_name);
+    return ok;
+}
+
 static ASTNode *levelc_lower_binary_method(Context *context,
                                            ASTNode *expr,
                                            LevelCLowerPlan *plan,
                                            ASTNode *prelude,
                                            const char *method_name) {
-    ASTNode *args[1];
+    ASTNode *args[2];
     ASTNode *receiver;
+    char *left_name = NULL;
+    char *right_name = NULL;
+    int numeric;
 
     if (!method_name) return NULL;
+    numeric = strcmp(method_name, "add") == 0 ||
+                 strcmp(method_name, "subtract") == 0 ||
+                 strcmp(method_name, "multiply") == 0 ||
+                 strcmp(method_name, "divide") == 0 ||
+                 strcmp(method_name, "integerDivide") == 0 ||
+                 strcmp(method_name, "remainder") == 0 ||
+                 strcmp(method_name, "power") == 0 ||
+                 strcmp(method_name, "compareEqual") == 0 ||
+                 strcmp(method_name, "compareNotEqual") == 0 ||
+                 strcmp(method_name, "compareGreaterThan") == 0 ||
+                 strcmp(method_name, "compareLessThan") == 0 ||
+                 strcmp(method_name, "compareGreaterOrEqual") == 0 ||
+                 strcmp(method_name, "compareLessOrEqual") == 0;
     receiver = levelc_lower_expr(context, expr->child, plan, prelude);
-    args[0] = levelc_lower_expr(context, expr->child->sibling, plan, prelude);
-    if (!receiver || !args[0]) return NULL;
+    if (!receiver) return NULL;
+    if (numeric) {
+        ASTNode *assignment;
+        left_name = rxcp_remap_create_generated_node_name(
+            "__rxcp_levelc_numeric_left_", expr);
+        assignment = left_name ? rxcp_remap_create_named_assignment(
+            context, expr, left_name, receiver) : NULL;
+        if (!assignment) goto fail;
+        add_ast(prelude, assignment);
+        receiver = rxcp_remap_create_named_ref(
+            context, expr, VAR_SYMBOL, left_name);
+    }
+    args[0] = levelc_lower_expr(
+        context, expr->child->sibling, plan, prelude);
+    if (!receiver || !args[0]) goto fail;
+    if (numeric) {
+        ASTNode *assignment;
+        right_name = rxcp_remap_create_generated_node_name(
+            "__rxcp_levelc_numeric_right_", expr);
+        assignment = right_name ? rxcp_remap_create_named_assignment(
+            context, expr, right_name, args[0]) : NULL;
+        if (!assignment) goto fail;
+        add_ast(prelude, assignment);
+        args[0] = rxcp_remap_create_named_ref(
+            context, expr, VAR_SYMBOL, right_name);
+        if (!args[0] ||
+            !levelc_append_lostdigits_guard(
+                context, prelude, expr, left_name,
+                "__rxcp_levelc_numeric_left_loss_",
+                "__rxcp_levelc_numeric_left_event_") ||
+            !levelc_append_lostdigits_guard(
+                context, prelude, expr, right_name,
+                "__rxcp_levelc_numeric_right_loss_",
+                "__rxcp_levelc_numeric_right_event_")) goto fail;
+    }
+    args[1] = numeric ? rxcp_remap_create_integer_constant(
+        context, expr, 1, TP_INTEGER) : NULL;
+    if (numeric && !args[1]) goto fail;
+    ASTNode *call = rxcp_remap_create_member_call(
+        context, expr, receiver, method_name, args, numeric ? 2 : 1);
+    free(left_name);
+    free(right_name);
+    return call;
 
-    return rxcp_remap_create_member_call(context, expr, receiver, method_name, args, 1);
+fail:
+    free(left_name);
+    free(right_name);
+    return NULL;
 }
 
 static ASTNode *levelc_lower_unary_method(Context *context,
@@ -2490,12 +2664,42 @@ static ASTNode *levelc_lower_unary_method(Context *context,
                                           ASTNode *prelude,
                                           const char *method_name) {
     ASTNode *receiver;
+    ASTNode *args[1];
+    int arithmetic;
+    char *value_name = NULL;
 
     if (!method_name) return NULL;
     receiver = levelc_lower_expr(context, expr->child, plan, prelude);
     if (!receiver) return NULL;
 
-    return rxcp_remap_create_member_call(context, expr, receiver, method_name, NULL, 0);
+    arithmetic = strcmp(method_name, "negate") == 0 ||
+                 strcmp(method_name, "positive") == 0;
+    if (arithmetic) {
+        ASTNode *assignment;
+        value_name = rxcp_remap_create_generated_node_name(
+            "__rxcp_levelc_numeric_unary_", expr);
+        assignment = value_name ? rxcp_remap_create_named_assignment(
+            context, expr, value_name, receiver) : NULL;
+        if (!assignment) goto unary_fail;
+        add_ast(prelude, assignment);
+        receiver = rxcp_remap_create_named_ref(
+            context, expr, VAR_SYMBOL, value_name);
+        if (!receiver || !levelc_append_lostdigits_guard(
+                context, prelude, expr, value_name,
+                "__rxcp_levelc_numeric_unary_loss_",
+                "__rxcp_levelc_numeric_unary_event_")) goto unary_fail;
+    }
+    args[0] = arithmetic ? rxcp_remap_create_integer_constant(
+        context, expr, 1, TP_INTEGER) : NULL;
+    if (arithmetic && !args[0]) goto unary_fail;
+    ASTNode *call = rxcp_remap_create_member_call(
+        context, expr, receiver, method_name, args, arithmetic ? 1 : 0);
+    free(value_name);
+    return call;
+
+unary_fail:
+    free(value_name);
+    return NULL;
 }
 
 static ASTNode *levelc_if_logical_value(Context *context,
@@ -3135,12 +3339,7 @@ static ASTNode *levelc_say_statement(Context *context,
     if (say_node->child) {
         lowered_expr = levelc_lower_expr(context, say_node->child, plan, prelude);
         if (!lowered_expr) return NULL;
-        as_string = rxcp_remap_create_member_call(context,
-                                                 say_node,
-                                                 lowered_expr,
-                                                 "asString",
-                                                 NULL,
-                                                 0);
+        as_string = levelc_classic_as_string(context, say_node, lowered_expr);
     } else {
         as_string = rxcp_remap_create_string_constant(context, say_node, "");
     }
@@ -3954,12 +4153,9 @@ static ASTNode *levelc_build_options(Context *context,
                                              anchor_node ? anchor_node : options,
                                              "rxfnsb")
         : NULL;
-    import_condition_event = plan &&
-        (plan->has_novalue_on || plan->has_address)
-        ? rxcp_remap_create_generated_import(context,
-                                             anchor_node ? anchor_node : options,
-                                             "rexxclassicconditionevent")
-        : NULL;
+    import_condition_event = rxcp_remap_create_generated_import(
+        context, anchor_node ? anchor_node : options,
+        "rexxclassicconditionevent");
     import_address = plan && plan->has_address
         ? rxcp_remap_create_generated_import(context,
                                              anchor_node ? anchor_node : options,
@@ -3971,8 +4167,7 @@ static ASTNode *levelc_build_options(Context *context,
         (provider_name && !provider_namespace) ||
         (needs_translate && !import_translate) ||
         (needs_rxfnsb && !import_signal) ||
-        (plan && (plan->has_novalue_on || plan->has_address) &&
-         !import_condition_event) ||
+        !import_condition_event ||
         (plan && plan->has_address && !import_address)) return NULL;
 
     add_ast(options, levelb);
@@ -4216,10 +4411,7 @@ static int levelc_lower_drop(Context *context,
         if (target->node_type == VAR_REFERENCE) {
             ASTNode *value = levelc_pool_value(context, target, plan,
                                                instructions);
-            args[0] = value
-                ? rxcp_remap_create_member_call(context, target, value,
-                                                "asString", NULL, 0)
-                : NULL;
+            args[0] = levelc_classic_as_string(context, target, value);
             args[1] = levelc_config_ref(context, target, VAR_SYMBOL);
             arg_count = 2;
             method = "dropIndirectList";
@@ -4649,8 +4841,7 @@ static int levelc_lower_template_segment(Context *context,
         LEVELC_PARSE_SOURCE_PREFIX, segment);
     fields_name = rxcp_remap_create_generated_node_name(
         LEVELC_PARSE_FIELDS_PREFIX, segment);
-    source_string = rxcp_remap_create_member_call(
-        context, stmt, value, "asString", NULL, 0);
+    source_string = levelc_classic_as_string(context, stmt, value);
     source_capture = source_name && source_string
         ? rxcp_remap_create_named_assignment(context, stmt,
                                              source_name, source_string)
@@ -4681,9 +4872,8 @@ static int levelc_lower_template_segment(Context *context,
         ASTNode *operand = external_operands[external_index];
         ASTNode *pool_value = levelc_pool_value(context, operand, plan,
                                                 prelude);
-        ASTNode *as_string = pool_value
-            ? rxcp_remap_create_member_call(context, operand, pool_value,
-                                            "asString", NULL, 0) : NULL;
+        ASTNode *as_string = levelc_classic_as_string(
+            context, operand, pool_value);
         ASTNode *assignment = as_string &&
             result_count + external_index + 1 <= INT_MAX
             ? rxcp_remap_create_indexed_assignment(context, operand,
@@ -4975,9 +5165,7 @@ static int levelc_lower_queue_write_instruction(Context *context,
     ASTNode *value = stmt->child
         ? levelc_lower_expr(context, stmt->child, plan, prelude)
         : levelc_blank_rexxvalue(context, stmt);
-    ASTNode *text_value = value
-        ? rxcp_remap_create_member_call(context, stmt, value,
-                                        "asString", NULL, 0) : NULL;
+    ASTNode *text_value = levelc_classic_as_string(context, stmt, value);
     ASTNode *args[1] = {text_value};
     ASTNode *write = config && text_value
         ? rxcp_remap_create_member_call_statement(context, stmt, config,
@@ -5003,8 +5191,7 @@ static ASTNode *levelc_address_text(Context *context,
     if (symbol_literal && source->node_type == LITERAL)
         return levelc_name_string(context, source);
     value = levelc_lower_expr(context, source, plan, prelude);
-    return value ? rxcp_remap_create_member_call(
-        context, source, value, "asString", NULL, 0) : NULL;
+    return levelc_classic_as_string(context, source, value);
 }
 
 static int levelc_append_address_connection(Context *context,
@@ -5044,8 +5231,7 @@ static int levelc_append_address_connection(Context *context,
     stream_value = resource && kind && strcmp(kind, "STREAM") == 0
         ? levelc_pool_value(context, resource, plan, prelude) : NULL;
     args[3] = resource && kind && strcmp(kind, "STREAM") == 0
-        ? (stream_value ? rxcp_remap_create_member_call(
-            context, resource, stream_value, "asString", NULL, 0) : NULL)
+        ? levelc_classic_as_string(context, resource, stream_value)
         : resource ? levelc_address_text(context, resource, plan, prelude, 1)
         : rxcp_remap_create_string_constant(context, head, "");
     operation = receiver && args[0] && args[1] && args[2] &&
@@ -5311,6 +5497,143 @@ fail:
     free(command_name);
     if (reason_out && !*reason_out)
         *reason_out = "failed to lower supported ADDRESS instruction";
+    return 0;
+}
+
+static int levelc_append_numeric_setting(Context *context,
+                                         ASTNode *instructions,
+                                         ASTNode *anchor,
+                                         const char *getter_name,
+                                         const char *opcode,
+                                         const char *symbol_prefix) {
+    char *setting_name = rxcp_remap_create_generated_node_name(
+        symbol_prefix, anchor);
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, anchor, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *getter = receiver ? rxcp_remap_create_member_call(
+        context, anchor, receiver, getter_name, NULL, 0) : NULL;
+    ASTNode *assignment = getter && setting_name
+        ? rxcp_remap_create_named_assignment(
+            context, anchor, setting_name, getter) : NULL;
+    ASTNode *instruction = ast_ftt(context, ASSEMBLER, strdup(opcode));
+    if (!assignment || !instruction) {
+        free(setting_name);
+        return 0;
+    }
+    add_ast(instructions, assignment);
+    instruction->free_node_string = 1;
+    instruction->is_compiler_added = 1;
+    rxcp_remap_anchor_synthetic(instruction, anchor);
+    add_ast(instruction, rxcp_remap_create_named_ref(
+        context, anchor, VAR_SYMBOL, setting_name));
+    add_ast(instructions, instruction);
+    free(setting_name);
+    return 1;
+}
+
+static int levelc_append_numeric_context_setup(Context *context,
+                                               ASTNode *instructions,
+                                               ASTNode *anchor) {
+    return levelc_append_numeric_setting(context, instructions, anchor,
+               "numericDigits", "setnumdgts", "__rxcp_levelc_numeric_entry_digits_") &&
+           levelc_append_numeric_setting(context, instructions, anchor,
+               "numericFuzz", "setnumfuz", "__rxcp_levelc_numeric_entry_fuzz_") &&
+           levelc_append_numeric_setting(context, instructions, anchor,
+               "numericForm", "setnumfrm", "__rxcp_levelc_numeric_entry_form_");
+}
+
+static int levelc_lower_numeric_instruction(Context *context,
+                                           ASTNode *instructions,
+                                           ASTNode *stmt,
+                                           LevelCLowerPlan *plan,
+                                           const char **reason_out) {
+    ASTNode *kind = stmt->child;
+    ASTNode *operand = kind ? kind->sibling : NULL;
+    ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
+    ASTNode *value;
+    ASTNode *receiver;
+    ASTNode *args[2];
+    ASTNode *setter;
+    ASTNode *detail_assignment;
+    ASTNode *detail;
+    ASTNode *condition;
+    char *name = kind ? levelc_upper_name(kind) : NULL;
+    char *detail_name = rxcp_remap_create_generated_node_name(
+        "__rxcp_levelc_numeric_detail_", stmt);
+    const char *set_method;
+    const char *get_method;
+    const char *opcode;
+    const char *symbol_prefix;
+    int argument_count;
+
+    if (!name || !prelude || !detail_name) goto fail;
+    if (strcmp(name, "DIGITS") == 0) {
+        set_method = "setNumericDigits";
+        get_method = "numericDigits";
+        opcode = "setnumdgts";
+        symbol_prefix = "__rxcp_levelc_numeric_digits_";
+        argument_count = 2;
+        value = operand ? levelc_lower_expr(context, operand, plan, prelude)
+                        : levelc_rexxvalue_from_text(context, stmt, "9");
+    } else if (strcmp(name, "FUZZ") == 0) {
+        set_method = "setNumericFuzz";
+        get_method = "numericFuzz";
+        opcode = "setnumfuz";
+        symbol_prefix = "__rxcp_levelc_numeric_fuzz_";
+        argument_count = 2;
+        value = operand ? levelc_lower_expr(context, operand, plan, prelude)
+                        : levelc_rexxvalue_from_text(context, stmt, "0");
+    } else if (strcmp(name, "FORM") == 0) {
+        set_method = "setNumericForm";
+        get_method = "numericForm";
+        opcode = "setnumfrm";
+        symbol_prefix = "__rxcp_levelc_numeric_form_";
+        argument_count = 1;
+        value = operand && operand->node_type == LITERAL
+            ? levelc_rexxvalue_from_literal(context, operand)
+            : operand ? levelc_lower_expr(context, operand, plan, prelude) : NULL;
+    } else goto fail;
+    if (!value) goto fail;
+    rxcp_remap_append_builder_children(instructions, prelude);
+
+    receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    args[0] = value;
+    args[1] = argument_count == 2
+        ? levelc_config_ref(context, stmt, VAR_SYMBOL) : NULL;
+    setter = receiver && args[0] &&
+        (argument_count == 1 || args[1])
+        ? rxcp_remap_create_member_call(context, stmt, receiver,
+                                        set_method, args, argument_count)
+        : NULL;
+    detail_assignment = setter ? rxcp_remap_create_named_assignment(
+        context, stmt, detail_name, setter) : NULL;
+    if (!detail_assignment) goto fail;
+    add_ast(instructions, detail_assignment);
+
+    detail = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, detail_name);
+    condition = ast_f(context, OP_COMPARE_S_NEQ, stmt->token);
+    if (!detail || !condition) goto fail;
+    rxcp_remap_anchor_synthetic(condition, stmt);
+    add_ast(condition, detail);
+    add_ast(condition, rxcp_remap_create_string_constant(context, stmt, ""));
+    detail = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, detail_name);
+    if (!detail || !levelc_append_classic_error_if_expr(
+            context, instructions, stmt, condition, detail)) goto fail;
+
+    if (!levelc_append_numeric_setting(context, instructions, stmt,
+                                       get_method, opcode, symbol_prefix)) goto fail;
+    free(name);
+    free(detail_name);
+    return 1;
+
+fail:
+    free(name);
+    free(detail_name);
+    if (reason_out && !*reason_out)
+        *reason_out = "failed to lower NUMERIC instruction";
     return 0;
 }
 
@@ -5651,8 +5974,7 @@ static int levelc_lower_value_signal(Context *context,
         context, function, function->child,
         levelc_function_argument_count(function), "TRANSLATE", plan,
         prelude, LEVELC_BIF_TRANSLATE_HELPER, NULL, value);
-    as_string = upper ? rxcp_remap_create_member_call(
-        context, stmt, upper, "asString", NULL, 0) : NULL;
+    as_string = levelc_classic_as_string(context, stmt, upper);
     capture = as_string ? rxcp_remap_create_named_assignment(
         context, stmt, target_name, as_string) : NULL;
     if (!capture) goto fail;
@@ -5765,6 +6087,9 @@ static int levelc_lower_statement(Context *context,
         return levelc_lower_direct_parse(context, instructions, stmt, plan, reason_out);
     if (stmt->node_type == LEVELC_ADDRESS)
         return levelc_lower_address_instruction(context, instructions, stmt,
+                                                plan, reason_out);
+    if (stmt->node_type == LEVELC_NUMERIC)
+        return levelc_lower_numeric_instruction(context, instructions, stmt,
                                                 plan, reason_out);
     if (stmt->node_type == IMPLICIT_CMD)
         return levelc_lower_implicit_command(context, instructions, stmt,
@@ -6900,6 +7225,10 @@ static int levelc_rewrite_program(Context *context,
     add_ast(instructions, body_args);
     add_ast(instructions, parent_setup);
     add_ast(instructions, inherited_pool);
+    if (!levelc_append_numeric_context_setup(context, instructions, anchor)) {
+        if (reason_out) *reason_out = "failed to initialize Classic numeric context";
+        return 0;
+    }
     if (needs_signal_policy) {
         ASTNode *event_args[1] = {
             rxcp_remap_create_string_constant(context, anchor, "")

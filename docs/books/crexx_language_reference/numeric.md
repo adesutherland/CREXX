@@ -39,7 +39,7 @@ Keeping these two responsibilities separate is essential when a source file
 uses one parsing convention but an individual procedure selects another
 arithmetic standard.
 
-## Syntax
+## Level B Syntax
 
 The `NUMERIC` instruction must be the first instruction in a procedure,
 immediately following its label. This position permits the compiler to
@@ -91,7 +91,7 @@ the arithmetic standard are local constants.
 If a component is omitted, its cRexx default is used. Omission does not imply
 inheritance. Inheritance must always be requested explicitly.
 
-## Procedure Scope
+## Level B Procedure Scope
 
 The numeric context applies to all numeric operations performed within the
 procedure. It remains in effect for the lifetime of that invocation and is not
@@ -107,6 +107,48 @@ tested for 18 significant digits should not silently run at a caller's lower
 precision unless the procedure explicitly permits that behaviour. Conversely,
 `INHERITED` is useful for a general-purpose routine intended to participate in
 the caller's chosen numeric environment.
+
+## Level C Classic NUMERIC
+
+With `OPTIONS LEVELC`, `NUMERIC` is an executable instruction. It may occur
+where an instruction is allowed, and each setting takes effect when that clause
+runs. The supported Classic forms are:
+
+```rexx
+numeric digits [expression]
+numeric fuzz [expression]
+numeric form scientific
+numeric form engineering
+numeric form value expression
+```
+
+The initial settings are 9 significant digits, zero comparison fuzz, and
+scientific form. `NUMERIC DIGITS` and `NUMERIC FUZZ` without an operand reset
+their respective settings to 9 and 0. The operand is evaluated once before
+the setting changes. DIGITS must be a positive whole number no greater than
+999 and greater than the current FUZZ; FUZZ must be a nonnegative whole number
+less than the current DIGITS. `FORM VALUE` evaluates its expression and uses
+the first character of the translated result: `S` selects scientific and `E`
+selects engineering form. An invalid setting leaves the previous context in
+place and raises a source-identified Classic syntax condition.
+
+The settings belong to a Classic invocation. An internal call, recursive call,
+or statically signed external Level C call inherits the caller's settings;
+changes made by the callee do not change the caller's settings on return.
+`PROCEDURE` changes variable exposure without resetting the numeric context.
+`DIGITS()`, `FUZZ()`, and `FORM()` report the active settings. Arithmetic,
+ordinary numeric comparison, numeric display, and context-sensitive numeric
+BIFs such as `FORMAT()` observe that context. `ABS()` preserves the received
+argument's significant digits while normalizing its sign and notation under
+the active `FORM`; ordinary expression evaluation before the call already
+uses the active precision. `MAX()` and `MIN()` select by exact numeric value,
+independent of comparison `FUZZ`.
+When `SIGNAL ON LOSTDIGITS` is active, using an operand that would discard
+significant nonzero digits raises `LOSTDIGITS`; a rounded operation result or
+discarded zeroes alone do not.
+
+The Level B declarations and inheritance rules in the following sections
+remain separate from this executable Level C form.
 
 ## NUMERIC DIGITS
 

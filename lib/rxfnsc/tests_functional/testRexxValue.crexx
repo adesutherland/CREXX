@@ -45,6 +45,7 @@ errors = errors + check(i.cacheFlags() = RV_FLAGS_STRING_INT_TEXT + RV_FLAG_DECI
 
 d = .RexxValue.fromDecimal("2.5" as .decimal)
 errors = errors + check(d.asString() = "2.5", "decimal to string")
+errors = errors + check(nonclassicFormIsolation(), "non-Classic decimal display keeps default form")
 errors = errors + check(d.hasDecimal(), "decimal current")
 errors = errors + check(d.hasString(), "decimal string current")
 
@@ -201,6 +202,11 @@ errors = errors + check(copy.asString() = "AB", "copy text-capable value")
 
 if errors = 0 then say "ok"
 return errors
+
+nonclassicFormIsolation: procedure = .boolean
+  numeric form engineering
+  value = .RexxValue.fromDecimal("1E+20" as .decimal)
+  return value.asString() = "1E+20"
 
 check: procedure = .int
   arg passed = .boolean, label = .string

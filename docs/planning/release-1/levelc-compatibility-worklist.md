@@ -27,12 +27,12 @@ closed on the shared activation and implicit-main path.
 PARSE closed on the shared template engine and its seven agreed sources;
 `LC-I-20` ADDRESS and `LC-I-21` implicit command closed 2026-10-06 with the
 approved embedded-NUL host-command exception recorded as
-`LC-HOST-ADDRESS-NUL`. `LC-I-22` NUMERIC is the active whole-instruction
-review; `LC-I-23`–`LC-I-25` remain open. The full
+`LC-HOST-ADDRESS-NUL`. `LC-I-22` NUMERIC closed 2026-10-06;
+`LC-I-23` SIGNAL is next, and `LC-I-24`–`LC-I-25` remain open. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The latest grouped normal
-Debug Level C checkpoint passed 724/724 and matched focused macOS ASan passed
-27/27 for ADDRESS plus implicit command. The earlier normal Debug Level C
+Debug Level C checkpoint passed 735/735 for NUMERIC. The earlier matched
+focused macOS ASan passed 27/27 for ADDRESS plus implicit command. The earlier normal Debug Level C
 checkpoint for the whole RETURN review passed 662/662 with
 process memory monitoring. Focused macOS ASan passed 42/42 and final-input
 Level B/G/RexxScript isolation passed 11/11.
@@ -1700,7 +1700,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-19 PARSE — closed 2026-10-06 | LC-STEP-81A–81E complete | `LC-81-01–07`: all seven agreed sources, UPPER, arbitrary/comma templates, patterns, positions, errors, source services and frame behavior pass one shared executor and qualified checkpoint. EXTERNAL and NUMERIC are explicitly outside initial Level C scope. |
 | LC-I-20 ADDRESS — closed 2026-10-06 | LC-STEP-82A–82E complete | Selection/swap/transient command, WITH resources, frame state, RC/conditions and configured host path pass opt/no-opt, linked, callback and grouped qualification. The approved embedded-NUL host-command exception remains open as `LC-HOST-ADDRESS-NUL` under `LC-AC-06`. |
 | LC-I-21 implicit command — closed 2026-10-06 | LC-STEP-83A–83D complete | Expression-only commands evaluate once, then use the active invocation's ADDRESS environment and lasting connections through the shared adapter. Forms/errors, source warnings, linked opt/no-opt, nested/external and native host conditions passed grouped normal and focused sanitizer checks. `LC-HOST-ADDRESS-NUL` remains open under LC-AC-06. |
-| LC-I-22 NUMERIC | LC-STEP-84 | DIGITS/FORM/FUZZ defaults, validation, context lifetime and arithmetic effects; shared value semantics. |
+| LC-I-22 NUMERIC — closed 2026-10-06 | LC-STEP-84A–84D complete | `LC-84-01–05`: executable DIGITS/FORM/FUZZ, source errors, once-only evaluation, activation-local lifetime, arithmetic/display/BIF effects and LOSTDIGITS pass opt/no-opt and grouped qualification. Full Level C and cross-cutting criteria remain open. |
 | LC-I-23 SIGNAL | LC-STEP-85 | Direct/VALUE branch and ON/OFF conditions, labels, loop-state clearing and delivery; condition lifecycle. |
 | LC-I-24 TRACE | LC-STEP-86 | Options, skip/inhibit, interactive and source/result/command tracing; clause hooks and host output. |
 | LC-I-25 INTERPRET | LC-STEP-87 | Dynamic source parsing, current context, HALT/SYNTAX/label rules and condition state; parser and lifecycle foundation. |
@@ -5053,6 +5053,76 @@ separate. No first-party sanitizer finding appeared. `LC-83-01–04` and
 LC-I-21 close. `LC-AC-01/04/06/08/58/59`, the approved
 `LC-HOST-ADDRESS-NUL` host obligation, and full Level C and Release 1
 qualification remain open.
+
+**LC-I-22 NUMERIC plan — vision and intended outcome, 2026-10-06.**
+Compile each Classic NUMERIC clause as a runtime change to the current
+invocation's numeric context. Expressions observe the new setting at the
+authored point; nested/local calls inherit it and cannot leak their later
+changes back to callers. The existing Level B/G and RexxScript numeric APIs
+retain their contracts. Reuse the current numeric RXAS operations and shared
+`RexxValue` arithmetic; no linker or VM change is authorized. This is one
+whole-instruction checkpoint, not a sequence of case-sized deliveries.
+
+1. **LC-84-01 — forms and diagnostics (closed):** `DIGITS`/`FUZZ` with an
+   optional expression and `FORM SCIENTIFIC|ENGINEERING|VALUE expression`
+   have the standard source shapes, including nested instruction positions.
+   Invalid subkeywords, missing expressions and extra operands retain Classic
+   error identity and source location. Verify raw/canonical AST, Regina and
+   focused compile cases.
+2. **LC-84-02 — evaluation and validation (closed):** evaluate a dynamic
+   operand exactly once, before changing the setting. Bare DIGITS/FUZZ reset
+   to 9/0. Reject invalid whole-number values, DIGITS not greater than FUZZ,
+   FUZZ not less than DIGITS, the documented digit limit, and FORM values
+   whose first translated character is neither S nor E; keep the previous
+   context on failure. Verify boundary/error and side-effect probes.
+3. **LC-84-03 — invocation lifetime (closed):** the main invocation begins at
+   9/0/SCIENTIFIC; internal, recursive and signed external Classic calls
+   inherit the caller's setting and restore the caller on return or trapped
+   transfer. PROCEDURE pool changes do not alter numeric inheritance. Verify
+   nested opt/no-opt and linked calls and numeric BIF queries.
+4. **LC-84-04 — numeric effects and isolation (closed):** arithmetic,
+   comparison, display and numeric BIFs use the active Classic context,
+   including precision, FUZZ and engineering/scientific notation. Operands
+   that discard significant nonzero digits raise the source-identified
+   LOSTDIGITS condition when its inherited SIGNAL policy is enabled; zeros
+   discarded at the precision boundary do not. Preserve Level B/G and
+   RexxScript behavior, the Unicode scalar contract and `RexxValue` binary
+   capability. Verify reference results, condition delivery, shared-consumer
+   regressions and generated RXAS.
+5. **LC-84-05 — coherent closure (closed):** one validated numeric source shape
+   and one compiled context route replace unsupported placeholder handling;
+   focused regressions, the relevant normal Debug Level C suite once on the
+   final code/test inputs, and linked toolchain execution pass. Retain only
+   concise evidence and keep the full programme criteria open.
+
+1. **LC-STEP-84A (`LC-84-01–04`; complete):** inventory ANSI/Regina forms,
+   current parser/validator, numeric RXAS, `RexxValue` and call-frame paths;
+   settle a compiler/library-only context design before product edits.
+2. **LC-STEP-84B (`LC-84-01–03`; complete):** validate and lower the
+   complete instruction into one current-invocation context path with
+   source-anchored errors and call-frame lifetime.
+3. **LC-STEP-84C (`LC-84-03–04`; complete):** make shared value and BIF
+   operations observe that context without changing non-Classic consumers;
+   test the whole valid/error and frame matrix in focused runs.
+4. **LC-STEP-84D (`LC-84-01–05`; complete):** inspect compiler-to-RXAS
+   flow, run one grouped normal checkpoint, update architecture/reference
+   docs, record concise evidence and commit the coherent instruction.
+
+**LC-I-22 closure receipt.** The raw AST retains `LEVELC_NUMERIC`; the
+lowered AST uses one activation setter route and emits existing
+`setnumdgts`/`setnumfuz`/`setnumfrm` RXAS. Regina comparisons cover defaults,
+arithmetic scale and notation, validation, nested/recursive calls, FORM VALUE,
+LOSTDIGITS and numeric BIF behavior. The accepted signed external Level C
+boundary inherits its caller's context; Regina starts a separately loaded
+external program at defaults. The final Debug build passed. Focused CTest
+passed 40/40 on the final inputs, including Level B/G, RexxScript, shared
+`RexxValue` and BIF isolation; the grouped normal Debug Level C suite passed
+735/735 (`ctest --test-dir cmake-build-debug --parallel 30
+--output-on-failure -L levelc`). All test/toolchain child processes exited.
+No VM or linker change was made. `LC-AC-01/04/06/08/58/59`,
+`LC-HOST-ADDRESS-NUL`, remaining SIGNAL/TRACE/INTERPRET and full Level C and
+Release 1 qualification remain open. No sanitizer gate was added for this
+ordinary development increment.
 
 **LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
 The following proposed VM operation is retained only as history; Adrian

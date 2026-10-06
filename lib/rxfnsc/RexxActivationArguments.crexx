@@ -26,6 +26,8 @@ options levelb comments_dash numeric_classic
 namespace rexxactivation expose RexxActivationArguments
 import rexxvalue
 import rexxclassicstate
+import rexxclassicdatatype
+import rexxclassicconfig
 import rexxpool
 import rxfnsb
 
@@ -51,6 +53,9 @@ RexxActivationArguments: class
   procedure_eligible = .boolean
   function_call = .boolean
   address_state = .RexxAddressState
+  numeric_digits = .int
+  numeric_fuzz = .int
+  numeric_form = .int
   signal_policy = .int[]
   parent_activation_ref = reference .RexxActivationArguments
   has_parent_activation = .boolean
@@ -80,6 +85,9 @@ RexxActivationArguments: class
     procedure_eligible = 0
     function_call = 0
     address_state = .RexxAddressState()
+    numeric_digits = 9
+    numeric_fuzz = 0
+    numeric_form = 1
     has_parent_activation = 0
     has_caller_pool = 0
     has_program_root = 0
@@ -124,7 +132,146 @@ RexxActivationArguments: class
     state = .RexxAddressState
     assembler link state, address_state
     call state.copyFrom(parent.addressState())
+    numeric_digits = parent.numericDigits()
+    numeric_fuzz = parent.numericFuzz()
+    numeric_form = parent.numericForm()
     return
+
+  /** Current invocation-local Classic significant-digit setting. */
+  numericDigits: method = .int
+    return numeric_digits
+
+  /** Current invocation-local Classic comparison fuzz setting. */
+  numericFuzz: method = .int
+    return numeric_fuzz
+
+  /** Current invocation-local Classic form: 1 scientific, 2 engineering. */
+  numericForm: method = .int
+    return numeric_form
+
+  /** Validate DIGITS and change only this invocation after a successful check. */
+  setNumericDigits: method = .string
+    arg value = .RexxValue, config_ref = reference .RexxClassicConfig
+    config = dereference config_ref
+    text = value.asString()
+    if \rexxclassic_datatype_test(value, "W", config) then
+      return "RXC-LC-26.5: NUMERIC DIGITS must be a positive whole number; found " || text
+    state = 0
+    normalized = rexxclassic_datatype_normalize_number(value, config, state)
+    candidate = boundedNumericWhole(normalized)
+    if candidate <= 0 then
+      return "RXC-LC-26.5: NUMERIC DIGITS must be a positive whole number; found " || text
+    if candidate <= numeric_fuzz then
+      return "RXC-LC-33.1: NUMERIC DIGITS must exceed NUMERIC FUZZ; found " || text
+    if candidate > 999 then
+      return "RXC-LC-33.2: NUMERIC DIGITS must not exceed 999; found " || text
+    numeric_digits = candidate
+    return ""
+
+  /** Validate FUZZ against the active DIGITS before changing this invocation. */
+  setNumericFuzz: method = .string
+    arg value = .RexxValue, config_ref = reference .RexxClassicConfig
+    config = dereference config_ref
+    text = value.asString()
+    if \rexxclassic_datatype_test(value, "W", config) then
+      return "RXC-LC-26.6: NUMERIC FUZZ must be a non-negative whole number; found " || text
+    state = 0
+    normalized = rexxclassic_datatype_normalize_number(value, config, state)
+    candidate = boundedNumericWhole(normalized)
+    if candidate < 0 then
+      return "RXC-LC-26.6: NUMERIC FUZZ must be a non-negative whole number; found " || text
+    if candidate >= numeric_digits then
+      return "RXC-LC-33.1: NUMERIC DIGITS must exceed NUMERIC FUZZ; found " || text
+    numeric_fuzz = candidate
+    return ""
+
+  /**
+   * Read an already validated whole spelling without narrowing an unbounded
+   * source value to a native integer. Values beyond 999 saturate at 1000.
+   */
+  boundedNumericWhole: method = .int
+    arg normalized = .string
+    text_length = .int
+    codepoint = .int
+    assembler strlen text_length,normalized
+    index = 0
+    negative = 0
+    assembler strchar codepoint,normalized,index
+    if codepoint = 43 | codepoint = 45 then do
+      negative = codepoint = 45
+      index = index + 1
+    end
+    mantissa_start = index
+    digit_count = 0
+    fractional_digits = 0
+    first_nonzero = 0
+    saw_point = 0
+    do while index < text_length
+      assembler strchar codepoint,normalized,index
+      if codepoint = 46 then do
+        saw_point = 1
+        index = index + 1
+        iterate
+      end
+      if codepoint = 69 | codepoint = 101 then leave
+      digit_count = digit_count + 1
+      if saw_point then fractional_digits = fractional_digits + 1
+      if first_nonzero = 0 & codepoint <> 48 then first_nonzero = digit_count
+      index = index + 1
+    end
+    if first_nonzero = 0 then return 0
+    mantissa_end = index
+    exponent = 0
+    negative_exponent = 0
+    if index < text_length then do
+      index = index + 1
+      assembler strchar codepoint,normalized,index
+      if codepoint = 43 | codepoint = 45 then do
+        negative_exponent = codepoint = 45
+        index = index + 1
+      end
+      exponent_cap = text_length + 4
+      do while index < text_length
+        assembler strchar codepoint,normalized,index
+        if exponent < exponent_cap then do
+          exponent = exponent * 10 + codepoint - 48
+          if exponent > exponent_cap then exponent = exponent_cap
+        end
+        index = index + 1
+      end
+    end
+    if negative_exponent then exponent = 0 - exponent
+    decimal_position = digit_count - fractional_digits + exponent
+    significant_length = decimal_position - first_nonzero + 1
+    if significant_length > 3 then do
+      if negative then return -1000
+      return 1000
+    end
+    result = 0
+    digit_index = 0
+    do index = .int(mantissa_start) to mantissa_end - 1
+      assembler strchar codepoint,normalized,index
+      if codepoint = 46 then iterate
+      digit_index = digit_index + 1
+      if digit_index >= first_nonzero & digit_index <= decimal_position then
+        result = result * 10 + codepoint - 48
+    end
+    do while digit_index < decimal_position
+      result = result * 10
+      digit_index = digit_index + 1
+    end
+    if negative then return 0 - result
+    return result
+
+  /** FORM VALUE uses only the first translated character of its value. */
+  setNumericForm: method = .string
+    arg value = .RexxValue
+    text = value.asString()
+    first = upper(left(text, 1))
+    if first = "S" then numeric_form = 1
+    else if first = "E" then numeric_form = 2
+    else return "RXC-LC-33.6: NUMERIC FORM must start with E or S; found " || text
+    return ""
 
   /** Keep command status shared across signed external Classic calls. */
   captureCallerPool: method = .void

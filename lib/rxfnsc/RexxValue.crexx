@@ -233,15 +233,28 @@ RexxValue: class
     return 0
 
   asString: method = .string
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg ?classic = 0
     temp = .string
     flags = cache_flags
     if (flags <has> RV_FLAG_STRING) then return string_value
     if (flags <has> RV_FLAG_DECIMAL) then do
-      numeric_digits = rexxvalue_numeric_digits()
-      numeric_fuzz = rexxvalue_numeric_fuzz()
-      assembler setnumdgts numeric_digits
-      assembler setnumfuz numeric_fuzz
+      if \classic then do
+        numeric_digits = rexxvalue_numeric_digits()
+        numeric_fuzz = rexxvalue_numeric_fuzz()
+        assembler setnumdgts numeric_digits
+        assembler setnumfuz numeric_fuzz
+      end
       temp = decimal_value as .string
+      if classic then do
+        digits_setting = .int
+        form_setting = .int
+        assembler getnumdgts digits_setting
+        assembler getnumfrm form_setting
+        temp = _rv_classic_decimal_text(temp, digits_setting, form_setting)
+      end
       string_value = temp
       new_flags = flags <set> RV_FLAG_STRING
       if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
@@ -369,14 +382,20 @@ RexxValue: class
     return fields
 
   asInt: method = .int
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg ?classic = 0
     temp = 0
     flags = cache_flags
     if (flags <has> RV_FLAG_INT) then return int_value
     if (flags <has> RV_FLAG_DECIMAL) then do
-      numeric_digits = rexxvalue_numeric_digits()
-      numeric_fuzz = rexxvalue_numeric_fuzz()
-      assembler setnumdgts numeric_digits
-      assembler setnumfuz numeric_fuzz
+      if \classic then do
+        numeric_digits = rexxvalue_numeric_digits()
+        numeric_fuzz = rexxvalue_numeric_fuzz()
+        assembler setnumdgts numeric_digits
+        assembler setnumfuz numeric_fuzz
+      end
       temp = decimal_value as .int
     end
     else if (flags <has> RV_FLAG_FLOAT) then
@@ -399,14 +418,20 @@ RexxValue: class
     return temp
 
   asFloat: method = .float
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg ?classic = 0
     temp = 0 as .float
     flags = cache_flags
     if (flags <has> RV_FLAG_FLOAT) then return float_value
     if (flags <has> RV_FLAG_DECIMAL) then do
-      numeric_digits = rexxvalue_numeric_digits()
-      numeric_fuzz = rexxvalue_numeric_fuzz()
-      assembler setnumdgts numeric_digits
-      assembler setnumfuz numeric_fuzz
+      if \classic then do
+        numeric_digits = rexxvalue_numeric_digits()
+        numeric_fuzz = rexxvalue_numeric_fuzz()
+        assembler setnumdgts numeric_digits
+        assembler setnumfuz numeric_fuzz
+      end
       temp = decimal_value as .float
     end
     else if (flags <has> RV_FLAG_INT) then
@@ -429,13 +454,21 @@ RexxValue: class
     return temp
 
   asDecimal: method = .decimal
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg ?classic = 0
     temp = "0" as .decimal
     flags = cache_flags
+    -- Classic strings are reparsed under the active precision at each use.
+    if classic & (flags <has> RV_FLAG_STRING) then return string_value as .decimal
     if (flags <has> RV_FLAG_DECIMAL) then return decimal_value
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
     if (flags <has> RV_FLAG_INT) then
       temp = int_value as .decimal
     else if (flags <has> RV_FLAG_FLOAT) then
@@ -541,69 +574,189 @@ RexxValue: class
     arg other = .RexxValue
     return .RexxValue(asString() || " " || other.asString())
 
+  /** Materialize a Classic arithmetic result at the operation's precision. */
+  _decimalResult: method = .RexxValue
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg value = .decimal, ?classic = 0
+    result = .RexxValue.fromDecimal(value)
+    if classic then displayed = result.asString(1)
+    return result
+
+  /** Keep the fractional scale of Classic addition and multiplication. */
+  _classicScaledResult: method = .RexxValue
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg result = .RexxValue, scale = .int
+    if scale <= 0 | result.asDecimal(1) = 0 then return result
+    result_text = result.asString(1)
+    if pos("E", upper(result_text)) > 0 then return result
+    digits_setting = .int
+    assembler getnumdgts digits_setting
+    limit = _rv_control_result_scale(result_text, digits_setting)
+    if limit < scale then scale = limit
+    if scale <= 0 then return result
+    return .RexxValue(format(result.asDecimal(1), , scale))
+
+  /** Return the original operand only when NUMERIC DIGITS would discard data. */
+  lostDigitsDescription: method = .string
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    original = asString(1)
+    if \_rv_is_number_text(original) then return ""
+    text = strip(original)
+    if left(text, 1) = "+" | left(text, 1) = "-" then text = substr(text, 2)
+    exponent_at = pos("E", upper(text))
+    if exponent_at > 0 then text = left(text, exponent_at - 1)
+    digits_setting = .int
+    assembler getnumdgts digits_setting
+    significant = 0
+    started = 0
+    do index = 1 to length(text)
+      digit = substr(text, index, 1)
+      if digit = "." then iterate
+      if digit <> "0" then started = 1
+      if started then do
+        significant = significant + 1
+        if significant > digits_setting & digit <> "0" then return original
+      end
+    end
+    return ""
+
+  /** Normalize ABS text without rounding significant digits a second time. */
+  classicAbsolute: method = .RexxValue
+    numeric form inherited
+    arg normalized = .string
+    text = strip(normalized)
+    if left(text, 1) = "+" | left(text, 1) = "-" then text = substr(text, 2)
+    exponent_at = pos("E", upper(text))
+    if exponent_at > 0 then mantissa = left(text, exponent_at - 1)
+    else mantissa = text
+    significant = 0
+    started = 0
+    do index = 1 to length(mantissa)
+      digit = substr(mantissa, index, 1)
+      if digit = "." then iterate
+      if digit <> "0" then started = 1
+      if started then significant = significant + 1
+    end
+    if significant = 0 then return .RexxValue("0")
+    form_setting = .int
+    assembler getnumfrm form_setting
+    return .RexxValue(_rv_classic_decimal_text(text, significant, form_setting))
+
   add: method = .RexxValue
-    arg other = .RexxValue
-    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    if \classic & rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
       float_result = 0 as .float
       float_result = asFloat() + other.asFloat()
       return .RexxValue.fromFloat(float_result)
     end
     result = "0" as .decimal
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    result = asDecimal() + other.asDecimal()
-    return .RexxValue.fromDecimal(result)
+    scale = .int
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    if classic then do
+      left_scale = _rv_control_fraction_scale(asString(1))
+      right_scale = _rv_control_fraction_scale(other.asString(1))
+      scale = left_scale
+      if right_scale > scale then scale = right_scale
+    end
+    result = asDecimal(classic) + other.asDecimal(classic)
+    value = _decimalResult(result, classic)
+    if classic then return _classicScaledResult(value, scale)
+    return value
 
   subtract: method = .RexxValue
-    arg other = .RexxValue
-    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    if \classic & rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
       float_result = 0 as .float
       float_result = asFloat() - other.asFloat()
       return .RexxValue.fromFloat(float_result)
     end
     result = "0" as .decimal
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    result = asDecimal() - other.asDecimal()
-    return .RexxValue.fromDecimal(result)
+    scale = .int
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    if classic then do
+      left_scale = _rv_control_fraction_scale(asString(1))
+      right_scale = _rv_control_fraction_scale(other.asString(1))
+      scale = left_scale
+      if right_scale > scale then scale = right_scale
+    end
+    result = asDecimal(classic) - other.asDecimal(classic)
+    value = _decimalResult(result, classic)
+    if classic then return _classicScaledResult(value, scale)
+    return value
 
   multiply: method = .RexxValue
-    arg other = .RexxValue
-    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    if \classic & rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
       float_result = 0 as .float
       float_result = asFloat() * other.asFloat()
       return .RexxValue.fromFloat(float_result)
     end
     result = "0" as .decimal
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    result = asDecimal() * other.asDecimal()
-    return .RexxValue.fromDecimal(result)
+    scale = .int
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    if classic then scale = _rv_control_fraction_scale(asString(1)) +,
+                            _rv_control_fraction_scale(other.asString(1))
+    result = asDecimal(classic) * other.asDecimal(classic)
+    value = _decimalResult(result, classic)
+    if classic then return _classicScaledResult(value, scale)
+    return value
 
   divide: method = .RexxValue
-    arg other = .RexxValue
-    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    if \classic & rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
       float_result = 0 as .float
       float_result = asFloat() / other.asFloat()
       return .RexxValue.fromFloat(float_result)
     end
     result = "0" as .decimal
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    result = asDecimal() / other.asDecimal()
-    return .RexxValue.fromDecimal(result)
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    result = asDecimal(classic) / other.asDecimal(classic)
+    return _decimalResult(result, classic)
 
   integerDivide: method = .RexxValue
-    arg other = .RexxValue
-    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    if \classic & rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
       float_result = 0 as .float
       int_result = 0
       float_result = asFloat() / other.asFloat()
@@ -611,16 +764,21 @@ RexxValue: class
       return .RexxValue.fromFloat(int_result as .float)
     end
     result = "0" as .decimal
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    result = asDecimal() % other.asDecimal()
-    return .RexxValue.fromDecimal(result)
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    result = asDecimal(classic) % other.asDecimal(classic)
+    return _decimalResult(result, classic)
 
   remainder: method = .RexxValue
-    arg other = .RexxValue
-    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    if \classic & rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
       left_float = 0 as .float
       right_float = 0 as .float
       quotient = 0
@@ -636,55 +794,74 @@ RexxValue: class
     result = "0" as .decimal
     quotient = .int
     quotient = 0
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    result = asDecimal() // other.asDecimal()
-    return .RexxValue.fromDecimal(result)
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    result = asDecimal(classic) // other.asDecimal(classic)
+    return _decimalResult(result, classic)
 
   power: method = .RexxValue
-    arg other = .RexxValue
-    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    if \classic & rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
       float_result = 0 as .float
       float_result = asFloat() ** other.asFloat()
       return .RexxValue.fromFloat(float_result)
     end
     result = "0" as .decimal
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    result = asDecimal() ** other.asInt()
-    return .RexxValue.fromDecimal(result)
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    result = asDecimal(classic) ** other.asInt(classic)
+    return _decimalResult(result, classic)
 
   negate: method = .RexxValue
-    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg ?classic = 0
+    if \classic & rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
       float_result = 0 as .float
       float_result = -asFloat()
       return .RexxValue.fromFloat(float_result)
     end
     result = "0" as .decimal
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    result = -asDecimal()
-    return .RexxValue.fromDecimal(result)
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    result = -asDecimal(classic)
+    return _decimalResult(result, classic)
 
   positive: method = .RexxValue
-    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg ?classic = 0
+    if \classic & rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
       float_result = 0 as .float
       float_result = asFloat()
       return .RexxValue.fromFloat(float_result)
     end
     result = "0" as .decimal
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    result = asDecimal()
-    return .RexxValue.fromDecimal(result)
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    result = asDecimal(classic)
+    return _decimalResult(result, classic)
 
   logicalValue: method = .boolean
     return _rv_logical_text(asString())
@@ -723,7 +900,10 @@ RexxValue: class
 
   /** Validate and capture a Classic DO TO endpoint at loop setup. */
   controlToValue: method = .RexxValue
-    text = asString()
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    text = asString(1)
     if datatype(text, "N") <> "1" then do
       message = "RXC-LC-41.4: DO TO value must be numeric; found " || text
       assembler signal "ERROR", message
@@ -732,7 +912,10 @@ RexxValue: class
 
   /** Validate and capture a Classic DO BY step at loop setup. */
   controlByValue: method = .RexxValue
-    text = asString()
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    text = asString(1)
     if datatype(text, "N") <> "1" then do
       message = "RXC-LC-41.5: DO BY value must be numeric; found " || text
       assembler signal "ERROR", message
@@ -741,7 +924,10 @@ RexxValue: class
 
   /** Validate a captured Classic DO control start before the visible pool set. */
   controlStartValue: method = .RexxValue
-    text = asString()
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    text = asString(1)
     if datatype(text, "N") <> "1" then do
       message = "RXC-LC-41.6: DO control start value must be numeric; found " || text
       assembler signal "ERROR", message
@@ -750,7 +936,11 @@ RexxValue: class
 
   /** Classic DO arithmetic keeps significant fractional zeroes through a step. */
   controlNumericAdd: method = .RexxValue
-    arg other = .RexxValue
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    if classic then return add(other, 1)
     left_scale = _rv_control_fraction_scale(asString())
     right_scale = _rv_control_fraction_scale(other.asString())
     scale = left_scale
@@ -770,43 +960,49 @@ RexxValue: class
 
   /** Select the TO comparison from the sign of a Classic DO BY value. */
   controlToContinueBy: method = .boolean
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     arg limit = .RexxValue, step = .RexxValue
-    text = asString()
+    text = asString(1)
     if datatype(text, "N") <> "1" then do
       control_message = "RXC-LC-41.6: DO control variable must be numeric; found " || text
       assembler signal "ERROR", control_message
     end
-    limit_text = limit.asString()
+    limit_text = limit.asString(1)
     if datatype(limit_text, "N") <> "1" then do
       limit_message = "RXC-LC-41.4: DO TO value must be numeric; found " || limit_text
       assembler signal "ERROR", limit_message
     end
-    step_text = step.asString()
+    step_text = step.asString(1)
     if datatype(step_text, "N") <> "1" then do
       by_message = "RXC-LC-41.5: DO BY value must be numeric; found " || step_text
       assembler signal "ERROR", by_message
     end
-    if step.asDecimal() < 0 then do
-      lower_comparison = compareGreaterOrEqual(limit)
+    if step.asDecimal(1) < 0 then do
+      lower_comparison = compareGreaterOrEqual(limit, 1)
       return lower_comparison.logicalValue()
     end
-    upper_comparison = compareLessOrEqual(limit)
+    upper_comparison = compareLessOrEqual(limit, 1)
     return upper_comparison.logicalValue()
 
   /** Advance a Classic DO control variable by its fixed BY value. */
   controlStepBy: method = .RexxValue
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
     arg step = .RexxValue
-    text = asString()
+    text = asString(1)
     if datatype(text, "N") <> "1" then do
       step_message = "RXC-LC-41.6: DO control variable must be numeric; found " || text
       assembler signal "ERROR", step_message
     end
-    step_text = step.asString()
+    step_text = step.asString(1)
     if datatype(step_text, "N") <> "1" then do
       advance_message = "RXC-LC-41.5: DO BY value must be numeric; found " || step_text
       assembler signal "ERROR", advance_message
     end
-    return controlNumericAdd(step)
+    return controlNumericAdd(step, 1)
 
   logicalResult: method = .RexxValue
     return _rv_bool_value(_rv_logical_text(asString()))
@@ -833,28 +1029,46 @@ RexxValue: class
     return _rv_bool_value((left_bool & \right_bool) | (\left_bool & right_bool))
 
   compareEqual: method = .RexxValue
-    arg other = .RexxValue
-    return _rv_bool_value(_rv_compare_standard(self, other) = 0)
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    return _rv_bool_value(_rv_compare_standard(self, other, classic) = 0)
 
   compareNotEqual: method = .RexxValue
-    arg other = .RexxValue
-    return _rv_bool_value(_rv_compare_standard(self, other) <> 0)
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    return _rv_bool_value(_rv_compare_standard(self, other, classic) <> 0)
 
   compareGreaterThan: method = .RexxValue
-    arg other = .RexxValue
-    return _rv_bool_value(_rv_compare_standard(self, other) > 0)
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    return _rv_bool_value(_rv_compare_standard(self, other, classic) > 0)
 
   compareLessThan: method = .RexxValue
-    arg other = .RexxValue
-    return _rv_bool_value(_rv_compare_standard(self, other) < 0)
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    return _rv_bool_value(_rv_compare_standard(self, other, classic) < 0)
 
   compareGreaterOrEqual: method = .RexxValue
-    arg other = .RexxValue
-    return _rv_bool_value(_rv_compare_standard(self, other) >= 0)
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    return _rv_bool_value(_rv_compare_standard(self, other, classic) >= 0)
 
   compareLessOrEqual: method = .RexxValue
-    arg other = .RexxValue
-    return _rv_bool_value(_rv_compare_standard(self, other) <= 0)
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg other = .RexxValue, ?classic = 0
+    return _rv_bool_value(_rv_compare_standard(self, other, classic) <= 0)
 
   strictCompareEqual: method = .RexxValue
     arg other = .RexxValue
@@ -966,17 +1180,82 @@ _rv_is_number_text: procedure = .boolean
   end
   return 1
 
+/** Apply Classic exponent thresholds to a rounded decimal's text view. */
+_rv_classic_decimal_text: procedure = .string
+  arg rendered = .string, precision = .int, form = .int
+  text = strip(rendered)
+  if \_rv_is_number_text(text) then return rendered
+  sign = ""
+  if left(text, 1) = "-" | left(text, 1) = "+" then do
+    if left(text, 1) = "-" then sign = "-"
+    text = substr(text, 2)
+  end
+  exponent = 0
+  exponent_at = pos("E", upper(text))
+  if exponent_at > 0 then do
+    exponent = substr(text, exponent_at + 1) as .int
+    text = left(text, exponent_at - 1)
+  end
+  point_at = pos(".", text)
+  if point_at = 0 then digits_before = length(text)
+  else digits_before = point_at - 1
+  if point_at = 0 then all_digits = text
+  else all_digits = left(text, point_at - 1) || substr(text, point_at + 1)
+  first = 0
+  do index = 1 to length(all_digits)
+    if substr(all_digits, index, 1) <> "0" then do
+      first = index
+      leave
+    end
+  end
+  if first = 0 then return rendered
+  adjusted = digits_before + exponent - first
+  significant = substr(all_digits, first)
+  do while length(significant) > precision & right(significant, 1) = "0"
+    significant = left(significant, length(significant) - 1)
+  end
+  use_exponent = adjusted >= precision | adjusted < -6
+  if use_exponent then do
+    if length(significant) < precision then
+      significant = significant || copies("0", precision - length(significant))
+    exponent_out = adjusted
+    coefficient_before = 1
+    if form = 2 then do
+      do while exponent_out // 3 <> 0
+        exponent_out = exponent_out - 1
+      end
+      coefficient_before = adjusted - exponent_out + 1
+    end
+    if length(significant) < coefficient_before then
+      significant = significant || copies("0", coefficient_before - length(significant))
+    coefficient = left(significant, coefficient_before)
+    if length(significant) > coefficient_before then
+      coefficient = coefficient || "." || substr(significant, coefficient_before + 1)
+    if exponent_out >= 0 then return sign || coefficient || "E+" || exponent_out
+    return sign || coefficient || "E" || exponent_out
+  end
+  point = adjusted + 1
+  if point <= 0 then return sign || "0." || copies("0", 0 - point) || significant
+  if point >= length(significant) then
+    return sign || significant || copies("0", point - length(significant))
+  return sign || left(significant, point) || "." || substr(significant, point + 1)
+
 _rv_compare_standard: procedure = .int
-  arg left = .RexxValue, right = .RexxValue
-  left_text = left.asString()
-  right_text = right.asString()
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg left = .RexxValue, right = .RexxValue, classic = .int
+  left_text = left.asString(classic)
+  right_text = right.asString(classic)
   if _rv_is_number_text(left_text) & _rv_is_number_text(right_text) then do
-    numeric_digits = rexxvalue_numeric_digits()
-    numeric_fuzz = rexxvalue_numeric_fuzz()
-    assembler setnumdgts numeric_digits
-    assembler setnumfuz numeric_fuzz
-    left_dec = left.asDecimal()
-    right_dec = right.asDecimal()
+    if \classic then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+    end
+    left_dec = left.asDecimal(classic)
+    right_dec = right.asDecimal(classic)
     if left_dec = right_dec then return 0
     if left_dec < right_dec then return -1
     return 1

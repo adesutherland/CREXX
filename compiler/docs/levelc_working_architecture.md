@@ -2620,10 +2620,11 @@ Level C DO/END control slice on 2026-05-11:
     external calls invalid;
   - `PROCEDURE` emits `17.1` unless it is the first instruction following a
     local label;
-  - simple constant `NUMERIC DIGITS`, `NUMERIC FUZZ`, and `NUMERIC FORM VALUE`
-    clauses emit `26.5`, `26.6`, and `33.6` when the invalid value is known at
-    parse/highlight time, including direct quoted-string constants for
-    `DIGITS`/`FUZZ`.
+  - simple bare integer `NUMERIC DIGITS`, `NUMERIC FUZZ`, and literal
+    `NUMERIC FORM VALUE` clauses emit `26.5`, `26.6`, and `33.6` when the
+    invalid value is known at parse/highlight time. Quoted DIGITS/FUZZ values
+    now use the runtime validator, which applies the configured Classic
+    numeric alphabet and accepts whole exponent spellings.
 - The deep validation pass adds conservative source-proven checks that are still
   Level C-only:
   - binary and hexadecimal string literals emit Level C identities `15.1` through
@@ -3024,7 +3025,35 @@ ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-
 Result after the deep-validation slice: full build passes; all
 1084 CTest tests pass.
 
-The remaining first implementation sequence is:
+## Current Level C NUMERIC execution route (2026-10-06)
+
+The earlier parser and highlighter history above predates execution lowering.
+`LEVELC_NUMERIC` stays intact through source validation. The Level C lowerer
+evaluates the operand once at the clause, calls the current
+`RexxActivationArguments` numeric setter, turns a returned diagnostic into a
+source-anchored Classic syntax condition, then emits the existing RXAS
+`setnumdgts`, `setnumfuz`, or `setnumfrm` instruction. The same three RXAS
+settings are loaded from the activation at each compiled body entry. The
+activation begins at 9/0/scientific, and a child activation copies its
+parent's settings, so local, recursive, and signed external Level C calls
+restore the caller's context without a linker or VM change.
+
+Level C arithmetic and ordinary numeric comparison call the shared
+`RexxValue` methods with an explicit Classic flag. The default method path
+continues to use the Level B/G and RexxScript numeric policy. Classic results
+are materialized at operation precision; Classic display applies the active
+scientific or engineering exponent threshold. The lowerer captures operator
+operands in source order and, only when the inherited LOSTDIGITS policy is
+enabled, asks `RexxValue` whether significant nonzero operand digits would be
+discarded. It raises the existing `RexxClassicConditionEvent` at the operator
+source. Numeric BIF queries read the existing RXAS context, and FORMAT obtains
+Classic display through `RexxValue`. ABS normalizes the configured numeric
+alphabet, sign and exponent form through the same decimal-text formatter while
+preserving the received argument's significant digits. Expression evaluation
+before a BIF call uses the active context. MAX and MIN keep exact numeric
+selection, independent of ordinary comparison FUZZ.
+
+The following first-implementation sequence is retained as historical context:
 
 1. Review the remaining lexer/parser gaps against the public syntax text:
    non-integer number forms, period-start constants and reserved symbols,
