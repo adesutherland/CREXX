@@ -5279,6 +5279,9 @@ add_levelc_invalid_compile_test(levelc_compile_invalid_if_missing_then
 add_levelc_invalid_compile_test(levelc_arg_malformed
         rexx_src/levelc_arg_malformed.rexx
         "RXC-LC-38\\.1" "levelc_arg_malformed\\.rexx @ 2:7")
+add_levelc_invalid_compile_test(levelc_pull_invalid_template
+        rexx_src/levelc_pull_invalid_template.rexx
+        "RXC-LC-38\\.1" "levelc_pull_invalid_template\\.rexx @ 2:6")
 add_levelc_invalid_compile_test(levelc_arg_missing_positions
         rexx_src/levelc_arg_missing_positions.rexx
         "levelc_arg_missing_positions\\.rexx @ 2:7 - #RXC-LC-38\\.1"
@@ -5665,6 +5668,12 @@ add_levelc_runtime_syntax_signal_test(levelc_arg_bad_dynamic_position
 add_levelc_runtime_syntax_signal_test(levelc_arg_bad_dynamic_position_noopt
         rexx_src/levelc_arg_bad_dynamic_position.rexx "26.4" "before\n"
         "levelc_arg_bad_dynamic_position.rexx:9:" -n)
+add_levelc_runtime_syntax_signal_test(levelc_pull_bad_dynamic_position
+        rexx_src/levelc_pull_bad_dynamic_position.rexx "26.4" "before\n"
+        "levelc_pull_bad_dynamic_position.rexx:4:")
+add_levelc_runtime_syntax_signal_test(levelc_pull_bad_dynamic_position_noopt
+        rexx_src/levelc_pull_bad_dynamic_position.rexx "26.4" "before\n"
+        "levelc_pull_bad_dynamic_position.rexx:4:" -n)
 add_levelc_runtime_syntax_signal_test(levelc_parse_bad_dynamic_position
         rexx_src/levelc_parse_bad_dynamic_position.rexx "26.4" "before\n"
         "levelc_parse_bad_dynamic_position.rexx:4:")
@@ -6428,6 +6437,29 @@ add_test(NAME levelc_arg_frame_linked
 set_tests_properties(levelc_arg_frame_linked PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+foreach(_pull_mode IN ITEMS opt noopt)
+    if(_pull_mode STREQUAL "noopt")
+        set(_pull_noopt -DNOOPT=1)
+    else()
+        set(_pull_noopt)
+    endif()
+    add_test(NAME levelc_pull_linked_${_pull_mode}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_pull_instruction.rexx
+            -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_pull_instruction.input
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_pull_instruction.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            ${_pull_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_pull_linked.cmake)
+    set_tests_properties(levelc_pull_linked_${_pull_mode} PROPERTIES
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()
 add_test(NAME levelc_call_resolution_result_linked
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>
@@ -7490,6 +7522,14 @@ add_test(NAME levelc_arg_template_source_tree
         -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_template_source_tree.cmake)
 set_tests_properties(levelc_arg_template_source_tree PROPERTIES LABELS "compiler;levelc")
+add_test(NAME levelc_pull_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_pull_instruction.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_pull_source_tree.cmake)
+set_tests_properties(levelc_pull_source_tree PROPERTIES LABELS "compiler;levelc")
 add_test(NAME levelc_signal_source_tree
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>

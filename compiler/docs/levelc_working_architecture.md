@@ -945,6 +945,30 @@ fallthrough has no result. This expressly differs from the IBM EXIT wording.
 The worklist records the decision and retained reference logs. The broader
 host text-result service remains open.
 
+## 2026-10-06 Classic PULL source and template route (grouped QA open)
+
+The parsed `PULL` node uses the same optional `TEMPLATES` list and checked
+segment shape as `ARG`. The compiler acquires one value through the active
+`RexxClassicConfig.pullText()` method before inspecting template contents.
+That method delegates to the existing `rxfnsb.pull()` named-queue service,
+which reads default `linein()` when the active queue is empty. An empty
+template or bare PULL still consumes one value. The first template receives
+the acquired `RexxValue` when it has targets; subsequent comma templates
+receive blank values. Each nonempty segment passes through the same Classic TRANSLATE
+uppercase and VM `parseplan` operation as ARG/PARSE, then writes targets in
+source order through the shared visible pool. The compiler adds no queue
+storage or PULL-specific template executor, and changes no linker or VM
+product code.
+
+The configuration method provides one compiler-side queue acquisition point
+for the later PUSH/QUEUE review. It does not itself supply a native host queue
+callback; that wider host contract stays open in LC-AC-06. Focused opt/no-opt,
+linked, source-tree and error tests pass for piped input, empty input,
+template variants and nested procedures. Level C queue-produced input and
+the grouped correctness, sanitizer and isolation qualification are pending
+under LC-STEP-78D. The shared simple uppercase map remains the one described
+above; this work does not change its Unicode mapping policy.
+
 ## 2026-10-03 implementation review: simplify before expansion
 
 This review covers the active Level C parser-to-canonical path, neutral AST

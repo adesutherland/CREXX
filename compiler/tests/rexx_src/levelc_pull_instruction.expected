@@ -1,0 +1,10 @@
+words=MIXED|CASE
+pattern=AB|CD
+unicode=É🙂|X
+comma=ALPHA|BETA||
+empty=|AFTER-EMPTY
+position=AB|CDEF
+dynamic=GH|IJKL
+compound=COMPOUND
+nested=NESTED|LINE
+eof=[]

@@ -34,6 +34,10 @@ LC-I-15 EXIT has a whole-instruction implementation and focused reference
 matrix, including the explicit Regina physical-EOF decision, but its grouped
 final-input broad regression and sanitizer checkpoint remains open. This is
 a development checkpoint, not a Level C or Beta 4 qualification verdict.
+LC-I-16 PULL now has its source, lowering, default-input, template and error
+implementation with focused linked opt/no-opt evidence. Its Level C queue
+interaction and grouped final-input gate remain open while the strict queue
+advances to PUSH and QUEUE.
 
 **2026-10-06 qualification cadence revision.** Adrian directed thicker
 instruction increments and one broad regression/sanitizer checkpoint across
@@ -1684,7 +1688,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-13 CALL — closed 2026-10-06 | LC-STEP-75A–75E | `LC-75-01–06`: whole syntax/error, local/BIF/external signed resolution, ARG and result lifecycle, linked and native host execution, and four-condition delayed policy/handler delivery pass under the accepted static provider boundary. ADDRESS, stream and host HALT producers retain their own open rows; this CALL closure does not qualify them. |
 | LC-I-14 RETURN — closed 2026-10-06 | LC-STEP-76A–76C | `LC-76-01–05`: bare/value syntax and anchored errors, one-body local function/subroutine lifecycle, result presence/drop, outermost status through the implicit main and native host, optimized/no-opt direct/linked proof. EXIT and host result exchange remain separately open. |
 | LC-I-15 EXIT — implementation complete, grouped QA open | LC-STEP-77A–77D | Full explicit-EXIT matrix and Regina physical EOF verified in focused Debug; LC-77-06 broad final-input and sanitizer gate remains open. No whole-instruction closure claim yet. |
-| LC-I-16 PULL | LC-STEP-78 | Queue/default input, optional template and empty/error behavior; host queue and PARSE source service. |
+| LC-I-16 PULL — implementation complete 2026-10-06; grouped QA open | LC-STEP-78A–78C complete; 78D open | One queue/default-input acquisition and shared PARSE UPPER template executor; bare, word, dot, literal, positional, dynamic and comma forms have focused opt/no-opt and linked proof. Queue interaction awaits PUSH/QUEUE, and grouped normal/sanitizer/isolation qualification and LC-AC-06 host configuration remain open. |
 | LC-I-17 PUSH | LC-STEP-79 | Front-of-queue ordering, optional expression and null value; configured queue. |
 | LC-I-18 QUEUE | LC-STEP-80 | Back-of-queue ordering, optional expression and null value; configured queue. |
 | LC-I-19 PARSE | LC-STEP-81 | Every source type, UPPER, arbitrary target/template sequence, static/dynamic patterns and positions, comma templates and errors; one reviewed parse engine plus argument/input/source services. |
@@ -4350,6 +4354,107 @@ implementation checkpoint, not a full-suite or sanitizer pass on final
 inputs. LC-77-06 and LC-I-15 closure remain open for the next grouped
 qualification; prior partial/before-fix broad evidence is not promoted
 to a passing final verdict.
+
+**LC-I-16 PULL plan — vision and intended outcome, 2026-10-06.** Compile
+Classic PULL as `PARSE UPPER PULL` through the existing shared parse-template
+engine. One reached PULL consumes exactly one string from the active external
+data queue; when it is empty it reads one line from default input. Uppercase
+the full valid-Unicode source by codepoint before parsing, preserve the
+Latin-1 ordinal bridge, and assign arbitrary legal template targets in the
+visible Classic pool. A bare PULL still consumes and discards its source.
+Use the already shipped `rxfnsb` named-queue/default-input implementation
+as the initial queue source, shared with subsequent PUSH/QUEUE reviews, and
+keep the broader host-selectable queue/input callback obligation under
+LC-AC-06 visibly open. Do not edit linker or VM product code. Review PULL
+as a whole instruction, then continue to PUSH and QUEUE; schedule their
+shared broad regression/sanitizer gate under Adrian's thicker-increment
+direction. The [IBM PULL reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=parse-pull-instruction)
+and [parsing summary](https://www.ibm.com/docs/en/zos/2.5.0?topic=parsing-instructions-summary)
+are the instruction reference.
+
+1. **LC-78-01 — source forms and errors (open):** bare PULL and every
+   optional single/comma template form retain authored source/AST anchors,
+   contextual keyword behavior and specific invalid-tail/template errors.
+   Verify IBM/Regina probes, parser recovery, source/canonical trees and
+   optimized/no-opt diagnostics.
+2. **LC-78-02 — source acquisition (open):** each reached instruction reads
+   one active-queue entry before falling back to one default-input line,
+   including empty text, an empty queue, EOF and repeated calls. A bare
+   instruction discards exactly that entry. Preserve current named-queue
+   selection, program/host lifetime and ordered side effects. Verify queue
+   and piped-input probes without a blocking terminal wait.
+3. **LC-78-03 — parsing and pool effects (open):** PULL uppercases the one
+   source with the approved Unicode contract, then runs the same arbitrary
+   word/dot/pattern/position/comma template executor as ARG/PARSE, assigning
+   into shared and PROCEDURE-private/exposed pools in source order. Later
+   comma templates receive null sources. Verify direct, nested, recursive,
+   optimizer-parity and linked cases; retain dynamic-position errors.
+4. **LC-78-04 — host and queue boundary (open):** use the existing queue
+   service for default behavior, retain the broader configurable host
+   queue/input callback contract in LC-AC-06, and identify any genuinely
+   new architecture decision before implementation. Verify current native
+   host and Level B/G isolation without claiming the open host API complete.
+5. **LC-78-05 — coherent qualification (open):** implement one acquisition
+   route and one parse executor, keep architecture docs and source tags in
+   sync, pass focused normal Debug tests for the whole PULL matrix, and
+   commit its coherent implementation. Run the normal Level C, focused
+   maintained sanitizer and Level B/G/RexxScript isolation matrix once on
+   the grouped PULL/PUSH/QUEUE final inputs, then close LC-I-16 only when
+   LC-78-01–05 are verified. Keep full Level C and Release 1 open.
+
+1. **LC-STEP-78A (`LC-78-01–04`; complete 2026-10-06):** inventory source forms,
+   errors, queue/input/EOF behavior and host paths against IBM and Regina;
+   inspect parser AST, the ARG/PARSE executor, `rxfnsb` queue and default
+   input, and source/linked/native entry behavior. Retain guarded reference
+   and pre-change probes; resolve any real architecture gap before editing.
+2. **LC-STEP-78B (`LC-78-01–04`; complete 2026-10-06; depends on 78A):** lower complete PULL
+   through the shared source and template path, add source/error/runtime
+   and host regressions, and verify queue effects with the existing service.
+3. **LC-STEP-78C (`LC-78-05`; complete 2026-10-06; depends on 78B):** run focused normal checks,
+   record the tested inputs and commit the whole-instruction increment;
+   then review PUSH and QUEUE in order before the grouped broad gate.
+4. **LC-STEP-78D (`LC-78-05`; grouped gate):** qualify the shared final
+   code/test inputs once, reconcile PULL and the queue-family evidence,
+   and close LC-I-16 only when every criterion above passes.
+
+**LC-I-16 implementation receipt, 2026-10-06.** The parser's `PULL` AST and
+`TEMPLATES` list already had the full ARG/PARSE template grammar. The lowerer
+now validates that list through the same checked template shape as ARG, obtains
+exactly one source from `RexxClassicConfig.pullText()`, and runs the existing
+`parseplan` executor with uppercase on the first template. Later comma
+templates parse null sources; a bare or empty-first-template PULL still
+consumes its source. `pullText()` delegates to the shipped `rxfnsb.pull()`
+queue, whose empty-queue route calls default `linein()`; it adds a configuration
+seam without a linker or VM product change. No separate PULL parser engine or
+queue storage was added. The shared configuration remains a future host
+selection point under LC-AC-06.
+
+The retained reference probe at
+`cmake-build-debug/levelc_pull_reference/reference.log` records Regina queue
+FIFO, bare discard, pattern, piped-input uppercase and EOF behavior. Regina
+rejects a comma PULL template with 64.1 in that probe, whereas the IBM
+instruction reference permits a template list and assigns null to templates
+after the first source. The compiler follows the already planned IBM grammar
+and the shared ARG/PARSE template implementation. The pre-change compiler
+reported `unsupported main statement` on PULL in `prechange.log`.
+
+The final-input focused Debug CTests passed the linked optimized/no-opt input
+matrix 2/2 in `focused-expanded.log`, invalid source 1/1 and reached invalid
+dynamic position 2/2 in `focused-all.log`, and the source/canonical tree
+inspection 1/1 in `source-tree-test.log`. The input matrix covers untaken IF,
+bare discard, words, literal pattern, leading empty/comma-null templates,
+absolute/dynamic positions, compound target, Latin-1 uppercase plus
+supplementary-text preservation, private/exposed procedure targets and EOF.
+Shared ARG invocation/source-tree checks passed 2/2 in
+`shared-focused.log`; the existing named queue functional baseline passed
+1/1 in `queue-baseline.log`. The guarded runs left zero child processes.
+The current `strupper`/Classic TRANSLATE route supplies the already documented
+simple uppercase map; its broader Unicode mapping choice remains in the
+shared character/configuration contract and is not silently described as
+full Unicode case mapping. The Level C instruction has not yet been tested
+against queue entries produced by Level C PUSH/QUEUE, and the grouped normal,
+maintained sanitizer and Level B/G/RexxScript isolation gate is open under
+78D. LC-I-16, LC-AC-04/06/08/59 and Release 1 remain open.
 
 **LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
 The following proposed VM operation is retained only as history; Adrian

@@ -62,6 +62,7 @@
 #define LEVELC_NOVALUE_EVENT_PREFIX "__rxcp_levelc_novalue_event_"
 #define LEVELC_PARSE_FIELDS_PREFIX "__rxcp_levelc_parse_fields_"
 #define LEVELC_PARSE_SOURCE_PREFIX "__rxcp_levelc_parse_source_"
+#define LEVELC_PULL_CONFIG_PREFIX "__rxcp_levelc_pull_config_"
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_DO_STATE_PREFIX "__rxcp_levelc_do_state_"
 #define LEVELC_BIF_TRANSLATE_HELPER "rexxclassicbif_translate"
@@ -1171,19 +1172,19 @@ unsupported:
     return 0;
 }
 
-static int levelc_arg_statement_supported(ASTNode *stmt,
-                                          const char **reason_out) {
+static int levelc_template_list_statement_supported(ASTNode *stmt,
+                                                    const char **reason_out) {
     ASTNode *templates;
     ASTNode *template_node;
-    if (!stmt || stmt->node_type != LEVELC_ARG) {
-        if (reason_out) *reason_out = "missing ARG statement";
+    if (!stmt || (stmt->node_type != LEVELC_ARG && stmt->node_type != PULL)) {
+        if (reason_out) *reason_out = "missing ARG/PULL statement";
         return 0;
     }
 
     templates = stmt->child;
     if (!templates) return 1;
     if (templates->node_type != TEMPLATES || templates->sibling) {
-        if (reason_out) *reason_out = "unsupported ARG template list";
+        if (reason_out) *reason_out = "unsupported ARG/PULL template list";
         return 0;
     }
 
@@ -1713,7 +1714,8 @@ static int levelc_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS)
         return !stmt->child || levelc_expr_supported(stmt->child, plan, reason_out);
-    if (stmt->node_type == LEVELC_ARG) return levelc_arg_statement_supported(stmt, reason_out);
+    if (stmt->node_type == LEVELC_ARG || stmt->node_type == PULL)
+        return levelc_template_list_statement_supported(stmt, reason_out);
     if (stmt->node_type == LEVELC_SIGNAL && stmt->child && !stmt->child->sibling) {
         if (stmt->child->node_type == LITERAL || stmt->child->node_type == STRING)
             return 1;
@@ -4629,6 +4631,69 @@ fail:
     return 0;
 }
 
+static int levelc_lower_pull_instruction(Context *context,
+                                         ASTNode *instructions,
+                                         ASTNode *stmt,
+                                         LevelCLowerPlan *plan,
+                                         const char **reason_out) {
+    ASTNode *templates = stmt ? stmt->child : NULL;
+    ASTNode *segment = templates ? templates->child : NULL;
+    ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
+    ASTNode *config_ref = levelc_config_ref(context, stmt, VAR_SYMBOL);
+    char *config_name = rxcp_remap_create_generated_node_name(
+        LEVELC_PULL_CONFIG_PREFIX, stmt);
+    ASTNode *config_assignment = config_ref && config_name
+        ? rxcp_remap_create_named_assignment(context, stmt, config_name,
+            rxcp_remap_create_dereference_expr(context, stmt, config_ref))
+        : NULL;
+    ASTNode *config = config_name
+        ? rxcp_remap_create_named_ref(context, stmt, VAR_SYMBOL, config_name)
+        : NULL;
+    ASTNode *pulled = config
+        ? rxcp_remap_create_member_call(context, stmt, config,
+                                        "pullText", NULL, 0) : NULL;
+    ASTNode *args[1] = {pulled};
+    ASTNode *source = pulled
+        ? rxcp_remap_create_factory_call(context, stmt,
+                                         LEVELC_REXX_VALUE_CLASS, args, 1) : NULL;
+    char *source_name = rxcp_remap_create_generated_node_name(
+        LEVELC_PARSE_SOURCE_PREFIX, stmt);
+    ASTNode *capture = source && source_name
+        ? rxcp_remap_create_named_assignment(context, stmt, source_name, source)
+        : NULL;
+    int first = 1;
+
+    if (!prelude || !config_assignment || !capture) goto fail;
+    add_ast(prelude, config_assignment);
+    add_ast(prelude, capture);
+    rxcp_remap_append_builder_children(instructions, prelude);
+
+    while (segment) {
+        if (segment->child) {
+            ASTNode *value = first
+                ? rxcp_remap_create_named_ref(context, stmt, VAR_SYMBOL,
+                                               source_name)
+                : levelc_blank_rexxvalue(context, stmt);
+            prelude = rxcp_remap_create_instruction_builder(context, stmt);
+            if (!value || !prelude ||
+                !levelc_lower_template_segment(context, instructions, stmt,
+                                                segment, value, prelude, plan,
+                                                1, reason_out)) goto fail;
+        }
+        first = 0;
+        segment = segment->sibling;
+    }
+    free(config_name);
+    free(source_name);
+    return 1;
+
+fail:
+    free(config_name);
+    free(source_name);
+    if (reason_out && !*reason_out) *reason_out = "failed to lower PULL instruction";
+    return 0;
+}
+
 static int levelc_append_signal_sigl(Context *context,
                                      ASTNode *instructions,
                                      ASTNode *stmt) {
@@ -4989,6 +5054,9 @@ static int levelc_lower_statement(Context *context,
         return levelc_lower_arg_instruction(context, instructions, stmt,
                                             plan, reason_out);
     }
+    if (stmt->node_type == PULL)
+        return levelc_lower_pull_instruction(context, instructions, stmt,
+                                             plan, reason_out);
     if (stmt->node_type == LEVELC_SIGNAL) {
         if (stmt->child && stmt->child->node_type == LEVELC_SIGNAL_VALUE)
             return levelc_lower_value_signal(context, instructions, stmt, plan,
@@ -5517,6 +5585,15 @@ static int levelc_tree_contains_arg(ASTNode *node) {
     return 0;
 }
 
+static int levelc_tree_contains_pull(ASTNode *node) {
+    while (node) {
+        if (node->node_type == PULL ||
+            levelc_tree_contains_pull(node->child)) return 1;
+        node = node->sibling;
+    }
+    return 0;
+}
+
 static int levelc_tree_contains_procedure(ASTNode *node) {
     while (node) {
         if (node->node_type == LEVELC_PROCEDURE ||
@@ -6027,6 +6104,7 @@ static int levelc_rewrite_program(Context *context,
     anchor = old_instructions && old_instructions->child ? old_instructions->child : program_file;
     needs_translate = levelc_tree_contains_parse_upper(old_instructions) ||
                       levelc_tree_contains_arg(old_instructions) ||
+                      levelc_tree_contains_pull(old_instructions) ||
                       levelc_tree_contains_signal_value(old_instructions);
     needs_signal_policy = levelc_tree_contains_signal_on(old_instructions);
     if (plan) plan->has_novalue_on = levelc_tree_contains_novalue_on(old_instructions);

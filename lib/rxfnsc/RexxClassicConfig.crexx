@@ -180,6 +180,10 @@ RexxClassicConfig: class
     arg words = .RexxValue
     return
 
+  /** Consume one text value from the selected data queue or default input. */
+  pullText: method = .string
+    return pull()
+
   isByteProfile: method = .boolean
     return profile_name == "BYTE"
 
