@@ -26,9 +26,9 @@ PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-13`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The latest normal Debug
-Level C checkpoint for the compiler-only external CALL path passed 623/623
+Level C checkpoint for the compiler-only external CALL path passed 625/625
 with process memory monitoring. Focused macOS ASan and Level B/G/RexxScript
-isolation also passed on those inputs. CALL remains open.
+isolation also passed on their qualified inputs. CALL remains open.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 **2026-10-05 scope and VM decision.** Adrian initially excluded a general
@@ -58,11 +58,24 @@ below are historical and superseded. Generate ordinary typed imports and
 calls for external targets; separately compiled Level C providers need a
 compiler-generated exposed entry with this signature, unique helper symbols
 and no competing `.main`. Preserve the one Classic activation frame,
-Unicode text boundary and optional result protocol. `LC-75-01/04` retain their
-reference timing and search obligations until the compiler-only path is
-qualified or Adrian explicitly decides a documented departure. In particular,
-ordinary compile/link failure for a missing import cannot silently be called
-equivalent to Classic reached-only runtime 43.1.
+Unicode text boundary and optional result protocol. The compiler-only
+missing-target path retains reached-only 43.1 for a target absent at caller
+compilation. The later static-boundary decision below governs providers added
+after compilation or omitted from the linked image.
+
+**2026-10-06 CALL static-boundary scope decision.** Adrian accepted the
+static signed boundary for Level C CALL. A provider must be visible to the
+compiler when its caller is compiled and must be included in the linked
+image. A provider added only after caller compilation is outside the Level C
+CALL search contract; recompile the caller to bind it. If a provider that was
+available at compilation is omitted from the image, retain the ordinary
+core `FUNCTION_NOT_FOUND` behavior, including its existing source location
+for a direct CALL or delayed external handler. This is an explicit departure
+from Classic late runtime lookup and its error identity/timing, limited to
+that static provider boundary. It does not change reached-only 43.1 for a
+target absent at caller compilation, the 16.1 causing-clause behavior for an
+absent local/delayed handler, frame/result semantics, or the remaining CALL
+criteria. No linker or runtime edit is authorized by this decision.
 
 Dated plans and receipts below preserve the state and proposals at their own
 checkpoints. The status above, the whole-instruction queue and the current
@@ -3212,8 +3225,11 @@ their shared dependencies are implemented here where CALL needs them.
    targets, no arguments, arbitrary source-ordered expression/omission lists,
    `ON/OFF ERROR|FAILURE|HALT|NOTREADY` and optional `ON ... NAME target`
    retain the authored AST. Bare/bad CALL, malformed argument expressions,
-   bad condition/NAME tails and unavailable targets report the applicable
-   Classic identity at the causing clause. Verify parser/canonical trees,
+   bad condition/NAME tails and targets absent at caller compilation report
+   the applicable Classic identity at the causing clause. A signed provider
+   available at compilation but omitted from the image retains the ordinary
+   core `FUNCTION_NOT_FOUND` result and source location under the accepted
+   static boundary. Verify parser/canonical trees,
    source diagnostics, and the [IBM CALL reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=instructions-call).
 2. **LC-75-02 — routine resolution and arguments:** an unquoted target
    resolves a callable local label before a shared BIF and then an external
@@ -3234,18 +3250,20 @@ their shared dependencies are implemented here where CALL needs them.
    aliases must observe the correct sequence; expression calls still enforce
    their separate required-value rule. Verify reference output and
    optimized/no-opt, source and linked tests.
-4. **LC-75-04 — external Classic routine lifecycle:** locate and invoke a
-   separately compiled Classic routine through a defined search/load path,
+4. **LC-75-04 — external Classic routine lifecycle:** find a separately
+   compiled Classic provider through the compiler's source/binary import
+   inventory and invoke it when included in the linked image,
    pass the same argument frame and call-kind state, return its optional
    result, and restore the caller's state and source/error identity across
    success, missing target and nested external calls. Keep the active host
    environment, streams, traps and variable-pool API available to the
    external adapter without exposing ordinary caller variables to the new
    Classic programme. Verify packaged and configured-host execution with
-   the full toolchain. Before editing a new
-   loader/VM boundary, present its exact API, ownership and search behavior
-   for Adrian's architectural decision; do not treat implementation effort
-   as an exclusion.
+   the full toolchain. Providers appearing only after caller compilation are
+   outside the accepted static signed boundary; recompile the caller to bind
+   one. An available provider omitted from the image retains ordinary core
+   `FUNCTION_NOT_FOUND` behavior. A new loader/VM boundary would require a
+   separate architectural decision.
 5. **LC-75-05 — delayed condition calls:** `CALL ON/OFF` and `SIGNAL ON/OFF`
    replace one another for a condition; the handler target defaults to the
    condition name or follows `NAME`. ERROR, FAILURE, HALT and NOTREADY use
@@ -3255,7 +3273,9 @@ their shared dependencies are implemented here where CALL needs them.
    CONDITION data and caller-policy restoration. Prove re-enable/OFF,
    nested/recursive calls, local/BIF/external handler targets, and the
    available event producers; keep missing ADDRESS, I/O and host event
-   producers open with their owner rows rather than claiming them here.
+   producers open with their owner rows rather than claiming them here. A
+   handler provider omitted from the linked image follows the accepted
+   static-boundary core error behavior.
 6. **LC-75-06 — coherent delivery:** replace overlapping CALL/BIF/function
    dispatch and result paths with reviewed shared helpers, retain source
    documentation tags, add a complete reference and negative matrix, and
@@ -3273,11 +3293,10 @@ their shared dependencies are implemented here where CALL needs them.
    the matrix and open owners in this worklist before product edits.
 2. **LC-STEP-75B (LC-75-02–04; depends on 75A):** design one invocation
    resolver and result-presence path around the existing Classic activation.
-   Specify the external Classic search/load and call boundary, including
-   paths, source identity, Unicode lengths and lifetime. Reuse the existing
-   module system where it satisfies the contract. Obtain Adrian's decision
-   before a new loader or VM architecture; already approved frame/AST work
-   needs no repeat approval.
+   Specify the accepted compile-time import and linked call boundary,
+   including paths, source identity, Unicode lengths and lifetime. Reuse the
+   existing module system. Obtain Adrian's decision before any new loader or
+   VM architecture; already approved frame/AST work needs no repeat approval.
 3. **LC-STEP-75C (LC-75-01–04; depends on 75B and its decision gate):**
    implement local/BIF/external calls, quoted bypass, ordered actuals,
    optional result writes/drops and errors through shared compiler/runtime
@@ -3848,12 +3867,11 @@ unmatched form. The compiler-only path retains the ordinary linker and VM.
    observations for external handler private state, caller `SIGL`, RESULT and
    CALL-after-SIGNAL replacement; check SIGNAL-after-CALL policy through its
    existing activation API, then compare the inference with the IBM reference.
-2. **75B-C5a-2 (`LC-75-01/02/04`, open):** retain exact late-provider and
-   available-but-unlinked receipts, finish the direct and delayed negative
-   matrix, and identify which observable obligations require a scope decision
+2. **75B-C5a-2 (`LC-75-01/02/04`, boundary decision complete):** retain exact
+   late-provider and available-but-unlinked receipts, finish the direct and
+   delayed negative matrix, and record Adrian's static-boundary scope decision
    under the fixed compile-time signature and unchanged core behavior.
-3. **75B-C5a-3 (`LC-75-06`, bounded qualification complete; final closure
-   depends on step 2):** measure the expanded nested aggregate in normal Debug
+3. **75B-C5a-3 (`LC-75-06`, bounded qualification complete):** measure the expanded nested aggregate in normal Debug
    and maintained ASan, run focused checks during edits and one relevant normal
    correctness suite on final code/test inputs, then update architecture and
    coverage. Keep LC-I-13 and full Level C open for any unverified criterion.
@@ -3870,9 +3888,9 @@ zero children. A separate controlled external-handler image omitted its
 provider; `rxlink` succeeded and `rxvm` raised `FUNCTION_NOT_FOUND` at the
 authored `CALL ON` policy line rather than 16.1 at the event's NOP line
 (`cmake-build-debug/compiler/tests/levelc_call_external/opt/`
-`external-handler-unlinked-run.log`). These are unresolved Classic error and
-source-timing differences within `LC-75-01/04/05`. They do not authorize a
-linker/runtime edit or a silent relaxation of the full CALL criteria.
+`external-handler-unlinked-run.log`). Adrian accepted these precise
+static-boundary departures above; the other `LC-75-01/04/05` obligations
+remain open. This does not authorize a linker/runtime edit.
 
 The permanent external-handler fixture now asserts a fresh zero-argument
 frame, CONDITION `ERROR|CALL|DELAY`, ignored handler return, private-pool
@@ -5671,7 +5689,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL, including numeric, digit-starting and period-starting constant-symbol labels, and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; external Level C providers and fixed-signature Level B/G entries have linked opt/noopt proof under 75B, including nested providers, source/binary discovery, Unicode/NUL and signature rejection; compile-time-absent direct targets raise `43.1` only when reached, and external delayed handlers have controlled CONDITION/ARG/RESULT proof; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; direct and policy diagnostics have source-anchored matrix coverage under LC-STEP-75A | Late provider and available-but-unlinked timing, external-handler SIGL reference, real condition producers and their source identity, remaining clause/lifecycle matrix and whole-instruction review open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL, including numeric, digit-starting and period-starting constant-symbol labels, and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; external Level C providers and fixed-signature Level B/G entries have linked opt/noopt proof under 75B, including nested providers, source/binary discovery, Unicode/NUL and signature rejection; compile-time-absent direct targets raise `43.1` only when reached, and external delayed handlers have controlled CONDITION/ARG/RESULT proof; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; both SIGNAL/CALL policy replacement orders and external handler private/caller state have focused proof; direct and policy diagnostics have source-anchored matrix coverage under LC-STEP-75A; the 2026-10-06 decision accepts the static signed provider boundary and ordinary core error for an omitted linked provider | External-handler SIGL reference, real condition producers and their source identity, remaining clause/lifecycle matrix and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |

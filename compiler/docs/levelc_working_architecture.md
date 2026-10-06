@@ -157,11 +157,14 @@ handler's private pool has unassigned `SIGL`, while the interrupted caller's
 policy. The latter check uses the existing activation API and a controlled
 queue attempt after the authored SIGNAL clause.
 
-This remains a bounded external CALL path. Search or loading of a provider
-that appears only after compilation, an available provider omitted from the
-linked image, exact reference equivalence for external-handler `SIGL`, real
-condition producers, and the complete trap lifecycle remain open under the
-CALL worklist. No linker or VM rule was added.
+Adrian accepted this as a static signed external CALL boundary on 2026-10-06.
+A provider must be visible at caller compilation and included in the linked
+image. A later provider requires caller recompilation; an available provider
+omitted from the image retains the core `FUNCTION_NOT_FOUND` result and its
+ordinary source location. These are explicit departures from Classic late
+lookup and error timing. Exact reference equivalence for external-handler
+`SIGL`, real condition producers, and the complete trap lifecycle remain open
+under the CALL worklist. No linker or VM rule was added.
 
 **Approved 2026-10-04 Unicode-first direction.** Level C visible scalar
 strings are valid text. Existing Level B `.string` and codepoint PARSE/SAY
