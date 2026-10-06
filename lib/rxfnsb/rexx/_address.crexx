@@ -339,6 +339,15 @@ addressredirect: class
     _captured = empty
     return
 
+  /** Snapshot byte-valued input without adding a line terminator. */
+  input_binary: factory
+    arg source = .binary
+    empty = .binary
+    _kind = 1
+    _input = source
+    _captured = empty
+    return
+
   input_array: factory
     arg source = .string[]
     input = .binary

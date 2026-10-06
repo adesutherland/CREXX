@@ -5343,6 +5343,33 @@ add_levelc_invalid_compile_test(levelc_call_diagnostic_matrix
         "levelc_call_diagnostic_matrix\\.rexx @ 9:20 - #RXC-LC-19\\.3"
         "levelc_call_diagnostic_matrix\\.rexx @ 10:20 - #RXC-LC-19\\.3"
         "levelc_call_diagnostic_matrix\\.rexx @ 11:20 - #RXC-LC-19\\.3")
+add_levelc_invalid_compile_test(levelc_address_invalid_value
+        rexx_src/levelc_address_invalid_value.rexx
+        "@ 2:9 - #RXC-LC-19\\.1")
+add_levelc_invalid_compile_test(levelc_address_invalid_bare_with
+        rexx_src/levelc_address_invalid_bare_with.rexx
+        "@ 2:14 - #RXC-LC-25\\.5")
+add_levelc_invalid_compile_test(levelc_address_invalid_stream_missing
+        rexx_src/levelc_address_invalid_stream_missing.rexx
+        "@ 2:37 - #RXC-LC-53\\.1")
+add_levelc_invalid_compile_test(levelc_address_invalid_stream_literal
+        rexx_src/levelc_address_invalid_stream_literal.rexx
+        "@ 2:37 - #RXC-LC-53\\.1")
+add_levelc_invalid_compile_test(levelc_address_invalid_stem
+        rexx_src/levelc_address_invalid_stem.rexx
+        "@ 2:42 - #RXC-LC-53\\.3")
+add_levelc_invalid_compile_test(levelc_address_invalid_duplicate
+        rexx_src/levelc_address_invalid_duplicate.rexx
+        "@ 2:47 - #RXC-LC-25\\.5")
+add_levelc_invalid_compile_test(levelc_address_invalid_normal_extra
+        rexx_src/levelc_address_invalid_normal_extra.rexx
+        "@ 2:38 - #RXC-LC-25\\.5")
+add_levelc_invalid_compile_test(levelc_address_invalid_input_append
+        rexx_src/levelc_address_invalid_input_append.rexx
+        "@ 2:24 - #RXC-LC-25\\.6")
+add_levelc_invalid_compile_test(levelc_address_invalid_keyword
+        rexx_src/levelc_address_invalid_keyword.rexx
+        "@ 2:24 - #RXC-LC-25\\.5")
 add_levelc_invalid_compile_test(levelc_binary_grouping_invalid
         rexx_src/levelc_binary_grouping_invalid.rexx
         "levelc_binary_grouping_invalid\\.rexx @ 2:6 - #RXC-LC-15\\.2"
@@ -6570,6 +6597,73 @@ foreach(_parse_mode IN ITEMS opt noopt)
             LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 endforeach()
+foreach(_address_mode IN ITEMS opt noopt)
+    if(_address_mode STREQUAL "noopt")
+        set(_address_noopt -DNOOPT=1)
+    else()
+        set(_address_noopt)
+    endif()
+    foreach(_address_case IN ITEMS whole notready)
+        set(_address_name levelc_address_${_address_case})
+        add_test(NAME ${_address_name}_${_address_mode}
+                COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXLINK=$<TARGET_FILE:rxlink>
+                -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                -DBINDIR=${CMAKE_BINARY_DIR}/bin
+                -DNAME=${_address_name}
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${_address_name}.rexx
+                -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${_address_name}.expected
+                -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+                ${_address_noopt}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
+        set_tests_properties(${_address_name}_${_address_mode} PROPERTIES
+                LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+                CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    endforeach()
+    add_test(NAME levelc_address_external_${_address_mode}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_address_external.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            ${_address_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_address_external.cmake)
+    set_tests_properties(levelc_address_external_${_address_mode} PROPERTIES
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    if(UNIX)
+        add_test(NAME levelc_address_input_exact_${_address_mode}
+                COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXLINK=$<TARGET_FILE:rxlink>
+                -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                -DBINDIR=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+                ${_address_noopt}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_address_input_exact.cmake)
+        set_tests_properties(levelc_address_input_exact_${_address_mode} PROPERTIES
+                LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+                CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    endif()
+endforeach()
+add_test(NAME levelc_address_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_address_whole.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_address_source_tree.cmake)
+set_tests_properties(levelc_address_source_tree PROPERTIES
+        LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+        CREXX_PREP_TARGETS "rxc;library;classlib;rxfnsc")
 add_test(NAME levelc_call_resolution_result_linked
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>
@@ -8306,6 +8400,24 @@ target_compile_definitions(test_levelc_say_host_output PRIVATE
 add_dependencies(test_levelc_say_host_output levelc_say_host_output_bin library rxfnsc)
 
 add_custom_command(
+        OUTPUT levelc_address_host_callback.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_address_host_callback ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_address_host_callback.rexx
+        COMMAND $<TARGET_FILE:rxas> levelc_address_host_callback
+        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_address_host_callback.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling Level C ADDRESS host callback fixture ...")
+add_custom_target(levelc_address_host_callback_bin DEPENDS levelc_address_host_callback.rxbin)
+add_executable(test_levelc_address_host_callback src/test_levelc_address_host_callback.c)
+target_link_libraries(test_levelc_address_host_callback PRIVATE rxvml rxpashim)
+target_include_directories(test_levelc_address_host_callback PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_levelc_address_host_callback PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_CLASSLIB_PATH="${CMAKE_BINARY_DIR}/bin/classlib"
+        CREXX_TEST_RXFNSC_PATH="${CMAKE_BINARY_DIR}/bin/rxfnsc"
+        CREXX_TEST_ADDRESS_MODULE="${CMAKE_CURRENT_BINARY_DIR}/levelc_address_host_callback.rxbin")
+add_dependencies(test_levelc_address_host_callback levelc_address_host_callback_bin library rxfnsc)
+
+add_custom_command(
         OUTPUT levelc_arg_host_entry.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_arg_host_entry ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_host_entry.rexx
         COMMAND $<TARGET_FILE:rxas> levelc_arg_host_entry
@@ -8650,6 +8762,9 @@ set_tests_properties(say_bytes_host_callbacks PROPERTIES LABELS "compiler;levelc
 add_test(NAME levelc_say_host_output COMMAND test_levelc_say_host_output)
 set_tests_properties(levelc_say_host_output PROPERTIES LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "test_levelc_say_host_output")
+add_test(NAME levelc_address_host_callback COMMAND test_levelc_address_host_callback)
+set_tests_properties(levelc_address_host_callback PROPERTIES LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "test_levelc_address_host_callback")
 add_test(NAME levelc_arg_host_entry COMMAND test_levelc_arg_host_entry)
 set_tests_properties(levelc_arg_host_entry PROPERTIES
         LABELS "compiler;levelc"

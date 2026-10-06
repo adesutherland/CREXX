@@ -1437,6 +1437,16 @@ static walker_result emit_walker(walker_direction direction,
                     line = next_line;
                     first_operand = 0;
                 }
+                /* Evaluating a SIGNAL payload can inline a getter from a
+                 * library source file. Restore the causing clause before the
+                 * instruction so the VM records the authored SIGL. */
+                if (node->node_string_length == 6 &&
+                    strncasecmp(node->node_string, "signal", 6) == 0 &&
+                    node->child) {
+                    comment_meta = get_metaline(node);
+                    output_append_text(node->output, comment_meta);
+                    free(comment_meta);
+                }
                 if (node->source_provenance == AST_SOURCE_SYNTHETIC &&
                     node->node_string_length == 4 &&
                     strncasecmp(node->node_string, "copy", 4) == 0 &&

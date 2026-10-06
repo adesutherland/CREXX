@@ -36,15 +36,25 @@ import rxfnsb
  */
 RexxAddressState: class
   environment_name = .string
+  alternate_environment_name = .string
   input_position = .string
   input_type = .string
   input_resource = .string
+  alternate_input_position = .string
+  alternate_input_type = .string
+  alternate_input_resource = .string
   output_position = .string
   output_type = .string
   output_resource = .string
+  alternate_output_position = .string
+  alternate_output_type = .string
+  alternate_output_resource = .string
   error_position = .string
   error_type = .string
   error_resource = .string
+  alternate_error_position = .string
+  alternate_error_type = .string
+  alternate_error_resource = .string
 
   *: factory
     environment_name = "CREXX"
@@ -57,15 +67,99 @@ RexxAddressState: class
     error_position = "REPLACE"
     error_type = "NORMAL"
     error_resource = ""
+    alternate_environment_name = environment_name
+    alternate_input_position = input_position
+    alternate_input_type = input_type
+    alternate_input_resource = input_resource
+    alternate_output_position = output_position
+    alternate_output_type = output_type
+    alternate_output_resource = output_resource
+    alternate_error_position = error_position
+    alternate_error_type = error_type
+    alternate_error_resource = error_resource
     return
 
+  /** Copy both saved ADDRESS settings into a child Classic invocation. */
+  copyFrom: method = .void
+    arg parent = .RexxAddressState
+    environment_name = parent.environment()
+    alternate_environment_name = parent.alternateEnvironment()
+    input_position = parent.position("I")
+    input_type = parent.type("I")
+    input_resource = parent.resource("I")
+    output_position = parent.position("O")
+    output_type = parent.type("O")
+    output_resource = parent.resource("O")
+    error_position = parent.position("E")
+    error_type = parent.type("E")
+    error_resource = parent.resource("E")
+    alternate_input_position = parent.alternatePosition("I")
+    alternate_input_type = parent.alternateType("I")
+    alternate_input_resource = parent.alternateResource("I")
+    alternate_output_position = parent.alternatePosition("O")
+    alternate_output_type = parent.alternateType("O")
+    alternate_output_resource = parent.alternateResource("O")
+    alternate_error_position = parent.alternatePosition("E")
+    alternate_error_type = parent.alternateType("E")
+    alternate_error_resource = parent.alternateResource("E")
+    return
+
+  /** A lasting selection saves the old setting and starts normal connections. */
   setEnvironment: method = .void
     arg name = .string
-    environment_name = name
+    alternate_environment_name = environment_name
+    alternate_input_position = input_position
+    alternate_input_type = input_type
+    alternate_input_resource = input_resource
+    alternate_output_position = output_position
+    alternate_output_type = output_type
+    alternate_output_resource = output_resource
+    alternate_error_position = error_position
+    alternate_error_type = error_type
+    alternate_error_resource = error_resource
+    environment_name = upper(strip(name))
+    input_position = "INPUT"
+    input_type = "NORMAL"
+    input_resource = ""
+    output_position = "REPLACE"
+    output_type = "NORMAL"
+    output_resource = ""
+    error_position = "REPLACE"
+    error_type = "NORMAL"
+    error_resource = ""
+    return
+
+  /** Bare ADDRESS exchanges the current and previously selected settings. */
+  swapEnvironment: method = .void
+    held = .RexxAddressState()
+    call held.copyFrom(self)
+    environment_name = held.alternateEnvironment()
+    input_position = held.alternatePosition("I")
+    input_type = held.alternateType("I")
+    input_resource = held.alternateResource("I")
+    output_position = held.alternatePosition("O")
+    output_type = held.alternateType("O")
+    output_resource = held.alternateResource("O")
+    error_position = held.alternatePosition("E")
+    error_type = held.alternateType("E")
+    error_resource = held.alternateResource("E")
+    alternate_environment_name = held.environment()
+    alternate_input_position = held.position("I")
+    alternate_input_type = held.type("I")
+    alternate_input_resource = held.resource("I")
+    alternate_output_position = held.position("O")
+    alternate_output_type = held.type("O")
+    alternate_output_resource = held.resource("O")
+    alternate_error_position = held.position("E")
+    alternate_error_type = held.type("E")
+    alternate_error_resource = held.resource("E")
     return
 
   environment: method = .string
     return environment_name
+
+  alternateEnvironment: method = .string
+    return alternate_environment_name
 
   setConnection: method = .void
     arg option = .string, position = .string, type = .string, resource = .string
@@ -125,6 +219,30 @@ RexxAddressState: class
     if selector = "I" then return input_resource
     if selector = "O" then return output_resource
     if selector = "E" then return error_resource
+    return ""
+
+  alternatePosition: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+    if selector = "I" then return alternate_input_position
+    if selector = "O" then return alternate_output_position
+    if selector = "E" then return alternate_error_position
+    return ""
+
+  alternateType: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+    if selector = "I" then return alternate_input_type
+    if selector = "O" then return alternate_output_type
+    if selector = "E" then return alternate_error_type
+    return ""
+
+  alternateResource: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+    if selector = "I" then return alternate_input_resource
+    if selector = "O" then return alternate_output_resource
+    if selector = "E" then return alternate_error_resource
     return ""
 
 /**

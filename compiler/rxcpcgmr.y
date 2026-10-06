@@ -28,6 +28,7 @@
 
 %include {
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -40,6 +41,27 @@ static char *levelc_diag_token_text(Token *token) {
     if (!token->token_string || token->length <= 0) return strdup("end-of-clause");
     if (token->token_string[0] == '\n' || token->token_string[0] == '\r') return strdup("end-of-clause");
     return rx_strndup(token->token_string, (size_t)token->length);
+}
+
+static int levelc_token_same_word(Token *left, Token *right) {
+    int i;
+    if (!left || !right || !left->token_string || !right->token_string ||
+        left->length != right->length) return 0;
+    for (i = 0; i < left->length; i++)
+        if (toupper((unsigned char)left->token_string[i]) !=
+            toupper((unsigned char)right->token_string[i])) return 0;
+    return 1;
+}
+
+static int levelc_token_is_word(Token *token, const char *word) {
+    size_t i;
+    size_t length = strlen(word);
+    if (!token || !token->token_string || token->length < 0 ||
+        (size_t)token->length != length) return 0;
+    for (i = 0; i < length; i++)
+        if (toupper((unsigned char)token->token_string[i]) !=
+            toupper((unsigned char)word[i])) return 0;
+    return 1;
 }
 
 static char *levelc_diag_line_text(Token *token) {
@@ -747,7 +769,14 @@ address_instruction(I) ::= CTK_ADDRESS(T) address_value_opt(V) address_with_opt(
 {
     I = ast_f(context, LEVELC_ADDRESS, T);
     if (V) add_ast(I, V);
-    if (W) add_ast(I, W);
+    if (W) {
+        if (!V && W->child && W->child->node_type == ARGS &&
+            W->child->child && W->child->child->token)
+            add_ast(W, levelc_expected_keywords(
+                context, "25.5", W->child->child->token,
+                "INPUT OUTPUT ERROR"));
+        add_ast(I, W);
+    }
 }
 
 arg_instruction(I) ::= CTK_ARG(T) template_list_opt(L).
@@ -1466,16 +1495,32 @@ address_value_opt(V) ::= CTK_VALUE(T).
     add_ast(V, levelc_current_token_error(context, "19.1", T));
 }
 
-address_value_opt(V) ::= CTK_VAR_SYMBOL(T) simple_tail(L).
+address_value_opt(V) ::= CTK_VAR_SYMBOL(T) expression(E).
 {
     V = ast_f(context, LITERAL, T);
-    if (L) add_ast(V, L);
+    add_ast(V, E);
 }
 
-address_value_opt(V) ::= CTK_STRING(T) simple_tail(L).
+address_value_opt(V) ::= CTK_VAR_SYMBOL(T).
+{
+    V = ast_f(context, LITERAL, T);
+}
+
+address_value_opt(V) ::= CTK_STRING(T) expression(E).
 {
     V = ast_f(context, STRING, T);
-    if (L) add_ast(V, L);
+    add_ast(V, E);
+}
+
+address_value_opt(V) ::= CTK_STRING(T).
+{
+    V = ast_f(context, STRING, T);
+}
+
+address_value_opt(V) ::= CTK_OPEN_BRACKET(T) expression(E) CTK_CLOSE_BRACKET.
+{
+    V = ast_f(context, LITERAL, T);
+    add_ast(V, E);
 }
 
 address_with_opt(W) ::= .
@@ -1522,8 +1567,19 @@ address_with_opt(W) ::= CTK_WITH(T).
 
 address_connection(C) ::= address_connection(C0) address_connection_clause(A).
 {
+    ASTNode *prior;
+    int repeated = 0;
     C = C0;
+    for (prior = C0 ? C0->child : NULL; prior; prior = prior->sibling) {
+        if (prior->node_type == LITERAL && A &&
+            levelc_token_same_word(prior->token, A->token)) {
+            repeated = 1;
+            break;
+        }
+    }
     add_ast(C, A);
+    if (repeated) add_ast(C, levelc_expected_keywords(
+        context, "25.5", A->token, "INPUT OUTPUT ERROR"));
 }
 
 address_connection(C) ::= address_connection_clause(A).
@@ -1534,8 +1590,23 @@ address_connection(C) ::= address_connection_clause(A).
 
 address_connection_clause(A) ::= address_connection_head(H) address_connection_tail(T).
 {
+    ASTNode *kind = T ? T->child : NULL;
+    ASTNode *extra = NULL;
     A = H;
     if (T) add_ast(A, T);
+    if (kind && (levelc_token_is_word(kind->token, "APPEND") ||
+                 levelc_token_is_word(kind->token, "REPLACE")))
+        kind = kind->sibling;
+    if (kind && kind->token) {
+        if (levelc_token_is_word(kind->token, "NORMAL"))
+            extra = kind->sibling;
+        else if (levelc_token_is_word(kind->token, "STREAM") ||
+                 levelc_token_is_word(kind->token, "STEM"))
+            extra = kind->sibling ? kind->sibling->sibling : NULL;
+    }
+    if (extra && extra->token)
+        add_ast(A, levelc_expected_keywords(
+            context, "25.5", extra->token, "INPUT OUTPUT ERROR"));
 }
 
 address_connection_head(A) ::= CTK_INPUT(T).

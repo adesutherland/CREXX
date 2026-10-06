@@ -476,8 +476,10 @@ activity.
 
 - bare `ADDRESS` swaps active and alternate environments;
 - `ADDRESS env` sets the active environment;
-- `ADDRESS env command` or `ADDRESS VALUE expr command` issues one transient
-  command;
+- `ADDRESS env command` issues one transient command;
+- `ADDRESS VALUE expression` evaluates the environment name for a lasting
+  selection; the complete expression is the environment name, not a command
+  operand;
 - `WITH INPUT|OUTPUT|ERROR` supports `NORMAL`, `STREAM name`, and `STEM name`,
   with output/error `APPEND` or `REPLACE`;
 - command result updates `RC`, `.RC`, and `.RS`, then raises `ERROR` or

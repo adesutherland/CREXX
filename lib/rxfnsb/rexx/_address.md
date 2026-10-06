@@ -27,6 +27,12 @@ lookup. Commands, values, diagnostics, redirect resources, and provider data
 remain strings. Counts, indexes, return codes, binding slots, and iteration
 cursors use `.int` at the Level B boundary.
 
+`addressredirect.input_binary(bytes)` snapshots exact binary input. It leaves
+line terminators untouched, including an absent final newline, and preserves
+embedded NUL and non-text bytes for byte-oriented providers. The existing
+`input_string` and `input_array` factories retain their line-oriented behavior
+and append a newline after each input string or array element.
+
 The request/response, binding, standard sandbox, and standard stem class
 attribute order is part of the native VM bridge ABI in `interpreter/rxvml.c`.
 Do not reorder or insert attributes without changing and testing that bridge.
@@ -83,7 +89,7 @@ normalization or object allocation.
 `lib/rxfnsb/tests_functional/ts_address_protocol.crexx` covers the pure Level B
 protocol in optimized and unoptimized modes: registry aliases/prefixes,
 typed cursors, normalization, drop/iteration, request/response objects,
-sandbox/stem/scalar writeback, function requests, environment selection,
+sandbox/stem/scalar writeback, exact binary input, function requests, environment selection,
 unknown-environment responses, and signal errors. The existing
 `ts_address.crexx`, `ts_address_crexx.crexx`, compiler ADDRESS cases, and native
 host callback tests cover execution integration.

@@ -162,6 +162,21 @@ RexxVariablePool: class
     trace_state = .RexxTraceState()
     date_time_state = .RexxDateTimeState()
     date_time_ready = 0
+    next_slot = 1
+    ignored = slots.put(".RC", "1")
+    kinds[1] = RVP_BINDING_VALUE
+    values[1] = .RexxValue("0")
+    next_slot = 2
+    ignored = slots.put(".RS", "2")
+    kinds[2] = RVP_BINDING_VALUE
+    values[2] = .RexxValue("0")
+    return
+
+  /** Command status stays visible through PROCEDURE's private variable pool. */
+  inheritCommandStatus: method = .void
+    arg parent = reference .RexxVariablePool
+    call exposeValue(".RC", parent, ".RC")
+    call exposeValue(".RS", parent, ".RS")
     return
 
   setAddressEnvironment: method = .void
@@ -173,6 +188,15 @@ RexxVariablePool: class
 
   addressEnvironment: method = .string
     return address_state.environment()
+
+  addressState: method = .RexxAddressState
+    return address_state
+
+  swapAddressEnvironment: method = .void
+    state = .RexxAddressState
+    assembler link state, address_state
+    call state.swapEnvironment()
+    return
 
   setAddressConnection: method = .void
     arg option = .string, position = .string, type = .string, resource = .string
@@ -200,10 +224,9 @@ RexxVariablePool: class
   inheritAddressState: method = .void
     arg parent = reference .RexxVariablePool
     parent_pool = dereference parent
-    call setAddressEnvironment(parent_pool.addressEnvironment())
-    call setAddressConnection("I", parent_pool.addressPosition("I"), parent_pool.addressType("I"), parent_pool.addressResource("I"))
-    call setAddressConnection("O", parent_pool.addressPosition("O"), parent_pool.addressType("O"), parent_pool.addressResource("O"))
-    call setAddressConnection("E", parent_pool.addressPosition("E"), parent_pool.addressType("E"), parent_pool.addressResource("E"))
+    state = .RexxAddressState
+    assembler link state, address_state
+    call state.copyFrom(parent_pool.addressState())
     return
 
   /** Return the current activation's Classic TRACE setting. */

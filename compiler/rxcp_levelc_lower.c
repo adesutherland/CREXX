@@ -154,7 +154,7 @@ static int levelc_signal_condition_id(const char *name) {
 static const LevelCBifEntry levelc_direct_bifs[] = {
     LEVELC_DIRECT_BIF("ABBREV", "rexxclassicbifabbrev", "rexxclassicbif_abbrev"),
     LEVELC_DIRECT_BIF("ABS", "rexxclassicbifabs", "rexxclassicbif_abs"),
-    LEVELC_DIRECT_BIF("ADDRESS", "rexxclassicbifaddress", "rexxclassicbif_address"),
+    LEVELC_DIRECT_BIF("ADDRESS", "rexxclassicbifaddress", "rexxclassicbif_address_frame"),
     LEVELC_DIRECT_BIF("ARG", "rexxclassicbifarg", "rexxclassicbif_arg"),
     LEVELC_DIRECT_BIF("B2X", "rexxclassicbifb2x", "rexxclassicbif_b2x"),
     {"BITAND", NULL, "rexxclassicbifs.rexxclassicbif_bitand"},
@@ -233,6 +233,7 @@ typedef struct {
     ASTNode *classic_condition_dispatch;
     ASTNode *classic_condition_source;
     int has_novalue_on;
+    int has_address;
     LevelCLoopBinding *active_loop;
     uint64_t used_direct_bifs;
     char **external_imports;
@@ -1730,6 +1731,102 @@ unsupported:
     return 0;
 }
 
+typedef struct {
+    ASTNode *environment;
+    ASTNode *command;
+    ASTNode *connections;
+    int dynamic_environment;
+    int swap;
+} LevelCAddressShape;
+
+static int levelc_address_shape(ASTNode *stmt,
+                                LevelCLowerPlan *plan,
+                                LevelCAddressShape *shape,
+                                const char **reason_out) {
+    ASTNode *target;
+    ASTNode *with;
+    ASTNode *head;
+    unsigned seen = 0;
+
+    if (!stmt || stmt->node_type != LEVELC_ADDRESS || !shape) return 0;
+    memset(shape, 0, sizeof(*shape));
+    target = stmt->child;
+    if (!target) {
+        shape->swap = 1;
+        return 1;
+    }
+    if (target->node_type == WITH) goto invalid;
+    if (target->node_type != LITERAL && target->node_type != STRING) goto invalid;
+    shape->environment = target;
+    with = target->sibling;
+    if (with && (with->node_type != WITH || with->sibling)) goto invalid;
+    shape->connections = with;
+
+    if (target->node_type == LITERAL) {
+        char *name = levelc_upper_name(target);
+        shape->dynamic_environment = name &&
+            (strcmp(name, "VALUE") == 0 || strcmp(name, "(") == 0);
+        free(name);
+    }
+    if (shape->dynamic_environment) {
+        if (!target->child || target->child->sibling ||
+            !levelc_expr_supported(target->child, plan, reason_out)) return 0;
+    } else if (target->child) {
+        if (target->child->sibling ||
+            !levelc_expr_supported(target->child, plan, reason_out)) return 0;
+        shape->command = target->child;
+    }
+
+    if (!with) return 1;
+    if (!with->child || with->child->node_type != ARGS ||
+        with->child->sibling) goto invalid;
+    for (head = with->child->child; head; head = head->sibling) {
+        ASTNode *atoms = head->child;
+        ASTNode *first = atoms ? atoms->child : NULL;
+        ASTNode *resource;
+        char *which;
+        char *kind;
+        unsigned bit;
+        if (head->node_type != LITERAL || !atoms ||
+            atoms->node_type != ARGS || atoms->sibling || !first) goto invalid;
+        which = levelc_upper_name(head);
+        bit = which && strcmp(which, "INPUT") == 0 ? 1U
+            : which && strcmp(which, "OUTPUT") == 0 ? 2U
+            : which && strcmp(which, "ERROR") == 0 ? 4U : 0U;
+        free(which);
+        if (!bit || (seen & bit)) goto invalid;
+        seen |= bit;
+        kind = levelc_upper_name(first);
+        if (kind && (strcmp(kind, "APPEND") == 0 ||
+                     strcmp(kind, "REPLACE") == 0)) {
+            if (bit == 1U || !first->sibling) {
+                free(kind);
+                goto invalid;
+            }
+            first = first->sibling;
+            free(kind);
+            kind = levelc_upper_name(first);
+        }
+        resource = first->sibling;
+        if (!kind ||
+            ((strcmp(kind, "STREAM") == 0 || strcmp(kind, "STEM") == 0)
+             ? (!resource || resource->sibling ||
+                resource->node_type != LITERAL)
+             : (strcmp(kind, "NORMAL") != 0 || resource))) {
+            free(kind);
+            goto invalid;
+        }
+        free(kind);
+    }
+    if (seen) return 1;
+    if (reason_out) *reason_out = "ADDRESS WITH requires a connection";
+    return 0;
+
+invalid:
+    if (reason_out) *reason_out = "invalid ADDRESS source shape";
+    return 0;
+}
+
 static int levelc_statement_supported(ASTNode *stmt,
                                       LevelCLowerPlan *plan,
                                       int in_procedure,
@@ -1785,6 +1882,12 @@ static int levelc_statement_supported(ASTNode *stmt,
         return levelc_select_statement_supported(stmt, plan, in_procedure, reason_out);
     if (stmt->node_type == PARSE)
         return levelc_parse_shape(stmt, plan, NULL, NULL, NULL, NULL, reason_out);
+    if (stmt->node_type == LEVELC_ADDRESS) {
+        LevelCAddressShape shape;
+        if (!levelc_address_shape(stmt, plan, &shape, reason_out)) return 0;
+        if (plan) plan->has_address = 1;
+        return 1;
+    }
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
 
     if (stmt->node_type == CALL) {
@@ -2143,6 +2246,8 @@ static char *levelc_begin_call_activation(Context *context,
     ASTNode *parent;
     ASTNode *inherit;
     ASTNode *inherit_args[1];
+    ASTNode *capture;
+    ASTNode *capture_args[1];
     ASTNode *begin;
 
     if (!context || !call_node || !prelude) return NULL;
@@ -2163,16 +2268,26 @@ static char *levelc_begin_call_activation(Context *context,
         : NULL;
     receiver = assignment ? rxcp_remap_create_named_ref(
         context, call_node, VAR_SYMBOL, name) : NULL;
+    parent = levelc_pool_ref(context, call_node, VAR_SYMBOL);
+    capture_args[0] = parent ? rxcp_remap_create_reference_expr(
+        context, call_node, parent) : NULL;
+    capture = receiver && capture_args[0]
+        ? rxcp_remap_create_member_call_statement(
+            context, call_node, receiver, "captureCallerPool", capture_args, 1)
+        : NULL;
+    receiver = assignment ? rxcp_remap_create_named_ref(
+        context, call_node, VAR_SYMBOL, name) : NULL;
     begin = receiver ? rxcp_remap_create_member_call_statement(
         context, call_node, receiver,
         is_function ? "beginInternalFunction" : "beginInternalCall",
         NULL, 0) : NULL;
-    if (!assignment || !inherit || !begin) {
+    if (!assignment || !inherit || !capture || !begin) {
         free(name);
         return NULL;
     }
     add_ast(prelude, assignment);
     add_ast(prelude, inherit);
+    add_ast(prelude, capture);
     add_ast(prelude, begin);
     return name;
 }
@@ -2607,7 +2722,8 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     int activation_bif;
 
     if (!context || !expr || !bif_name || !prelude) return NULL;
-    activation_bif = strcmp(bif_name, "ARG") == 0 ||
+    activation_bif = strcmp(bif_name, "ADDRESS") == 0 ||
+                     strcmp(bif_name, "ARG") == 0 ||
                      strcmp(bif_name, "CONDITION") == 0;
 
     args_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_ARGS_PREFIX, expr);
@@ -3082,6 +3198,19 @@ static ASTNode *levelc_pool_setup_statement(Context *context, ASTNode *anchor_no
     add_ast(assign, lhs);
     add_ast(assign, rhs);
     return assign;
+}
+
+static ASTNode *levelc_provider_status_setup_statement(Context *context,
+                                                        ASTNode *anchor) {
+    ASTNode *activation = rxcp_remap_create_named_ref(
+        context, anchor, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *pool = levelc_pool_ref(context, anchor, VAR_SYMBOL);
+    ASTNode *args[1];
+    args[0] = pool ? rxcp_remap_create_reference_expr(context, anchor, pool) : NULL;
+    return activation && args[0]
+        ? rxcp_remap_create_member_call_statement(
+            context, anchor, activation, "applyCommandStatusToPool", args, 1)
+        : NULL;
 }
 
 static ASTNode *levelc_config_setup_statement(Context *context,
@@ -3770,6 +3899,7 @@ static ASTNode *levelc_build_options(Context *context,
     ASTNode *import_translate;
     ASTNode *import_signal;
     ASTNode *import_condition_event;
+    ASTNode *import_address;
     ASTNode *provider_namespace = provider_name
         ? levelc_provider_namespace(context, anchor_node, provider_name) : NULL;
     size_t i;
@@ -3810,10 +3940,16 @@ static ASTNode *levelc_build_options(Context *context,
                                              anchor_node ? anchor_node : options,
                                              "rxfnsb")
         : NULL;
-    import_condition_event = plan && plan->has_novalue_on
+    import_condition_event = plan &&
+        (plan->has_novalue_on || plan->has_address)
         ? rxcp_remap_create_generated_import(context,
                                              anchor_node ? anchor_node : options,
                                              "rexxclassicconditionevent")
+        : NULL;
+    import_address = plan && plan->has_address
+        ? rxcp_remap_create_generated_import(context,
+                                             anchor_node ? anchor_node : options,
+                                             "rexxclassicaddress")
         : NULL;
     if (!levelb || !comments_dash || !numeric_classic || !import_value ||
         !import_pool || !import_activation || (needs_do_state && !import_do) ||
@@ -3821,7 +3957,9 @@ static ASTNode *levelc_build_options(Context *context,
         (provider_name && !provider_namespace) ||
         (needs_translate && !import_translate) ||
         (needs_rxfnsb && !import_signal) ||
-        (plan && plan->has_novalue_on && !import_condition_event)) return NULL;
+        (plan && (plan->has_novalue_on || plan->has_address) &&
+         !import_condition_event) ||
+        (plan && plan->has_address && !import_address)) return NULL;
 
     add_ast(options, levelb);
     add_ast(options, comments_dash);
@@ -3836,6 +3974,7 @@ static ASTNode *levelc_build_options(Context *context,
     if (import_translate) add_ast(options, import_translate);
     if (import_signal) add_ast(options, import_signal);
     if (import_condition_event) add_ast(options, import_condition_event);
+    if (import_address) add_ast(options, import_address);
     for (i = 0; plan && i < plan->external_import_count; i++) {
         ASTNode *import = rxcp_remap_create_generated_import(
             context, anchor_node ? anchor_node : options,
@@ -4840,6 +4979,309 @@ static int levelc_lower_queue_write_instruction(Context *context,
     return 1;
 }
 
+static ASTNode *levelc_address_text(Context *context,
+                                    ASTNode *source,
+                                    LevelCLowerPlan *plan,
+                                    ASTNode *prelude,
+                                    int symbol_literal) {
+    ASTNode *value;
+    if (!source) return NULL;
+    if (symbol_literal && source->node_type == LITERAL)
+        return levelc_name_string(context, source);
+    value = levelc_lower_expr(context, source, plan, prelude);
+    return value ? rxcp_remap_create_member_call(
+        context, source, value, "asString", NULL, 0) : NULL;
+}
+
+static int levelc_append_address_connection(Context *context,
+                                             ASTNode *instructions,
+                                             ASTNode *stmt,
+                                             ASTNode *head,
+                                             const char *receiver_name,
+                                             const char *method,
+                                             LevelCLowerPlan *plan,
+                                             ASTNode *prelude) {
+    ASTNode *first = head->child->child;
+    ASTNode *resource;
+    ASTNode *receiver;
+    ASTNode *args[4];
+    ASTNode *operation;
+    ASTNode *stream_value;
+    char *which = levelc_upper_name(head);
+    char *kind = levelc_upper_name(first);
+    const char *position = which && strcmp(which, "INPUT") == 0
+        ? "INPUT" : "REPLACE";
+    if (kind && (strcmp(kind, "APPEND") == 0 ||
+                 strcmp(kind, "REPLACE") == 0)) {
+        position = strcmp(kind, "APPEND") == 0 ? "APPEND" : "REPLACE";
+        first = first->sibling;
+        free(kind);
+        kind = levelc_upper_name(first);
+    }
+    resource = first ? first->sibling : NULL;
+    receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, receiver_name);
+    args[0] = which ? rxcp_remap_create_string_constant(
+        context, head, which) : NULL;
+    args[1] = rxcp_remap_create_string_constant(
+        context, head, position);
+    args[2] = kind ? rxcp_remap_create_string_constant(
+        context, head, kind) : NULL;
+    stream_value = resource && kind && strcmp(kind, "STREAM") == 0
+        ? levelc_pool_value(context, resource, plan, prelude) : NULL;
+    args[3] = resource && kind && strcmp(kind, "STREAM") == 0
+        ? (stream_value ? rxcp_remap_create_member_call(
+            context, resource, stream_value, "asString", NULL, 0) : NULL)
+        : resource ? levelc_address_text(context, resource, plan, prelude, 1)
+        : rxcp_remap_create_string_constant(context, head, "");
+    operation = receiver && args[0] && args[1] && args[2] &&
+        args[3]
+        ? rxcp_remap_create_member_call_statement(
+            context, head, receiver, method, args, 4) : NULL;
+    free(which);
+    free(kind);
+    if (!operation) return 0;
+    rxcp_remap_append_builder_children(instructions, prelude);
+    add_ast(instructions, operation);
+    return 1;
+}
+
+static int levelc_append_address_condition(Context *context,
+                                            ASTNode *instructions,
+                                            ASTNode *stmt,
+                                            const char *command_name) {
+    char *condition_name = rxcp_remap_create_generated_node_name(
+        "__rxcp_levelc_address_condition_", stmt);
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, command_name);
+    ASTNode *condition_id = receiver ? rxcp_remap_create_member_call(
+        context, stmt, receiver, "conditionId", NULL, 0) : NULL;
+    ASTNode *capture = condition_id && condition_name
+        ? rxcp_remap_create_named_assignment(
+            context, stmt, condition_name, condition_id) : NULL;
+    ASTNode *activation;
+    ASTNode *queue_args[3];
+    ASTNode *queue;
+    ASTNode *policy_args[1];
+    ASTNode *policy;
+    ASTNode *enabled;
+    ASTNode *event_args[2];
+    ASTNode *event;
+    ASTNode *signal;
+    ASTNode *then_instructions;
+    ASTNode *then_block;
+    ASTNode *branch;
+    if (!capture) goto fail;
+    add_ast(instructions, capture);
+
+    activation = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    queue_args[0] = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, condition_name);
+    receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, command_name);
+    queue_args[1] = receiver ? rxcp_remap_create_member_call(
+        context, stmt, receiver, "conditionDescription", NULL, 0) : NULL;
+    queue_args[2] = rxcp_remap_create_integer_constant(
+        context, stmt, stmt->token ? stmt->token->line + 1 : 0,
+        TP_INTEGER);
+    queue = activation && queue_args[0] && queue_args[1] && queue_args[2]
+        ? rxcp_remap_create_member_call_statement(
+            context, stmt, activation, "queueCallCondition", queue_args, 3)
+        : NULL;
+    if (!queue) goto fail;
+    add_ast(instructions, queue);
+
+    activation = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    policy_args[0] = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, condition_name);
+    policy = activation && policy_args[0]
+        ? rxcp_remap_create_member_call(
+            context, stmt, activation, "signalPolicy", policy_args, 1)
+        : NULL;
+    enabled = ast_f(context, OP_COMPARE_GT, stmt->token);
+    if (!policy || !enabled) goto fail;
+    rxcp_remap_anchor_synthetic(enabled, stmt);
+    add_ast(enabled, policy);
+    add_ast(enabled, rxcp_remap_create_integer_constant(
+        context, stmt, 0, TP_INTEGER));
+
+    event_args[0] = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, condition_name);
+    receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, command_name);
+    event_args[1] = receiver ? rxcp_remap_create_member_call(
+        context, stmt, receiver, "conditionDescription", NULL, 0) : NULL;
+    event = event_args[0] && event_args[1]
+        ? rxcp_remap_create_factory_call(
+            context, stmt, "RexxClassicConditionEvent", event_args, 2)
+        : NULL;
+    signal = ast_ftt(context, ASSEMBLER, strdup("signal"));
+    then_instructions = rxcp_remap_create_instruction_builder(context, stmt);
+    if (!event || !signal || !then_instructions) goto fail;
+    signal->free_node_string = 1;
+    signal->is_compiler_added = 1;
+    rxcp_remap_anchor_synthetic(signal, stmt);
+    add_ast(signal, rxcp_remap_create_string_constant(
+        context, stmt, "CLASSIC_CONDITION"));
+    add_ast(signal, event);
+    add_ast(then_instructions, signal);
+    then_block = rxcp_remap_create_do_block(
+        context, stmt, then_instructions);
+    branch = then_block ? rxcp_remap_create_if_statement(
+        context, stmt, enabled, then_block, NULL) : NULL;
+    if (!branch) goto fail;
+    add_ast(instructions, branch);
+    free(condition_name);
+    return 1;
+
+fail:
+    free(condition_name);
+    return 0;
+}
+
+static int levelc_append_address_syntax(Context *context,
+                                        ASTNode *instructions,
+                                        ASTNode *stmt,
+                                        const char *command_name) {
+    char *name = rxcp_remap_create_generated_node_name(
+        "__rxcp_levelc_address_syntax_", stmt);
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, command_name);
+    ASTNode *error = receiver ? rxcp_remap_create_member_call(
+        context, stmt, receiver, "syntaxError", NULL, 0) : NULL;
+    ASTNode *capture = name && error
+        ? rxcp_remap_create_named_assignment(context, stmt, name, error) : NULL;
+    ASTNode *condition = ast_f(context, OP_COMPARE_NEQ, stmt->token);
+    ASTNode *signal = ast_ftt(context, ASSEMBLER, strdup("signal"));
+    ASTNode *then_instructions = rxcp_remap_create_instruction_builder(
+        context, stmt);
+    ASTNode *then_block;
+    ASTNode *branch;
+    if (!capture || !condition || !signal || !then_instructions) {
+        free(name);
+        return 0;
+    }
+    add_ast(instructions, capture);
+    rxcp_remap_anchor_synthetic(condition, stmt);
+    add_ast(condition, rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, name));
+    add_ast(condition, rxcp_remap_create_string_constant(context, stmt, ""));
+    signal->free_node_string = 1;
+    signal->is_compiler_added = 1;
+    rxcp_remap_anchor_synthetic(signal, stmt);
+    add_ast(signal, rxcp_remap_create_string_constant(
+        context, stmt, "CLASSIC_SYNTAX"));
+    add_ast(signal, rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, name));
+    add_ast(then_instructions, signal);
+    then_block = rxcp_remap_create_do_block(
+        context, stmt, then_instructions);
+    branch = then_block ? rxcp_remap_create_if_statement(
+        context, stmt, condition, then_block, NULL) : NULL;
+    free(name);
+    if (!branch) return 0;
+    add_ast(instructions, branch);
+    return 1;
+}
+
+static int levelc_lower_address_instruction(Context *context,
+                                            ASTNode *instructions,
+                                            ASTNode *stmt,
+                                            LevelCLowerPlan *plan,
+                                            const char **reason_out) {
+    LevelCAddressShape shape;
+    ASTNode *prelude;
+    ASTNode *receiver;
+    ASTNode *operation;
+    ASTNode *environment;
+    ASTNode *args[4];
+    ASTNode *command;
+    ASTNode *head;
+    char *command_name = NULL;
+    const char *method;
+
+    if (!levelc_address_shape(stmt, plan, &shape, reason_out)) return 0;
+    if (shape.swap)
+        return levelc_append_activation_method(context, instructions, stmt,
+                                                "swapAddressEnvironment");
+    prelude = rxcp_remap_create_instruction_builder(context, stmt);
+    environment = shape.dynamic_environment
+        ? levelc_address_text(context, shape.environment->child,
+                              plan, prelude, 0)
+        : levelc_address_text(context, shape.environment,
+                              plan, prelude, 1);
+    if (!prelude || !environment) goto fail;
+
+    if (shape.command) {
+        command = levelc_address_text(context, shape.command,
+                                      plan, prelude, 0);
+        command_name = rxcp_remap_create_generated_node_name(
+            "__rxcp_levelc_address_command_", stmt);
+        receiver = levelc_pool_ref(context, stmt, VAR_SYMBOL);
+        args[0] = receiver ? rxcp_remap_create_reference_expr(
+            context, stmt, receiver) : NULL;
+        receiver = rxcp_remap_create_named_ref(
+            context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+        args[1] = receiver ? rxcp_remap_create_reference_expr(
+            context, stmt, receiver) : NULL;
+        args[2] = environment;
+        args[3] = command;
+        operation = args[0] && args[1] && args[2] && args[3]
+            ? rxcp_remap_create_factory_call(context, stmt,
+                "RexxClassicAddressCommand", args, 4) : NULL;
+        operation = operation && command_name
+            ? rxcp_remap_create_named_assignment(
+                context, stmt, command_name, operation) : NULL;
+        if (!operation) goto fail;
+        rxcp_remap_append_builder_children(instructions, prelude);
+        add_ast(instructions, operation);
+        method = "withConnection";
+    } else {
+        receiver = rxcp_remap_create_named_ref(
+            context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+        args[0] = environment;
+        operation = receiver ? rxcp_remap_create_member_call_statement(
+            context, stmt, receiver, "setAddressEnvironment", args, 1)
+            : NULL;
+        if (!operation) goto fail;
+        rxcp_remap_append_builder_children(instructions, prelude);
+        add_ast(instructions, operation);
+        method = "setAddressConnection";
+    }
+
+    for (head = shape.connections ? shape.connections->child->child : NULL;
+         head; head = head->sibling) {
+        ASTNode *connection_prelude = rxcp_remap_create_instruction_builder(
+            context, head);
+        if (!connection_prelude || !levelc_append_address_connection(
+                context, instructions, stmt, head,
+                command_name ? command_name : LEVELC_ACTIVATION_SYMBOL,
+                method, plan, connection_prelude)) goto fail;
+    }
+    if (shape.command) {
+        receiver = rxcp_remap_create_named_ref(
+            context, stmt, VAR_SYMBOL, command_name);
+        operation = receiver ? rxcp_remap_create_member_call_statement(
+            context, stmt, receiver, "run", NULL, 0) : NULL;
+        if (!operation) goto fail;
+        add_ast(instructions, operation);
+        if (!levelc_append_address_syntax(
+                context, instructions, stmt, command_name)) goto fail;
+        if (!levelc_append_address_condition(
+                context, instructions, stmt, command_name)) goto fail;
+    }
+    free(command_name);
+    return 1;
+
+fail:
+    free(command_name);
+    if (reason_out && !*reason_out)
+        *reason_out = "failed to lower supported ADDRESS instruction";
+    return 0;
+}
+
 static int levelc_append_signal_sigl(Context *context,
                                      ASTNode *instructions,
                                      ASTNode *stmt) {
@@ -5235,6 +5677,9 @@ static int levelc_lower_statement(Context *context,
     }
     if (stmt->node_type == PARSE)
         return levelc_lower_direct_parse(context, instructions, stmt, plan, reason_out);
+    if (stmt->node_type == LEVELC_ADDRESS)
+        return levelc_lower_address_instruction(context, instructions, stmt,
+                                                plan, reason_out);
     if (stmt->node_type == IF) {
         return levelc_lower_if_statement(context, instructions, stmt, plan,
                                          procedure, in_procedure, reason_out);
@@ -6193,6 +6638,12 @@ static int levelc_append_private_pool_transition(Context *context,
     ASTNode *private_setup = private_name && factory
         ? rxcp_remap_create_named_assignment(context, procedure_node,
                                               private_name, factory) : NULL;
+    ASTNode *parent_pool = levelc_pool_ref(context, procedure_node, VAR_SYMBOL);
+    ASTNode *status_args[1];
+    ASTNode *status_receiver = private_name
+        ? rxcp_remap_create_named_ref(context, procedure_node,
+                                      VAR_SYMBOL, private_name) : NULL;
+    ASTNode *inherit_status;
     ASTNode *private_symbol = private_name
         ? rxcp_remap_create_named_ref(context, procedure_node,
                                       VAR_SYMBOL, private_name) : NULL;
@@ -6205,9 +6656,17 @@ static int levelc_append_private_pool_transition(Context *context,
     ASTNode *activate = private_value
         ? rxcp_remap_create_named_assignment(context, procedure_node,
                                               LEVELC_POOL_SYMBOL, private_value) : NULL;
+    status_args[0] = parent_pool
+        ? rxcp_remap_create_reference_expr(context, procedure_node, parent_pool)
+        : NULL;
+    inherit_status = status_receiver && status_args[0]
+        ? rxcp_remap_create_member_call_statement(
+            context, procedure_node, status_receiver,
+            "inheritCommandStatus", status_args, 1) : NULL;
     free(private_name);
-    if (!private_setup || !activate) return 0;
+    if (!private_setup || !inherit_status || !activate) return 0;
     add_ast(instructions, private_setup);
+    add_ast(instructions, inherit_status);
     add_ast(instructions, activate);
     return 1;
 }
@@ -6312,6 +6771,15 @@ static int levelc_rewrite_program(Context *context,
         add_ast(instructions, provider_args);
     }
     add_ast(instructions, pool_setup);
+    if (provider_name) {
+        ASTNode *status_setup = levelc_provider_status_setup_statement(
+            context, anchor);
+        if (!status_setup) {
+            if (reason_out) *reason_out = "failed to inherit external Classic status";
+            return 0;
+        }
+        add_ast(instructions, status_setup);
+    }
     add_ast(instructions, config_setup);
     add_ast(instructions, config_ref_setup);
     /* Only this wrapper reads the VM's hidden command-line argv. */

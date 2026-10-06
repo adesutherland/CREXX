@@ -66,6 +66,14 @@ errors = errors + check(request.get_binding_count() = 2, "request binding count"
 errors = errors + check(request.get_binding_value("EXTERNAL") = "value", "request binding alias lookup")
 errors = errors + check(request.get_binding_stem_value(2, "1") = "alpha", "request stem lookup")
 
+raw_input = "61626300ff"x as .binary
+raw_redirect = .addressredirect.input_binary(raw_input)
+errors = errors + check(raw_redirect.has_input(), "binary redirect has input")
+errors = errors + check(bincompare(raw_redirect.input_snapshot(), raw_input) = 0, "binary redirect preserves bytes")
+errors = errors + check(binlength(raw_redirect.input_snapshot()) = 5, "binary redirect does not append newline")
+raw_input = "00"x as .binary
+errors = errors + check(binlength(raw_redirect.input_snapshot()) = 5, "binary redirect owns snapshot")
+
 response = .addressresponse(7, "ERROR")
 call response.add_diagnostic("problem")
 call response.add_updated_binding("var", "local", "external", "updated", "")

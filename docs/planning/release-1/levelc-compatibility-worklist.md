@@ -4823,6 +4823,139 @@ instruction closes on that bounded evidence and Adrian's explicit extension
 scope decision; full Level C, broader host input selection, external function
 expression entry and Release 1 qualification remain open under their owners.
 
+**LC-I-20 ADDRESS plan — vision and intended outcome, 2026-10-06.** A compiled
+Classic ADDRESS must select, swap and query the active command environment in
+the current invocation; execute explicit transient commands through the
+configured environment protocol; and apply its legal input, output and error
+connections with Classic RC, condition and source behavior. The same visible
+pool state must serve ADDRESS() and persist or restore at the correct internal
+and external call boundaries. Preserve exact Unicode text, including embedded
+NUL, and the existing host encoding contract. Build on the current
+`RexxAddressState`, `RexxClassicConfig`, `RexxActivationArguments` and
+`_rxsysb.addressrequest`/`addressresponse` environment registry. Do not alter
+the linker, VM, bytecode or loader without a separate approved decision.
+Implicit expression-only command clauses remain under LC-I-21; ADDRESS must
+leave a coherent selected environment and connection state for them. Broader
+host stream selection and C-string `rxvml_run()` embedded-NUL input remain
+open under LC-AC-06. The full Level C and Release 1 criteria remain open.
+
+1. **LC-82-01 — complete forms and errors (open):** reconcile every Classic
+   ADDRESS source form (bare, named, VALUE, command-bearing, WITH and legal
+   combinations) against the parser and IBM/Regina references. Preserve
+   contextual keyword/variable ownership, authored source AST, exact
+   evaluation order, valid IF/DO/SELECT/local placement, source-anchored
+   diagnostics and recovery. Verify a form/error matrix, source/canonical
+   trees, optimized/no-opt compilation and reference probes.
+   The prior compliance note's `ADDRESS VALUE expr command` spelling was
+   inaccurate: IBM and Regina treat all following expression tokens as the
+   lasting environment name. `ADDRESS env command` is the transient form.
+2. **LC-82-02 — invocation-local selection (open):** active and alternate
+   environment changes, bare swap, dynamic VALUE and transient command target
+   follow Classic timing. ADDRESS() reports the selected state; internal,
+   recursive and external signed calls inherit and restore the required
+   environment/connection state without changing the Level B global default.
+   Verify reference and linked nested-call cases and pool-state tests.
+3. **LC-82-03 — one configured command path (open):** evaluate the explicit
+   command once and submit its exact Unicode text to the selected registered
+   environment via one request/response adapter, including built-in, unknown
+   and native host environments. Set RC, .RC and .RS with the documented
+   completion mapping; deliver ERROR/FAILURE to enabled SIGNAL/CALL policies
+   at the causing clause while preserving ordinary non-trapped completion.
+   Verify callback and linked tests, source identity, Unicode/NUL and opt/no-opt.
+4. **LC-82-04 — complete WITH connections (open):** INPUT, OUTPUT and ERROR
+   NORMAL/STREAM/STEM resources, legal APPEND/REPLACE variants, repeated and
+   reordered clauses, persistent/default connection state and transient
+   overrides follow the reference. Resolve stream/stem names and data at the
+   prescribed time; preserve text, line boundaries and empty results; report
+   missing resource and I/O failures with the correct Classic condition/error.
+   Verify reference, file/stem/default and host callback cases, ADDRESS()
+   connection queries, and linked opt/no-opt output.
+5. **LC-82-05 — coherent lowering and isolation (open):** one validated ADDRESS
+   shape reaches one compiler/configuration dispatch path, with no independent
+   special-case command implementation. No Level C-only node survives
+   lowering. Preserve Level B/G ADDRESS and RexxScript behavior; inspect
+   source/canonical AST and generated RXAS, run focused cross-consumer tests,
+   the relevant normal correctness suite on final inputs and the maintained
+   focused sanitizer check when the grouped checkpoint is due.
+6. **LC-82-06 — instruction closure (open):** document the implementation,
+   supported environments, connections, diagnostics, host limits and retained
+   evidence; commit one coherent whole-instruction increment. Close LC-I-20
+   only after LC-82-01–05 pass. Keep LC-I-21 and every full programme/release
+criterion visibly open.
+
+Adrian selected the ANSI `WITH ... STREAM name` timing on 2026-10-06: evaluate
+the resource variable at the ADDRESS clause and retain that filename in the
+connection. Regina's later resolution is a known reference difference. The
+focused ADDRESS review has also found two existing bridge limits. Adrian
+approved an additive shared ADDRESS library `input_binary` factory on
+2026-10-06, preserving an INPUT STREAM byte snapshot without the newline added
+by `input_string`; its final focused and broad proof is pending. Adrian also
+approved the narrow `rxvml` native callback bridge
+repair on 2026-10-06: copy its existing condition and diagnostic fields into
+the existing response object without changing the callback ABI or linker. The
+focused `levelc_address_host_callback` now passes with explicit FAILURE and
+`CALL ON FAILURE`; the broader final checkpoint remains pending. Current
+working changes are not an instruction closure.
+
+The 2026-10-06 review also reproduced a host command containing embedded NUL:
+the Level C scalar retained the complete text, but the shared process channel
+raised `CHANNEL_ERROR` at `_address.crexx:1698` instead of a Classic condition.
+The native callback request exposes a C string without a length, so it cannot
+report the text after NUL. LC-82-03 remains open pending Adrian's explicit
+host-boundary decision; no native callback ABI or VM change has been made. An
+empty or whitespace-only command in a built-in process environment reached
+the same channel; Regina completes it successfully without a process. The
+Level C adapter now skips only those built-in blank spawns, still handles their
+redirections, and keeps unknown-environment RC 30 behavior.
+
+1. **LC-STEP-82A (`LC-82-01–04`; completed 2026-10-06):** inventory grammar, diagnostics,
+   source AST, state/condition helpers and the existing environment protocol;
+   run guarded IBM/Regina/local host probes; record any genuine decision gate
+   before product edits.
+2. **LC-STEP-82B (`LC-82-01/02/05`; completed on focused evidence; depends on 82A):** validate one
+   ADDRESS source description and lower environment/connection state operations
+   through the invocation-local Classic state.
+3. **LC-STEP-82C (`LC-82-03–05`; in progress; depends on 82B):** implement one
+   configured command adapter and complete WITH resource/response handling,
+   reusing the current environment object and native callback protocol.
+4. **LC-STEP-82D (`LC-82-01–05`; in progress; depends on 82C):** retain the whole
+   valid/error, nested, host, Unicode, opt/no-opt, source-tree and linked matrix;
+   repair uncovered causes, with focused checks during development.
+5. **LC-STEP-82E (`LC-82-05/06`; pending; depends on 82D):** run one relevant
+   final-input normal correctness checkpoint and grouped focused sanitizer and
+   isolation checks as scheduled, reconcile every LC-82 criterion, update docs
+   and commit the coherent instruction review.
+
+The current whole-instruction reference inventory, still subject to final
+qualification, is:
+
+| ADDRESS family | Reference finding | Permanent local coverage |
+|---|---|---|
+| Bare, named, VALUE and computed environment; `VALUE` plus `WITH` | Bare swaps saved settings; each lasting selection saves the previous setting, including reselection of the same name; VALUE consumes its full expression | `levelc_address_whole`, source tree |
+| Explicit command and blank command | The explicit command is transient and its expression runs once; Regina completes blank built-in commands with RC 0 and retains the selected environment, but an unknown environment yields RC 30 | `levelc_address_whole`, exact-input fixture |
+| INPUT/OUTPUT/ERROR with NORMAL, STEM and STREAM | STEM counts and APPEND/REPLACE apply at the clause; invalid counts raise SYNTAX 54.1; missing streams under NOTREADY trap report the resource and causing line | `levelc_address_whole`, `levelc_address_notready`, `levelc_address_input_exact`, native callback |
+| STREAM variable timing and invocation scope | Adrian selected the ANSI snapshot at ADDRESS; Regina's later name resolution is an accepted difference. Local recursion inherits the selected environment and connection into each new frame, while its changes remain local | `levelc_address_whole`, external linked fixture |
+| Native condition and status | Callback FAILURE and ERROR must reach their CALL policies with causing-clause SIGL; RC/.RC/.RS, nonzero process status and external signed invocation state remain coherent | Native callback, exact-input, `levelc_address_external` |
+| Exact text/bytes | The shared line-input factory appends a newline; the approved binary factory preserves input bytes. Unicode output and a host-produced NUL byte reach STREAM unchanged | Protocol, exact-input and native callback fixtures |
+| Invalid source forms | Missing VALUE operand, bare WITH, missing or literal STREAM resource, malformed STEM, repeated direction, NORMAL extra operand, INPUT APPEND and unknown WITH keyword diagnose at source | Nine `levelc_address_invalid_*` tests |
+
+The current ADDRESS implementation checkpoint built `rxc`, `rxas`, `rxlink`,
+`rxvm`, `rxfnsc` and the native callback fixture successfully
+(`/tmp/crexx-address-checkpoint-build.PHqUkS`). One grouped final-input
+focused Debug command passed 24/24 invalid, linked opt/no-opt, source-tree,
+native callback and shared ADDRESS tests
+(`/tmp/crexx-address-checkpoint-focused.JAw8tk`). It includes native ERROR
+delivery, nonzero process status, local recursion and once-only command
+evaluation. This is a substantial ADDRESS implementation increment, not
+whole-instruction closure. The relevant normal Level C suite remains due after
+the host-command boundary is decided and implemented. The maintained macOS ASan build at
+`cmake-build-debugasan/asan-logs/20261006-155715-build` and focused tests at
+`20261006-160320-ctest` and `20261006-160611-ctest` passed on the preceding
+ADDRESS checkpoint. Later blank-command and expanded matrix inputs still need
+the grouped sanitizer checkpoint. Apple LSan is unavailable; no Linux full
+sanitizer or release-ready claim is made. LC-82-03 and all closure criteria
+remain open while the embedded-NUL host command boundary is unresolved.
+
 **LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
 The following proposed VM operation is retained only as history; Adrian
 directed the compiler to use ordinary typed imports and prohibited linker or

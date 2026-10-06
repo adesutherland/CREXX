@@ -1869,24 +1869,32 @@ is a separate grammar and emitter path.
 
 ### 6.9 ADDRESS
 
-Syntax extraction only:
+The parser preserves one `LEVELC_ADDRESS` source node for bare swap, named
+selection, `VALUE expression`, and a named environment with an explicit command
+expression. `WITH` carries ordered INPUT, OUTPUT and ERROR connections. Each
+connection has NORMAL, STEM or STREAM shape; OUTPUT and ERROR also accept
+APPEND or REPLACE. Validation rejects duplicate directions, malformed
+resources and invalid modifiers before lowering. The raw tree retains the
+authored expression and connection structure; no `LEVELC_ADDRESS` node reaches
+the later compiler stages.
 
-- `ADDRESS` can be bare, can name an environment, can include a command
-  expression, or can use `VALUE expression`.
-- `WITH` introduces connection redirection syntax.
-- Connections include `INPUT`, `OUTPUT`, and `ERROR`.
-- Resources include `STREAM`, `STEM`, and `NORMAL`; output/error can use
-  `APPEND` or `REPLACE`.
+Lowering stores the active and alternate environment and persistent connections
+in `RexxActivationArguments`, which a child Classic invocation copies. An
+explicit command is evaluated once and passed through one
+`RexxClassicAddressCommand` adapter to the existing Level B environment
+registry. Its `WITH` connections are transient. A STREAM variable is read at
+the ADDRESS clause, and its filename is retained rather than re-resolved by a
+later command. INPUT STREAM uses the shared exact-byte `input_binary` redirect;
+STEM, output and error handling, RC/.RC/.RS, and condition delivery stay in
+the adapter and activation policy. The compiler emits the causing source step
+after evaluating a SIGNAL payload so inlined library calls cannot replace the
+authored SIGL. The narrow native callback response bridge carries its existing
+condition and diagnostic fields; the linker and bytecode model are unchanged.
 
-Implementation consequences:
-
-- The current certified exit path is the likely owner for execution lowering.
-- For parsing/highlighting, Level C needs explicit syntax recognition for the
-  Classic redirection shape, but milestone 1 does not need to implement command
-  execution.
-- Host-variable anchors such as `:name` and `${name}` are current compiler
-  auto-expose syntax for ADDRESS handlers, not Classic command syntax. Keep that
-  distinction visible in future docs.
+Implicit expression-only command clauses remain the next instruction review.
+Host-variable anchors such as `:name` and `${name}` are compiler auto-expose
+syntax for ADDRESS handlers; their command meaning belongs to the selected
+environment.
 
 ### 6.10 PARSE and templates
 

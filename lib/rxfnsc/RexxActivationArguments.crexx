@@ -25,6 +25,8 @@
 options levelb comments_dash numeric_classic
 namespace rexxactivation expose RexxActivationArguments
 import rexxvalue
+import rexxclassicstate
+import rexxpool
 import rxfnsb
 
 /**
@@ -48,9 +50,12 @@ RexxActivationArguments: class
   return_present = .boolean
   procedure_eligible = .boolean
   function_call = .boolean
+  address_state = .RexxAddressState
   signal_policy = .int[]
   parent_activation_ref = reference .RexxActivationArguments
   has_parent_activation = .boolean
+  caller_pool_ref = reference .RexxVariablePool
+  has_caller_pool = .boolean
   program_root_ref = reference .RexxActivationArguments
   has_program_root = .boolean
   program_exit_requested = .boolean
@@ -74,7 +79,9 @@ RexxActivationArguments: class
     return_present = 0
     procedure_eligible = 0
     function_call = 0
+    address_state = .RexxAddressState()
     has_parent_activation = 0
+    has_caller_pool = 0
     has_program_root = 0
     program_exit_requested = 0
     delayed_condition = 0
@@ -114,7 +121,55 @@ RexxActivationArguments: class
     condition_extra = parent.currentConditionExtra()
     condition_instruction = parent.currentConditionInstruction()
     delayed_condition = parent.delayedConditionId()
+    state = .RexxAddressState
+    assembler link state, address_state
+    call state.copyFrom(parent.addressState())
     return
+
+  /** Keep command status shared across signed external Classic calls. */
+  captureCallerPool: method = .void
+    arg pool_ref = reference .RexxVariablePool
+    caller_pool_ref = pool_ref
+    has_caller_pool = 1
+    return
+
+  applyCommandStatusToPool: method = .void
+    arg pool_ref = reference .RexxVariablePool
+    if \has_caller_pool then return
+    pool = dereference pool_ref
+    call pool.inheritCommandStatus(caller_pool_ref)
+    return
+
+  /** The current invocation's independent Classic ADDRESS setting. */
+  addressState: method = .RexxAddressState
+    return address_state
+
+  setAddressEnvironment: method = .void
+    arg name = .string
+    state = .RexxAddressState
+    assembler link state, address_state
+    call state.setEnvironment(name)
+    return
+
+  swapAddressEnvironment: method = .void
+    state = .RexxAddressState
+    assembler link state, address_state
+    call state.swapEnvironment()
+    return
+
+  setAddressConnection: method = .void
+    arg option = .string, position = .string, type = .string, resource = .string
+    state = .RexxAddressState
+    assembler link state, address_state
+    call state.setConnection(option, position, type, resource)
+    return
+
+  addressEnvironment: method = .string
+    return address_state.environment()
+
+  addressConnection: method = .string
+    arg option = .string
+    return address_state.connection(option)
 
   /**
    * The root of this compiled Classic program, shared by its internal calls.

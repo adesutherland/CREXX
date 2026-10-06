@@ -118,6 +118,7 @@ set(RXFNSC_MODULES
   RexxClassicCharacterOps
   RexxClassicEncoding
   RexxClassicState
+  RexxClassicAddress
   RexxVariablePool
   RexxActivationArguments
   RexxClassicConditionEvent
@@ -180,8 +181,9 @@ add_custom_target(rxfnsc_imports
 set(RXFNSC_SELECTORS ${RXFNSC_MODULES})
 set(RXFNSC_DEPS_RexxStem RexxValue)
 set(RXFNSC_DEPS_RexxClassicState RexxValue)
+set(RXFNSC_DEPS_RexxClassicAddress RexxClassicState RexxActivationArguments RexxVariablePool RexxValue)
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan)
-set(RXFNSC_DEPS_RexxActivationArguments RexxValue)
+set(RXFNSC_DEPS_RexxActivationArguments RexxValue RexxClassicState RexxVariablePool)
 set(RXFNSC_DEPS_RexxDoState RexxValue RexxVariablePool)
 set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxClassicConditionEvent RexxClassicDiagnosticCatalog RexxActivationArguments RexxVariablePool)
 set(RXFNSC_DEPS_RexxClassicConfig RexxValue)
@@ -191,6 +193,7 @@ set(RXFNSC_DEPS_RexxClassicBitFunctions RexxClassicEncoding)
 foreach(MOD IN LISTS RXFNSC_DIRECT_BIF_MODULES)
   set(RXFNSC_DEPS_${MOD} RexxClassicBifs)
 endforeach()
+set(RXFNSC_DEPS_RexxClassicBifAddress RexxClassicBifs RexxActivationArguments RexxClassicState)
 set(RXFNSC_DEPS_RexxClassicBifArg RexxClassicBifs RexxActivationArguments)
 set(RXFNSC_DEPS_RexxClassicBifCondition RexxClassicBifs RexxActivationArguments)
 set(RXFNSC_DEPS_RexxClassicBifBitand RexxClassicBitFunctions)

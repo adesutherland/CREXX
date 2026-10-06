@@ -1,7 +1,9 @@
-# ADDRESS — Level C Classic BIF
+# ADDRESS — Level C Classic instruction and BIF
 
-The Level C `ADDRESS()` BIF is implemented independently of the Level B
-ADDRESS statement protocol in `RexxClassicBifAddress.crexx`.
+Compiled Level C keeps the selected environment, its alternate, and the three
+connection descriptions in `RexxActivationArguments` for each Classic
+invocation. `RexxClassicBifAddress.crexx` reads that same state for `ADDRESS()`.
+The direct library BIF retains its pool-based entry for existing callers.
 
 ## Contract
 
@@ -41,13 +43,42 @@ result = rexxclassicbif_address(reference context)
 ```
 
 `context` is a `RexxBifCallContext`. Arguments and provided/omitted positions
-are carried as `RexxValue` and presence arrays. The caller's
-`RexxVariablePool` owns its `RexxAddressState`; a child activation can copy the
-parent state with `inheritAddressState(reference parent_pool)`.
+are carried as `RexxValue` and presence arrays. The direct entry reads the
+caller's `RexxVariablePool` state. The compiler calls
+`rexxclassicbif_address_frame(context, activation)` so the query sees the
+current invocation's selection and its snapshotted connection resources.
+Child Classic activations copy both the active and alternate settings and
+restore the caller's state on return.
 
-The function clears the context error, validates the call, reads only the
-caller pool's ADDRESS state, and returns a new `RexxValue`. It does not call the
-Level B command dispatcher and does not perform name-based BIF dispatch.
+Both entries clear the context error, validate the call and return a new
+`RexxValue`. Neither performs command dispatch.
+
+## Compiled instruction
+
+`ADDRESS` selects an environment, `ADDRESS VALUE expression` evaluates and
+selects one, and bare `ADDRESS` exchanges the active and alternate settings.
+`WITH` sets INPUT, OUTPUT and ERROR connections. A STREAM variable is evaluated
+when its ADDRESS clause runs and its filename is retained in the frame; a
+later assignment to that variable does not redirect the existing connection.
+
+An explicit command uses `RexxClassicAddressCommand`: it captures the command
+text once, applies transient `WITH` connections, and dispatches one
+`addressrequest` through the shared Level B environment registry. INPUT STEM
+uses its counted lines; INPUT STREAM reads exact bytes through
+`addressredirect.input_binary` and preserves a missing final newline. OUTPUT
+and ERROR STEM or STREAM receive captured output, with REPLACE or APPEND as
+selected. INPUT STREAM uses the shared RXCV channel's 16 MiB input limit;
+an unreadable or larger input is a resource failure, reported through NOTREADY
+when that policy is enabled. Command completion sets `RC`, `.RC` and `.RS`; eligible ERROR,
+FAILURE and NOTREADY events reach the active SIGNAL or CALL policy at the
+causing ADDRESS clause. Invalid STEM counts signal SYNTAX 54.1 there. A native
+callback's condition and diagnostic are copied by the approved `rxvml`
+response bridge without changing its callback ABI.
+
+An ADDRESS command scalar can contain embedded NUL, but the current shared
+process channel rejects it and the native callback request exposes only a C
+string. The unresolved host-command boundary is tracked under `LC-82-03` in
+the Level C worklist; this instruction is not yet closed.
 
 ## Errors
 
@@ -60,18 +91,12 @@ blank `RexxValue`:
 | option is not `E`, `I`, `N`, or `O` | `RXC-LC-40.28` |
 | more than one argument | `RXC-LC-40.4` |
 
-## Compiler compatibility boundary
-
-This library programme does not change `rxc` lowering. Current compiler output
-may continue to use the deprecated `rexxclassicbif_call` compatibility
-dispatcher for already-supported BIFs. Direct compiler calls and removal of
-that artifact belong to a later bulk Level C lowering change. `ADDRESS()` is
-therefore validated here through its direct library harness, not through newly
-emitted compiler code.
-
 ## Coverage
 
 `lib/rxfnsc/tests_functional/testRexxClassicBifAddress.crexx` calls the direct
-function in optimized and unoptimized modes. It covers every option, default
-and custom state, omitted arguments, state inheritance, connection formatting,
-and each documented error.
+and frame BIFs in optimized and unoptimized modes. The linked Level C ADDRESS
+fixtures cover valid forms, invocation state, external signed calls, exact
+stream input, output/error capture, condition delivery, source trees, and
+source-anchored errors. `levelc_address_host_callback` exercises the native
+environment response and Unicode streams. The Level B protocol test checks
+that binary input can preserve embedded NUL and non-text bytes.

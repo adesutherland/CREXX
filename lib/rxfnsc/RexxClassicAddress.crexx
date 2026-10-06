@@ -1,0 +1,299 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicaddress expose RexxClassicAddressCommand
+import _rxsysb
+import rxfnsb
+import rexxclassicstate
+import rexxactivation
+import rexxpool
+import rexxvalue
+
+/**
+ * One transient Classic command. Its connections start at NORMAL independently
+ * of the invocation's lasting ADDRESS setting; WITH changes this snapshot.
+ * The existing Level B environment registry owns the actual command request.
+ */
+RexxClassicAddressCommand: class
+  selected_state = .RexxAddressState
+  caller_pool_ref = reference .RexxVariablePool
+  activation_ref = reference .RexxActivationArguments
+  target_environment = .string
+  command_text = .string
+  last_condition_id = .int
+  last_syntax_error = .string
+  last_condition_description = .string
+  stream_read_error = .string
+
+  *: factory
+    arg pool_ref = reference .RexxVariablePool, frame_ref = reference .RexxActivationArguments, environment = .string, command = .string
+    selected_state = .RexxAddressState()
+    caller_pool_ref = pool_ref
+    activation_ref = frame_ref
+    target_environment = upper(strip(environment))
+    command_text = command
+    last_condition_id = 0
+    last_syntax_error = ""
+    last_condition_description = command
+    stream_read_error = ""
+    return
+
+  conditionId: method = .int
+    return last_condition_id
+
+  syntaxError: method = .string
+    return last_syntax_error
+
+  commandText: method = .string
+    return command_text
+
+  conditionDescription: method = .string
+    return last_condition_description
+
+  withConnection: method = .void
+    arg option = .string, position = .string, type = .string, resource = .string
+    state = .RexxAddressState
+    assembler link state,selected_state
+    call state.setConnection(option, position, type, resource)
+    return
+
+  /** Run the exact command text through the registered environment object. */
+  run: method = .addressresponse
+    state = .RexxAddressState
+    assembler link state,selected_state
+    pool = dereference caller_pool_ref
+    activation = dereference activation_ref
+    input_endpoint = .addressredirect.none()
+    output_endpoint = .addressredirect.none()
+    error_endpoint = .addressredirect.none()
+    output_lines = .string[]
+    error_lines = .string[]
+    empty_lines = .string[]
+    stem = .string
+    count_text = .string
+    builtin_process = target_environment = "CREXX" | target_environment = "SYSTEM" |,
+                      target_environment = "COMMAND" | target_environment = "CMD" |,
+                      target_environment = "SHELL" | target_environment = "PATH"
+    output_text = .string
+    error_text = .string
+    output_path = .string
+    error_path = .string
+    io_error = .string
+    output_start = 0
+    error_start = 0
+    last_condition_id = 0
+    last_syntax_error = ""
+    last_condition_description = command_text
+
+    if state.type("I") = "STEM" then do
+      stem = state.resource("I")
+      count_text = pool.symbolValue(stem || "0").asString()
+      if \datatype(count_text, "W") then do
+        last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS input stem count " || stem || "0"
+        return .addressresponse(0)
+      end
+      count = count_text as .int
+      if count < 0 then do
+        last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS input stem count " || stem || "0"
+        return .addressresponse(0)
+      end
+      input_lines = .string[]
+      do index = 1 to count
+        input_lines[index] = pool.symbolValue(stem || index).asString()
+      end
+      input_endpoint = .addressredirect.input_array(input_lines)
+    end
+    else if state.type("I") = "STREAM" then do
+      path = state.resource("I")
+      bytes = readInputStream(path)
+      if stream_read_error <> "" then do
+        if activation.signalPolicy(5) <> 0 then do
+          last_condition_id = 5
+          last_condition_description = path
+          return .addressresponse(0)
+        end
+        input_endpoint = .addressredirect.input_array(empty_lines)
+      end
+      else input_endpoint = .addressredirect.input_binary(bytes)
+    end
+
+    if state.type("O") = "STREAM" then output_path = state.resource("O")
+    if state.type("E") = "STREAM" then error_path = state.resource("E")
+    if state.type("O") = "STEM" & state.position("O") = "APPEND" then do
+      stem = state.resource("O")
+      count_text = pool.symbolValue(stem || "0").asString()
+      if \datatype(count_text, "W") then do
+        last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS output stem count " || stem || "0"
+        return .addressresponse(0)
+      end
+      output_start = count_text as .int
+      if output_start < 0 then do
+        last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS output stem count " || stem || "0"
+        return .addressresponse(0)
+      end
+    end
+    if state.type("E") = "STEM" & state.position("E") = "APPEND" then do
+      stem = state.resource("E")
+      count_text = pool.symbolValue(stem || "0").asString()
+      if \datatype(count_text, "W") then do
+        last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS error stem count " || stem || "0"
+        return .addressresponse(0)
+      end
+      error_start = count_text as .int
+      if error_start < 0 then do
+        last_syntax_error = "RXC-LC-54.1 Invalid ADDRESS error stem count " || stem || "0"
+        return .addressresponse(0)
+      end
+    end
+
+    if state.type("O") = "STEM" then
+      output_endpoint = .addressredirect.output_array(reference output_lines)
+    else if state.type("O") = "STREAM" then
+      output_endpoint = .addressredirect.output_string(reference output_text)
+    if state.type("E") = "STEM" then
+      error_endpoint = .addressredirect.output_array(reference error_lines)
+    else if state.type("E") = "STREAM" then
+      error_endpoint = .addressredirect.output_string(reference error_text)
+
+    if builtin_process & words(command_text) = 0 then
+      response = .addressresponse(0)
+    else do
+      request = .addressrequest(target_environment, command_text, input_endpoint, output_endpoint, error_endpoint)
+      response = _address_dispatch_request(request)
+    end
+    if response.get_rc() = -3 & response.get_condition_name() = "FAILURE" &,
+       response.get_diagnostic_count() > 0 &,
+       response.get_diagnostic(1) = "Unknown address environment " || target_environment then do
+      /* Classic treats an unrecognised host environment as ERROR 30. */
+      call response.set_rc(30)
+      call response.set_condition_name("ERROR")
+    end
+    if state.type("O") = "STEM" then
+      call address_apply_stem(caller_pool_ref, state.resource("O"), output_start, output_lines)
+    else if state.type("O") = "STREAM" then do
+      if address_write_stream(output_path, state.position("O"), output_text) <> 0 then
+        io_error = output_path
+    end
+    if state.type("E") = "STEM" then
+      call address_apply_stem(caller_pool_ref, state.resource("E"), error_start, error_lines)
+    else if state.type("E") = "STREAM" then do
+      if address_write_stream(error_path, state.position("E"), error_text) <> 0 then
+        if io_error = "" then io_error = error_path
+    end
+
+    result_code = response.get_rc()
+    condition = upper(response.get_condition_name())
+    /* The built-in process environments report exit status only. A native
+       provider may return a nonzero RC with normal completion, so preserve
+       its explicit condition indicator. */
+    if condition = "" & result_code <> 0 & builtin_process then do
+      condition = "ERROR"
+      call response.set_condition_name(condition)
+    end
+    status = 0
+    if condition = "ERROR" then status = 1
+    if condition = "FAILURE" then status = -1
+    last_condition_id = 0
+    if condition = "ERROR" then last_condition_id = 2
+    if condition = "FAILURE" then last_condition_id = 3
+    if io_error <> "" & activation.signalPolicy(5) <> 0 then do
+      last_condition_id = 5
+      last_condition_description = io_error
+    end
+    result_text = result_code || ""
+    call pool.setSymbolValue("RC", .RexxValue(result_text))
+    call pool.setSymbolValue(".RC", .RexxValue(result_text))
+    call pool.setSymbolValue(".RS", .RexxValue(status || ""))
+    return response
+
+  /** Read no more than the shared command endpoint can accept. */
+  readInputStream: method = .binary
+    arg path = .string
+    fileid = 0
+    mode = "rb"
+    result = .binary
+    chunk = .binary
+    chunk_length = 0
+    chunk_size = 32768
+    total = 0
+    read_error = 0
+    eof = 0
+    close_status = 0
+    stream_read_error = ""
+    assembler fopen fileid,path,mode
+    if fileid = 0 then do
+      stream_read_error = path
+      return result
+    end
+    do while eof = 0
+      assembler freadb chunk,fileid,chunk_size
+      assembler blen chunk_length,chunk
+      total = total + chunk_length
+      if total > 16777216 then do
+        assembler fclose close_status,fileid
+        stream_read_error = path
+        return result
+      end
+      if chunk_length > 0 then assembler bappend result,chunk
+      assembler ferror read_error,fileid
+      assembler feof eof,fileid
+      if read_error <> 0 | (chunk_length = 0 & eof = 0) then do
+        assembler fclose close_status,fileid
+        stream_read_error = path
+        return result
+      end
+    end
+    assembler fclose close_status,fileid
+    if close_status <> 0 then stream_read_error = path
+    return result
+
+/** Apply captured command lines after the environment returns. */
+address_apply_stem: procedure = .void
+  arg pool_ref = reference .RexxVariablePool, stem = .string, start = .int, lines = .string[]
+  pool = dereference pool_ref
+  do index = 1 to lines[0]
+    call pool.setSymbolValue(stem || (start + index), .RexxValue(lines[index]))
+  end
+  call pool.setSymbolValue(stem || "0", .RexxValue((start + lines[0]) || ""))
+  return
+
+/** Preserve captured UTF-8 bytes when writing to a named stream. */
+address_write_stream: procedure = .int
+  arg path = .string, position = .string, contents = .string
+  mode = "wb"
+  if position = "APPEND" then mode = "ab"
+  fileid = 0
+  write_error = 0
+  flush_status = 0
+  close_status = 0
+  assembler fopen fileid,path,mode
+  if fileid = 0 then return 1
+  data = contents as .binary
+  assembler fwriteb fileid,data
+  assembler ferror write_error,fileid
+  assembler fflush flush_status,fileid
+  assembler fclose close_status,fileid
+  if write_error <> 0 | flush_status <> 0 | close_status <> 0 then return 1
+  return 0

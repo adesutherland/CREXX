@@ -68,6 +68,9 @@ enum {
 };
 
 enum {
+    RXVML_ADDRESS_RESPONSE_CONDITION_NAME = 0,
+    RXVML_ADDRESS_RESPONSE_DIAGNOSTIC_COUNT = 1,
+    RXVML_ADDRESS_RESPONSE_DIAGNOSTICS = 2,
     RXVML_ADDRESS_RESPONSE_UPDATED_BINDING_COUNT = 4,
     RXVML_ADDRESS_RESPONSE_UPDATED_BINDINGS = 5
 };
@@ -679,12 +682,26 @@ static int rxvml_populate_address_binding_value(value* binding_value, const rxvm
     return 0;
 }
 
-static int rxvml_copy_address_response_updates(value* response_value, const rxvml_address_response* response) {
+static int rxvml_copy_address_response(value* response_value, const rxvml_address_response* response) {
+    value* diagnostics;
     value* updated_bindings;
     size_t i;
 
     if (!response_value || !response) return -1;
     if (response_value->num_attributes <= RXVML_ADDRESS_RESPONSE_UPDATED_BINDINGS) return -1;
+
+    if (rxvml_set_value_cstr(
+            response_value->attributes[RXVML_ADDRESS_RESPONSE_CONDITION_NAME],
+            response->condition_name ? response->condition_name : "") != 0) return -1;
+    diagnostics = response_value->attributes[RXVML_ADDRESS_RESPONSE_DIAGNOSTICS];
+    if (response->diagnostic && diagnostics) {
+        set_int(response_value->attributes[RXVML_ADDRESS_RESPONSE_DIAGNOSTIC_COUNT], 1);
+        set_num_attributes(diagnostics, 1);
+        if (rxvml_set_value_cstr(diagnostics->attributes[0], response->diagnostic) != 0) return -1;
+    } else {
+        set_int(response_value->attributes[RXVML_ADDRESS_RESPONSE_DIAGNOSTIC_COUNT], 0);
+        if (diagnostics) set_num_attributes(diagnostics, 0);
+    }
 
     updated_bindings = response_value->attributes[RXVML_ADDRESS_RESPONSE_UPDATED_BINDINGS];
     if (!updated_bindings) return -1;
@@ -1473,8 +1490,8 @@ static void rxvml_native_address_execute(
     callback_rc = entry->callback(ctx, &request, &response, entry->userdata);
     if (callback_rc != 0 && response.rc == 0) response.rc = callback_rc;
 
-    if (rxvml_copy_address_response_updates(response_value, &response) != 0) {
-        rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to copy native ADDRESS response updates");
+    if (rxvml_copy_address_response(response_value, &response) != 0) {
+        rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to copy native ADDRESS response");
         rxvml_memory_free(ctx, bindings);
         return;
     }

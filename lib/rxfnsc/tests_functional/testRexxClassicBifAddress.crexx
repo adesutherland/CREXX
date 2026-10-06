@@ -34,6 +34,15 @@ child_pool = .RexxVariablePool()
 call child_pool.inheritAddressState(reference pool)
 errors = errors + check(child_pool.addressEnvironment() = "CMS", "ADDRESS state inheritance")
 errors = errors + check(child_pool.addressConnection("E") = "REPLACE STEM ERR.", "ADDRESS connection inheritance")
+call pool.setString("LOG", "first.txt")
+errors = errors + check(check_pool_address(reference pool, "APPEND STREAM first.txt", "O") = 0, "STREAM resource follows current variable value")
+call pool.setString("LOG", "second.txt")
+errors = errors + check(check_pool_address(reference pool, "APPEND STREAM second.txt", "O") = 0, "STREAM resource is resolved again")
+call pool.setAddressEnvironment("COMMAND")
+errors = errors + check(pool.addressConnection("O") = "REPLACE NORMAL ", "new environment resets connections")
+call pool.swapAddressEnvironment()
+errors = errors + check(pool.addressEnvironment() = "CMS", "bare ADDRESS restores saved environment")
+errors = errors + check(pool.addressConnection("O") = "APPEND STREAM LOG", "bare ADDRESS restores saved connection")
 
 omitted_args = .RexxValue[]
 omitted_exists = .int[]
@@ -60,6 +69,20 @@ check_address: procedure = .int
   result = rexxclassicbif_address(reference context)
   if \context.hasError() & result.asString() = expected then return 0
   say "FAIL: ADDRESS expected" expected "got" result.asString() context.errorCode() context.errorMessage()
+  return 1
+
+check_pool_address: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected = .string, option = .string
+  context = .RexxBifCallContext("ADDRESS")
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(option)
+  exists[1] = 1
+  call context.setArguments(args, exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_address(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: ADDRESS pool expected" expected "got" result.asString()
   return 1
 
 check_error: procedure = .int

@@ -23,8 +23,10 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifaddress expose rexxclassicbif_address
+namespace rexxclassicbifaddress expose rexxclassicbif_address rexxclassicbif_address_frame
 import rexxclassicbifs
+import rexxclassicstate
+import rexxactivation
 import rexxpool
 import rexxvalue
 
@@ -40,14 +42,32 @@ import rexxvalue
 rexxclassicbif_address: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
-  call context.clearError()
-  if rexxclassicbif_check_args(context_ref, "oEINO") = 0 then return .RexxValue("")
-
   pool_ref = reference .RexxVariablePool
   pool_ref = context.callerPool()
   pool = dereference pool_ref
+  return rexxclassicbif_address_state(context_ref, pool.addressState(), pool_ref, 1)
+
+/** Compiled Level C reads its invocation's ADDRESS state, even with a shared pool. */
+rexxclassicbif_address_frame: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext, activation_ref = reference .RexxActivationArguments
+  context = dereference context_ref
+  pool_ref = reference .RexxVariablePool
+  pool_ref = context.callerPool()
+  activation = dereference activation_ref
+  return rexxclassicbif_address_state(context_ref, activation.addressState(), pool_ref, 0)
+
+rexxclassicbif_address_state: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext, state = .RexxAddressState, pool_ref = reference .RexxVariablePool, resolve_stream_name = 0
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "oEINO") = 0 then return .RexxValue("")
 
   option = "N"
   if context.argumentExists(1) then option = context.argumentText(1)
-  if option = "N" then return .RexxValue(pool.addressEnvironment())
-  return .RexxValue(pool.addressConnection(option))
+  if option = "N" then return .RexxValue(state.environment())
+  if state.type(option) = "STREAM" & resolve_stream_name then do
+    pool = dereference pool_ref
+    name = pool.symbolValue(state.resource(option)).asString()
+    return .RexxValue(state.position(option) || " STREAM " || name)
+  end
+  return .RexxValue(state.connection(option))
