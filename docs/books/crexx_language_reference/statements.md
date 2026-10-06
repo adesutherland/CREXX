@@ -561,6 +561,8 @@ If a `WHEN` condition is met, its associated `THEN` instruction is executed, and
 
 ## SIGNAL
 
+### Level B signal objects
+
 Signals are Level B error/condition objects implementing `.signal`.
 Rexx-created signals can be raised with a signal object or with the compact
 named forms:
@@ -614,6 +616,40 @@ Only a simple `DO ... END` group can carry `ON SIGNAL` clauses. Counted,
 conditional, forever, and expression-form `DO` loops do not carry handlers
 directly. To protect code inside a loop, put a simple signal-handling
 `DO ... END` group inside the loop body.
+
+### Level C Classic SIGNAL
+
+Classic `SIGNAL` transfers control within the current invocation to a label.
+The target can be a symbol, a quoted name, or an expression evaluated once:
+
+```rexx
+signal done
+signal 'done'
+signal value target_name
+signal ('done')
+```
+
+The last form has an implied `VALUE` because its expression begins with a
+special character. Label matching is case insensitive under the Level C
+Unicode text rules. If a label occurs more than once, an explicit transfer
+selects the first occurrence; ordinary execution can fall through later
+labels. A reached target with no matching label raises Classic error `16.1`.
+Transfer leaves active `DO` and `SELECT` control in that invocation; it does
+not return to the instruction after `SIGNAL`.
+
+Classic condition handlers use `SIGNAL ON condition [NAME label]` and
+`SIGNAL OFF condition`. The seven condition names are `SYNTAX`, `NOVALUE`,
+`ERROR`, `FAILURE`, `HALT`, `NOTREADY`, and `LOSTDIGITS`. Without `NAME`, the
+condition name is the label. `NAME` also accepts a quoted label. The latest
+executed `SIGNAL ON`, `CALL ON`, or corresponding `OFF` for a condition
+controls delivery in the current invocation. A delivered `SIGNAL` handler
+turns itself off before transferring;
+it can be enabled again with `SIGNAL ON`.
+
+The handler can inspect `CONDITION()` (or its `C`, `D`, `E`, `I`, and `S`
+options), `RC`, and `SIGL`. `SIGL` identifies the source line that raised the
+condition. A called invocation inherits condition policy and may change its
+own policy without changing its caller's policy.
 
 ## TRACE
 

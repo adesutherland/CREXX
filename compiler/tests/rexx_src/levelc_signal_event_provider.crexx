@@ -1,0 +1,12 @@
+options levelb
+namespace levelc_signal_event_provider expose raiseevent
+import rexxactivation
+import rexxclassicconditionevent
+
+raiseevent: procedure = .void
+  arg frame = .RexxActivationArguments
+  kind = frame.argument(1).asInt()
+  detail = frame.argument(2).asString()
+  event = .RexxClassicConditionEvent(kind, detail)
+  assembler signal "CLASSIC_CONDITION",event
+  return

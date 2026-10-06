@@ -855,15 +855,23 @@ The permanent crossed-control case branches out of nested DO groups, enters a
 new loop, then traps a later SYNTAX error; optimized, no-opt and linked
 execution agree on `SIGL`, `RC` and one-shot condition state.
 
-This architecture is approved direction with bounded direct-SIGNAL behavior;
-the complete SIGNAL instruction remains open.
+At this 2026-10-05 checkpoint the approved architecture had bounded
+direct-SIGNAL behavior; the complete instruction was still open.
 The [LC-STEP-63T gates](../../docs/planning/release-1/levelc-compatibility-worklist.md#approved-architecture-direction-for-lc-step-63t)
 cover direct and trapped conditions, label/PROCEDURE/CALL/RETURN lifetimes,
 source and `SIGL`, optimized/no-opt parity, linked execution, and existing
 Level C and RexxScript regressions. ARG is closed on the admitted Classic
-activation model. SIGNAL remains open for its own complete handler and
-transfer matrix; absent ADDRESS, host/I/O and NUMERIC condition producers
-retain their separate owners and do not by themselves block SIGNAL closure.
+activation model. SIGNAL's one-body implementation uses `FRAME_BRANCH` for
+direct and evaluated label transfers. `FRAME_HANDLER_ON/OFF` bind the VM
+condition event to the current activation; shared lowering records policy,
+dispatches typed Classic events and restores caller policy on return. The
+handler transfer uses a source-ordered frame label, clears crossed control
+state and records `SIGL`. The signal event and `CONDITION()` state belong to
+the active invocation. Real condition production stays with the instruction
+or host that raises it; the host HALT producer remains under `LC-AC-06`.
+The whole SIGNAL instruction closed under `LC-AC-76` on 2026-10-06 after a
+seven-condition matrix, native producer checks, linked execution and normal
+Debug and Release Level C qualification.
 
 ## 2026-10-06 Classic RETURN completion
 

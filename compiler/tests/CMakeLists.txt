@@ -6988,6 +6988,27 @@ add_test(NAME levelc_signal_implicit_value_linked
 set_tests_properties(levelc_signal_implicit_value_linked PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+foreach(_signal_mode IN ITEMS opt noopt)
+    add_test(NAME levelc_signal_event_matrix_${_signal_mode}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_signal_event_matrix.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            -DNAME=levelc_signal_event_matrix
+            -DPROVIDER=levelc_signal_event_provider
+            -DCONSUMER=levelc_signal_event_matrix
+            -DBG_PROVIDER=1
+            -DNOOPT=$<STREQUAL:${_signal_mode},noopt>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_signed_external.cmake)
+    set_tests_properties(levelc_signal_event_matrix_${_signal_mode} PROPERTIES
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()
 add_levelc_runtime_slice_test(levelc_slice4_procedure_missing_arg
         rexx_src/levelc_slice4_procedure_missing_arg.rexx "2|\n")
 add_levelc_runtime_slice_test(levelc_slice6_local_function_omitted_arg

@@ -28,6 +28,24 @@ if rc <> 7 | .rc <> 7 | .rs <> 1 then exit 29
 address editor with output stem implicit.
 'héllo🙂'
 if implicit.0 <> 1 | implicit.1 <> 'native:héllo🙂' then exit 32
+call off failure
+call off error
+signal on failure name signal_failed
+address editor 'signalfail'
+exit 34
+signal_failed:
+if condition('C') <> 'FAILURE' | condition('D') <> 'signalfail' then exit 35
+if condition('I') <> 'SIGNAL' | condition('S') <> 'OFF' then exit 36
+if rc <> -9 | .rc <> -9 | .rs <> -1 then exit 37
+if sigl <> 34 then exit 42
+signal on error name signal_errored
+address editor 'signalerror'
+exit 38
+signal_errored:
+if condition('C') <> 'ERROR' | condition('D') <> 'signalerror' then exit 39
+if condition('I') <> 'SIGNAL' | condition('S') <> 'OFF' then exit 40
+if rc <> 7 | .rc <> 7 | .rs <> 1 then exit 41
+if sigl <> 42 then exit 43
 exit 0
 errored:
 if condition('C') <> 'ERROR' | condition('D') <> 'error' then exit 30

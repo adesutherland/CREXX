@@ -21,17 +21,20 @@ one-frame label and SIGNAL design has a
 canonical AST/emitter foundation and one-body invocation route, including
 first-instruction PROCEDURE eligibility, main fallthrough and a second
 PROCEDURE. The whole PROCEDURE review now includes direct and indirect EXPOSE,
-exact compound aliases and private-pool lifecycle. SIGNAL remains open;
+exact compound aliases and private-pool lifecycle. SIGNAL is closed under
+`LC-AC-76`;
 CALL closed under the accepted static provider boundary, and RETURN and EXIT
 closed on the shared activation and implicit-main path.
 PARSE closed on the shared template engine and its seven agreed sources;
 `LC-I-20` ADDRESS and `LC-I-21` implicit command closed 2026-10-06 with the
 approved embedded-NUL host-command exception recorded as
 `LC-HOST-ADDRESS-NUL`. `LC-I-22` NUMERIC closed 2026-10-06;
-`LC-I-23` SIGNAL is next, and `LC-I-24`–`LC-I-25` remain open. The full
+`LC-I-23` SIGNAL closed 2026-10-06; `LC-I-24` TRACE is next and
+`LC-I-25` INTERPRET remains open. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The latest grouped normal
-Debug Level C checkpoint passed 735/735 for NUMERIC. The earlier matched
+Debug and Release Level C checkpoints passed 737/737 each for SIGNAL. The
+earlier matched
 focused macOS ASan passed 27/27 for ADDRESS plus implicit command. The earlier normal Debug Level C
 checkpoint for the whole RETURN review passed 662/662 with
 process memory monitoring. Focused macOS ASan passed 42/42 and final-input
@@ -963,7 +966,7 @@ PROCEDURE/CALL rows.
   values/I/O as a separately planned future facility with no implicit
   conversion into Level C text. Verify the accepted BIF design and explicit
   binary deferral in architecture, language and release documents.
-- [ ] **LC-AC-76 — complete SIGNAL instruction:** direct symbol and quoted
+- [x] **LC-AC-76 — complete SIGNAL instruction:** direct symbol and quoted
   label targets, evaluated `VALUE expression`, and ON/OFF condition forms
   with default or named labels follow Classic clause, label and invocation
   rules. Evaluate a VALUE expression once, resolve label spelling without
@@ -978,9 +981,9 @@ PROCEDURE/CALL rows.
   conditions and legal nested contexts, raw/canonical AST, optimized/no-opt,
   source metadata, linked output, normal Debug/Release Level C and Level
   B/G/RexxScript isolation. Exercise each condition handler with a controlled
-  typed event where its real producer is not yet available. Keep unimplemented
-  ADDRESS, host/I/O and numeric condition producers explicitly open under
-  their owning rows; their absence does not block SIGNAL instruction closure.
+  typed event where its real producer is not yet available. The real host HALT
+  producer remains open under `LC-AC-06`; its absence does not block SIGNAL
+  instruction closure.
 
 ## Implementation steps
 
@@ -1701,7 +1704,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-20 ADDRESS — closed 2026-10-06 | LC-STEP-82A–82E complete | Selection/swap/transient command, WITH resources, frame state, RC/conditions and configured host path pass opt/no-opt, linked, callback and grouped qualification. The approved embedded-NUL host-command exception remains open as `LC-HOST-ADDRESS-NUL` under `LC-AC-06`. |
 | LC-I-21 implicit command — closed 2026-10-06 | LC-STEP-83A–83D complete | Expression-only commands evaluate once, then use the active invocation's ADDRESS environment and lasting connections through the shared adapter. Forms/errors, source warnings, linked opt/no-opt, nested/external and native host conditions passed grouped normal and focused sanitizer checks. `LC-HOST-ADDRESS-NUL` remains open under LC-AC-06. |
 | LC-I-22 NUMERIC — closed 2026-10-06 | LC-STEP-84A–84D complete | `LC-84-01–05`: executable DIGITS/FORM/FUZZ, source errors, once-only evaluation, activation-local lifetime, arithmetic/display/BIF effects and LOSTDIGITS pass opt/no-opt and grouped qualification. Full Level C and cross-cutting criteria remain open. |
-| LC-I-23 SIGNAL | LC-STEP-85 | Direct/VALUE branch and ON/OFF conditions, labels, loop-state clearing and delivery; condition lifecycle. |
+| LC-I-23 SIGNAL — closed 2026-10-06 | LC-STEP-85A–85D complete | `LC-AC-76`/`LC-85-01–05`: direct/quoted/VALUE branches, seven ON/OFF identities, source-ordered frame labels, one-shot and activation-local delivery, condition state, malformed and missing-target diagnostics, linked and Debug/Release proof. Real host HALT production stays under `LC-AC-06`. |
 | LC-I-24 TRACE | LC-STEP-86 | Options, skip/inhibit, interactive and source/result/command tracing; clause hooks and host output. |
 | LC-I-25 INTERPRET | LC-STEP-87 | Dynamic source parsing, current context, HALT/SYNTAX/label rules and condition state; parser and lifecycle foundation. |
 
@@ -5929,7 +5932,7 @@ Before any code edit, check the proposed route against these observable gates:
    nested/recursive calls. The existing optional-result activation state
    owns this distinction; complete CALL/RETURN reviews remain separate.
    Each checkpoint serves `LC-63T-02/03`; none alone closes ARG or SIGNAL.
-4. **LC-STEP-63T-4 (LC-63T-01/02/04/LC-AC-76; depends on 63T-3):** implement direct and
+4. **LC-STEP-63T-4 — complete (LC-63T-01/02/04/LC-AC-76; depends on 63T-3):** implement direct and
    VALUE SIGNAL, ON/OFF and named condition targets through the VM's frame
    branch/handler path; map Classic condition identities, SIGL and source,
    and discard crossed loop/reference state. Reviewable implementation
@@ -5952,9 +5955,9 @@ Before any code edit, check the proposed route against these observable gates:
    host/numeric producers to their instruction or host rows (`4D3-3`).
    The `4D3-3` reference matrix checks `CONDITION` C/D/E/I/S and omission,
    source-order policy changes, nested save/restore, and invalid options
-   before a product edit. These remain checkpoints of one open SIGNAL instruction.
+   before a product edit. These were checkpoints of the then-open SIGNAL instruction.
    Each checkpoint retains focused evidence and is not SIGNAL closure.
-5. **LC-STEP-63T-5 (LC-63T-01–04/LC-AC-76; depends on 63T-4):** qualify the complete
+5. **LC-STEP-63T-5 — complete (LC-63T-01–04/LC-AC-76; depends on 63T-4):** qualify the complete
    SIGNAL reference matrix, opt/no-opt, raw/canonical AST, linked toolchain,
    relevant normal correctness and Level B/G/RexxScript isolation. Update
    architecture/reference docs, commit coherent checkpoints and close the
@@ -6599,14 +6602,83 @@ following as one instruction contract before another SIGNAL closure claim:
 | Direct symbol/quoted and evaluated VALUE | One frame-local branch route, once-only VALUE evaluation and runtime 16.1 exist. Complete source, Unicode-label, nested-call, crossed-DO and re-entry reference cases in optimized/no-opt and linked output. A fresh Regina/compiled crossed-loop and subsequent SYNTAX trap probe agrees; its ignored evidence is `cmake-build-debug/levelc-signal-whole-probe-*.log`. |
 | ON/OFF for seven parsed names | Activation policy, source-order override, one-shot delivery, nested inheritance and named/default labels exist. Audit malformed tails and reached missing targets together with the actual condition-producer matrix. |
 | Condition state and descriptions | `CONDITION()` reads activation-local C/D/E/I/S and SYNTAX/NOVALUE state. Complete catalog-expanded SYNTAX description from the one standard diagnostic catalog and review extra data against the reference, without a second hand-maintained message table. |
-| Producer ownership | SYNTAX and NOVALUE are live. ERROR/FAILURE belong to ADDRESS and command completion (LC-I-20/21), HALT to host interrupt lifecycle (LC-AC-06), NOTREADY to host streams and input (LC-I-16/20), and LOSTDIGITS to numeric context (LC-I-22). Their absence does not block the SIGNAL instruction if each handler path is exercised through a controlled typed event and its real producer remains open with its owner. A parsed ON/OFF form alone is not delivery evidence. |
-| Crossed control and adjacent instructions | Check loop/reference/handler cleanup on branch or trap and source-order label fallthrough. An `EXIT` inside a local target currently fails as an unsupported procedure statement; that is an open LC-I-15 EXIT shape, not an approved SIGNAL exclusion. |
+| Producer ownership | SYNTAX and NOVALUE are live. ADDRESS and implicit commands now produce ERROR/FAILURE and stream/input NOTREADY; NUMERIC now produces LOSTDIGITS. HALT remains under host interrupt lifecycle (LC-AC-06). Exercise each live producer through SIGNAL and each of the seven handler identities through controlled typed events; keep missing real host producers with their owners. A parsed ON/OFF form alone is not delivery evidence. |
+| Crossed control and adjacent instructions | Check loop/reference/handler cleanup on branch or trap and source-order label fallthrough. EXIT is closed; test its reached behavior after a local transfer without reopening that instruction. |
 | Delivery and isolation | Verify raw/canonical AST, authored source and errors, full `rxc`→`rxas`→`rxlink`→`rxvm`, optimized/no-opt, normal correctness, and Level B/G/RexxScript isolation on the final code/test inputs. |
 
 The current probe is a reference and implementation audit, not a new closed
 instruction or a reason to move the strict whole-instruction queue. The
 approved frame design remains the shared prerequisite for ARG, PROCEDURE and
 CALL; LC-AC-76 and LC-I-23 remain open pending this whole review.
+
+**LC-I-23 SIGNAL plan — vision and intended outcome, 2026-10-06.** Complete
+Classic SIGNAL on the approved one-body, frame-local label and activation
+model. A direct or evaluated transfer reaches the correct source label and
+clears crossed control state. Condition handlers respond at their source
+points, keep policy and condition state local to each invocation, and use the
+same source-anchored diagnostic catalog and typed event route. Existing
+ADDRESS, NUMERIC and variable-pool producers are exercised here; the absent
+host HALT producer stays owned by `LC-AC-06`. The Level B/G and RexxScript
+signal contracts remain intact. This is one whole-instruction checkpoint;
+no linker or VM change is authorized by this plan.
+
+1. **LC-85-01 — forms and errors (complete):** direct symbol/quoted target,
+   explicit and special-character-implied VALUE expression, and ON/OFF for
+   all seven condition names preserve raw/canonical AST shape, expression
+   evaluation count, source location, malformed-tail identity and reached
+   missing-target 16.1. Verify parser/AST inspection, Regina or normative
+   source, and optimized/no-opt compile and runtime cases.
+2. **LC-85-02 — frame transfer (complete):** direct and dynamic transfer select
+   the first case-insensitive Unicode label, permit source-order fallthrough
+   through duplicates, clear crossed DO/SELECT state, and support re-entry,
+   local calls and RETURN/EXIT without stale references. Verify linked
+   optimized/no-opt executions and generated RXAS frame branches.
+3. **LC-85-03 — handlers and delivery (complete):** ON/OFF source order,
+   named/default target, one-shot disable, child inheritance/override and
+   caller restoration work for SYNTAX, NOVALUE, ERROR, FAILURE, HALT,
+   NOTREADY and LOSTDIGITS. Exercise six identities with controlled typed
+   events and SYNTAX through its native producer; use other live producers
+   where available. Verify RC, SIGL and source
+   identity, including a reached missing handler target. The unimplemented
+   real host HALT producer remains `LC-AC-06`, not a SIGNAL exclusion.
+4. **LC-85-04 — condition state (complete):** `CONDITION()` C/D/E/I/S and default
+   reflect the current activation's last event and policy; SYNTAX uses the
+   shared catalog, and available producer descriptions/extra fields follow
+   their owned contracts. Verify reference wording, one-shot state and
+   nested/recursive restoration with focused BIF tests.
+5. **LC-85-05 — coherent closure (complete):** one frame-label/handler route
+   covers the legal instruction rather than case-specific control paths.
+   Inspect AST-to-RXAS, run focused linked and shared-consumer checks plus
+   the normal Debug and Release Level C suites once on final code/test inputs,
+   update architecture/reference docs and commit. Keep full Level C and
+   Release 1 criteria open.
+
+1. **LC-STEP-85A (`LC-85-01–04`; complete):** reconcile the retained SIGNAL
+   reference matrix, current implementation and now-live producer paths;
+   identify the smallest missing whole-contract mechanisms before edits.
+2. **LC-STEP-85B (`LC-85-01–02`; complete):** repair source/branch/flow
+   issues in the approved frame model and qualify transfer forms together.
+3. **LC-STEP-85C (`LC-85-03–04`; complete):** complete the shared
+   handler/policy/condition route, reference descriptions and live-producer
+   matrix without changing each producer's separate owner contract.
+4. **LC-STEP-85D (`LC-85-01–05`; complete):** run one grouped final
+   correctness checkpoint, record concise evidence, synchronize docs and
+   commit SIGNAL as a whole instruction.
+
+**LC-I-23 closure, 2026-10-06.** The retained direct/quoted/VALUE, Unicode and
+duplicate-label, crossed-control, nested-call, malformed-tail and missing-target
+cases cover the transfer contract. This increment adds a linked opt/no-opt
+matrix for six typed condition identities plus native SYNTAX, and extends the
+native ADDRESS callback fixture through SIGNAL FAILURE and ERROR. Shared
+activation and event tests cover policy, source, Unicode payload and caller
+isolation; raw and lowered AST plus generated RXAS inspection confirm the
+single frame-local route. Focused SIGNAL and adjacent regressions passed
+106/106; Debug Level C passed 737/737, Release Level C passed 737/737, and
+Level B/G signal and RexxScript isolation passed 10/10 in each group on final
+code/test/build inputs.
+All test/build child processes exited. There is no SIGNAL product-code change
+in this final review. Real host HALT production and broader Level C and
+Release 1 criteria remain open under their own owners.
 
 **2026-10-05 SIGNAL closure-boundary correction.** Adrian clarified that
 SIGNAL responds to conditions; ADDRESS, host/I/O and NUMERIC own the missing
@@ -6825,7 +6897,7 @@ itself make its Classic shape executable.
 | `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | One generated callable body with frame labels; whole ARG, PROCEDURE, CALL and RETURN instructions closed, including aliases, signed CALL and activation result presence | Condition producers and full shared lifecycle remain open |
 | `PARSE`, `PULL`, template/pattern/position nodes | Whole PARSE and PULL instructions closed: seven agreed PARSE sources and PULL use shared `parseplan` with arbitrary templates, ordered pool writes, source snapshots, errors and opt/no-opt linked proof | EXTERNAL/NUMERIC PARSE extensions are outside initial Level C; host input selection stays open under LC-AC-06 |
 | `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | PUSH and QUEUE instructions closed; ADDRESS and implicit command remain front-end foundations | Configured environment/stream protocol and RC/condition behavior under LC-I-20/21 |
-| `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | SIGNAL has bounded frame-local direct/VALUE and ON/OFF paths; the other listed instruction families remain front-end or bounded foundations | Complete condition producer/handler, numeric context, dynamic code, trace and error identities remain open under their rows |
+| `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | NUMERIC and SIGNAL whole instructions close under LC-I-22/23; TRACE and INTERPRET remain front-end or bounded foundations | Host HALT production, dynamic code, trace and shared compatibility criteria remain open under their rows |
 
 The production post-lowering boundary verifier walks every accepted node,
 rejects a missing root, sibling cycle, mismatched parent pointer, or surviving
@@ -6866,7 +6938,7 @@ language boundaries; they do not excuse unfinished instruction or host work.
 | Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | One generated body dispatches main/local labels with fresh frames; ARG, PROCEDURE, CALL, RETURN and EXIT whole-instruction reviews are closed. CALL includes linked and native host signed providers, result presence and delayed handler lifecycle. | Real condition producers and shared invocation lifecycle retain their own open reviews |
 | PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Whole PARSE instruction closed under LC-81-01–07: one `parseplan` route, all seven agreed sources, arbitrary targets/commas/patterns/positions, frame/source/input behavior and errors, with normal/ASan/isolation evidence | EXTERNAL/NUMERIC are explicitly excluded; host selection and external function-expression entry remain with their owners |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
-| Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | CALL ON/OFF handler policy and controlled four-condition delivery are closed under LC-I-13; SYNTAX/NOVALUE producers and bounded SIGNAL handler delivery run on the one-frame model | Full SIGNAL review, real producer delivery, messages and cross-instruction lifecycle remain open |
+| Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | CALL ON/OFF closes under LC-I-13 and SIGNAL closes under LC-I-23; live SYNTAX/NOVALUE, ADDRESS ERROR/FAILURE/NOTREADY and NUMERIC LOSTDIGITS producers pass their instruction reviews | Real host HALT producer and full cross-instruction lifecycle remain open |
 | Numeric | DIGITS, FORM, FUZZ, decimal arithmetic, rounding, logical conversion | Runtime: `RexxValue` foundation | Full context, limits, signal and optimized parity |
 | Source/trace | TRACE, SOURCELINE, clause hooks, source preservation | Front end/runtime pieces | Visible source, tracing and clause lifecycle |
 | Host | commands, external routines, queues, streams, time/random, traps, API variable pools, initialization/termination | Runtime foundation only | Configuration adapters and supported-platform contract |
@@ -6882,7 +6954,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-OPTIONS` | Classic `OPTIONS` clauses and Level C selection | Whole instruction closed under LC-AC-66/LC-STEP-67D | Shared condition, TRACE and host proof remains open in its own criteria |
 | `SYN-CLASSIC-CLAUSES` | Semicolon/EOL clause model | Parser and twelve closed instruction execution paths | Full clause/TRACE and condition lifecycle open |
 | `SYN-CLASSIC-CONTEXTUAL-KEYWORDS` | Instruction words usable as symbols outside instruction context | Parser plus selected executable variable/expression contexts | Complete contextual reference matrix open |
-| `SYN-CLASSIC-LABELS` | Labels and local routine names | One-body frame-label entry, source-order fallthrough, nested shared-pool and recursive CALL pass opt/no-opt; PROCEDURE 17.1 is source-anchored; CALL label and handler matrices close under LC-I-13 | Complete SIGNAL label and condition reference matrix remains open |
+| `SYN-CLASSIC-LABELS` | Labels and local routine names | One-body frame-label entry, source-order fallthrough, nested shared-pool and recursive CALL pass opt/no-opt; PROCEDURE 17.1 is source-anchored; CALL and SIGNAL label and handler matrices close under LC-I-13/23 | TRACE, INTERPRET and shared source lifecycle remain open |
 | `SYN-CLASSIC-SYMBOLS` | Simple, compound, and constant symbols | Shared pool reads and closed assignment/DROP paths exercise scalar, stem and compound symbols | Constant-symbol and full condition/reference proof open |
 | `SYN-CLASSIC-STEMS` | Classic stems and compound-variable tails | Whole assignment, DROP and PROCEDURE paths cover stem and exact compound aliases | Shared condition and host/API alias proof remains open |
 | `SYN-CLASSIC-STRINGS` | Quoted, doubled-quote, hex, and binary strings | Hex/binary source literals use the fixed Latin-1 ordinal bridge in expressions, calls and PARSE patterns under LC-STEP-88C; four/eight-bit binary grouping, malformed later-group `15.2`, encoded CALL target, opt/no-opt, tree and linked evidence pass under LC-STEP-75A-B; SAY host text output passes under LC-STEP-88D-1 | Remaining quoted forms, error/reference equivalence and other host text inputs remain open |
@@ -6908,7 +6980,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-RETURN` | RETURN instruction | Whole instruction closed under LC-76-01–05/LC-STEP-76C: bare/value, main/local/function paths, presence/drop, private/shared pools, once-only Unicode/NUL result, status bridge, anchored errors and direct/linked/native host optimizer parity | EXIT and general host text-result exchange retain separate owners |
 | `SYN-CLASSIC-SAY` | SAY instruction | Whole-instruction closure under LC-AC-57/LC-STEP-88D-1; NUL, source hex ordinals, mapped high characters and non-Latin-1 text pass default, host, optimized/no-opt and linked output | Missing expression/BIF, TRACE and SIGNAL services remain shared work |
 | `SYN-CLASSIC-SELECT` | SELECT/WHEN/OTHERWISE | Whole instruction closed under LC-AC-68/LC-STEP-69C | Shared condition/TRACE lifecycle remains in its own rows |
-| `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Direct symbol/quoted and VALUE targets use frame branches; source-ordered ON/OFF, SYNTAX/NOVALUE delivery and condition state have bounded evidence under 63T-4A–4D | Remaining handler identities, full transfer/reference matrix and whole-instruction qualification open; absent producers stay with ADDRESS, host/I/O and NUMERIC |
+| `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Whole instruction closed under LC-AC-76/LC-STEP-85: direct/quoted/VALUE, seven condition identities, frame transfer, policy/condition state, source and error matrix pass linked opt/no-opt plus Debug/Release Level C | Real host HALT production remains under LC-AC-06; full Level C and Release 1 criteria remain open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-EXPRESSIONS` | Classic arithmetic, comparison, Boolean, and concatenation expressions | Bounded slice: documented operator family | Remaining Classic forms, errors and configuration proof open |
 | `SYN-CLASSIC-BIF-CALL` | Recognised Classic BIF calls | Direct compiler table for 58 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and implicit TRANSLATE ordinals under LC-STEP-88E-1 | Remaining services, configured context and complete reference proof open |

@@ -1,0 +1,7 @@
+error-ok
+failure-ok
+halt-ok
+notready-ok
+novalue-ok
+lostdigits-ok
+syntax-ok

@@ -2,23 +2,24 @@ options levelb comments_dash numeric_classic
 import rxfnsb
 import rexxclassicconditionevent
 
-main: procedure = .int expose failures handled stripped
+main: procedure = .int expose failures handled stripped expected_id
   arg test_args = .string[]
   failures = 0
   handled = 0
   stripped = test_args[0] > 0 & test_args[1] = "testRexxClassicConditionEvent_opt"
-  event = .RexxClassicConditionEvent(6, "Élan 😀")
-  failures = failures + check(event.conditionId() = 6, "NOVALUE identity")
-  failures = failures + check(event.description() = "Élan 😀", "Unicode description")
-
   assembler sigcalla caught(),"CLASSIC_CONDITION"
-  assembler signal "CLASSIC_CONDITION",event
-  failures = failures + check(handled = 1, "typed VM event delivered")
+  do expected_id = 2 to 7
+    event = .RexxClassicConditionEvent(expected_id, "Élan 😀")
+    failures = failures + check(event.conditionId() = expected_id, "condition identity")
+    failures = failures + check(event.description() = "Élan 😀", "Unicode description")
+    assembler signal "CLASSIC_CONDITION",event
+  end
+  failures = failures + check(handled = 6, "all typed VM events delivered")
 
   if failures = 0 then say "ok"
   return failures
 
-caught: procedure = .string expose failures handled stripped
+caught: procedure = .string expose failures handled stripped expected_id
   arg raw = .runtime_signal_raw
   condition = .runtime_signal("")
   call condition.set_raw(raw)
@@ -31,7 +32,7 @@ caught: procedure = .string expose failures handled stripped
   failures = failures + check(payload is .RexxClassicConditionEvent, "typed payload")
   if payload is .RexxClassicConditionEvent then do
     typed = payload as .RexxClassicConditionEvent
-    failures = failures + check(typed.conditionId() = 6, "delivered NOVALUE identity")
+    failures = failures + check(typed.conditionId() = expected_id, "delivered condition identity")
     failures = failures + check(typed.description() = "Élan 😀", "delivered Unicode description")
   end
   return "__rxsignal_skip"

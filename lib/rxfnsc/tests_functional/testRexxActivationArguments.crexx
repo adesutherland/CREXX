@@ -104,6 +104,22 @@ main: procedure = .int
   call args.clearReturnValue()
   errors = errors + check(\args.hasReturnValue(), "bare return absent")
   errors = errors + check(args.returnValue().asString() = "", "cleared return value")
+  do condition_id = 1 to 7
+    call args.setSignalPolicy(condition_id, condition_id + 10)
+    call args.recordCondition(condition_id, "Élan 😀", "extra", "SIGNAL")
+    errors = errors + check(args.signalPolicy(condition_id) = condition_id + 10, "all SIGNAL policies selected")
+    errors = errors + check(args.currentConditionId() = condition_id &,
+        args.currentConditionName() <> "" &,
+        args.currentConditionDescription() = "Élan 😀" &,
+        args.currentConditionExtra() = "extra" &,
+        args.currentConditionInstruction() = "SIGNAL", "all condition states recorded")
+    call other.inheritSignalPolicy(reference args)
+    errors = errors + check(other.signalPolicy(condition_id) = condition_id + 10 &,
+        other.currentConditionId() = condition_id, "all condition states inherited")
+    call other.setSignalPolicy(condition_id, 0)
+    errors = errors + check(args.signalPolicy(condition_id) = condition_id + 10, "child policy leaves parent active")
+    call args.setSignalPolicy(condition_id, 0)
+  end
   if errors = 0 then say "ok"
   return errors
 
