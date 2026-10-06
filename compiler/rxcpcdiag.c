@@ -729,7 +729,7 @@ static void levelc_validate_trace_value(Context *context,
 
     if (!value) return;
     cursor = value;
-    while (*cursor == '?') cursor++;
+    while (*cursor == '?' || *cursor == '!') cursor++;
     if (*cursor == '\0') return;
     if (levelc_trace_letter_ok(*cursor)) return;
 

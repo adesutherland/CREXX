@@ -43,6 +43,7 @@ traceexit: class
         call desc.add_flag("certified")
         call desc.add_flag("reserved_keyword")
         call desc.add_import("rxfnsb", "trace", "")
+        call desc.add_import("rxfnsc", "RexxValue", "")
         return desc
 
     pre_process: method = .exitplan
@@ -125,6 +126,11 @@ traceexit: class
         if mode = "OFF" then do
             call result.add_replacement_line("assembler bpoff")
             call result.add_replacement_line("if _trace_set_off() <> 0 then call __rxtrace_reset_display_state()")
+            return result
+        end
+        if tracePrefixesOnly(mode_text) <> 0 then do
+            call result.add_replacement_line("call _trace_set(_trace_current_mode())")
+            call addTraceActivation result
             return result
         end
         if mode = "ENV" then call result.add_replacement_line("call _trace_set_from_env(" || (1 - output_is_explicit) || ")")
@@ -238,7 +244,7 @@ staticTraceModeText: procedure = .string
 canonicalTraceMode: procedure = .string
     arg text = .string
     mode = upper(strip(text))
-    do while left(mode, 1) = "?"
+    do while left(mode, 1) = "?" | left(mode, 1) = "!"
         mode = substr(mode, 2)
     end
     if mode = "" then return "REXX"
@@ -269,6 +275,15 @@ canonicalTraceMode: procedure = .string
     if traceOptionPrefix(mode, "RESULT", 1) <> 0 then return "R"
     if traceOptionPrefix(mode, "RESULTS", 1) <> 0 then return "R"
     return ""
+
+tracePrefixesOnly: procedure = .int
+    arg text = .string
+    if text = "" then return 0
+    do i = 1 to length(text)
+        ch = substr(text, i, 1)
+        if ch <> "?" & ch <> "!" then return 0
+    end
+    return 1
 
 traceOptionPrefix: procedure = .int
     arg option = .string, word = .string, minimum = .int
@@ -434,6 +449,12 @@ makeTraceHelper: procedure = .helperplan
     call helper.add_line('          assembler metalinkpreg __rxtrace_f_value,__rxtrace_parent_register')
     call helper.add_line('          call _trace_supply_parent_value(__rxtrace_f_value)')
     call helper.add_line('          assembler unlink __rxtrace_f_value')
+    call helper.add_line('        end')
+    call helper.add_line('        else if __rxtrace_parent_type = ".RexxValue" then do')
+    call helper.add_line('          __rxtrace_o_value = .RexxValue')
+    call helper.add_line('          assembler metalinkpreg __rxtrace_o_value,__rxtrace_parent_register')
+    call helper.add_line('          call _trace_supply_parent_value(__rxtrace_o_value.asString(1))')
+    call helper.add_line('          assembler unlink __rxtrace_o_value')
     call helper.add_line('        end')
     call helper.add_line('        else do')
     call helper.add_line('          __rxtrace_s_value = ""')

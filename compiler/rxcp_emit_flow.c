@@ -733,6 +733,12 @@ void emit_flow(ASTNode *node, void *pl) {
             if (!node->output) node->output = output_f();
             break;
 
+        case TRACE_CLAUSE:
+            comment_meta = get_metaline(node);
+            node->output = output_fs(comment_meta);
+            free(comment_meta);
+            break;
+
         case FRAME_LABEL:
             comment_meta = get_metaline(node);
             node->output = output_fs(comment_meta);

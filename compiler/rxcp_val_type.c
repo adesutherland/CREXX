@@ -3289,6 +3289,7 @@ walker_result func_type_safety_walker(walker_direction direction,
             case SIGNAL_NAMES:
             case SIGNAL_NAME:
             case FRAME_LABEL:
+            case TRACE_CLAUSE:
             case FRAME_BRANCH:
             case FRAME_HANDLER_ON:
             case FRAME_HANDLER_OFF:

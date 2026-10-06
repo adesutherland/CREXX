@@ -1322,6 +1322,7 @@ const char* node_type_to_string(NodeType type) {
         case ITERATE: return "ITERATE";
         case LABEL: return "LABEL";
         case FRAME_LABEL: return "FRAME_LABEL";
+        case TRACE_CLAUSE: return "TRACE_CLAUSE";
         case FRAME_BRANCH: return "FRAME_BRANCH";
         case FRAME_HANDLER_ON: return "FRAME_HANDLER_ON";
         case FRAME_HANDLER_OFF: return "FRAME_HANDLER_OFF";
@@ -1465,6 +1466,7 @@ const char* node_type_to_string(NodeType type) {
         case LEVELC_SIGNAL: return "LEVELC_SIGNAL";
         case LEVELC_SIGNAL_VALUE: return "LEVELC_SIGNAL_VALUE";
         case LEVELC_TRACE: return "LEVELC_TRACE";
+        case LEVELC_TRACE_VALUE: return "LEVELC_TRACE_VALUE";
     }
     return "UNKNOWN";
 }

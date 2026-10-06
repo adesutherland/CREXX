@@ -2949,6 +2949,17 @@ Level C parse/instruction completion slice on 2026-05-12:
   - `PROCEDURE [EXPOSE variable-list]`.
   - `SIGNAL` target, `SIGNAL VALUE expression`, and condition-control forms.
   - `TRACE` target and `TRACE VALUE expression`.
+- Level C TRACE lowering retains an authored-clause `TRACE_CLAUSE` source marker
+  and activation-local `RexxTraceState`. It updates that state before invoking
+  the existing certified TRACE exit; `TRACE()` uses the same state and restores
+  the exit immediately after a successful change. Generic Level B metadata
+  events are suppressed for compiler-generated Classic helper operations.
+  Authored scalar expression events carry a typed `RexxValue` register marker,
+  so the generated handler reads Unicode text through `asString()` rather
+  than misreading an object pointer as a string. Optimized-away events may be
+  absent. Interactive prompts, numeric skip/suppress counts, SCAN and complete
+  label/final-result coverage are documented divergences under the approved
+  practical TRACE scope in `docs/ai-context/CREXX_TRACE_REQUIREMENTS.md`.
 - Command clauses are now parsed as Level C-only `IMPLICIT_CMD` statements. The
   adapter emits a special command-start parser token only for a clause-leading
   symbol that is not assignment lookahead and not a promoted instruction keyword;

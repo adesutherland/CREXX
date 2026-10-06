@@ -1403,10 +1403,12 @@ trace_instruction(I) ::= CTK_TRACE(T) trace_target(C).
     add_ast(I, C);
 }
 
-trace_instruction(I) ::= CTK_TRACE(T) CTK_VALUE expression(E).
+trace_instruction(I) ::= CTK_TRACE(T) CTK_VALUE(V) expression(E).
 {
     I = ast_f(context, LEVELC_TRACE, T);
-    add_ast(I, E);
+    ASTNode *value_form = ast_f(context, LEVELC_TRACE_VALUE, V);
+    add_ast(value_form, E);
+    add_ast(I, value_form);
 }
 
 trace_instruction(I) ::= CTK_TRACE(T) CTK_BAD_STRING(B).

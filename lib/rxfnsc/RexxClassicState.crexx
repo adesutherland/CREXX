@@ -255,41 +255,95 @@ RexxAddressState: class
 RexxTraceState: class
   trace_setting = .string
   interacting = .boolean
+  inhibiting = .boolean
 
   *: factory
     trace_setting = "N"
     interacting = 0
+    inhibiting = 0
     return
 
   current: method = .string
-    if interacting then return "?" || trace_setting
-    return trace_setting
+    result = ""
+    if interacting then result = result || "?"
+    if inhibiting then result = result || "!"
+    return result || trace_setting
 
-  apply: method = .void
+  copyFrom: method = .void
+    arg parent = .RexxTraceState
+    trace_setting = "N"
+    interacting = 0
+    inhibiting = 0
+    call apply(parent.current())
+    return
+
+  isInteractive: method = .boolean
+    return interacting
+
+  isInhibiting: method = .boolean
+    return inhibiting
+
+  apply: method = .boolean
     arg option = .string
     option_length = .int
     index = .int
     codepoint = .int
+    remainder = .string
+    next_mode = .string
+    digit_start = .int
+    digit_index = .int
+    digit = .int
+    i = .int
     assembler strlen option_length,option
 
-    if option_length = 0 then interacting = 0
+    if option_length = 0 then do
+      trace_setting = "N"
+      interacting = 0
+      inhibiting = 0
+      return 1
+    end
     index = 0
     do while index < option_length
       assembler strchar codepoint,option,index
-      if codepoint <> 63 then leave
-      interacting = \interacting
+      if codepoint <> 63 & codepoint <> 33 then leave
       index = index + 1
     end
 
-    if index >= option_length then trace_setting = "N"
-    else do
+    if index < option_length then do
+      remainder = substr(option, index + 1)
       assembler strchar codepoint,option,index
-      if codepoint >= 97 & codepoint <= 122 then codepoint = codepoint - 32
-      trace_setting = ""
-      assembler appendchar trace_setting,codepoint
+      if codepoint = 43 | codepoint = 45 |,
+         (codepoint >= 48 & codepoint <= 57) then do
+        digit_start = 1
+        if codepoint = 43 | codepoint = 45 then digit_start = 2
+        if digit_start > length(remainder) then return 0
+        do i = digit_start to length(remainder)
+          digit_index = i - 1
+          assembler strchar digit,remainder,digit_index
+          if digit < 48 | digit > 57 then return 0
+        end
+        next_mode = trace_setting
+        if strip(substr(remainder, digit_start), "L", "0") = "" then next_mode = "O"
+      end
+      else do
+        next_mode = translate(left(remainder, 1))
+        if upper(remainder) = "AS" | upper(remainder) = "ASM" |,
+           upper(remainder) = "LL" | upper(remainder) = "LLM" then next_mode = _trace_mode_from_option(remainder)
+        if next_mode <> "ASM" & next_mode <> "LLM" &,
+           pos(next_mode, "ACEFILNOR") = 0 then return 0
+      end
     end
-    if trace_setting = "O" then interacting = 0
-    return
+    do i = 0 to index - 1
+      assembler strchar codepoint,option,i
+      if codepoint = 63 then interacting = \interacting
+      else inhibiting = \inhibiting
+    end
+    if index < option_length then trace_setting = next_mode
+    if trace_setting = "O" then do
+      interacting = 0
+      inhibiting = 0
+    end
+    return 1
 
 /**
  * Per-activation Classic DATE/TIME clause clock.

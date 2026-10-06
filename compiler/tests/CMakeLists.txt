@@ -8878,6 +8878,34 @@ add_levelc_runtime_syntax_signal_test(levelc_numeric_fuzz_huge
 add_levelc_runtime_syntax_signal_test(levelc_numeric_form_bad
         rexx_src/levelc_numeric_form_bad.rexx "33.6" "before\n"
         "levelc_numeric_form_bad.rexx:4:1")
+foreach(_trace_mode IN ITEMS opt noopt)
+    if(_trace_mode STREQUAL "noopt")
+        set(_trace_noopt -DNOOPT=ON -DRXAS_NOOPT=ON)
+    else()
+        set(_trace_noopt)
+    endif()
+    add_test(NAME levelc_trace_values_${_trace_mode}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_trace_values.rexx
+            -DEXPECTED_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_trace_values_${_trace_mode}.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            -DNAME=levelc_trace_values_${_trace_mode}
+            ${_trace_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
+    set_tests_properties(levelc_trace_values_${_trace_mode} PROPERTIES
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()
+add_levelc_invalid_compile_test(levelc_trace_scan_unsupported
+        rexx_src/levelc_trace_scan_unsupported.rexx "RXC-LC-24.1")
+add_levelc_runtime_syntax_signal_test(levelc_trace_invalid_value
+        rexx_src/levelc_trace_invalid_value.rexx "24.1" "before\n"
+        "levelc_trace_invalid_value.rexx:3:1")
 add_test(NAME levelc_arg_host_entry COMMAND test_levelc_arg_host_entry)
 set_tests_properties(levelc_arg_host_entry PROPERTIES
         LABELS "compiler;levelc"

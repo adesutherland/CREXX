@@ -29,11 +29,11 @@ PARSE closed on the shared template engine and its seven agreed sources;
 `LC-I-20` ADDRESS and `LC-I-21` implicit command closed 2026-10-06 with the
 approved embedded-NUL host-command exception recorded as
 `LC-HOST-ADDRESS-NUL`. `LC-I-22` NUMERIC closed 2026-10-06;
-`LC-I-23` SIGNAL closed 2026-10-06; `LC-I-24` TRACE is next and
-`LC-I-25` INTERPRET remains open. The full
+`LC-I-23` SIGNAL and `LC-I-24` TRACE closed 2026-10-06; `LC-I-25`
+INTERPRET is next. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The latest grouped normal
-Debug and Release Level C checkpoints passed 737/737 each for SIGNAL. The
+Debug and Release Level C checkpoints passed 741/741 each for TRACE. The
 earlier matched
 focused macOS ASan passed 27/27 for ADDRESS plus implicit command. The earlier normal Debug Level C
 checkpoint for the whole RETURN review passed 662/662 with
@@ -984,6 +984,20 @@ PROCEDURE/CALL rows.
   typed event where its real producer is not yet available. The real host HALT
   producer remains open under `LC-AC-06`; its absence does not block SIGNAL
   instruction closure.
+- [x] **LC-AC-77 — TRACE instruction, approved practical scope:** bare,
+  alphabetic, prefix, numeric and `VALUE` forms use one activation-local
+  option state with source-anchored errors. The compiled `TRACE()` BIF observes
+  and updates that state. Supported source, command, result and intermediate
+  records contain the correct Unicode scalar values and source locations;
+  unsupported records must be absent rather than display a false value.
+  Command inhibition and ordinary execution remain correct. Preserve the
+  existing Level B/G/RexxScript trace behavior. Document any remaining Classic
+  divergence, including interactive, numeric, SCAN or record-coverage gaps,
+  with a bounded probe and user-visible effect; these divergences do not block
+  this instruction's closure under Adrian's 2026-10-06 direction. Verify
+  focused reference cases, opt/no-opt linked output, one normal Debug and
+  Release Level C checkpoint, and relevant Level B/G/RexxScript isolation.
+  Keep full Level C and Release 1 criteria open until their own matrices pass.
 
 ## Implementation steps
 
@@ -1705,8 +1719,92 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-21 implicit command — closed 2026-10-06 | LC-STEP-83A–83D complete | Expression-only commands evaluate once, then use the active invocation's ADDRESS environment and lasting connections through the shared adapter. Forms/errors, source warnings, linked opt/no-opt, nested/external and native host conditions passed grouped normal and focused sanitizer checks. `LC-HOST-ADDRESS-NUL` remains open under LC-AC-06. |
 | LC-I-22 NUMERIC — closed 2026-10-06 | LC-STEP-84A–84D complete | `LC-84-01–05`: executable DIGITS/FORM/FUZZ, source errors, once-only evaluation, activation-local lifetime, arithmetic/display/BIF effects and LOSTDIGITS pass opt/no-opt and grouped qualification. Full Level C and cross-cutting criteria remain open. |
 | LC-I-23 SIGNAL — closed 2026-10-06 | LC-STEP-85A–85D complete | `LC-AC-76`/`LC-85-01–05`: direct/quoted/VALUE branches, seven ON/OFF identities, source-ordered frame labels, one-shot and activation-local delivery, condition state, malformed and missing-target diagnostics, linked and Debug/Release proof. Real host HALT production stays under `LC-AC-06`. |
-| LC-I-24 TRACE | LC-STEP-86 | Options, skip/inhibit, interactive and source/result/command tracing; clause hooks and host output. |
+| LC-I-24 TRACE — closed 2026-10-06 | LC-STEP-86A–86E | `LC-AC-77` practical scope: activation-local options and `TRACE()`, correct displayed Unicode/NUL values, authored source, command inhibition and diagnostics pass linked opt/no-opt and grouped Debug/Release. Interactive, numeric skip/suppress, SCAN and incomplete event coverage are recorded divergences below. |
 | LC-I-25 INTERPRET | LC-STEP-87 | Dynamic source parsing, current context, HALT/SYNTAX/label rules and condition state; parser and lifecycle foundation. |
+
+**LC-I-24 TRACE plan — vision and intended outcome, 2026-10-06; scope revised
+by Adrian 2026-10-06.** A Classic program can select, query and reset tracing
+at execution time, inspect correct source and scalar values, and suppress or
+examine host commands without changing ordinary program semantics. Remaining
+Classic trace differences with little practical value may be documented and
+closed rather than expanded into compiler/runtime work. Level C should reuse
+the established certified TRACE exit, `.srcstep`/`.traceevent` metadata and
+breakpoint handler rather than grow a separate trace engine. The Unicode-first
+text contract applies to source, values and host output. Existing Level B/G,
+RexxScript, output-sink and namespace-extension behavior remains supported.
+The linker and VM are outside this plan's edit authority; a discovered need to
+change either requires a concrete review with Adrian before that edit. The
+companion `TRACE()` BIF must share the observable Classic state. This is one
+whole-instruction review, with coherent implementation commits and one grouped
+normal correctness checkpoint per final code/test input set.
+
+1. **LC-86-01 — forms and diagnostics (closed):** bare reset, alphabetic words
+   and abbreviations, static and `VALUE` options, `?`/`!` prefixes and signed
+   numeric settings preserve source, once-only evaluation and source-anchored
+   errors. Document unsupported `SCAN` explicitly. Verify reference cases,
+   AST shape and opt/no-opt compile and execution.
+2. **LC-86-02 — shared activation state (closed):** option, prefix and inhibition
+   state inherit into calls and restore to callers. `TRACE()` sees and changes
+   the same state as the instruction; `OFF` and bare reset clear prefixes as
+   specified. Document interactive/numeric behavior that is not implemented.
+   Verify nested/recursive and host entry cases without a second state path.
+3. **LC-86-03 — observable trace records (closed):** supported Classic and cREXX
+   modes/sinks emit correct source, command, result and intermediate values;
+   never print a fabricated or stale scalar. Record any missing Classic events
+   as a specific divergence. Verify Unicode values and full
+   `rxc`→`rxas`→`rxlink`→`rxvm` output in optimized and no-opt builds.
+4. **LC-86-04 — execution controls (closed with recorded divergences):** `!` inhibits subsequent host
+   commands while setting `RC` as the Classic contract requires. Probe and
+   document the exact unimplemented interactive `?`, numeric skip/suppress
+   and `SCAN` effects; ensure accepted options do not silently corrupt
+   execution or report wrong values.
+5. **LC-86-05 — coherent isolation and closure (closed):** use one trace option
+   parser/state path and one event route across Level C and existing consumers.
+   Keep source and diagnostic docs current; run focused checks while building,
+   then one relevant normal Debug and Release Level C checkpoint on final
+   code/test inputs, plus Level B/G/RexxScript isolation. Record concise
+   evidence and commit the whole instruction only when LC-AC-77 passes.
+
+1. **LC-STEP-86A (`LC-86-01–05`; complete):** reconcile the IBM/Regina reference,
+   existing exit/runtime/metadata and Level C AST; inventory every legal form,
+   error and producer/output path before implementation.
+2. **LC-STEP-86B (`LC-86-01–02`; complete):** connect the Level C source
+   node to the existing trace route, unify option parsing and activation state
+   with `TRACE()`, and cover forms/errors in main and called bodies.
+3. **LC-STEP-86C (`LC-86-03`; complete to approved scope):** deliver authored
+   source, supported command/result/intermediate metadata and formatting
+   through the existing trace handler, preserving optimized value safety;
+   record absent label and expression records.
+4. **LC-STEP-86D (`LC-86-04`; complete to approved scope):** finish command inhibition,
+   probe interactive/numeric/SCAN behavior and record bounded divergences.
+5. **LC-STEP-86E (`LC-86-01–05`; complete):** group focused and
+   normal qualification, update architecture/reference docs and commit the
+   coherent whole-instruction result. Keep all unverified criteria open.
+
+**LC-STEP-86C value finding, repaired and qualified.** The
+first linked `TRACE R/I` probe showed generated helper events and read
+`RexxValue` objects as strings, printing false empty values. An authored
+clause marker, typed Classic scalar events and handler `asString()` read now
+print the actual value; generic helper events are filtered. A later NUL probe
+found that capturing assignment value after call marshalling could print an
+empty string; capture now precedes marshalling and prints `\x00`. The focused
+linked opt/no-opt matrix checks numeric, NUL and Unicode values, compound
+variables, PARSE, calls, frame restore and `TRACE()`; remaining event omissions
+are listed in the TRACE requirements note. No VM or linker edit was made.
+
+**LC-I-24 closure, 2026-10-06.** Final-input focused TRACE and existing
+Level B/G/RexxScript isolation passed 41/41; normal Debug and Release Level C
+passed 741/741 each. Linked opt/no-opt output is compared exactly by
+`levelc_trace_values_*`; unsupported static SCAN and invalid dynamic options
+have stable diagnostics. The focused `!C` host probe inhibited a command,
+set RC zero, and `!` reenabled execution. Approved divergences: `?` updates
+state without prompting; nonzero numeric options do not skip or suppress;
+SCAN is rejected; `L` has no label-pass records; compound-name,
+final-expression and some optimized expression records may be absent.
+All emitted scalar values must be correct, including NUL displayed as
+`\x00`; unavailable events are omitted. The `N`/`E`/`F` host-condition
+classification remains coarse as documented. Full Level C, host-interface
+and Release 1 criteria remain open under their own IDs.
 
 **LC-STEP-88A closed-instruction review.** The former receipts remain evidence
 for their tested forms; the changed character contract affects instruction

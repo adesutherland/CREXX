@@ -249,7 +249,7 @@ static int flow_node_produces_temporary(const ASTNode *node) {
         case PROCEDURE: case METHOD: case FACTORY: case MATCH:
         case ARGS: case ARG: case INSTRUCTIONS: case ASSIGN: case DEFINE:
         case IF: case DO: case SIGNAL_BLOCK: case SIGNAL_HANDLER:
-        case FRAME_LABEL: case FRAME_BRANCH:
+        case FRAME_LABEL: case FRAME_BRANCH: case TRACE_CLAUSE:
         case FRAME_HANDLER_ON: case FRAME_HANDLER_OFF:
         case RETURN: case LEAVE: case ITERATE: case LEAVE_WITH:
         case SELECT: case SWITCH: case WHEN: case OTHERWISE:

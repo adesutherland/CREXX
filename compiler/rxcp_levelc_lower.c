@@ -198,7 +198,7 @@ static const LevelCBifEntry levelc_direct_bifs[] = {
     LEVELC_DIRECT_BIF("SUBWORD", "rexxclassicbifsubword", "rexxclassicbif_subword"),
     LEVELC_DIRECT_BIF("SYMBOL", "rexxclassicbifsymbol", "rexxclassicbif_symbol"),
     LEVELC_DIRECT_BIF("TIME", "rexxclassicbiftime", "rexxclassicbif_time"),
-    LEVELC_DIRECT_BIF("TRACE", "rexxclassicbiftrace", "rexxclassicbif_trace"),
+    LEVELC_DIRECT_BIF("TRACE", "rexxclassicbiftrace", "rexxclassicbif_trace_frame"),
     LEVELC_DIRECT_BIF("TRANSLATE", "rexxclassicbiftranslate", "rexxclassicbif_translate"),
     LEVELC_DIRECT_BIF("TRUNC", "rexxclassicbiftrunc", "rexxclassicbif_trunc"),
     {"UPPER", NULL, "rexxclassicbifs.rexxclassicbif_upper"},
@@ -234,6 +234,7 @@ typedef struct {
     ASTNode *classic_condition_source;
     int has_novalue_on;
     int has_address;
+    int has_trace;
     LevelCLoopBinding *active_loop;
     uint64_t used_direct_bifs;
     char **external_imports;
@@ -273,6 +274,7 @@ static int levelc_node_is_source_only(NodeType type) {
         case LEVELC_SIGNAL:
         case LEVELC_SIGNAL_VALUE:
         case LEVELC_TRACE:
+        case LEVELC_TRACE_VALUE:
         case PARSE:
         case PULL:
         case TEMPLATES:
@@ -544,7 +546,11 @@ static int levelc_direct_bif_supported(ASTNode *expr,
         }
         arg = arg->sibling;
     }
-    if (plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+    if (plan) {
+        plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+        if (strcmp(bif->name, "TRACE") == 0 && expr->child &&
+            levelc_argument_exists(expr->child)) plan->has_trace = 1;
+    }
     return 1;
 }
 
@@ -1313,7 +1319,11 @@ static int levelc_call_statement_supported(ASTNode *stmt,
             return 0;
         }
     }
-    if (bif && plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+    if (bif && plan) {
+        plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+        if (strcmp(bif->name, "TRACE") == 0 && args->child &&
+            levelc_argument_exists(args->child)) plan->has_trace = 1;
+    }
     if (!procedure && !bif &&
         !levelc_record_external_import(stmt->context, plan, target_name)) {
         free(target_name);
@@ -1920,6 +1930,20 @@ static int levelc_statement_supported(ASTNode *stmt,
         if (plan) plan->has_address = 1;
         return 1;
     }
+    if (stmt->node_type == LEVELC_TRACE) {
+        ASTNode *option = stmt->child;
+        if (plan) plan->has_trace = 1;
+        if (!option) return 1;
+        if (option->sibling) {
+            if (reason_out) *reason_out = "invalid TRACE source shape";
+            return 0;
+        }
+        if (option->node_type == LEVELC_TRACE_VALUE)
+            return option->child && levelc_expr_supported(option->child, plan, reason_out);
+        if (option->node_type == LITERAL || option->node_type == INTEGER)
+            return 1;
+        return levelc_expr_supported(option, plan, reason_out);
+    }
     if (levelc_pool_statement_supported(stmt, plan, reason_out)) return 1;
 
     if (stmt->node_type == CALL) {
@@ -2099,12 +2123,16 @@ static ASTNode *levelc_rexxvalue_from_literal(Context *context, ASTNode *source_
     char *cursor;
     ASTNode *result;
 
-    if (levelc_byte_literal_kind(source_node))
-        return levelc_rexxvalue_from_byte_literal(context, source_node);
+    if (levelc_byte_literal_kind(source_node)) {
+        result = levelc_rexxvalue_from_byte_literal(context, source_node);
+        goto mark_literal;
+    }
 
     if (source_node && source_node->node_type == STRING &&
-        source_node->node_string_length == 0)
-        return levelc_rexxvalue_from_text(context, source_node, "");
+        source_node->node_string_length == 0) {
+        result = levelc_rexxvalue_from_text(context, source_node, "");
+        goto mark_literal;
+    }
 
     text = levelc_node_text_copy(source_node);
     if (!text) return NULL;
@@ -2117,6 +2145,10 @@ static ASTNode *levelc_rexxvalue_from_literal(Context *context, ASTNode *source_
     }
     result = levelc_rexxvalue_from_text(context, source_node, text);
     free(text);
+mark_literal:
+    if (result) ast_attach_semantic_context(result,
+        ast_make_semantic_context(context,
+            AST_SEMANTIC_CONTEXT_CLASSIC_LITERAL, source_node, NULL));
     return result;
 }
 
@@ -2249,6 +2281,9 @@ static ASTNode *levelc_pool_value(Context *context,
         return NULL;
     }
     value = levelc_symbol_pool_value_by_name(context, source_node, name);
+    if (value) ast_attach_semantic_context(value,
+        ast_make_semantic_context(context,
+            AST_SEMANTIC_CONTEXT_CLASSIC_READ, source_node, name));
 
     free(name);
     return value;
@@ -2648,6 +2683,9 @@ static ASTNode *levelc_lower_binary_method(Context *context,
     if (numeric && !args[1]) goto fail;
     ASTNode *call = rxcp_remap_create_member_call(
         context, expr, receiver, method_name, args, numeric ? 2 : 1);
+    if (call) ast_attach_semantic_context(call,
+        ast_make_semantic_context(context,
+            AST_SEMANTIC_CONTEXT_CLASSIC_BINARY, expr, NULL));
     free(left_name);
     free(right_name);
     return call;
@@ -2694,6 +2732,9 @@ static ASTNode *levelc_lower_unary_method(Context *context,
     if (arithmetic && !args[0]) goto unary_fail;
     ASTNode *call = rxcp_remap_create_member_call(
         context, expr, receiver, method_name, args, arithmetic ? 1 : 0);
+    if (call) ast_attach_semantic_context(call,
+        ast_make_semantic_context(context,
+            AST_SEMANTIC_CONTEXT_CLASSIC_UNARY, expr, NULL));
     free(value_name);
     return call;
 
@@ -2911,6 +2952,39 @@ fail:
     return NULL;
 }
 
+static int levelc_append_trace_activation_exit(Context *context,
+                                                ASTNode *instructions,
+                                                ASTNode *source,
+                                                const char *activation_name) {
+    char *mode_name = rxcp_remap_create_generated_node_name(
+        "__rxcp_levelc_trace_restore_", source);
+    ASTNode *activation = rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL,
+        activation_name ? activation_name : LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *mode = activation ? rxcp_remap_create_member_call(
+        context, source, activation, "traceSetting", NULL, 0) : NULL;
+    ASTNode *save = mode_name && mode
+        ? rxcp_remap_create_named_assignment(context, source, mode_name, mode)
+        : NULL;
+    ASTNode *trace = ast_ftt(context, EXIT_EXTENDED, strdup("TRACE"));
+    ASTNode *keyword = ast_ftt(context, LITERAL, strdup("VALUE"));
+    ASTNode *mode_ref = mode_name
+        ? ast_ftt(context, VAR_SYMBOL, strdup(mode_name)) : NULL;
+    if (!mode_name || !save || !trace || !keyword || !mode_ref) {
+        free(mode_name);
+        return 0;
+    }
+    trace->free_node_string = 1;
+    keyword->free_node_string = 1;
+    mode_ref->free_node_string = 1;
+    add_ast(instructions, save);
+    add_ast(trace, keyword);
+    add_ast(trace, mode_ref);
+    add_ast(instructions, trace);
+    free(mode_name);
+    return 1;
+}
+
 static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
                                                ASTNode *expr,
                                                ASTNode *first_argument,
@@ -2942,7 +3016,8 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     if (!context || !expr || !bif_name || !prelude) return NULL;
     activation_bif = strcmp(bif_name, "ADDRESS") == 0 ||
                      strcmp(bif_name, "ARG") == 0 ||
-                     strcmp(bif_name, "CONDITION") == 0;
+                     strcmp(bif_name, "CONDITION") == 0 ||
+                     strcmp(bif_name, "TRACE") == 0;
 
     args_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_ARGS_PREFIX, expr);
     exists_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_EXISTS_PREFIX, expr);
@@ -3093,6 +3168,11 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
         !levelc_append_classic_error_if_expr(context, prelude, expr,
                                              condition, detail)) goto fail;
 
+    if (strcmp(bif_name, "TRACE") == 0 && argument_count > 0 &&
+        levelc_argument_exists(first_argument) &&
+        !levelc_append_trace_activation_exit(context, prelude, expr,
+                                             activation_name)) goto fail;
+
     result = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, result_name);
     if (!result) goto fail;
 
@@ -3220,6 +3300,11 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
         free(frame_name);
         return NULL;
     }
+    if (plan && plan->has_trace &&
+        !levelc_append_trace_activation_exit(context, prelude, expr, NULL)) {
+        free(frame_name);
+        return NULL;
+    }
     if (!levelc_append_function_result_guard(
             context, prelude, expr, frame_name, target_name)) {
         free(frame_name);
@@ -3251,12 +3336,18 @@ static ASTNode *levelc_lower_function_call(Context *context,
         ASTNode *call = levelc_lower_bif_dispatch_call(
             context, expr, expr->child, levelc_function_argument_count(expr),
             name, plan, prelude, bif->entry, NULL, NULL);
+        if (call) ast_attach_semantic_context(call,
+            ast_make_semantic_context(context,
+                AST_SEMANTIC_CONTEXT_CLASSIC_FUNCTION, expr, name));
         free(name);
         return call;
     }
     if (procedure) {
         ASTNode *call = levelc_lower_local_function_call(
             context, expr, plan, procedure, name, prelude);
+        if (call) ast_attach_semantic_context(call,
+            ast_make_semantic_context(context,
+                AST_SEMANTIC_CONTEXT_CLASSIC_FUNCTION, expr, name));
         free(name);
         return call;
     }
@@ -3308,6 +3399,8 @@ static ASTNode *levelc_pool_set_statement(Context *context,
     ASTNode *expr;
     ASTNode *receiver;
     ASTNode *args[2];
+    ASTNode *call;
+    char *target_name;
 
     target = assign_node->child;
     expr = target ? target->sibling : NULL;
@@ -3320,12 +3413,18 @@ static ASTNode *levelc_pool_set_statement(Context *context,
                                     : levelc_blank_rexxvalue(context, assign_node);
     if (!receiver || !args[0] || !args[1]) return NULL;
 
-    return rxcp_remap_create_member_call_statement(context,
+    call = rxcp_remap_create_member_call_statement(context,
                                                    assign_node,
                                                    receiver,
                                                    "setSymbolValue",
                                                    args,
                                                    2);
+    target_name = levelc_upper_name(target);
+    if (call && call->child && target_name) ast_attach_semantic_context(call->child,
+        ast_make_semantic_context(context,
+            AST_SEMANTIC_CONTEXT_CLASSIC_ASSIGNMENT, assign_node, target_name));
+    free(target_name);
+    return call;
 }
 
 static ASTNode *levelc_say_statement(Context *context,
@@ -3542,11 +3641,24 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
         prelude, &frame_name);
     if (!statement) return NULL;
     if (condition_handler) {
+        ASTNode *nop = ast_f(context, NOP, call_node->token);
+        add_ast(prelude, statement);
+        if (!nop || (plan && plan->has_trace &&
+            !levelc_append_trace_activation_exit(
+                context, prelude, call_node, NULL))) {
+            free(frame_name);
+            return NULL;
+        }
         free(frame_name);
-        return statement;
+        return nop;
     }
     add_ast(prelude, statement);
     if (!levelc_append_program_exit_guard(context, prelude, call_node)) {
+        free(frame_name);
+        return NULL;
+    }
+    if (plan && plan->has_trace &&
+        !levelc_append_trace_activation_exit(context, prelude, call_node, NULL)) {
         free(frame_name);
         return NULL;
     }
@@ -3677,10 +3789,23 @@ static ASTNode *levelc_call_external_statement(Context *context,
         return NULL;
     }
     if (condition_handler) {
+        ASTNode *nop = ast_f(context, NOP, call_node->token);
+        add_ast(prelude, statement);
+        if (!nop || (plan && plan->has_trace &&
+            !levelc_append_trace_activation_exit(
+                context, prelude, call_node, NULL))) {
+            free(frame_name);
+            return NULL;
+        }
         free(frame_name);
-        return statement;
+        return nop;
     }
     add_ast(prelude, statement);
+    if (plan && plan->has_trace &&
+        !levelc_append_trace_activation_exit(context, prelude, call_node, NULL)) {
+        free(frame_name);
+        return NULL;
+    }
     receiver = rxcp_remap_create_named_ref(context, call_node,
                                            VAR_SYMBOL, frame_name);
     present = receiver ? rxcp_remap_create_member_call(
@@ -6029,6 +6154,70 @@ fail:
     return 0;
 }
 
+static char *levelc_trace_static_text(ASTNode *option) {
+    unsigned char *decoded = NULL;
+    size_t length = 0;
+    size_t chars = 0;
+    const char *raw;
+    size_t raw_length;
+    char *text;
+
+    if (!option || !option->token) return NULL;
+    if (option->node_type == STRING) {
+        if (!levelc_parseplan_literal(option, &decoded, &length, &chars))
+            return NULL;
+        if (strlen((const char *)decoded) != length) {
+            free(decoded);
+            return NULL;
+        }
+        return (char *)decoded;
+    }
+    raw = option->token->token_string;
+    raw_length = option->token->length;
+    if (!raw) return NULL;
+    if (option->node_type == INTEGER && option->child &&
+        option->child->token) {
+        Token *sign = option->child->token;
+        text = malloc((size_t)sign->length + raw_length + 1);
+        if (!text) return NULL;
+        memcpy(text, sign->token_string, (size_t)sign->length);
+        memcpy(text + sign->length, raw, raw_length);
+        text[sign->length + raw_length] = '\0';
+        return text;
+    }
+    return rx_strndup(raw, raw_length);
+}
+
+static int levelc_append_trace_state_update(Context *context,
+                                            ASTNode *instructions,
+                                            ASTNode *source,
+                                            const char *option_text,
+                                            const char *option_name) {
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *args[1];
+    ASTNode *call;
+    ASTNode *condition;
+    ASTNode *zero;
+    args[0] = option_name
+        ? rxcp_remap_create_named_ref(context, source, VAR_SYMBOL, option_name)
+        : rxcp_remap_create_string_constant(context, source,
+                                             option_text ? option_text : "");
+    call = receiver && args[0]
+        ? rxcp_remap_create_member_call(
+            context, source, receiver, "setTraceOption", args, 1)
+        : NULL;
+    condition = ast_f(context, OP_COMPARE_EQUAL, source->token);
+    zero = rxcp_remap_create_integer_constant(context, source, 0, TP_BOOLEAN);
+    if (!call || !condition || !zero) return 0;
+    rxcp_remap_anchor_synthetic(condition, source);
+    add_ast(condition, call);
+    add_ast(condition, zero);
+    return levelc_append_classic_error_if(
+        context, instructions, source, condition,
+        "RXC-LC-24.1: Invalid TRACE option");
+}
+
 static int levelc_lower_statement(Context *context,
                                   ASTNode *instructions,
                                   ASTNode *stmt,
@@ -6038,8 +6227,16 @@ static int levelc_lower_statement(Context *context,
                                   const char **reason_out) {
     ASTNode *prelude;
     ASTNode *lowered;
+    ASTNode *trace_clause;
 
     if (!stmt) return 1;
+    trace_clause = ast_f(context, TRACE_CLAUSE, stmt->token);
+    if (!trace_clause) {
+        if (reason_out) *reason_out = "failed to preserve Classic clause source";
+        return 0;
+    }
+    ast_copy_source_anchor(trace_clause, stmt, AST_SOURCE_COMPOSITE);
+    add_ast(instructions, trace_clause);
     if (stmt->node_type == NOP) return levelc_lower_nop(context, instructions, stmt, reason_out);
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_lower_transfer(context, instructions, stmt, plan, reason_out);
@@ -6090,7 +6287,49 @@ static int levelc_lower_statement(Context *context,
                                                 plan, reason_out);
     if (stmt->node_type == LEVELC_NUMERIC)
         return levelc_lower_numeric_instruction(context, instructions, stmt,
-                                                plan, reason_out);
+                                                 plan, reason_out);
+    if (stmt->node_type == LEVELC_TRACE) {
+        ASTNode *option = stmt->child;
+        char *static_text = NULL;
+        char *dynamic_name = NULL;
+        if (option && option->node_type == LEVELC_TRACE_VALUE) {
+            ASTNode *setup = rxcp_remap_create_instruction_builder(context, stmt);
+            ASTNode *value = setup && option->child
+                ? levelc_lower_expr(context, option->child, plan, setup) : NULL;
+            ASTNode *as_string = value
+                ? levelc_classic_as_string(context, option, value) : NULL;
+            dynamic_name = rxcp_remap_create_generated_node_name(
+                "__rxcp_levelc_trace_option_", stmt);
+            ASTNode *assignment = dynamic_name && as_string
+                ? rxcp_remap_create_named_assignment(context, stmt, dynamic_name, as_string)
+                : NULL;
+            if (!setup || !assignment) {
+                free(dynamic_name);
+                if (reason_out) *reason_out = "failed to lower Level C TRACE VALUE";
+                return 0;
+            }
+            add_ast(setup, assignment);
+            rxcp_remap_append_builder_children(instructions, setup);
+        } else if (option) {
+            static_text = levelc_trace_static_text(option);
+            if (!static_text) {
+                if (reason_out) *reason_out = "failed to lower Level C TRACE option";
+                return 0;
+            }
+        }
+        if (!levelc_append_trace_state_update(context, instructions, stmt,
+                                              static_text, dynamic_name) ||
+            !levelc_append_trace_activation_exit(context, instructions, stmt,
+                                                 NULL)) {
+            free(static_text);
+            free(dynamic_name);
+            if (reason_out) *reason_out = "failed to activate Level C TRACE state";
+            return 0;
+        }
+        free(static_text);
+        free(dynamic_name);
+        return 1;
+    }
     if (stmt->node_type == IMPLICIT_CMD)
         return levelc_lower_implicit_command(context, instructions, stmt,
                                              plan, reason_out);
@@ -7363,6 +7602,7 @@ static int levelc_rewrite_program(Context *context,
         program_file->node_string_length = context->namespace->node_string_length;
     }
 
+    context->levelc_lowered = 1;
     context->level = LEVELB;
     context->changed_flags |= FLAG_VAL_TRANS;
     free(provider_name);

@@ -1851,6 +1851,7 @@ static walker_result emit_walker(walker_direction direction,
                     break;
 
             case NOP:
+            case TRACE_CLAUSE:
             case FRAME_LABEL:
             case FRAME_BRANCH:
             case FRAME_HANDLER_ON:

@@ -234,12 +234,11 @@ RexxVariablePool: class
     return trace_state.current()
 
   /** Apply one validated Classic TRACE BIF option to this activation. */
-  setTraceOption: method = .void
+  setTraceOption: method = .boolean
     arg option = .string
     state = .RexxTraceState
     assembler link state, trace_state
-    call state.apply(option)
-    return
+    return state.apply(option)
 
   /** Copy Classic TRACE state when creating a child activation pool. */
   inheritTraceState: method = .void

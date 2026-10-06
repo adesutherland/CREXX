@@ -424,9 +424,11 @@ void add_global_symbol(Symbol *symbol, void *payload) {
     if (symbol->symbol_type == VARIABLE_SYMBOL && symbol->exposed) {
 
         symbol_fqn = sym_frnm(symbol);
+        /* A headerless Classic file has no namespace. Its synthetic file
+         * scope contributes a leading separator that is not an RXAS name. */
         buffer = mprintf("%c%d .expose=%s\n",
                          symbol->register_type, symbol->register_num,
-                         symbol_fqn
+                         symbol_fqn[0] == '.' ? symbol_fqn + 1 : symbol_fqn
         );
         free(symbol_fqn);
 

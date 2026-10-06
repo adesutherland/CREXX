@@ -116,6 +116,14 @@ RexxClassicAddressCommand: class
     last_syntax_error = ""
     last_condition_description = command_text
 
+    if activation.traceInhibiting() then do
+      call _trace_command_before(target_environment, command_text)
+      call pool.setSymbolValue("RC", .RexxValue("0"))
+      call pool.setSymbolValue(".RC", .RexxValue("0"))
+      call pool.setSymbolValue(".RS", .RexxValue("0"))
+      return .addressresponse(0)
+    end
+
     if state.type("I") = "STEM" then do
       stem = state.resource("I")
       count_text = pool.symbolValue(stem || "0").asString()

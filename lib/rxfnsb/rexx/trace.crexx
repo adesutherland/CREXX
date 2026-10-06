@@ -168,13 +168,16 @@ tracecontext: class
     source_line = .string
     found = .int
     if _source_loaded <> 0 then return
-    found = _trace_exact_source(_module, _address, line, column, source, source_line)
+    call prepare_procedure()
+    classic_body = .int
+    classic_body = pos("__rxcp_levelc_body", _procedure) > 0
+    found = _trace_exact_source(_module, _address, line, column, source, source_line, classic_body)
     _has_source = found
     _line = line
     _column = column
     _source = source
     _source_line = source_line
-    if _has_source <> 0 then _source_file = _trace_exact_source_file(_module, _address)
+    if _has_source <> 0 then _source_file = _trace_exact_source_file(_module, _address, classic_body)
     _source_loaded = 1
     return
 
@@ -315,6 +318,12 @@ tracecontroller: class
     call add_suppressed_namespace("runtime_signal")
     call add_suppressed_namespace("signalaction")
     call add_suppressed_namespace("library")
+    call add_suppressed_namespace("rexxactivation")
+    call add_suppressed_namespace("rexxpool")
+    call add_suppressed_namespace("rexxvalue")
+    call add_suppressed_namespace("rexxstem")
+    call add_suppressed_namespace("rexxdostate")
+    call add_suppressed_namespace("data.StringHashMap")
     return
 
   suppress_namespace: method = .void
@@ -448,6 +457,9 @@ tracecontroller: class
       if namespace_is_suppressed(proc_name) then return 0
     end
     call event.prepare_content(_mode)
+    if _include_runtime = 0 then do
+      if _trace_is_internal_source(event.source_file()) then return 0
+    end
     return 1
 
   should_trace_module: method = .int
@@ -469,7 +481,7 @@ tracecontroller: class
     column = .int
     source = .string
     result = .string
-    if _trace_exact_source(module, addr, line, column, source, result) = 0 then return ""
+    if _trace_exact_source(module, addr, line, column, source, result, 0) = 0 then return ""
     return result
 
   closest_source_line: method = .string
@@ -568,6 +580,7 @@ tracecontroller: class
     value_type = 0
     register_type = 0
     reg = 0
+    event_flags = 0
 
     call clear_pending_result()
 
@@ -582,10 +595,11 @@ tracecontroller: class
           assembler linkattr1 value_type, meta_entry, 4
           assembler linkattr1 register_type, meta_entry, 5
           assembler linkattr1 reg, meta_entry, 6
+          assembler linkattr1 event_flags, meta_entry, 9
           if value_source = 82 & reg >= 0 then do
             _pending_event_count = _pending_event_count + 1
             _pending_event_prefixes[_pending_event_count] = _trace_prefix_from_kind(kind)
-            _pending_event_types[_pending_event_count] = _trace_type_name_from_codes(value_type, register_type)
+            _pending_event_types[_pending_event_count] = _trace_type_name_from_codes(value_type, register_type, event_flags)
             _pending_event_registers[_pending_event_count] = reg
           end
         end
@@ -807,7 +821,7 @@ _trace_normalize_mode: procedure = .string expose _trace_mode_cache_ready _trace
   start = 0
   do while start < normalized_length
     assembler strchar codepoint,normalized,start
-    if codepoint <> 63 then leave
+    if codepoint <> 63 & codepoint <> 33 then leave
     start = start + 1
   end
   if start > 0 then do
@@ -852,6 +866,11 @@ _trace_normalize_mode: procedure = .string expose _trace_mode_cache_ready _trace
 
 _trace_mode_from_option: procedure = .string
   arg option = .string
+  stripped = strip(option)
+  do while left(stripped, 1) = "?" | left(stripped, 1) = "!"
+    stripped = substr(stripped, 2)
+  end
+  if stripped = "" & option <> "" then return _trace_current_mode()
   return _trace_normalize_mode(option)
 
 _trace_option_prefix: procedure = .int
@@ -1060,7 +1079,8 @@ _trace_mask_has: procedure = .int
   return 0
 
 _trace_type_name_from_codes: procedure = .string
-  arg value_type = .int, register_type = .int
+  arg value_type = .int, register_type = .int, event_flags = .int
+  if (event_flags <has> 1) <> 0 then return ".RexxValue"
   if register_type = 105 | register_type = 73 then return ".int"
   if register_type = 102 | register_type = 70 then return ".float"
   if register_type = 115 | register_type = 83 then return ".string"
@@ -1137,7 +1157,7 @@ _trace_write_line: procedure = .void expose _trace_output_target
   return
 
 _trace_exact_source: procedure = .int
-  arg module = .int, addr = .int, expose line = .int, expose column = .int, expose source = .string, expose result = .string
+  arg module = .int, addr = .int, expose line = .int, expose column = .int, expose source = .string, expose result = .string, classic_body = .int
   meta_array = 0
   meta_entry = ""
   line = 0
@@ -1148,6 +1168,8 @@ _trace_exact_source: procedure = .int
   line_value = 0
   column_value = 0
   source_value = ""
+  source_flags = 0
+  source_file = ""
 
   if module <= 0 then return 0
   if addr < 0 then return 0
@@ -1156,6 +1178,10 @@ _trace_exact_source: procedure = .int
   do i = 1 to meta_array
     assembler linkattr1 meta_entry, meta_array, i
     if meta_entry = ".meta_source_step" then do
+      assembler linkattr1 source_flags, meta_entry, 3
+      assembler linkattr1 source_file, meta_entry, 4
+      if (source_flags <has> 1) = 0 | source_file = "exit_fragment" then iterate
+      if classic_body <> 0 & (source_flags <has> 64) = 0 then iterate
       assembler linkattr1 line_value, meta_entry, 5
       assembler linkattr1 column_value, meta_entry, 6
       assembler linkattr1 source_value, meta_entry, 8
@@ -1170,9 +1196,11 @@ _trace_exact_source: procedure = .int
   return found
 
 _trace_exact_source_file: procedure = .string
-  arg module = .int, addr = .int
+  arg module = .int, addr = .int, classic_body = .int
   meta_array = 0
   meta_entry = ""
+  source_flags = 0
+  source_file = ""
   result = ""
 
   if module <= 0 then return ""
@@ -1181,7 +1209,13 @@ _trace_exact_source_file: procedure = .string
   assembler metaloaddata meta_array, module, addr
   do i = 1 to meta_array
     assembler linkattr1 meta_entry, meta_array, i
-    if meta_entry = ".meta_source_step" then assembler linkattr1 result, meta_entry, 4
+    if meta_entry = ".meta_source_step" then do
+      assembler linkattr1 source_flags, meta_entry, 3
+      assembler linkattr1 source_file, meta_entry, 4
+      if (source_flags <has> 1) = 0 | source_file = "exit_fragment" then iterate
+      if classic_body <> 0 & (source_flags <has> 64) = 0 then iterate
+      result = source_file
+    end
   end
 
   return result
@@ -1197,7 +1231,7 @@ _trace_closest_source_line: procedure = .string
   if addr < 0 then return ""
 
   do a = addr to 0 by -1
-    if _trace_exact_source(module, a, line, column, source, result) <> 0 then return result
+    if _trace_exact_source(module, a, line, column, source, result, 0) <> 0 then return result
   end
 
   return ""
@@ -1354,12 +1388,26 @@ _trace_is_trace_runtime: procedure = .int
   arg name = .string
   n = _trace_normalize_namespace(name)
   if n = "" then return 0
+  if left(n, 11) = "rexxclassic" then return 1
   if left(n, 7) = "_trace_" then return 1
   if pos("._trace_", n) > 0 then return 1
   if pos("__rxtrace_handler", n) > 0 then return 1
   if _trace_namespace_matches("tracecontroller", n) <> 0 then return 1
   if _trace_namespace_matches("tracecontext", n) <> 0 then return 1
   if _trace_namespace_matches("trace_interrupt_raw", n) <> 0 then return 1
+  return 0
+
+_trace_is_internal_source: procedure = .int
+  arg name = .string
+  file = lower(name)
+  slash = lastpos("/", file)
+  if slash > 0 then file = substr(file, slash + 1)
+  if file = "exit_fragment" then return 1
+  if right(file, 6) <> ".crexx" then return 0
+  if left(file, 11) = "rexxclassic" then return 1
+  if file = "rexxvalue.crexx" | file = "rexxactivationarguments.crexx" |,
+     file = "rexxvariablepool.crexx" | file = "rexxstem.crexx" |,
+     file = "rexxdostate.crexx" | file = "stringhashmap.crexx" then return 1
   return 0
 
 _trace_find_proc: procedure = .int

@@ -636,20 +636,6 @@ _check_arg_type: procedure = .int
     return 1
   end
 
-  if rule = "ACEFILNOR" then do
-    remainder = value
-    do while left(remainder, 1) = "?"
-      remainder = substr(remainder, 2)
-    end
-    if remainder = "" then return 1
-    option = translate(left(remainder, 1))
-    if pos(option, rule) = 0 then do
-      call _set_bif_error(context_ref, "40.28", index, value, rule)
-      return 0
-    end
-    return 1
-  end
-
   if rule = "ABLMNSUWX" | rule = "CDEIS" | rule = "EINO" | rule = "EO" | rule = "LTB" | rule = "MN" |,
      rule = "BDEMNOSUW" | rule = "BDENOSU" |,
      rule = "CEHLMNORS" | rule = "CHLMNS" then do

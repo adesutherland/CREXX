@@ -1,0 +1,48 @@
+     3 *-* x = 1 + 2
+       >=>   "3"
+     4 *-* say x
+       >V>   "3"
+3
+     5 *-* trace value 'intermediates'
+     6 *-* nul = x2c('00')
+       >L>   "00"
+       >=>   "\x00"
+     7 *-* say c2x(nul)
+       >V>   "\x00"
+00
+     8 *-* s. = 'base'
+       >L>   "base"
+       >=>   "base"
+     9 *-* i = 1
+       >L>   "1"
+       >=>   "1"
+    10 *-* s.i = '漢🙂'
+       >L>   "漢🙂"
+       >=>   "漢🙂"
+    11 *-* y = s.i
+       >V>   "漢🙂"
+       >=>   "漢🙂"
+    12 *-* say y
+       >V>   "漢🙂"
+漢🙂
+    13 *-* parse value 'a b' with a b
+       >L>   "a b"
+    14 *-* say a b
+       >V>   "a"
+       >V>   "b"
+       >O>   "a b"
+a b
+    15 *-* call child 'é'
+       >L>   "é"
+    21 *-*   arg p
+    22 *-*   say p
+       >V>   "É"
+É
+    23 *-*   trace o
+    16 *-* say 'mode' trace()
+       >L>   "mode"
+       >O>   "mode I"
+mode I
+    17 *-* old = trace('O')
+       >L>   "O"
+off I

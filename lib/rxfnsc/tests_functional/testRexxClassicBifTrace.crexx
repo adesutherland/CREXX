@@ -29,7 +29,8 @@ errors = errors + check_trace(reference pool, "?R", 0, "")
 errors = errors + check_omitted(reference pool)
 errors = errors + check_error(reference pool, "RXC-LC-40.4", 2, "R")
 errors = errors + check_error(reference pool, "RXC-LC-40.28", 1, "scan")
-errors = errors + check_error(reference pool, "RXC-LC-40.28", 1, "!R")
+errors = errors + check_trace(reference pool, "?R", 1, "!R")
+errors = errors + check_trace(reference pool, "?!R", 1, "+2")
 errors = errors + check_error(reference pool, "RXC-LC-40.28", 1, " R")
 
 if errors = 0 then say "PASS: Level C TRACE BIF"

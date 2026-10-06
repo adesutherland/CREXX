@@ -1495,6 +1495,8 @@ const char *ast_ndtp(NodeType type) {
             return "LABEL";
         case FRAME_LABEL:
             return "FRAME_LABEL";
+        case TRACE_CLAUSE:
+            return "TRACE_CLAUSE";
         case FRAME_BRANCH:
             return "FRAME_BRANCH";
         case FRAME_HANDLER_ON:
@@ -1773,6 +1775,8 @@ const char *ast_ndtp(NodeType type) {
             return "LEVELC_SIGNAL_VALUE";
         case LEVELC_TRACE:
             return "LEVELC_TRACE";
+        case LEVELC_TRACE_VALUE:
+            return "LEVELC_TRACE_VALUE";
         default: return "*UNKNOWN*";
     }
 }

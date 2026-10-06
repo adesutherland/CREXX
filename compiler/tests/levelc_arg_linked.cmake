@@ -20,8 +20,12 @@ execute_process(
 if(NOT result EQUAL 0)
     message(FATAL_ERROR "rxc failed: ${output}${error}")
 endif()
+set(rxas_flags)
+if(RXAS_NOOPT)
+    list(APPEND rxas_flags -n)
+endif()
 execute_process(
-        COMMAND "${RXAS}" -o "${base}.rxbin" "${base}"
+        COMMAND "${RXAS}" ${rxas_flags} -o "${base}.rxbin" "${base}"
         WORKING_DIRECTORY "${BUILD_DIR}"
         OUTPUT_VARIABLE output ERROR_VARIABLE error RESULT_VARIABLE result)
 if(NOT result EQUAL 0)

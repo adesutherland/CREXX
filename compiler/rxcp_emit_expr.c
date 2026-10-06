@@ -378,6 +378,60 @@ static void append_semantic_operation_trace_event(OutputFragment *output,
                                        "");
 }
 
+static int classic_trace_event_kind(ASTSemanticContextKind kind,
+                                    char *event_kind,
+                                    unsigned int *mode_mask) {
+    switch (kind) {
+        case AST_SEMANTIC_CONTEXT_CLASSIC_LITERAL:
+            *event_kind = RXBIN_TRACE_KIND_LITERAL;
+            *mode_mask = RXBIN_TRACE_MODE_I;
+            return 1;
+        case AST_SEMANTIC_CONTEXT_CLASSIC_READ:
+            *event_kind = RXBIN_TRACE_KIND_VARIABLE;
+            *mode_mask = RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I;
+            return 1;
+        case AST_SEMANTIC_CONTEXT_CLASSIC_BINARY:
+            *event_kind = RXBIN_TRACE_KIND_BINARY_OP;
+            *mode_mask = RXBIN_TRACE_MODE_I;
+            return 1;
+        case AST_SEMANTIC_CONTEXT_CLASSIC_UNARY:
+            *event_kind = RXBIN_TRACE_KIND_PREFIX_OP;
+            *mode_mask = RXBIN_TRACE_MODE_I;
+            return 1;
+        case AST_SEMANTIC_CONTEXT_CLASSIC_FUNCTION:
+            *event_kind = RXBIN_TRACE_KIND_FUNCTION;
+            *mode_mask = RXBIN_TRACE_MODE_I;
+            return 1;
+        case AST_SEMANTIC_CONTEXT_CLASSIC_ASSIGNMENT:
+            *event_kind = RXBIN_TRACE_KIND_ASSIGNMENT;
+            *mode_mask = RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I;
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static void append_classic_value_trace_event(OutputFragment *output,
+                                             ASTNode *semantic_node,
+                                             ASTNode *value_node) {
+    char kind;
+    unsigned int mode_mask;
+    char *line;
+    const char *symbol;
+
+    if (!output || !value_node || value_node->register_num < 0 ||
+        !classic_trace_event_kind(ast_semantic_context_kind(semantic_node),
+                                  &kind, &mode_mask)) return;
+    symbol = semantic_node->semantic_context->node_string
+        ? semantic_node->semantic_context->node_string : "";
+    line = trace_event_metaline(kind, mode_mask, RXBIN_TRACE_VALUE_REGISTER,
+                                TP_OBJECT, value_node->register_type,
+                                value_node->register_num, 0, 0, 1,
+                                symbol, "");
+    if (line && line[0]) output_append_text(output, line);
+    free(line);
+}
+
 enum native_stem_call_kind {
     NATIVE_STEM_CALL_NONE = 0,
     NATIVE_STEM_CALL_GET,
@@ -792,6 +846,8 @@ void emit_expression(ASTNode *node, void *payload) {
     int i, j, k;
     int loose_string_compare = 0;
     char ret_type;
+    char trace_kind;
+    unsigned int trace_mode_mask;
     int ret_num;
     enum direct_call_prep_kind direct_prep_kind = DIRECT_CALL_PREP_NONE;
     char direct_prep_type = 'r';
@@ -843,6 +899,11 @@ void emit_expression(ASTNode *node, void *payload) {
                 }
                 n = n->sibling;
             }
+            /* The call may consume or replace an object argument register.
+             * Capture the authored assignment value after RHS evaluation and
+             * before call-window marshalling. */
+            if (semantic_kind == AST_SEMANTIC_CONTEXT_CLASSIC_ASSIGNMENT)
+                append_classic_value_trace_event(node->output, node, child3);
 
             /* Fixed calls keep the existing per-argument status contract.
              * They separate SETTP from the call instead of fusing it with
@@ -1140,7 +1201,11 @@ void emit_expression(ASTNode *node, void *payload) {
 	            }
 
 	            type_promotion(node);
-	            if (semantic_context_is_sugar_access(semantic_kind)) {
+	            if (semantic_kind != AST_SEMANTIC_CONTEXT_CLASSIC_ASSIGNMENT &&
+	                classic_trace_event_kind(semantic_kind, &trace_kind,
+	                                         &trace_mode_mask)) {
+	                append_classic_value_trace_event(node->output, node, node);
+	            } else if (semantic_context_is_sugar_access(semantic_kind)) {
 	                append_semantic_access_value_trace_event(node->output,
 	                                                         semantic_kind,
 	                                                         child1,

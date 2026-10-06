@@ -15,12 +15,9 @@ Classic Rexx TRACE has three option families:
 - Numeric options: positive numbers skip interactive pauses; negative numbers
   temporarily suppress trace output and pauses for matching clauses.
 
-cREXX follows a CMS-style minimum-abbreviation rule for implemented TRACE
-options: the supplied option must be a left-prefix of the canonical option word
-and must be at least the documented minimum length. Classic Rexx options use a
-one-letter minimum (`R`, `RE`, `RES`, `RESULT`, and `RESULTS` all select
-Results). Non-prefix spellings such as `RAS` are rejected instead of being
-treated as Results.
+The existing Level B/G TRACE exit uses CMS-style left-prefix abbreviations.
+Level C uses the Classic first-letter rule: `R`, `RESULTS`, and `RAS` all
+select Results. `AS`/`ASM` and `LL`/`LLM` remain explicit cREXX extensions.
 
 Useful primary references:
 
@@ -45,12 +42,12 @@ Target standard names:
 | `N` | `Normal` | Default: trace failing host commands after execution. |
 | `O` | `Off` | Disable trace and reset prefix options. |
 | `R` | `Results` | Trace all clauses and final expression results. |
-| `S` | `Scan` | Syntax-scan remaining clauses without executing them. |
+| `S` | `Scan` | Classic SCAN; excluded from initial Level C TRACE scope. |
 | `AS` | `ASM` | cREXX extension: VM/RXAS instruction trace. |
 | `LL` | `LLM` | cREXX extension: JSON-lines-style trace records for tooling. |
 | `ENV` | `ENV` | cREXX extension: re-read `CREXX_TRACE` / `CREXX_TRACE_TO` and apply that trace setting. |
 
-Current cREXX `TRACE` accepts these names for static options, and
+The Level B/G exit accepts these names for static options, and its
 `TRACE VALUE expr` normalizes dynamic option values with the same rules:
 
 - Implemented classic modes: any valid left-prefix of `ALL`, `COMMAND`,
@@ -76,18 +73,24 @@ Current cREXX `TRACE` accepts these names for static options, and
   rules as `TO`. An empty `CREXX_TRACE` turns tracing off. An invalid
   `CREXX_TRACE` turns tracing off and emits a `+++` trace message.
 
-Current gaps:
+Level C practical scope, approved 2026-10-06:
 
-- `!` command inhibition is not accepted.
-- `S`/`Scan` is not accepted.
-- `TRACE` with no option does not yet restore defaults.
-- Environment-variable tracing still needs an explicit compiled `TRACE ENV`
-  marker; there is no compiler/runtime bootstrap path for tracing a program
-  that has no TRACE instruction at all.
-- The public `TRACE()` BIF is not wired to the breakpoint-backed trace runtime.
-- The ADDRESS condition taxonomy is still coarse. `TRACE N` and `TRACE E`
-  currently report any non-zero `RC` or condition; `TRACE F` reports negative
-  `RC` or a `FAILURE` condition.
+- Bare `TRACE` resets to Normal. Static options, `TRACE VALUE expression`,
+  and `TRACE()` use the invocation's shared option state. The BIF returns the
+  prior setting and immediately applies a valid new setting. Invalid options
+  cause a source-anchored Classic error; `SCAN` is rejected as unsupported.
+- `!` toggles host-command inhibition. `?` toggles the reported interactive
+  flag but does not prompt or read control input. Signed numeric options are
+  checked; zero selects Off, while nonzero skip/pause and suppress counts are
+  not enacted. These are recorded divergences, not claims of Classic parity.
+- `L` selects Labels but emits no label-pass record. Source/result/intermediate
+  event coverage is partial, especially for compound names, final expression
+  results, and optimized-away values. Every emitted Level C scalar value must
+  be the actual Unicode text at that point; an unavailable event is omitted.
+- `TRACE ENV` in Level C takes the Classic first letter `E` (Error). The
+  Level B/G environment override remains its existing cREXX extension.
+- The ADDRESS condition taxonomy remains coarse: `N`/`E` report any nonzero
+  `RC` or condition, while `F` reports negative `RC` or FAILURE.
 
 ## Standard Text Output Format
 
@@ -141,6 +144,9 @@ the visible source file changes, including when execution returns to the first
 file. The generated TRACE handler owns this presentation state.
 
 ## Output By Option
+
+The table describes the shared trace handler and its broader target. The
+Level C exceptions and approved divergences are stated above.
 
 | Option | Required standard records | Current cREXX status |
 | --- | --- | --- |
@@ -358,16 +364,17 @@ large number of interrupts. Recommended requirements before enabling it:
 - Avoid prompting when input is not interactive unless explicitly forced.
 - Keep `TRACE LLM TO FILE` noninteractive and streaming-friendly.
 
-## Enhancement Roadmap
+## Broader TRACE Enhancement Roadmap
 
-1. Parser and option state compatibility:
-   - accept `!`;
-   - accept `S`;
-   - implement `TRACE` with no option as default reset;
+1. Beyond the approved Level C practical scope:
+   - implement interactive prompts and numeric skip/suppress behavior;
+   - implement SCAN and label-pass records if future use justifies them;
+   - complete source/result/intermediate event coverage;
+   - extend Level C's `!` and bare reset behavior to other levels where useful;
    - add a compiler/runtime bootstrap path for `CREXX_TRACE` when a program has
      no explicit `TRACE ENV` statement;
-   - add the public `TRACE()` BIF, returning the previous setting and applying a
-     new setting when an argument is supplied.
+   - align the public `TRACE()` BIF on other language levels with the Level C
+     activation-local implementation where that interface is supported.
 
 2. Standard text output:
    - add nesting indentation;

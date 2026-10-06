@@ -53,6 +53,7 @@ RexxActivationArguments: class
   procedure_eligible = .boolean
   function_call = .boolean
   address_state = .RexxAddressState
+  trace_state = .RexxTraceState
   numeric_digits = .int
   numeric_fuzz = .int
   numeric_form = .int
@@ -85,6 +86,7 @@ RexxActivationArguments: class
     procedure_eligible = 0
     function_call = 0
     address_state = .RexxAddressState()
+    trace_state = .RexxTraceState()
     numeric_digits = 9
     numeric_fuzz = 0
     numeric_form = 1
@@ -132,10 +134,31 @@ RexxActivationArguments: class
     state = .RexxAddressState
     assembler link state, address_state
     call state.copyFrom(parent.addressState())
+    trace_state = .RexxTraceState()
+    call trace_state.copyFrom(parent.traceState())
     numeric_digits = parent.numericDigits()
     numeric_fuzz = parent.numericFuzz()
     numeric_form = parent.numericForm()
     return
+
+  /** The TRACE state owned by this invocation. */
+  traceState: method = .RexxTraceState
+    return trace_state
+
+  /** Return the current TRACE setting, including active prefixes. */
+  traceSetting: method = .string
+    return trace_state.current()
+
+  /** Apply one validated TRACE option to this invocation. */
+  setTraceOption: method = .boolean
+    arg option = .string
+    return trace_state.apply(option)
+
+  traceInhibiting: method = .boolean
+    return trace_state.isInhibiting()
+
+  traceInteractive: method = .boolean
+    return trace_state.isInteractive()
 
   /** Current invocation-local Classic significant-digit setting. */
   numericDigits: method = .int

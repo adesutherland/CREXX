@@ -110,6 +110,7 @@ struct Context {
     char source_has_srcmap;
     char levelc_strict_classic; /* Leading OPTIONS STRICTC: runtime Classic transfer errors. */
     char levelc_routine_mode; /* Emit a typed, exposed Classic routine instead of main. */
+    char levelc_lowered; /* The canonical tree originated as Classic Level C. */
     RexxLevel level;
     RexxLevel cli_level_override;
     RexxLevel cli_default_level;

@@ -1244,9 +1244,11 @@ static ExitEntry *rxcp_resolve_exit_entry(Context *ctx,
     dispatch_keyword_len = 0;
     entry = NULL;
 
-    if (node->node_type == EXIT_EXTENDED && node->token) {
-        dispatch_keyword = node->token->token_string;
-        dispatch_keyword_len = node->token->length;
+    if (node->node_type == EXIT_EXTENDED) {
+        dispatch_keyword = node->token ? node->token->token_string
+                                       : node->node_string;
+        dispatch_keyword_len = node->token ? node->token->length
+                                           : node->node_string_length;
         entry = rxcp_find_exit_entry(ctx, dispatch_keyword, dispatch_keyword_len);
     } else if (node->node_type == IMPLICIT_CMD && num_tokens > 0 && node_map) {
         first_token = rxcp_first_source_token(node->child);

@@ -470,6 +470,11 @@ void output_append_trace_event_register(OutputFragment *output,
     char *event;
 
     if (!output) return;
+    /* Classic lowering uses generated object operations. Their generic Level B
+     * events name implementation registers, not Classic scalar values. Classic
+     * semantic events are emitted explicitly at their value boundaries. */
+    if (value_node && value_node->context && value_node->context->levelc_lowered)
+        return;
     event = trace_event_register_metaline(kind,
                                           mode_mask,
                                           value_node,
