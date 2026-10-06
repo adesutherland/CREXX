@@ -184,6 +184,27 @@ RexxClassicConfig: class
   pullText: method = .string
     return pull()
 
+  /** Read one line directly from default input, bypassing queued entries. */
+  lineinText: method = .string
+    return linein()
+
+  /** Describe the running VM for PARSE VERSION. */
+  versionText: method = .string
+    return version()
+
+  /**
+   * Replace SOURCEINFO's default entry mode with the Classic programme root
+   * mode while preserving the metadata-derived source path, including spaces.
+   * @param info direct caller SOURCEINFO result
+   * @param mode COMMAND, FUNCTION or SUBROUTINE from the activation root
+   */
+  sourceText: method = .string
+    arg info = .string, mode = .string
+    system_name = word(info, 1)
+    /* SOURCEINFO emits "SYSTEM COMMAND filename"; preserve filename blanks. */
+    source_name = substr(info, length(system_name) + 10)
+    return system_name || " " || mode || " " || source_name
+
   /** Insert one text value at the front of the selected data queue. */
   pushText: method = .void
     arg text = .string

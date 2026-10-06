@@ -132,6 +132,23 @@ RexxActivationArguments: class
     return
 
   /**
+   * Return the entry mode of this compiled Classic programme. Internal
+   * routines inherit the programme root's mode; a signed external call
+   * starts a new programme root on its existing activation frame.
+   */
+  programSourceMode: method = .string
+    root = dereference programRoot()
+    if root.hasProgramCaller() then do
+      if root.isFunctionCall() then return "FUNCTION"
+      return "SUBROUTINE"
+    end
+    return "COMMAND"
+
+  /** @return true when this activation was created by a caller */
+  hasProgramCaller: method = .boolean
+    return has_parent_activation
+
+  /**
    * Record one program-wide EXIT result at this program's activation root.
    * @param value full Unicode or binary-capable Classic scalar
    * @param present true when the EXIT has an expression

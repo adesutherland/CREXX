@@ -24,8 +24,8 @@ PROCEDURE. The whole PROCEDURE review now includes direct and indirect EXPOSE,
 exact compound aliases and private-pool lifecycle. SIGNAL remains open;
 CALL closed under the accepted static provider boundary, and RETURN and EXIT
 closed on the shared activation and implicit-main path.
-PARSE has a substantial shared template engine but no whole-instruction
-closure. `LC-I-19`–`LC-I-25` remain open as whole instructions. The full
+PARSE closed on the shared template engine and its seven agreed sources;
+`LC-I-20`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
 open even where a supporting slice or helper passes. The final-input normal
 Debug Level C checkpoint for the whole RETURN review passed 662/662 with
@@ -1692,7 +1692,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-16 PULL — closed 2026-10-06 | LC-STEP-78A–78D complete | `LC-78-01–05`: one selected-queue/default-input acquisition and shared PARSE UPPER template executor; source, error, EOF, queue interaction and grouped qualification pass. Host selection API remains under LC-AC-06. |
 | LC-I-17 PUSH — closed 2026-10-06 | LC-STEP-79A–79D complete | `LC-79-01–04`: optional expression/bare null, source/errors, exact text, front insertion and nested/recursive lifecycle pass with PULL/QUEUE and grouped qualification. Host selection API remains under LC-AC-06. |
 | LC-I-18 QUEUE — closed 2026-10-06 | LC-STEP-80A–80D complete | `LC-80-01–04`: optional expression/bare null, source/errors, FIFO tail and PUSH/PULL interaction pass after shared rxfnsb active-count repair and grouped qualification. Host selection API remains under LC-AC-06. |
-| LC-I-19 PARSE | LC-STEP-81 | Every source type, UPPER, arbitrary target/template sequence, static/dynamic patterns and positions, comma templates and errors; one reviewed parse engine plus argument/input/source services. |
+| LC-I-19 PARSE — closed 2026-10-06 | LC-STEP-81A–81E complete | `LC-81-01–07`: all seven agreed sources, UPPER, arbitrary/comma templates, patterns, positions, errors, source services and frame behavior pass one shared executor and qualified checkpoint. EXTERNAL and NUMERIC are explicitly outside initial Level C scope. |
 | LC-I-20 ADDRESS | LC-STEP-82 | Select/swap/transient command and WITH redirection, RC and conditions; configured environment protocol. |
 | LC-I-21 implicit command | LC-STEP-83 | Command clause evaluation, host execution, results and conditions; ADDRESS. |
 | LC-I-22 NUMERIC | LC-STEP-84 | DIGITS/FORM/FUZZ defaults, validation, context lifetime and arithmetic effects; shared value semantics. |
@@ -4648,6 +4648,181 @@ implemented claim for these closed instruction rows. The C-string host
 `rxvml_run()` NUL obligation and full Level C/Release 1 criteria also remain
 open. Documentation-only closure here does not change the tested inputs.
 
+**LC-I-19 PARSE plan — vision and intended outcome, 2026-10-06.** A compiled
+Classic PARSE in the agreed Level C scope must obtain exactly the selected source, preserve its original
+text unless UPPER is requested, and apply one reviewed template executor to
+all legal target, dot, literal-pattern, dynamic-pattern, positional and
+comma-segment forms. Source expressions and variable reads occur before
+target writes; queue and input forms consume exactly one item even with an
+empty template. Every form must work inside the one-body local frame and
+signed Level C programme boundary with correct source errors and pool
+lifetime. Reuse the existing `parseplan`, activation arguments,
+`RexxClassicConfig`, `rxfnsb` input/metadata and `RexxValue` bridge; retain
+Unicode codepoint positions, the Latin-1 ordinal bridge and RexxValue binary
+capability. Keep linker and VM product code unchanged. Host stream selection,
+general Classic/non-Classic entry and C-string embedded-NUL input remain
+open under LC-AC-06. The [IBM PARSE instruction](https://www.ibm.com/docs/en/zos/3.1.0?topic=instructions-parse)
+and [IBM source summary](https://www.ibm.com/docs/en/zvm/7.3.0?topic=parsing-instructions-summary)
+are reference points, with guarded local Regina probes retained under
+`cmake-build-debug/levelc_parse_reference/`.
+
+**Scope decision, Adrian, 2026-10-06:** the initial Level C PARSE surface is
+ARG, PULL, SOURCE, LINEIN, VERSION, VALUE and VAR. `PARSE EXTERNAL` and
+`PARSE NUMERIC` are excluded for now as host-specific extensions; they must
+continue to receive the existing invalid-PARSE-type error rather than being
+aliased to another source. IBM documents both as non-SAA subkeywords;
+Regina admits EXTERNAL but rejects NUMERIC with 25.12, so this is an explicit
+Level C scope boundary, not a claim that no non-mainframe interpreter has
+EXTERNAL. If either is added later, EXTERNAL needs its distinct terminal
+input-buffer contract and NUMERIC needs current DIGITS/FUZZ/FORM state.
+Regina's LOWER and CASELESS extensions are outside the IBM UPPER syntax
+agreed for Level C; they are also excluded from this review.
+
+1. **LC-81-01 — forms and diagnostics (closed 2026-10-06):** accept every agreed source,
+   optional UPPER, bare/empty and arbitrary comma templates, and legal
+   IF/DO/SELECT/local contexts. Keep contextual keyword ownership, authored
+   source/canonical trees, parser recovery and Classic error identities for
+   missing source keywords, VAR names, VALUE WITH, malformed tails and
+   runtime dynamic positions. Verify reference probes and opt/no-opt errors.
+2. **LC-81-02 — one template route (closed 2026-10-06):** validate and lower all PARSE
+   sources through the shared ARG/PULL `parseplan` template executor, with no
+   word-only, source-specific or target-count fallback. Preserve evaluation
+   order, completed-capture dynamic operands, source snapshots, dot and
+   compound-target writes, comma-null behavior, Unicode codepoint positions
+   and optimizer parity. Verify structural and linked tests.
+3. **LC-81-03 — ARG and pool sources (closed 2026-10-06):** PARSE ARG reads the current
+   activation's ordered present/omitted arguments without uppercasing by
+   default; PARSE VAR snapshots scalar, stem or compound values before writes
+   and keeps NOVALUE policy; PARSE VALUE evaluates its optional expression
+   exactly once before WITH targets. Verify main, local, recursive, exposed
+   and external signed Level C calls with empty and NUL-bearing text.
+4. **LC-81-04 — input sources (closed 2026-10-06):** PARSE PULL uses the selected queue
+   then default input; PARSE LINEIN bypasses queued values
+   and consumes the default-input line. Bare forms still
+   consume; EOF yields empty text. Verify queue/input ordering, piped-input
+   nonblocking cases and current host behavior, retaining the broader host
+   selection contract under LC-AC-06.
+5. **LC-81-05 — SOURCE and VERSION (closed 2026-10-06):** PARSE SOURCE reports the
+   executing programme's system, programme-entry mode and source identity
+   through existing metadata and the program-root activation, unchanged by
+   internal calls; PARSE VERSION reports the active runtime version string.
+   Verify direct, nested, linked and signed external Level C invocation,
+   source provenance and opt/no-opt parity. Broader host metadata services
+   retain their LC-AC-06 owner.
+6. **LC-81-06 — extension decision (closed 2026-10-06):** Adrian excludes
+   PARSE EXTERNAL and PARSE NUMERIC from initial Level C; retain invalid-type
+   diagnostics for both and keep general numeric context under LC-I-22.
+   Verify compiler diagnostics for the excluded spellings.
+7. **LC-81-07 — coherent implementation and qualification (closed 2026-10-06):** remove
+   duplicate PARSE lowering routes, retain source tags/docs and permanent
+   whole-instruction tests, run focused normal Debug through all affected
+   consumers during development and commit the coherent instruction
+   implementation. Qualify the coherent checkpoint across the final-input
+   normal Level C suite, focused maintained sanitizer and Level B/G/RexxScript
+   isolation, reusing unchanged passing evidence after obsolete-test removal.
+   Full Level C and Release 1 criteria remain open.
+
+1. **LC-STEP-81A (`LC-81-01–06`; complete):** complete IBM/Regina source,
+   template and error probes; inspect grammar, checked shape, metadata,
+   activation and input services; retain the extension scope decision and
+   identify only genuine architecture gaps.
+2. **LC-STEP-81B (`LC-81-01–03`; complete):** replace the VAR/VALUE-only
+   one-segment guard with one checked PARSE source/template plan and shared
+   `parseplan` lowering, retaining source order and diagnostics.
+3. **LC-STEP-81C (`LC-81-03–06`; complete):** add admitted ARG, input,
+   SOURCE and VERSION acquisition through
+   existing compiler/configuration/runtime services, with no linker/VM edit.
+4. **LC-STEP-81D (`LC-81-01–07`; complete):** add whole-form/error,
+   opt/no-opt, linked/native and source-tree regressions, run focused normal
+   checks, update architecture and commit the coherent PARSE implementation.
+5. **LC-STEP-81E (`LC-81-07`; complete):** run the
+   grouped final-input normal/sanitizer/isolation checkpoint once, reconcile
+   every LC-81 criterion and close LC-I-19 only on verified evidence.
+
+**LC-STEP-81A review checkpoint, 2026-10-06.** Guarded Regina probes in
+`cmake-build-debug/levelc_parse_reference/parse_sources.log`,
+`parse_input.log`, `parse_source_mode.log`, `parse_var_shapes.log` and
+`parse_arg_frames.log` show that non-ARG comma segments receive null,
+bare VALUE WITH uses null, PULL consumes the selected queue, LINEIN and
+EXTERNAL bypass it for successive piped input lines, UPPER applies before
+templates, VAR accepts stem/compound sources and snapshots before overwrite,
+and internal calls preserve the programme's SOURCE mode. The compiler's
+pre-change `prechange_*.log` probes accept only one nonempty VAR/VALUE
+template, reject ARG/PULL/SOURCE/LINEIN/VERSION and empty/comma VALUE at
+lowering, and reject EXTERNAL/NUMERIC at the grammar's 25.12 boundary.
+`RexxClassicConfig` already owns the PULL queue route; `rxfnsb` has LINEIN,
+SOURCEINFO and VERSION facilities. SOURCEINFO currently reports COMMAND,
+so the programme-root activation must supply SUBROUTINE mode for admitted
+signed external CALL and retain FUNCTION mode for a later external function
+entry. No linker or VM product edit is needed for the
+reviewed source route. Complete error/reference inventory before
+LC-STEP-81A is marked complete.
+
+**LC-STEP-81B/81C in-progress evidence, 2026-10-06.** On existing grammar
+sources, the lowerer now validates one arbitrary template list and routes
+ARG, PULL, LINEIN, SOURCE, VERSION, VALUE and VAR through the shared
+`parseplan` executor. ARG preserves case unless UPPER is written; other
+sources capture once and apply null to later comma segments. The config
+adapter reads default input separately from the selected queue, and source
+metadata uses the current programme root's entry mode without a VM or linker
+product change. Permanent `levelc_parse_whole_{opt,noopt}` and
+`levelc_parse_source_external_{opt,noopt}` pass on the linked toolchain;
+the external test proves COMMAND/SUBROUTINE modes and a source filename
+containing spaces, plus omitted/Unicode-capable external PARSE ARG with an
+embedded NUL. `levelc_parse_source_tree` proves authored PARSE nodes
+lower to `parseplan`; 38 existing PARSE/template/diagnostic regressions pass
+in `cmake-build-debug/levelc_parse_reference/legacy-regressions.log`.
+After the final generated-name cleanup, the normal Debug `rxc rxfnsc` build
+passed in `current-build.log`; the PARSE whole-form, signed external SOURCE,
+source-tree and PULL/PUSH/QUEUE affected checks passed 11/11 in
+`final-code-focused.log`. The earlier 38-template/error receipt is unchanged
+by that generated-name cleanup. The augmented external ARG fixture passes
+opt/no-opt in `external-arg-final.log`. Main, private, exposed and recursive
+PARSE ARG frame cases pass in `whole-frames-final.log` alongside all admitted
+source forms, opt/no-opt and source-tree checks.
+The first directory-path assertion in the external fixture was corrected
+because SOURCEINFO provides the source filename rather than that parent
+directory; the corrected filename-with-spaces test passes. The complete
+error/reference inventory, excluded-extension diagnostics, grouped normal and
+maintained sanitizer/isolation gates, and whole-instruction closure were then
+completed in the checkpoint below. FUNCTION SOURCE mode has frame support but lacks a currently admitted
+external function-expression entry; retain that integration with the open
+external function-expression work rather than claiming it qualified here.
+
+**LC-STEP-81A/81D scope and normal checkpoint, 2026-10-06.** The
+`syntaxhighlight_levelc_parse_excluded_sources` test passes the retained
+25.12/25.13 diagnostics for EXTERNAL and NUMERIC with and without UPPER in
+`cmake-build-debug/levelc_parse_reference/excluded-permanent.log`. The full
+normal Debug Level C run in `levelc-normal-checkpoint.log` completed 700
+cases: 698 passed; two historic tests that expected now-supported PARSE ARG
+programmes to be rejected failed because compilation correctly succeeded.
+Their obsolete registrations and source fixtures were removed. After CMake
+regeneration, the current Level C list has 698 tests, exactly the 698 that
+passed on the same code/test inputs in that retained run. Repeating the whole
+suite would add no new coverage; the removed negatives are replaced by the
+whole PARSE main/local/recursive/exposed linked fixture. No product source
+changed during that test reconciliation.
+
+**LC-I-19 closure checkpoint, 2026-10-06.** The final PARSE fixture adds
+main/local/recursive/exposed ARG, external signed ARG with omitted, Unicode
+and embedded-NUL data, queue versus direct input with bare consumption/EOF,
+stem/compound VAR snapshots, VALUE/UPPER/comma cases, SOURCE/VERSION and
+NOVALUE on a missing VAR source. Its last changed inputs pass opt/no-opt in
+`cmake-build-debug/levelc_parse_reference/novalue-final-normal.log` and the
+source-tree check passes in `source-tree-final.log`. The unchanged 695 other
+current Level C tests passed in `levelc-normal-checkpoint.log`; that run also
+passed the two PARSE cases before their final NOVALUE input addition. The
+maintained macOS ASan `rxc rxfnsc` build passed at
+`cmake-build-debugasan/asan-logs/20261006-135248-build`; focused PARSE,
+ARG/PULL and diagnostics passed 10/10 at `20261006-135645-ctest`, and the
+last changed whole-form fixture passed opt/no-opt at `20261006-135843-ctest`.
+Apple LSan is unavailable; no Linux full sanitizer or release-ready claim is
+made. Level B/G/RexxScript isolation passed 11/11 in
+`cmake-build-debug/levelc_parse_reference/isolation-final.log`. The
+instruction closes on that bounded evidence and Adrian's explicit extension
+scope decision; full Level C, broader host input selection, external function
+expression entry and Release 1 qualification remain open under their owners.
+
 **LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
 The following proposed VM operation is retained only as history; Adrian
 directed the compiler to use ordinary typed imports and prohibited linker or
@@ -6341,14 +6516,14 @@ itself make its Classic shape executable.
 | Parser-emitted family | Current AST/lowering disposition | Structural risk and next proof |
 | --- | --- | --- |
 | Program shell, `REXX_OPTIONS`, top-level `INSTRUCTIONS`, `LABEL` | Slice: one generated body with frame-label entry dispatch and a main wrapper; generated `REXX_OPTIONS` imports and canonical siblings replace the Classic instruction wrapper | Multiple file/label layouts, option placement, source anchors and generated symbol/scope ownership |
-| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY, DROP, assignment, NOP and RETURN instructions closed under their own criteria; bare main EXIT remains a bounded slice | Whole EXIT lifecycle and shared configuration proof remain open under their own rows |
+| `ASSIGN`, `SAY`, `NOP`, `EXIT`, `RETURN`, `LEVELC_DROP` | SAY, DROP, assignment, NOP, RETURN and EXIT instructions closed under their own criteria | Shared configuration and remaining instruction owners remain open under their own rows |
 | `VAR_SYMBOL`/`VAR_TARGET`, strings, integers, expression operators, function calls | Slice: proven scalar/compound pool reads, including empty quoted strings, literal and operator methods, eager Classic `&`/`|`, bounded BIF/local calls including adjacent calls under blank concatenation | More expression shapes, remaining operator order, numeric context and missing-argument behavior remain open |
 | `IF` with condition/THEN/ELSE; simple `DO` with `INSTRUCTIONS` | Whole IF and DO instructions closed; canonical branch/group builders cover accepted nested contexts | Shared condition/TRACE lifecycle and per-arm instruction owners remain open |
 | `SELECT` with `INSTRUCTIONS` of `WHEN` and optional `OTHERWISE` | Whole SELECT instruction closed under LC-AC-68, including ordered/lazy arms and `34.2`/`7.3` errors | Shared condition/TRACE lifecycle remains open |
 | Header-bearing `DO`, `REPEAT`, `FOR`, `WHILE`, `UNTIL`, `BY`, `TO`, `LEAVE`, `ITERATE` | Whole DO, LEAVE and ITERATE instructions closed under LC-AC-65/69/70 with one checked header, shared loop state, compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host proof remains open in their own rows |
-| `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | One generated callable body with frame labels; whole ARG, PROCEDURE, CALL and RETURN instructions closed, including aliases, signed CALL and activation result presence | EXIT, condition producers and full shared lifecycle remain open |
-| `PARSE`, `PULL`, template/pattern/position nodes | Shared VM `parseplan` executes ARG and VAR/VALUE arbitrary target lists, comma templates, compound targets, static/dynamic patterns and positions, with ordered pool writes | Other PARSE sources and complete instruction/error/reference proof open |
-| `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | Open: parser/front end only | Host/queue protocol and side-effect ordering |
+| `LABEL`, `LEVELC_PROCEDURE`, `LEVELC_ARG`, `CALL`, `RETURN` | One generated callable body with frame labels; whole ARG, PROCEDURE, CALL and RETURN instructions closed, including aliases, signed CALL and activation result presence | Condition producers and full shared lifecycle remain open |
+| `PARSE`, `PULL`, template/pattern/position nodes | Whole PARSE and PULL instructions closed: seven agreed PARSE sources and PULL use shared `parseplan` with arbitrary templates, ordered pool writes, source snapshots, errors and opt/no-opt linked proof | EXTERNAL/NUMERIC PARSE extensions are outside initial Level C; host input selection stays open under LC-AC-06 |
+| `LEVELC_ADDRESS`, command expression, `LEVELC_PUSH`, `LEVELC_QUEUE` | PUSH and QUEUE instructions closed; ADDRESS and implicit command remain front-end foundations | Configured environment/stream protocol and RC/condition behavior under LC-I-20/21 |
 | `LEVELC_NUMERIC`, `LEVELC_SIGNAL`, `LEVELC_TRACE`, `LEVELC_INTERPRET`, condition CALL forms | SIGNAL has bounded frame-local direct/VALUE and ON/OFF paths; the other listed instruction families remain front-end or bounded foundations | Complete condition producer/handler, numeric context, dynamic code, trace and error identities remain open under their rows |
 
 The production post-lowering boundary verifier walks every accepted node,
@@ -6387,8 +6562,8 @@ language boundaries; they do not excuse unfinished instruction or host work.
 | Control | LEAVE/ITERATE | Both whole instructions closed under LC-AC-69/70, including named/unnamed transfers and default/STRICTC timing | Shared SIGNAL/TRACE and invocation lifecycle remain open |
 | Control | SELECT/WHEN/OTHERWISE | Whole SELECT instruction closed under LC-AC-68/LC-STEP-69C | Shared condition, TRACE and host lifecycle remain open |
 | Control | NOP | Whole instruction closed under LC-AC-64: childless opt/no-opt, nested SELECT/IF/DO/local, source anchors, invalid `21.1`, normal and linked proof | Shared labeled-clause, TRACE and host text lifecycle remains open under LC-AC-04/08 and later rows |
-| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | One generated body dispatches main/local labels with fresh frames; ARG, PROCEDURE, CALL and RETURN whole-instruction reviews are closed. CALL includes linked and native host signed providers, result presence and delayed handler lifecycle. | EXIT, real condition producers and shared invocation lifecycle retain their own open reviews |
-| PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Shared `parseplan` executes VAR/VALUE and ARG templates with arbitrary targets, comma positions, static/dynamic patterns and positions, compound targets and Classic 26.4 dynamic-position errors | Whole PARSE review, remaining source acquisition, configuration and errors |
+| Routines | labels, local/external CALL and functions, ARG, PROCEDURE EXPOSE, RETURN, EXIT | One generated body dispatches main/local labels with fresh frames; ARG, PROCEDURE, CALL, RETURN and EXIT whole-instruction reviews are closed. CALL includes linked and native host signed providers, result presence and delayed handler lifecycle. | Real condition producers and shared invocation lifecycle retain their own open reviews |
+| PARSE | ARG, PULL, SOURCE, LINEIN, VERSION, VALUE, VAR; templates and UPPER | Whole PARSE instruction closed under LC-81-01–07: one `parseplan` route, all seven agreed sources, arbitrary targets/commas/patterns/positions, frame/source/input behavior and errors, with normal/ASan/isolation evidence | EXTERNAL/NUMERIC are explicitly excluded; host selection and external function-expression entry remain with their owners |
 | Environment | ADDRESS, command clauses, WITH redirection | Front end: parser/validation | Configured command/stream service and RC/condition behavior |
 | Conditions | CALL ON/OFF, SIGNAL, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS, SYNTAX | CALL ON/OFF handler policy and controlled four-condition delivery are closed under LC-I-13; SYNTAX/NOVALUE producers and bounded SIGNAL handler delivery run on the one-frame model | Full SIGNAL review, real producer delivery, messages and cross-instruction lifecycle remain open |
 | Numeric | DIGITS, FORM, FUZZ, decimal arithmetic, rounding, logical conversion | Runtime: `RexxValue` foundation | Full context, limits, signal and optimized parity |
@@ -6417,18 +6592,18 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Whole instruction closed under LC-75-01–06/LC-STEP-75E: legal direct and policy forms/errors, local/BIF/external signed resolution, source-ordered/omitted actuals, RESULT presence/drop, linked and native host Unicode/NUL execution, four-condition delayed delivery, policy replacement, nested isolation, buffered HALT, authored-clause diagnostics and optimized/no-opt parity. The accepted static boundary requires provider visibility at caller compilation and inclusion in the image; an omitted linked provider keeps core `FUNCTION_NOT_FOUND`. | Real ADDRESS, stream and host HALT condition producers and their source identity remain open with their owning instruction/host rows; full Level C qualification remains open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
-| `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
+| `SYN-CLASSIC-EXIT` | EXIT instruction | Whole instruction closed under LC-77-01–06 | Broader host result exchange remains under its own owner |
 | `SYN-CLASSIC-IF` | Classic IF/THEN/ELSE | Whole IF instruction closed under LC-AC-67/LC-STEP-68C | Each arm's instruction and shared condition/TRACE lifecycle remain in their own rows |
 | `SYN-CLASSIC-INTERPRET` | INTERPRET instruction | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ITERATE` | ITERATE instruction | Whole instruction closed under LC-AC-70/LC-STEP-72C | Shared loop/condition/TRACE lifecycle remains in its own rows |
 | `SYN-CLASSIC-LEAVE` | LEAVE instruction | Whole instruction closed under LC-AC-69/LC-STEP-71C | Shared loop/condition/TRACE lifecycle remains in its own rows |
 | `SYN-CLASSIC-NOP` | NOP instruction | Whole instruction closed under LC-AC-64/LC-STEP-66B | Shared label/TRACE and configuration proof remains open under LC-AC-04/08 |
 | `SYN-CLASSIC-NUMERIC` | NUMERIC DIGITS/FORM/FUZZ | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-PARSE` | PARSE variants and templates | Shared `parseplan` supports arbitrary VAR/VALUE and ARG target sequences, comma templates, compound targets, static/dynamic patterns and positions, optional UPPER and selected Classic errors | Whole-instruction review and remaining PARSE source services open |
+| `SYN-CLASSIC-PARSE` | PARSE variants and templates | Whole instruction closed under LC-81-01–07 for ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR, UPPER, shared `parseplan`, errors and final checkpoint | EXTERNAL/NUMERIC excluded by Adrian; host input selection remains under LC-AC-06 |
 | `SYN-CLASSIC-PROCEDURE` | PROCEDURE and EXPOSE | Whole instruction closed under LC-74-01–05: private pool, direct/indirect scalar/stem/exact compound aliases, first-instruction 17.1, source/AST, opt/no-opt and linked proof; CALL and RETURN are closed under LC-I-13/14 | EXIT and full host/condition lifecycle retain their own rows |
-| `SYN-CLASSIC-PULL` | PULL instruction/templates | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-PUSH` | PUSH instruction | Front end only | Execution and reference proof open |
-| `SYN-CLASSIC-QUEUE` | QUEUE instruction | Front end only | Execution and reference proof open |
+| `SYN-CLASSIC-PULL` | PULL instruction/templates | Whole instruction closed under LC-78-01–05 | Host selection API remains under LC-AC-06 |
+| `SYN-CLASSIC-PUSH` | PUSH instruction | Whole instruction closed under LC-79-01–04 | Host selection API remains under LC-AC-06 |
+| `SYN-CLASSIC-QUEUE` | QUEUE instruction | Whole instruction closed under LC-80-01–04 | Host selection API remains under LC-AC-06 |
 | `SYN-CLASSIC-RETURN` | RETURN instruction | Whole instruction closed under LC-76-01–05/LC-STEP-76C: bare/value, main/local/function paths, presence/drop, private/shared pools, once-only Unicode/NUL result, status bridge, anchored errors and direct/linked/native host optimizer parity | EXIT and general host text-result exchange retain separate owners |
 | `SYN-CLASSIC-SAY` | SAY instruction | Whole-instruction closure under LC-AC-57/LC-STEP-88D-1; NUL, source hex ordinals, mapped high characters and non-Latin-1 text pass default, host, optimized/no-opt and linked output | Missing expression/BIF, TRACE and SIGNAL services remain shared work |
 | `SYN-CLASSIC-SELECT` | SELECT/WHEN/OTHERWISE | Whole instruction closed under LC-AC-68/LC-STEP-69C | Shared condition/TRACE lifecycle remains in its own rows |

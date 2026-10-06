@@ -4630,6 +4630,19 @@ if (ENABLE_PARSER_MODE)
     set_tests_properties(syntaxhighlight_levelc_parse_bad_forms PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_parse_excluded_sources
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_parse_excluded_sources.rexx
+            MUST_MATCH
+            "RXC-LC-25\\.12 keywords=.*external"
+            "RXC-LC-25\\.12 keywords=.*numeric"
+            "RXC-LC-25\\.13 keywords=.*external"
+            "RXC-LC-25\\.13 keywords=.*numeric"
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_parse_excluded_sources PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_levelc_if_else
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_if_else.rexx
             MUST_MATCH
@@ -5213,14 +5226,8 @@ function(add_levelc_unsupported_compile_test NAME SOURCE_FILE)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
 
-add_levelc_unsupported_compile_test(levelc_compile_unsupported
-        rexx_src/levelc_unsupported.rexx)
-
 add_levelc_unsupported_compile_test(levelc_slice4_omitted_call_unsupported
         rexx_src/levelc_slice4_omitted_call_unsupported.rexx)
-
-add_levelc_unsupported_compile_test(levelc_slice6_procedure_parse_unsupported
-        rexx_src/levelc_slice6_procedure_parse_unsupported.rexx)
 
 function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -6525,6 +6532,44 @@ foreach(_queue_mode IN ITEMS opt noopt)
             LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 endforeach()
+foreach(_parse_mode IN ITEMS opt noopt)
+    if(_parse_mode STREQUAL "noopt")
+        set(_parse_noopt -DNOOPT=1)
+    else()
+        set(_parse_noopt)
+    endif()
+    add_test(NAME levelc_parse_whole_${_parse_mode}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DNAME=levelc_parse_whole
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_parse_whole.rexx
+            -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_parse_whole.input
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_parse_whole.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            ${_parse_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
+    set_tests_properties(levelc_parse_whole_${_parse_mode} PROPERTIES
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    add_test(NAME levelc_parse_source_external_${_parse_mode}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            ${_parse_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_parse_source_external.cmake)
+    set_tests_properties(levelc_parse_source_external_${_parse_mode} PROPERTIES
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()
 add_test(NAME levelc_call_resolution_result_linked
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>
@@ -7599,6 +7644,18 @@ add_test(NAME levelc_pull_source_tree
         -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_source_tree.cmake)
 set_tests_properties(levelc_pull_source_tree PROPERTIES LABELS "compiler;levelc")
+add_test(NAME levelc_parse_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DNAME=levelc_parse
+        -DSOURCE_NODE=PARSE
+        -DMEMBER=sourceText
+        -DNEEDS_PARSEPLAN=1
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_parse_whole.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_source_tree.cmake)
+set_tests_properties(levelc_parse_source_tree PROPERTIES LABELS "compiler;levelc")
 add_test(NAME levelc_push_source_tree
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>

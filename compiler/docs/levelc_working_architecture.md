@@ -404,7 +404,8 @@ That exit consumes tokens and generates Level B replacement code, including
 direct `parsewords`/`parsepos2` operations and packed `parseplan` descriptors;
 Level C already has a parsed template AST and writes through a separate
 Classic variable pool. It reuses the VM descriptor semantics while preserving
-Level C AST ownership and pool writes. Other PARSE source types remain guarded.
+Level C AST ownership and pool writes. The seven agreed PARSE sources now share
+that route; EXTERNAL and NUMERIC are explicitly outside initial Level C.
 The approved compiled Level C scalar route is Unicode text. ARG uppercases
 Unicode codepoints before applying the same PARSE descriptor; byte literals
 are Latin-1 ordinals in that text. This does not change `RexxValue` binary
@@ -1916,6 +1917,25 @@ Implementation consequences:
   expressions after the parse type.
 - Highlighting should distinguish template targets from expression variables.
 - Lowering must write through the Classic variable pool map.
+
+The current Level C compiler sends admitted `PARSE` forms, `ARG` and `PULL`
+through the same checked `parseplan` executor. `PARSE ARG` reads one
+activation argument per comma segment without an implicit case change;
+non-ARG sources feed the first segment and later comma segments receive null.
+The source is captured before any target write, including `PARSE VAR` on a
+stem or compound name and `PARSE VALUE` with an expression. `RexxClassicConfig`
+owns selected-queue PULL, direct default-input LINEIN, VERSION text and
+SOURCE reconstruction. SOURCEINFO supplies the executing source identity;
+the activation programme root supplies COMMAND or the currently admitted
+signed external SUBROUTINE mode, which internal calls inherit. The frame
+method also recognizes FUNCTION for a future signed external function entry;
+external function-expression lookup is still tracked separately. The SOURCEINFO
+metadata may contain only the source filename, and that filename may have
+spaces. Adrian excluded the non-SAA EXTERNAL and NUMERIC parse sources from
+initial Level C on 2026-10-06; both retain the invalid-type diagnostic.
+EXTERNAL would need a distinct terminal input-buffer service if admitted
+later, while NUMERIC would depend on the current numeric context. Broader
+host stream selection remains under LC-AC-06.
 
 ### 6.11 Variable lists
 

@@ -62,7 +62,7 @@
 #define LEVELC_NOVALUE_EVENT_PREFIX "__rxcp_levelc_novalue_event_"
 #define LEVELC_PARSE_FIELDS_PREFIX "__rxcp_levelc_parse_fields_"
 #define LEVELC_PARSE_SOURCE_PREFIX "__rxcp_levelc_parse_source_"
-#define LEVELC_QUEUE_CONFIG_PREFIX "__rxcp_levelc_queue_config_"
+#define LEVELC_CONFIG_VALUE_PREFIX "__rxcp_levelc_config_value_"
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_DO_STATE_PREFIX "__rxcp_levelc_do_state_"
 #define LEVELC_BIF_TRANSLATE_HELPER "rexxclassicbif_translate"
@@ -1172,19 +1172,12 @@ unsupported:
     return 0;
 }
 
-static int levelc_template_list_statement_supported(ASTNode *stmt,
-                                                    const char **reason_out) {
-    ASTNode *templates;
+static int levelc_template_list_supported(ASTNode *templates,
+                                          const char **reason_out) {
     ASTNode *template_node;
-    if (!stmt || (stmt->node_type != LEVELC_ARG && stmt->node_type != PULL)) {
-        if (reason_out) *reason_out = "missing ARG/PULL statement";
-        return 0;
-    }
-
-    templates = stmt->child;
     if (!templates) return 1;
     if (templates->node_type != TEMPLATES || templates->sibling) {
-        if (reason_out) *reason_out = "unsupported ARG/PULL template list";
+        if (reason_out) *reason_out = "unsupported PARSE template list";
         return 0;
     }
 
@@ -1195,6 +1188,15 @@ static int levelc_template_list_statement_supported(ASTNode *stmt,
         template_node = template_node->sibling;
     }
     return 1;
+}
+
+static int levelc_template_list_statement_supported(ASTNode *stmt,
+                                                    const char **reason_out) {
+    if (!stmt || (stmt->node_type != LEVELC_ARG && stmt->node_type != PULL)) {
+        if (reason_out) *reason_out = "missing ARG/PULL statement";
+        return 0;
+    }
+    return levelc_template_list_supported(stmt->child, reason_out);
 }
 
 static int levelc_call_statement_supported(ASTNode *stmt,
@@ -1648,19 +1650,28 @@ static int levelc_if_statement_supported(ASTNode *stmt,
     return !else_statement || levelc_main_statement_supported(else_statement, plan, reason_out);
 }
 
+typedef enum {
+    LEVELC_PARSE_ARG,
+    LEVELC_PARSE_PULL,
+    LEVELC_PARSE_SOURCE,
+    LEVELC_PARSE_LINEIN,
+    LEVELC_PARSE_VERSION,
+    LEVELC_PARSE_VALUE,
+    LEVELC_PARSE_VAR
+} LevelCParseSource;
+
 static int levelc_parse_shape(ASTNode *stmt,
                               LevelCLowerPlan *plan,
                               ASTNode **source_out,
-                              ASTNode **segment_out,
-                              int *is_value_out,
+                              ASTNode **templates_out,
+                              LevelCParseSource *kind_out,
                               int *upper_out,
                               const char **reason_out) {
     ASTNode *source;
     ASTNode *templates;
-    ASTNode *template_node;
     char *name;
     int upper = 0;
-    int is_value = 0;
+    LevelCParseSource kind;
 
     if (!stmt || stmt->node_type != PARSE) return 0;
     source = stmt->child;
@@ -1672,33 +1683,45 @@ static int levelc_parse_shape(ASTNode *stmt,
         if (!upper) goto unsupported;
         source = source->sibling;
     }
-    templates = source ? source->sibling : NULL;
-    template_node = templates && templates->node_type == TEMPLATES ? templates->child : NULL;
-    if (!source || !templates || templates->sibling || !template_node ||
-        template_node->sibling || !template_node->child) goto unsupported;
+    if (!source) goto unsupported;
+    templates = source->sibling;
+    if (!levelc_template_list_supported(templates, reason_out)) return 0;
 
     if (source->node_type == VAR_REFERENCE) {
         name = levelc_upper_name(source);
         if (!source->child || source->child->node_type != TOKEN ||
             source->child->sibling || !name ||
-            levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR) {
+            levelc_variable_name_kind(name) == LEVELC_VAR_NAME_INVALID) {
             free(name);
             goto unsupported;
         }
         free(name);
+        kind = LEVELC_PARSE_VAR;
     } else if (source->node_type == LITERAL) {
         ASTNode *expr = source->child;
         name = levelc_upper_name(source);
-        is_value = name && strcmp(name, "VALUE") == 0;
+        if (!name) goto unsupported;
+        if (strcmp(name, "ARG") == 0) kind = LEVELC_PARSE_ARG;
+        else if (strcmp(name, "PULL") == 0) kind = LEVELC_PARSE_PULL;
+        else if (strcmp(name, "SOURCE") == 0) kind = LEVELC_PARSE_SOURCE;
+        else if (strcmp(name, "LINEIN") == 0) kind = LEVELC_PARSE_LINEIN;
+        else if (strcmp(name, "VERSION") == 0) kind = LEVELC_PARSE_VERSION;
+        else if (strcmp(name, "VALUE") == 0) kind = LEVELC_PARSE_VALUE;
+        else {
+            free(name);
+            goto unsupported;
+        }
         free(name);
-        if (!is_value || !expr || expr->sibling ||
-            !levelc_expr_supported(expr, plan, reason_out)) goto unsupported;
+        if (kind == LEVELC_PARSE_VALUE) {
+            if (expr && (expr->sibling ||
+                         !levelc_expr_supported(expr, plan, reason_out)))
+                goto unsupported;
+        } else if (expr) goto unsupported;
     } else goto unsupported;
 
-    if (!levelc_template_segment_supported(template_node, reason_out)) return 0;
     if (source_out) *source_out = source;
-    if (segment_out) *segment_out = template_node;
-    if (is_value_out) *is_value_out = is_value;
+    if (templates_out) *templates_out = templates;
+    if (kind_out) *kind_out = kind;
     if (upper_out) *upper_out = upper;
     return 1;
 
@@ -3731,7 +3754,7 @@ static ASTNode *levelc_provider_args(Context *context, ASTNode *anchor) {
 static ASTNode *levelc_build_options(Context *context,
                                      ASTNode *anchor_node,
                                      int needs_translate,
-                                     int needs_signal_policy,
+                                     int needs_rxfnsb,
                                      const char *provider_name,
                                      const LevelCLowerPlan *plan) {
     ASTNode *options;
@@ -3782,7 +3805,7 @@ static ASTNode *levelc_build_options(Context *context,
                                              anchor_node ? anchor_node : options,
                                              "rexxclassicbiftranslate")
         : NULL;
-    import_signal = needs_signal_policy
+    import_signal = needs_rxfnsb
         ? rxcp_remap_create_generated_import(context,
                                              anchor_node ? anchor_node : options,
                                              "rxfnsb")
@@ -3797,7 +3820,7 @@ static ASTNode *levelc_build_options(Context *context,
         !import_config || !import_bifs ||
         (provider_name && !provider_namespace) ||
         (needs_translate && !import_translate) ||
-        (needs_signal_policy && !import_signal) ||
+        (needs_rxfnsb && !import_signal) ||
         (plan && plan->has_novalue_on && !import_condition_event)) return NULL;
 
     add_ast(options, levelb);
@@ -4565,39 +4588,13 @@ fail:
     return 0;
 }
 
-static int levelc_lower_direct_parse(Context *context,
-                                     ASTNode *instructions,
-                                     ASTNode *stmt,
-                                     LevelCLowerPlan *plan,
-                                     const char **reason_out) {
-    ASTNode *source;
-    ASTNode *segment;
-    ASTNode *prelude;
-    ASTNode *value;
-    int is_value;
-    int upper;
-
-    if (!levelc_parse_shape(stmt, plan, &source, &segment,
-                            &is_value, &upper, reason_out)) return 0;
-    prelude = rxcp_remap_create_instruction_builder(context, stmt);
-    if (!prelude) goto fail;
-    value = is_value ? levelc_lower_expr(context, source->child, plan, prelude)
-                     : levelc_pool_value(context, source, plan, prelude);
-    if (!value) goto fail;
-    return levelc_lower_template_segment(context, instructions, stmt, segment,
-                                          value, prelude, plan, upper, reason_out);
-
-fail:
-    if (reason_out) *reason_out = "failed to lower supported PARSE shape";
-    return 0;
-}
-
-static int levelc_lower_arg_instruction(Context *context,
-                                        ASTNode *instructions,
-                                        ASTNode *stmt,
-                                        LevelCLowerPlan *plan,
-                                        const char **reason_out) {
-    ASTNode *templates = stmt ? stmt->child : NULL;
+static int levelc_lower_argument_templates(Context *context,
+                                           ASTNode *instructions,
+                                           ASTNode *stmt,
+                                           ASTNode *templates,
+                                           LevelCLowerPlan *plan,
+                                           int upper,
+                                           const char **reason_out) {
     ASTNode *segment = templates ? templates->child : NULL;
     size_t index = 1;
 
@@ -4623,7 +4620,7 @@ static int levelc_lower_arg_instruction(Context *context,
             : NULL;
         if (!prelude || !value ||
             !levelc_lower_template_segment(context, instructions, stmt, segment,
-                                            value, prelude, plan, 1, reason_out))
+                                            value, prelude, plan, upper, reason_out))
             return 0;
         segment = segment->sibling;
         index++;
@@ -4635,12 +4632,21 @@ fail:
     return 0;
 }
 
-static ASTNode *levelc_queue_config_value(Context *context,
-                                          ASTNode *stmt,
-                                          ASTNode *prelude) {
+static int levelc_lower_arg_instruction(Context *context,
+                                        ASTNode *instructions,
+                                        ASTNode *stmt,
+                                        LevelCLowerPlan *plan,
+                                        const char **reason_out) {
+    return levelc_lower_argument_templates(context, instructions, stmt,
+                                            stmt->child, plan, 1, reason_out);
+}
+
+static ASTNode *levelc_config_value(Context *context,
+                                     ASTNode *stmt,
+                                     ASTNode *prelude) {
     ASTNode *config_ref = levelc_config_ref(context, stmt, VAR_SYMBOL);
     char *config_name = rxcp_remap_create_generated_node_name(
-        LEVELC_QUEUE_CONFIG_PREFIX, stmt);
+        LEVELC_CONFIG_VALUE_PREFIX, stmt);
     ASTNode *config_assignment = config_ref && config_name
         ? rxcp_remap_create_named_assignment(context, stmt, config_name,
             rxcp_remap_create_dereference_expr(context, stmt, config_ref))
@@ -4654,22 +4660,31 @@ static ASTNode *levelc_queue_config_value(Context *context,
     return config;
 }
 
-static int levelc_lower_pull_instruction(Context *context,
+static ASTNode *levelc_config_text_source(Context *context,
+                                          ASTNode *stmt,
+                                          ASTNode *prelude,
+                                          const char *method) {
+    ASTNode *config = levelc_config_value(context, stmt, prelude);
+    ASTNode *text_value = config
+        ? rxcp_remap_create_member_call(context, stmt, config,
+                                        method, NULL, 0) : NULL;
+    ASTNode *args[1] = {text_value};
+    return text_value
+        ? rxcp_remap_create_factory_call(context, stmt,
+                                         LEVELC_REXX_VALUE_CLASS, args, 1)
+        : NULL;
+}
+
+static int levelc_lower_source_templates(Context *context,
                                          ASTNode *instructions,
                                          ASTNode *stmt,
+                                         ASTNode *templates,
+                                         ASTNode *source,
+                                         ASTNode *prelude,
                                          LevelCLowerPlan *plan,
+                                         int upper,
                                          const char **reason_out) {
-    ASTNode *templates = stmt ? stmt->child : NULL;
     ASTNode *segment = templates ? templates->child : NULL;
-    ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
-    ASTNode *config = levelc_queue_config_value(context, stmt, prelude);
-    ASTNode *pulled = config
-        ? rxcp_remap_create_member_call(context, stmt, config,
-                                        "pullText", NULL, 0) : NULL;
-    ASTNode *args[1] = {pulled};
-    ASTNode *source = pulled
-        ? rxcp_remap_create_factory_call(context, stmt,
-                                         LEVELC_REXX_VALUE_CLASS, args, 1) : NULL;
     char *source_name = rxcp_remap_create_generated_node_name(
         LEVELC_PARSE_SOURCE_PREFIX, stmt);
     ASTNode *capture = source && source_name
@@ -4691,7 +4706,7 @@ static int levelc_lower_pull_instruction(Context *context,
             if (!value || !prelude ||
                 !levelc_lower_template_segment(context, instructions, stmt,
                                                 segment, value, prelude, plan,
-                                                1, reason_out)) goto fail;
+                                                upper, reason_out)) goto fail;
         }
         first = 0;
         segment = segment->sibling;
@@ -4701,7 +4716,97 @@ static int levelc_lower_pull_instruction(Context *context,
 
 fail:
     free(source_name);
-    if (reason_out && !*reason_out) *reason_out = "failed to lower PULL instruction";
+    if (reason_out && !*reason_out) *reason_out = "failed to lower PARSE source/template";
+    return 0;
+}
+
+static int levelc_lower_pull_instruction(Context *context,
+                                         ASTNode *instructions,
+                                         ASTNode *stmt,
+                                         LevelCLowerPlan *plan,
+                                         const char **reason_out) {
+    ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
+    ASTNode *source = levelc_config_text_source(context, stmt, prelude,
+                                                 "pullText");
+    return levelc_lower_source_templates(context, instructions, stmt,
+                                          stmt->child, source, prelude,
+                                          plan, 1, reason_out);
+}
+
+static int levelc_lower_direct_parse(Context *context,
+                                     ASTNode *instructions,
+                                     ASTNode *stmt,
+                                     LevelCLowerPlan *plan,
+                                     const char **reason_out) {
+    ASTNode *source;
+    ASTNode *templates;
+    ASTNode *prelude;
+    ASTNode *value = NULL;
+    LevelCParseSource kind;
+    int upper;
+
+    if (!levelc_parse_shape(stmt, plan, &source, &templates,
+                            &kind, &upper, reason_out)) return 0;
+    if (kind == LEVELC_PARSE_ARG)
+        return levelc_lower_argument_templates(context, instructions, stmt,
+                                                templates, plan, upper,
+                                                reason_out);
+
+    prelude = rxcp_remap_create_instruction_builder(context, stmt);
+    if (!prelude) goto fail;
+    switch (kind) {
+        case LEVELC_PARSE_VAR:
+            value = levelc_pool_value(context, source, plan, prelude);
+            break;
+        case LEVELC_PARSE_VALUE:
+            value = source->child
+                ? levelc_lower_expr(context, source->child, plan, prelude)
+                : levelc_blank_rexxvalue(context, stmt);
+            break;
+        case LEVELC_PARSE_PULL:
+            value = levelc_config_text_source(context, stmt, prelude,
+                                               "pullText");
+            break;
+        case LEVELC_PARSE_LINEIN:
+            value = levelc_config_text_source(context, stmt, prelude,
+                                               "lineinText");
+            break;
+        case LEVELC_PARSE_VERSION:
+            value = levelc_config_text_source(context, stmt, prelude,
+                                               "versionText");
+            break;
+        case LEVELC_PARSE_SOURCE: {
+            ASTNode *metadata = rxcp_remap_create_function_call(
+                context, stmt, "sourceinfo", NULL, 0);
+            ASTNode *activation = rxcp_remap_create_named_ref(
+                context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+            ASTNode *mode = activation
+                ? rxcp_remap_create_member_call(context, stmt, activation,
+                                                "programSourceMode", NULL, 0)
+                : NULL;
+            ASTNode *config = levelc_config_value(context, stmt, prelude);
+            ASTNode *args[2] = {metadata, mode};
+            ASTNode *text_value = metadata && mode && config
+                ? rxcp_remap_create_member_call(context, stmt, config,
+                                                "sourceText", args, 2) : NULL;
+            ASTNode *value_args[1] = {text_value};
+            value = text_value
+                ? rxcp_remap_create_factory_call(context, stmt,
+                                                 LEVELC_REXX_VALUE_CLASS,
+                                                 value_args, 1) : NULL;
+            break;
+        }
+        default:
+            break;
+    }
+    if (!value) goto fail;
+    return levelc_lower_source_templates(context, instructions, stmt,
+                                          templates, value, prelude,
+                                          plan, upper, reason_out);
+
+fail:
+    if (reason_out && !*reason_out)
+        *reason_out = "failed to lower supported PARSE shape";
     return 0;
 }
 
@@ -4713,7 +4818,7 @@ static int levelc_lower_queue_write_instruction(Context *context,
     const char *method = stmt->node_type == LEVELC_PUSH
         ? "pushText" : "queueText";
     ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
-    ASTNode *config = levelc_queue_config_value(context, stmt, prelude);
+    ASTNode *config = levelc_config_value(context, stmt, prelude);
     ASTNode *value = stmt->child
         ? levelc_lower_expr(context, stmt->child, plan, prelude)
         : levelc_blank_rexxvalue(context, stmt);
@@ -5620,6 +5725,23 @@ static int levelc_tree_contains_parse_upper(ASTNode *node) {
     return 0;
 }
 
+static int levelc_tree_contains_parse_source(ASTNode *node) {
+    while (node) {
+        if (node->node_type == PARSE && node->child) {
+            ASTNode *source = node->child->node_type == OPTIONS
+                ? node->child->sibling : node->child;
+            char *name = source && source->node_type == LITERAL
+                ? levelc_upper_name(source) : NULL;
+            int found = name && strcmp(name, "SOURCE") == 0;
+            free(name);
+            if (found) return 1;
+        }
+        if (levelc_tree_contains_parse_source(node->child)) return 1;
+        node = node->sibling;
+    }
+    return 0;
+}
+
 static int levelc_tree_contains_arg(ASTNode *node) {
     while (node) {
         if (node->node_type == LEVELC_ARG ||
@@ -6158,7 +6280,9 @@ static int levelc_rewrite_program(Context *context,
         return 0;
     }
     options = levelc_build_options(context, anchor, needs_translate,
-                                   needs_signal_policy, provider_name, plan);
+                                   needs_signal_policy ||
+                                   levelc_tree_contains_parse_source(old_instructions),
+                                   provider_name, plan);
     instructions = rxcp_remap_create_instruction_builder(context, anchor);
     if (!options || !instructions) {
         if (reason_out) *reason_out = "failed to create Level C lowered program shell";
