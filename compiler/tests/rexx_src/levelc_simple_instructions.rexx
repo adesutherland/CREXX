@@ -1,6 +1,6 @@
 options levelc
 address system 'echo hi'
-address value environment with output stream out replace
+address value environment with output replace stream out
 arg first second
 call subroutine 1, 2
 call on error name handler

@@ -77,8 +77,10 @@ response bridge without changing its callback ABI.
 
 An ADDRESS command scalar can contain embedded NUL, but the current shared
 process channel rejects it and the native callback request exposes only a C
-string. The unresolved host-command boundary is tracked under `LC-82-03` in
-the Level C worklist; this instruction is not yet closed.
+string. The host-command boundary is tracked as `LC-HOST-ADDRESS-NUL` in the
+Level C worklist. Adrian approved closing the ADDRESS instruction with this
+host-interface obligation still open; no length-aware native callback ABI or
+VM change was made for that gap.
 
 ## Errors
 

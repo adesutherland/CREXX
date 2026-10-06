@@ -5,8 +5,8 @@ trace "??"
 trace 3
 trace -3
 
-address with input normal output append stream out.
-address with output append stem out.
+address system with input normal output append stream out.
+address system with output append stem out.
 
 say 'F'X
 say '0F 0A'X

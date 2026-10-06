@@ -481,9 +481,15 @@ activity.
   selection; the complete expression is the environment name, not a command
   operand;
 - `WITH INPUT|OUTPUT|ERROR` supports `NORMAL`, `STREAM name`, and `STEM name`,
-  with output/error `APPEND` or `REPLACE`;
+  with output/error `APPEND` or `REPLACE` before the resource kind. A `WITH`
+  clause requires an environment name;
 - command result updates `RC`, `.RC`, and `.RS`, then raises `ERROR` or
   `FAILURE` if enabled.
+
+The compiled ADDRESS scalar retains embedded NUL, but the current process
+channel cannot submit it and the native callback command field is a C string.
+Adrian approved this documented host-command exception for ADDRESS closure;
+`LC-HOST-ADDRESS-NUL` remains open under the shared host-interface criteria.
 
 `CALL`:
 

@@ -9,9 +9,9 @@ Classic REXX compatibility, using the current cREXX compiler front-end style:
 re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
 The first DSLSH syntax-highlighting milestone is complete. Compiled Level C
-also has fourteen closed whole-instruction reviews, including ARG, PROCEDURE,
-CALL and RETURN, and substantial
-PARSE and BIF foundations; the [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
+has twenty closed whole-instruction reviews through ADDRESS, including ARG,
+PROCEDURE, CALL, RETURN and PARSE, and substantial BIF foundations; the
+[worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
 owns their exact status and evidence. The approved one-frame label/SIGNAL
 architecture is the shared ARG/PROCEDURE/CALL foundation. Its reference
 review and canonical frame-control nodes are complete, and the one-body
@@ -1871,9 +1871,9 @@ is a separate grammar and emitter path.
 
 The parser preserves one `LEVELC_ADDRESS` source node for bare swap, named
 selection, `VALUE expression`, and a named environment with an explicit command
-expression. `WITH` carries ordered INPUT, OUTPUT and ERROR connections. Each
-connection has NORMAL, STEM or STREAM shape; OUTPUT and ERROR also accept
-APPEND or REPLACE. Validation rejects duplicate directions, malformed
+expression. `WITH` carries ordered INPUT, OUTPUT and ERROR connections and
+requires an environment name. Each connection has NORMAL, STEM or STREAM shape;
+OUTPUT and ERROR also accept a preceding APPEND or REPLACE. Validation rejects duplicate directions, malformed
 resources and invalid modifiers before lowering. The raw tree retains the
 authored expression and connection structure; no `LEVELC_ADDRESS` node reaches
 the later compiler stages.
