@@ -251,10 +251,10 @@ const char *rxcp_levelc_compile_unsupported_message(void) {
     return "REXX Level C (Classic REXX) compilation does not yet support this program shape";
 }
 
-static int levelc_node_has_diagnostic(ASTNode *node) {
+static int levelc_node_has_error(ASTNode *node) {
     while (node) {
-        if (node->node_type == ERROR || node->node_type == WARNING) return 1;
-        if (node->child && levelc_node_has_diagnostic(node->child)) return 1;
+        if (node->node_type == ERROR) return 1;
+        if (node->child && levelc_node_has_error(node->child)) return 1;
         node = node->sibling;
     }
     return 0;
@@ -1885,6 +1885,20 @@ static int levelc_statement_supported(ASTNode *stmt,
     if (stmt->node_type == LEVELC_ADDRESS) {
         LevelCAddressShape shape;
         if (!levelc_address_shape(stmt, plan, &shape, reason_out)) return 0;
+        if (plan) plan->has_address = 1;
+        return 1;
+    }
+    if (stmt->node_type == IMPLICIT_CMD) {
+        ASTNode *expression = stmt->child;
+        ASTNode *warning = expression ? expression->sibling : NULL;
+        if (!expression || (warning &&
+            (warning->node_type != TOKEN || warning->sibling ||
+             !warning->child || warning->child->node_type != WARNING ||
+             warning->child->sibling))) {
+            if (reason_out) *reason_out = "invalid implicit command source shape";
+            return 0;
+        }
+        if (!levelc_expr_supported(expression, plan, reason_out)) return 0;
         if (plan) plan->has_address = 1;
         return 1;
     }
@@ -5186,6 +5200,42 @@ static int levelc_append_address_syntax(Context *context,
     return 1;
 }
 
+static ASTNode *levelc_address_command_factory(Context *context,
+                                                ASTNode *source,
+                                                ASTNode *environment,
+                                                ASTNode *command) {
+    ASTNode *receiver;
+    ASTNode *args[4];
+    receiver = levelc_pool_ref(context, source, VAR_SYMBOL);
+    args[0] = receiver ? rxcp_remap_create_reference_expr(
+        context, source, receiver) : NULL;
+    receiver = rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    args[1] = receiver ? rxcp_remap_create_reference_expr(
+        context, source, receiver) : NULL;
+    args[2] = environment;
+    args[3] = command;
+    return args[0] && args[1] && args[2] && args[3]
+        ? rxcp_remap_create_factory_call(context, source,
+            "RexxClassicAddressCommand", args, 4) : NULL;
+}
+
+static int levelc_append_address_run(Context *context,
+                                     ASTNode *instructions,
+                                     ASTNode *source,
+                                     const char *command_name) {
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, source, VAR_SYMBOL, command_name);
+    ASTNode *operation = receiver ? rxcp_remap_create_member_call_statement(
+        context, source, receiver, "run", NULL, 0) : NULL;
+    if (!operation) return 0;
+    add_ast(instructions, operation);
+    return levelc_append_address_syntax(context, instructions, source,
+                                       command_name) &&
+           levelc_append_address_condition(context, instructions, source,
+                                           command_name);
+}
+
 static int levelc_lower_address_instruction(Context *context,
                                             ASTNode *instructions,
                                             ASTNode *stmt,
@@ -5196,7 +5246,7 @@ static int levelc_lower_address_instruction(Context *context,
     ASTNode *receiver;
     ASTNode *operation;
     ASTNode *environment;
-    ASTNode *args[4];
+    ASTNode *args[1];
     ASTNode *command;
     ASTNode *head;
     char *command_name = NULL;
@@ -5219,18 +5269,8 @@ static int levelc_lower_address_instruction(Context *context,
                                       plan, prelude, 0);
         command_name = rxcp_remap_create_generated_node_name(
             "__rxcp_levelc_address_command_", stmt);
-        receiver = levelc_pool_ref(context, stmt, VAR_SYMBOL);
-        args[0] = receiver ? rxcp_remap_create_reference_expr(
-            context, stmt, receiver) : NULL;
-        receiver = rxcp_remap_create_named_ref(
-            context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
-        args[1] = receiver ? rxcp_remap_create_reference_expr(
-            context, stmt, receiver) : NULL;
-        args[2] = environment;
-        args[3] = command;
-        operation = args[0] && args[1] && args[2] && args[3]
-            ? rxcp_remap_create_factory_call(context, stmt,
-                "RexxClassicAddressCommand", args, 4) : NULL;
+        operation = levelc_address_command_factory(context, stmt,
+                                                   environment, command);
         operation = operation && command_name
             ? rxcp_remap_create_named_assignment(
                 context, stmt, command_name, operation) : NULL;
@@ -5261,16 +5301,8 @@ static int levelc_lower_address_instruction(Context *context,
                 method, plan, connection_prelude)) goto fail;
     }
     if (shape.command) {
-        receiver = rxcp_remap_create_named_ref(
-            context, stmt, VAR_SYMBOL, command_name);
-        operation = receiver ? rxcp_remap_create_member_call_statement(
-            context, stmt, receiver, "run", NULL, 0) : NULL;
-        if (!operation) goto fail;
-        add_ast(instructions, operation);
-        if (!levelc_append_address_syntax(
-                context, instructions, stmt, command_name)) goto fail;
-        if (!levelc_append_address_condition(
-                context, instructions, stmt, command_name)) goto fail;
+        if (!levelc_append_address_run(context, instructions, stmt,
+                                       command_name)) goto fail;
     }
     free(command_name);
     return 1;
@@ -5279,6 +5311,60 @@ fail:
     free(command_name);
     if (reason_out && !*reason_out)
         *reason_out = "failed to lower supported ADDRESS instruction";
+    return 0;
+}
+
+static int levelc_lower_implicit_command(Context *context,
+                                          ASTNode *instructions,
+                                          ASTNode *stmt,
+                                          LevelCLowerPlan *plan,
+                                          const char **reason_out) {
+    ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
+    ASTNode *command = prelude ? levelc_address_text(
+        context, stmt->child, plan, prelude, 0) : NULL;
+    char *text_name = rxcp_remap_create_generated_node_name(
+        "__rxcp_levelc_command_text_", stmt);
+    char *command_name = rxcp_remap_create_generated_node_name(
+        "__rxcp_levelc_address_command_", stmt);
+    ASTNode *capture = command && text_name
+        ? rxcp_remap_create_named_assignment(
+            context, stmt, text_name, command) : NULL;
+    ASTNode *receiver;
+    ASTNode *environment;
+    ASTNode *operation;
+
+    if (!prelude || !capture || !command_name) goto fail;
+    rxcp_remap_append_builder_children(instructions, prelude);
+    /* ANSI evaluates the command expression before copying ACTIVE. */
+    add_ast(instructions, capture);
+    receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    environment = receiver ? rxcp_remap_create_member_call(
+        context, stmt, receiver, "addressEnvironment", NULL, 0) : NULL;
+    command = rxcp_remap_create_named_ref(context, stmt, VAR_SYMBOL, text_name);
+    operation = levelc_address_command_factory(context, stmt,
+                                               environment, command);
+    operation = operation ? rxcp_remap_create_named_assignment(
+        context, stmt, command_name, operation) : NULL;
+    if (!operation) goto fail;
+    add_ast(instructions, operation);
+    receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, command_name);
+    operation = receiver ? rxcp_remap_create_member_call_statement(
+        context, stmt, receiver, "useActiveConnections", NULL, 0) : NULL;
+    if (!operation) goto fail;
+    add_ast(instructions, operation);
+    if (!levelc_append_address_run(context, instructions, stmt,
+                                   command_name)) goto fail;
+    free(text_name);
+    free(command_name);
+    return 1;
+
+fail:
+    free(text_name);
+    free(command_name);
+    if (reason_out && !*reason_out)
+        *reason_out = "failed to lower implicit command";
     return 0;
 }
 
@@ -5680,6 +5766,9 @@ static int levelc_lower_statement(Context *context,
     if (stmt->node_type == LEVELC_ADDRESS)
         return levelc_lower_address_instruction(context, instructions, stmt,
                                                 plan, reason_out);
+    if (stmt->node_type == IMPLICIT_CMD)
+        return levelc_lower_implicit_command(context, instructions, stmt,
+                                             plan, reason_out);
     if (stmt->node_type == IF) {
         return levelc_lower_if_statement(context, instructions, stmt, plan,
                                          procedure, in_procedure, reason_out);
@@ -6964,8 +7053,8 @@ int rxcp_levelc_lower_to_canonical(Context *context, const char **reason_out) {
         return 0;
     }
 
-    if (levelc_node_has_diagnostic(context->ast)) {
-        if (reason_out) *reason_out = "source diagnostics present";
+    if (levelc_node_has_error(context->ast)) {
+        if (reason_out) *reason_out = "source errors present";
         return 0;
     }
 

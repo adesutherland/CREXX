@@ -25,13 +25,15 @@ exact compound aliases and private-pool lifecycle. SIGNAL remains open;
 CALL closed under the accepted static provider boundary, and RETURN and EXIT
 closed on the shared activation and implicit-main path.
 PARSE closed on the shared template engine and its seven agreed sources;
-`LC-I-20` ADDRESS closed 2026-10-06 with the approved embedded-NUL
-host-command exception recorded as `LC-HOST-ADDRESS-NUL`. `LC-I-21` implicit
-command is the active whole-instruction review; `LC-I-22`–`LC-I-25`
-remain open. The full
+`LC-I-20` ADDRESS and `LC-I-21` implicit command closed 2026-10-06 with the
+approved embedded-NUL host-command exception recorded as
+`LC-HOST-ADDRESS-NUL`. `LC-I-22` NUMERIC is the active whole-instruction
+review; `LC-I-23`–`LC-I-25` remain open. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
-open even where a supporting slice or helper passes. The final-input normal
-Debug Level C checkpoint for the whole RETURN review passed 662/662 with
+open even where a supporting slice or helper passes. The latest grouped normal
+Debug Level C checkpoint passed 724/724 and matched focused macOS ASan passed
+27/27 for ADDRESS plus implicit command. The earlier normal Debug Level C
+checkpoint for the whole RETURN review passed 662/662 with
 process memory monitoring. Focused macOS ASan passed 42/42 and final-input
 Level B/G/RexxScript isolation passed 11/11.
 `LC-I-15`–`LC-I-18` closed at the grouped 2026-10-06 checkpoint: normal Debug
@@ -1697,7 +1699,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-18 QUEUE — closed 2026-10-06 | LC-STEP-80A–80D complete | `LC-80-01–04`: optional expression/bare null, source/errors, FIFO tail and PUSH/PULL interaction pass after shared rxfnsb active-count repair and grouped qualification. Host selection API remains under LC-AC-06. |
 | LC-I-19 PARSE — closed 2026-10-06 | LC-STEP-81A–81E complete | `LC-81-01–07`: all seven agreed sources, UPPER, arbitrary/comma templates, patterns, positions, errors, source services and frame behavior pass one shared executor and qualified checkpoint. EXTERNAL and NUMERIC are explicitly outside initial Level C scope. |
 | LC-I-20 ADDRESS — closed 2026-10-06 | LC-STEP-82A–82E complete | Selection/swap/transient command, WITH resources, frame state, RC/conditions and configured host path pass opt/no-opt, linked, callback and grouped qualification. The approved embedded-NUL host-command exception remains open as `LC-HOST-ADDRESS-NUL` under `LC-AC-06`. |
-| LC-I-21 implicit command | LC-STEP-83 | Command clause evaluation, host execution, results and conditions; ADDRESS. |
+| LC-I-21 implicit command — closed 2026-10-06 | LC-STEP-83A–83D complete | Expression-only commands evaluate once, then use the active invocation's ADDRESS environment and lasting connections through the shared adapter. Forms/errors, source warnings, linked opt/no-opt, nested/external and native host conditions passed grouped normal and focused sanitizer checks. `LC-HOST-ADDRESS-NUL` remains open under LC-AC-06. |
 | LC-I-22 NUMERIC | LC-STEP-84 | DIGITS/FORM/FUZZ defaults, validation, context lifetime and arithmetic effects; shared value semantics. |
 | LC-I-23 SIGNAL | LC-STEP-85 | Direct/VALUE branch and ON/OFF conditions, labels, loop-state clearing and delivery; condition lifecycle. |
 | LC-I-24 TRACE | LC-STEP-86 | Options, skip/inhibit, interactive and source/result/command tracing; clause hooks and host output. |
@@ -4985,37 +4987,72 @@ retain their own behavior. The approved `LC-HOST-ADDRESS-NUL` exception applies
 to this same host transport and remains open under `LC-AC-06`. Full Level C and
 Release 1 criteria remain open until separately qualified.
 
-1. **LC-83-01 — forms, ambiguity and errors (open):** inventory string-literal,
+1. **LC-83-01 — forms, ambiguity and errors (closed 2026-10-06):** inventory string-literal,
    variable, compound, concatenated and function-result command expressions,
    their parser tree and warning policy, malformed expressions, assignment
    precedence and nested IF/DO/SELECT/local placement. Verify reference probes,
    source diagnostics and optimized/no-opt compilation.
-2. **LC-83-02 — selected-environment execution (open):** capture the expression
+2. **LC-83-02 — selected-environment execution (closed 2026-10-06):** capture the expression
    once before the request, use the active frame's environment and lasting
    connections without changing either, and preserve selection across local,
    recursive and signed external calls. Verify opt/no-opt, linked and callback
    cases against ADDRESS state queries and output resources.
-3. **LC-83-03 — completion and conditions (open):** reuse the explicit ADDRESS
+3. **LC-83-03 — completion and conditions (closed 2026-10-06):** reuse the explicit ADDRESS
    response path for RC/.RC/.RS, ERROR/FAILURE and NOTREADY, with causing-clause
    source identity, normal completion and nonzero status. Verify signal and
    delayed-call handlers, built-in/unknown/native environments and Unicode
    command text; keep `LC-HOST-ADDRESS-NUL` visibly open.
-4. **LC-83-04 — one lowering path and closure (open):** no independent implicit
+4. **LC-83-04 — one lowering path and closure (closed 2026-10-06):** no independent implicit
    host dispatch or surviving Level C command node; inspect raw/canonical AST
    and RXAS, run focused normal and shared-consumer checks, the relevant normal
    correctness suite at the grouped checkpoint, and focused maintained
    sanitizer evidence. Document the result and commit the coherent instruction
    increment before advancing to NUMERIC.
 
-1. **LC-STEP-83A (`LC-83-01–03`; pending):** review Classic reference and parser
+1. **LC-STEP-83A (`LC-83-01–03`; completed 2026-10-06):** review Classic reference and parser
    forms, existing exit fallback and ADDRESS adapter; retain counterexamples.
-2. **LC-STEP-83B (`LC-83-01–04`; pending; depends on 83A):** validate the source
+2. **LC-STEP-83B (`LC-83-01–04`; completed 2026-10-06; depends on 83A):** validate the source
    command node and lower it through the one ADDRESS adapter and frame state.
-3. **LC-STEP-83C (`LC-83-01–03`; pending; depends on 83B):** add full valid/error,
+3. **LC-STEP-83C (`LC-83-01–03`; completed on focused evidence 2026-10-06; depends on 83B):** add full valid/error,
    nested, host, source-tree and linked opt/no-opt evidence with focused checks.
-4. **LC-STEP-83D (`LC-83-04`; pending; depends on 83C):** run the required grouped
+4. **LC-STEP-83D (`LC-83-04`; completed 2026-10-06; depends on 83C):** run the required grouped
    normal/sanitizer and cross-consumer checks on final inputs, reconcile every
    criterion, update docs and commit the whole-instruction result.
+
+The [ANSI command rule](https://www.rexxla.org/rexxlang/standards/j18pub.pdf)
+evaluates the expression before copying ACTIVE environment and connections,
+then uses the same `CommandIssue` operation as an explicit ADDRESS command.
+Regina probes confirmed a lasting SYSTEM output stem for literal and variable
+commands, RC 30 for an unknown selected environment, and blank concatenation
+for `name (expression)`. The parser now accepts a leading adjacent
+`name(args)` as a function term and uses its existing adjacency check for the
+spaced form. Authored `IMPLICIT_CMD` and its non-string source warning survive
+source validation; errors remain fatal. Lowering captures the command text
+once before reading the frame's selected environment, copies the active
+connections into `RexxClassicAddressCommand`, and shares explicit ADDRESS
+factory, run, SYNTAX and condition emission. No linker, VM, callback ABI or
+Level B/G exit path changed.
+
+The final-input normal Debug product build passed at
+`/tmp/crexx-implicit-final-product-build.LbTaFj`. Focused Debug CTest passed
+27/27 at `/tmp/crexx-implicit-final-focused.SM0gtL`: linked opt/no-opt
+literal, variable, compound, concatenated, Unicode, function-result, spaced
+parenthesis, IF/SELECT/DO, local/recursive and external command cases;
+source-tree and invalid syntax; exact INPUT STREAM/STEM, native callback,
+RC/.RC/.RS, ERROR/FAILURE/NOTREADY with source identity; and Level B/G shared
+ADDRESS/exit isolation. The `LC-HOST-ADDRESS-NUL` exception applies to the
+shared transport and remains open. The grouped normal Debug Level C checkpoint
+passed 724/724 on these final code and test inputs
+(`/tmp/crexx-implicit-levelc-normal.AiNKOs`), with zero compiler, assembler,
+linker, VM or CTest child processes afterward. The maintained macOS ASan
+build passed at `cmake-build-debugasan/asan-logs/20261006-171254-build`, and
+the matched focused ASan CTest passed 27/27 at
+`cmake-build-debugasan/asan-logs/20261006-171704-ctest`. Apple LSan is
+unavailable, and overnight Linux/full-platform sanitizer assurance remains
+separate. No first-party sanitizer finding appeared. `LC-83-01–04` and
+LC-I-21 close. `LC-AC-01/04/06/08/58/59`, the approved
+`LC-HOST-ADDRESS-NUL` host obligation, and full Level C and Release 1
+qualification remain open.
 
 **LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
 The following proposed VM operation is retained only as history; Adrian

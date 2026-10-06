@@ -486,9 +486,19 @@ activity.
 - command result updates `RC`, `.RC`, and `.RS`, then raises `ERROR` or
   `FAILURE` if enabled.
 
+An expression-only command clause evaluates its text once, then uses the
+active invocation's environment and lasting INPUT, OUTPUT and ERROR
+connections. Literal, variable, compound, concatenated and function-result
+expressions use the same ADDRESS command adapter, status mapping and condition
+delivery. A clause-leading symbol that is not an assignment carries the
+`RXC-LC-IMPLICIT_ADDRESS` source warning; compilation continues. Adjacent
+`name(args)` is a function term, while `name (expression)` is blank
+concatenation.
+
 The compiled ADDRESS scalar retains embedded NUL, but the current process
 channel cannot submit it and the native callback command field is a C string.
-Adrian approved this documented host-command exception for ADDRESS closure;
+Adrian approved this documented host-command exception for ADDRESS and implicit
+command closure;
 `LC-HOST-ADDRESS-NUL` remains open under the shared host-interface criteria.
 
 `CALL`:

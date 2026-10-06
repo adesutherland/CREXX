@@ -6654,6 +6654,45 @@ foreach(_address_mode IN ITEMS opt noopt)
                 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
     endif()
 endforeach()
+add_levelc_invalid_compile_test(levelc_implicit_invalid_rhs
+        rexx_src/levelc_implicit_invalid_rhs.rexx "RXC-LC-35.1")
+add_levelc_invalid_compile_test(levelc_implicit_invalid_group
+        rexx_src/levelc_implicit_invalid_group.rexx "RXC-LC-36")
+foreach(_implicit_mode IN ITEMS opt noopt)
+    if(_implicit_mode STREQUAL "noopt")
+        set(_implicit_noopt -DNOOPT=1)
+    else()
+        set(_implicit_noopt)
+    endif()
+    foreach(_implicit_case IN ITEMS whole signal_error)
+        add_test(NAME levelc_implicit_${_implicit_case}_${_implicit_mode}
+                COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXLINK=$<TARGET_FILE:rxlink>
+                -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                -DBINDIR=${CMAKE_BINARY_DIR}/bin
+                -DNAME=levelc_implicit_${_implicit_case}
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_implicit_${_implicit_case}.rexx
+                -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_implicit_${_implicit_case}.expected
+                -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+                ${_implicit_noopt}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
+        set_tests_properties(levelc_implicit_${_implicit_case}_${_implicit_mode} PROPERTIES
+                LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+                CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    endforeach()
+endforeach()
+add_test(NAME levelc_implicit_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_implicit_whole.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_implicit_source_tree.cmake)
+set_tests_properties(levelc_implicit_source_tree PROPERTIES
+        LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+        CREXX_PREP_TARGETS "rxc;library;classlib;rxfnsc")
 add_test(NAME levelc_address_source_tree
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>

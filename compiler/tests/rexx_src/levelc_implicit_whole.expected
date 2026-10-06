@@ -1,0 +1,15 @@
+literal=1/Literal/REPLACE STEM OUT.
+variable=1/Variable
+compound=1/Compound
+joined=1/Joined
+unicode=1/Héllo🙂
+spaced=1/Spaced
+function=1/1/Once
+if=If
+select=Select
+loop=Loop
+local=1/Local/CREXX
+recursive=1/Rec1/CREXX
+unknown=30/30/1/BOGUS
+restored=CREXX/REPLACE STEM OUT.
+append=2/Rec1/Appended

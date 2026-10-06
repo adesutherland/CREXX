@@ -89,6 +89,11 @@ static int editor_command(rxvml_context *ctx,
         response->diagnostic = "native editor reported command error";
         return 0;
     }
+    if (state->calls == 10 && strcmp(request->command, "héllo🙂") == 0) {
+        if (rxvml_address_emit_output(ctx, request, "native:héllo🙂\n") != 0)
+            state->invalid = 1;
+        return 0;
+    }
     state->invalid = 1;
     response->rc = -10;
     return 0;
@@ -127,7 +132,7 @@ int main(void) {
         failed = 1;
         goto done;
     }
-    if (program_rc != 0 || state.calls != 9 || state.invalid) {
+    if (program_rc != 0 || state.calls != 10 || state.invalid) {
         fprintf(stderr, "ADDRESS host result: rc=%d calls=%d invalid=%d\n",
                 program_rc, state.calls, state.invalid);
         failed = 1;

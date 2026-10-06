@@ -14,17 +14,22 @@ address editor 'errstemappend' with error append stem errors.
 if errors.0 <> 2 | errors.2 <> 'err-two' then exit 28
 if rc <> 0 | .rc <> 0 | .rs <> 0 then exit 26
 call on failure name failed
-address editor 'fail'
+address editor
+'fail'
 exit 22
 failed:
 if condition('C') <> 'FAILURE' then exit 23
 if condition('D') <> 'fail' then exit 24
 if rc <> -9 | .rc <> -9 | .rs <> -1 then exit 25
+if sigl <> 18 then exit 33
 call on error name errored
 address editor 'error'
 if rc <> 7 | .rc <> 7 | .rs <> 1 then exit 29
+address editor with output stem implicit.
+'héllo🙂'
+if implicit.0 <> 1 | implicit.1 <> 'native:héllo🙂' then exit 32
 exit 0
 errored:
 if condition('C') <> 'ERROR' | condition('D') <> 'error' then exit 30
-if sigl <> 24 then exit 31
+if sigl <> 26 then exit 31
 return

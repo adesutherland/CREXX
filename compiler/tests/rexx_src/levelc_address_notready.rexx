@@ -1,7 +1,8 @@
 options levelc
 signal on notready name missing
 f = 'missing-levelc-address-input-20261006'
-address system 'cat' with input stream f
+address system with input stream f
+'cat'
 exit 90
 missing:
 say 'notready=' || condition('C') || '/' || condition('D') || '/' || sigl
@@ -15,7 +16,8 @@ exit 91
 output_missing:
 say 'output=' || condition('C') || '/' || condition('D') || '/' || sigl
 signal on syntax name bad_stem
-address crexx 'echo should-not-run' with input stem missing.
+address crexx with input stem missing.
+'echo should-not-run'
 exit 92
 bad_stem:
 say 'stem=' || condition('C') || '/' || condition('D') || '/' || sigl

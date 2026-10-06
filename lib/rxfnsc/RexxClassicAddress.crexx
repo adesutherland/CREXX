@@ -32,8 +32,9 @@ import rexxpool
 import rexxvalue
 
 /**
- * One transient Classic command. Its connections start at NORMAL independently
- * of the invocation's lasting ADDRESS setting; WITH changes this snapshot.
+ * One Classic command. An explicit ADDRESS command starts with NORMAL
+ * connections and applies its transient WITH overrides. An implicit command
+ * copies the active invocation's lasting connections before execution.
  * The existing Level B environment registry owns the actual command request.
  */
 RexxClassicAddressCommand: class
@@ -77,6 +78,14 @@ RexxClassicAddressCommand: class
     state = .RexxAddressState
     assembler link state,selected_state
     call state.setConnection(option, position, type, resource)
+    return
+
+  /** Capture the active invocation's connections for an implicit command. */
+  useActiveConnections: method = .void
+    state = .RexxAddressState
+    activation = dereference activation_ref
+    assembler link state,selected_state
+    call state.copyFrom(activation.addressState())
     return
 
   /** Run the exact command text through the registered environment object. */

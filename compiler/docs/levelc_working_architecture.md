@@ -9,8 +9,9 @@ Classic REXX compatibility, using the current cREXX compiler front-end style:
 re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
 The first DSLSH syntax-highlighting milestone is complete. Compiled Level C
-has twenty closed whole-instruction reviews through ADDRESS, including ARG,
-PROCEDURE, CALL, RETURN and PARSE, and substantial BIF foundations; the
+has twenty-one closed whole-instruction reviews through implicit command,
+including ARG, PROCEDURE, CALL, RETURN and PARSE, and substantial BIF
+foundations; the
 [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
 owns their exact status and evidence. The approved one-frame label/SIGNAL
 architecture is the shared ARG/PROCEDURE/CALL foundation. Its reference
@@ -1873,9 +1874,10 @@ The parser preserves one `LEVELC_ADDRESS` source node for bare swap, named
 selection, `VALUE expression`, and a named environment with an explicit command
 expression. `WITH` carries ordered INPUT, OUTPUT and ERROR connections and
 requires an environment name. Each connection has NORMAL, STEM or STREAM shape;
-OUTPUT and ERROR also accept a preceding APPEND or REPLACE. Validation rejects duplicate directions, malformed
-resources and invalid modifiers before lowering. The raw tree retains the
-authored expression and connection structure; no `LEVELC_ADDRESS` node reaches
+OUTPUT and ERROR also accept a preceding APPEND or REPLACE. Validation rejects
+duplicate directions, malformed resources and invalid modifiers before
+lowering. The raw tree retains the authored expression and connection
+structure; no `LEVELC_ADDRESS` node reaches
 the later compiler stages.
 
 Lowering stores the active and alternate environment and persistent connections
@@ -1891,7 +1893,14 @@ after evaluating a SIGNAL payload so inlined library calls cannot replace the
 authored SIGL. The narrow native callback response bridge carries its existing
 condition and diagnostic fields; the linker and bytecode model are unchanged.
 
-Implicit expression-only command clauses remain the next instruction review.
+An implicit expression-only clause remains an authored `IMPLICIT_CMD` source
+node. Its warning is retained as a source diagnostic and does not prevent
+lowering. The command expression is captured once before the active frame's
+environment and persistent connections are copied. Both command forms create
+`RexxClassicAddressCommand` and share its run, syntax and condition lowering.
+The parser distinguishes a leading `name(args)` function term from
+`name (expression)` blank concatenation by token adjacency. The compiler exit
+path for Level B/G and the RexxScript sandbox remain separate.
 Host-variable anchors such as `:name` and `${name}` are compiler auto-expose
 syntax for ADDRESS handlers; their command meaning belongs to the selected
 environment.

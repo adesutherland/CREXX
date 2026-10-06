@@ -75,6 +75,13 @@ causing ADDRESS clause. Invalid STEM counts signal SYNTAX 54.1 there. A native
 callback's condition and diagnostic are copied by the approved `rxvml`
 response bridge without changing its callback ABI.
 
+An expression-only Classic clause captures the command text once, then copies
+the frame's active environment and lasting connections into the same command
+adapter. It uses the same request, RC/.RC/.RS update, SYNTAX and condition
+delivery as an explicit command. The compiler retains its authored
+`IMPLICIT_CMD` source node and warning before lowering; Level B/G compiler
+exits retain their own path.
+
 An ADDRESS command scalar can contain embedded NUL, but the current shared
 process channel rejects it and the native callback request exposes only a C
 string. The host-command boundary is tracked as `LC-HOST-ADDRESS-NUL` in the

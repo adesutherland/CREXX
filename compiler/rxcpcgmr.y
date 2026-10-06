@@ -517,7 +517,7 @@ static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expressio
 %nonassoc CTK_OTHERWISE.
 %nonassoc CTK_DO.
 %nonassoc CTK_ELSE.
-%left CTK_STRING CTK_INTEGER CTK_DECIMAL CTK_CONST_SYMBOL CTK_VAR_SYMBOL.
+%left CTK_STRING CTK_INTEGER CTK_DECIMAL CTK_CONST_SYMBOL CTK_VAR_SYMBOL CTK_COMMAND_SYMBOL.
 %left CTK_OPEN_BRACKET.
 
 %type bad_expression_start {Token*}
@@ -1435,7 +1435,10 @@ trace_instruction(I) ::= CTK_TRACE(T) CTK_HIGH_PRIORITY_MINUS(B).
 
 command_instruction(I) ::= command_expression(E).
 {
-    I = ast_ft(context, IMPLICIT_CMD);
+    ASTNode *first = levelc_first_implicit_cmd_leaf(E);
+    I = first && first->token
+        ? ast_f(context, IMPLICIT_CMD, first->token)
+        : ast_ft(context, IMPLICIT_CMD);
     add_ast(I, E);
     if (!levelc_implicit_cmd_starts_with_string(E)) {
         ASTNode *W;
@@ -2884,6 +2887,16 @@ unexpected_otherwise(E) ::= CTK_OTHERWISE(T) recovery_instruction(S).
 unexpected_otherwise(E) ::= CTK_OTHERWISE(T).
 {
     E = rxcp_levelc_ast_error(context, "9.2", T);
+}
+
+command_primary_expr(T) ::= CTK_COMMAND_SYMBOL(S) CTK_OPEN_BRACKET(O) levelc_call_args(A) CTK_CLOSE_BRACKET. [CTK_COMMAND_SYMBOL]
+{
+    T = levelc_continuation_call_or_concat(context, S, O, A);
+}
+
+command_primary_expr(T) ::= CTK_COMMAND_SYMBOL(S) CTK_OPEN_BRACKET(O) CTK_CLOSE_BRACKET. [CTK_COMMAND_SYMBOL]
+{
+    T = levelc_continuation_call_or_concat(context, S, O, ast_ft(context, NOVAL));
 }
 
 command_primary_expr(T) ::= CTK_COMMAND_SYMBOL(S).
