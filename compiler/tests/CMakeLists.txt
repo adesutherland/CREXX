@@ -5282,6 +5282,15 @@ add_levelc_invalid_compile_test(levelc_arg_malformed
 add_levelc_invalid_compile_test(levelc_pull_invalid_template
         rexx_src/levelc_pull_invalid_template.rexx
         "RXC-LC-38\\.1" "levelc_pull_invalid_template\\.rexx @ 2:6")
+add_levelc_invalid_compile_test(levelc_push_invalid_expr
+        rexx_src/levelc_push_invalid_expr.rexx
+        "RXC-LC-35\\.1" "levelc_push_invalid_expr\\.rexx @ 2:6")
+add_levelc_invalid_compile_test(levelc_push_invalid_comma
+        rexx_src/levelc_push_invalid_comma.rexx
+        "RXC-LC-35\\.1" "levelc_push_invalid_comma\\.rexx @ 2:9")
+add_levelc_invalid_compile_test(levelc_push_invalid_close
+        rexx_src/levelc_push_invalid_close.rexx
+        "RXC-LC-35\\.1" "levelc_push_invalid_close\\.rexx @ 2:9")
 add_levelc_invalid_compile_test(levelc_arg_missing_positions
         rexx_src/levelc_arg_missing_positions.rexx
         "levelc_arg_missing_positions\\.rexx @ 2:7 - #RXC-LC-38\\.1"
@@ -6450,13 +6459,37 @@ foreach(_pull_mode IN ITEMS opt noopt)
             -DRXLINK=$<TARGET_FILE:rxlink>
             -DRXVM=${CREXX_RXVM_EXECUTABLE}
             -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DNAME=levelc_pull_instruction
             -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_pull_instruction.rexx
             -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_pull_instruction.input
             -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_pull_instruction.expected
             -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
             ${_pull_noopt}
-            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_pull_linked.cmake)
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
     set_tests_properties(levelc_pull_linked_${_pull_mode} PROPERTIES
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()
+foreach(_push_mode IN ITEMS opt noopt)
+    if(_push_mode STREQUAL "noopt")
+        set(_push_noopt -DNOOPT=1)
+    else()
+        set(_push_noopt)
+    endif()
+    add_test(NAME levelc_push_linked_${_push_mode}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DNAME=levelc_push_instruction
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_push_instruction.rexx
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_push_instruction.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            ${_push_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
+    set_tests_properties(levelc_push_linked_${_push_mode} PROPERTIES
             LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 endforeach()
@@ -7526,10 +7559,25 @@ add_test(NAME levelc_pull_source_tree
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>
         -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DNAME=levelc_pull
+        -DSOURCE_NODE=PULL
+        -DMEMBER=pullText
+        -DNEEDS_PARSEPLAN=1
         -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_pull_instruction.rexx
         -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_pull_source_tree.cmake)
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_source_tree.cmake)
 set_tests_properties(levelc_pull_source_tree PROPERTIES LABELS "compiler;levelc")
+add_test(NAME levelc_push_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DNAME=levelc_push
+        -DSOURCE_NODE=LEVELC_PUSH
+        -DMEMBER=pushText
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_push_instruction.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_source_tree.cmake)
+set_tests_properties(levelc_push_source_tree PROPERTIES LABELS "compiler;levelc")
 add_test(NAME levelc_signal_source_tree
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>

@@ -184,6 +184,12 @@ RexxClassicConfig: class
   pullText: method = .string
     return pull()
 
+  /** Insert one text value at the front of the selected data queue. */
+  pushText: method = .void
+    arg text = .string
+    call push text
+    return
+
   isByteProfile: method = .boolean
     return profile_name == "BYTE"
 

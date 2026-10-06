@@ -62,7 +62,7 @@
 #define LEVELC_NOVALUE_EVENT_PREFIX "__rxcp_levelc_novalue_event_"
 #define LEVELC_PARSE_FIELDS_PREFIX "__rxcp_levelc_parse_fields_"
 #define LEVELC_PARSE_SOURCE_PREFIX "__rxcp_levelc_parse_source_"
-#define LEVELC_PULL_CONFIG_PREFIX "__rxcp_levelc_pull_config_"
+#define LEVELC_QUEUE_CONFIG_PREFIX "__rxcp_levelc_queue_config_"
 #define LEVELC_LOOP_PREFIX "__rxcp_levelc_loop_"
 #define LEVELC_DO_STATE_PREFIX "__rxcp_levelc_do_state_"
 #define LEVELC_BIF_TRANSLATE_HELPER "rexxclassicbif_translate"
@@ -1714,6 +1714,10 @@ static int levelc_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS)
         return !stmt->child || levelc_expr_supported(stmt->child, plan, reason_out);
+    if (stmt->node_type == LEVELC_PUSH)
+        return !stmt->child ||
+               (!stmt->child->sibling &&
+                levelc_expr_supported(stmt->child, plan, reason_out));
     if (stmt->node_type == LEVELC_ARG || stmt->node_type == PULL)
         return levelc_template_list_statement_supported(stmt, reason_out);
     if (stmt->node_type == LEVELC_SIGNAL && stmt->child && !stmt->child->sibling) {
@@ -4631,6 +4635,25 @@ fail:
     return 0;
 }
 
+static ASTNode *levelc_queue_config_value(Context *context,
+                                          ASTNode *stmt,
+                                          ASTNode *prelude) {
+    ASTNode *config_ref = levelc_config_ref(context, stmt, VAR_SYMBOL);
+    char *config_name = rxcp_remap_create_generated_node_name(
+        LEVELC_QUEUE_CONFIG_PREFIX, stmt);
+    ASTNode *config_assignment = config_ref && config_name
+        ? rxcp_remap_create_named_assignment(context, stmt, config_name,
+            rxcp_remap_create_dereference_expr(context, stmt, config_ref))
+        : NULL;
+    ASTNode *config = config_name
+        ? rxcp_remap_create_named_ref(context, stmt, VAR_SYMBOL, config_name)
+        : NULL;
+    free(config_name);
+    if (!config_assignment || !config || !prelude) return NULL;
+    add_ast(prelude, config_assignment);
+    return config;
+}
+
 static int levelc_lower_pull_instruction(Context *context,
                                          ASTNode *instructions,
                                          ASTNode *stmt,
@@ -4639,16 +4662,7 @@ static int levelc_lower_pull_instruction(Context *context,
     ASTNode *templates = stmt ? stmt->child : NULL;
     ASTNode *segment = templates ? templates->child : NULL;
     ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
-    ASTNode *config_ref = levelc_config_ref(context, stmt, VAR_SYMBOL);
-    char *config_name = rxcp_remap_create_generated_node_name(
-        LEVELC_PULL_CONFIG_PREFIX, stmt);
-    ASTNode *config_assignment = config_ref && config_name
-        ? rxcp_remap_create_named_assignment(context, stmt, config_name,
-            rxcp_remap_create_dereference_expr(context, stmt, config_ref))
-        : NULL;
-    ASTNode *config = config_name
-        ? rxcp_remap_create_named_ref(context, stmt, VAR_SYMBOL, config_name)
-        : NULL;
+    ASTNode *config = levelc_queue_config_value(context, stmt, prelude);
     ASTNode *pulled = config
         ? rxcp_remap_create_member_call(context, stmt, config,
                                         "pullText", NULL, 0) : NULL;
@@ -4663,8 +4677,7 @@ static int levelc_lower_pull_instruction(Context *context,
         : NULL;
     int first = 1;
 
-    if (!prelude || !config_assignment || !capture) goto fail;
-    add_ast(prelude, config_assignment);
+    if (!prelude || !capture) goto fail;
     add_ast(prelude, capture);
     rxcp_remap_append_builder_children(instructions, prelude);
 
@@ -4683,15 +4696,41 @@ static int levelc_lower_pull_instruction(Context *context,
         first = 0;
         segment = segment->sibling;
     }
-    free(config_name);
     free(source_name);
     return 1;
 
 fail:
-    free(config_name);
     free(source_name);
     if (reason_out && !*reason_out) *reason_out = "failed to lower PULL instruction";
     return 0;
+}
+
+static int levelc_lower_push_instruction(Context *context,
+                                         ASTNode *instructions,
+                                         ASTNode *stmt,
+                                         LevelCLowerPlan *plan,
+                                         const char **reason_out) {
+    ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
+    ASTNode *config = levelc_queue_config_value(context, stmt, prelude);
+    ASTNode *value = stmt->child
+        ? levelc_lower_expr(context, stmt->child, plan, prelude)
+        : levelc_blank_rexxvalue(context, stmt);
+    ASTNode *text_value = value
+        ? rxcp_remap_create_member_call(context, stmt, value,
+                                        "asString", NULL, 0) : NULL;
+    ASTNode *args[1] = {text_value};
+    ASTNode *push = config && text_value
+        ? rxcp_remap_create_member_call_statement(context, stmt, config,
+                                                  "pushText", args, 1)
+        : NULL;
+
+    if (!prelude || !push) {
+        if (reason_out) *reason_out = "failed to lower PUSH instruction";
+        return 0;
+    }
+    rxcp_remap_append_builder_children(instructions, prelude);
+    add_ast(instructions, push);
+    return 1;
 }
 
 static int levelc_append_signal_sigl(Context *context,
@@ -5056,6 +5095,9 @@ static int levelc_lower_statement(Context *context,
     }
     if (stmt->node_type == PULL)
         return levelc_lower_pull_instruction(context, instructions, stmt,
+                                             plan, reason_out);
+    if (stmt->node_type == LEVELC_PUSH)
+        return levelc_lower_push_instruction(context, instructions, stmt,
                                              plan, reason_out);
     if (stmt->node_type == LEVELC_SIGNAL) {
         if (stmt->child && stmt->child->node_type == LEVELC_SIGNAL_VALUE)

@@ -38,6 +38,9 @@ LC-I-16 PULL now has its source, lowering, default-input, template and error
 implementation with focused linked opt/no-opt evidence. Its Level C queue
 interaction and grouped final-input gate remain open while the strict queue
 advances to PUSH and QUEUE.
+LC-I-17 PUSH now has its optional-expression, exact-text and front-insertion
+implementation with focused linked opt/no-opt evidence. Its named-host queue
+selection and the same grouped gate remain open while QUEUE is reviewed.
 
 **2026-10-06 qualification cadence revision.** Adrian directed thicker
 instruction increments and one broad regression/sanitizer checkpoint across
@@ -1689,7 +1692,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-14 RETURN — closed 2026-10-06 | LC-STEP-76A–76C | `LC-76-01–05`: bare/value syntax and anchored errors, one-body local function/subroutine lifecycle, result presence/drop, outermost status through the implicit main and native host, optimized/no-opt direct/linked proof. EXIT and host result exchange remain separately open. |
 | LC-I-15 EXIT — implementation complete, grouped QA open | LC-STEP-77A–77D | Full explicit-EXIT matrix and Regina physical EOF verified in focused Debug; LC-77-06 broad final-input and sanitizer gate remains open. No whole-instruction closure claim yet. |
 | LC-I-16 PULL — implementation complete 2026-10-06; grouped QA open | LC-STEP-78A–78C complete; 78D open | One queue/default-input acquisition and shared PARSE UPPER template executor; bare, word, dot, literal, positional, dynamic and comma forms have focused opt/no-opt and linked proof. Queue interaction awaits PUSH/QUEUE, and grouped normal/sanitizer/isolation qualification and LC-AC-06 host configuration remain open. |
-| LC-I-17 PUSH | LC-STEP-79 | Front-of-queue ordering, optional expression and null value; configured queue. |
+| LC-I-17 PUSH — implementation complete 2026-10-06; grouped QA open | LC-STEP-79A–79C complete; 79D open | Optional expression/bare null, source and error identities, LIFO queue effects, exact text and nested/recursive lifecycle pass focused opt/no-opt linked checks. Named host selection and grouped qualification remain open. |
 | LC-I-18 QUEUE | LC-STEP-80 | Back-of-queue ordering, optional expression and null value; configured queue. |
 | LC-I-19 PARSE | LC-STEP-81 | Every source type, UPPER, arbitrary target/template sequence, static/dynamic patterns and positions, comma templates and errors; one reviewed parse engine plus argument/input/source services. |
 | LC-I-20 ADDRESS | LC-STEP-82 | Select/swap/transient command and WITH redirection, RC and conditions; configured environment protocol. |
@@ -4455,6 +4458,88 @@ full Unicode case mapping. The Level C instruction has not yet been tested
 against queue entries produced by Level C PUSH/QUEUE, and the grouped normal,
 maintained sanitizer and Level B/G/RexxScript isolation gate is open under
 78D. LC-I-16, LC-AC-04/06/08/59 and Release 1 remain open.
+
+**LC-I-17 PUSH plan — vision and intended outcome, 2026-10-06.** A reached
+Classic `PUSH [expression]` evaluates its optional expression once, converts
+the resulting valid-Unicode scalar to text without losing embedded NUL, and
+inserts that value at the front of the selected external data queue. Omission
+inserts one null string. The next PULL sees the new head; local calls share
+the active queue, while untaken branches cause no insertion. Use the same
+`RexxClassicConfig`/`rxfnsb` service path as PULL and the following QUEUE
+review, preserving the host-configuration obligation in LC-AC-06. Keep the
+linker and VM product unchanged. The [IBM PUSH reference](https://www.ibm.com/docs/en/SSLTBW_2.3.0/pdf/ikja300_v2r3.pdf)
+and [data-stack ordering example](https://www.ibm.com/docs/en/zos/2.5.0?topic=stack-exercise-using-data)
+govern the Classic forms and order; the approved Unicode-first scalar model
+governs text representation.
+
+1. **LC-79-01 — source forms and errors (open):** bare and expression PUSH
+   preserve source/AST ownership, clause-context keyword behavior and Classic
+   diagnostics for malformed expression tails. Verify IBM/Regina probes,
+   source/canonical trees, valid continuation and optimized/no-opt compiler
+   errors.
+2. **LC-79-02 — evaluation and text (open):** a reached expression evaluates
+   exactly once before insertion, preserving side effects, empty text,
+   Unicode, Latin-1 mapped ordinals and embedded NUL; bare PUSH inserts an
+   empty string. Verify optimized/no-opt runtime output and exact-length queue
+   round trips without an arbitrary expression or value-size guard.
+3. **LC-79-03 — queue effects and lifecycle (open):** PUSH inserts at the
+   front of the selected queue, preserving existing FIFO-tail entries and
+   order across nested/recursive Classic calls, branches and named queue
+   selection. Verify with PULL and the shipped named-queue service; leave
+   unimplemented stack-buffer/host environment facilities under their owning
+   rows.
+4. **LC-79-04 — coherent implementation and qualification (open):** use one
+   queue configuration route for PULL/PUSH and later QUEUE, with no duplicate
+   storage or VM/linker change; pass focused normal Debug source/error/runtime,
+   optimized/no-opt and linked tests, then commit. Run one grouped normal
+   Level C, maintained sanitizer and Level B/G/RexxScript isolation gate on
+   final PULL/PUSH/QUEUE inputs before closing LC-I-17. Keep LC-AC-06 host
+   configurability and full Level C/Release 1 visibly open.
+
+1. **LC-STEP-79A (`LC-79-01–03`; complete 2026-10-06):** inventory the IBM/Regina forms,
+   parser/validator AST, current `rxfnsb.push()` front insertion, PULL
+   interaction and source/error behavior; retain guarded pre-change probes.
+2. **LC-STEP-79B (`LC-79-01–03`; complete 2026-10-06; depends on 79A):** lower all PUSH forms
+   through the shared queue configuration service, add whole-instruction
+   regression cases and review any repeated compiler-to-config setup with
+   PULL for simplification.
+3. **LC-STEP-79C (`LC-79-04`; complete 2026-10-06; depends on 79B):** run focused normal tests,
+   record exact evidence, update architecture and commit the coherent PUSH
+   increment; then review QUEUE as the next whole instruction.
+4. **LC-STEP-79D (`LC-79-04`; grouped gate):** qualify final shared queue
+   inputs in the grouped normal/sanitizer/isolation checkpoint, reconcile
+   PULL/PUSH evidence, and close LC-I-17 only when its criteria pass.
+
+**LC-I-17 implementation receipt, 2026-10-06.** Regina's guarded reference
+probe (`cmake-build-debug/levelc_pull_reference/push-reference.log`) confirms
+bare null insertion, LIFO order, one function evaluation, untaken IF and 35.1
+for a bad expression. The pre-change compiler stopped at `unsupported main
+statement` in `push-prechange.log`. Parser review found that a surplus comma
+or close parenthesis after a valid PUSH expression was silently dropped. The
+grammar now emits source-anchored 35.1 for those forms, following the same
+clause-boundary rule as EXIT/RETURN; tests cover each form plus `PUSH +`.
+
+The lowerer accepts one optional expression and calls
+`RexxClassicConfig.pushText()` with the evaluated value's exact `.string`
+representation, or `""` when omitted. That method delegates to shipped
+`rxfnsb.push()`. A shared compiler helper now dereferences the configuration
+once for PULL/PUSH, avoiding parallel setup paths. The linked optimized and
+no-opt matrix passed 2/2 and compile errors passed 3/3 in `push-focused.log`;
+source/canonical inspection passed 1/1 in `queue-trees.log`. It covers
+LIFO, bare empty, embedded NUL through the Latin-1 ordinal bridge, Unicode
+text, a called expression exactly once, SELECT and loop arms, and nested
+recursive procedure sharing. PULL's focused suite passed 6/6 after the
+shared helper/test-script refactor in `pull-after-push.log`, and its tree check
+passed again in `queue-trees.log`. The guarded builds/tests report zero
+residual child processes.
+
+The default selected queue is still the existing `rxfnsb` execution-local
+queue; Level C cannot yet choose its named queue through an admitted Classic
+instruction. Queue selection and configurable host ownership remain open
+under LC-AC-06 and the upcoming queue-family review. The grouped normal
+Level C, maintained sanitizer and Level B/G/RexxScript isolation gate is
+pending on final PULL/PUSH/QUEUE inputs. LC-I-17, LC-79-03/04 and full Level
+C/Release 1 remain open.
 
 **LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
 The following proposed VM operation is retained only as history; Adrian

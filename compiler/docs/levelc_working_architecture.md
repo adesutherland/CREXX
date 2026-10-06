@@ -969,6 +969,25 @@ the grouped correctness, sanitizer and isolation qualification are pending
 under LC-STEP-78D. The shared simple uppercase map remains the one described
 above; this work does not change its Unicode mapping policy.
 
+## 2026-10-06 Classic PUSH queue route (grouped QA open)
+
+The parser emits `LEVELC_PUSH` with zero or one expression. Its reviewed
+surplus-comma/close-bracket productions now retain a source-anchored 35.1
+error instead of silently discarding the tail. The lowerer evaluates a reached
+expression once, converts its `RexxValue` to exact-length valid text, and
+calls `RexxClassicConfig.pushText()`; the childless form supplies empty text.
+That method delegates to the existing `rxfnsb.push()`, which inserts at the
+front of the selected execution-local queue. The compiler now uses one
+configuration dereference helper for PULL and PUSH. There is no new queue
+storage, emitter instruction, VM change or linker change.
+
+Focused optimized/no-opt linked evidence covers bare null insertion, LIFO
+order, NUL and mapped Latin-1 round trips through PULL, Unicode text,
+expression side effects, selected/untaken arms, loops and recursive local
+routines. The source/canonical tree inspection confirms the `LEVELC_PUSH`
+node is lowered to the configuration method call. Named host selection and
+the grouped normal/sanitizer/isolation gate remain open in the worklist.
+
 ## 2026-10-03 implementation review: simplify before expansion
 
 This review covers the active Level C parser-to-canonical path, neutral AST

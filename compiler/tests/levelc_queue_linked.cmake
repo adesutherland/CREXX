@@ -1,15 +1,20 @@
-foreach(required RXC RXAS RXLINK RXVM BINDIR SOURCE INPUT EXPECTED BUILD_DIR)
+foreach(required RXC RXAS RXLINK RXVM BINDIR NAME SOURCE EXPECTED BUILD_DIR)
     if(NOT DEFINED ${required})
         message(FATAL_ERROR "Missing ${required}")
     endif()
 endforeach()
 
 if(NOOPT)
-    set(base levelc_pull_instruction_noopt)
+    set(base "${NAME}_noopt")
     set(rxc_flags -n)
 else()
-    set(base levelc_pull_instruction)
+    set(base "${NAME}")
     set(rxc_flags)
+endif()
+if(DEFINED INPUT AND NOT INPUT STREQUAL "")
+    set(input_args INPUT_FILE "${INPUT}")
+else()
+    set(input_args)
 endif()
 
 execute_process(
@@ -37,7 +42,7 @@ if(NOT result EQUAL 0)
 endif()
 execute_process(
         COMMAND "${RXVM}" "${base}_image.rxbin"
-        WORKING_DIRECTORY "${BUILD_DIR}" INPUT_FILE "${INPUT}"
+        WORKING_DIRECTORY "${BUILD_DIR}" ${input_args}
         OUTPUT_VARIABLE output ERROR_VARIABLE error RESULT_VARIABLE result)
 if(NOT result EQUAL 0 OR NOT error STREQUAL "")
     message(FATAL_ERROR "rxvm failed (${result}): ${output}${error}")
@@ -45,5 +50,5 @@ endif()
 file(READ "${EXPECTED}" expected)
 string(REPLACE "\r\n" "\n" output "${output}")
 if(NOT output STREQUAL expected)
-    message(FATAL_ERROR "Unexpected PULL output: ${output}")
+    message(FATAL_ERROR "Unexpected Level C queue output: ${output}")
 endif()
