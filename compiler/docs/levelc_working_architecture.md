@@ -937,15 +937,16 @@ Focused opt/no-opt direct and linked tests already cover main, local,
 recursive, private-pool and function-expression EXIT; later actuals and
 clauses remain unevaluated. Separate tests cover external provider result
 presence, Unicode plus embedded NUL, delayed handler unwind, source-tree
-retention, malformed tails, and native status. LC-I-15 remains open until
-the complete instruction checkpoint is qualified. Adrian chose Regina's
+retention, malformed tails, and native status. At this focused checkpoint
+LC-I-15 was open; the grouped 694/694 normal and 34/34 macOS ASan gate
+later closed it on `09d48617c` code/test inputs. Adrian chose Regina's
 caller-return behavior for physical EOF on 2026-10-06. The existing final
 body RETURN therefore ends only the active internal invocation; top-level
 fallthrough has no result. This expressly differs from the IBM EXIT wording.
 The worklist records the decision and retained reference logs. The broader
 host text-result service remains open.
 
-## 2026-10-06 Classic PULL source and template route (grouped QA open)
+## 2026-10-06 Classic PULL source and template route (grouped QA closed)
 
 The parsed `PULL` node uses the same optional `TEMPLATES` list and checked
 segment shape as `ARG`. The compiler acquires one value through the active
@@ -961,15 +962,15 @@ storage or PULL-specific template executor, and changes no linker or VM
 product code.
 
 The configuration method provides one compiler-side queue acquisition point
-for the later PUSH/QUEUE review. It does not itself supply a native host queue
+shared with PUSH and QUEUE. It does not itself supply a native host queue
 callback; that wider host contract stays open in LC-AC-06. Focused opt/no-opt,
 linked, source-tree and error tests pass for piped input, empty input,
 template variants and nested procedures. Level C queue-produced input and
-the grouped correctness, sanitizer and isolation qualification are pending
-under LC-STEP-78D. The shared simple uppercase map remains the one described
-above; this work does not change its Unicode mapping policy.
+the grouped correctness, sanitizer and isolation qualification passed under
+LC-STEP-78D on `09d48617c` inputs. The shared simple uppercase map remains
+the one described above; this work does not change its Unicode mapping policy.
 
-## 2026-10-06 Classic PUSH queue route (grouped QA open)
+## 2026-10-06 Classic PUSH queue route (grouped QA closed)
 
 The parser emits `LEVELC_PUSH` with zero or one expression. Its reviewed
 surplus-comma/close-bracket productions now retain a source-anchored 35.1
@@ -985,10 +986,11 @@ Focused optimized/no-opt linked evidence covers bare null insertion, LIFO
 order, NUL and mapped Latin-1 round trips through PULL, Unicode text,
 expression side effects, selected/untaken arms, loops and recursive local
 routines. The source/canonical tree inspection confirms the `LEVELC_PUSH`
-node is lowered to the configuration method call. Named host selection and
-the grouped normal/sanitizer/isolation gate remain open in the worklist.
+node is lowered to the configuration method call. The grouped
+normal/sanitizer/isolation gate passed on `09d48617c` inputs; named host
+selection remains open under LC-AC-06.
 
-## 2026-10-06 Classic QUEUE tail route (grouped QA open)
+## 2026-10-06 Classic QUEUE tail route (grouped QA closed)
 
 `LEVELC_QUEUE` shares PUSH's checked optional-expression lowering and the
 compiler's single queue-configuration dereference. A reached expression is
@@ -1007,8 +1009,14 @@ slot ahead of a later queued tail. PUSH now shifts only active entries and
 increments the logical count. A Level B optimized/no-opt functional
 regression covers QUEUE/PULL/PUSH/QUEUE order after consumed slots, and
 the complete Level C queue family passes focused linked optimized/no-opt
-tests. Host-selectable queue/input configuration and the grouped normal,
-sanitizer and isolation checkpoint remain open in the worklist.
+tests. The grouped checkpoint closed EXIT, PULL, PUSH and QUEUE on their
+reviewed instruction contracts: normal Debug Level C 694/694, focused macOS
+ASan 34/34, and Level B/G/RexxScript isolation 11/11 on `09d48617c`
+code/test inputs. The Level B named-queue service and Level C default
+selected-queue execution share the same `rxfnsb` repository. Host-selectable
+queue/input configuration remains open under LC-AC-06; no linker or VM
+product code changed for the queue family. See the grouped closure receipt
+in the worklist for exact logs and process evidence.
 
 ## 2026-10-03 implementation review: simplify before expansion
 
