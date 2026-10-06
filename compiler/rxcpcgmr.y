@@ -1208,6 +1208,22 @@ return_instruction(I) ::= CTK_RETURN(T) expression(E).
     add_ast(I, E);
 }
 
+return_instruction(I) ::= CTK_RETURN(T) expression(E) CTK_COMMA(B) simple_tail(L).
+{
+    I = ast_f(context, RETURN, T);
+    add_ast(I, E);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "35.1", B));
+    if (L) add_ast(I, L);
+}
+
+return_instruction(I) ::= CTK_RETURN(T) expression(E) CTK_CLOSE_BRACKET(B) simple_tail(L).
+{
+    I = ast_f(context, RETURN, T);
+    add_ast(I, E);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "35.1", B));
+    if (L) add_ast(I, L);
+}
+
 return_instruction(I) ::= CTK_RETURN(T).
 {
     I = ast_f(context, RETURN, T);

@@ -1770,7 +1770,7 @@ static int levelc_statement_supported(ASTNode *stmt,
         return 1;
     }
 
-    if (in_procedure && stmt->node_type == RETURN) {
+    if (stmt->node_type == RETURN) {
         if (stmt->child) return levelc_expr_supported(stmt->child, plan, reason_out);
         return 1;
     }
@@ -4974,7 +4974,7 @@ static int levelc_lower_statement(Context *context,
         lowered = levelc_lower_call_statement(context, stmt, plan, prelude);
     } else if (!in_procedure && stmt->node_type == EXIT) {
         lowered = rxcp_remap_create_return_statement(context, stmt);
-    } else if (in_procedure && stmt->node_type == RETURN) {
+    } else if (stmt->node_type == RETURN) {
         lowered = levelc_proc_return_statement(context, stmt, plan, procedure, prelude);
     } else {
         lowered = NULL;
@@ -5002,7 +5002,8 @@ static int levelc_lower_main_statement(Context *context,
                                        const char **reason_out) {
     if (!levelc_lower_statement(context, instructions, stmt, plan,
                                 NULL, 0, reason_out)) return 0;
-    if (stmt->node_type == EXIT || stmt->node_type == LEAVE ||
+    if (stmt->node_type == EXIT || stmt->node_type == RETURN ||
+        stmt->node_type == LEAVE ||
         stmt->node_type == ITERATE) return 1;
     if (!levelc_append_call_trap_checkpoint(context, instructions, stmt, plan)) {
         if (reason_out) *reason_out = "failed to lower CALL clause checkpoint";
@@ -5909,6 +5910,18 @@ static ASTNode *levelc_main_body_call(Context *context, ASTNode *anchor) {
     return call ? rxcp_remap_create_call_statement(context, anchor, call) : NULL;
 }
 
+static ASTNode *levelc_main_status_return(Context *context, ASTNode *anchor) {
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, anchor, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *status = receiver ? rxcp_remap_create_member_call(
+        context, anchor, receiver, "programReturnCode", NULL, 0) : NULL;
+    ASTNode *return_stmt = status
+        ? rxcp_remap_create_return_statement(context, anchor) : NULL;
+    if (!return_stmt) return NULL;
+    add_ast(return_stmt, status);
+    return return_stmt;
+}
+
 static int levelc_rewrite_program(Context *context,
                                   ASTNode *program_file,
                                   ASTNode *old_instructions,
@@ -5988,7 +6001,9 @@ static int levelc_rewrite_program(Context *context,
         return 0;
     }
     body_call = levelc_main_body_call(context, anchor);
-    return_stmt = rxcp_remap_create_return_statement(context, anchor);
+    return_stmt = provider_name
+        ? rxcp_remap_create_return_statement(context, anchor)
+        : levelc_main_status_return(context, anchor);
     if (!body_call || !return_stmt) {
         if (reason_out) *reason_out = "failed to create Level C main body call";
         return 0;

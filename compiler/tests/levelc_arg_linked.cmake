@@ -9,8 +9,12 @@ if(DEFINED NAME)
 else()
     set(base levelc_arg_linked)
 endif()
+set(rxc_flags)
+if(NOOPT)
+    list(APPEND rxc_flags -n)
+endif()
 execute_process(
-        COMMAND "${RXC}" -i "${BINDIR}" -o "${base}" "${SOURCE}"
+        COMMAND "${RXC}" ${rxc_flags} -i "${BINDIR}" -o "${base}" "${SOURCE}"
         WORKING_DIRECTORY "${BUILD_DIR}"
         OUTPUT_VARIABLE output ERROR_VARIABLE error RESULT_VARIABLE result)
 if(NOT result EQUAL 0)

@@ -473,6 +473,10 @@ int rexcpars(Context *context) {
     int do_condition_expr;
     int paren_depth;
     int implicit_signal_value;
+    int pending_continuation;
+    const char *continuation_text;
+    int continuation_line;
+    int continuation_column;
     LevelCTailMode tail_mode;
     LevelCParseStage parse_stage;
     LevelCTailStage tail_stage;
@@ -494,6 +498,10 @@ int rexcpars(Context *context) {
     do_header_first = 0;
     do_condition_expr = 0;
     paren_depth = 0;
+    pending_continuation = 0;
+    continuation_text = NULL;
+    continuation_line = 0;
+    continuation_column = 0;
     tail_mode = LEVELC_TAIL_NONE;
     parse_stage = LEVELC_PARSE_TYPE;
     tail_stage = LEVELC_TAIL_STAGE_HEAD;
@@ -504,6 +512,17 @@ int rexcpars(Context *context) {
         token_type = token->token_type;
 
         if (token_type == TK_EOS || token_type == TK_BADCOMMENT) {
+            if (pending_continuation && token_type == TK_EOS) {
+                Token *trailing = tok_splt(context, token, 0);
+                trailing->token_type = TK_COMMA;
+                trailing->token_string = (char *)continuation_text;
+                trailing->length = 1;
+                trailing->line = continuation_line;
+                trailing->column = continuation_column;
+                context->current_parser_token = trailing;
+                context->next_parser_token = token;
+                RexxC(parser, CTK_COMMA, trailing, context);
+            }
             if (last_parser_token != CTK_EOC) {
                 context->current_parser_token = token;
                 context->next_parser_token = token;
@@ -531,11 +550,18 @@ int rexcpars(Context *context) {
         peek_token = token_f(context, rexcscan(context));
 
         if (token_type == TK_COMMA && peek_token->token_type == TK_EOL) {
+            pending_continuation = 1;
+            continuation_text = token->token_string;
+            continuation_line = token->line;
+            continuation_column = token->column;
             token_r(context);
             token_r(context);
             peek_token = token_f(context, rexcscan(context));
             continue;
         }
+
+        if (token_type != TK_EOL && token_type != TK_EOC)
+            pending_continuation = 0;
 
         if (token_type == TK_EOC &&
             (last_parser_token == CTK_THEN || last_parser_token == CTK_ELSE) &&

@@ -1,0 +1,8 @@
+keyword=8
+shared=雪2;root=雪2
+private=inside;secret=SECRET
+bare=RESULT
+empty=VAR;len=0
+counted=1;count=1
+function=E900;chars=2
+loop=1

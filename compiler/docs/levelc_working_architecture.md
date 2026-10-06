@@ -862,6 +862,54 @@ activation model. SIGNAL remains open for its own complete handler and
 transfer matrix; absent ADDRESS, host/I/O and NUMERIC condition producers
 retain their separate owners and do not by themselves block SIGNAL closure.
 
+## 2026-10-06 Classic RETURN completion
+
+The Level C source tree keeps one `RETURN` node with an optional expression
+in main and called labels. The shared validator and lowerer now accept both
+contexts. Every reached RETURN writes optional result presence into the
+current `RexxActivationArguments` before leaving the one compiled body.
+The expression is evaluated once while any PROCEDURE-private pool is still
+active. A bare subroutine return clears presence, and a reached bare function
+return raises 45.1 at the authored clause; function falloff retains its 44.1
+call-site check. The caller's pool and condition policy are restored by
+returning from the current VM invocation, including nested and recursive
+calls. RETURN inside IF, DO and SELECT uses that same path.
+
+The compiler-generated implicit main wrapper infers `.int` from its final
+status RETURN while retaining the existing hidden argv access. After its body
+returns, it asks the main activation for the current integer program status.
+`RexxActivationArguments.programReturnCode` reads the full Unicode
+`RexxValue` only at this host boundary, giving zero for bare, non-whole or
+out-of-range results and the integer for a representable signed 64-bit whole
+number, including decimal spellings such as `3.0`. The bridge uses a 20-digit
+decimal context for exact range checks before `.int` conversion. This matches the current
+CLI and `rxvml_run` status interface; it does not add a general host text
+result API. The IBM RETURN and EXIT contracts distinguish the Classic text
+result from the host's command-status conversion. Native RXVML proof loads
+the library, class library and `rxfnsc` before the program. A separate
+`crexxsaa_run_source` probe returned zero for `RETURN 7` when only the base
+library was preloaded; explicitly loading those dependencies first returned
+seven. That integration ordering remains an open host-interface obligation.
+No linker or VM code changed for RETURN.
+
+The Lemon source grammar now retains a RETURN expression followed by an
+invalid comma or unmatched closing parenthesis as an anchored 35.1 error
+instead of silently discarding the surplus tail. A comma used for line
+continuation is still removed before parsing. If that continuation reaches
+end of source without another expression token, the parser reintroduces the
+authored comma before its final clause boundary, yielding the same 35.1.
+The permanent source-tree, invalid-form, optimized/no-opt, linked and native
+host cases are registered under LC-I-14 in the worklist. Full EXIT and the
+remaining host-interface contract retain their own owners.
+
+An explicit generated `main:` header removed the compiler's implicit-main
+marker and caused existing ARG/CALL host entries to lose command-line
+arguments. The final wrapper relies on the compiler's implicit main and its
+return-type inference, preserving the hidden argv path. The repaired Debug
+Level C suite passed 662/662; focused macOS ASan passed 42/42 and
+Level B/G/RexxScript isolation passed 11/11. LC-I-14 closure evidence and the
+separate `crexxsaa` load-order obligation are recorded in the worklist.
+
 ## 2026-10-03 implementation review: simplify before expansion
 
 This review covers the active Level C parser-to-canonical path, neutral AST
