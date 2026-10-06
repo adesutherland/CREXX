@@ -38,6 +38,8 @@
 #include "rxcp_emit.h"
 #include "rxcp_source_ext.h"
 #include "rxcp_srcmap.h"
+#include "rxcp_source_tree.h"
+#include "rxcp_levelc_lower.h"
 #include "rxbin.h"
 #include "rxas.h"
 #include "rxpa.h"
@@ -3138,8 +3140,25 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
 
     /* Parse program for real */
     switch (context->level){
+        case LEVELC: {
+            const char *reason = 0;
+            rexcpars(context);
+            if (!context->ast) goto finish;
+            rxcp_levelc_prepare_source_ast(context);
+            source_tree_sync_diagnostics(context);
+            if (rxcp_levelc_validate_recovered_syntax(context))
+                source_tree_sync_diagnostics(context);
+            if (prnterrs(context)) goto finish;
+            context->levelc_routine_mode = 1;
+            if (!rxcp_levelc_lower_to_canonical(context, &reason)) {
+                fprintf(stderr, "%s: %s\n",
+                        rxcp_levelc_compile_unsupported_message(),
+                        reason ? reason : "invalid imported Classic routine");
+                goto finish;
+            }
+            break;
+        }
         case LEVELA:
-        case LEVELC:
         case LEVELD:
             if (parent_context->debug_mode >= 2) fprintf(stderr,"Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
             break;

@@ -79,6 +79,7 @@ struct ASTNode {
     char is_const_arg;
     char is_varg;
     char is_compiler_added;
+    char is_levelc_external_call; /* Generated CALL through the typed external frame ABI. */
     char is_select_dispatch;
     char dispatch_kind;
     char is_implicit_main;

@@ -2,7 +2,7 @@
 
 Status: active Level C architecture design; the original parser design record
 is retained below for implementation history
-Last updated: 2026-10-05
+Last updated: 2026-10-06
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
@@ -122,6 +122,27 @@ Classic invocation matrix passed. Future external CALL/INTERPRET must reuse
 the same activation frame under their own instruction rows. Adrian later
 permitted Level C CALL to reach Level B/G routines through a fixed signature;
 general cross-dialect invocation remains outside this review.
+
+An external direct `CALL` now follows the same source-ordered activation-frame
+builder and optional `RESULT`/`.RESULT` update as a local call. The compiler
+resolves an unquoted local label first, then a shared BIF, then an ordinary
+imported callable; a quoted target bypasses the local label. An unqualified
+external target imports its same-stem namespace; a qualified target imports
+the namespace before its first dot. A Level C source compiled with
+`rxc --levelc-routine` exports a same-stem `.void` entry taking one by-value
+`.RexxActivationArguments`. That wrapper creates a private pool and default
+Classic configuration, then enters the existing one-body frame. A Level B/G
+entry can provide the same signature and set an optional frame return value.
+The ordinary compiler type checker validates the call and maps signature
+errors to `LEVELC_CALL_SIGNATURE`; assembly, linking and VM execution use
+their existing operations. No special linker or VM rule was added.
+
+This is a bounded external CALL path, not whole CALL closure. Static imports
+currently reject a missing direct target during compilation, while Classic
+reference behavior reports 43.1 only if the clause is reached. Delayed
+external handler selection has the same import-timing issue; the existing
+missing local-handler runtime 16.1 path is retained. The CALL worklist owns
+these open compatibility questions and the remaining condition lifecycle.
 
 **Approved 2026-10-04 Unicode-first direction.** Level C visible scalar
 strings are valid text. Existing Level B `.string` and codepoint PARSE/SAY

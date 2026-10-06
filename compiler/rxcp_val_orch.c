@@ -1226,6 +1226,14 @@ int rxcp_contextualize_exact_decimal_literals(Context *context,
     return 1;
 }
 
+/* Keep the ordinary promotion rules for generated Classic CALL arguments;
+ * only their diagnostic identity is specific to the fixed external ABI. */
+static const char *call_argument_conversion_code(ASTNode *node,
+                                                  const char *ordinary_code) {
+    return node && node->parent && node->parent->is_levelc_external_call
+        ? "LEVELC_CALL_SIGNATURE" : ordinary_code;
+}
+
 /* Validates a node promotion is correct adding error nodes if not */
 void validate_node_promotion(Context *context, ASTNode* node) {
     size_t i;
@@ -1313,11 +1321,11 @@ void validate_node_promotion(Context *context, ASTNode* node) {
 
     if (node->value_type == TP_REFERENCE || node->target_type == TP_REFERENCE) {
         if (node->value_type != node->target_type) {
-            mknd_err(node, "TYPE_MISMATCH");
+            mknd_err(node, call_argument_conversion_code(node, "TYPE_MISMATCH"));
             return;
         }
         if (!rxcp_same_reference_value_and_target_type(node)) {
-            mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+            mknd_err(node, call_argument_conversion_code(node, "REFERENCE_TYPE_MISMATCH"));
             return;
         }
     }
@@ -1334,7 +1342,7 @@ void validate_node_promotion(Context *context, ASTNode* node) {
 
     /* Class / Object Support */
     if (node->value_type == TP_OBJECT && node->target_type == TP_STRING) {
-        mknd_err(node, "BAD_CONVERSION");
+        mknd_err(node, call_argument_conversion_code(node, "BAD_CONVERSION"));
     }
     else if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
         if (node->value_type != node->target_type) {
@@ -1343,15 +1351,15 @@ void validate_node_promotion(Context *context, ASTNode* node) {
                 strncpy(debug_str, node->node_string, node->node_string_length);
             }
             /* printf("DEBUG: TYPE_MISMATCH on '%s': value_type=%d, target_type=%d\n", debug_str, node->value_type, node->target_type); */
-            mknd_err(node, "TYPE_MISMATCH");
+            mknd_err(node, call_argument_conversion_code(node, "TYPE_MISMATCH"));
         }
         else if (node->value_class && node->target_class) {
             if (!symbol_name_assignable_to(context, node->value_class, node->target_class)) {
-                mknd_err(node, "TYPE_MISMATCH");
+                mknd_err(node, call_argument_conversion_code(node, "TYPE_MISMATCH"));
             }
         }
         else if (node->value_class || node->target_class) {
-            mknd_err(node, "TYPE_MISMATCH");
+            mknd_err(node, call_argument_conversion_code(node, "TYPE_MISMATCH"));
         }
     }
 }

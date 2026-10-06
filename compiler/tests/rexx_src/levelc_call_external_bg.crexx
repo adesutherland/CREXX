@@ -1,0 +1,9 @@
+options levelb
+namespace levelc_call_external_bg expose typedentry
+import rexxactivation
+import rexxvalue
+
+typedentry: procedure = .void
+  arg frame = .RexxActivationArguments
+  call frame.setReturnValue(.RexxValue('BG-RESULT'))
+  return

@@ -157,6 +157,7 @@ static void help() {
             "  -s source       Source import locations - \";\" delimited list\n"
             "  -i import       Binary import locations - \";\" delimited list\n"
             "  --level level   Default source level when OPTIONS omits one\n"
+            "  --levelc-routine  Compile a Classic source as an exposed callable routine\n"
             "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
             "  --import-rxas   Enable auto-import scanning of .rxas in binary roots\n"
             "  --autoload      Emit packaged-RXBIN autoload hints (default)\n"
@@ -367,6 +368,7 @@ int rxcmain(int argc, char *argv[]) {
     size_t srcmap_cleaned_len = 0;
     const char* filename_extension;
     RexxLevel cli_default_level = UNKNOWN;
+    int levelc_routine_mode = 0;
     char **cli_import_names = 0;
     size_t cli_import_count = 0;
 
@@ -421,6 +423,11 @@ int rxcmain(int argc, char *argv[]) {
                 error_and_exit(2, "Invalid level name after --level");
             }
             cli_default_level = parsed_level;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--levelc-routine") == 0) {
+            levelc_routine_mode = 1;
             continue;
         }
 
@@ -673,6 +680,7 @@ int rxcmain(int argc, char *argv[]) {
     context->cli_default_level = cli_default_level != UNKNOWN ?
                                  cli_default_level :
                                  rxcp_source_default_level_for_extension(context->initial_source_extension);
+    context->levelc_routine_mode = (char)levelc_routine_mode;
     context->cli_import_names = cli_import_names;
     context->cli_import_count = cli_import_count;
 
@@ -798,6 +806,11 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Create Options parser to work out the required language level */
     opt_pars(context);
+    if (context->levelc_routine_mode && context->level != LEVELC) {
+        fprintf(stderr, "--levelc-routine requires Level C source\n");
+        errors = 1;
+        goto finish;
+    }
 
     /* Deallocate memory and reset context */
     free_ast(context);

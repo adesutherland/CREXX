@@ -3068,6 +3068,42 @@ walker_result type_safety_walker(walker_direction direction,
 
 /* Fix up types for function arguments and OP_ARG_VALUE nodes
  * Needs to be done after the procedure arguments have been processed */
+static int levelc_external_call_signature_matches(ASTNode *call) {
+    ASTNode *definition;
+    ASTNode *formals;
+    ASTNode *formal;
+    ASTNode *type;
+    char *name;
+    int matches;
+    int i;
+
+    if (!call || call->value_type == TP_UNKNOWN ||
+        !call->symbolNode || !call->symbolNode->symbol ||
+        sym_nond(call->symbolNode->symbol) == 0) return 0;
+    definition = NULL;
+    for (i = 0; i < sym_nond(call->symbolNode->symbol); i++) {
+        ASTNode *candidate = sym_trnd(call->symbolNode->symbol, i)->node;
+        if (candidate && candidate->node_type == PROCEDURE) {
+            definition = candidate;
+            break;
+        }
+    }
+    formals = definition ? ast_chld(definition, ARGS, 0) : NULL;
+    formal = formals ? formals->child : NULL;
+    type = formal ? ast_type_child(formal) : NULL;
+    if (call->value_type != TP_VOID || !formal || formal->sibling ||
+        formal->is_opt_arg || !formal->child ||
+        formal->child->node_type != VAR_TARGET ||
+        !type || type->node_type != CLASS || !type->node_string) return 0;
+    name = rxcp_normalize_source_symbol_name(type->node_string,
+                                               type->node_string_length, 1, 1);
+    if (!name) return 0;
+    matches = strcmp(name, "rexxactivationarguments") == 0 ||
+              strcmp(name, "rexxactivation.rexxactivationarguments") == 0;
+    free(name);
+    return matches;
+}
+
 walker_result func_type_safety_walker(walker_direction direction,
                                              ASTNode* node,
                                              void *payload) {
@@ -3115,9 +3151,13 @@ walker_result func_type_safety_walker(walker_direction direction,
                         }
                         /* Its not an error for the first NOVAL argument */
                         if (arg_num > 1 || n1->node_type != NOVAL) {
-                            char *arg_text = rxcp_diag_int_string(arg_num);
-                            mknd_err1(n1, "UNEXPECTED_ARGUMENT", "position", arg_text);
-                            free(arg_text);
+                            if (node->is_levelc_external_call) {
+                                mknd_err(n1, "LEVELC_CALL_SIGNATURE");
+                            } else {
+                                char *arg_text = rxcp_diag_int_string(arg_num);
+                                mknd_err1(n1, "UNEXPECTED_ARGUMENT", "position", arg_text);
+                                free(arg_text);
+                            }
                         }
                         else if (n1->node_type == NOVAL) {
                             /* Prune the unwanted NOVAL - the parser grammar just added it */
@@ -3137,9 +3177,13 @@ walker_result func_type_safety_walker(walker_direction direction,
                         if (n1->node_type == NOVAL) {
                             if (n1->sibling) {
                                 /* If n1 is not the last argument then it can't be NOVAL */
-                                char *arg_text = rxcp_diag_int_string(arg_num);
-                                mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text, "name", "...");
-                                free(arg_text);
+                                if (node->is_levelc_external_call) {
+                                    mknd_err(n1, "LEVELC_CALL_SIGNATURE");
+                                } else {
+                                    char *arg_text = rxcp_diag_int_string(arg_num);
+                                    mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text, "name", "...");
+                                    free(arg_text);
+                                }
                             }
                             else {
                                 /* Prune the unwanted NOVAL - the parser grammar just added it */
@@ -3170,10 +3214,14 @@ walker_result func_type_safety_walker(walker_direction direction,
                         if (n1->node_type == NOVAL) {
                             ast_svtn(n1, n2);
                             if (!n1->is_opt_arg) {
-                                char *arg_text = rxcp_diag_int_string(arg_num);
-                                mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text,
-                                          "name", required_argument_name(n2));
-                                free(arg_text);
+                                if (node->is_levelc_external_call) {
+                                    mknd_err(n1, "LEVELC_CALL_SIGNATURE");
+                                } else {
+                                    char *arg_text = rxcp_diag_int_string(arg_num);
+                                    mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text,
+                                              "name", required_argument_name(n2));
+                                    free(arg_text);
+                                }
                             }
                         } else {
                             ast_sttn(n1, n2);
@@ -3213,13 +3261,22 @@ walker_result func_type_safety_walker(walker_direction direction,
                         n1->is_ref_arg = n2->is_ref_arg;
                         n1->is_const_arg = n2->is_const_arg;
                         if (!n1->is_opt_arg) {
-                            char *arg_text = rxcp_diag_int_string(arg_num);
-                            mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text,
-                                      "name", required_argument_name(n2));
-                            free(arg_text);
+                            if (node->is_levelc_external_call) {
+                                mknd_err(n1, "LEVELC_CALL_SIGNATURE");
+                            } else {
+                                char *arg_text = rxcp_diag_int_string(arg_num);
+                                mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text,
+                                          "name", required_argument_name(n2));
+                                free(arg_text);
+                            }
                         }
                         n2 = n2->sibling;
                     }
+                }
+                if (node->is_levelc_external_call && context->is_final_pass &&
+                    !levelc_external_call_signature_matches(node) &&
+                    !ast_hase(node)) {
+                    mknd_err(node, "LEVELC_CALL_SIGNATURE");
                 }
                 break;
 

@@ -6165,6 +6165,24 @@ add_levelc_runtime_slice_test(levelc_call_resolution_result_noopt
         rexx_src/levelc_call_resolution_result.rexx
         "${_levelc_call_resolution_output}" -n)
 foreach(_mode IN ITEMS opt noopt)
+    add_test(NAME levelc_call_external_${_mode}
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/levelc_call_external.py
+                --rxc $<TARGET_FILE:rxc>
+                --rxas $<TARGET_FILE:rxas>
+                --rxlink $<TARGET_FILE:rxlink>
+                --rxvm ${CREXX_RXVM_EXECUTABLE}
+                --bindir ${CMAKE_BINARY_DIR}/bin
+                --sourcedir ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                --workdir ${CMAKE_CURRENT_BINARY_DIR}/levelc_call_external
+                --mode ${_mode})
+    set_tests_properties(levelc_call_external_${_mode} PROPERTIES
+            LABELS "compiler;levelc"
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc"
+            RUN_SERIAL TRUE
+            TIMEOUT 300)
+endforeach()
+foreach(_mode IN ITEMS opt noopt)
     add_test(NAME levelc_call_delayed_handler_${_mode}
             COMMAND ${Python3_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/levelc_call_delayed_injection.py

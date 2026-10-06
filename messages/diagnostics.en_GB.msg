@@ -9,6 +9,7 @@ ARRAY_DIMS_MISMATCH = Array dimensions do not match.
 ARRAY_ELEMENT_TYPE_MISMATCH = Array element type does not match the target type.
 ASSEMBLER_ONLY_LEVELB = Inline assembler is only supported in Level B.
 BAD_CONVERSION = Value cannot be converted to the required type.
+LEVELC_CALL_SIGNATURE = External CALL requires an exposed .void(frame=.RexxActivationArguments) routine.
 BINARY_MEMORY_AT_REQUIRED = Binary memory access requires an at intrinsic.
 BINARY_MEMORY_COMPARE_ARGUMENTS = Binary memory compare intrinsic has an invalid argument list.
 BINARY_MEMORY_COMPARE_NEEDLE_TYPE = Binary memory compare needle has an incompatible type.

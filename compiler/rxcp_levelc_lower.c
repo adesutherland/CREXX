@@ -10,8 +10,8 @@
  * The active lowering accepts only reviewed Classic instruction and
  * expression shapes. The one-body frame, argument activation, variable pool,
  * direct BIF table and condition scaffolding are shared across those shapes.
- * Unreviewed external CALL and delayed CALL ON/OFF still report an explicit
- * unsupported-shape diagnostic until their contracts are implemented.
+ * External CALL uses ordinary typed imports; unreviewed shapes still report
+ * an explicit unsupported-shape diagnostic until their contracts are proved.
  */
 
 #include <ctype.h>
@@ -234,6 +234,8 @@ typedef struct {
     int has_novalue_on;
     LevelCLoopBinding *active_loop;
     uint64_t used_direct_bifs;
+    char **external_imports;
+    size_t external_import_count;
 } LevelCLowerPlan;
 
 typedef enum {
@@ -356,6 +358,9 @@ static void levelc_lower_plan_free(LevelCLowerPlan *plan) {
     free(plan->do_headers);
     free(plan->signal_handlers);
     free(plan->call_handlers);
+    for (i = 0; i < plan->external_import_count; i++)
+        free(plan->external_imports[i]);
+    free(plan->external_imports);
     memset(plan, 0, sizeof(*plan));
 }
 
@@ -981,6 +986,65 @@ static char *levelc_resolve_call_target(ASTNode *call_node,
     return name;
 }
 
+/* Classic external names enter the ordinary lowercase namespace/callable
+ * resolver. An unqualified target names a same-stem import; an explicitly
+ * qualified target imports the namespace before its first dot. */
+static char *levelc_external_callable_name(const char *target,
+                                            char **namespace_out) {
+    char *callable;
+    char *separator;
+    size_t namespace_length;
+
+    if (namespace_out) *namespace_out = NULL;
+    if (!target || !target[0]) return NULL;
+    callable = rxcp_normalize_source_symbol_name(target, strlen(target), 0, 0);
+    if (!callable) return NULL;
+    separator = strchr(callable, '.');
+    namespace_length = separator ? (size_t)(separator - callable) : strlen(callable);
+    if (!namespace_length || (separator && !separator[1])) {
+        free(callable);
+        return NULL;
+    }
+    if (namespace_out) {
+        *namespace_out = rx_strndup(callable, namespace_length);
+        if (!*namespace_out) {
+            free(callable);
+            return NULL;
+        }
+    }
+    return callable;
+}
+
+static int levelc_record_external_import(LevelCLowerPlan *plan,
+                                         const char *target) {
+    char *namespace_name = NULL;
+    char *callable = levelc_external_callable_name(target, &namespace_name);
+    char **imports;
+    size_t index;
+
+    free(callable);
+    if (!namespace_name) return 0;
+    if (!plan) {
+        free(namespace_name);
+        return 1;
+    }
+    for (index = 0; index < plan->external_import_count; index++) {
+        if (strcmp(plan->external_imports[index], namespace_name) == 0) {
+            free(namespace_name);
+            return 1;
+        }
+    }
+    imports = realloc(plan->external_imports,
+                      sizeof(*imports) * (plan->external_import_count + 1));
+    if (!imports) {
+        free(namespace_name);
+        return 0;
+    }
+    plan->external_imports = imports;
+    plan->external_imports[plan->external_import_count++] = namespace_name;
+    return 1;
+}
+
 static int levelc_procedure_tail_supported(ASTNode *procedure_node,
                                            const char **reason_out) {
     ASTNode *child;
@@ -1186,8 +1250,7 @@ static int levelc_call_statement_supported(ASTNode *stmt,
 
     target_name = levelc_resolve_call_target(stmt, plan, &procedure, &bif,
                                               &bif_index);
-    if (target_name) free(target_name);
-    if (!procedure && !bif) {
+    if (!target_name) {
         if (reason_out) *reason_out = "unsupported CALL target";
         return 0;
     }
@@ -1195,17 +1258,35 @@ static int levelc_call_statement_supported(ASTNode *stmt,
     args = stmt->child ? stmt->child->sibling : NULL;
     if (!args) {
         if (bif && plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+        if (!procedure && !bif &&
+            !levelc_record_external_import(plan, target_name)) {
+            free(target_name);
+            if (reason_out) *reason_out = "invalid external CALL target";
+            return 0;
+        }
+        free(target_name);
         return 1;
     }
     if (args->node_type != ARGS || args->sibling || !args->child) {
+        free(target_name);
         if (reason_out) *reason_out = "unsupported CALL argument list";
         return 0;
     }
     for (arg = args->child; arg; arg = arg->sibling) {
         if (levelc_argument_exists(arg) &&
-            !levelc_expr_supported(arg, plan, reason_out)) return 0;
+            !levelc_expr_supported(arg, plan, reason_out)) {
+            free(target_name);
+            return 0;
+        }
     }
     if (bif && plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+    if (!procedure && !bif &&
+        !levelc_record_external_import(plan, target_name)) {
+        free(target_name);
+        if (reason_out) *reason_out = "invalid external CALL target";
+        return 0;
+    }
+    free(target_name);
     return 1;
 }
 
@@ -1682,6 +1763,7 @@ static int levelc_proc_statement_supported(ASTNode *stmt,
 
 static int levelc_collect_lower_plan(ASTNode *instructions,
                                      LevelCLowerPlan *plan,
+                                     int routine_mode,
                                      const char **reason_out) {
     ASTNode *stmt;
     ASTNode *label;
@@ -1743,7 +1825,9 @@ static int levelc_collect_lower_plan(ASTNode *instructions,
 
     stmt = plan->main_first;
     while (stmt && stmt != plan->main_end) {
-        if (!levelc_main_statement_supported(stmt, plan, reason_out)) return 0;
+        if (routine_mode
+            ? !levelc_proc_statement_supported(stmt, plan, reason_out)
+            : !levelc_main_statement_supported(stmt, plan, reason_out)) return 0;
         stmt = stmt->sibling;
     }
 
@@ -2151,6 +2235,27 @@ static int levelc_append_call_actuals(Context *context,
         actual = actual->sibling;
     }
     return 1;
+}
+
+/* Local and imported routines share the same ordered, presence-bearing frame. */
+static char *levelc_prepare_call_activation(Context *context,
+                                            ASTNode *source,
+                                            LevelCLowerPlan *plan,
+                                            ASTNode *actuals,
+                                            int function_call,
+                                            int condition_handler,
+                                            ASTNode *prelude) {
+    char *frame_name = levelc_begin_call_activation(
+        context, source, prelude, function_call);
+    if (!frame_name) return NULL;
+    if (!levelc_append_call_actuals(context, actuals, plan, prelude,
+                                    frame_name) ||
+        (condition_handler && !levelc_append_call_trap_state(
+            context, source, prelude, frame_name))) {
+        free(frame_name);
+        return NULL;
+    }
+    return frame_name;
 }
 
 static ASTNode *levelc_lower_binary_method(Context *context,
@@ -2642,22 +2747,15 @@ static ASTNode *levelc_build_local_invocation(Context *context,
     entry = (size_t)(procedure - plan->procedures) + 1;
     if (entry > INT_MAX) return NULL;
 
-    frame_name = levelc_begin_call_activation(
-        context, source, prelude, function_call);
+    frame_name = levelc_prepare_call_activation(
+        context, source, plan, actuals, function_call, condition_handler,
+        prelude);
     if (!frame_name) return NULL;
 
     pool_symbol = levelc_pool_ref(context, source, VAR_SYMBOL);
     args[0] = rxcp_remap_create_reference_expr(context, source, pool_symbol);
     args[1] = levelc_config_ref(context, source, VAR_SYMBOL);
     if (!pool_symbol || !args[0] || !args[1]) {
-        free(frame_name);
-        return NULL;
-    }
-
-    if (!levelc_append_call_actuals(context, actuals, plan, prelude,
-                                    frame_name) ||
-        (condition_handler && !levelc_append_call_trap_state(
-            context, source, prelude, frame_name))) {
         free(frame_name);
         return NULL;
     }
@@ -3055,6 +3153,54 @@ static ASTNode *levelc_call_bif_statement(Context *context,
                                               present, result);
 }
 
+static ASTNode *levelc_call_external_statement(Context *context,
+                                                ASTNode *call_node,
+                                                LevelCLowerPlan *plan,
+                                                ASTNode *prelude,
+                                                const char *target_name) {
+    ASTNode *args_node = call_node->child ? call_node->child->sibling : NULL;
+    ASTNode *actuals = args_node ? args_node->child : NULL;
+    ASTNode *args[1];
+    ASTNode *call;
+    ASTNode *statement;
+    ASTNode *receiver;
+    ASTNode *present;
+    ASTNode *value;
+    char *frame_name;
+    char *callable = levelc_external_callable_name(target_name, NULL);
+
+    if (!callable) return NULL;
+    frame_name = levelc_prepare_call_activation(
+        context, call_node, plan, actuals, 0, 0, prelude);
+    if (!frame_name) {
+        free(callable);
+        return NULL;
+    }
+    args[0] = rxcp_remap_create_named_ref(context, call_node,
+                                          VAR_SYMBOL, frame_name);
+    call = args[0] ? rxcp_remap_create_function_call(
+        context, call_node, callable, args, 1) : NULL;
+    if (call) call->is_levelc_external_call = 1;
+    statement = call ? rxcp_remap_create_call_statement(
+        context, call_node, call) : NULL;
+    free(callable);
+    if (!statement) {
+        free(frame_name);
+        return NULL;
+    }
+    add_ast(prelude, statement);
+    receiver = rxcp_remap_create_named_ref(context, call_node,
+                                           VAR_SYMBOL, frame_name);
+    present = receiver ? rxcp_remap_create_member_call(
+        context, call_node, receiver, "hasReturnValue", NULL, 0) : NULL;
+    receiver = rxcp_remap_create_named_ref(context, call_node,
+                                           VAR_SYMBOL, frame_name);
+    value = receiver ? rxcp_remap_create_member_call(
+        context, call_node, receiver, "returnValue", NULL, 0) : NULL;
+    free(frame_name);
+    return levelc_apply_call_result_statement(context, call_node, present, value);
+}
+
 static ASTNode *levelc_lower_call_statement(Context *context,
                                            ASTNode *call_node,
                                            LevelCLowerPlan *plan,
@@ -3067,7 +3213,9 @@ static ASTNode *levelc_lower_call_statement(Context *context,
         ? levelc_call_local_procedure_statement(
             context, call_node, plan, procedure, prelude, 0)
         : bif ? levelc_call_bif_statement(
-            context, call_node, plan, prelude, name, bif) : NULL;
+            context, call_node, plan, prelude, name, bif)
+        : levelc_call_external_statement(
+            context, call_node, plan, prelude, name);
     free(name);
     return result;
 }
@@ -3393,10 +3541,53 @@ static int levelc_append_procedure_exposes(Context *context,
     return 1;
 }
 
+static char *levelc_provider_name(Context *context) {
+    const char *base;
+    const char *extension;
+    size_t length;
+
+    if (!context || !context->file_name) return NULL;
+    base = filename(context->file_name);
+    extension = strrchr(base, '.');
+    length = extension ? (size_t)(extension - base) : strlen(base);
+    return length ? rxcp_normalize_source_symbol_name(base, length, 0, 0)
+                  : NULL;
+}
+
+static ASTNode *levelc_provider_namespace(Context *context,
+                                           ASTNode *anchor,
+                                           const char *name) {
+    ASTNode *node = ast_f(context, NAMESPACE, anchor->token);
+    ASTNode *namespace_name = rxcp_remap_create_literal(context, anchor, name);
+    ASTNode *exposed = ast_f(context, EXPOSED, anchor->token);
+    ASTNode *entry_name = rxcp_remap_create_literal(context, anchor, name);
+    if (!node || !namespace_name || !exposed || !entry_name) return NULL;
+    rxcp_remap_anchor_synthetic(node, anchor);
+    rxcp_remap_anchor_synthetic(exposed, anchor);
+    add_ast(exposed, entry_name);
+    add_ast(node, namespace_name);
+    add_ast(node, exposed);
+    return node;
+}
+
+static ASTNode *levelc_provider_args(Context *context, ASTNode *anchor) {
+    ASTNode *args = rxcp_remap_create_args_builder(context, anchor);
+    ASTNode *target = rxcp_remap_create_named_ref(
+        context, anchor, VAR_TARGET, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *type = rxcp_remap_create_class_type(
+        context, anchor, LEVELC_ACTIVATION_CLASS_TYPE);
+    ASTNode *arg = target && type
+        ? rxcp_remap_create_arg(context, anchor, target, type) : NULL;
+    if (!args || !arg) return NULL;
+    add_ast(args, arg);
+    return args;
+}
+
 static ASTNode *levelc_build_options(Context *context,
                                      ASTNode *anchor_node,
                                      int needs_translate,
                                      int needs_signal_policy,
+                                     const char *provider_name,
                                      const LevelCLowerPlan *plan) {
     ASTNode *options;
     ASTNode *levelb;
@@ -3411,6 +3602,8 @@ static ASTNode *levelc_build_options(Context *context,
     ASTNode *import_translate;
     ASTNode *import_signal;
     ASTNode *import_condition_event;
+    ASTNode *provider_namespace = provider_name
+        ? levelc_provider_namespace(context, anchor_node, provider_name) : NULL;
     size_t i;
     int needs_do_state = context->levelc_strict_classic;
 
@@ -3457,6 +3650,7 @@ static ASTNode *levelc_build_options(Context *context,
     if (!levelb || !comments_dash || !numeric_classic || !import_value ||
         !import_pool || !import_activation || (needs_do_state && !import_do) ||
         !import_config || !import_bifs ||
+        (provider_name && !provider_namespace) ||
         (needs_translate && !import_translate) ||
         (needs_signal_policy && !import_signal) ||
         (plan && plan->has_novalue_on && !import_condition_event)) return NULL;
@@ -3464,6 +3658,7 @@ static ASTNode *levelc_build_options(Context *context,
     add_ast(options, levelb);
     add_ast(options, comments_dash);
     add_ast(options, numeric_classic);
+    if (provider_namespace) add_ast(options, provider_namespace);
     add_ast(options, import_value);
     add_ast(options, import_pool);
     add_ast(options, import_activation);
@@ -3473,6 +3668,13 @@ static ASTNode *levelc_build_options(Context *context,
     if (import_translate) add_ast(options, import_translate);
     if (import_signal) add_ast(options, import_signal);
     if (import_condition_event) add_ast(options, import_condition_event);
+    for (i = 0; plan && i < plan->external_import_count; i++) {
+        ASTNode *import = rxcp_remap_create_generated_import(
+            context, anchor_node ? anchor_node : options,
+            plan->external_imports[i]);
+        if (!import) return NULL;
+        add_ast(options, import);
+    }
     for (i = 0; plan && i < LEVELC_DIRECT_BIF_COUNT; i++) {
         const char *module;
         ASTNode *import;
@@ -5631,7 +5833,11 @@ static int levelc_rewrite_program(Context *context,
     ASTNode *event_setup = NULL;
     ASTNode *body_call;
     ASTNode *return_stmt;
+    ASTNode *provider_header = NULL;
+    ASTNode *provider_args = NULL;
     ASTNode *stmt;
+    char *provider_name = context->levelc_routine_mode
+        ? levelc_provider_name(context) : NULL;
     size_t i;
     int needs_translate = 0;
     int needs_signal_policy = 0;
@@ -5644,8 +5850,12 @@ static int levelc_rewrite_program(Context *context,
     needs_signal_policy = levelc_tree_contains_signal_on(old_instructions);
     if (plan) plan->has_novalue_on = levelc_tree_contains_novalue_on(old_instructions);
     has_procedure = levelc_tree_contains_procedure(old_instructions);
+    if (context->levelc_routine_mode && !provider_name) {
+        if (reason_out) *reason_out = "invalid Level C routine filename";
+        return 0;
+    }
     options = levelc_build_options(context, anchor, needs_translate,
-                                   needs_signal_policy, plan);
+                                   needs_signal_policy, provider_name, plan);
     instructions = rxcp_remap_create_instruction_builder(context, anchor);
     if (!options || !instructions) {
         if (reason_out) *reason_out = "failed to create Level C lowered program shell";
@@ -5659,11 +5869,27 @@ static int levelc_rewrite_program(Context *context,
         if (reason_out) *reason_out = "failed to create Level C pool setup";
         return 0;
     }
+    if (provider_name) {
+        size_t header_length = strlen(provider_name) + 2;
+        char *header_name = malloc(header_length);
+        if (!header_name) return 0;
+        snprintf(header_name, header_length, "%s:", provider_name);
+        provider_header = levelc_named_body_header(context, anchor, header_name);
+        provider_args = levelc_provider_args(context, anchor);
+        free(header_name);
+        if (!provider_header || !provider_args) {
+            if (reason_out) *reason_out = "failed to create Level C routine entry";
+            return 0;
+        }
+        add_ast(instructions, provider_header);
+        add_ast(instructions, provider_args);
+    }
     add_ast(instructions, pool_setup);
     add_ast(instructions, config_setup);
     add_ast(instructions, config_ref_setup);
     /* Only this wrapper reads the VM's hidden command-line argv. */
-    if (!levelc_append_main_activation(context, instructions, anchor)) {
+    if (!provider_name &&
+        !levelc_append_main_activation(context, instructions, anchor)) {
         if (reason_out) *reason_out = "failed to capture main ARG activation";
         return 0;
     }
@@ -5717,11 +5943,11 @@ static int levelc_rewrite_program(Context *context,
 
     stmt = plan ? plan->main_first : old_instructions->child;
     while (stmt && (!plan || stmt != plan->main_end)) {
-        if (!levelc_lower_main_statement(context,
-                                         instructions,
-                                         stmt,
-                                         plan,
-                                         reason_out)) {
+        if (provider_name
+            ? !levelc_lower_proc_statement(context, instructions, stmt,
+                                            plan, NULL, reason_out)
+            : !levelc_lower_main_statement(context, instructions, stmt,
+                                            plan, reason_out)) {
             return 0;
         }
         stmt = stmt->sibling;
@@ -5811,8 +6037,20 @@ static int levelc_rewrite_program(Context *context,
     instructions->parent = NULL;
     instructions->sibling = NULL;
 
+    /* Level C source-tree preparation ran before this generated namespace
+     * existed, so the ordinary pre-validation namespace walker will not run
+     * again. Bind the same namespace node before symbol harvest. */
+    if (provider_name) {
+        ASTNode *namespace_node = ast_chld(options, NAMESPACE, 0);
+        if (!namespace_node || !namespace_node->child) return 0;
+        context->namespace = namespace_node->child;
+        program_file->node_string = context->namespace->node_string;
+        program_file->node_string_length = context->namespace->node_string_length;
+    }
+
     context->level = LEVELB;
     context->changed_flags |= FLAG_VAL_TRANS;
+    free(provider_name);
     return 1;
 }
 
@@ -5841,7 +6079,8 @@ int rxcp_levelc_lower_to_canonical(Context *context, const char **reason_out) {
         return 0;
     }
 
-    if (!levelc_collect_lower_plan(instructions, &plan, reason_out)) {
+    if (!levelc_collect_lower_plan(instructions, &plan,
+                                   context->levelc_routine_mode, reason_out)) {
         levelc_lower_plan_free(&plan);
         return 0;
     }

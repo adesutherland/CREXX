@@ -6,7 +6,7 @@ contract (`R1-AC-01/02`) and the roadmap owns portfolio order. This worklist
 records coverage, incremental evidence and Adrian-approved scope revisions;
 it does not change the 2026-11-30 target.
 
-**Current status, 2026-10-05.** `LC-I-01`–`LC-I-12` (SAY, DROP, assignment,
+**Current status, 2026-10-06.** `LC-I-01`–`LC-I-12` (SAY, DROP, assignment,
 NOP, OPTIONS, IF, SELECT, DO, LEAVE, ITERATE, ARG and PROCEDURE) have closed
 whole-instruction reviews. ARG uses the shared PARSE template executor and
 one activation argument frame; the complete admitted Classic invocation and
@@ -25,11 +25,10 @@ and SIGNAL remain open.
 PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-13`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
-open even where a supporting slice or helper passes. The latest code/test-input
-Debug Level C checkpoint for the four-condition CALL matrix passed 621/621
-with process memory monitoring. Its focused ASan check passed; the product code
-is unchanged from the encoded CALL target checkpoint, whose Level B/G and
-RexxScript isolation also passed. Exact receipts are below.
+open even where a supporting slice or helper passes. The latest normal Debug
+Level C checkpoint for the compiler-only external CALL path passed 623/623
+with process memory monitoring. Focused macOS ASan and Level B/G/RexxScript
+isolation also passed on those inputs. CALL remains open.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 **2026-10-05 scope and VM decision.** Adrian initially excluded a general
@@ -47,6 +46,23 @@ Adrian approved retaining the `signalorigin` RXAS/VM operation from
 as implementations of the approved one-frame SIGNAL direction. These are VM
 contract changes, not merely compiler AST nodes. Any further architectural
 shift still requires its own decision before a product edit.
+
+**2026-10-06 CALL implementation decision.** Adrian accepted the fixed
+`.void(frame=.RexxActivationArguments)` Level B/G signature and directed that
+Level C use the ordinary Level B/G compiler signature check (with a Level C
+diagnostic), linker and runtime behavior. Level C is a compiler compatibility
+layer at this boundary. Do not edit `rxlink`, the VM, its instruction set, or
+its loader for CALL without a further explicit decision. The prior
+`metacheckproc`, dynamic pointer selection and special host resolver proposals
+below are historical and superseded. Generate ordinary typed imports and
+calls for external targets; separately compiled Level C providers need a
+compiler-generated exposed entry with this signature, unique helper symbols
+and no competing `.main`. Preserve the one Classic activation frame,
+Unicode text boundary and optional result protocol. `LC-75-01/04` retain their
+reference timing and search obligations until the compiler-only path is
+qualified or Adrian explicitly decides a documented departure. In particular,
+ordinary compile/link failure for a missing import cannot silently be called
+equivalent to Classic reached-only runtime 43.1.
 
 Dated plans and receipts below preserve the state and proposals at their own
 checkpoints. The status above, the whole-instruction queue and the current
@@ -3667,8 +3683,104 @@ the lowercase qualified metadata key
 distinguish Classic quoted target spelling for file search from the compiler's
 normalized callable key.
 
-**LC-STEP-75B descriptor-safe selection proposal — new VM contract decision
-pending.** Reuse the existing `metaloadmodule`, exposed-procedure enumeration
+**LC-STEP-75B compiler-only external CALL plan — active 2026-10-06.**
+The intended outcome is one Classic CALL resolver that hands its existing
+presence-bearing activation frame to either a local body, shared BIF or an
+ordinary imported callable. The external ABI is an exposed Level B/G
+`.void` procedure with exactly one by-value
+`.RexxActivationArguments` argument. It may set an optional `RexxValue`
+return on the frame. A separately compiled Level C routine supplies the same
+callable ABI through a generated wrapper, with its own initial variable pool
+and configuration, while the invocation body remains the approved one-frame
+implementation. The compiler uses the existing signature validator and emits
+the same import/call metadata as Level B/G; only the Level C error message and
+lowering are specific. The ordinary assembler, linker and runtime remain
+unchanged.
+
+1. **75B-C1 (`LC-75-01/02/04`, complete):** inspect source and binary import
+   discovery, typed callable resolution, Level C programme generation and
+   existing result helpers. Prove with ignored-build probes that a generated
+   import can bind an exposed compatible callable, that an incompatible
+   signature is rejected by the compiler, and that an ordinary linked call
+   returns its optional frame result. Record the exact naming and package
+   rule before product edits; avoid a second dynamic resolver.
+2. **75B-C2 (`LC-75-02/04/06`, active):** generate a unique exposed
+   provider entry for a separately compiled Level C source without exporting
+   another `.main`. Its wrapper constructs a private pool/default Classic
+   configuration, passes the incoming frame into the one compiled body and
+   preserves source metadata. Qualify linked and nested Level C providers,
+   argument presence, Unicode/NUL and optional returns. This is compiler
+   lowering only; any new source syntax or non-compiler contract needs a
+   separate decision.
+3. **75B-C3 (`LC-75-01/02/03/04/06`, active; depends on C1/C2):** resolve a nonlocal
+   CALL to an ordinary exposed import, reuse the existing actual/frame and
+   `applyCallResult` paths, and map the existing B/G signature error to a
+   Level C diagnostic. Verify local-before-BIF-before-external order, quoted
+   local bypass and case behavior, invalid signatures, source/canonical AST,
+   opt/no-opt and unchanged ordinary linker/VM execution.
+4. **75B-C4 (`LC-75-01/04/05`, active; depends on C3):** check static import failure
+   against the retained reached-only missing-target and delayed-handler
+   reference cases. Seek a narrow language-compatibility decision only if
+   the approved unchanged linker/runtime path cannot meet those timing
+   obligations through compiler lowering. Keep failed cases visibly open;
+   do not convert them into an unapproved exception.
+5. **75B-C5 (`LC-75-01–06`, open; depends on C2–C4):** finish the whole CALL
+   reference matrix and delayed handler variants, run focused development
+   checks and then one relevant normal Debug correctness suite on final
+   code/test inputs. Retain ordinary linked delivery, Level B/G/RexxScript
+   isolation and process-exit evidence; close the instruction only when each
+   criterion is proved or explicitly revised by Adrian.
+
+**75B compiler-only implementation checkpoint, 2026-10-06 (CALL still open).**
+The generated Level C provider has a same-stem exposed entry and no extra
+`main`; two separate Level C providers link together without helper-name
+collisions. Direct external CALL reuses the local activation/argument builder
+and result-presence writer. A fixed-signature Level B/G provider uses the
+same ordinary import and link path. The permanent
+`levelc_call_external_opt/noopt` cases compile all providers and consumer,
+assemble and link them with unchanged `rxlink`, then run unchanged `rxvm`.
+They cover nested Level C providers, source-ordered omitted and Unicode/NUL
+actuals, private external pool, optional result presence/drop, local label
+precedence, quoted bypass and fixed Level B/G entry. Negative compilation
+checks reject wrong parameter type, return type, arity and reference mode
+with `LEVELC_CALL_SIGNATURE`. The new AST marker is initialized and copied;
+the first isolated macOS ASan run exposed its missing initialization as
+spurious diagnostics, corrected before retained sanitizer success. The
+guarded core build passed in
+`cmake-build-debug/levelc-call-external-core-final.log`. Focused CALL and
+source-import checks passed **27/27** in
+`cmake-build-debug/levelc-call-external-focused-final.log`. The normal Debug
+Level C suite passed **623/623** in
+`cmake-build-debug/levelc-call-external-levelc-final.log`, peaking at
+**4560.5 MiB** aggregate RSS and leaving zero child processes. Level B/G and
+RexxScript isolation passed **10/10** in
+`cmake-build-debug/levelc-call-external-isolation-final.log`. The focused
+macOS ASan build and external CALL tests passed **2/2** through
+`tools/asan-run.sh` in
+`cmake-build-debug/levelc-call-external-asan-build-final-guard.log` and
+`cmake-build-debug/levelc-call-external-asan-ctest-final-guard.log`, peaking
+at **684.9 MiB** with zero residual processes. Apple LeakSanitizer is
+unsupported; the ASan test run used `--leaks off`. These are exact current
+code/test-input development receipts, not whole CALL or Level C closure.
+
+**75B-C4 static-resolution finding.** The guarded unreachable
+`IF 0 THEN CALL no_such_external` probe fails compilation with
+`#NOT_A_FUNCTION` at line 2
+(`cmake-build-debug/levelc-call-missing-external-static.log`), whereas the
+retained Classic reference requires 43.1 only on a reached call. Routing an
+unknown delayed handler through an ordinary import likewise moved the
+existing 16.1 runtime error to a compile failure in the trial focused run;
+the trial was removed and the missing-handler test passed again in
+`cmake-build-debug/levelc-call-missing-recheck.log`. The unchanged static
+linker/runtime path has no resolved compiler-only equivalent yet. Keep
+`LC-75-01/04/05`, whole CALL, and full Level C open while checking the
+remaining compiler options and requesting a narrow decision only if this
+timing conflict proves fundamental.
+
+**LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
+The following proposed VM operation is retained only as history; Adrian
+directed the compiler to use ordinary typed imports and prohibited linker or
+runtime changes without further approval. Reuse the existing `metaloadmodule`, exposed-procedure enumeration
 and `dcall` operations. At a reached CALL clause, the generated resolver
 searches the selected provider module's *exposed* entries for the exact target
 name. Before `dcall`, a proposed `metacheckproc` operation takes that
@@ -3721,7 +3833,7 @@ and presence through the frame and calls `setReturnValue` only when returning
 a Classic value. This proposed signature and the provider load/search policy
 await Adrian's decision before product edits.
 
-**LC-STEP-75B external implementation order (proposal, decision gate open).**
+**LC-STEP-75B external implementation order (historical proposal, superseded).**
 1. `75B-1` (`LC-75-02/04`): fix the one-argument frame ABI, exact target-name
    encoding and a Level C routine build mode whose exported entry and helper
    symbols are unique and whose provider image does not export ordinary
@@ -5431,7 +5543,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL, including numeric, digit-starting and period-starting constant-symbol labels, and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; direct and policy diagnostics have source-anchored matrix coverage under LC-STEP-75A | External Level C and fixed-signature Level B/G resolution, real condition producers and their source identity, remaining clause/lifecycle matrix, runtime missing-target errors and whole-instruction review open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL, including numeric, digit-starting and period-starting constant-symbol labels, and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; external Level C providers and fixed-signature Level B/G entries have linked opt/noopt focused proof under 75B, including nested providers, Unicode/NUL and signature rejection; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; direct and policy diagnostics have source-anchored matrix coverage under LC-STEP-75A | External missing-target timing and search, delayed external handlers, real condition producers and their source identity, remaining clause/lifecycle matrix and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |
