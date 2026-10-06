@@ -5291,6 +5291,15 @@ add_levelc_invalid_compile_test(levelc_push_invalid_comma
 add_levelc_invalid_compile_test(levelc_push_invalid_close
         rexx_src/levelc_push_invalid_close.rexx
         "RXC-LC-35\\.1" "levelc_push_invalid_close\\.rexx @ 2:9")
+add_levelc_invalid_compile_test(levelc_queue_invalid_expr
+        rexx_src/levelc_queue_invalid_expr.rexx
+        "RXC-LC-35\\.1" "levelc_queue_invalid_expr\\.rexx @ 2:7")
+add_levelc_invalid_compile_test(levelc_queue_invalid_comma
+        rexx_src/levelc_queue_invalid_comma.rexx
+        "RXC-LC-35\\.1" "levelc_queue_invalid_comma\\.rexx @ 2:10")
+add_levelc_invalid_compile_test(levelc_queue_invalid_close
+        rexx_src/levelc_queue_invalid_close.rexx
+        "RXC-LC-35\\.1" "levelc_queue_invalid_close\\.rexx @ 2:10")
 add_levelc_invalid_compile_test(levelc_arg_missing_positions
         rexx_src/levelc_arg_missing_positions.rexx
         "levelc_arg_missing_positions\\.rexx @ 2:7 - #RXC-LC-38\\.1"
@@ -6493,6 +6502,29 @@ foreach(_push_mode IN ITEMS opt noopt)
             LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 endforeach()
+foreach(_queue_mode IN ITEMS opt noopt)
+    if(_queue_mode STREQUAL "noopt")
+        set(_queue_noopt -DNOOPT=1)
+    else()
+        set(_queue_noopt)
+    endif()
+    add_test(NAME levelc_queue_linked_${_queue_mode}
+            COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DNAME=levelc_queue_instruction
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_queue_instruction.rexx
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_queue_instruction.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            ${_queue_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
+    set_tests_properties(levelc_queue_linked_${_queue_mode} PROPERTIES
+            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()
 add_test(NAME levelc_call_resolution_result_linked
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>
@@ -7578,6 +7610,17 @@ add_test(NAME levelc_push_source_tree
         -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_source_tree.cmake)
 set_tests_properties(levelc_push_source_tree PROPERTIES LABELS "compiler;levelc")
+add_test(NAME levelc_queue_source_tree
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DBINDIR=${CMAKE_BINARY_DIR}/bin
+        -DNAME=levelc_queue
+        -DSOURCE_NODE=LEVELC_QUEUE
+        -DMEMBER=queueText
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_queue_instruction.rexx
+        -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_source_tree.cmake)
+set_tests_properties(levelc_queue_source_tree PROPERTIES LABELS "compiler;levelc")
 add_test(NAME levelc_signal_source_tree
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>

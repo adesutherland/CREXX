@@ -190,6 +190,12 @@ RexxClassicConfig: class
     call push text
     return
 
+  /** Append one text value to the selected data queue. */
+  queueText: method = .void
+    arg text = .string
+    call queue text
+    return
+
   isByteProfile: method = .boolean
     return profile_name == "BYTE"
 

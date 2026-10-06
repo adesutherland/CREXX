@@ -92,6 +92,19 @@ errors = errors + check("tail", pull(), "queue is FIFO tail")
 errors = errors + check("nested", pull(), "nested append visible")
 errors = errors + check_int(0, queued(), "final depth")
 
+/* Reusing slots after PULL must not make PUSH revive stale array entries. */
+call queue "used-one"
+call queue "used-two"
+errors = errors + check("used-one", pull(), "consume first physical slot")
+errors = errors + check("used-two", pull(), "consume second physical slot")
+call queue "old"
+call push "head"
+call queue "tail"
+errors = errors + check_int(3, queued(), "push after pull counts active entries")
+errors = errors + check("head", pull(), "push after pull head")
+errors = errors + check("old", pull(), "push after pull existing entry")
+errors = errors + check("tail", pull(), "push after pull queued tail")
+
 /* PEEK order, bounds, and non-consumption. */
 call queue "alpha"
 call queue "beta"

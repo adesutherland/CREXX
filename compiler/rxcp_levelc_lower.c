@@ -1714,7 +1714,7 @@ static int levelc_statement_supported(ASTNode *stmt,
     if (!stmt) return 1;
     if (stmt->node_type == REXX_OPTIONS)
         return !stmt->child || levelc_expr_supported(stmt->child, plan, reason_out);
-    if (stmt->node_type == LEVELC_PUSH)
+    if (stmt->node_type == LEVELC_PUSH || stmt->node_type == LEVELC_QUEUE)
         return !stmt->child ||
                (!stmt->child->sibling &&
                 levelc_expr_supported(stmt->child, plan, reason_out));
@@ -4705,11 +4705,13 @@ fail:
     return 0;
 }
 
-static int levelc_lower_push_instruction(Context *context,
-                                         ASTNode *instructions,
-                                         ASTNode *stmt,
-                                         LevelCLowerPlan *plan,
-                                         const char **reason_out) {
+static int levelc_lower_queue_write_instruction(Context *context,
+                                                ASTNode *instructions,
+                                                ASTNode *stmt,
+                                                LevelCLowerPlan *plan,
+                                                const char **reason_out) {
+    const char *method = stmt->node_type == LEVELC_PUSH
+        ? "pushText" : "queueText";
     ASTNode *prelude = rxcp_remap_create_instruction_builder(context, stmt);
     ASTNode *config = levelc_queue_config_value(context, stmt, prelude);
     ASTNode *value = stmt->child
@@ -4719,17 +4721,17 @@ static int levelc_lower_push_instruction(Context *context,
         ? rxcp_remap_create_member_call(context, stmt, value,
                                         "asString", NULL, 0) : NULL;
     ASTNode *args[1] = {text_value};
-    ASTNode *push = config && text_value
+    ASTNode *write = config && text_value
         ? rxcp_remap_create_member_call_statement(context, stmt, config,
-                                                  "pushText", args, 1)
+                                                  method, args, 1)
         : NULL;
 
-    if (!prelude || !push) {
-        if (reason_out) *reason_out = "failed to lower PUSH instruction";
+    if (!prelude || !write) {
+        if (reason_out) *reason_out = "failed to lower PUSH/QUEUE instruction";
         return 0;
     }
     rxcp_remap_append_builder_children(instructions, prelude);
-    add_ast(instructions, push);
+    add_ast(instructions, write);
     return 1;
 }
 
@@ -5096,9 +5098,9 @@ static int levelc_lower_statement(Context *context,
     if (stmt->node_type == PULL)
         return levelc_lower_pull_instruction(context, instructions, stmt,
                                              plan, reason_out);
-    if (stmt->node_type == LEVELC_PUSH)
-        return levelc_lower_push_instruction(context, instructions, stmt,
-                                             plan, reason_out);
+    if (stmt->node_type == LEVELC_PUSH || stmt->node_type == LEVELC_QUEUE)
+        return levelc_lower_queue_write_instruction(context, instructions,
+                                                    stmt, plan, reason_out);
     if (stmt->node_type == LEVELC_SIGNAL) {
         if (stmt->child && stmt->child->node_type == LEVELC_SIGNAL_VALUE)
             return levelc_lower_value_signal(context, instructions, stmt, plan,

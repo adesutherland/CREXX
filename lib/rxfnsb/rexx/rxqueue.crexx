@@ -86,14 +86,18 @@ return
 /*------------------------------------------------------------*/
 /* Insert a value at the front of the queue.                  */
 /*                                                            */
-/* Existing entries are shifted one position towards the end. */
+/* Active entries are shifted one position towards the end.   */
+/* Physical slots left by earlier PULL or CLEAR are ignored.  */
 /* The next PULL therefore returns the newly PUSHed value.     */
 /*------------------------------------------------------------*/
 push: method = .void
   arg value = .string
 
-  call arrayprepend _entries, value
-  _count = _entries[0]
+  do i = _count to 1 by -1
+      _entries[i + 1] = _entries[i]
+  end
+  _entries[1] = value
+  _count = _count + 1
   return
 
 

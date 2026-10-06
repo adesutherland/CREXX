@@ -988,6 +988,28 @@ routines. The source/canonical tree inspection confirms the `LEVELC_PUSH`
 node is lowered to the configuration method call. Named host selection and
 the grouped normal/sanitizer/isolation gate remain open in the worklist.
 
+## 2026-10-06 Classic QUEUE tail route (grouped QA open)
+
+`LEVELC_QUEUE` shares PUSH's checked optional-expression lowering and the
+compiler's single queue-configuration dereference. A reached expression is
+converted from `RexxValue` to exact-length text once, then
+`RexxClassicConfig.queueText()` delegates to `rxfnsb.queue()`; omission
+appends empty text. Surplus comma or close-bracket tails now emit anchored
+35.1 instead of disappearing during parsing. The existing `RexxQueue`
+instance owns both front and tail operations, including the current named
+queue selected by its repository. No separate Level C storage, linker path
+or VM operation was added.
+
+The first linked QUEUE interaction test found a defect in that shared
+library: after PULL left physical array slots beyond the active count,
+`RexxQueue.push()` prepended across the physical array and revived an empty
+slot ahead of a later queued tail. PUSH now shifts only active entries and
+increments the logical count. A Level B optimized/no-opt functional
+regression covers QUEUE/PULL/PUSH/QUEUE order after consumed slots, and
+the complete Level C queue family passes focused linked optimized/no-opt
+tests. Host-selectable queue/input configuration and the grouped normal,
+sanitizer and isolation checkpoint remain open in the worklist.
+
 ## 2026-10-03 implementation review: simplify before expansion
 
 This review covers the active Level C parser-to-canonical path, neutral AST
