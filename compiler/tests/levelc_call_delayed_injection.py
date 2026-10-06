@@ -29,12 +29,12 @@ def run(command, cwd, log_path, expect_failure=False):
     return output
 
 
-def queue_snippet(base, line, description):
+def queue_snippet(base, line, description, condition=2):
     return (
         f'   load r{base},4\n'
         f'   settp a3,256\n'
         f'   swap r{base + 1},a3\n'
-        f'   load r{base + 2},2\n'
+        f'   load r{base + 2},{condition}\n'
         f'   load r{base + 3},"{description}"\n'
         f'   load r{base + 4},{line}\n'
         f'   settp r{base + 3},768\n'
@@ -149,11 +149,44 @@ def inject_lifecycle(assembly):
     return append_queue_import(assembly[:body_start] + body + assembly[body_end:])
 
 
+def inject_conditions(assembly):
+    body_start = assembly.index("__rxcp_levelc_body() .locals=")
+    body_end = assembly.index(
+        "__rxcp_levelc_call_trap_dispatch() .locals=", body_start)
+    body = assembly[body_start:body_end]
+    markers = list(re.finditer(
+        r'   \.srcstep \d+ \d+ 6 "levelc_call_condition_matrix\.rexx" '
+        r'(\d+) 1 4 "nop"\n', body))
+    sites = []
+    for marker in markers:
+        next_source = body.find("   .srcstep ", marker.end())
+        segment = body[marker.end():next_source]
+        dispatch = re.search(
+            r"   call4 r\d+,__rxcp_levelc_call_trap_dispatch\(\),[^\n]*\n",
+            segment)
+        if dispatch is not None:
+            sites.append((int(marker.group(1)), marker.end() + dispatch.start()))
+    if [line for line, _ in sites] != [4, 7, 10, 13]:
+        raise RuntimeError("expected one NOP checkpoint for each CALL condition")
+    maximum = max(int(value) for value in re.findall(r"\br(\d+)\b", body))
+    descriptions = ("error", "failure", "halt", "notready")
+    for ordinal in reversed(range(4)):
+        base = maximum + 1 + ordinal * 6
+        line, site = sites[ordinal]
+        body = body[:site] + queue_snippet(
+            base, line, descriptions[ordinal], ordinal + 2) + body[site:]
+    body = re.sub(
+        r"(__rxcp_levelc_body\(\) \.locals=)\d+",
+        lambda match: match.group(1) + str(maximum + 25),
+        body, count=1)
+    return append_queue_import(assembly[:body_start] + body + assembly[body_end:])
+
+
 def main():
     parser = argparse.ArgumentParser()
     for name in ("rxc", "rxas", "rxvm", "bindir", "source", "workdir", "mode"):
         parser.add_argument(f"--{name}", required=True)
-    parser.add_argument("--scenario", choices=("policy", "boundaries", "transfers", "lifecycle", "missing"),
+    parser.add_argument("--scenario", choices=("policy", "boundaries", "transfers", "lifecycle", "missing", "conditions"),
                         default="policy")
     args = parser.parse_args()
     args.rxc = str(Path(args.rxc).resolve())
@@ -176,6 +209,8 @@ def main():
     run(compile_command, workdir, workdir / f"{stem}_compile.log")
     if args.scenario == "policy":
         injected = inject_policy(assembly_path.read_text())
+    elif args.scenario == "conditions":
+        injected = inject_conditions(assembly_path.read_text())
     elif args.scenario == "lifecycle":
         injected = inject_lifecycle(assembly_path.read_text())
     elif args.scenario == "missing":
@@ -227,6 +262,12 @@ def main():
             "caught=ERROR|parent|DELAY|CALL|0|old|9\n"
             "after-child\n"
             "parent=|old\n"),
+        "conditions": (
+            "caught=ERROR|error|CALL|DELAY|4|0\n"
+            "caught=FAILURE|failure|CALL|DELAY|7|0\n"
+            "caught=HALT|halt|CALL|DELAY|10|0\n"
+            "caught=NOTREADY|notready|CALL|DELAY|13|0\n"
+            "after=prior|prior|\n"),
     }
     expected = expected_by_scenario[args.scenario].encode("utf-8")
     if output != expected:

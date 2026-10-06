@@ -25,10 +25,11 @@ and SIGNAL remain open.
 PARSE has a substantial shared template engine but no whole-instruction
 closure. `LC-I-13`–`LC-I-25` remain open as whole instructions. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
-open even where a supporting slice or helper passes. The final code/test-input
-Debug Level C checkpoint for the encoded CALL target/binary-grouping increment
-passed 619/619 with process memory monitoring. Its focused ASan and Level
-B/G/RexxScript isolation checks also passed; the exact receipts are below.
+open even where a supporting slice or helper passes. The latest code/test-input
+Debug Level C checkpoint for the four-condition CALL matrix passed 621/621
+with process memory monitoring. Its focused ASan check passed; the product code
+is unchanged from the encoded CALL target checkpoint, whose Level B/G and
+RexxScript isolation also passed. Exact receipts are below.
 This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
 
 **2026-10-05 scope and VM decision.** Adrian initially excluded a general
@@ -3832,6 +3833,26 @@ The guarded normal Debug Level C suite passed **608/608** in
 passed **10/10** in
 `cmake-build-debug/levelc-call-delayed-checkpoint-isolation.log`. Every
 guarded final-input build/test process exited with zero residual children.
+
+**LC-STEP-75D four-condition matrix, 2026-10-06.** Regina accepts ON/OFF
+forms for ERROR, FAILURE, HALT and NOTREADY in
+`cmake-build-debug/levelc-call-conditions-regina.log`. The permanent
+`levelc_call_condition_matrix.rexx` fixture and controlled RXAS producer
+exercise each condition at an authored NOP checkpoint. Both optimization modes
+prove the selected condition name and description, `I=CALL`, `S=DELAY`,
+causing `SIGL`, a zero-argument handler, OFF lifecycle and preservation of
+`RESULT`/`.RESULT`; the handler returns a value that the caller ignores.
+Focused Debug passed **2/2** in
+`cmake-build-debug/levelc-call-condition-focused-v2.log`; the ten existing
+controlled CALL scenarios also passed in
+`cmake-build-debug/levelc-call-condition-neighbors.log`. Focused maintained
+ASan passed **2/2** with macOS leak detection off in
+`cmake-build-debug/levelc-call-conditions-asan-ctest-guard.log`. These tests
+use synthetic pending events and do not prove ADDRESS, stream, host HALT or
+external-handler production. The final-input normal Debug Level C suite passed
+**621/621** in `cmake-build-debug/levelc-call-condition-final-levelc.log`
+(peak **5756.5 MiB** aggregate RSS). Every guarded command left zero residual
+children. Whole CALL and full Level C remain open.
 
 `LC-75-05` and whole CALL remain **open**: the unimplemented ADDRESS, stream
 and host-interrupt producers must connect and qualify their own source events;

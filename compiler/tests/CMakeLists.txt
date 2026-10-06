@@ -6179,6 +6179,21 @@ foreach(_mode IN ITEMS opt noopt)
             LABELS "compiler;levelc"
             RUN_SERIAL TRUE
             TIMEOUT 180)
+    add_test(NAME levelc_call_condition_matrix_${_mode}
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/levelc_call_delayed_injection.py
+                --rxc $<TARGET_FILE:rxc>
+                --rxas $<TARGET_FILE:rxas>
+                --rxvm ${CREXX_RXVM_EXECUTABLE}
+                --bindir ${CMAKE_BINARY_DIR}/bin
+                --source ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_condition_matrix.rexx
+                --workdir ${CMAKE_CURRENT_BINARY_DIR}
+                --mode ${_mode}
+                --scenario conditions)
+    set_tests_properties(levelc_call_condition_matrix_${_mode} PROPERTIES
+            LABELS "compiler;levelc"
+            RUN_SERIAL TRUE
+            TIMEOUT 180)
     add_test(NAME levelc_call_clause_boundaries_${_mode}
             COMMAND ${Python3_EXECUTABLE}
                 ${CMAKE_CURRENT_SOURCE_DIR}/levelc_call_delayed_injection.py
