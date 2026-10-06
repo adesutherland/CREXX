@@ -6,6 +6,8 @@ from pathlib import Path
 import re
 import subprocess
 
+from levelc_call_delayed_injection import inject_boundaries
+
 
 def run(command, workdir, label, success=True):
     result = subprocess.run(command, cwd=workdir, capture_output=True,
@@ -31,9 +33,11 @@ def main():
     bindir = Path(args.bindir).resolve()
     sourcedir = Path(args.sourcedir).resolve()
     binaries = []
+    providers = []
     cases = (
         ("levelc_call_external_leaf", ".rexx", True),
         ("levelc_call_external_middle", ".rexx", True),
+        ("levelc_call_external_handler", ".rexx", True),
         ("levelc_call_external_bg", ".crexx", False),
         ("levelc_call_external_consumer", ".rexx", False),
     )
@@ -53,6 +57,8 @@ def main():
         run([args.rxas, "-o", str(binary), str(assembly)], workdir,
             f"{stem}_assemble")
         binaries.append(str(binary))
+        if provider or stem == "levelc_call_external_bg":
+            providers.append(str(binary))
         if provider:
             text = assembly.read_text()
             if ".expose=" not in text or "__rxcp_levelc_body()" not in text:
@@ -79,6 +85,52 @@ def main():
     ).encode()
     if output != expected:
         raise RuntimeError(f"unexpected output: {output!r}; expected {expected!r}")
+
+    binary_only = workdir / "binary_only"
+    binary_only.mkdir(exist_ok=True)
+    binary_source = binary_only / "levelc_call_external_consumer.rexx"
+    binary_source.write_bytes((sourcedir / binary_source.name).read_bytes())
+    binary_assembly = binary_only / "levelc_call_external_consumer.rxas"
+    binary_consumer = binary_only / "levelc_call_external_consumer.rxbin"
+    binary_image = binary_only / "levelc_call_external_image.rxbin"
+    binary_command = [args.rxc, "-i", str(workdir), "-i", str(bindir),
+                      "--import", "levelc_call_external_bg"]
+    if args.mode == "noopt":
+        binary_command.append("-n")
+    binary_command += ["-o", str(binary_assembly), str(binary_source)]
+    run(binary_command, binary_only, "binary_only_compile")
+    run([args.rxas, "-o", str(binary_consumer), str(binary_assembly)],
+        binary_only, "binary_only_assemble")
+    run([args.rxlink, "-o", str(binary_image), str(binary_consumer),
+         *providers, str(bindir / "library.rxbin"),
+         str(bindir / "classlib.rxbin"), str(bindir / "rxfnsc.rxbin")],
+        binary_only, "binary_only_link")
+    binary_output = run([args.rxvm, str(binary_image)], binary_only,
+                        "binary_only_run")
+    if binary_output != expected:
+        raise RuntimeError(f"binary-only provider output: {binary_output!r}")
+
+    trap_source = sourcedir / "levelc_call_external_trap.rexx"
+    trap_assembly = workdir / "levelc_call_external_trap.rxas"
+    trap_injected = workdir / "levelc_call_external_trap_injected.rxas"
+    trap_binary = workdir / "levelc_call_external_trap.rxbin"
+    trap_command = [args.rxc, "-s", str(sourcedir), "-i", str(bindir)]
+    if args.mode == "noopt":
+        trap_command.append("-n")
+    trap_command += ["-o", str(trap_assembly), str(trap_source)]
+    run(trap_command, workdir, "trap_compile")
+    trap_injected.write_text(
+        inject_boundaries(trap_assembly.read_text(), ((4, "external"),)),
+        encoding="utf-8")
+    run([args.rxas, "-o", str(trap_binary), str(trap_injected)],
+        workdir, "trap_assemble")
+    trap_image = workdir / "levelc_call_external_trap_image.rxbin"
+    run([args.rxlink, "-o", str(trap_image), str(trap_binary), *providers,
+         str(bindir / "library.rxbin"), str(bindir / "classlib.rxbin"),
+         str(bindir / "rxfnsc.rxbin")], workdir, "trap_link")
+    trap_output = run([args.rxvm, str(trap_image)], workdir, "trap_run")
+    if trap_output != b"trap=ERROR|CALL|DELAY|0\nafter=prior|prior\n":
+        raise RuntimeError(f"unexpected external trap output: {trap_output!r}")
 
     invalid_entries = {
         "badarg": (".void", "frame = .string"),

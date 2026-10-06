@@ -1015,15 +1015,38 @@ static char *levelc_external_callable_name(const char *target,
     return callable;
 }
 
-static int levelc_record_external_import(LevelCLowerPlan *plan,
+static int levelc_external_target_may_exist(Context *context,
+                                            const char *target) {
+    char *namespace_name = NULL;
+    char *callable = levelc_external_callable_name(target, &namespace_name);
+    int available = namespace_name
+        ? rxcp_importable_module_may_exist(context, namespace_name) : -1;
+    free(callable);
+    free(namespace_name);
+    return available;
+}
+
+static int levelc_record_external_import(Context *context,
+                                         LevelCLowerPlan *plan,
                                          const char *target) {
     char *namespace_name = NULL;
     char *callable = levelc_external_callable_name(target, &namespace_name);
     char **imports;
     size_t index;
 
+    int available = namespace_name
+        ? rxcp_importable_module_may_exist(context, namespace_name) : -1;
+
     free(callable);
     if (!namespace_name) return 0;
+    if (available < 0) {
+        free(namespace_name);
+        return 0;
+    }
+    if (!available) {
+        free(namespace_name);
+        return 1;
+    }
     if (!plan) {
         free(namespace_name);
         return 1;
@@ -1240,6 +1263,13 @@ static int levelc_call_statement_supported(ASTNode *stmt,
                 plan->call_handlers[plan->call_handler_count].target_name = name;
                 plan->call_handler_count++;
                 if (bif) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+                if (!local && !bif &&
+                    !levelc_record_external_import(stmt->context, plan, name)) {
+                    free(condition_name);
+                    free(mode_name);
+                    if (reason_out) *reason_out = "invalid external CALL handler";
+                    return 0;
+                }
             }
             free(condition_name);
             free(mode_name);
@@ -1259,7 +1289,7 @@ static int levelc_call_statement_supported(ASTNode *stmt,
     if (!args) {
         if (bif && plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
         if (!procedure && !bif &&
-            !levelc_record_external_import(plan, target_name)) {
+            !levelc_record_external_import(stmt->context, plan, target_name)) {
             free(target_name);
             if (reason_out) *reason_out = "invalid external CALL target";
             return 0;
@@ -1281,7 +1311,7 @@ static int levelc_call_statement_supported(ASTNode *stmt,
     }
     if (bif && plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
     if (!procedure && !bif &&
-        !levelc_record_external_import(plan, target_name)) {
+        !levelc_record_external_import(stmt->context, plan, target_name)) {
         free(target_name);
         if (reason_out) *reason_out = "invalid external CALL target";
         return 0;
@@ -3153,11 +3183,48 @@ static ASTNode *levelc_call_bif_statement(Context *context,
                                               present, result);
 }
 
-static ASTNode *levelc_call_external_statement(Context *context,
+static ASTNode *levelc_call_missing_external_statement(
+                                                Context *context,
                                                 ASTNode *call_node,
                                                 LevelCLowerPlan *plan,
                                                 ASTNode *prelude,
                                                 const char *target_name) {
+    static const char prefix[] = "RXC-LC-43.1: Could not find routine ";
+    ASTNode *args_node = call_node->child ? call_node->child->sibling : NULL;
+    ASTNode *actuals = args_node ? args_node->child : NULL;
+    ASTNode *condition;
+    ASTNode *nop;
+    char *frame_name;
+    size_t length = sizeof(prefix) + strlen(target_name);
+    char *detail = malloc(length);
+    int added;
+
+    frame_name = levelc_prepare_call_activation(
+        context, call_node, plan, actuals, 0, 0, prelude);
+    condition = rxcp_remap_create_integer_constant(
+        context, call_node, 1, TP_BOOLEAN);
+    nop = ast_f(context, NOP, call_node->token);
+    if (!frame_name || !condition || !nop || !detail) {
+        free(frame_name);
+        free(detail);
+        return NULL;
+    }
+    snprintf(detail, length, "%s%s", prefix, target_name);
+    added = levelc_append_classic_error_if(
+        context, prelude, call_node, condition, detail);
+    free(frame_name);
+    free(detail);
+    if (!added) return NULL;
+    rxcp_remap_anchor_synthetic(nop, call_node);
+    return nop;
+}
+
+static ASTNode *levelc_call_external_statement(Context *context,
+                                                ASTNode *call_node,
+                                                LevelCLowerPlan *plan,
+                                                ASTNode *prelude,
+                                                const char *target_name,
+                                                int condition_handler) {
     ASTNode *args_node = call_node->child ? call_node->child->sibling : NULL;
     ASTNode *actuals = args_node ? args_node->child : NULL;
     ASTNode *args[1];
@@ -3168,10 +3235,19 @@ static ASTNode *levelc_call_external_statement(Context *context,
     ASTNode *value;
     char *frame_name;
     char *callable = levelc_external_callable_name(target_name, NULL);
+    int available = levelc_external_target_may_exist(context, target_name);
 
-    if (!callable) return NULL;
+    if (!callable || available < 0) {
+        free(callable);
+        return NULL;
+    }
+    if (!available) {
+        free(callable);
+        return levelc_call_missing_external_statement(
+            context, call_node, plan, prelude, target_name);
+    }
     frame_name = levelc_prepare_call_activation(
-        context, call_node, plan, actuals, 0, 0, prelude);
+        context, call_node, plan, actuals, 0, condition_handler, prelude);
     if (!frame_name) {
         free(callable);
         return NULL;
@@ -3187,6 +3263,10 @@ static ASTNode *levelc_call_external_statement(Context *context,
     if (!statement) {
         free(frame_name);
         return NULL;
+    }
+    if (condition_handler) {
+        free(frame_name);
+        return statement;
     }
     add_ast(prelude, statement);
     receiver = rxcp_remap_create_named_ref(context, call_node,
@@ -3215,7 +3295,7 @@ static ASTNode *levelc_lower_call_statement(Context *context,
         : bif ? levelc_call_bif_statement(
             context, call_node, plan, prelude, name, bif)
         : levelc_call_external_statement(
-            context, call_node, plan, prelude, name);
+            context, call_node, plan, prelude, name, 0);
     free(name);
     return result;
 }
@@ -3320,13 +3400,17 @@ static int levelc_append_call_trap_dispatch_body(Context *context,
             plan, handler->target_name);
         const LevelCBifEntry *bif = procedure ? NULL
             : levelc_find_direct_bif(handler->target_name, NULL);
+        int external = !procedure && !bif
+            ? levelc_external_target_may_exist(context, handler->target_name)
+            : 0;
         ASTNode *condition = ast_f(context, OP_COMPARE_EQUAL, source->token);
         ASTNode *then_instructions = rxcp_remap_create_instruction_builder(
             context, source);
         ASTNode *call_node = ast_f(context, CALL, source->token);
         ASTNode *then_block;
         ASTNode *branch;
-        if (!condition || !then_instructions || !call_node) goto fail;
+        if (!condition || !then_instructions || !call_node || external < 0)
+            goto fail;
         rxcp_remap_anchor_synthetic(condition, source);
         rxcp_remap_anchor_synthetic(call_node, source);
         add_ast(condition, rxcp_remap_create_named_ref(
@@ -3355,6 +3439,16 @@ static int levelc_append_call_trap_dispatch_body(Context *context,
                 : NULL;
             free(frame_name);
             if (!result) goto fail;
+        } else if (external) {
+            ASTNode *prelude = rxcp_remap_create_instruction_builder(
+                context, call_node);
+            ASTNode *call = prelude
+                ? levelc_call_external_statement(
+                    context, call_node, plan, prelude,
+                    handler->target_name, 1) : NULL;
+            if (!call) goto fail;
+            rxcp_remap_append_builder_children(then_instructions, prelude);
+            add_ast(then_instructions, call);
         } else {
             size_t length = strlen(handler->target_name) + 64;
             char *detail = malloc(length);

@@ -137,12 +137,25 @@ The ordinary compiler type checker validates the call and maps signature
 errors to `LEVELC_CALL_SIGNATURE`; assembly, linking and VM execution use
 their existing operations. No special linker or VM rule was added.
 
-This is a bounded external CALL path, not whole CALL closure. Static imports
-currently reject a missing direct target during compilation, while Classic
-reference behavior reports 43.1 only if the clause is reached. Delayed
-external handler selection has the same import-timing issue; the existing
-missing local-handler runtime 16.1 path is retained. The CALL worklist owns
-these open compatibility questions and the remaining condition lifecycle.
+Before lowering an external CALL, the compiler checks its existing ordered
+import inventory. Source candidates use their declared namespace, which may
+differ from the filename; binary candidates use the module stem. A binary
+provider with a different module filename can be supplied through an explicit
+`--import`, as with ordinary Level B/G compilation. An absent
+direct target becomes a source-anchored 43.1 error on the reached clause,
+after its argument expressions are evaluated. An absent delayed CALL handler
+keeps the authored raising-clause 16.1 route. A provider already available to
+the compiler follows the typed import and ordinary signature checker. An
+explicit command-line import is conservatively left to normal resolution
+because its exposed callable may differ from its module name. The generated
+trap dispatcher can call an available external handler with a fresh zero-
+argument frame and the existing CONDITION state; its return does not replace
+the interrupted caller's RESULT.
+
+This remains a bounded external CALL path. Search or loading of a provider
+that appears only after compilation, external-handler SIGL in its private
+pool, real condition producers, and the complete trap lifecycle remain open
+under the CALL worklist. No linker or VM rule was added.
 
 **Approved 2026-10-04 Unicode-first direction.** Level C visible scalar
 strings are valid text. Existing Level B `.string` and codepoint PARSE/SAY

@@ -4967,6 +4967,34 @@ importable_file **rxfl_lst(Context *context) {
     return list;
 }
 
+/* A conservative pre-validation query for Classic CALL lowering. A compiler
+ * import explicitly supplied on the command line may expose a callable whose
+ * name differs from its provider module, so leave it to normal resolution. */
+int rxcp_importable_module_may_exist(Context *context, const char *namespace_name) {
+    Context *master;
+    size_t i;
+
+    if (!context || !namespace_name || !namespace_name[0]) return -1;
+    master = context->master_context ? context->master_context : context;
+    if (master->cli_import_count) return 1;
+    if (master->levelc_routine_mode && master->file_name &&
+        module_name_equals(filename(master->file_name), namespace_name)) return 1;
+    if (!master->importable_file_list)
+        master->importable_file_list = rxfl_lst(master);
+    if (master->import_discovery_error) return -1;
+    if (!master->importable_file_list) return 0;
+    for (i = 0; master->importable_file_list[i]; i++) {
+        importable_file *file = master->importable_file_list[i];
+        if (file->type == REXX_FILE) {
+            const char *source_namespace =
+                rxcp_importable_source_namespace(master, file);
+            if (source_namespace &&
+                strcasecmp(source_namespace, namespace_name) == 0) return 1;
+        } else if (module_name_equals(file->name, namespace_name)) return 1;
+    }
+    return 0;
+}
+
 // Free statically linked functions list
 void free_static_linked_functions()
 {

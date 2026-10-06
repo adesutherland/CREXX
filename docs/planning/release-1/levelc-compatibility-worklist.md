@@ -3763,7 +3763,7 @@ at **684.9 MiB** with zero residual processes. Apple LeakSanitizer is
 unsupported; the ASan test run used `--leaks off`. These are exact current
 code/test-input development receipts, not whole CALL or Level C closure.
 
-**75B-C4 static-resolution finding.** The guarded unreachable
+**75B-C4 initial static-resolution finding (superseded in part by C4a).** The guarded unreachable
 `IF 0 THEN CALL no_such_external` probe fails compilation with
 `#NOT_A_FUNCTION` at line 2
 (`cmake-build-debug/levelc-call-missing-external-static.log`), whereas the
@@ -3771,11 +3771,70 @@ retained Classic reference requires 43.1 only on a reached call. Routing an
 unknown delayed handler through an ordinary import likewise moved the
 existing 16.1 runtime error to a compile failure in the trial focused run;
 the trial was removed and the missing-handler test passed again in
-`cmake-build-debug/levelc-call-missing-recheck.log`. The unchanged static
-linker/runtime path has no resolved compiler-only equivalent yet. Keep
-`LC-75-01/04/05`, whole CALL, and full Level C open while checking the
-remaining compiler options and requesting a narrow decision only if this
-timing conflict proves fundamental.
+`cmake-build-debug/levelc-call-missing-recheck.log`. C4a below repairs the
+compile-time-absent case through compiler lowering. A provider appearing only
+after compilation and an available-but-unlinked provider still need whole
+CALL review under the unchanged linker/runtime constraint.
+
+**75B-C4a compiler-only missing-provider plan (active).** Reuse the
+compiler's existing ordered source/binary import inventory to distinguish a
+namespace absent at compile time from an available provider with an invalid
+signature. For an absent direct target, lower to an authored-clause runtime
+43.1 error only if reached; for an absent delayed handler, keep the current
+authored raising-clause 16.1 route. An available provider continues through
+the fixed typed import and ordinary signature checker. Prove unreachable and
+reached direct calls, missing and available delayed handlers, opt/noopt and
+linked execution without changing `rxlink` or the VM. Do not silently extend
+this to a provider discovered after compilation: that search/lifecycle case
+remains an explicit `LC-75-04` decision or proof obligation.
+
+**75B-C4a compiler-only implementation, qualified as a bounded CALL increment.** The
+CALL lowerer checks the compiler's existing ordered import inventory before
+constructing an ordinary typed import. A source candidate is matched by its
+declared namespace rather than a misleading filename; a binary candidate
+uses its module stem. For a compile-time-absent direct target, the generated
+clause evaluates actual expressions and raises source-anchored `43.1` only
+when reached. A missing delayed handler retains the raising-clause `16.1`
+path. A present external delayed handler uses the same activation-frame
+builder with zero actuals, `CONDITION()` state and ignored handler return, so
+the caller's prior RESULT remains. Explicit CLI imports remain under the
+ordinary resolver because their exposed names may differ from module names.
+Permanent opt/noopt linked fixtures cover reached and unreachable missing
+CALLs, declared-namespace aliases, source and binary-only providers, and
+external delayed-handler dispatch through a controlled event. No `rxlink` or
+VM files changed. The guarded full Debug product build passed in
+`cmake-build-debug/levelc-call-availability-core-final.log`; focused CALL and
+source-import tests passed **43/43** in
+`cmake-build-debug/levelc-call-availability-focused-final.log`, peaking at
+**2771.8 MiB** and leaving zero child processes. The final-input normal Debug
+Level C suite passed **625/625** in
+`cmake-build-debug/levelc-call-availability-levelc-final.log`, peaking at
+**5134.3 MiB** with zero residual processes. Level B/G and RexxScript
+isolation passed **10/10** in
+`cmake-build-debug/levelc-call-availability-isolation-final.log`. The
+materially expanded external-CALL aggregate took **10.25 seconds** isolated
+in normal Debug and also passed isolated macOS ASan; `RUN_SERIAL` and the
+300-second backstop remain appropriate. The focused ASan build passed in
+`cmake-build-debug/levelc-call-availability-asan-build2-guard.log`.
+On final test inputs the expanded external aggregate passed isolated macOS
+ASan optimized and no-opt runs in
+`cmake-build-debug/levelc-call-external-binary-asan-isolated.log` and
+`cmake-build-debug/levelc-call-external-noopt-asan-final.log`; the missing
+target opt/noopt tests passed in
+`cmake-build-debug/levelc-call-availability-asan-focused2-guard.log`.
+These used `tools/asan-run.sh --leaks off` because Apple LSan is unsupported;
+each guard reported zero residual processes. The expanded aggregate peaked
+at **810.9 MiB** optimized and **811.1 MiB** no-opt under ASan.
+The late-provider and available-but-unlinked timing cases,
+external-handler `SIGL` reference interpretation, and real condition
+producers remain open under `LC-75-04/05`; the controlled event does not
+qualify ADDRESS or host event creation.
+The [IBM CALL reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=instructions-call)
+specifically places the incoming line in the caller's variable environment
+for an *internal* routine. The ignored-build Regina probe
+`cmake-build-debug/levelc_call_sigl_probe/` observed unassigned `SIGL` in a
+direct external routine; its external `CALL ON` attempt instead failed with
+`16.1`, so it cannot settle the external trap's private-pool `SIGL` rule.
 
 **LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
 The following proposed VM operation is retained only as history; Adrian
@@ -5543,7 +5602,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-COMMAND` | Implicit command clause | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ADDRESS` | Classic ADDRESS forms | Front end only | Execution and reference proof open |
 | `SYN-CLASSIC-ARG` | Classic ARG instruction | Whole instruction closed under LC-AC-71/LC-STEP-73: main and routine frames, omitted/present values, arbitrary comma templates, patterns and positions, exposed targets, repeated reads, Unicode, shared PARSE execution, authored diagnostics, opt/no-opt and linked output | C-string host entry's embedded-NUL limit remains a host-interface obligation; external Classic CALL and INTERPRET retain their instruction owners and must reuse the argument frame |
-| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL, including numeric, digit-starting and period-starting constant-symbol labels, and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; external Level C providers and fixed-signature Level B/G entries have linked opt/noopt focused proof under 75B, including nested providers, Unicode/NUL and signature rejection; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; direct and policy diagnostics have source-anchored matrix coverage under LC-STEP-75A | External missing-target timing and search, delayed external handlers, real condition producers and their source identity, remaining clause/lifecycle matrix and whole-instruction review open |
+| `SYN-CLASSIC-CALL` | CALL routine and CALL ON/OFF forms | Direct local CALL, including numeric, digit-starting and period-starting constant-symbol labels, and shared BIF entries accept source-ordered actuals, omissions, fresh local frames, quoted BIF bypass and RESULT/.RESULT presence/drop under LC-STEP-75C; external Level C providers and fixed-signature Level B/G entries have linked opt/noopt proof under 75B, including nested providers, source/binary discovery, Unicode/NUL and signature rejection; compile-time-absent direct targets raise `43.1` only when reached, and external delayed handlers have controlled CONDITION/ARG/RESULT proof; delayed local/BIF handlers, selected IF/WHEN/DO/transfer boundaries, repeated ON/OFF lifecycle and authored-clause missing-handler `16.1` have controlled event-injection proof under LC-STEP-75D; direct and policy diagnostics have source-anchored matrix coverage under LC-STEP-75A | Late provider and available-but-unlinked timing, external-handler SIGL reference, real condition producers and their source identity, remaining clause/lifecycle matrix and whole-instruction review open |
 | `SYN-CLASSIC-DO` | Simple, counted, conditional, and forever DO | Whole DO instruction closed under LC-AC-65/LC-STEP-70D, including compound controls and arbitrary numeric counts | Shared NUMERIC, condition, TRACE and host lifecycle remain in their own rows |
 | `SYN-CLASSIC-DROP` | DROP instruction | Whole instruction closed under LC-AC-62/LC-STEP-88D-2, including arbitrary direct compounds, Regina-style invalid-word skip and configured Unicode text classification | Shared pool/external host behavior remains under LC-AC-04/06 |
 | `SYN-CLASSIC-EXIT` | EXIT instruction | Bounded slice: empty EXIT | Remaining Classic forms, errors and configuration proof open |

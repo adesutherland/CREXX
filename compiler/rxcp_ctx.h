@@ -396,6 +396,7 @@ void freimpfc(imported_func *func);
 /* Get the list of importable files as a null terminated malloced array */
 importable_file **rxfl_lst(Context *context);
 const char *rxcp_importable_source_namespace(Context *context, importable_file *file);
+int rxcp_importable_module_may_exist(Context *context, const char *namespace_name);
 
 /* Internal project-driver dependency snapshot: zero means written/current. */
 int rxcp_project_dependencies(Context *context, const char *path, int check);
