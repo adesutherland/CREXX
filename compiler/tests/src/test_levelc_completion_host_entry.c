@@ -14,8 +14,11 @@
 #ifndef CREXX_TEST_RXFNSC_PATH
 #define CREXX_TEST_RXFNSC_PATH "rxfnsc.rxbin"
 #endif
-#ifndef CREXX_TEST_RETURN_MODULE
-#define CREXX_TEST_RETURN_MODULE "levelc_return_status7.rxbin"
+#ifndef CREXX_TEST_COMPLETION_MODULE
+#define CREXX_TEST_COMPLETION_MODULE "levelc_return_status7.rxbin"
+#endif
+#ifndef CREXX_TEST_INSTRUCTION
+#define CREXX_TEST_INSTRUCTION "RETURN"
 #endif
 
 int main(void) {
@@ -27,20 +30,21 @@ int main(void) {
     if (rxvml_load_module_file(ctx, CREXX_TEST_LIBRARY_PATH) <= 0 ||
         rxvml_load_module_file(ctx, CREXX_TEST_CLASSLIB_PATH) <= 0 ||
         rxvml_load_module_file(ctx, CREXX_TEST_RXFNSC_PATH) <= 0 ||
-        rxvml_load_module_file(ctx, CREXX_TEST_RETURN_MODULE) <= 0) {
+        rxvml_load_module_file(ctx, CREXX_TEST_COMPLETION_MODULE) <= 0) {
         rxvml_last_error(ctx, &error);
-        fprintf(stderr, "RETURN host module load failed: %s\n",
-                error ? error : "unknown error");
+        fprintf(stderr, "%s host module load failed: %s\n",
+                CREXX_TEST_INSTRUCTION, error ? error : "unknown error");
         goto cleanup;
     }
     if (rxvml_run(ctx, 0, NULL, &program_rc) != 0) {
         rxvml_last_error(ctx, &error);
-        fprintf(stderr, "RETURN host run failed: %s\n",
-                error ? error : "unknown error");
+        fprintf(stderr, "%s host run failed: %s\n",
+                CREXX_TEST_INSTRUCTION, error ? error : "unknown error");
         goto cleanup;
     }
     if (program_rc != 7) {
-        fprintf(stderr, "RETURN host expected status 7, got %d\n", program_rc);
+        fprintf(stderr, "%s host expected status 7, got %d\n",
+                CREXX_TEST_INSTRUCTION, program_rc);
     } else {
         failed = 0;
     }

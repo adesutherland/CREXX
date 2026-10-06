@@ -1762,11 +1762,9 @@ static int levelc_statement_supported(ASTNode *stmt,
         return levelc_call_statement_supported(stmt, plan, reason_out);
     }
 
-    if (!in_procedure && stmt->node_type == EXIT) {
-        if (stmt->child) {
-            if (reason_out) *reason_out = "EXIT expression is outside slice";
-            return 0;
-        }
+    if (stmt->node_type == EXIT) {
+        if (stmt->child)
+            return levelc_expr_supported(stmt->child, plan, reason_out);
         return 1;
     }
 
@@ -2160,6 +2158,30 @@ static int levelc_append_activation_method(Context *context,
         context, anchor, receiver, method, NULL, 0) : NULL;
     if (!call) return 0;
     add_ast(instructions, call);
+    return 1;
+}
+
+/* Stop this VM invocation before consuming a nested program EXIT result. */
+static int levelc_append_program_exit_guard(Context *context,
+                                            ASTNode *instructions,
+                                            ASTNode *anchor) {
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, anchor, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *condition = receiver ? rxcp_remap_create_member_call(
+        context, anchor, receiver, "programExitRequested", NULL, 0) : NULL;
+    ASTNode *then_instructions = rxcp_remap_create_instruction_builder(
+        context, anchor);
+    ASTNode *return_stmt = rxcp_remap_create_return_statement(context, anchor);
+    ASTNode *then_block;
+    ASTNode *branch;
+    if (!condition || !then_instructions || !return_stmt) return 0;
+    add_ast(then_instructions, return_stmt);
+    then_block = rxcp_remap_create_do_block(
+        context, anchor, then_instructions);
+    branch = then_block ? rxcp_remap_create_if_statement(
+        context, anchor, condition, then_block, NULL) : NULL;
+    if (!branch) return 0;
+    add_ast(instructions, branch);
     return 1;
 }
 
@@ -2831,6 +2853,10 @@ static ASTNode *levelc_lower_local_function_call(Context *context,
         context, expr, plan, procedure, actuals, 1, 0, prelude, &frame_name);
     if (!call_stmt) return NULL;
     add_ast(prelude, call_stmt);
+    if (!levelc_append_program_exit_guard(context, prelude, expr)) {
+        free(frame_name);
+        return NULL;
+    }
     if (!levelc_append_function_result_guard(
             context, prelude, expr, frame_name, target_name)) {
         free(frame_name);
@@ -3149,6 +3175,10 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
         return statement;
     }
     add_ast(prelude, statement);
+    if (!levelc_append_program_exit_guard(context, prelude, call_node)) {
+        free(frame_name);
+        return NULL;
+    }
     receiver = rxcp_remap_create_named_ref(context, call_node, VAR_SYMBOL,
                                            frame_name);
     present = receiver ? rxcp_remap_create_member_call(
@@ -3231,6 +3261,7 @@ static ASTNode *levelc_call_external_statement(Context *context,
     ASTNode *call;
     ASTNode *statement;
     ASTNode *receiver;
+    ASTNode *boundary;
     ASTNode *present;
     ASTNode *value;
     char *frame_name;
@@ -3252,6 +3283,16 @@ static ASTNode *levelc_call_external_statement(Context *context,
         free(callable);
         return NULL;
     }
+    receiver = rxcp_remap_create_named_ref(context, call_node,
+                                           VAR_SYMBOL, frame_name);
+    boundary = receiver ? rxcp_remap_create_member_call_statement(
+        context, call_node, receiver, "beginExternalProgram", NULL, 0) : NULL;
+    if (!boundary) {
+        free(frame_name);
+        free(callable);
+        return NULL;
+    }
+    add_ast(prelude, boundary);
     args[0] = rxcp_remap_create_named_ref(context, call_node,
                                           VAR_SYMBOL, frame_name);
     call = args[0] ? rxcp_remap_create_function_call(
@@ -3336,6 +3377,8 @@ static int levelc_append_call_trap_checkpoint(Context *context,
         context, source, call) : NULL;
     if (!statement) return 0;
     add_ast(instructions, statement);
+    if (!levelc_append_program_exit_guard(context, instructions, source))
+        return 0;
 
     error_name = rxcp_remap_create_generated_node_name(
         LEVELC_CALL_TRAP_ERROR_PREFIX, source);
@@ -3473,6 +3516,8 @@ static int levelc_append_call_trap_dispatch_body(Context *context,
             if (!record) goto fail;
             add_ast(then_instructions, record);
         }
+        if (!levelc_append_program_exit_guard(
+                context, then_instructions, source)) goto fail;
         then_block = rxcp_remap_create_do_block(
             context, source, then_instructions);
         branch = then_block ? rxcp_remap_create_if_statement(
@@ -3841,6 +3886,34 @@ static ASTNode *levelc_proc_return_statement(Context *context,
     if (!record) return NULL;
     add_ast(prelude, record);
 
+    return return_stmt;
+}
+
+static ASTNode *levelc_program_exit_statement(Context *context,
+                                              ASTNode *stmt,
+                                              LevelCLowerPlan *plan,
+                                              ASTNode *prelude) {
+    ASTNode *value = stmt->child
+        ? levelc_lower_expr(context, stmt->child, plan, prelude)
+        : levelc_blank_rexxvalue(context, stmt);
+    ASTNode *present = rxcp_remap_create_integer_constant(
+        context, stmt, stmt->child != NULL, TP_BOOLEAN);
+    ASTNode *receiver = rxcp_remap_create_named_ref(
+        context, stmt, VAR_SYMBOL, LEVELC_ACTIVATION_SYMBOL);
+    ASTNode *args[2];
+    ASTNode *record;
+    ASTNode *return_stmt;
+
+    if (!value || !present || !receiver) return NULL;
+    args[0] = value;
+    args[1] = present;
+    record = rxcp_remap_create_member_call_statement(
+        context, stmt, receiver, "requestProgramExit", args, 2);
+    return_stmt = rxcp_remap_create_return_statement(context, stmt);
+    if (!record || !return_stmt) return NULL;
+    if (!levelc_append_call_trap_checkpoint(context, prelude, stmt, plan))
+        return NULL;
+    add_ast(prelude, record);
     return return_stmt;
 }
 
@@ -4972,8 +5045,8 @@ static int levelc_lower_statement(Context *context,
         lowered = levelc_say_statement(context, stmt, plan, prelude);
     } else if (stmt->node_type == CALL) {
         lowered = levelc_lower_call_statement(context, stmt, plan, prelude);
-    } else if (!in_procedure && stmt->node_type == EXIT) {
-        lowered = rxcp_remap_create_return_statement(context, stmt);
+    } else if (stmt->node_type == EXIT) {
+        lowered = levelc_program_exit_statement(context, stmt, plan, prelude);
     } else if (stmt->node_type == RETURN) {
         lowered = levelc_proc_return_statement(context, stmt, plan, procedure, prelude);
     } else {
@@ -4986,7 +5059,7 @@ static int levelc_lower_statement(Context *context,
     }
 
     rxcp_remap_append_builder_children(instructions, prelude);
-    if ((stmt->node_type == RETURN || stmt->node_type == EXIT) &&
+    if (stmt->node_type == RETURN &&
         !levelc_append_call_trap_checkpoint(context, instructions, stmt, plan)) {
         if (reason_out) *reason_out = "failed to lower CALL checkpoint before completion";
         return 0;
@@ -5020,7 +5093,8 @@ static int levelc_lower_proc_statement(Context *context,
                                        const char **reason_out) {
     if (!levelc_lower_statement(context, instructions, stmt, plan,
                                 procedure, 1, reason_out)) return 0;
-    if (stmt->node_type == RETURN || stmt->node_type == LEAVE ||
+    if (stmt->node_type == RETURN || stmt->node_type == EXIT ||
+        stmt->node_type == LEAVE ||
         stmt->node_type == ITERATE) return 1;
     if (!levelc_append_call_trap_checkpoint(context, instructions, stmt, plan)) {
         if (reason_out) *reason_out = "failed to lower CALL clause checkpoint";

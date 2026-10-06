@@ -5264,6 +5264,14 @@ add_levelc_invalid_compile_test(levelc_return_invalid_close
         rexx_src/levelc_return_invalid_close.rexx "RXC-LC-35.1" "@ 2:10")
 add_levelc_invalid_compile_test(levelc_return_invalid_trailing_comma
         rexx_src/levelc_return_invalid_trailing_comma.rexx "RXC-LC-35.1" "@ 2:9")
+add_levelc_invalid_compile_test(levelc_exit_invalid_comma
+        rexx_src/levelc_exit_invalid_comma.rexx "RXC-LC-35.1" "@ 2:7")
+add_levelc_invalid_compile_test(levelc_exit_invalid_close
+        rexx_src/levelc_exit_invalid_close.rexx "RXC-LC-35.1" "@ 2:8")
+add_levelc_invalid_compile_test(levelc_exit_invalid_trailing_comma
+        rexx_src/levelc_exit_invalid_trailing_comma.rexx "RXC-LC-35.1" "@ 2:7")
+add_levelc_invalid_compile_test(levelc_exit_invalid_expr
+        rexx_src/levelc_exit_invalid_expr.rexx "RXC-LC-35.1" "@ 2:6")
 
 add_levelc_invalid_compile_test(levelc_compile_invalid_if_missing_then
         rexx_src/levelc_if_missing_then.rexx
@@ -6162,6 +6170,35 @@ add_levelc_runtime_slice_test(levelc_return_whole
 add_levelc_runtime_slice_test(levelc_return_whole_noopt
         rexx_src/levelc_return_whole.rexx
         "keyword=8\nshared=雪2;root=雪2\nprivate=inside;secret=SECRET\nbare=RESULT\nempty=VAR;len=0\ncounted=1;count=1\nfunction=E900;chars=2\nloop=1\n" -n)
+foreach(_exit_mode IN ITEMS opt noopt)
+    foreach(_exit_case IN ITEMS whole external handler)
+        if(_exit_case STREQUAL "whole")
+            set(_exit_source_arg
+                    --source ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_whole.rexx
+                    --sourcedir ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src)
+        elseif(_exit_case STREQUAL "handler")
+            set(_exit_source_arg --source ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_handler.rexx)
+        else()
+            set(_exit_source_arg --sourcedir ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src)
+        endif()
+        add_test(NAME levelc_exit_${_exit_case}_${_exit_mode}
+                COMMAND ${Python3_EXECUTABLE}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/levelc_exit_${_exit_case}.py
+                    --rxc $<TARGET_FILE:rxc>
+                    --rxas $<TARGET_FILE:rxas>
+                    --rxlink $<TARGET_FILE:rxlink>
+                    --rxvm ${CREXX_RXVM_EXECUTABLE}
+                    --bindir ${CMAKE_BINARY_DIR}/bin
+                    ${_exit_source_arg}
+                    --workdir ${CMAKE_CURRENT_BINARY_DIR}/levelc_exit_${_exit_case}
+                    --mode ${_exit_mode})
+        set_tests_properties(levelc_exit_${_exit_case}_${_exit_mode} PROPERTIES
+                LABELS "compiler;levelc"
+                CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc"
+                RUN_SERIAL TRUE
+                TIMEOUT 300)
+    endforeach()
+endforeach()
 add_levelc_runtime_slice_test(levelc_call_expression_actuals
         rexx_src/levelc_call_expression_actuals.rexx
         "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|Ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n")
@@ -6502,6 +6539,35 @@ foreach(_return_mode IN ITEMS opt noopt)
             LABELS "compiler;levelc"
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 endforeach()
+foreach(_exit_mode IN ITEMS opt noopt)
+    set(_exit_noopt_arg)
+    if(_exit_mode STREQUAL "noopt")
+        set(_exit_noopt_arg -DNOOPT=1)
+    endif()
+    add_test(NAME levelc_exit_continuation_${_exit_mode}
+            COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                -DBINDIR=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_continuation.rexx
+                -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+                -DNAME=levelc_exit_continuation_${_exit_mode}
+                -DEXPECTED_STATUS=3
+                ${_exit_noopt_arg}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_return_status.cmake)
+    set_tests_properties(levelc_exit_continuation_${_exit_mode} PROPERTIES
+            LABELS "compiler;levelc"
+            CREXX_PREP_TARGETS "rxc;rxas;rxvm;library;classlib;rxfnsc")
+endforeach()
+add_test(NAME levelc_exit_source_tree
+        COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc>
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_whole.rexx
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_exit_source_tree.cmake)
+set_tests_properties(levelc_exit_source_tree PROPERTIES LABELS "compiler;levelc")
 set(_return_status_cases seven text bare continuation fallthrough decimal huge overflow exponent_huge args)
 if(UNIX)
     list(APPEND _return_status_cases nearmax negative)
@@ -8103,7 +8169,7 @@ add_custom_command(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling Level C RETURN host entry ...")
 add_custom_target(levelc_return_status7_bin DEPENDS levelc_return_status7.rxbin)
-add_executable(test_levelc_return_host_entry src/test_levelc_return_host_entry.c)
+add_executable(test_levelc_return_host_entry src/test_levelc_completion_host_entry.c)
 target_link_libraries(test_levelc_return_host_entry PRIVATE rxvml rxpashim)
 target_include_directories(test_levelc_return_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 target_compile_definitions(test_levelc_return_host_entry PRIVATE
@@ -8111,8 +8177,28 @@ target_compile_definitions(test_levelc_return_host_entry PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library.rxbin"
         CREXX_TEST_CLASSLIB_PATH="${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
         CREXX_TEST_RXFNSC_PATH="${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
-        CREXX_TEST_RETURN_MODULE="${CMAKE_CURRENT_BINARY_DIR}/levelc_return_status7.rxbin")
+        CREXX_TEST_COMPLETION_MODULE="${CMAKE_CURRENT_BINARY_DIR}/levelc_return_status7.rxbin")
 add_dependencies(test_levelc_return_host_entry levelc_return_status7_bin library rxfnsc)
+
+add_custom_command(
+        OUTPUT levelc_exit_status7.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_exit_status7 ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_status7.rexx
+        COMMAND $<TARGET_FILE:rxas> levelc_exit_status7
+        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_status7.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling Level C EXIT host entry ...")
+add_custom_target(levelc_exit_status7_bin DEPENDS levelc_exit_status7.rxbin)
+add_executable(test_levelc_exit_host_entry src/test_levelc_completion_host_entry.c)
+target_link_libraries(test_levelc_exit_host_entry PRIVATE rxvml rxpashim)
+target_include_directories(test_levelc_exit_host_entry PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_levelc_exit_host_entry PRIVATE
+        CREXX_TEST_BINDIR="${CMAKE_BINARY_DIR}/bin"
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library.rxbin"
+        CREXX_TEST_CLASSLIB_PATH="${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+        CREXX_TEST_RXFNSC_PATH="${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+        CREXX_TEST_COMPLETION_MODULE="${CMAKE_CURRENT_BINARY_DIR}/levelc_exit_status7.rxbin"
+        CREXX_TEST_INSTRUCTION="EXIT")
+add_dependencies(test_levelc_exit_host_entry levelc_exit_status7_bin library rxfnsc)
 
 add_custom_command(
         OUTPUT dynamic_load_provider.rxbin
@@ -8388,6 +8474,10 @@ add_test(NAME levelc_return_host_entry COMMAND test_levelc_return_host_entry)
 set_tests_properties(levelc_return_host_entry PROPERTIES
         LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "test_levelc_return_host_entry")
+add_test(NAME levelc_exit_host_entry COMMAND test_levelc_exit_host_entry)
+set_tests_properties(levelc_exit_host_entry PROPERTIES
+        LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "test_levelc_exit_host_entry")
 add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
 foreach(_dynamic_interface_runner IN ITEMS rxvm)

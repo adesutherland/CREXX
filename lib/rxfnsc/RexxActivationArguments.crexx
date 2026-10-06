@@ -51,6 +51,9 @@ RexxActivationArguments: class
   signal_policy = .int[]
   parent_activation_ref = reference .RexxActivationArguments
   has_parent_activation = .boolean
+  program_root_ref = reference .RexxActivationArguments
+  has_program_root = .boolean
+  program_exit_requested = .boolean
   delayed_condition = .int
   pending_condition = .int
   pending_description = .string
@@ -72,6 +75,8 @@ RexxActivationArguments: class
     procedure_eligible = 0
     function_call = 0
     has_parent_activation = 0
+    has_program_root = 0
+    program_exit_requested = 0
     delayed_condition = 0
     pending_condition = 0
     pending_description = ""
@@ -99,6 +104,8 @@ RexxActivationArguments: class
     parent = dereference parent_ref
     parent_activation_ref = parent_ref
     has_parent_activation = 1
+    program_root_ref = parent.programRoot()
+    has_program_root = 1
     do index = 1 to 7
       signal_policy[index] = parent.signalPolicy(index)
     end
@@ -107,6 +114,48 @@ RexxActivationArguments: class
     condition_extra = parent.currentConditionExtra()
     condition_instruction = parent.currentConditionInstruction()
     delayed_condition = parent.delayedConditionId()
+    return
+
+  /**
+   * The root of this compiled Classic program, shared by its internal calls.
+   * External signed CALL starts a distinct root while retaining the caller
+   * reference for condition-policy inheritance.
+   */
+  programRoot: method = reference .RexxActivationArguments
+    if has_program_root then return program_root_ref
+    return reference self
+
+  /** Start a separate external Level C program on this fresh activation. */
+  beginExternalProgram: method = .void
+    has_program_root = 0
+    program_exit_requested = 0
+    return
+
+  /**
+   * Record one program-wide EXIT result at this program's activation root.
+   * @param value full Unicode or binary-capable Classic scalar
+   * @param present true when the EXIT has an expression
+   */
+  requestProgramExit: method = .void
+    arg value = .RexxValue, present = .boolean
+    root = dereference programRoot()
+    call root.recordProgramExit(value, present)
+    return
+
+  /** @return whether this program has requested EXIT from any internal frame */
+  programExitRequested: method = .boolean
+    if has_program_root then do
+      root = dereference program_root_ref
+      return root.programExitRequested()
+    end
+    return program_exit_requested
+
+  /** Store the program result once at the program boundary. */
+  recordProgramExit: method = .void
+    arg value = .RexxValue, present = .boolean
+    program_exit_requested = 1
+    if present then call setReturnValue(value)
+    else call clearReturnValue()
     return
 
   /** Record the condition currently visible to CONDITION(). */

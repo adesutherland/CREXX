@@ -9,7 +9,8 @@ Classic REXX compatibility, using the current cREXX compiler front-end style:
 re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
 The first DSLSH syntax-highlighting milestone is complete. Compiled Level C
-also has twelve closed whole-instruction reviews, including ARG and PROCEDURE, and substantial
+also has fourteen closed whole-instruction reviews, including ARG, PROCEDURE,
+CALL and RETURN, and substantial
 PARSE and BIF foundations; the [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
 owns their exact status and evidence. The approved one-frame label/SIGNAL
 architecture is the shared ARG/PROCEDURE/CALL foundation. Its reference
@@ -909,6 +910,40 @@ return-type inference, preserving the hidden argv path. The repaired Debug
 Level C suite passed 662/662; focused macOS ASan passed 42/42 and
 Level B/G/RexxScript isolation passed 11/11. LC-I-14 closure evidence and the
 separate `crexxsaa` load-order obligation are recorded in the worklist.
+
+## 2026-10-06 Classic EXIT frame model (instruction review open)
+
+Explicit `EXIT` uses the same source-tree optional-expression shape in main,
+called labels, branches and loops. Lowering evaluates the expression once in
+the current visible pool, records optional `RexxValue` presence at the
+program's activation root, then returns from the current compiled body. Each
+internal activation retains a reference to that root. Generated local CALL,
+function-expression and delayed CALL-handler boundaries check its exit flag
+before consuming `RESULT`, evaluating later operands or resuming the
+interrupted caller. This propagates termination through nested and recursive
+VM invocations without a new VM instruction.
+
+The approved signed external Level C CALL creates a fresh activation frame
+and explicitly starts a separate program root before entering its exported
+wrapper. `EXIT` within that provider therefore completes only the provider;
+the caller receives optional result presence through its existing CALL route
+and continues. The program root holds the full Unicode and binary-capable
+`RexxValue`; the existing implicit-main status bridge converts only at the
+outermost CLI or native `rxvml_run` boundary. An external Level B/G provider
+continues to use the same signed activation type. No linker or VM product
+operation was changed for this EXIT path.
+
+Focused opt/no-opt direct and linked tests already cover main, local,
+recursive, private-pool and function-expression EXIT; later actuals and
+clauses remain unevaluated. Separate tests cover external provider result
+presence, Unicode plus embedded NUL, delayed handler unwind, source-tree
+retention, malformed tails, and native status. LC-I-15 remains open until
+the complete instruction checkpoint is qualified. Adrian chose Regina's
+caller-return behavior for physical EOF on 2026-10-06. The existing final
+body RETURN therefore ends only the active internal invocation; top-level
+fallthrough has no result. This expressly differs from the IBM EXIT wording.
+The worklist records the decision and retained reference logs. The broader
+host text-result service remains open.
 
 ## 2026-10-03 implementation review: simplify before expansion
 

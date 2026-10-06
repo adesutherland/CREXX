@@ -30,7 +30,22 @@ open even where a supporting slice or helper passes. The final-input normal
 Debug Level C checkpoint for the whole RETURN review passed 662/662 with
 process memory monitoring. Focused macOS ASan passed 42/42 and final-input
 Level B/G/RexxScript isolation passed 11/11.
-This is a development checkpoint, not a Level C or Beta 4 qualification verdict.
+LC-I-15 EXIT has a whole-instruction implementation and focused reference
+matrix, including the explicit Regina physical-EOF decision, but its grouped
+final-input broad regression and sanitizer checkpoint remains open. This is
+a development checkpoint, not a Level C or Beta 4 qualification verdict.
+
+**2026-10-06 qualification cadence revision.** Adrian directed thicker
+instruction increments and one broad regression/sanitizer checkpoint across
+several completed instruction implementations instead of repeatedly running
+the entire matrix for each one. Finish each whole-instruction source-form,
+error and runtime review with focused normal Debug tests and a coherent
+commit; retain any broad or sanitizer criterion as visibly open until the
+next grouped checkpoint passes on its actual final inputs. This changes
+test scheduling, not Level C acceptance or instruction scope. The EXIT
+review is the first increment under this cadence after one broad run had
+already started. Do not repeat that broad run solely to replace an
+identified stale prebuilt host fixture or reprove unaffected tests.
 
 **2026-10-05 scope and VM decision.** Adrian initially excluded a general
 interface between Classic and non-Classic Rexx from this programme, then
@@ -1668,7 +1683,7 @@ unchanged evidence and leave overnight assurance to its scheduled lanes.
 | LC-I-12 PROCEDURE — closed 2026-10-05 | LC-STEP-74A–74D | `LC-74-01–05`: first-instruction and diagnostics, private pool, direct/indirect scalar/stem/exact compound EXPOSE, source order, nested/recursive alias lifetime, Unicode and isolation. CALL/RETURN later closed under LC-I-13/14; EXIT and shared full Level C lifecycle remain open under their own rows. |
 | LC-I-13 CALL — closed 2026-10-06 | LC-STEP-75A–75E | `LC-75-01–06`: whole syntax/error, local/BIF/external signed resolution, ARG and result lifecycle, linked and native host execution, and four-condition delayed policy/handler delivery pass under the accepted static provider boundary. ADDRESS, stream and host HALT producers retain their own open rows; this CALL closure does not qualify them. |
 | LC-I-14 RETURN — closed 2026-10-06 | LC-STEP-76A–76C | `LC-76-01–05`: bare/value syntax and anchored errors, one-body local function/subroutine lifecycle, result presence/drop, outermost status through the implicit main and native host, optimized/no-opt direct/linked proof. EXIT and host result exchange remain separately open. |
-| LC-I-15 EXIT | LC-STEP-77 | Optional value, fallthrough equivalence, completion and finalization; programme lifecycle. |
+| LC-I-15 EXIT — implementation complete, grouped QA open | LC-STEP-77A–77D | Full explicit-EXIT matrix and Regina physical EOF verified in focused Debug; LC-77-06 broad final-input and sanitizer gate remains open. No whole-instruction closure claim yet. |
 | LC-I-16 PULL | LC-STEP-78 | Queue/default input, optional template and empty/error behavior; host queue and PARSE source service. |
 | LC-I-17 PUSH | LC-STEP-79 | Front-of-queue ordering, optional expression and null value; configured queue. |
 | LC-I-18 QUEUE | LC-STEP-80 | Back-of-queue ordering, optional expression and null value; configured queue. |
@@ -4158,6 +4173,183 @@ Apple-unavailable leak detection off. No linker or VM product source changed.
 `LC-76-01–05` and LC-I-14 close on this evidence. EXIT, PARSE, the remaining
 instruction queue, host-interface obligations and full Level C/Release 1
 qualification stay open.
+
+**LC-I-15 EXIT plan — vision and intended outcome, 2026-10-06.** Complete
+Classic EXIT as the unconditional termination of the current REXX program,
+including when an internal subroutine, function, nested call, loop or
+condition handler is active. Evaluate its optional expression once in the
+active variable pool, preserve the full Unicode/embedded-NUL scalar as the
+program result, and unwind to the program boundary without resuming an
+interrupted caller or running later clauses. An external Level C program
+called through the approved signed CALL boundary has its own program
+boundary: its EXIT returns to its caller with optional result presence,
+without ending the caller's program. Reuse the one-body activation model
+and existing integer host-status bridge; retain the broader host text-result
+API, real condition producers, full Level C and Release 1 as open criteria.
+No linker or VM product change is authorized. The
+[IBM EXIT reference](https://www.ibm.com/docs/en/zos/2.5.0?topic=instructions-exit)
+is the reference for explicit EXIT. Adrian chose Regina's caller-return
+behavior for physical end-of-program on 2026-10-06, resolving its conflict
+with the IBM wording and preserving the closed LC-I-13 CALL fallthrough case.
+
+1. **LC-77-01 — source forms and errors (verified focused):** bare EXIT and EXIT with
+   one expression retain authored AST/source anchors and contextual keyword
+   behavior in main, local labels and nested IF/DO/SELECT arms. Missing or
+   surplus expressions fail at the causing source token/clause. Verify
+   reference probes, source/canonical trees, optimized/no-opt diagnostics
+   and parser recovery.
+2. **LC-77-02 — result and main completion (verified focused):** bare EXIT supplies no
+   result, and valued EXIT supplies the exact once-evaluated Unicode scalar,
+   including empty text and embedded NUL, before the active pool disappears.
+   Main completion stops subsequent clauses, exposes the current VM/native
+   host status through the existing bridge and does not alter prior RC or
+   unrelated settings. Verify direct, linked and native entry cases.
+3. **LC-77-03 — internal termination (verified focused):** EXIT inside any internal
+   invocation terminates that program, unwinding every active internal
+   CALL/function/handler frame without delivering an intermediate CALL
+   RESULT, evaluating later actuals or expressions, or resuming the caller.
+   Verify shared and PROCEDURE-private pools, nested/recursive calls,
+   loops, branches, delayed traps and optimizer parity.
+4. **LC-77-04 — external program boundary (verified focused):** an external Level C
+   provider's EXIT completes that provider program and returns its optional
+   scalar through the approved signed CALL subroutine boundary; the caller
+   continues with its own pool and condition policy. The reference's deferred
+   bare external-function error is recorded for the separately open external
+   function-expression service. Keep linker/VM behavior and cross-dialect
+   exclusions as already agreed.
+5. **LC-77-05 — physical fallthrough (verified):**
+   top-level end completes with no result; an active internal routine that
+   runs off the physical end returns without a value to its caller. This is
+   Adrian's explicit 2026-10-06 choice over IBM's whole-program wording.
+   Verify main, subroutine, function and external-program cases and retain
+   the earlier CALL fallthrough behavior.
+6. **LC-77-06 — coherent qualification (open):** implement one program
+   completion state on the shared activation/frame path, retain docs and
+   source tags, and pass focused normal Debug checks during development.
+   At the next grouped checkpoint, run the maintained focused sanitizer,
+   the relevant normal Level C suite, Level B/G/RexxScript isolation and
+   optimized/no-opt linked/native host cases on their final code/test inputs.
+   Record exact logs, memory/process evidence and remaining host obligations.
+   Commit the complete instruction implementation now; close LC-I-15 only
+   when LC-77-01–06 are verified at that grouped checkpoint.
+
+1. **LC-STEP-77A (`LC-77-01–05`, reference review complete):** inventory IBM and Regina
+   syntax/result/EOF/error behavior; inspect parser/AST, current bare-main
+   EXIT, local and external activation parentage, all CALL expression and
+   handler boundaries, and native host completion. Retain guarded minimal
+   reference and pre-change compiled probes. The EOF choice is recorded above.
+2. **LC-STEP-77B (`LC-77-01–04`; complete):** carry one optional
+   program result and termination request through the shared activation
+   graph, with a distinct external-program boundary. Lower explicit EXIT
+   through that path and insert required post-call/handler/function guards
+   before any further expression or RESULT use. Add permanent whole-form,
+   source-tree, error, direct/linked and host regressions.
+3. **LC-STEP-77C (`LC-77-05`; complete):**
+   implement and test the chosen physical-end behavior, reconcile the
+   earlier CALL fallthrough receipt and docs, and preserve all remaining
+   accepted CALL semantics.
+4. **LC-STEP-77D (`LC-77-06`; grouped QA pending):** commit the focused-
+   qualified whole EXIT implementation, proceed to LC-I-16 PULL, then
+   qualify the grouped final code/test inputs once and reconcile the full
+   EXIT matrix and open criteria before claiming LC-I-15 closure.
+
+**LC-STEP-77A reference and implementation review, 2026-10-06.** Guarded
+Regina probes in `cmake-build-debug/levelc_return_reference/exit_matrix/`
+and `exit-reference-matrix.log` show bare/valued EXIT from main, a local
+subroutine, nested PROCEDURE-private calls and a function expression stop
+the program immediately; the interrupted SAY/function/caller never
+continues. Bare internal-function EXIT ends the program without a 45.1.
+An external provider's EXIT 7 returns the value to a calling subroutine or
+function while the caller continues; bare external-function EXIT raises
+44.1 at the caller, and bare external-subroutine EXIT drops RESULT. The
+current Level C compiler accepts bare main EXIT but rejects valued main
+EXIT and every local EXIT, as retained in `exit-prechange-matrix.log`.
+Malformed EXIT tails behave like RETURN tails: Regina rejects comma and
+stray close with parser 64.1, while an invalid expression gives 35.1.
+The source grammar already emits one EXIT node with an optional expression;
+its surplus-tail recovery needs the same anchored review as RETURN.
+
+The approved activation already links each internal frame to its parent for
+condition policy, and the provider path passes a fresh activation to a
+separate compiled Level C routine. The EXIT implementation can share one
+program-completion record by reference from the activation root to internal
+frames, reset that root at an external signed CALL, and make every generated
+local-call, function-expression and delayed-handler boundary return early
+when that root requests EXIT. This carries the exact optional RexxValue
+without changing linker or VM operations or duplicating source result
+lowering. The physical EOF rule remains under LC-77-05: the
+[IBM EXIT instruction](https://www.ibm.com/docs/en/zos/2.5.0?topic=instructions-exit)
+says running off the physical end is EXIT, while guarded Regina
+`exit-falloff-reference.log` and the closed CALL fixture resume an internal
+caller. Adrian chose the Regina caller-return behavior on 2026-10-06. The
+existing terminal frame RETURN path implements that choice; permanent
+whole-form and external-program fallthrough checks will qualify it.
+
+**LC-STEP-77B explicit-EXIT development checkpoint, 2026-10-06.** The
+activation now shares one program-root exit flag and optional `RexxValue`
+result across internal frames. External signed Level C CALL resets a fresh
+frame as the provider's program root. The shared lowerer accepts EXIT in
+main and internal clauses, evaluates its expression once, records result
+presence, and returns from the current body. Generated local CALL,
+function-expression and delayed-handler boundaries check the root before
+resuming work or consuming CALL results. The parser retains surplus comma
+and close tokens as anchored 35.1 errors while valid comma continuation
+still evaluates. Source-tree evidence retains the authored EXIT nodes and
+their canonical completion calls. No linker or VM product source changed.
+
+The guarded focused `levelc_exit_*` CTest matrix passed 14/14 in
+`cmake-build-debug/levelc_return_reference/exit-ctest-focused-2.log`
+(peak group RSS 734.3 MiB; no residual processes). It covers optimized and
+unoptimized direct/linked main, recursive local, private pool, nested
+expression/actual, loop, external provider, delayed CALL handler, parser
+errors, source trees and continuation. The provider result test observes
+Unicode plus embedded NUL, optional empty/bare values, unchanged caller RC,
+and an expression evaluated once. The native `rxvml_run` entry's status 7
+passed separately in `exit-host-test.log`. The maintained macOS ASan build
+passed in `cmake-build-debugasan/asan-logs/20261006-111510-build/build.log`;
+the focused EXIT matrix passed 14/14 with Apple-unavailable leak detection
+off in `20261006-111852-ctest/ctest.log`. Its measured longest aggregate was
+22.85 seconds in normal Debug and 34.29 seconds under ASan, so the nested
+compiler/linker scenario tests run serially with a 300-second hang backstop.
+These were development checks on the explicit-EXIT path, not LC-I-15 closure.
+At this checkpoint LC-77-05, final-input normal suite and isolation evidence
+remained open; the next receipt supersedes the LC-77-05 status.
+
+**LC-STEP-77C Regina fallthrough decision and proof, 2026-10-06.** Adrian
+selected caller return for physical EOF; IBM's contrary whole-program
+wording is an explicit compatibility exception for this case only. The
+existing one-body terminal RETURN already implements it, so no new product
+code was required. The then-current focused EXIT matrix passed 14/14 in
+`cmake-build-debug/levelc_return_reference/exit-eof-focused.log`, covering
+top-level fallthrough, a called final label that resumes its caller and drops
+RESULT, and an external Level C provider's final-label fallthrough that
+resumes its own wrapper/caller. The existing closed CALL/fallthrough and
+function 44.1 regressions passed 6/6 in `exit-eof-existing.log` in optimized
+and no-opt modes. Both guarded runs left zero residual processes. This
+verifies LC-77-05; LC-77-01–04/06 and LC-I-15 remain open until final
+qualification. The 14-test macOS ASan receipt above predates the EOF test
+additions and is not the final-input sanitizer receipt.
+
+**LC-STEP-77D pre-grouped QA finding and disposition, 2026-10-06.** The
+normal Debug Level C run at `exit-final-levelc-suite.log` completed 673/676
+with peak group RSS 5126.2 MiB and zero residual processes. Two failures
+were one actual EXIT interaction: delayed CALL conditions queued for the
+EXIT clause were skipped because the new termination flag was recorded
+before the clause checkpoint. The lowerer now dispatches the pending
+condition after EXIT's expression and before recording program exit; a
+handler's own EXIT can then supersede the interrupted EXIT. The exact two
+CALL transfer tests passed 2/2 in `exit-trap-fix-tests.log`. The third
+failure, `levelc_call_host_entry`, used a prebuilt provider/entry image that
+had not been regenerated after compiler changes. Building its declared
+target recompiled both images, and the test passed in
+`exit-call-host-retested.log`; no CALL or host product edit was needed.
+The complete focused EXIT matrix passed 14/14 after the product fix in
+`exit-postfix-focused.log` (peak group RSS 543.8 MiB; no residual
+processes). Under Adrian's grouped-gate direction, this is a coherent
+implementation checkpoint, not a full-suite or sanitizer pass on final
+inputs. LC-77-06 and LC-I-15 closure remain open for the next grouped
+qualification; prior partial/before-fix broad evidence is not promoted
+to a passing final verdict.
 
 **LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
 The following proposed VM operation is retained only as history; Adrian
