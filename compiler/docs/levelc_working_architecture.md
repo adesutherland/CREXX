@@ -150,12 +150,18 @@ explicit command-line import is conservatively left to normal resolution
 because its exposed callable may differ from its module name. The generated
 trap dispatcher can call an available external handler with a fresh zero-
 argument frame and the existing CONDITION state; its return does not replace
-the interrupted caller's RESULT.
+the interrupted caller's RESULT. A controlled event shows that the external
+handler's private pool has unassigned `SIGL`, while the interrupted caller's
+`SIGL` records the causing line. Source-order `SIGNAL ON` followed by
+`CALL ON` selects delayed CALL; the reverse order removes that delayed CALL
+policy. The latter check uses the existing activation API and a controlled
+queue attempt after the authored SIGNAL clause.
 
 This remains a bounded external CALL path. Search or loading of a provider
-that appears only after compilation, external-handler SIGL in its private
-pool, real condition producers, and the complete trap lifecycle remain open
-under the CALL worklist. No linker or VM rule was added.
+that appears only after compilation, an available provider omitted from the
+linked image, exact reference equivalence for external-handler `SIGL`, real
+condition producers, and the complete trap lifecycle remain open under the
+CALL worklist. No linker or VM rule was added.
 
 **Approved 2026-10-04 Unicode-first direction.** Level C visible scalar
 strings are valid text. Existing Level B `.string` and codepoint PARSE/SAY

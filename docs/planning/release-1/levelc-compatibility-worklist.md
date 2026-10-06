@@ -3836,6 +3836,75 @@ for an *internal* routine. The ignored-build Regina probe
 direct external routine; its external `CALL ON` attempt instead failed with
 `16.1`, so it cannot settle the external trap's private-pool `SIGL` rule.
 
+**75B-C5a whole-CALL coherence plan (partially complete).** Keep the intended
+outcome and numbered `LC-75-01–06` acceptance criteria above unchanged. This
+review checks the external handler's caller/private-pool `SIGL` behavior
+against the IBM CALL/condition wording, exercises both directions of
+CALL/SIGNAL policy replacement, and audits the complete CALL
+source/error/result matrix against retained reference probes. Record each
+unmatched form. The compiler-only path retains the ordinary linker and VM.
+
+1. **75B-C5a-1 (`LC-75-03/05`, complete):** add focused linked optimized/no-opt
+   observations for external handler private state, caller `SIGL`, RESULT and
+   CALL-after-SIGNAL replacement; check SIGNAL-after-CALL policy through its
+   existing activation API, then compare the inference with the IBM reference.
+2. **75B-C5a-2 (`LC-75-01/02/04`, open):** retain exact late-provider and
+   available-but-unlinked receipts, finish the direct and delayed negative
+   matrix, and identify which observable obligations require a scope decision
+   under the fixed compile-time signature and unchanged core behavior.
+3. **75B-C5a-3 (`LC-75-06`, bounded qualification complete; final closure
+   depends on step 2):** measure the expanded nested aggregate in normal Debug
+   and maintained ASan, run focused checks during edits and one relevant normal
+   correctness suite on final code/test inputs, then update architecture and
+   coverage. Keep LC-I-13 and full Level C open for any unverified criterion.
+
+**75B-C5a reference and runtime boundary receipt, 2026-10-06 (open).** A
+guarded compile/assemble/link/execute probe in
+`cmake-build-debug/levelc_call_late_probe/` established three outcomes with
+the unchanged core: a provider added only after caller compilation does not
+replace the emitted 43.1 clause even when linked; a provider known at
+compile time but omitted from the image passes `rxlink` and raises VM
+`FUNCTION_NOT_FOUND` at the reached CALL; the same caller linked with its
+provider returns `LATE`. The guarded probe peaked at **283.4 MiB** and left
+zero children. A separate controlled external-handler image omitted its
+provider; `rxlink` succeeded and `rxvm` raised `FUNCTION_NOT_FOUND` at the
+authored `CALL ON` policy line rather than 16.1 at the event's NOP line
+(`cmake-build-debug/compiler/tests/levelc_call_external/opt/`
+`external-handler-unlinked-run.log`). These are unresolved Classic error and
+source-timing differences within `LC-75-01/04/05`. They do not authorize a
+linker/runtime edit or a silent relaxation of the full CALL criteria.
+
+The permanent external-handler fixture now asserts a fresh zero-argument
+frame, CONDITION `ERROR|CALL|DELAY`, ignored handler return, private-pool
+`SIGL` unassigned, caller RESULT preserved and caller `SIGL` at the causing
+line. It also proves CALL after SIGNAL selects CALL. A second linked source
+with SIGNAL after CALL rejects a controlled delayed CALL queue; the existing
+activation unit separately proves `setSignalPolicy` replaces an active CALL
+slot and a nested child's policy change does not mutate its caller. Both
+optimized and no-opt external aggregates passed focused Debug **2/2** in
+`cmake-build-debug/levelc-call-c5a-override-focused2.log`, peaking at
+**330.5 MiB** with zero residual processes.
+The materially expanded aggregate passed macOS ASan optimized/no-opt
+**2/2** in `cmake-build-debug/levelc-call-c5a-asan-focused-guard.log`,
+taking **26.22/25.51 seconds** in isolation, peaking at **811.2 MiB** and
+leaving zero children. `RUN_SERIAL` and the 300-second hang backstop remain
+appropriate. The unchanged activation unit passed Debug **2/2** in
+`cmake-build-debug/levelc-call-c5a-activation-focused.log`; its SIGNAL/CALL
+replacement and nested-policy assertions were already present. The commit
+`14fa28f8e` core build and Level B/G/RexxScript isolation remain valid because
+only CALL test inputs and documentation changed after them.
+The final-input normal Debug Level C suite passed **625/625** in
+`cmake-build-debug/levelc-call-c5a-levelc-final.log`, taking **163.02
+seconds**, peaking at **5713.3 MiB** and leaving zero residual processes.
+The private-pool `SIGL` expectation is inferred from IBM's internal-routine
+caller-environment wording plus Regina's direct-external observation;
+Regina's external CALL ON
+probe returns 16.1 instead of entering that handler, so exact external-trap
+reference equivalence stays open. The CALL diagnostic, local/BIF/result,
+four-condition, source-boundary and missing-handler matrices already have
+permanent focused evidence above; no missing legal parser form was found in
+this pass. Real event producers still belong to their instruction/host rows.
+
 **LC-STEP-75B descriptor-safe selection proposal — superseded 2026-10-06.**
 The following proposed VM operation is retained only as history; Adrian
 directed the compiler to use ordinary typed imports and prohibited linker or

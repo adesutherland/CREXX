@@ -6,7 +6,8 @@ from pathlib import Path
 import re
 import subprocess
 
-from levelc_call_delayed_injection import inject_boundaries
+from levelc_call_delayed_injection import (
+    inject_after_signal_override, inject_boundaries)
 
 
 def run(command, workdir, label, success=True):
@@ -120,7 +121,7 @@ def main():
     trap_command += ["-o", str(trap_assembly), str(trap_source)]
     run(trap_command, workdir, "trap_compile")
     trap_injected.write_text(
-        inject_boundaries(trap_assembly.read_text(), ((4, "external"),)),
+        inject_boundaries(trap_assembly.read_text(), ((5, "external"),)),
         encoding="utf-8")
     run([args.rxas, "-o", str(trap_binary), str(trap_injected)],
         workdir, "trap_assemble")
@@ -129,8 +130,31 @@ def main():
          str(bindir / "library.rxbin"), str(bindir / "classlib.rxbin"),
          str(bindir / "rxfnsc.rxbin")], workdir, "trap_link")
     trap_output = run([args.rxvm, str(trap_image)], workdir, "trap_run")
-    if trap_output != b"trap=ERROR|CALL|DELAY|0\nafter=prior|prior\n":
+    if trap_output != b"trap=ERROR|CALL|DELAY|0|LIT\nafter=prior|prior|5\n":
         raise RuntimeError(f"unexpected external trap output: {trap_output!r}")
+
+    override_source = sourcedir / "levelc_call_signal_override.rexx"
+    override_assembly = workdir / "levelc_call_signal_override.rxas"
+    override_injected = workdir / "levelc_call_signal_override_injected.rxas"
+    override_binary = workdir / "levelc_call_signal_override.rxbin"
+    override_command = [args.rxc, "-s", str(sourcedir), "-i", str(bindir)]
+    if args.mode == "noopt":
+        override_command.append("-n")
+    override_command += ["-o", str(override_assembly), str(override_source)]
+    run(override_command, workdir, "override_compile")
+    override_injected.write_text(
+        inject_after_signal_override(
+            override_assembly.read_text(), 4, "replaced"), encoding="utf-8")
+    run([args.rxas, "-o", str(override_binary), str(override_injected)],
+        workdir, "override_assemble")
+    override_image = workdir / "levelc_call_signal_override_image.rxbin"
+    run([args.rxlink, "-o", str(override_image), str(override_binary),
+         str(bindir / "library.rxbin"), str(bindir / "classlib.rxbin"),
+         str(bindir / "rxfnsc.rxbin")], workdir, "override_link")
+    override_output = run([args.rxvm, str(override_image)],
+                          workdir, "override_run")
+    if override_output != b"after-override\n":
+        raise RuntimeError(f"unexpected SIGNAL override output: {override_output!r}")
 
     invalid_entries = {
         "badarg": (".void", "frame = .string"),

@@ -111,6 +111,30 @@ def inject_boundaries(assembly, sites_description):
     return append_queue_import(assembly[:body_start] + body + assembly[body_end:])
 
 
+def inject_after_signal_override(assembly, line, description):
+    body_start = assembly.index("__rxcp_levelc_body() .locals=")
+    body_end = assembly.index(
+        "__rxcp_levelc_call_trap_dispatch() .locals=", body_start)
+    body = assembly[body_start:body_end]
+    policies = list(re.finditer(
+        r"   call r\d+,§rexxactivation\.rexxactivationarguments\.setsignalpolicy\(\),r\d+\n",
+        body))
+    if not policies:
+        raise RuntimeError("SIGNAL override has no policy write")
+    checkpoint = re.search(
+        r"   call4 r\d+,__rxcp_levelc_call_trap_dispatch\(\),[^\n]*\n",
+        body[policies[0].end():])
+    if checkpoint is None:
+        raise RuntimeError("SIGNAL override has no generated checkpoint")
+    site = policies[0].end() + checkpoint.end()
+    maximum = max(int(value) for value in re.findall(r"\br(\d+)\b", body))
+    body = body[:site] + queue_snippet(maximum + 1, line, description) + body[site:]
+    body = re.sub(
+        r"(__rxcp_levelc_body\(\) \.locals=)\d+",
+        lambda match: match.group(1) + str(maximum + 7), body, count=1)
+    return append_queue_import(assembly[:body_start] + body + assembly[body_end:])
+
+
 def inject_lifecycle(assembly):
     body_start = assembly.index("__rxcp_levelc_body() .locals=")
     body_end = assembly.index(
