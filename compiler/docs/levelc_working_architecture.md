@@ -162,9 +162,25 @@ A provider must be visible at caller compilation and included in the linked
 image. A later provider requires caller recompilation; an available provider
 omitted from the image retains the core `FUNCTION_NOT_FOUND` result and its
 ordinary source location. These are explicit departures from Classic late
-lookup and error timing. Exact reference equivalence for external-handler
-`SIGL`, real condition producers, and the complete trap lifecycle remain open
-under the CALL worklist. No linker or VM rule was added.
+lookup and error timing. The external handler's private `SIGL` starts
+unassigned while the caller records the causing clause, following IBM's
+caller-environment rule and the external programme's implicit private pool.
+Regina's external CALL ON path raises 16.1, so this exact handler observation
+rests on the documented rule and the compiled fixture rather than a
+byte-for-byte Regina comparison. CALL policy and handler lifecycle are
+qualified with controlled events; real ADDRESS, stream and host HALT
+producers retain their own instruction and host owners. No linker or VM rule
+was added.
+
+A native `rxvml` host can load the signed Level C provider and its caller as
+separate modules in one context. The caller's ARG frame passes through the
+ordinary typed call, the provider's `SAY` uses the host's byte-length output
+callback, and its optional RETURN reaches the caller. The host regression
+uses both Unicode and embedded NUL through `rxvml_run_with_lengths()`.
+Controlled nested HALT delivery also exercises the compiled handler path: a
+second HALT raised while its first handler is delayed is buffered on the
+interrupted activation, then delivered with its own causing line after the
+first handler returns. Real HALT production remains a host obligation.
 
 **Approved 2026-10-04 Unicode-first direction.** Level C visible scalar
 strings are valid text. Existing Level B `.string` and codepoint PARSE/SAY

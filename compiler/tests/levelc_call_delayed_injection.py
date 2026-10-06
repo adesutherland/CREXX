@@ -206,11 +206,45 @@ def inject_conditions(assembly):
     return append_queue_import(assembly[:body_start] + body + assembly[body_end:])
 
 
+def inject_buffered_halt(assembly):
+    body_start = assembly.index("__rxcp_levelc_body() .locals=")
+    body_end = assembly.index(
+        "__rxcp_levelc_call_trap_dispatch() .locals=", body_start)
+    body = assembly[body_start:body_end]
+    policy = re.search(
+        r"   call r\d+,§rexxactivation\.rexxactivationarguments\.setcallpolicy\(\),r\d+\n",
+        body)
+    if policy is None:
+        raise RuntimeError("HALT fixture has no CALL ON policy")
+    checkpoint = re.search(
+        r"   call4 r\d+,__rxcp_levelc_call_trap_dispatch\(\),[^\n]*\n",
+        body[policy.end():])
+    if checkpoint is None:
+        raise RuntimeError("HALT policy has no generated checkpoint")
+    first = policy.end() + checkpoint.end()
+    marker = re.search(r'   load r\d+,"inside"\n', body)
+    if marker is None:
+        raise RuntimeError("HALT handler lacks the first-event marker")
+    say = re.search(r"   say r\d+\n", body[marker.end():])
+    if say is None:
+        raise RuntimeError("HALT handler marker has no SAY")
+    second = marker.end() + say.end()
+    if first >= second:
+        raise RuntimeError("HALT events are not in source order")
+    maximum = max(int(value) for value in re.findall(r"\br(\d+)\b", body))
+    body = body[:second] + queue_snippet(maximum + 7, 8, "buffered", 4) + body[second:]
+    body = body[:first] + queue_snippet(maximum + 1, 3, "initial", 4) + body[first:]
+    body = re.sub(
+        r"(__rxcp_levelc_body\(\) \.locals=)\d+",
+        lambda match: match.group(1) + str(maximum + 13), body, count=1)
+    return append_queue_import(assembly[:body_start] + body + assembly[body_end:])
+
+
 def main():
     parser = argparse.ArgumentParser()
     for name in ("rxc", "rxas", "rxvm", "bindir", "source", "workdir", "mode"):
         parser.add_argument(f"--{name}", required=True)
-    parser.add_argument("--scenario", choices=("policy", "boundaries", "transfers", "lifecycle", "missing", "conditions"),
+    parser.add_argument("--scenario", choices=("policy", "boundaries", "transfers", "lifecycle", "missing", "conditions", "buffered_halt"),
                         default="policy")
     args = parser.parse_args()
     args.rxc = str(Path(args.rxc).resolve())
@@ -237,6 +271,8 @@ def main():
         injected = inject_conditions(assembly_path.read_text())
     elif args.scenario == "lifecycle":
         injected = inject_lifecycle(assembly_path.read_text())
+    elif args.scenario == "buffered_halt":
+        injected = inject_buffered_halt(assembly_path.read_text())
     elif args.scenario == "missing":
         injected = inject_boundaries(assembly_path.read_text(), ((3, "missing"),))
     else:
@@ -292,6 +328,11 @@ def main():
             "caught=HALT|halt|CALL|DELAY|10|0\n"
             "caught=NOTREADY|notready|CALL|DELAY|13|0\n"
             "after=prior|prior|\n"),
+        "buffered_halt": (
+            "caught=initial|3\n"
+            "inside\n"
+            "caught=buffered|8\n"
+            "after\n"),
     }
     expected = expected_by_scenario[args.scenario].encode("utf-8")
     if output != expected:
