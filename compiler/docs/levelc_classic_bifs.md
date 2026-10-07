@@ -84,7 +84,8 @@ The specification helper code uses three numeric contexts:
 
 - `NUM` and `WHOLENUM` checks use the caller's `NUMERIC DIGITS` and
   `NUMERIC FORM`.
-- `WHOLE`, `WHOLE>=0`, and `WHOLE>0` checks use the BIF's own internal digits
+- `WHOLE`, `WHOLE>=0`, and `WHOLE>0` checks accept exact whole decimal and
+  exponent forms, expand them to plain signed digits, and use the BIF's own internal digits
   setting and scientific form.
 - Internal date, radix, and formatting work may use enough precision to avoid
   introducing exponential notation in intermediate values.

@@ -203,6 +203,37 @@ exited. Direct count is 61/70; nine names remain absent. Sanitizer and grouped
 whole-product proof remain STEP-90F obligations. ERRORTEXT and the CONDITION
 producer audit are still pending within STEP-90D.
 
+**LC-STEP-90E numeric audit, implementation plan.** The retained ASCII
+reproducer `SUBSTR('abc','1.0')` exits 28 with source-anchored 40.12 on
+`f69ab852f`, while Regina returns `abc` (whole decimal and exponent spellings).
+Failure log: `/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-bif-whole-baseline.idl3orbw/baseline.log`;
+reference: `/tmp/crexx-bif-whole-repro.D0LIH6.reference.log`. Repair the shared
+WHOLE normalizer by reusing the existing decimal-expansion helper, removing the
+integer-spelling-only branch. Verify exact decimal/exponent values, fractional
+rejection, signs/zero, caller digits independence, source errors and direct/linked
+opt/no-opt. Keep WHOLENUM caller rounding and the existing configured numeric
+alphabet/Unicode transport unchanged. This is a reference-backed argument
+validation repair, not a new character compatibility rule. Wider integer/resource
+limits stay visibly open until characterized.
+
+**LC-STEP-90E WHOLE receipt, 2026-10-07.** Exact decimal/exponent whole
+arguments now use the existing expansion algorithm in the shared datatype
+module. The obsolete integer-spelling validator is removed; WHOLENUM reuses
+that same expansion after its existing caller-context rounding. No numeric
+alphabet, codec or I/O path changed. Debug focused build of `rxfnsc`,
+`testRexxClassicBifDatatype`, `testRexxClassicBifD2x` and
+`testRexxClassicBifSubstr`, `--parallel 4`, passed
+(`/tmp/crexx-bif-whole-build.log`). CTest `-R
+'^(testRexxClassicBif(Datatype|D2x|Substr)|levelc_bif_whole)' --parallel 4
+--output-on-failure` passed 10/10 in 2.91s
+(`/tmp/crexx-bif-whole-tests.log`). The compiled fixture exactly matches Regina
+(`/tmp/crexx-bif-whole-reference.log`): decimal/exponent/leading-zero/sign
+values, caller digits 2/fuzz 1, multiple positional/count BIFs and SOURCELINE,
+ARG, fractional error 40.12 and its source line, direct and linked opt/no-opt.
+Existing configured-digit tests now expect a mathematically whole decimal
+through the unchanged normalization route. That assertion is not wider Unicode
+qualification. Broad/product and sanitizer checks remain STEP-90F obligations.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A

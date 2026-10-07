@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicdatatype expose rexxclassic_datatype_classify rexxclassic_datatype_test rexxclassic_datatype_normalize_number rexxclassic_datatype_normalize_whole rexxclassic_datatype_binary rexxclassic_datatype_hex rexxclassic_datatype_symbol_kind
+namespace rexxclassicdatatype expose rexxclassic_datatype_expand_whole rexxclassic_datatype_classify rexxclassic_datatype_test rexxclassic_datatype_normalize_number rexxclassic_datatype_normalize_whole rexxclassic_datatype_binary rexxclassic_datatype_hex rexxclassic_datatype_symbol_kind
 import rexxclassicconfig
 import rexxvalue
 
@@ -69,13 +69,13 @@ rexxclassic_datatype_normalize_number: procedure = .string
     return _normalize_byte_number(value.asBinary(),config.byteDatatypeDigits(),config.exponentDigitLimit(),state)
   return _normalize_text_number(value.asString(),config.textDatatypeDigits(),config.exponentDigitLimit(),state)
 
-/** Normalize a strict CheckArgs WHOLE spelling to signed ASCII digits. */
+/** Normalize an exact CheckArgs WHOLE value to signed ASCII digits. */
 rexxclassic_datatype_normalize_whole: procedure = .string
   arg value = .RexxValue, config = .RexxClassicConfig, expose valid = .int
   state = 0
   normalized = rexxclassic_datatype_normalize_number(value,config,state)
-  valid = state = 1 & _normalized_integer_syntax(normalized)
-  if valid then return normalized
+  valid = 0
+  if state = 1 then return rexxclassic_datatype_expand_whole(normalized,valid)
   return ""
 
 /** Validate configured binary digits and blank grouping from the right. */
@@ -428,23 +428,6 @@ _normalize_text_number: procedure = .string
   if state = 1 then return normalized
   return ""
 
-_normalized_integer_syntax: procedure = .boolean
-  arg normalized = .string
-  normalized_length = .int
-  codepoint = .int
-  assembler strlen normalized_length,normalized
-  if normalized_length = 0 then return 0
-  index = 0
-  assembler strchar codepoint,normalized,index
-  if codepoint = 43 | codepoint = 45 then index = index + 1
-  if index >= normalized_length then return 0
-  do while index < normalized_length
-    assembler strchar codepoint,normalized,index
-    if codepoint < 48 | codepoint > 57 then return 0
-    index = index + 1
-  end
-  return 1
-
 _normalized_whole: procedure = .boolean
   arg normalized = .string
   normalized_length = .int
@@ -635,3 +618,102 @@ _text_blank: procedure = .boolean
   configured_position = -1
   assembler poschar configured_position,blanks,codepoint
   return configured_position >= 0
+
+/* Expand normalized scientific/engineering decimal text and reject a fraction. */
+rexxclassic_datatype_expand_whole: procedure = .string
+  arg value = .string, expose valid = .int
+  text = value
+  negative = 0
+  exponent = 0
+  text_length = .int
+  start = 0
+  first_codepoint = .int
+  codepoint = .int
+  exponent_position = .int
+  exponent_start = .int
+  exponent_length = .int
+  mantissa_end = .int
+  before_length = .int
+  digit_length = .int
+  decimal_position = .int
+  integer_source_length = .int
+  fractional_start = .int
+  first_nonzero = .int
+  segment_length = .int
+  padding_count = .int
+  saw_point = 0
+  digits = ""
+  whole_text = ""
+  exponent_text = ""
+  segment = ""
+  zero_character = 48
+  point_character = 46
+  upper_e_character = 69
+  lower_e_character = 101
+  plus_character = 43
+  minus_character = 45
+
+  valid = 0
+  assembler strlen text_length,text
+  if text_length = 0 then return ""
+  assembler strchar first_codepoint,text,start
+  if first_codepoint = plus_character | first_codepoint = minus_character then do
+    negative = first_codepoint = minus_character
+    start = 1
+  end
+
+  exponent_position = -1
+  assembler poschar exponent_position,text,upper_e_character
+  if exponent_position < 0 then
+    assembler poschar exponent_position,text,lower_e_character
+  mantissa_end = text_length
+  if exponent_position >= 0 then do
+    exponent_start = exponent_position + 1
+    exponent_length = text_length - exponent_start
+    assembler substring exponent_text,text,exponent_start,exponent_length
+    exponent = exponent_text
+    mantissa_end = exponent_position
+  end
+
+  do i = start to mantissa_end - 1
+    assembler strchar codepoint,text,i
+    if codepoint = point_character then saw_point = 1
+    else do
+      assembler appendchar digits,codepoint
+      if \saw_point then before_length = before_length + 1
+    end
+  end
+  assembler strlen digit_length,digits
+  decimal_position = before_length + exponent
+
+  fractional_start = decimal_position
+  if fractional_start < 0 then fractional_start = 0
+  if fractional_start < digit_length then do i = .int(fractional_start) to digit_length - 1
+    assembler strchar codepoint,digits,i
+    if codepoint <> zero_character then return ""
+  end
+
+  integer_source_length = decimal_position
+  if integer_source_length < 0 then integer_source_length = 0
+  if integer_source_length > digit_length then integer_source_length = digit_length
+  first_nonzero = -1
+  if integer_source_length > 0 then do i = .int(0) to integer_source_length - 1
+    assembler strchar codepoint,digits,i
+    if codepoint <> zero_character then do
+      first_nonzero = i
+      leave
+    end
+  end
+  if first_nonzero < 0 then whole_text = "0"
+  else do
+    if negative then assembler appendchar whole_text,minus_character
+    segment_length = integer_source_length - first_nonzero
+    assembler substring segment,digits,first_nonzero,segment_length
+    assembler append whole_text,segment
+    if decimal_position > digit_length then do
+      padding_count = decimal_position - digit_length
+      assembler padstr whole_text,zero_character,padding_count
+    end
+  end
+  valid = 1
+  return whole_text
