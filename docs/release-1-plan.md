@@ -113,6 +113,11 @@ binary values/I/O are future separate work. The component worklist owns the
 revised acceptance and affected instruction requalification. Complete Level C
 claims must use that documented boundary and must not imply byte-exact Classic
 parity.
+On 2026-10-07 Adrian parked `INTERPRET` as not implemented while the Level C
+worklist closes its remaining cross-cutting gaps before a new-session
+consistency review. Parking is not an approved "won't implement" exception;
+`R1-AC-01/02` and the Level C instruction criterion stay open until an
+individual disposition and the remaining qualification are recorded.
 
 Existing interface dispatch is implemented; interface inheritance and overloads are not part of
 the current documented Level B surface. Listing polymorphism here does not
