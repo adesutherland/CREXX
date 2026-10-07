@@ -5,7 +5,7 @@ address system with input stream f
 'cat'
 exit 90
 missing:
-say 'notready=' || condition('C') || '/' || condition('D') || '/' || sigl
+if condition('E') <> '' | condition('I') <> 'SIGNAL' | condition('S') <> 'OFF' then exit 93; say 'notready=' || condition('C') || '/' || condition('D') || '/' || sigl
 signal off notready
 address system 'cat' with input stream f
 say 'after=' || rc || '/' || .rc || '/' || .rs
@@ -14,7 +14,7 @@ badpath = 'missing-address-directory-20261006/out'
 address crexx 'echo hi' with output stream badpath
 exit 91
 output_missing:
-say 'output=' || condition('C') || '/' || condition('D') || '/' || sigl
+if condition('E') <> '' | condition('I') <> 'SIGNAL' | condition('S') <> 'OFF' then exit 94; say 'output=' || condition('C') || '/' || condition('D') || '/' || sigl
 signal on syntax name bad_stem
 address crexx with input stem missing.
 'echo should-not-run'

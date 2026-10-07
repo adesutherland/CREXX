@@ -9,5 +9,5 @@ a = 1234 + 0
 say 'after' a
 exit
 lost:
-say 'caught' condition('C') condition('D') condition('I') sigl
+if condition('E') <> '' | condition('S') <> 'OFF' then exit 91; say 'caught' condition('C') condition('D') condition('I') sigl
 exit

@@ -1,0 +1,86 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifcondition
+import rexxactivation
+import rexxvalue
+
+activation = .RexxActivationArguments()
+errors = 0
+id = .int
+names = .string[]
+names[1] = "SYNTAX"
+names[2] = "ERROR"
+names[3] = "FAILURE"
+names[4] = "HALT"
+names[5] = "NOTREADY"
+names[6] = "NOVALUE"
+names[7] = "LOSTDIGITS"
+do index = 1 to 5
+  option = word("C D E I S",index)
+  errors = errors + check(read(reference activation, option) = "", "initial field")
+end
+do id = 1 to 7
+  call activation.recordCondition(id, "description", "extra", "SIGNAL")
+  call activation.setSignalPolicy(id, 9)
+  errors = errors + check(read(reference activation,"C") = names[id], "identity")
+  errors = errors + check(read(reference activation,"D") = "description", "description")
+  errors = errors + check(read(reference activation,"E") = "extra", "extra")
+  errors = errors + check(read(reference activation,"I") = "SIGNAL", "instruction")
+  errors = errors + check(read(reference activation,"",0) = "SIGNAL", "default instruction")
+  errors = errors + check(read(reference activation,"S") = "ON", "enabled")
+  child = .RexxActivationArguments()
+  call child.inheritSignalPolicy(reference activation)
+  errors = errors + check(read(reference child,"C") = names[id], "child inherits")
+  call child.recordCondition(1,"child","child extra","SIGNAL")
+  errors = errors + check(read(reference activation,"E") = "extra", "parent isolated")
+  call activation.setSignalPolicy(id,0)
+  errors = errors + check(read(reference activation,"S") = "OFF", "disabled")
+end
+do id = 2 to 5
+  call activation.beginCallTrap(id,"call description")
+  errors = errors + check(read(reference activation,"C") = names[id], "CALL identity")
+  errors = errors + check(read(reference activation,"D") = "call description", "CALL description")
+  errors = errors + check(read(reference activation,"E") = "", "CALL extra cleared")
+  errors = errors + check(read(reference activation,"I") = "CALL", "CALL instruction")
+  errors = errors + check(read(reference activation,"S") = "DELAY", "CALL delayed")
+end
+errors = errors + check(read(reference activation,"condition") = "NOTREADY", "long lowercase option")
+errors = errors + check_error("",1,"RXC-LC-40.21")
+errors = errors + check_error("Q",1,"RXC-LC-40.28")
+errors = errors + check_error("C",2,"RXC-LC-40.4")
+if errors = 0 then say "PASS: Level C CONDITION BIF"
+return errors <> 0
+
+read: procedure = .string
+  arg activation_ref = reference .RexxActivationArguments, option = .string, supplied = 1
+  context = .RexxBifCallContext("CONDITION")
+  args = .RexxValue[]
+  exists = .int[]
+  if supplied then do
+    args[1] = .RexxValue(option)
+    exists[1] = 1
+  end
+  call context.setArguments(args,exists)
+  value = rexxclassicbif_condition(reference context,activation_ref)
+  if context.hasError() then return "ERROR: " || context.errorCode()
+  return value.asString()
+
+check_error: procedure = .int
+  arg option = .string, count = .int, expected = .string
+  context = .RexxBifCallContext("CONDITION")
+  activation = .RexxActivationArguments()
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue(option)
+    exists[i] = 1
+  end
+  call context.setArguments(args,exists)
+  value = rexxclassicbif_condition(reference context,reference activation)
+  return check(context.hasError() & context.errorCode() = expected,"argument error")
+
+check: procedure = .int
+  arg valid = .boolean, label = .string
+  if valid then return 0
+  say "FAIL: CONDITION" label
+  return 1

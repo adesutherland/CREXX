@@ -26,6 +26,7 @@ set(REXXBINS
   testRexxClassicBifCentre
   testRexxClassicBifChangestr
   testRexxClassicBifCompare
+  testRexxClassicBifCondition
   testRexxClassicBifCopies
   testRexxClassicBifCountstr
   testRexxClassicBifD2x

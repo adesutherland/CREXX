@@ -323,10 +323,10 @@ def main():
             "after-child\n"
             "parent=|old\n"),
         "conditions": (
-            "caught=ERROR|error|CALL|DELAY|4|0\n"
-            "caught=FAILURE|failure|CALL|DELAY|7|0\n"
-            "caught=HALT|halt|CALL|DELAY|10|0\n"
-            "caught=NOTREADY|notready|CALL|DELAY|13|0\n"
+            "caught=ERROR|error||CALL|DELAY|4|0\n"
+            "caught=FAILURE|failure||CALL|DELAY|7|0\n"
+            "caught=HALT|halt||CALL|DELAY|10|0\n"
+            "caught=NOTREADY|notready||CALL|DELAY|13|0\n"
             "after=prior|prior|\n"),
         "buffered_halt": (
             "caught=initial|3\n"

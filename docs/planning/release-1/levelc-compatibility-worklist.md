@@ -146,7 +146,7 @@ stream/Unicode and wider host proof visibly open.
 3. **LC-STEP-90C (LC-BIF-03/07; implementation and focused proof complete; depends on 90A):** add QUEUED using the
    existing selected queue/configuration service and shared direct lowering;
    cover arguments, effects, selection and isolation; commit the family.
-4. **LC-STEP-90D (LC-BIF-04/07; pending; depends on 90A):** retain source lines
+4. **LC-STEP-90D (LC-BIF-04/07; source/messages implemented, condition proof in progress; depends on 90A):** retain source lines
    through compiler-generated activation data, implement SOURCELINE and catalog
    ERRORTEXT, reconcile diagnostic code range against references, and audit
    CONDITION producers/fields. Commit coherent source/message/state increments;
@@ -320,6 +320,35 @@ remain required before grouped QA. These are admitted ASCII contract repairs,
 not Unicode/I/O, scanner, VM/linker or broader host closure. Full reference
 limits and the deferred eight stream BIFs remain open.
 
+**LC-STEP-90D CONDITION proof steps (LC-BIF-04/07).** Add direct C/D/E/I/S
+and default/omitted/invalid/count checks for all seven existing condition IDs,
+ON/OFF/DELAY and child isolation. Extend the existing typed CALL matrix with E;
+extend existing live ADDRESS ERROR/FAILURE/NOTREADY and arithmetic LOSTDIGITS
+fixtures with missing E/I/S assertions without new producers or host support.
+Retain SYNTAX/NOVALUE, source and nested-restore fixtures. Real host HALT,
+new stream producers, mapped source and deferred Unicode behavior remain open.
+
+**LC-STEP-90D CONDITION receipt, 2026-10-07.** The direct BIF now has a
+focused test for every C/D/E/I/S field and all seven admitted IDs, initial
+empty state, default and long/lowercase options, argument errors, ON/OFF/DELAY,
+extra-data preservation/reset and child isolation. Existing compiled fixtures
+prove SYNTAX extra error number, NOVALUE, live ADDRESS ERROR/FAILURE/NOTREADY,
+LOSTDIGITS and controlled typed CALL events; newly added assertions cover their
+previously missing E/I/S fields. No producer, host ABI or VM/linker change was
+made. Real host HALT remains unrun under LC-GAP-04; controlled HALT proves
+handler/field behavior only.
+
+Focused Debug build passed (`/tmp/crexx-bif-condition-build.log`); CTest regex
+`^(testRexxClassicBifCondition_|testRexxActivationArguments_|levelc_condition_|levelc_call_condition_matrix_|levelc_numeric_lostdigits_|levelc_address_host_callback$|levelc_address_.*(reference|matrix|notready))`
+with `--parallel 4 --output-on-failure` passed 35/35 in 17.00s
+(`/tmp/crexx-bif-condition-focused.log`). The final warning-free unit/host
+build and exact changed unit/host replay passed 3/3
+(`/tmp/crexx-bif-condition-final-build.log`, `/tmp/crexx-bif-condition-final.log`).
+Retained unchanged 32 results remain valid. Both monitored runs left zero
+children, with unchanged swap; peak child RSS was 537 MiB. Grouped product and
+sanitizer proof remain LC-STEP-90F. SOURCELINE source-map/physical-NUL behavior
+and Unicode compatibility retain their deferred owners.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A
@@ -332,7 +361,7 @@ with the later whole-instruction receipts before the fresh review.
 | ID | Remaining point and current boundary | Owner / disposition needed |
 | --- | --- | --- |
 | LC-GAP-01 | `INTERPRET` is recognized but not executable. `LC-87-01–05` cover exact generated Unicode source, nested groups, current frame and condition/control transfers, and bounded code lifetime. The compiled-fragment and RexxScript-inspired routes below are research, not approved designs. | `LC-I-25`, `LC-AC-59/04`, `LC-REF-062`, `R1-AC-01/02`: parked now. Later choose implementation or individually approve a Release 1 "won't implement" entry with diagnostic and documentation. |
-| LC-GAP-02 | Of 70 catalogued Classic BIF names, 62 have direct compiler entries; eight do not: `CHARIN`, `CHAROUT`, `CHARS`, `LINEIN`, `LINEOUT`, `LINES`, `QUALIFY`, `STREAM`. QUEUED, SOURCELINE and ERRORTEXT have focused contract receipts in LC-STEP-90C/D; grouped QA remains open. `CONDITION` now has a direct entry but its complete state fields remain open. Entry presence does not prove arguments, errors, context or reference behavior for any of the 70. | `LC-AC-01/04/06/73`, `LC-REF-018/019/071/072/074`: finish the stream, queue, source and diagnostic services and audit the reachable BIFs; decide any exact exceptions individually. |
+| LC-GAP-02 | Of 70 catalogued Classic BIF names, 62 have direct compiler entries; eight do not: `CHARIN`, `CHAROUT`, `CHARS`, `LINEIN`, `LINEOUT`, `LINES`, `QUALIFY`, `STREAM`. QUEUED, SOURCELINE and ERRORTEXT have focused contract receipts in LC-STEP-90C/D; grouped QA remains open. `CONDITION` has admitted producer/field proof in LC-STEP-90D; real host HALT remains separately open. Entry presence does not prove arguments, errors, context or reference behavior for any of the 70. | `LC-AC-01/04/06/73`, `LC-REF-018/019/071/072/074`: finish the stream, queue, source and diagnostic services and audit the reachable BIFs; decide any exact exceptions individually. |
 | LC-GAP-03 | Configured command, stream, default input, queue selection and external routine services need an end-to-end host contract, including resource lifecycle and condition/result reporting. ADDRESS, implicit command, PULL/PUSH/QUEUE and CALL are instruction-closed on their admitted paths. CALL's approved static signed Level B/G boundary and unchanged linker/VM remain in force. | `LC-AC-06/04`, `LC-REF-003/015–020`: distinguish missing host APIs from closed instruction behavior; implement or explicitly disposition each required adapter. General Classic/non-Classic interoperation remains outside this programme. |
 | LC-GAP-04 | Invocation modes, caller trap overrides, completion classes and an externally visible variable-pool API/access window are not fully qualified. The C-string `rxvml_run()` cannot carry an embedded-NUL argument; its length-aware entry exists, but the C-string obligation is not an approved exclusion. Real host HALT production remains open. | `LC-AC-06/04`, `LC-REF-001/004–006/021–024/057/071/073`: specify and qualify required host behavior or request precise scope decisions; preserve the existing VM/linker approval boundary. |
 | LC-GAP-05 | `LC-HOST-ADDRESS-NUL` remains an approved instruction-level FAILURE diagnostic when the command host path cannot represent NUL; length-aware delivery is still a separate host-interface obligation. TRACE's practical divergences are agreed, and displayed scalar values must remain correct. PARSE EXTERNAL/NUMERIC are outside Adrian's initial Level C scope as mainframe-specific sources; their final Release 1 disposition is not yet recorded. | `LC-AC-06/04`, `LC-REF-015/018/070`: decide the remaining host-transport and final PARSE-source dispositions without reopening the closed ADDRESS/TRACE/PARSE reviews merely to gather more evidence. |
@@ -7549,7 +7578,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Whole instruction closed under LC-AC-76/LC-STEP-85: direct/quoted/VALUE, seven condition identities, frame transfer, policy/condition state, source and error matrix pass linked opt/no-opt plus Debug/Release Level C | Real host HALT production remains under LC-AC-06; full Level C and Release 1 criteria remain open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Whole instruction closed under LC-I-24/LC-AC-77 with documented practical divergences | Correct scalar display retained; full source/host lifecycle remains under LC-GAP-05/06 |
 | `SYN-CLASSIC-EXPRESSIONS` | Classic arithmetic, comparison, Boolean, and concatenation expressions | Bounded slice: documented operator family | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-BIF-CALL` | Recognised Classic BIF calls | Direct compiler table for 59 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and implicit TRANSLATE ordinals under LC-STEP-88E-1 | Eleven missing direct entries and complete arguments/errors/context/reference proof remain under LC-GAP-02 |
+| `SYN-CLASSIC-BIF-CALL` | Recognised Classic BIF calls | Direct compiler table for 62 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and implicit TRANSLATE ordinals under LC-STEP-88E-1 | Eleven missing direct entries and complete arguments/errors/context/reference proof remain under LC-GAP-02 |
 | `SYN-CLASSIC-LOCAL-CALL` | Direct local function/procedure calls | Whole CALL/ARG/PROCEDURE/RETURN instruction reviews cover expression actuals, omitted positions, fresh frames, result presence/drop and private/shared pools | EXIT, condition producers and full shared configuration proof remain open |
 | `SYN-CLASSIC-DSLSH` | Source tree, diagnostics, and syntax-highlighting projection | Parser-mode milestone | Execution and full diagnostic conformance remain separate |
 | `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Structural verifier, frame-local label/branch/handler nodes and 24 closed whole-instruction reviews | INTERPRET and complete AST ownership/provenance proof remain open |

@@ -18,7 +18,7 @@ address editor
 'fail'
 exit 22
 failed:
-if condition('C') <> 'FAILURE' then exit 23
+if condition('C') <> 'FAILURE' | condition('E') <> '' | condition('I') <> 'CALL' | condition('S') <> 'DELAY' then exit 23
 if condition('D') <> 'fail' then exit 24
 if rc <> -9 | .rc <> -9 | .rs <> -1 then exit 25
 if sigl <> 18 then exit 33
@@ -35,7 +35,7 @@ address editor 'signalfail'
 exit 34
 signal_failed:
 if condition('C') <> 'FAILURE' | condition('D') <> 'signalfail' then exit 35
-if condition('I') <> 'SIGNAL' | condition('S') <> 'OFF' then exit 36
+if condition('I') <> 'SIGNAL' | condition('S') <> 'OFF' | condition('E') <> '' then exit 36
 if rc <> -9 | .rc <> -9 | .rs <> -1 then exit 37
 if sigl <> 34 then exit 42
 signal on error name signal_errored
@@ -43,11 +43,11 @@ address editor 'signalerror'
 exit 38
 signal_errored:
 if condition('C') <> 'ERROR' | condition('D') <> 'signalerror' then exit 39
-if condition('I') <> 'SIGNAL' | condition('S') <> 'OFF' then exit 40
+if condition('I') <> 'SIGNAL' | condition('S') <> 'OFF' | condition('E') <> '' then exit 40
 if rc <> 7 | .rc <> 7 | .rs <> 1 then exit 41
 if sigl <> 42 then exit 43
 exit 0
 errored:
-if condition('C') <> 'ERROR' | condition('D') <> 'error' then exit 30
+if condition('C') <> 'ERROR' | condition('D') <> 'error' | condition('E') <> '' | condition('I') <> 'CALL' | condition('S') <> 'DELAY' then exit 30
 if sigl <> 26 then exit 31
 return

@@ -15,7 +15,7 @@ call off notready
 say 'after=' || result || '|' || .result || '|' || condition('C')
 exit
 caught:
-  say 'caught=' || condition('C') || '|' || condition('D') || '|' || condition('I') || '|' || condition('S') || '|' || sigl || '|' || arg()
+  say 'caught=' || condition('C') || '|' || condition('D') || '|' || condition('E') || '|' || condition('I') || '|' || condition('S') || '|' || sigl || '|' || arg()
   return 'ignored'
 seed:
   return 'prior'
