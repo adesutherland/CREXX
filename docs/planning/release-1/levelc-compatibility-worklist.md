@@ -435,6 +435,25 @@ focused product build (`/tmp/crexx-bif-qa-repair-build.log`,
 children and unchanged swap. Maintained sanitizer proof for the source-anchor
 repair and the complete final-input product checkpoint remain open.
 
+**LC-BIF-PREP-04 source-anchor repair receipt.** The existing indexed-object
+setter rewrite now copies the authored assignment anchor to its outer CALL with
+inherited provenance. Synthetic input nodes retain their existing provenance;
+execution, method selection, optimization policy and VM/linker formats are
+unchanged. The existing TRACE results/intermediates fixture verifies the missing
+source lines and correct values. Source-line/linked provider isolation also
+passes after the repair (6/6 adjacent checks plus 8/8 source/provider checks in
+the normal Debug receipts above).
+
+Matching focused maintained ASan preparation and 14/14 checks passed in 94.27s
+(`/tmp/crexx-bif-provenance-asan-build.log`,
+`/tmp/crexx-bif-provenance-asan-tests.log`, runner `20261007-225125-ctest`). No
+sanitizer diagnostic was found; peak child RSS was 1.22 GiB, zero children
+remained and swap stayed 347.94 MiB. `LC-BIF-PREP-03/04` are verified for the
+admitted local paths. Apple LeakSanitizer and unrun platform gates are not passed.
+This narrow existing-source repair does not close LC-GAP-06. The revised product
+checkpoint must still complete its core preparation, full normal Debug suite,
+Release correctness and installed/host smoke checks on final code/test inputs.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A

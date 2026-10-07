@@ -694,6 +694,14 @@ walker_result syntax_sugar_walker(walker_direction direction,
                         ast_rw_add(call_tmpl, member_call_tmpl);
 
                         rewritten_root = ast_execute_rewrite(context, node, call_tmpl);
+                        /* The outer call still represents the authored assignment.
+                         * Keep its clause visible; generated setter operands retain
+                         * their synthetic provenance. */
+                        if (rewritten_root && node->source_node &&
+                            node->source_provenance != AST_SOURCE_NONE &&
+                            node->source_provenance != AST_SOURCE_SYNTHETIC) {
+                            ast_copy_source_anchor(rewritten_root, node, AST_SOURCE_INHERITED);
+                        }
                         attach_stem_semantic_context(context,
                                                      rewritten_root,
                                                      node,
