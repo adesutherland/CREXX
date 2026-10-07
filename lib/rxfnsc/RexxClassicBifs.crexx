@@ -564,6 +564,45 @@ _check_arg_type: procedure = .int
     return 1
   end
 
+  if rule = "0_90" then do
+    number_state = 0
+    normalized_number = rexxclassic_datatype_normalize_number(argument_value,config,number_state)
+    if number_state <> 1 then do
+      call _set_bif_error(context_ref,"40.11",index,value,"")
+      return 0
+    end
+    internal_digits = .int
+    internal_digits = length(normalized_number) + 1
+    assembler setnumdgts internal_digits
+    numeric fuzz 0
+    numeric form scientific
+    code = "0" as .decimal
+    code = normalized_number
+    if code < 0 | code >= 91 then do
+      call _set_bif_error(context_ref,"40.17",index,value,"")
+      return 0
+    end
+    code = code + 0
+    canonical = code as .string
+    major = code % 1
+    fraction = code - major
+    if fraction > .9 | pos("E",canonical) > 0 then do
+      call _set_bif_error(context_ref,"40.17",index,value,"")
+      return 0
+    end
+    /* Preserve a decimal subcode's trailing zeros as catalog-key digits. */
+    if pos("E",translate(normalized_number)) = 0 then do
+      canonical = normalized_number
+      if left(canonical,1) = "+" then canonical = substr(canonical,2)
+      if left(canonical,1) = "-" then canonical = "0"
+      canonical = strip(canonical,"L","0")
+      if canonical == "" then canonical = "0"
+      if left(canonical,1) = "." then canonical = "0" || canonical
+    end
+    call context.setArgumentText(index,canonical)
+    return 1
+  end
+
   if rule = "BIN" then do
     if rexxclassic_datatype_binary(argument_value,config) = 0 then do
       call _set_bif_error(context_ref, "40.24", index, value, "")
@@ -638,7 +677,7 @@ _check_arg_type: procedure = .int
 
   if rule = "ABLMNSUWX" | rule = "CDEIS" | rule = "EINO" | rule = "EO" | rule = "LTB" | rule = "MN" |,
      rule = "BDEMNOSUW" | rule = "BDENOSU" |,
-     rule = "CEHLMNORS" | rule = "CHLMNS" then do
+     rule = "CEHLMNORS" | rule = "CHLMNS" | rule = "SN" then do
     if length(value) = 0 then do
       call _set_bif_error(context_ref, "40.21", index, value, "")
       return 0

@@ -31,6 +31,10 @@ execute_process(
 if(NOT result EQUAL 0)
     message(FATAL_ERROR "rxas failed: ${output}${error}")
 endif()
+if(DIRECT)
+    set(runtime_image "${base}.rxbin")
+    set(runtime_libraries "${BINDIR}/library" "${BINDIR}/classlib" "${BINDIR}/rxfnsc")
+else()
 execute_process(
         COMMAND "${RXLINK}" -o "${base}_image.rxbin"
                 "${base}.rxbin" "${BINDIR}/library.rxbin"
@@ -40,8 +44,11 @@ execute_process(
 if(NOT result EQUAL 0)
     message(FATAL_ERROR "rxlink failed: ${output}${error}")
 endif()
+    set(runtime_image "${base}_image.rxbin")
+    set(runtime_libraries)
+endif()
 execute_process(
-        COMMAND "${RXVM}" "${base}_image.rxbin"
+        COMMAND "${RXVM}" "${runtime_image}" ${runtime_libraries}
         WORKING_DIRECTORY "${BUILD_DIR}" ${input_args}
         OUTPUT_VARIABLE output ERROR_VARIABLE error RESULT_VARIABLE result)
 if(NOT result EQUAL 0 OR NOT error STREQUAL "")
@@ -50,5 +57,5 @@ endif()
 file(READ "${EXPECTED}" expected)
 string(REPLACE "\r\n" "\n" output "${output}")
 if(NOT output STREQUAL expected)
-    message(FATAL_ERROR "Unexpected Level C queue output: ${output}")
+    message(FATAL_ERROR "Unexpected Level C runtime output: ${output}")
 endif()

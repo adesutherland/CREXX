@@ -1,0 +1,55 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbiferrortext
+import rexxclassicbifs
+import rexxvalue
+
+errors = 0
+errors = errors + check("40","",0,"Incorrect call to routine","")
+errors = errors + check("040.24","standard",1,'<bif> argument 1 must be a binary string; found "<value>"',"")
+errors = errors + check("40.24","normal",1,'<bif> argument 1 must be a binary string; found "<value>"',"")
+errors = errors + check("40.34","",0,'<bif> argument 1 ("<value>") must be less than or equal to the number of lines in the program (<sourceline()>)',"")
+errors = errors + check("0","",0,"","")
+errors = errors + check("90.9","",0,"","")
+errors = errors + check("40.240","",0,"","")
+errors = errors + check("bad","",0,"","RXC-LC-40.11")
+errors = errors + check("-1","",0,"","RXC-LC-40.17")
+errors = errors + check("91","",0,"","RXC-LC-40.17")
+errors = errors + check("40.900000001","",0,"","RXC-LC-40.17")
+errors = errors + check("1e999999999","",0,"","RXC-LC-40.17")
+errors = errors + check("40","",1,"","RXC-LC-40.21")
+errors = errors + check("40","Q",1,"","RXC-LC-40.28")
+args = .RexxValue[]
+exists = .int[]
+context = .RexxBifCallContext("ERRORTEXT")
+call context.setArguments(args,exists)
+result = rexxclassicbif_errortext(reference context)
+if context.errorCode() <> "RXC-LC-40.3" then errors = errors + 1
+args[1] = .RexxValue("40")
+exists[1] = 0
+call context.setArguments(args,exists)
+result = rexxclassicbif_errortext(reference context)
+if context.errorCode() <> "RXC-LC-40.5" then errors = errors + 1
+args[3] = .RexxValue("")
+exists[3] = 0
+call context.setArguments(args,exists)
+result = rexxclassicbif_errortext(reference context)
+if context.errorCode() <> "RXC-LC-40.4" then errors = errors + 1
+if errors = 0 then say "ok"
+return errors
+
+check: procedure = .int
+  arg code = .string, option = .string, supplied = .int, expected = .string, error_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(code)
+  exists[1] = 1
+  if supplied then do
+    args[2] = .RexxValue(option)
+    exists[2] = 1
+  end
+  context = .RexxBifCallContext("ERRORTEXT")
+  call context.setArguments(args,exists)
+  result = rexxclassicbif_errortext(reference context)
+  if result.asString() = expected & context.errorCode() = error_code then return 0
+  say "FAIL ERRORTEXT" code option result.asString() context.errorCode()
+  return 1

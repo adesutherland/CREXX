@@ -176,6 +176,7 @@ static const LevelCBifEntry levelc_direct_bifs[] = {
     LEVELC_DIRECT_BIF("DELSTR", "rexxclassicbifdelstr", "rexxclassicbif_delstr"),
     LEVELC_DIRECT_BIF("DELWORD", "rexxclassicbifdelword", "rexxclassicbif_delword"),
     LEVELC_DIRECT_BIF("DIGITS", "rexxclassicbifnumeric", "rexxclassicbif_digits"),
+    LEVELC_DIRECT_BIF("ERRORTEXT", "rexxclassicbiferrortext", "rexxclassicbif_errortext"),
     LEVELC_DIRECT_BIF("FORM", "rexxclassicbifnumeric", "rexxclassicbif_form"),
     LEVELC_DIRECT_BIF("FORMAT", "rexxclassicbifformat", "rexxclassicbif_format"),
     LEVELC_DIRECT_BIF("FUZZ", "rexxclassicbifnumeric", "rexxclassicbif_fuzz"),

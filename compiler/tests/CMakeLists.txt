@@ -9357,3 +9357,36 @@ foreach(_bif_mode IN ITEMS opt noopt)
     set_tests_properties(levelc_bif_whole_linked_${_bif_mode} PROPERTIES
         LABELS "compiler;levelc" TIMEOUT 240 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 endforeach()
+
+# ERRORTEXT uses the standard catalog in direct and linked execution.
+foreach(_bif_mode IN ITEMS opt noopt)
+    if(_bif_mode STREQUAL "noopt")
+        set(_bif_noopt ON)
+        set(_bif_flags -n)
+    else()
+        set(_bif_noopt OFF)
+        set(_bif_flags)
+    endif()
+    add_test(NAME levelc_bif_errortext_${_bif_mode}
+        COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink> -DRXVM=${CREXX_RXVM_EXECUTABLE}
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin -DNAME=levelc_bif_errortext_direct
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_errortext.rexx
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_errortext.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR} -DNOOPT=${_bif_noopt} -DDIRECT=ON
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
+    set_tests_properties(levelc_bif_errortext_${_bif_mode} PROPERTIES
+        LABELS "compiler;levelc" TIMEOUT 240 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    add_test(NAME levelc_bif_errortext_linked_${_bif_mode}
+        COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink> -DRXVM=${CMAKE_BINARY_DIR}/bin/rxvm
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin -DNAME=levelc_bif_errortext
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_errortext.rexx
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_errortext.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR} -DNOOPT=${_bif_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
+    set_tests_properties(levelc_bif_errortext_linked_${_bif_mode} PROPERTIES
+        LABELS "compiler;levelc" TIMEOUT 240 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()

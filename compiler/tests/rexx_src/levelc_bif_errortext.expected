@@ -1,0 +1,7 @@
+Incorrect call to routine
+<bif> argument 1 must be a binary string; found "<value>"
+<bif> argument 1 ("<value>") must be less than or equal to the number of lines in the program (<sourceline()>)
+0 0
+0
+40 9 SYNTAX
+Error 40.17: ERRORTEXT argument 1 must have an integer part in the range 0:90 and a decimal part no larger than .9; found "91"

@@ -73,6 +73,7 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifDatatype
   RexxClassicBifDelstr
   RexxClassicBifDelword
+  RexxClassicBifErrortext
   RexxClassicBifFormat
   RexxClassicBifInsert
   RexxClassicBifLastpos

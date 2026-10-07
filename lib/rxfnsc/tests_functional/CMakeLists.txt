@@ -34,6 +34,7 @@ set(REXXBINS
   testRexxClassicBifDatatype
   testRexxClassicBifDelstr
   testRexxClassicBifDelword
+  testRexxClassicBifErrortext
   testRexxClassicBifFormat
   testRexxClassicBifInsert
   testRexxClassicBifLastpos

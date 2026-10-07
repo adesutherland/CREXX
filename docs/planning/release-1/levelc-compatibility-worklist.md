@@ -234,6 +234,42 @@ Existing configured-digit tests now expect a mathematically whole decimal
 through the unchanged normalization route. That assertion is not wider Unicode
 qualification. Broad/product and sanitizer checks remain STEP-90F obligations.
 
+**LC-STEP-90D ERRORTEXT receipt, 2026-10-07.** ERRORTEXT uses the existing
+configure-generated diagnostic catalog with unexpanded Classic place-markers;
+there is no second hand-maintained message table. N uses the shipped English
+fallback. The extracted helper's 40.16 range call conflicts with its own catalog
+and Regina's range-specific 40.17; the implementation uses 40.17. Numeric
+validation uses the existing configured number normalizer and decimal service;
+decimal subcode trailing zeros are preserved as catalog-key digits. Undefined
+codes return empty, including zero. The catalog's 40.34 wording differs from
+Regina but follows the project's standard catalog.
+
+Debug build `cmake --build cmake-build-debug --target rxc rxfnsc
+testRexxClassicBifErrortext --parallel 4` passed
+(`/tmp/crexx-bif-message-repair-build.log`). CTest `-R
+'^(testRexxClassicBifErrortext|levelc_bif_errortext)' --parallel 4
+--output-on-failure` passed 6/6 in 2.00s
+(`/tmp/crexx-bif-message-final.log`), covering required/count/omitted/options,
+major/minor/undefined text, leading/trailing zero keys, decimal range precision,
+huge exponent, source-anchored 40.17 and direct/linked opt/no-opt. Reference
+receipts are `/tmp/crexx-bif-message-reference.4pBpq4.log` and
+`/tmp/crexx-errortext-probe.K4P1Wt.log` (Regina 3.9.7). Compiler/build/test
+processes exited. Initial harness wording/escaping and missing trailing-zero-key
+retention were corrected before this pass. Direct count is 62/70; only the eight
+deferred stream names are absent. Whole-product QA remains STEP-90F; entry count
+alone closes no BIF.
+
+**Approved numeric decisions, 2026-10-07.** Adrian approved the existing signed
+64-bit integer range for positional/count WHOLE BIF operands, with source-anchored
+40.12 outside it. Apply the check before expansion/allocation or VM conversion;
+WHOLENUM radix operands remain arbitrary precision under their current contract.
+Adrian also directed ANSI standard FORMAT rules. Preserve its initial
+caller-DIGITS rounding and add a reduced-DIGITS proof. IBM documents that rule;
+Regina 3.9.7 disagrees on the retained `DIGITS 2; FORMAT('12.3456',,3)` probe
+(`/tmp/crexx-bif-numeric-audit.59_1f2if`, cREXX `12.000`, Regina `12.346`).
+That difference is not a formatter defect. The other numeric BIF caller-context
+rules still require their own audit, not automatic adoption of Regina behavior.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A
@@ -246,7 +282,7 @@ with the later whole-instruction receipts before the fresh review.
 | ID | Remaining point and current boundary | Owner / disposition needed |
 | --- | --- | --- |
 | LC-GAP-01 | `INTERPRET` is recognized but not executable. `LC-87-01–05` cover exact generated Unicode source, nested groups, current frame and condition/control transfers, and bounded code lifetime. The compiled-fragment and RexxScript-inspired routes below are research, not approved designs. | `LC-I-25`, `LC-AC-59/04`, `LC-REF-062`, `R1-AC-01/02`: parked now. Later choose implementation or individually approve a Release 1 "won't implement" entry with diagnostic and documentation. |
-| LC-GAP-02 | Of 70 catalogued Classic BIF names, 61 have direct compiler entries; nine do not: `CHARIN`, `CHAROUT`, `CHARS`, `ERRORTEXT`, `LINEIN`, `LINEOUT`, `LINES`, `QUALIFY`, `STREAM`. QUEUED and SOURCELINE have focused contract receipts in LC-STEP-90C/D; grouped QA remains open. `CONDITION` now has a direct entry but its complete state fields remain open. Entry presence does not prove arguments, errors, context or reference behavior for any of the 70. | `LC-AC-01/04/06/73`, `LC-REF-018/019/071/072/074`: finish the stream, queue, source and diagnostic services and audit the reachable BIFs; decide any exact exceptions individually. |
+| LC-GAP-02 | Of 70 catalogued Classic BIF names, 62 have direct compiler entries; eight do not: `CHARIN`, `CHAROUT`, `CHARS`, `LINEIN`, `LINEOUT`, `LINES`, `QUALIFY`, `STREAM`. QUEUED, SOURCELINE and ERRORTEXT have focused contract receipts in LC-STEP-90C/D; grouped QA remains open. `CONDITION` now has a direct entry but its complete state fields remain open. Entry presence does not prove arguments, errors, context or reference behavior for any of the 70. | `LC-AC-01/04/06/73`, `LC-REF-018/019/071/072/074`: finish the stream, queue, source and diagnostic services and audit the reachable BIFs; decide any exact exceptions individually. |
 | LC-GAP-03 | Configured command, stream, default input, queue selection and external routine services need an end-to-end host contract, including resource lifecycle and condition/result reporting. ADDRESS, implicit command, PULL/PUSH/QUEUE and CALL are instruction-closed on their admitted paths. CALL's approved static signed Level B/G boundary and unchanged linker/VM remain in force. | `LC-AC-06/04`, `LC-REF-003/015–020`: distinguish missing host APIs from closed instruction behavior; implement or explicitly disposition each required adapter. General Classic/non-Classic interoperation remains outside this programme. |
 | LC-GAP-04 | Invocation modes, caller trap overrides, completion classes and an externally visible variable-pool API/access window are not fully qualified. The C-string `rxvml_run()` cannot carry an embedded-NUL argument; its length-aware entry exists, but the C-string obligation is not an approved exclusion. Real host HALT production remains open. | `LC-AC-06/04`, `LC-REF-001/004–006/021–024/057/071/073`: specify and qualify required host behavior or request precise scope decisions; preserve the existing VM/linker approval boundary. |
 | LC-GAP-05 | `LC-HOST-ADDRESS-NUL` remains an approved instruction-level FAILURE diagnostic when the command host path cannot represent NUL; length-aware delivery is still a separate host-interface obligation. TRACE's practical divergences are agreed, and displayed scalar values must remain correct. PARSE EXTERNAL/NUMERIC are outside Adrian's initial Level C scope as mainframe-specific sources; their final Release 1 disposition is not yet recorded. | `LC-AC-06/04`, `LC-REF-015/018/070`: decide the remaining host-transport and final PARSE-source dispositions without reopening the closed ADDRESS/TRACE/PARSE reviews merely to gather more evidence. |
@@ -7473,7 +7509,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 The source list is `component-catalogue/raw-levelc-bifs.md` (recognition
 only). A standalone `lib/rxfnsc/RexxClassicBif<Name>.crexx` module establishes
 a runtime entry, not compiler reachability or conformance. The direct-entry
-compiler table reaches 61 of these 70 recognized Classic names, plus LOWER and
+compiler table reaches 62 of these 70 recognized Classic names, plus LOWER and
 UPPER. The legacy dispatcher is no longer on the Level C
 expression path. Selected running BIFs match Regina, but every BIF row remains open for complete
 argument, configured-context, signal and reference proof.
@@ -7507,7 +7543,7 @@ argument, configured-context, signal and reference proof.
 | `DIGITS` | Direct + runtime | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); configured numeric context and reference proof open |
 | `D2C` | Direct + runtime | [`RexxClassicBifD2c.crexx`](../../../lib/rxfnsc/RexxClassicBifD2c.crexx); full reference proof open |
 | `D2X` | Direct + runtime | [`RexxClassicBifD2x.crexx`](../../../lib/rxfnsc/RexxClassicBifD2x.crexx); full reference proof open |
-| `ERRORTEXT` | Open | No standalone Classic BIF module; implementation and proof open |
+| `ERRORTEXT` | Direct + runtime; focused contract passed | LC-STEP-90D: one standard catalog, S/N, undefined/subcode keys, omissions/count/options/range/errors/source and direct/linked opt/no-opt; grouped QA pending |
 | `FORM` | Direct + runtime | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); configured numeric context and reference proof open |
 | `FORMAT` | Direct + runtime | [`RexxClassicBifFormat.crexx`](../../../lib/rxfnsc/RexxClassicBifFormat.crexx); full reference proof open |
 | `FUZZ` | Direct + runtime | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); configured numeric context and reference proof open |

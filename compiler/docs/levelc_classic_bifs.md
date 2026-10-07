@@ -1,7 +1,7 @@
 # Level C Classic BIF Implementation Notes
 
 Status: Classic BIF semantic reference with current cREXX boundary notes
-Last updated: 2026-10-05
+Last updated: 2026-10-07
 
 Source: publicly available Classic REXX language specification.
 
@@ -112,7 +112,7 @@ starts with `r` for required or `o` for optional, followed by a type rule.
 | `WHOLE>0` | Whole number greater than zero. | `40.12`, `40.14` |
 | `WHOLENUM` | D2X-style whole number under caller settings. | `40.12` |
 | `WHOLENUM>=0` | D2X-style non-negative whole number under caller settings. | `40.12`, `40.13` |
-| `0_90` | `ERRORTEXT` message code in range `0` through `90.9`, without exponential notation. | `40.11`, source helper calls `40.16`; reconcile with catalog before implementation |
+| `0_90` | `ERRORTEXT` message code with integer part `0` through `90` and fractional part at most `.9`; normalized catalog key must not use exponential notation. | `40.11`, `40.17` |
 | `PAD` | Exactly one Unicode codepoint in compiled Level C; direct binary clients use one byte. | `40.23` |
 | `HEX` | Hex string according to `DATATYPE(value, "X")`. | `40.25` |
 | `BIN` | Binary string according to `DATATYPE(value, "B")`. | `40.24` |
@@ -122,9 +122,12 @@ starts with `r` for required or `o` for optional, followed by a type rule.
 | `ACEFILNOR` | TRACE option set; leading `?` characters are allowed before the option letter. | `40.28` |
 
 The message catalog is in `compiler/docs/levelc_standard_error_messages.md`.
-The extracted helper visibly calls `40.16` for the `0_90` range failure,
-while the extracted catalog has a nearby `40.17` range-specific text. Treat this
-as a source reconciliation item before wiring `ERRORTEXT` tests.
+The extracted helper calls `40.16` for the `0_90` range failure. The standard
+catalog and Regina identify this error as `40.17`; the implementation uses
+that range-specific identity. Decimal subcode digits, including trailing zeros,
+remain part of the catalog key. `ERRORTEXT` shares the generated English catalog
+with diagnostics and uses Classic angle-bracket place-markers. Undefined codes
+return empty text; `N` falls back to the shipped English catalog.
 
 ## Implemented Runtime Slice
 
@@ -361,7 +364,7 @@ source for planning. This is implementation guidance, not a code copy.
 | `ARG` | `ARG([n [,option]])` | `oWHOLE>0 oENO`, or required both when option supplied | No args returns argument count. One arg returns argument `n`. With option, returns existence/omission state. | Needs routine/program argument vector and existence flags. |
 | `CONDITION` | `CONDITION([option])` | `oCDEIS` | Returns current condition name, description, extra data, instruction, or enabled state. Null when no current condition. | Direct activation-local BIF covers trapped SYNTAX/NOVALUE and validation; exact catalog description, extra data and other producers remain open. |
 | `DIGITS` | `DIGITS()` | none | Returns current `NUMERIC DIGITS`. | Existing `numeric.crexx` is relevant but Level C must use Classic current frame settings. |
-| `ERRORTEXT` | `ERRORTEXT(code [,option])` | `r0_90 oSN` | Returns unexpanded message text; `S` requests specification English, `N` allows localized text. | Backed by `levelc_standard_error_messages.md`; reconcile `0_90` subcode issue. |
+| `ERRORTEXT` | `ERRORTEXT(code [,option])` | `r0_90 oSN` | Returns unexpanded message text; `S` requests specification English, `N` allows localized text. | Uses the same generated English catalog as diagnostics; N uses English fallback, and undefined codes return empty. Range errors use 40.17. |
 | `FORM` | `FORM()` | none | Returns current `NUMERIC FORM`. | Must return Classic form wording. |
 | `FUZZ` | `FUZZ()` | none | Returns current `NUMERIC FUZZ`. | Must follow current frame. |
 | `SOURCELINE` | `SOURCELINE([n])` | `oWHOLE>0` | No arg returns visible source line count or `0`; arg returns source line `n`. | Raises `40.34` beyond available source. Uses compiler-retained physical lines on ordinary source input, shared by local routines and isolated per separately compiled Classic unit. Generated source-map input reports unavailable (count zero); full mapped-source inventory remains open. |
