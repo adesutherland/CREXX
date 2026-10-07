@@ -363,7 +363,7 @@ source for planning. This is implementation guidance, not a code copy.
 | `ERRORTEXT` | `ERRORTEXT(code [,option])` | `r0_90 oSN` | Returns unexpanded message text; `S` requests specification English, `N` allows localized text. | Backed by `levelc_standard_error_messages.md`; reconcile `0_90` subcode issue. |
 | `FORM` | `FORM()` | none | Returns current `NUMERIC FORM`. | Must return Classic form wording. |
 | `FUZZ` | `FUZZ()` | none | Returns current `NUMERIC FUZZ`. | Must follow current frame. |
-| `SOURCELINE` | `SOURCELINE([n])` | `oWHOLE>0` | No arg returns visible source line count or `0`; arg returns source line `n`. | Raises `40.34` beyond available source. Needs retained source lines. |
+| `SOURCELINE` | `SOURCELINE([n])` | `oWHOLE>0` | No arg returns visible source line count or `0`; arg returns source line `n`. | Raises `40.34` beyond available source. Uses compiler-retained physical lines on ordinary source input, shared by local routines and isolated per separately compiled Classic unit. Generated source-map input reports unavailable (count zero); full mapped-source inventory remains open. |
 | `TRACE` | `TRACE([option])` | `oACEFILNOR` | Returns prior trace setting, optionally toggling interactive mode with leading `?` and setting new trace mode. | Current trace runtime is a good source, but BIF surface must return previous setting. |
 
 ### Conversion Built-in Functions

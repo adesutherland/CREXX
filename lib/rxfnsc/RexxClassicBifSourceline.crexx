@@ -1,0 +1,55 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifsourceline expose rexxclassicbif_sourceline
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Read the retained source of the executing Classic compilation unit.
+ * @bif SOURCELINE
+ * @signature SOURCELINE([n])
+ * @checkargs oWHOLE>0
+ * @param context_ref BIF operands and diagnostic context
+ * @return original physical line or available line count
+ * @error 40.34 requested line exceeds available source
+ * @sandbox source data supplied by the caller; no file I/O
+ */
+rexxclassicbif_sourceline: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"oWHOLE>0") = 0 then return .RexxValue("")
+  config = context.characterConfig()
+  count = config.sourceLineCount()
+  if \context.argumentExists(1) then return .RexxValue(count || "")
+  requested = context.argumentText(1)
+  if requested + 0 > count then do
+    call context.setError("RXC-LC-40.34",'RXC-LC-40.34 bif="SOURCELINE" value="' || requested || '" sourceline()="' || count || '"')
+    return .RexxValue("")
+  end
+  index = .int
+  index = requested + 0
+  return .RexxValue(config.sourceLine(index))

@@ -9308,3 +9308,28 @@ foreach(_bif_mode IN ITEMS opt noopt)
     set_tests_properties(levelc_bif_queued_linked_${_bif_mode} PROPERTIES
         LABELS "compiler;levelc" TIMEOUT 240 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 endforeach()
+# SOURCELINE reads retained source in direct and linked execution.
+foreach(_bif_mode IN ITEMS opt noopt)
+    if(_bif_mode STREQUAL "noopt")
+        set(_bif_noopt ON)
+        set(_bif_flags -n)
+    else()
+        set(_bif_noopt OFF)
+        set(_bif_flags)
+    endif()
+    add_levelc_runtime_slice_test(levelc_bif_sourceline_${_bif_mode}
+        rexx_src/levelc_bif_sourceline.rexx "17\n/* retained comment */\n0\noptions levelc\n40 9 SYNTAX\n1\n" ${_bif_flags})
+    add_levelc_runtime_slice_test(levelc_bif_sourceline_crlf_${_bif_mode}
+        rexx_src/levelc_bif_sourceline_crlf.rexx "17\n/* retained comment */\n0\noptions levelc\n40 9 SYNTAX\n1\n" ${_bif_flags})
+    add_test(NAME levelc_bif_sourceline_linked_${_bif_mode}
+        COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink> -DRXVM=${CMAKE_BINARY_DIR}/bin/rxvm
+            -DBINDIR=${CMAKE_BINARY_DIR}/bin -DNAME=levelc_bif_sourceline
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_sourceline.rexx
+            -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_bif_sourceline.expected
+            -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR} -DNOOPT=${_bif_noopt}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
+    set_tests_properties(levelc_bif_sourceline_linked_${_bif_mode} PROPERTIES
+        LABELS "compiler;levelc" TIMEOUT 240 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()

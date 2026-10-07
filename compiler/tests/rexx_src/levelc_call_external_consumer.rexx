@@ -9,6 +9,7 @@ call typedentry
 say 'local=' || result
 call 'typedentry'
 say 'bg=' || result || '|' || .result
+say 'caller-source=' || sourceline(2)
 exit
 typedentry:
   return 'LOCAL'

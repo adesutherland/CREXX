@@ -75,14 +75,17 @@ def main():
         "leaf-args=3|1|0|1\n"
         "leaf-data=410042|3|2|É🙂\n"
         "leaf-pool=LIT\n"
+        "leaf-source=arg first, second, third\n"
         "result=410042|410042\n"
         "caller-pool=caller\n"
         "leaf-args=0|0|0|0\n"
         "leaf-data=|0|0|\n"
         "leaf-pool=LIT\n"
+        "leaf-source=arg first, second, third\n"
         "void=LIT|LIT\n"
         "local=LOCAL\n"
         "bg=BG-RESULT|BG-RESULT\n"
+        "caller-source=shared = 'caller'\n"
     ).encode()
     if output != expected:
         raise RuntimeError(f"unexpected output: {output!r}; expected {expected!r}")

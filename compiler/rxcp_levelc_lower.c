@@ -193,6 +193,7 @@ static const LevelCBifEntry levelc_direct_bifs[] = {
     LEVELC_DIRECT_BIF("REVERSE", "rexxclassicbifreverse", "rexxclassicbif_reverse"),
     LEVELC_DIRECT_BIF("RIGHT", "rexxclassicbifright", "rexxclassicbif_right"),
     LEVELC_DIRECT_BIF("SIGN", "rexxclassicbifsign", "rexxclassicbif_sign"),
+    LEVELC_DIRECT_BIF("SOURCELINE", "rexxclassicbifsourceline", "rexxclassicbif_sourceline"),
     LEVELC_DIRECT_BIF("SPACE", "rexxclassicbifspace", "rexxclassicbif_space"),
     LEVELC_DIRECT_BIF("STRIP", "rexxclassicbifstrip", "rexxclassicbif_strip"),
     LEVELC_DIRECT_BIF("SUBSTR", "rexxclassicbifsubstr", "rexxclassicbif_substr"),
@@ -7352,6 +7353,54 @@ static ASTNode *levelc_main_status_return(Context *context, ASTNode *anchor) {
     return return_stmt;
 }
 
+/* Use the existing compiler buffer; SOURCELINE never rereads a runtime file.
+ * A source-mapped generated buffer is not an original source inventory. */
+static int levelc_append_source_lines(Context *context, ASTNode *instructions,
+                                      ASTNode *anchor, LevelCLowerPlan *plan) {
+    size_t bif_index;
+    const char *cursor;
+    const char *end;
+    if (!levelc_find_direct_bif("SOURCELINE", &bif_index) ||
+        !plan->used_direct_bifs[bif_index] || context->source_has_srcmap) return 1;
+    cursor = context->buff_start;
+    end = context->buff_end;
+    while (cursor && cursor < end && *cursor) {
+        const char *line = cursor;
+        size_t bytes;
+        size_t offset;
+        size_t escaped_length = 0;
+        char *escaped;
+        ASTNode *receiver;
+        ASTNode *args[1];
+        ASTNode *append;
+        while (cursor < end && *cursor && *cursor != '\r' && *cursor != '\n') cursor++;
+        bytes = (size_t)(cursor - line);
+        if (bytes > (SIZE_MAX - 1) / 4) return 0;
+        escaped = malloc(bytes * 4 + 1);
+        if (!escaped) return 0;
+        for (offset = 0; offset < bytes; offset++) {
+            const char *part = escape_character((unsigned char)line[offset]);
+            size_t part_length = strlen(part);
+            memcpy(escaped + escaped_length, part, part_length);
+            escaped_length += part_length;
+        }
+        escaped[escaped_length] = '\0';
+        receiver = rxcp_remap_create_named_ref(context, anchor, VAR_SYMBOL,
+                                               LEVELC_CONFIG_SYMBOL);
+        args[0] = rxcp_remap_create_string_constant(context, anchor, escaped);
+        free(escaped);
+        append = receiver && args[0] ? rxcp_remap_create_member_call_statement(
+            context, anchor, receiver, "appendSourceLine", args, 1) : NULL;
+        if (!append) return 0;
+        add_ast(instructions, append);
+        if (cursor < end && *cursor == '\r') {
+            cursor++;
+            if (cursor < end && *cursor == '\n') cursor++;
+        } else if (cursor < end && *cursor == '\n') cursor++;
+    }
+    return 1;
+}
+
 static int levelc_rewrite_program(Context *context,
                                   ASTNode *program_file,
                                   ASTNode *old_instructions,
@@ -7436,6 +7485,10 @@ static int levelc_rewrite_program(Context *context,
     }
     add_ast(instructions, config_setup);
     add_ast(instructions, config_ref_setup);
+    if (!levelc_append_source_lines(context, instructions, anchor, plan)) {
+        if (reason_out) *reason_out = "failed to retain Classic source lines";
+        return 0;
+    }
     /* Only this wrapper reads the VM's hidden command-line argv. */
     if (!provider_name &&
         !levelc_append_main_activation(context, instructions, anchor)) {

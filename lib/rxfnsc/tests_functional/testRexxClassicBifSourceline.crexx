@@ -1,0 +1,52 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifsourceline
+import rexxclassicbifs
+import rexxclassicconfig
+import rexxvalue
+
+errors = 0
+config = .RexxClassicConfig()
+args = .RexxValue[]
+exists = .int[]
+context = .RexxBifCallContext("SOURCELINE")
+call context.setArguments(args,exists)
+call context.setConfig(reference config)
+result = rexxclassicbif_sourceline(reference context)
+if result.asString() <> "0" | context.hasError() then errors = errors + 1
+call config.appendSourceLine("/* original */")
+call config.appendSourceLine("")
+call config.appendSourceLine("say 'last'")
+result = rexxclassicbif_sourceline(reference context)
+if result.asString() <> "3" then errors = errors + 1
+args[1] = .RexxValue("+0001")
+exists[1] = 1
+call context.setArguments(args,exists)
+result = rexxclassicbif_sourceline(reference context)
+if result.asString() <> "/* original */" | context.hasError() then errors = errors + 1
+args[1] = .RexxValue("2")
+call context.setArguments(args,exists)
+result = rexxclassicbif_sourceline(reference context)
+if result.asString() <> "" | context.hasError() then errors = errors + 1
+args[1] = .RexxValue("999999999999999999999999999")
+call context.setArguments(args,exists)
+result = rexxclassicbif_sourceline(reference context)
+if context.errorCode() <> "RXC-LC-40.34" then errors = errors + 1
+args[1] = .RexxValue("0")
+call context.setArguments(args,exists)
+result = rexxclassicbif_sourceline(reference context)
+if context.errorCode() <> "RXC-LC-40.14" then errors = errors + 1
+args[1] = .RexxValue("bad")
+call context.setArguments(args,exists)
+result = rexxclassicbif_sourceline(reference context)
+if context.errorCode() <> "RXC-LC-40.12" then errors = errors + 1
+exists[1] = 0
+call context.setArguments(args,exists)
+result = rexxclassicbif_sourceline(reference context)
+if result.asString() <> "3" | context.hasError() then errors = errors + 1
+args[2] = .RexxValue("")
+exists[2] = 0
+call context.setArguments(args,exists)
+result = rexxclassicbif_sourceline(reference context)
+if context.errorCode() <> "RXC-LC-40.4" then errors = errors + 1
+if errors = 0 then say "ok"
+return errors

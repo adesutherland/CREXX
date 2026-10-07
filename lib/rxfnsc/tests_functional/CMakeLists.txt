@@ -49,6 +49,7 @@ set(REXXBINS
   testRexxClassicBifReverse
   testRexxClassicBifRight
   testRexxClassicBifSign
+  testRexxClassicBifSourceline
   testRexxClassicBifSpace
   testRexxClassicBifStrip
   testRexxClassicBifSubstr

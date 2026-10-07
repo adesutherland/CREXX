@@ -179,6 +179,30 @@ no remaining compiler/assembler/linker/VM/CTest children were observed. Whole-
 product grouped and sanitizer checks remain open until STEP-90F. Wider host queue
 selection remains LC-GAP-03, and Unicode compatibility remains deferred.
 
+**LC-STEP-90D SOURCELINE receipt, 2026-10-07.** Compiler-generated source
+lines use the existing source buffer, string escaping and Classic configuration;
+there is no runtime file reread or new host/VM interface. Only a unit using this
+BIF retains its source. Local routines share that unit; separately compiled
+Classic providers retain their own unit. Source-mapped generated inputs report
+source unavailable (count zero), rather than inventing an original inventory;
+full mapped source identity and physical source NUL remain LC-GAP-06. The existing
+Unicode infrastructure is unchanged and its undefined cases are not claimed
+qualified. Argument bounds are checked before narrowing the source index.
+
+Focused Debug build `cmake --build cmake-build-debug --target rxc rxfnsc
+testRexxClassicBifSourceline --parallel 4` passed
+(`/tmp/crexx-bif-source-build.g0s0DF`). After adding CRLF/no-terminal-EOL and
+provider isolation assertions, `ctest --test-dir cmake-build-debug -R
+'^(testRexxClassicBifSourceline|levelc_bif_sourceline|levelc_call_external_)'
+--parallel 4 --output-on-failure` passed 10/10 in 28.23s
+(`/tmp/crexx-bif-source-final.log`). It exercises count/text, preserved comments
+and blank lines, leading-zero index, huge out-of-range index, invalid/zero index,
+missing/excess operands, source-anchored SYNTAX, optimized/no-opt and linked
+caller/provider isolation including binary-only provider imports. Processes
+exited. Direct count is 61/70; nine names remain absent. Sanitizer and grouped
+whole-product proof remain STEP-90F obligations. ERRORTEXT and the CONDITION
+producer audit are still pending within STEP-90D.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A
@@ -191,7 +215,7 @@ with the later whole-instruction receipts before the fresh review.
 | ID | Remaining point and current boundary | Owner / disposition needed |
 | --- | --- | --- |
 | LC-GAP-01 | `INTERPRET` is recognized but not executable. `LC-87-01–05` cover exact generated Unicode source, nested groups, current frame and condition/control transfers, and bounded code lifetime. The compiled-fragment and RexxScript-inspired routes below are research, not approved designs. | `LC-I-25`, `LC-AC-59/04`, `LC-REF-062`, `R1-AC-01/02`: parked now. Later choose implementation or individually approve a Release 1 "won't implement" entry with diagnostic and documentation. |
-| LC-GAP-02 | Of 70 catalogued Classic BIF names, 59 have direct compiler entries; 11 do not: `CHARIN`, `CHAROUT`, `CHARS`, `ERRORTEXT`, `LINEIN`, `LINEOUT`, `LINES`, `QUALIFY`, `QUEUED`, `SOURCELINE`, `STREAM`. `CONDITION` now has a direct entry but its complete state fields remain open. Entry presence does not prove arguments, errors, context or reference behavior for any of the 70. | `LC-AC-01/04/06/73`, `LC-REF-018/019/071/072/074`: finish the stream, queue, source and diagnostic services and audit the reachable BIFs; decide any exact exceptions individually. |
+| LC-GAP-02 | Of 70 catalogued Classic BIF names, 61 have direct compiler entries; nine do not: `CHARIN`, `CHAROUT`, `CHARS`, `ERRORTEXT`, `LINEIN`, `LINEOUT`, `LINES`, `QUALIFY`, `STREAM`. QUEUED and SOURCELINE have focused contract receipts in LC-STEP-90C/D; grouped QA remains open. `CONDITION` now has a direct entry but its complete state fields remain open. Entry presence does not prove arguments, errors, context or reference behavior for any of the 70. | `LC-AC-01/04/06/73`, `LC-REF-018/019/071/072/074`: finish the stream, queue, source and diagnostic services and audit the reachable BIFs; decide any exact exceptions individually. |
 | LC-GAP-03 | Configured command, stream, default input, queue selection and external routine services need an end-to-end host contract, including resource lifecycle and condition/result reporting. ADDRESS, implicit command, PULL/PUSH/QUEUE and CALL are instruction-closed on their admitted paths. CALL's approved static signed Level B/G boundary and unchanged linker/VM remain in force. | `LC-AC-06/04`, `LC-REF-003/015–020`: distinguish missing host APIs from closed instruction behavior; implement or explicitly disposition each required adapter. General Classic/non-Classic interoperation remains outside this programme. |
 | LC-GAP-04 | Invocation modes, caller trap overrides, completion classes and an externally visible variable-pool API/access window are not fully qualified. The C-string `rxvml_run()` cannot carry an embedded-NUL argument; its length-aware entry exists, but the C-string obligation is not an approved exclusion. Real host HALT production remains open. | `LC-AC-06/04`, `LC-REF-001/004–006/021–024/057/071/073`: specify and qualify required host behavior or request precise scope decisions; preserve the existing VM/linker approval boundary. |
 | LC-GAP-05 | `LC-HOST-ADDRESS-NUL` remains an approved instruction-level FAILURE diagnostic when the command host path cannot represent NUL; length-aware delivery is still a separate host-interface obligation. TRACE's practical divergences are agreed, and displayed scalar values must remain correct. PARSE EXTERNAL/NUMERIC are outside Adrian's initial Level C scope as mainframe-specific sources; their final Release 1 disposition is not yet recorded. | `LC-AC-06/04`, `LC-REF-015/018/070`: decide the remaining host-transport and final PARSE-source dispositions without reopening the closed ADDRESS/TRACE/PARSE reviews merely to gather more evidence. |
@@ -7418,7 +7442,7 @@ These 36 contract names come from the existing [raw language catalogue](componen
 The source list is `component-catalogue/raw-levelc-bifs.md` (recognition
 only). A standalone `lib/rxfnsc/RexxClassicBif<Name>.crexx` module establishes
 a runtime entry, not compiler reachability or conformance. The direct-entry
-compiler table reaches 59 of these 70 recognized Classic names, plus LOWER and
+compiler table reaches 61 of these 70 recognized Classic names, plus LOWER and
 UPPER. The legacy dispatcher is no longer on the Level C
 expression path. Selected running BIFs match Regina, but every BIF row remains open for complete
 argument, configured-context, signal and reference proof.
@@ -7473,7 +7497,7 @@ argument, configured-context, signal and reference proof.
 | `REVERSE` | Direct + runtime | [`RexxClassicBifReverse.crexx`](../../../lib/rxfnsc/RexxClassicBifReverse.crexx); full reference proof open |
 | `RIGHT` | Direct + runtime | [`RexxClassicBifRight.crexx`](../../../lib/rxfnsc/RexxClassicBifRight.crexx); full reference proof open |
 | `SIGN` | Direct + runtime | [`RexxClassicBifSign.crexx`](../../../lib/rxfnsc/RexxClassicBifSign.crexx); full reference proof open |
-| `SOURCELINE` | Open | No standalone Classic BIF module; implementation and proof open |
+| `SOURCELINE` | Direct + runtime; focused admitted contract passed | LC-STEP-90D: original lines, comments/blanks, CRLF/final line, argument/errors and local/linked unit isolation; mapped-source inventory and physical source NUL remain LC-GAP-06; grouped QA pending |
 | `SPACE` | Direct + runtime | [`RexxClassicBifSpace.crexx`](../../../lib/rxfnsc/RexxClassicBifSpace.crexx); full reference proof open |
 | `STREAM` | Open | No standalone Classic BIF module; implementation and proof open |
 | `STRIP` | Direct + runtime | [`RexxClassicBifStrip.crexx`](../../../lib/rxfnsc/RexxClassicBifStrip.crexx); full reference proof open |

@@ -123,6 +123,8 @@ RexxClassicConfig: class
   external_pool_names = .string[]
   external_pools = .RexxExternalValuePool[]
   external_pool_count = .int
+  source_lines = .string[]
+  source_line_count = .int
 
   *: factory
     arg requested_profile = "BYTE"
@@ -138,6 +140,7 @@ RexxClassicConfig: class
     exponent_digit_limit = 9
     random_state = .RexxRandomState()
     external_pool_count = 0
+    source_line_count = 0
     if requested_profile == "BYTE" | requested_profile == "UTF8" then
       profile_name = requested_profile
     else assembler signal "INVALID_ARGUMENTS", "Character profile must be BYTE or UTF8"
@@ -187,6 +190,23 @@ RexxClassicConfig: class
   /** Read one line directly from default input, bypassing queued entries. */
   lineinText: method = .string
     return linein()
+
+  /** Retain one original source line supplied by the compiler, without its EOL. */
+  appendSourceLine: method = .void
+    arg text = .string
+    source_line_count = source_line_count + 1
+    source_lines[source_line_count] = text
+    return
+
+  /** @return available source lines; zero when source is unavailable. */
+  sourceLineCount: method = .int
+    return source_line_count
+
+  /** @return an original source line; BIF validation owns the index bounds. */
+  sourceLine: method = .string
+    arg index = .int
+    if index < 1 | index > source_line_count then return ""
+    return source_lines[index]
 
   /** Describe the running VM for PARSE VERSION. */
   versionText: method = .string

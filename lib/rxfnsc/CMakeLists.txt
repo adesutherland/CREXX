@@ -88,6 +88,7 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifReverse
   RexxClassicBifRight
   RexxClassicBifSign
+  RexxClassicBifSourceline
   RexxClassicBifSpace
   RexxClassicBifStrip
   RexxClassicBifSubstr
