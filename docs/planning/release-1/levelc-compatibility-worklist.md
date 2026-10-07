@@ -389,6 +389,52 @@ The first all-target normal build failure and isolated reproducer are retained;
 no broad CTest has run yet. Resume product preparation on the revised frozen
 checkpoint rather than report that failed build as passed.
 
+**LC-STEP-90F early Debug attempt and focused repair plan.** The first broad
+normal Debug attempt was interrupted after 156.45s when five failures exposed
+three causes: `source_extension_direct_defaults` still expected headerless
+Classic compilation to fail; both `levelc_numeric_whole` modes expected the
+superseded unrounded numeric BIF values; `rxc_diagnostic_catalogs` found missing
+German/Dutch `LEVELC_CALL_SIGNATURE` keys. A fourth cause is the existing
+`trace_stem_sugar` regression: setter rewriting marks its whole assignment
+synthetic, suppressing authored source records while retaining the value. Log:
+`/tmp/crexx-bif-final-debug-ctest.log`. The interrupted process group exited with
+zero remaining children; its owned empty stdin-driver lock is removed before
+resuming. This attempt is not a completed or passing full Debug gate.
+
+Vision: make the requested complete product baseline checkable without changing
+language rules, I/O/Unicode transport, native ABI or VM/linker behavior. Preserve
+the documented `.rexx` default, Adrian-approved numeric rounding and existing
+TRACE statement/source expectations. The wider LC-GAP-06 review stays pending.
+
+1. **LC-BIF-PREP-03:** headerless `.rexx` regression verifies successful Classic
+   lowering, rather than absence of implemented Level C; numeric expected output
+   agrees with ANSI initial rounding; translated catalogs contain the shipped
+   static CALL diagnostic. Verify their existing focused normal tests.
+2. **LC-BIF-PREP-04:** rewritten authored object/stem setter statements retain
+   their source anchor on the outer CALL while helper operands stay synthetic.
+   Existing results/intermediates TRACE regression must pass in normal Debug
+   and maintained ASan; retain adjacent property/AST/TRACE tests.
+3. **LC-STEP-90F-3:** correct only the stale fixture expectations and missing
+   translation entries; update the existing source-default assertion without
+   expanding its compiler workload.
+4. **LC-STEP-90F-4:** preserve the original authored source through the existing
+   setter rewrite using the shared source-anchor API. Do not change dispatch,
+   optimizer policy, bytecode, native ABI or statement semantics. Run focused
+   normal and maintained-sanitizer checks, commit the distinct repairs, freeze
+   again, prepare the product and perform one complete final-input Debug run.
+
+**LC-BIF-PREP-03 focused receipt.** The source-default fixture now supplies
+valid headerless Classic source and inspects its generated Classic pool path;
+its workload still has the same compiler invocations. NUMERIC's two expected
+lines now use Adrian-approved initial BIF rounding and engineering scale. The
+German/Dutch catalogs now contain the existing static signed CALL diagnostic.
+The six affected/adjacent checks passed normal Debug 6/6 in 7.14s after the
+focused product build (`/tmp/crexx-bif-qa-repair-build.log`,
+`/tmp/crexx-bif-qa-repair-focused.log`). The source/provenance follow-up passed
+8/8 in 27.86s (`/tmp/crexx-bif-source-after-provenance.log`). Both runs left zero
+children and unchanged swap. Maintained sanitizer proof for the source-anchor
+repair and the complete final-input product checkpoint remain open.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A

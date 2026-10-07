@@ -9,6 +9,7 @@ ARRAY_DIMS_MISMATCH = Array-Dimensionen stimmen nicht überein.
 ARRAY_ELEMENT_TYPE_MISMATCH = Array-Elementtyp stimmt nicht mit dem Zieltyp überein.
 ASSEMBLER_ONLY_LEVELB = Inline-Assembler wird nur in Level B unterstützt.
 BAD_CONVERSION = Wert kann nicht in den erforderlichen Typ konvertiert werden.
+LEVELC_CALL_SIGNATURE = Externe CALL-Aufrufe erfordern eine exportierte Routine mit der Signatur .void(frame=.RexxActivationArguments).
 BINARY_MEMORY_AT_REQUIRED = Binärer Speicherzugriff erfordert ein at-Intrinsic.
 BINARY_MEMORY_COMPARE_ARGUMENTS = Binärspeicher-Vergleichsintrinsic hat eine ungültige Argumentliste.
 BINARY_MEMORY_COMPARE_NEEDLE_TYPE = Binärspeicher-Vergleichswert hat einen inkompatiblen Typ.

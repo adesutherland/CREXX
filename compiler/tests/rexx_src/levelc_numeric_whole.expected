@@ -1,9 +1,9 @@
 defaults 9 0 SCIENTIFIC
 arithmetic 1.235E+6 1.20 1.200 1.2
 format 1.235E+6 1.23
-bifs 1.235E+4 12345 12345 1.235 1.234 -1
+bifs 1.235E+4 1.235E+4 1.235E+4 1.235 1.234 -1
 engineering 12.35E+3 123.5E-9 ENGINEERING
-engineering-bif 12.0E+3 1.23E+6
+engineering-bif 12.00E+3 1.230E+6
 fuzz 1 0
 bif-fuzz 1.234 1.233
 inherited 4 1 ENGINEERING
