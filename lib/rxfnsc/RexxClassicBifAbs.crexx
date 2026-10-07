@@ -25,7 +25,6 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifabs expose rexxclassicbif_abs
 import rexxclassicbifs
-import rexxclassicdatatype
 import rexxvalue
 
 /**
@@ -38,11 +37,7 @@ import rexxvalue
  * @return normalized non-negative decimal as a RexxValue
  */
 rexxclassicbif_abs: procedure = .RexxValue
+  numeric digits inherited
   numeric form inherited
   arg context_ref = reference .RexxBifCallContext
-  context = dereference context_ref
-  call context.clearError()
-  if rexxclassicbif_check_args(context_ref, "rNUM") = 0 then return .RexxValue("")
-  state = 0
-  normalized = rexxclassic_datatype_normalize_number(context.argument(1), context.config(), state)
-  return context.argument(1).classicAbsolute(normalized)
+  return .rexxclassicbifs..rexxclassicbif_abs(context_ref)

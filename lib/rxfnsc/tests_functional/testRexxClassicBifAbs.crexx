@@ -3,6 +3,7 @@ import rexxclassicbifs
 import rexxclassicbifabs
 import rexxvalue
 
+numeric digits 18
 errors = 0
 
 errors = errors + check_value("12.3", "12.3")
@@ -25,6 +26,8 @@ if errors = 0 then say "PASS: Level C ABS BIF"
 return errors <> 0
 
 check_value: procedure = .int
+  numeric digits inherited
+  numeric form inherited
   arg expected = .string, input = .string
   args = .RexxValue[]
   exists = .int[]

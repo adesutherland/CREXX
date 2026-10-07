@@ -22,7 +22,7 @@ errors = errors + check_value("1", "F081", "1", 1)
 errors = errors + check_value("-6", "A", "1", 1)
 errors = errors + check_value("-6", "a", "1", 1)
 errors = errors + check_value("0", "0031", "0", 1)
-errors = errors + check_value("2748", "ABC", "999999999999999999999999", 1)
+errors = errors + check_value("2748", "ABC", "9223372036854775807", 1)
 errors = errors + check_value("-1", "F", "0000000001", 1)
 errors = errors + check_value("-1", "FFFFFFFFFFFFFFFFFFFFFFFF", "24", 1)
 errors = errors + check_value("129", "F081", " + 3", 1)
@@ -38,6 +38,8 @@ errors = errors + check_argument_error("RXC-LC-40.25", "0G", "", 0)
 errors = errors + check_argument_error("RXC-LC-40.25", "1 0", "", 0)
 errors = errors + check_argument_error("RXC-LC-40.12", "1", "1.2", 1)
 errors = errors + check_argument_error("RXC-LC-40.13", "1", "-1", 1)
+
+errors = errors + check_argument_error("RXC-LC-40.12", "ABC", "999999999999999999999999", 1)
 
 if errors = 0 then say "PASS: Level C X2D BIF"
 return errors <> 0

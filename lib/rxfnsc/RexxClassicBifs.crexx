@@ -391,6 +391,8 @@ rexxclassic_signal_event_id: procedure = .int
  * @return result value, or a blank value with context error set
  */
 rexxclassicbif_call: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   call context.clearError()
@@ -489,6 +491,8 @@ rexxclassicbif_check_args: procedure = .int
  * @return one when valid; otherwise zero with a standard context error
  */
 rexxclassicbif_check_variadic: procedure = .int
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext, rule = .string, minargs = .int
   context = dereference context_ref
   argc = context.argumentCount()
@@ -550,6 +554,8 @@ _check_arg_type: procedure = .int
   end
 
   if rule = "NUM" then do
+    number_state = .int
+    normalized_number = .string
     number_state = 0
     normalized_number = rexxclassic_datatype_normalize_number(argument_value,config,number_state)
     if number_state = 2 then do
@@ -560,11 +566,15 @@ _check_arg_type: procedure = .int
       call _set_bif_error(context_ref, "40.11", index, value, "")
       return 0
     end
-    call context.setArgumentText(index, normalized_number)
+    numeric_value = .RexxValue(normalized_number)
+    normalized_value = numeric_value.add(.RexxValue("0"), 1)
+    call context.setArgumentText(index, normalized_value.asString(1))
     return 1
   end
 
   if rule = "0_90" then do
+    number_state = .int
+    normalized_number = .string
     number_state = 0
     normalized_number = rexxclassic_datatype_normalize_number(argument_value,config,number_state)
     if number_state <> 1 then do
@@ -738,18 +748,16 @@ rexxclassicbif_abbrev: procedure = .RexxValue
  * @checkargs rNUM
  * @sandbox pure
  * @return absolute numeric value
- * @deprecated Compatibility body for the common controller. Direct callers use
- *             the standalone `rexxclassicbifabs` module.
+ * @note Shared numeric implementation used by the direct ABS entry and legacy controller.
  */
 rexxclassicbif_abs: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rNUM") = 0 then return _context_error(context_ref)
-  value = "0" as .decimal
-  value = context.argument(1).asDecimal()
-  if value < 0 then value = 0 - value
-  return _ok(value as .string)
+  return context.argument(1).classicAbsolute(context.argumentText(1))
 
 /**
  * Applies a bitwise AND operation to two Classic encoded strings.
@@ -1023,10 +1031,11 @@ rexxclassicbif_lower: procedure = .RexxValue
  * @checkargs rNUM...
  * @sandbox pure
  * @return selected numeric argument text
- * @deprecated Compatibility body for the common controller. Direct callers use
- *             the standalone `rexxclassicbifmax` module.
+ * @note Shared numeric implementation used by the direct MAX entry and legacy controller.
  */
 rexxclassicbif_max: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   call context.clearError()
@@ -1040,16 +1049,19 @@ rexxclassicbif_max: procedure = .RexxValue
  * @checkargs rNUM...
  * @sandbox pure
  * @return selected numeric argument text
- * @deprecated Compatibility body for the common controller. Direct callers use
- *             the standalone `rexxclassicbifmin` module.
+ * @note Shared numeric implementation used by the direct MIN entry and legacy controller.
  */
 rexxclassicbif_min: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   call context.clearError()
   return _bif_minmax(context_ref, "MIN")
 
 _bif_minmax: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext, mode = .string
   context = dereference context_ref
   argc = context.argumentCount()
@@ -1068,10 +1080,10 @@ _bif_minmax: procedure = .RexxValue
   best_text = context.argumentText(1)
   best_value = "0" as .decimal
   candidate_value = "0" as .decimal
-  best_value = .RexxValue(best_text).asDecimal()
+  best_value = .RexxValue(best_text).asDecimal(1)
   do i = .int(2) to argc
     candidate_text = context.argumentText(i)
-    candidate_value = .RexxValue(candidate_text).asDecimal()
+    candidate_value = .RexxValue(candidate_text).asDecimal(1)
     if mode = "MAX" then do
       if candidate_value > best_value then do
         best_text = candidate_text
@@ -1142,16 +1154,17 @@ rexxclassicbif_right: procedure = .RexxValue
  * @checkargs rNUM
  * @sandbox pure
  * @return -1, 0, or 1
- * @deprecated Compatibility body for the common controller. Direct callers use
- *             the standalone `rexxclassicbifsign` module.
+ * @note Shared numeric implementation used by the direct SIGN entry and legacy controller.
  */
 rexxclassicbif_sign: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rNUM") = 0 then return _context_error(context_ref)
   value = "0" as .decimal
-  value = context.argument(1).asDecimal()
+  value = context.argument(1).asDecimal(1)
   if value > 0 then return _ok("1")
   if value < 0 then return _ok("-1")
   return _ok("0")

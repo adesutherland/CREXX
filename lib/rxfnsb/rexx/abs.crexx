@@ -35,10 +35,14 @@ namespace rxfnsb expose abs
  * Return the absolute value of a decimal number.
  *
  * @param number decimal value
+ * @note The operand is first rounded under caller DIGITS and FORM.
  * @return non-negative decimal value
  * @signal CONVERSION_ERROR number cannot be converted to decimal
  */
 abs: procedure = .decimal
+  numeric digits inherited
+  numeric form inherited
   arg number = .decimal
+  number = number + 0
   if number < 0 then return 0 - number
   return number

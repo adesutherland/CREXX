@@ -37,12 +37,17 @@ namespace rxfnsb expose max
  *
  * @param first first and initially selected decimal
  * @param ... remaining decimal arguments
+ * @note The operand is first rounded under caller DIGITS and FORM.
  * @return greatest decimal; the first value wins a tie
  * @signal CONVERSION_ERROR an argument cannot be converted to decimal
  */
 max: procedure = .decimal
+  numeric digits inherited
+  numeric form inherited
   arg first = .decimal, ... = .decimal
+  first = first + 0
   do i = 1 to arg[0]
+    arg[i] = arg[i] + 0
     if arg[i] > first then first = arg[i]
   end
   return first

@@ -267,8 +267,58 @@ Adrian also directed ANSI standard FORMAT rules. Preserve its initial
 caller-DIGITS rounding and add a reduced-DIGITS proof. IBM documents that rule;
 Regina 3.9.7 disagrees on the retained `DIGITS 2; FORMAT('12.3456',,3)` probe
 (`/tmp/crexx-bif-numeric-audit.59_1f2if`, cREXX `12.000`, Regina `12.346`).
-That difference is not a formatter defect. The other numeric BIF caller-context
-rules still require their own audit, not automatic adoption of Regina behavior.
+That difference is not a formatter defect. Adrian subsequently approved ANSI/Classic caller-DIGITS rules for ABS, MAX,
+MIN, SIGN and TRUNC, and directed that B/G use the same rules.
+
+**LC-STEP-90E numeric family steps (LC-BIF-05/07).**
+1. Normalize NUM once with the existing Classic RexxValue +0 operation; inherit
+   caller DIGITS/FORM through the five BIFs and variadic validator. FORMAT
+   consumes that normalized text, retaining fractional zeros.
+2. Apply the same initial +0 and inherited context in the existing B/G decimal
+   BIFs; keep their typed arguments, return types and signals.
+3. Repair DATATYPE(S) valid constant-symbol rejection through the shared
+   symbol classifier; retain literal dot symbols, reject signed/blank-padded
+   numbers as symbol spellings, and keep the distinct variable-name SYM rule.
+   Regina reproducer: `/tmp/crexx-bif-datatype-symbol.rexx`. This repairs BIF
+   classification only; it does not close the scanner/source LC-GAP-06.
+4. Verify reduced/high DIGITS, ties, forms, fixed truncation, integer boundaries,
+   errors and caller restoration in opt/no-opt direct and linked execution.
+   Keep independent float/int families and Unicode/I/O infrastructure unchanged.
+
+**LC-STEP-90E numeric/argument receipt, 2026-10-07.** Shared NUM normalization
+now performs Classic +0 under caller DIGITS/FORM once. ABS/MAX/MIN/SIGN direct
+entries reuse their common implementation; FORMAT consumes normalized text,
+retaining fractional zeros. TRUNC truncates the rounded operand. B/G typed
+ABS/MAX/MIN/SIGN/TRUNC/FORMAT inherit the same caller settings and round with
++0, retaining typed returns/signals. Tests requiring high precision now declare
+that precision explicitly. Positional WHOLE checks reject values outside signed
+64-bit before allocation/conversion; arbitrary-precision WHOLENUM stays separate.
+DATATYPE(S) now accepts valid constant symbols; the shared classifier preserves
+dot literals and rejects signed/blank-padded numbers as symbol spellings.
+
+Focused Debug builds passed (`/tmp/crexx-bif-ansi-build.log`,
+`/tmp/crexx-bif-numeric-shared-build.log`, `/tmp/crexx-bif-symbol-build.log`).
+The final selected run passed 57/59; its two failures were obsolete SYMBOL
+expectations for valid `.BAD`/`.1.2` constants. After updating only those test
+expectations, both tests passed 2/2 (`/tmp/crexx-bif-symbol-final.log`). The
+other 57 results remain valid (`/tmp/crexx-bif-numeric-focused-final.log` and
+its command/memory JSON). Thus all 59 selected checks have passing final-input
+evidence: reduced/high DIGITS, forms and restoration, ties, fixed truncation,
+INT64 boundaries, huge exponents, source-anchored errors, direct/linked and
+opt/no-opt B/C/G plus the common legacy entry. Peak child RSS was 685 MiB;
+zero children remained and swap stayed 355.94 MiB.
+
+The consolidated ASCII reference fixture has 104 values, matching Regina
+(`/tmp/crexx-bif-reference-audit.log`). Original per-line checking-routine calls
+made optimized compilation unnecessarily expensive; those two development
+compiles were stopped, and the fixture now compares one complete output file.
+The shorter initial version measured 56.59s isolated Debug and 358 MiB child RSS,
+with no children left (`/tmp/crexx-bif-reference-isolated.log`); the final added
+constant-symbol cases passed no-opt in the 59-check run. The test is serialized
+with a 600s hang backstop; maintained-sanitizer measurement and all final modes
+remain required before grouped QA. These are admitted ASCII contract repairs,
+not Unicode/I/O, scanner, VM/linker or broader host closure. Full reference
+limits and the deferred eight stream BIFs remain open.
 
 ### Remaining-gap decision register (2026-10-07)
 

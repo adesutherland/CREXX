@@ -36,11 +36,15 @@ namespace rxfnsb expose sign
  * Return the sign of a decimal number.
  *
  * @param number decimal value
+ * @note The operand is first rounded under caller DIGITS and FORM.
  * @return `-1`, `0`, or `1`
  * @signal CONVERSION_ERROR number cannot be converted to decimal
  */
 sign: procedure = .int
+  numeric digits inherited
+  numeric form inherited
   arg number = .decimal
+  number = number + 0
   if number > 0 then return 1
   if number < 0 then return -1
   return 0

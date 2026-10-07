@@ -36,12 +36,16 @@ namespace rxfnsb expose trunc
  *
  * @param number decimal value
  * @param fraction non-negative number of fractional digits
+ * @note The operand is first rounded under caller DIGITS and FORM.
  * @return fixed, non-exponent decimal text without rounding
  * @signal CONVERSION_ERROR number cannot be converted to decimal
  * @signal INVALID_ARGUMENTS fraction is negative
  */
 trunc: procedure = .string
+  numeric digits inherited
+  numeric form inherited
   arg number = .decimal, fraction = 0
+  number = number + 0
   coefficient = .string
   formatted = .string
   digits = ""

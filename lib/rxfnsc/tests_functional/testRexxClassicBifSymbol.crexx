@@ -42,9 +42,9 @@ errors = errors + check_symbol(reference pool, "LIT", ".SIGL")
 errors = errors + check_symbol(reference pool, "LIT", "12ABC")
 errors = errors + check_symbol(reference pool, "LIT", "1E+3")
 errors = errors + check_symbol(reference pool, "LIT", ".5E-2")
-errors = errors + check_symbol(reference pool, "BAD", ".BAD")
-errors = errors + check_symbol(reference pool, "BAD", ".")
-errors = errors + check_symbol(reference pool, "BAD", ".1.2")
+errors = errors + check_symbol(reference pool, "LIT", ".BAD")
+errors = errors + check_symbol(reference pool, "LIT", ".")
+errors = errors + check_symbol(reference pool, "LIT", ".1.2")
 errors = errors + check_symbol(reference pool, "BAD", "")
 errors = errors + check_symbol(reference pool, "BAD", "has blank")
 errors = errors + check_symbol(reference pool, "BAD", "A-B")
@@ -54,6 +54,10 @@ errors = errors + check_symbol(reference pool, "BAD", "A*B")
 errors = errors + check_argument_error("RXC-LC-40.3", 0)
 errors = errors + check_argument_error("RXC-LC-40.4", 2)
 errors = errors + check_omitted_error()
+
+errors = errors + check_symbol(reference pool, "BAD", "-1")
+errors = errors + check_symbol(reference pool, "BAD", " 1 ")
+errors = errors + check_symbol(reference pool, "LIT", "1E+2")
 
 if errors = 0 then say "PASS: Level C SYMBOL BIF"
 return errors <> 0

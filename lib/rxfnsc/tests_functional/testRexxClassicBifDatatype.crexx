@@ -9,6 +9,13 @@ config = .RexxClassicConfig()
 
 errors = errors + check_classify(reference config,"NUM",.RexxValue("12.3"),"BYTE decimal")
 errors = errors + check_rule(reference config,"WHOLE",.RexxValue("1.0"),1,"","1")
+errors = errors + check_rule(reference config,"WHOLE",.RexxValue("9223372036854775807"),1,"","9223372036854775807")
+errors = errors + check_rule(reference config,"WHOLE",.RexxValue("-9223372036854775808"),1,"","-9223372036854775808")
+errors = errors + check_rule(reference config,"WHOLE",.RexxValue("00000000000000000000001e0"),1,"","1")
+errors = errors + check_rule(reference config,"WHOLE",.RexxValue("9223372036854775808"),0,"RXC-LC-40.12","")
+errors = errors + check_rule(reference config,"WHOLE",.RexxValue("-9223372036854775809"),0,"RXC-LC-40.12","")
+errors = errors + check_rule(reference config,"WHOLE",.RexxValue("1e999999999"),0,"RXC-LC-40.12","")
+
 errors = errors + check_rule(reference config,"WHOLE",.RexxValue("12e1"),1,"","120")
 errors = errors + check_rule(reference config,"WHOLE",.RexxValue("100e-2"),1,"","1")
 errors = errors + check_rule(reference config,"WHOLE",.RexxValue("+0001.000"),1,"","1")
@@ -26,7 +33,7 @@ errors = errors + check_type(reference config,"1",.RexxValue("lower"),"L","lower
 errors = errors + check_type(reference config,"1",.RexxValue("Mixed"),"M","mixed letters")
 errors = errors + check_type(reference config,"1",.RexxValue("+.5E-2"),"N","number")
 errors = errors + check_type(reference config,"1",.RexxValue("name.1"),"S","symbol")
-errors = errors + check_type(reference config,"0",.RexxValue("3name"),"S","constant is not S")
+errors = errors + check_type(reference config,"1",.RexxValue("3name"),"S","valid constant symbol")
 errors = errors + check_type(reference config,"1",.RexxValue("UPPER"),"U","uppercase")
 errors = errors + check_type(reference config,"1",.RexxValue("123.000"),"W","exact whole")
 errors = errors + check_type(reference config,"0",.RexxValue("123.0000003"),"W","no tolerance")
@@ -81,6 +88,13 @@ errors = errors + check_call_error(reference config,"RXC-LC-40.5",1,1,"","omitte
 errors = errors + check_call_error(reference config,"RXC-LC-40.21",2,0,"","empty option")
 errors = errors + check_call_error(reference config,"RXC-LC-40.28",2,0,"D","D excluded from Level C")
 errors = errors + check_call_error(reference config,"RXC-LC-40.28",2,0,"Q","unknown option")
+
+errors = errors + check_type(reference config,"1",.RexxValue("12"),"S","numeric constant symbol")
+errors = errors + check_type(reference config,"1",.RexxValue("."),"S","dot constant symbol")
+
+errors = errors + check_type(reference config,"0",.RexxValue("-1"),"S","signed number is not symbol")
+errors = errors + check_type(reference config,"0",.RexxValue(" 1 "),"S","blanks are not symbol")
+errors = errors + check_type(reference config,"1",.RexxValue("1e+2"),"S","exponent constant symbol")
 
 if errors = 0 then say "PASS: Level C DATATYPE BIF"
 return errors <> 0

@@ -467,3 +467,10 @@ hosts; adding a Level C/C host selector remains separate host work. STEP-90C in
 the worklist records focused direct/linked opt/no-opt proof. Adrian deferred
 changes to Unicode and I/O infrastructure on 2026-10-07; Unicode-driven signals
 and logic behavior are currently undefined for this BIF checkpoint.
+
+Numeric `NUM` operands of ABS, MAX, MIN, SIGN, TRUNC and FORMAT are first
+rounded as `number + 0` under caller DIGITS and FORM (ANSI/Classic rules).
+The Level B/G typed decimal BIFs use the same rule. Positional/count `WHOLE`
+operands accept exact decimal/exponent spellings within the signed 64-bit
+integer range; values outside it report Classic 40.12 before VM conversion.
+Radix `WHOLENUM` operands retain their arbitrary-precision caller-DIGITS rule.

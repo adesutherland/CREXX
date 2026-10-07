@@ -30,3 +30,7 @@ dynamic conversion raises the catchable `CONVERSION_ERROR` signal.
 
 The distinct Level C `TRUNC` BIF accepts Classic numeric text through RexxValue
 and preserves mantissas longer than the active typed-decimal precision.
+
+Operands are first rounded as `number + 0` under the caller’s `NUMERIC DIGITS`
+and `NUMERIC FORM`, following ANSI/Classic rules. Local numeric settings are
+restored when the function returns.

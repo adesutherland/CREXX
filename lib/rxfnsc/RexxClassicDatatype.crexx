@@ -40,7 +40,7 @@ rexxclassic_datatype_test: procedure = .boolean
   arg value = .RexxValue, option = .string, config = .RexxClassicConfig
   if option = "B" then return rexxclassic_datatype_binary(value,config)
   if option = "X" then return rexxclassic_datatype_hex(value,config)
-  if option = "S" then return rexxclassic_datatype_symbol_kind(value,config) = 1
+  if option = "S" then return rexxclassic_datatype_symbol_kind(value,config) <> 0
   if option = "N" then do
     state = 0
     normalized = rexxclassic_datatype_normalize_number(value,config,state)
@@ -75,7 +75,7 @@ rexxclassic_datatype_normalize_whole: procedure = .string
   state = 0
   normalized = rexxclassic_datatype_normalize_number(value,config,state)
   valid = 0
-  if state = 1 then return rexxclassic_datatype_expand_whole(normalized,valid)
+  if state = 1 then return rexxclassic_datatype_expand_whole(normalized,valid,1)
   return ""
 
 /** Validate configured binary digits and blank grouping from the right. */
@@ -111,7 +111,25 @@ rexxclassic_datatype_symbol_kind: procedure = .int
   arg value = .RexxValue, config = .RexxClassicConfig
   state = 0
   normalized = rexxclassic_datatype_normalize_number(value,config,state)
-  if state = 1 then return 2
+  if state = 1 then do
+    normalized_length = .int
+    original_length = .int
+    first = 0
+    first_character = .int
+    assembler strlen normalized_length,normalized
+    if config.isByteProfile() then do
+      bytes = value.asBinary()
+      assembler blen original_length,bytes
+      assembler getbyte first_character,bytes,first
+    end
+    else do
+      text = value.asString()
+      assembler strlen original_length,text
+      assembler strchar first_character,text,first
+    end
+    if original_length = normalized_length &,
+       ((first_character >= 48 & first_character <= 57) | first_character = 46) then return 2
+  end
   if config.isByteProfile() then return _byte_symbol_kind(value.asBinary(),config)
   return _text_symbol_kind(value.asString(),config)
 
@@ -506,7 +524,7 @@ _byte_symbol_kind: procedure = .int
   if first_general then return 1
   if first_digit then return 2
   if _byte_reserved_symbol(bytes) then return 1
-  return 0
+  return 2
 
 _text_symbol_kind: procedure = .int
   arg text = .string, config = .RexxClassicConfig
@@ -542,7 +560,7 @@ _text_symbol_kind: procedure = .int
   assembler strupper normalized,text
   if normalized = ".MN" | normalized = ".RESULT" | normalized = ".RC" |,
      normalized = ".RS" | normalized = ".SIGL" then return 1
-  return 0
+  return 2
 
 _byte_reserved_symbol: procedure = .boolean
   arg bytes = .binary
@@ -621,7 +639,7 @@ _text_blank: procedure = .boolean
 
 /* Expand normalized scientific/engineering decimal text and reject a fraction. */
 rexxclassic_datatype_expand_whole: procedure = .string
-  arg value = .string, expose valid = .int
+  arg value = .string, expose valid = .int, signed_integer_limit = 0
   text = value
   negative = 0
   exponent = 0
@@ -704,6 +722,9 @@ rexxclassic_datatype_expand_whole: procedure = .string
       leave
     end
   end
+  /* Bound positional/count operands before exponent padding can allocate. */
+  if signed_integer_limit & first_nonzero >= 0 then
+    if decimal_position - first_nonzero > 19 then return ""
   if first_nonzero < 0 then whole_text = "0"
   else do
     if negative then assembler appendchar whole_text,minus_character
@@ -713,6 +734,24 @@ rexxclassic_datatype_expand_whole: procedure = .string
     if decimal_position > digit_length then do
       padding_count = decimal_position - digit_length
       assembler padstr whole_text,zero_character,padding_count
+    end
+  end
+  if signed_integer_limit then do
+    magnitude = whole_text
+    boundary = "9223372036854775807"
+    if negative then do
+      magnitude = substr(magnitude,2)
+      boundary = "9223372036854775808"
+    end
+    if length(magnitude) = 19 then do
+      digit = .int
+      bound_digit = .int
+      do index = .int(0) to 18
+        assembler strchar digit,magnitude,index
+        assembler strchar bound_digit,boundary,index
+        if digit > bound_digit then return ""
+        if digit < bound_digit then leave
+      end
     end
   end
   valid = 1

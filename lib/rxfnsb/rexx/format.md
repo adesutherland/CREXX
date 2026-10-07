@@ -42,3 +42,7 @@ call the general Level B string BIFs on the optimized path.
 
 Classic Level C callers use the distinct RexxValue contract documented in
 [`lib/rxfnsc/format.md`](../../rxfnsc/format.md).
+
+Operands are first rounded as `number + 0` under the caller’s `NUMERIC DIGITS`
+and `NUMERIC FORM`, following ANSI/Classic rules. Local numeric settings are
+restored when the function returns.

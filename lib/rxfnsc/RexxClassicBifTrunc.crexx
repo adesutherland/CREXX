@@ -37,6 +37,8 @@ import rexxvalue
  * @return fixed, non-exponent text without rounding as a RexxValue
  */
 rexxclassicbif_trunc: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   call context.clearError()

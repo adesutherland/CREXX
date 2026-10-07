@@ -3,6 +3,7 @@ options levelb comments_dash numeric_classic
 import rxfnsb
 
 arg test_args = .string[]
+numeric digits 18
 errors = 0
 source = "127.09782"
 

@@ -24,3 +24,7 @@ dynamic conversion raises the catchable `CONVERSION_ERROR` signal.
 
 This is the strongly typed foundation API. The distinct Level C `SIGN` BIF
 normalizes Classic numeric text and reports standard context errors.
+
+Operands are first rounded as `number + 0` under the caller’s `NUMERIC DIGITS`
+and `NUMERIC FORM`, following ANSI/Classic rules. Local numeric settings are
+restored when the function returns.

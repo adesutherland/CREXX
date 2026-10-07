@@ -22,3 +22,7 @@ Invalid dynamic decimal conversion raises the catchable `CONVERSION_ERROR`
 signal.
 The separate Level C `MIN` BIF validates Classic `rNUM...` text and preserves
 the first selected argument's normalized text representation.
+
+Operands are first rounded as `number + 0` under the caller’s `NUMERIC DIGITS`
+and `NUMERIC FORM`, following ANSI/Classic rules. Local numeric settings are
+restored when the function returns.

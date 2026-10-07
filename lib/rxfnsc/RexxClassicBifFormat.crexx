@@ -44,13 +44,7 @@ rexxclassicbif_format: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rNUM oWHOLE>=0 oWHOLE>=0 oWHOLE>=0 oWHOLE>=0") = 0 then return .RexxValue("")
 
-  value = "0" as .decimal
-  value = context.argumentText(1)
-  number_text = .string
-  converted = .string
-  rounded_value = .RexxValue.fromDecimal(value)
-  converted = rounded_value.asString(1)
-  number_text = converted || ""
+  number_text = context.argumentText(1)
   if context.argumentCount() = 1 then return .RexxValue(number_text)
 
   before = 0

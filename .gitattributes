@@ -7,4 +7,4 @@ lib/plugins/sqlite/vendor/sqlite3.c text eol=lf -whitespace
 lib/plugins/sqlite/vendor/sqlite3.h text eol=lf -whitespace
 
 # SOURCELINE must exercise literal CRLF input, including after checkout.
-compiler/tests/rexx_src/levelc_bif_sourceline_crlf.rexx -text
+compiler/tests/rexx_src/levelc_bif_sourceline_crlf.rexx -text -whitespace

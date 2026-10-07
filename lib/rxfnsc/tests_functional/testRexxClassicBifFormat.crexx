@@ -3,7 +3,7 @@ import rexxclassicbifs
 import rexxclassicbifformat
 import rexxvalue
 
-errors = test_scientific() + test_engineering()
+errors = test_scientific() + test_engineering() + test_ansi_rounding()
 errors = errors + check_count_error("RXC-LC-40.3", 0)
 errors = errors + check_count_error("RXC-LC-40.4", 6)
 errors = errors + check_omitted_required()
@@ -15,6 +15,11 @@ errors = errors + check_fit_error("RXC-LC-40.38", "1E20", "1", "1", "1", "1", 1,
 
 if errors = 0 then say "PASS: Level C FORMAT BIF"
 return errors <> 0
+
+/* ANSI FORMAT first rounds as number+0 under caller DIGITS. */
+test_ansi_rounding: procedure = .int
+  numeric digits 2
+  return check_value("12.000","12.3456","","3","","",0,1,0,0)
 
 test_scientific: procedure = .int
   numeric digits 18

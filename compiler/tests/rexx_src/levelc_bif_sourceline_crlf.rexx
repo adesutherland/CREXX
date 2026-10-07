@@ -6,7 +6,7 @@ say sourceline('+0002')
 say length(sourceline(3))
 call nested
 signal on syntax name bad
-say sourceline(999999999999999999999999999)
+say sourceline(18)
 exit
 nested: procedure
   say sourceline(1)

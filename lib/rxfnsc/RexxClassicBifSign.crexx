@@ -37,12 +37,7 @@ import rexxvalue
  * @return `-1`, `0`, or `1` as a RexxValue integer
  */
 rexxclassicbif_sign: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext
-  context = dereference context_ref
-  call context.clearError()
-  if rexxclassicbif_check_args(context_ref, "rNUM") = 0 then return .RexxValue("")
-  value = "0" as .decimal
-  value = context.argument(1).asDecimal()
-  if value > 0 then return .RexxValue.fromInt(1)
-  if value < 0 then return .RexxValue.fromInt(-1)
-  return .RexxValue.fromInt(0)
+  return .rexxclassicbifs..rexxclassicbif_sign(context_ref)

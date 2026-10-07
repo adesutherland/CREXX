@@ -3,6 +3,7 @@ import rexxclassicbifs
 import rexxclassicbifmin
 import rexxvalue
 
+numeric digits 40
 errors = 0
 
 errors = errors + check1("7.5", "7.5")
@@ -12,7 +13,7 @@ errors = errors + check2("9007199254740992", "9007199254740993", "90071992547409
 errors = errors + check2("1.0", "1.0", "1.00")
 errors = errors + check2("1.00", "1.00", "1.0")
 errors = errors + check2("123456700000", "123456700000", "1234567E+5")
-errors = errors + check2("1.234567E+11", "1234567E+5", "123456700000")
+errors = errors + check2("123456700000", "1234567E+5", "123456700000")
 errors = errors + check2("-2", " - 1", "-2")
 
 errors = errors + check_no_args()
@@ -25,12 +26,16 @@ if errors = 0 then say "PASS: Level C MIN BIF"
 return errors <> 0
 
 check1: procedure = .int
+  numeric digits inherited
+  numeric form inherited
   arg expected = .string, first = .string
   values = .string[]
   values[1] = first
   return run_check(expected, values)
 
 check2: procedure = .int
+  numeric digits inherited
+  numeric form inherited
   arg expected = .string, first = .string, second = .string
   values = .string[]
   values[1] = first
@@ -38,6 +43,8 @@ check2: procedure = .int
   return run_check(expected, values)
 
 check3: procedure = .int
+  numeric digits inherited
+  numeric form inherited
   arg expected = .string, first = .string, second = .string, third = .string
   values = .string[]
   values[1] = first
@@ -46,6 +53,8 @@ check3: procedure = .int
   return run_check(expected, values)
 
 run_check: procedure = .int
+  numeric digits inherited
+  numeric form inherited
   arg expected = .string, values = .string[]
   args = .RexxValue[]
   exists = .int[]
