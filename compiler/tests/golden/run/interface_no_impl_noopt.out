@@ -1,0 +1,2 @@
+PANIC: No interface factory providers for interface_no_impl.vehicle (SIGNAL FUNCTION_NOT_FOUND)
+  source: interface_no_impl.crexx:6:3:   current = .vehicle("solo")

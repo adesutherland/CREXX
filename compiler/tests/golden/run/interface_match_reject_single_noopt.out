@@ -1,0 +1,2 @@
+PANIC: No matching interface factory provider for interface_match_reject_single.vehicle (SIGNAL FUNCTION_NOT_FOUND)
+  source: interface_match_reject_single.crexx:5:3:   current = .vehicle("x")

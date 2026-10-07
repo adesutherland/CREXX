@@ -80,10 +80,13 @@ changes are deferred until an architectural assessment determines the required
 compatibility. Unicode characters causing signals or other logic errors in Level C are
 acceptable and currently undefined by Adrian’s further clarification; do not introduce a codec, host ABI, VM/linker change or compatibility
 rule to suppress them. The stream provider proposal is unapproved and pending.
+The same deferred Unicode/I/O boundary applies to B/G. Approved ANSI numeric
+BIF rules apply across B/C/G through their existing decimal paths.
 Continue independent BIFs and audit the existing admitted paths; keep deferred
 stream/Unicode and wider host proof visibly open.
 
-**Acceptance criteria (all initially open).**
+**Acceptance criteria.** Status records the complete criterion, with admitted-path
+proof separated from deferred/unverified obligations.
 
 - [ ] **LC-BIF-01 — inventory and contract audit:** recount the 70 names against
   current compiler/runtime/test code and reconcile every inventory row with
@@ -95,7 +98,7 @@ stream/Unicode and wider host proof visibly open.
   NUL, availability/state/commands, invalid/nonpositionable resources, close,
   failure conditions, resource cleanup and context isolation. New language,
   host ABI or architecture decisions require Adrian's approval first.
-- [ ] **LC-BIF-03 — selected queue:** QUEUED observes the same execution-local
+- [x] **LC-BIF-03 — selected queue:** QUEUED observes the same execution-local
   selected repository as PULL/PUSH/QUEUE, without consuming input; verify empty,
   FIFO/LIFO, named selection, omissions/errors and independent executions.
 - [ ] **LC-BIF-04 — source, messages and condition:** SOURCELINE uses retained
@@ -124,7 +127,7 @@ stream/Unicode and wider host proof visibly open.
 
 **Implementation steps.**
 
-1. **LC-STEP-90A (LC-BIF-01/07; in progress):** read governing plans/guides,
+1. **LC-STEP-90A (LC-BIF-01/07; inventory/admitted-path audit complete):** read governing plans/guides,
    fetch/reconcile develop, recount entries, inspect retained evidence, and
    record this plan before implementation. Starting verified clean revision:
    `52fcfb21bd1acd18e8010af83ab65eaae8b7a863`; fetched origin/develop: 0 behind,
@@ -146,17 +149,17 @@ stream/Unicode and wider host proof visibly open.
 3. **LC-STEP-90C (LC-BIF-03/07; implementation and focused proof complete; depends on 90A):** add QUEUED using the
    existing selected queue/configuration service and shared direct lowering;
    cover arguments, effects, selection and isolation; commit the family.
-4. **LC-STEP-90D (LC-BIF-04/07; source/messages implemented, condition proof in progress; depends on 90A):** retain source lines
+4. **LC-STEP-90D (LC-BIF-04/07; admitted source/messages/condition proof complete; depends on 90A):** retain source lines
    through compiler-generated activation data, implement SOURCELINE and catalog
    ERRORTEXT, reconcile diagnostic code range against references, and audit
    CONDITION producers/fields. Commit coherent source/message/state increments;
    seek approval for any genuinely new rule or architecture.
-5. **LC-STEP-90E (LC-BIF-01/05/07; pending; depends on 90A):** audit all remaining
+5. **LC-STEP-90E (LC-BIF-01/05/07; admitted-path audit complete; depends on 90A):** audit all remaining
    families, reuse valid character/ordinal receipts, add regressions and repair
-   reproduced defects in family-sized commits. Grow the direct-entry use tracking
-   beyond its current 64-entry bound; do not add another dispatcher.
+   reproduced defects in family-sized commits. Direct-entry use tracking is now table-sized rather than a 64-bit mask; no
+   second dispatcher was added. Deferred Unicode/resource proof remains open.
 6. **LC-STEP-90F (LC-BIF-06/07; pending; depends on final independent code and
-   90B decisions):** perform the single grouped product checkpoint on frozen
+   90B deferral already recorded):** perform the single grouped product checkpoint on frozen
    final inputs, document each unrun platform gate, reconcile inventory/criteria,
    and report exact HEAD/ahead/behind and any precise blocked behavior.
 
@@ -453,6 +456,46 @@ admitted local paths. Apple LeakSanitizer and unrun platform gates are not passe
 This narrow existing-source repair does not close LC-GAP-06. The revised product
 checkpoint must still complete its core preparation, full normal Debug suite,
 Release correctness and installed/host smoke checks on final code/test inputs.
+
+**LC-STEP-90F negative traceback assertion follow-up plan.** The next Debug
+attempt on `15b8f9e1b` was stopped after 261.45s: four no-opt negative
+interface/cast fixtures still expected only the panic line. Their output now
+correctly includes the authored assignment source retained by LC-BIF-PREP-04.
+Unchanged direct VM probes return the existing signal exit codes (11 for missing
+factory, 6 for conversion), with exact source lines; there is no product value
+or signal regression. Log: `/tmp/crexx-bif-checkpoint-debug-ctest.log`; direct
+probes: `/tmp/crexx-bif-negative-{interface_no_impl,interface_match_reject_single,interface_named_factory_no_impl,type_ops_fail}.log`.
+The interrupted run briefly left its Level G process-worker parent/child;
+owned processes were stopped and its empty stdin driver lock removed. This is
+an interrupted attempt, not a completed full gate.
+
+Vision: make existing negative fixtures assert the correct panic, signal and
+source traceback while tolerating only unstable module/address records. Preserve
+native/compiler behavior and keep source evidence visible.
+
+1. **LC-BIF-PREP-05:** all four negative fixtures compare the exact panic in
+   no-opt/direct and opt/linked modes; no-opt also asserts the authored source
+   line. Optimized failure output retains its existing panic-only golden; full
+   source equivalence remains LC-GAP-06. Verify 8 normal
+   Debug checks and matching maintained ASan checks; no diagnostic/source strip.
+2. **LC-STEP-90F-5:** normalize only `at module ... address ...` in this existing
+   four-fixture harness and retain source records in maintained no-opt goldens.
+   No compiler invocations are added; the aggregate workload is unchanged.
+   Commit test repair separately, freeze revised inputs, then complete full
+   Debug and Release correctness on those final inputs.
+
+**LC-BIF-PREP-05 receipt.** Four no-opt goldens now assert the exact authored
+source as well as the panic. Optimized linked goldens keep their existing panic
+output. Only unstable module/address records are normalized; source records are
+never stripped. Normal Debug passed 8/8 in 1.60s
+(`/tmp/crexx-bif-negative-debug-final.log`); matching maintained ASan passed 8/8
+in 6.33s (`/tmp/crexx-bif-negative-asan-tests.log`, runner
+`20261007-230635-ctest`) after focused runner preparation
+(`/tmp/crexx-bif-negative-asan-build.log`). No sanitizer finding occurred;
+peak test child RSS was 717 MiB, no children remained, and swap stayed 347.94 MiB.
+The earlier opt golden mismatch was corrected by keeping mode-specific source
+expectations; no product edit was needed. LC-BIF-PREP-05 is verified for these
+fixtures; optimized general source equivalence remains LC-GAP-06.
 
 ### Remaining-gap decision register (2026-10-07)
 
@@ -7683,93 +7726,130 @@ These 36 contract names come from the existing [raw language catalogue](componen
 | `SYN-CLASSIC-SIGNAL` | SIGNAL target and ON/OFF conditions | Whole instruction closed under LC-AC-76/LC-STEP-85: direct/quoted/VALUE, seven condition identities, frame transfer, policy/condition state, source and error matrix pass linked opt/no-opt plus Debug/Release Level C | Real host HALT production remains under LC-AC-06; full Level C and Release 1 criteria remain open |
 | `SYN-CLASSIC-TRACE` | TRACE options/value | Whole instruction closed under LC-I-24/LC-AC-77 with documented practical divergences | Correct scalar display retained; full source/host lifecycle remains under LC-GAP-05/06 |
 | `SYN-CLASSIC-EXPRESSIONS` | Classic arithmetic, comparison, Boolean, and concatenation expressions | Bounded slice: documented operator family | Remaining Classic forms, errors and configuration proof open |
-| `SYN-CLASSIC-BIF-CALL` | Recognised Classic BIF calls | Direct compiler table for 62 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and implicit TRANSLATE ordinals under LC-STEP-88E-1 | Eleven missing direct entries and complete arguments/errors/context/reference proof remain under LC-GAP-02 |
+| `SYN-CLASSIC-BIF-CALL` | Recognised Classic BIF calls | Direct compiler table for 62 of 70 recognised names, plus LOWER/UPPER; shared SYNTAX result bridge; Unicode character-family matrix and implicit TRANSLATE ordinals under LC-STEP-88E-1 | Eight deferred stream entries and full Unicode/I/O/source/host/resource reference proof remain under LC-GAP-02; see the grouped audit and final product receipt |
 | `SYN-CLASSIC-LOCAL-CALL` | Direct local function/procedure calls | Whole CALL/ARG/PROCEDURE/RETURN instruction reviews cover expression actuals, omitted positions, fresh frames, result presence/drop and private/shared pools | EXIT, condition producers and full shared configuration proof remain open |
 | `SYN-CLASSIC-DSLSH` | Source tree, diagnostics, and syntax-highlighting projection | Parser-mode milestone | Execution and full diagnostic conformance remain separate |
 | `SYN-CLASSIC-CANONICAL-LOWERING` | Transformation to canonical compiler AST | Structural verifier, frame-local label/branch/handler nodes and 24 closed whole-instruction reviews | INTERPRET and complete AST ownership/provenance proof remain open |
 
+### BIF grouped contract audit, 2026-10-07
+
+This crosswalk reconciles every catalogued name with the current direct path,
+shared validator and maintained behavior fixtures. Inspecting each checklist
+establishes required/optional arguments and option sets; the shared validator
+owns omitted-position count, normalization and Classic error construction.
+BIF-specific checks own value/range and state changes. Compiler fixtures verify
+the authored SYNTAX bridge rather than accepting a raw VM conversion failure.
+Each existing standalone fixture below includes value or error assertions; the
+bitwise and numeric-state aliases use their named shared fixtures. This is an
+admitted-path audit, not an exhaustive conformance assertion for undefined
+Unicode behavior or unapproved stream infrastructure.
+
+| Audit group | Names / maintained proof | Checked behavior and remaining boundary |
+| --- | --- | --- |
+| `BIF-AUDIT-TEXT` (28) | ABBREV, CENTER/CENTRE, CHANGESTR, COMPARE, COPIES, COUNTSTR, DELSTR/DELWORD, INSERT, LASTPOS, LEFT/LENGTH, OVERLAY, POS, REVERSE/RIGHT, SPACE/STRIP, SUBSTR/SUBWORD, TRANSLATE, VERIFY, WORD/WORDINDEX/WORDLENGTH/WORDPOS/WORDS; per-name units below, 104-value `levelc_bif_reference_audit`, WHOLE and integer-limit fixtures | Required/optional strings, exact WHOLE positions/counts, PAD, LTB/MN options, empty strings, omitted defaults, boundaries, word blanks, reference values, error identities and source. WHOLE is signed 64-bit; successful allocation for every in-range size is not proved. Existing codepoint transport is retained; Unicode-caused signals/logic errors are undefined pending assessment. |
+| `BIF-AUDIT-ORDINAL` (12) | B2X, BITAND/BITOR/BITXOR, C2D/C2X, D2C/D2X, XRANGE, X2B/X2C/X2D; direct units, shared Bitwise fixture, LC-STEP-88B and Latin-1 compiled fixtures | HEX/BIN rules, omitted length/pad, signed/unsigned and arbitrary-precision radix values, bitwise padding, NUL/high ordinals, all 256 C2X/X2C round trips and XRANGE wrap. Existing fixed Latin-1 bridge and conversion signals remain; no codec/raw-byte I/O change or new Unicode compatibility claim. |
+| `BIF-AUDIT-NUMERIC` (6) | ABS, FORMAT, MAX/MIN, SIGN, TRUNC; direct units, common legacy unit, `level[b/c/g]_bif_numeric_context` in four execution modes | ANSI caller-DIGITS initial +0, FORM, variadic required operands, ties, fixed truncation/scale, FORMAT fields/overflow/errors and caller restoration. B/G decimal families use the same approved rule with typed results/signals; independent float/int families remain unchanged. Reduced-DIGITS Regina behavior differs from the approved ANSI rule. |
+| `BIF-AUDIT-POOL` (3) | DATATYPE, SYMBOL, VALUE; per-name units, shared datatype/pool tests and reference audit | AB(L)MNSUWX options, configured classes, constant versus variable symbol, exact symbol spelling, uninitialized/set/drop/compound and named external pool behavior, omitted new value versus empty value and errors. Shared ASCII symbol classification repaired; scanner/encoded source LC-GAP-06 and wider host variable-pool LC-GAP-04 stay open. |
+| `BIF-AUDIT-STATE` (10) | ADDRESS, ARG, CONDITION, DIGITS/FORM/FUZZ, TRACE, DATE, TIME, RANDOM; per-name/shared Numeric units, existing instruction/host fixtures and LC-STEP-90D CONDITION receipt | Omitted/count/options, selected environment, omitted/empty argument state, numeric/trace restoration, frozen clause time and elapsed/reset state, date/time conversions, random ranges/seed/config isolation; CONDITION C/D/E/I/S, ON/OFF/DELAY and all seven admitted IDs. Live ERROR/FAILURE/NOTREADY, SYNTAX/NOVALUE/LOSTDIGITS and controlled typed CALL events have field proof. Real host HALT stays LC-GAP-04; no wider host-service or full source closure. |
+| `BIF-AUDIT-QUEUE` (1) | QUEUED; LC-STEP-90C, direct unit and direct/linked opt/no-opt fixture | Same selected execution-local repository as PULL/PUSH/QUEUE; non-consuming counts, FIFO/LIFO, named selection, NUL, errors/source and context isolation. Wider Level C/C host selector stays LC-GAP-03. |
+| `BIF-AUDIT-SOURCE` (1) | SOURCELINE; LC-STEP-90D, direct unit and direct/linked/provider opt/no-opt fixtures | Retained original comments/blanks, CRLF/CR/LF and final line, no runtime reread, count/index/omissions/errors/source, local unit sharing and separate binary provider isolation. Mapped inputs return unavailable/count zero; physical source NUL truncation and full mapping remain LC-GAP-06. |
+| `BIF-AUDIT-MESSAGE` (1) | ERRORTEXT; LC-STEP-90D, direct unit and direct/linked opt/no-opt fixture | Shared standard English catalog; S/N fallback, major/minor/undefined codes, decimal subcode zeros, range 40.17, omissions/count/options and authored error source. No localization service/host ABI was added. |
+| `BIF-AUDIT-STREAM` (8) | CHARIN, CHAROUT, CHARS, LINEIN, LINEOUT, LINES, QUALIFY, STREAM | No direct entry or standalone Classic implementation. All defaults/named streams, EOF, positioning, encoding/NUL, state/commands, resource cleanup and isolation criteria remain unrun/open. Adrian deferred new I/O/Unicode infrastructure pending architectural assessment; LC-STEP-90B proposal is not approved. |
+
+The compiled reference audit records 104 expected values in one maintained
+fixture/output pair, checked with Regina 3.9.7. ANSI numeric rounding is separately
+checked against the approved IBM/Classic rule; it is not falsely labelled Regina
+parity. Existing Unicode departures retain their earlier labelled receipts;
+this session adds no Unicode/host transport rule. The final product receipt
+below owns exact-input grouped execution and supported sanitizer results.
+
 ### Individual BIF inventory
 
-The source list is `component-catalogue/raw-levelc-bifs.md` (recognition
-only). A standalone `lib/rxfnsc/RexxClassicBif<Name>.crexx` module establishes
-a runtime entry, not compiler reachability or conformance. The direct-entry
-compiler table reaches 62 of these 70 recognized Classic names, plus LOWER and
-UPPER. The legacy dispatcher is no longer on the Level C
-expression path. Selected running BIFs match Regina, but every BIF row remains open for complete
-argument, configured-context, signal and reference proof.
+The source list is `component-catalogue/raw-levelc-bifs.md` (recognition only).
+Recount on `15b8f9e1b`: 70 catalogued names, 62 in the existing compiler direct
+entry table, and eight deferred stream names. LOWER/UPPER are two additional
+entries outside this catalog. No second dispatcher was added. Shared aliases,
+numeric wrappers and bitwise methods retain their existing common bodies.
+
+Each row below points to its implementation, maintained behavioral regression
+and the grouped audit boundary above. A direct entry, a passing example or a
+unit test alone does not close the complete reference contract. The admitted
+ASCII/Latin-1 baseline has focused proof; deferred Unicode, I/O, source/host
+and resource limits remain visible under their owners. The 70-name baseline is
+not complete while the eight stream names and those obligations remain open.
 
 | BIF | Current state | Evidence / next proof |
 | --- | --- | --- |
-| `ABBREV` | Direct + runtime | [`RexxClassicBifAbbrev.crexx`](../../../lib/rxfnsc/RexxClassicBifAbbrev.crexx); full reference proof open |
-| `ABS` | Direct + runtime | [`RexxClassicBifAbs.crexx`](../../../lib/rxfnsc/RexxClassicBifAbs.crexx); full reference proof open |
-| `ADDRESS` | Direct + runtime | [`RexxClassicBifAddress.crexx`](../../../lib/rxfnsc/RexxClassicBifAddress.crexx); full reference proof open |
-| `ARG` | Direct + runtime | [`RexxClassicBifArg.crexx`](../../../lib/rxfnsc/RexxClassicBifArg.crexx); count, value, E/O, omitted/empty and selected errors proven; full profile/reference proof open |
-| `B2X` | Direct + runtime | [`RexxClassicBifB2x.crexx`](../../../lib/rxfnsc/RexxClassicBifB2x.crexx); full reference proof open |
-| `BITAND` | Direct + runtime | [`RexxClassicBifBitand.crexx`](../../../lib/rxfnsc/RexxClassicBifBitand.crexx); full reference proof open |
-| `BITOR` | Direct + runtime | [`RexxClassicBifBitor.crexx`](../../../lib/rxfnsc/RexxClassicBifBitor.crexx); full reference proof open |
-| `BITXOR` | Direct + runtime | [`RexxClassicBifBitxor.crexx`](../../../lib/rxfnsc/RexxClassicBifBitxor.crexx); full reference proof open |
-| `C2D` | Direct + runtime | [`RexxClassicBifC2d.crexx`](../../../lib/rxfnsc/RexxClassicBifC2d.crexx); full reference proof open |
-| `C2X` | Direct + runtime | [`RexxClassicBifC2x.crexx`](../../../lib/rxfnsc/RexxClassicBifC2x.crexx); full reference proof open |
-| `CENTER` | Direct + runtime | [`RexxClassicBifCenter.crexx`](../../../lib/rxfnsc/RexxClassicBifCenter.crexx); full reference proof open |
-| `CENTRE` | Direct + runtime | [`RexxClassicBifCenter.crexx`](../../../lib/rxfnsc/RexxClassicBifCenter.crexx); full reference proof open |
-| `CHANGESTR` | Direct + runtime | [`RexxClassicBifChangestr.crexx`](../../../lib/rxfnsc/RexxClassicBifChangestr.crexx); full reference proof open |
-| `CHARIN` | Open | No standalone Classic BIF module; implementation and proof open |
-| `CHAROUT` | Open | No standalone Classic BIF module; implementation and proof open |
-| `CHARS` | Open | No standalone Classic BIF module; implementation and proof open |
-| `COMPARE` | Direct + runtime | [`RexxClassicBifCompare.crexx`](../../../lib/rxfnsc/RexxClassicBifCompare.crexx); full reference proof open |
-| `CONDITION` | Direct + runtime | [`RexxClassicBifCondition.crexx`](../../../lib/rxfnsc/RexxClassicBifCondition.crexx); complete producer/state-field and reference proof open |
-| `COPIES` | Direct + runtime | [`RexxClassicBifCopies.crexx`](../../../lib/rxfnsc/RexxClassicBifCopies.crexx); full reference proof open |
-| `COUNTSTR` | Direct + runtime | [`RexxClassicBifCountstr.crexx`](../../../lib/rxfnsc/RexxClassicBifCountstr.crexx); full reference proof open |
-| `DATATYPE` | Direct + runtime | [`RexxClassicBifDatatype.crexx`](../../../lib/rxfnsc/RexxClassicBifDatatype.crexx); full reference proof open |
-| `DATE` | Direct + runtime | [`RexxClassicBifDate.crexx`](../../../lib/rxfnsc/RexxClassicBifDate.crexx); full reference proof open |
-| `DELSTR` | Direct + runtime | [`RexxClassicBifDelstr.crexx`](../../../lib/rxfnsc/RexxClassicBifDelstr.crexx); full reference proof open |
-| `DELWORD` | Direct + runtime | [`RexxClassicBifDelword.crexx`](../../../lib/rxfnsc/RexxClassicBifDelword.crexx); full reference proof open |
-| `DIGITS` | Direct + runtime | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); configured numeric context and reference proof open |
-| `D2C` | Direct + runtime | [`RexxClassicBifD2c.crexx`](../../../lib/rxfnsc/RexxClassicBifD2c.crexx); full reference proof open |
-| `D2X` | Direct + runtime | [`RexxClassicBifD2x.crexx`](../../../lib/rxfnsc/RexxClassicBifD2x.crexx); full reference proof open |
-| `ERRORTEXT` | Direct + runtime; focused contract passed | LC-STEP-90D: one standard catalog, S/N, undefined/subcode keys, omissions/count/options/range/errors/source and direct/linked opt/no-opt; grouped QA pending |
-| `FORM` | Direct + runtime | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); configured numeric context and reference proof open |
-| `FORMAT` | Direct + runtime | [`RexxClassicBifFormat.crexx`](../../../lib/rxfnsc/RexxClassicBifFormat.crexx); full reference proof open |
-| `FUZZ` | Direct + runtime | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); configured numeric context and reference proof open |
-| `INSERT` | Direct + runtime | [`RexxClassicBifInsert.crexx`](../../../lib/rxfnsc/RexxClassicBifInsert.crexx); full reference proof open |
-| `LASTPOS` | Direct + runtime | [`RexxClassicBifLastpos.crexx`](../../../lib/rxfnsc/RexxClassicBifLastpos.crexx); full reference proof open |
-| `LEFT` | Direct + runtime | [`RexxClassicBifLeft.crexx`](../../../lib/rxfnsc/RexxClassicBifLeft.crexx); full reference proof open |
-| `LENGTH` | Direct + runtime | [`levelc_slice3_bif_length`](../../../compiler/tests/rexx_src/levelc_slice3_bif_length.rexx); direct table, signal and selected argument cases pass; full reference proof open |
-| `LINEIN` | Open | No standalone Classic BIF module; implementation and proof open |
-| `LINEOUT` | Open | No standalone Classic BIF module; implementation and proof open |
-| `LINES` | Open | No standalone Classic BIF module; implementation and proof open |
-| `MAX` | Direct + runtime | [`RexxClassicBifMax.crexx`](../../../lib/rxfnsc/RexxClassicBifMax.crexx); full reference proof open |
-| `MIN` | Direct + runtime | [`RexxClassicBifMin.crexx`](../../../lib/rxfnsc/RexxClassicBifMin.crexx); full reference proof open |
-| `OVERLAY` | Direct + runtime | [`RexxClassicBifOverlay.crexx`](../../../lib/rxfnsc/RexxClassicBifOverlay.crexx); full reference proof open |
-| `POS` | Direct + runtime | [`RexxClassicBifPos.crexx`](../../../lib/rxfnsc/RexxClassicBifPos.crexx); full reference proof open |
-| `QUALIFY` | Open | No standalone Classic BIF module; implementation and proof open |
-| `QUEUED` | Direct + runtime; focused contract passed | LC-STEP-90C: selected queue, arguments, effects, source, linked opt/no-opt; grouped product proof pending |
-| `RANDOM` | Direct + runtime | [`RexxClassicBifRandom.crexx`](../../../lib/rxfnsc/RexxClassicBifRandom.crexx); full reference proof open |
-| `REVERSE` | Direct + runtime | [`RexxClassicBifReverse.crexx`](../../../lib/rxfnsc/RexxClassicBifReverse.crexx); full reference proof open |
-| `RIGHT` | Direct + runtime | [`RexxClassicBifRight.crexx`](../../../lib/rxfnsc/RexxClassicBifRight.crexx); full reference proof open |
-| `SIGN` | Direct + runtime | [`RexxClassicBifSign.crexx`](../../../lib/rxfnsc/RexxClassicBifSign.crexx); full reference proof open |
-| `SOURCELINE` | Direct + runtime; focused admitted contract passed | LC-STEP-90D: original lines, comments/blanks, CRLF/final line, argument/errors and local/linked unit isolation; mapped-source inventory and physical source NUL remain LC-GAP-06; grouped QA pending |
-| `SPACE` | Direct + runtime | [`RexxClassicBifSpace.crexx`](../../../lib/rxfnsc/RexxClassicBifSpace.crexx); full reference proof open |
-| `STREAM` | Open | No standalone Classic BIF module; implementation and proof open |
-| `STRIP` | Direct + runtime | [`RexxClassicBifStrip.crexx`](../../../lib/rxfnsc/RexxClassicBifStrip.crexx); full reference proof open |
-| `SUBSTR` | Direct + runtime | [`levelc_slice4_bif_substr`](../../../compiler/tests/rexx_src/levelc_slice4_bif_substr.rexx); direct table, signal and selected argument cases pass; full reference proof open |
-| `SUBWORD` | Direct + runtime | [`RexxClassicBifSubword.crexx`](../../../lib/rxfnsc/RexxClassicBifSubword.crexx); full reference proof open |
-| `SYMBOL` | Direct + runtime | [`RexxClassicBifSymbol.crexx`](../../../lib/rxfnsc/RexxClassicBifSymbol.crexx); full reference proof open |
-| `TIME` | Direct + runtime | [`RexxClassicBifTime.crexx`](../../../lib/rxfnsc/RexxClassicBifTime.crexx); full reference proof open |
-| `TRACE` | Direct + runtime | [`RexxClassicBifTrace.crexx`](../../../lib/rxfnsc/RexxClassicBifTrace.crexx); full reference proof open |
-| `TRANSLATE` | Direct + runtime | [`RexxClassicBifTranslate.crexx`](../../../lib/rxfnsc/RexxClassicBifTranslate.crexx); full reference proof open |
-| `TRUNC` | Direct + runtime | [`RexxClassicBifTrunc.crexx`](../../../lib/rxfnsc/RexxClassicBifTrunc.crexx); full reference proof open |
-| `VALUE` | Direct + runtime | [`RexxClassicBifValue.crexx`](../../../lib/rxfnsc/RexxClassicBifValue.crexx); full reference proof open |
-| `VERIFY` | Direct + runtime | [`RexxClassicBifVerify.crexx`](../../../lib/rxfnsc/RexxClassicBifVerify.crexx); full reference proof open |
-| `WORD` | Direct + runtime | [`RexxClassicBifWord.crexx`](../../../lib/rxfnsc/RexxClassicBifWord.crexx); full reference proof open |
-| `WORDINDEX` | Direct + runtime | [`RexxClassicBifWordindex.crexx`](../../../lib/rxfnsc/RexxClassicBifWordindex.crexx); full reference proof open |
-| `WORDLENGTH` | Direct + runtime | [`RexxClassicBifWordlength.crexx`](../../../lib/rxfnsc/RexxClassicBifWordlength.crexx); full reference proof open |
-| `WORDPOS` | Direct + runtime | [`RexxClassicBifWordpos.crexx`](../../../lib/rxfnsc/RexxClassicBifWordpos.crexx); full reference proof open |
-| `WORDS` | Direct + runtime | [`RexxClassicBifWords.crexx`](../../../lib/rxfnsc/RexxClassicBifWords.crexx); full reference proof open |
-| `XRANGE` | Direct + runtime | [`RexxClassicBifXrange.crexx`](../../../lib/rxfnsc/RexxClassicBifXrange.crexx); full reference proof open |
-| `X2B` | Direct + runtime | [`RexxClassicBifX2b.crexx`](../../../lib/rxfnsc/RexxClassicBifX2b.crexx); full reference proof open |
-| `X2C` | Direct + runtime | [`RexxClassicBifX2c.crexx`](../../../lib/rxfnsc/RexxClassicBifX2c.crexx); full reference proof open |
-| `X2D` | Direct + runtime | [`RexxClassicBifX2d.crexx`](../../../lib/rxfnsc/RexxClassicBifX2d.crexx); full reference proof open |
+| `ABBREV` | Direct + runtime; admitted baseline audited | [`RexxClassicBifAbbrev.crexx`](../../../lib/rxfnsc/RexxClassicBifAbbrev.crexx); [`testRexxClassicBifAbbrev`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifAbbrev.crexx); `BIF-AUDIT-TEXT` boundary |
+| `ABS` | Direct + runtime; admitted baseline audited | [`RexxClassicBifAbs.crexx`](../../../lib/rxfnsc/RexxClassicBifAbs.crexx); [`testRexxClassicBifAbs`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifAbs.crexx); `BIF-AUDIT-NUMERIC` boundary |
+| `ADDRESS` | Direct + runtime; admitted baseline audited | [`RexxClassicBifAddress.crexx`](../../../lib/rxfnsc/RexxClassicBifAddress.crexx); [`testRexxClassicBifAddress`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifAddress.crexx); `BIF-AUDIT-STATE` boundary |
+| `ARG` | Direct + runtime; admitted baseline audited | [`RexxClassicBifArg.crexx`](../../../lib/rxfnsc/RexxClassicBifArg.crexx); [`testRexxClassicBifArg`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifArg.crexx); `BIF-AUDIT-STATE` boundary |
+| `B2X` | Direct + runtime; admitted baseline audited | [`RexxClassicBifB2x.crexx`](../../../lib/rxfnsc/RexxClassicBifB2x.crexx); [`testRexxClassicBifB2x`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifB2x.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `BITAND` | Direct + runtime; admitted baseline audited | [`RexxClassicBifBitand.crexx`](../../../lib/rxfnsc/RexxClassicBifBitand.crexx); [`testRexxClassicBifBitwise`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifBitwise.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `BITOR` | Direct + runtime; admitted baseline audited | [`RexxClassicBifBitor.crexx`](../../../lib/rxfnsc/RexxClassicBifBitor.crexx); [`testRexxClassicBifBitwise`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifBitwise.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `BITXOR` | Direct + runtime; admitted baseline audited | [`RexxClassicBifBitxor.crexx`](../../../lib/rxfnsc/RexxClassicBifBitxor.crexx); [`testRexxClassicBifBitwise`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifBitwise.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `C2D` | Direct + runtime; admitted baseline audited | [`RexxClassicBifC2d.crexx`](../../../lib/rxfnsc/RexxClassicBifC2d.crexx); [`testRexxClassicBifC2d`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifC2d.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `C2X` | Direct + runtime; admitted baseline audited | [`RexxClassicBifC2x.crexx`](../../../lib/rxfnsc/RexxClassicBifC2x.crexx); [`testRexxClassicBifC2x`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifC2x.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `CENTER` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCenter.crexx`](../../../lib/rxfnsc/RexxClassicBifCenter.crexx); [`testRexxClassicBifCenter`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCenter.crexx); `BIF-AUDIT-TEXT` boundary |
+| `CENTRE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCenter.crexx`](../../../lib/rxfnsc/RexxClassicBifCenter.crexx); [`testRexxClassicBifCentre`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCentre.crexx); `BIF-AUDIT-TEXT` boundary |
+| `CHANGESTR` | Direct + runtime; admitted baseline audited | [`RexxClassicBifChangestr.crexx`](../../../lib/rxfnsc/RexxClassicBifChangestr.crexx); [`testRexxClassicBifChangestr`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifChangestr.crexx); `BIF-AUDIT-TEXT` boundary |
+| `CHARIN` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `CHAROUT` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `CHARS` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `COMPARE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCompare.crexx`](../../../lib/rxfnsc/RexxClassicBifCompare.crexx); [`testRexxClassicBifCompare`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCompare.crexx); `BIF-AUDIT-TEXT` boundary |
+| `CONDITION` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCondition.crexx`](../../../lib/rxfnsc/RexxClassicBifCondition.crexx); [`testRexxClassicBifCondition`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCondition.crexx); `BIF-AUDIT-STATE` boundary |
+| `COPIES` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCopies.crexx`](../../../lib/rxfnsc/RexxClassicBifCopies.crexx); [`testRexxClassicBifCopies`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCopies.crexx); `BIF-AUDIT-TEXT` boundary |
+| `COUNTSTR` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCountstr.crexx`](../../../lib/rxfnsc/RexxClassicBifCountstr.crexx); [`testRexxClassicBifCountstr`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCountstr.crexx); `BIF-AUDIT-TEXT` boundary |
+| `DATATYPE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifDatatype.crexx`](../../../lib/rxfnsc/RexxClassicBifDatatype.crexx); [`testRexxClassicBifDatatype`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifDatatype.crexx); `BIF-AUDIT-POOL` boundary |
+| `DATE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifDate.crexx`](../../../lib/rxfnsc/RexxClassicBifDate.crexx); [`testRexxClassicBifDate`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifDate.crexx); `BIF-AUDIT-STATE` boundary |
+| `DELSTR` | Direct + runtime; admitted baseline audited | [`RexxClassicBifDelstr.crexx`](../../../lib/rxfnsc/RexxClassicBifDelstr.crexx); [`testRexxClassicBifDelstr`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifDelstr.crexx); `BIF-AUDIT-TEXT` boundary |
+| `DELWORD` | Direct + runtime; admitted baseline audited | [`RexxClassicBifDelword.crexx`](../../../lib/rxfnsc/RexxClassicBifDelword.crexx); [`testRexxClassicBifDelword`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifDelword.crexx); `BIF-AUDIT-TEXT` boundary |
+| `DIGITS` | Direct + runtime; admitted baseline audited | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); [`testRexxClassicBifNumeric`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifNumeric.crexx); `BIF-AUDIT-STATE` boundary |
+| `D2C` | Direct + runtime; admitted baseline audited | [`RexxClassicBifD2c.crexx`](../../../lib/rxfnsc/RexxClassicBifD2c.crexx); [`testRexxClassicBifD2c`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifD2c.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `D2X` | Direct + runtime; admitted baseline audited | [`RexxClassicBifD2x.crexx`](../../../lib/rxfnsc/RexxClassicBifD2x.crexx); [`testRexxClassicBifD2x`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifD2x.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `ERRORTEXT` | Direct + runtime; admitted baseline audited | LC-STEP-90C/D family receipt; [`testRexxClassicBifErrortext`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifErrortext.crexx); `BIF-AUDIT-MESSAGE` boundary |
+| `FORM` | Direct + runtime; admitted baseline audited | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); [`testRexxClassicBifNumeric`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifNumeric.crexx); `BIF-AUDIT-STATE` boundary |
+| `FORMAT` | Direct + runtime; admitted baseline audited | [`RexxClassicBifFormat.crexx`](../../../lib/rxfnsc/RexxClassicBifFormat.crexx); [`testRexxClassicBifFormat`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifFormat.crexx); `BIF-AUDIT-NUMERIC` boundary |
+| `FUZZ` | Direct + runtime; admitted baseline audited | [`RexxClassicBifNumeric.crexx`](../../../lib/rxfnsc/RexxClassicBifNumeric.crexx); [`testRexxClassicBifNumeric`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifNumeric.crexx); `BIF-AUDIT-STATE` boundary |
+| `INSERT` | Direct + runtime; admitted baseline audited | [`RexxClassicBifInsert.crexx`](../../../lib/rxfnsc/RexxClassicBifInsert.crexx); [`testRexxClassicBifInsert`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifInsert.crexx); `BIF-AUDIT-TEXT` boundary |
+| `LASTPOS` | Direct + runtime; admitted baseline audited | [`RexxClassicBifLastpos.crexx`](../../../lib/rxfnsc/RexxClassicBifLastpos.crexx); [`testRexxClassicBifLastpos`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifLastpos.crexx); `BIF-AUDIT-TEXT` boundary |
+| `LEFT` | Direct + runtime; admitted baseline audited | [`RexxClassicBifLeft.crexx`](../../../lib/rxfnsc/RexxClassicBifLeft.crexx); [`testRexxClassicBifLeft`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifLeft.crexx); `BIF-AUDIT-TEXT` boundary |
+| `LENGTH` | Direct + runtime; admitted baseline audited | [`levelc_slice3_bif_length`](../../../compiler/tests/rexx_src/levelc_slice3_bif_length.rexx); [`testRexxClassicBifLength`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifLength.crexx); `BIF-AUDIT-TEXT` boundary |
+| `LINEIN` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `LINEOUT` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `LINES` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `MAX` | Direct + runtime; admitted baseline audited | [`RexxClassicBifMax.crexx`](../../../lib/rxfnsc/RexxClassicBifMax.crexx); [`testRexxClassicBifMax`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifMax.crexx); `BIF-AUDIT-NUMERIC` boundary |
+| `MIN` | Direct + runtime; admitted baseline audited | [`RexxClassicBifMin.crexx`](../../../lib/rxfnsc/RexxClassicBifMin.crexx); [`testRexxClassicBifMin`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifMin.crexx); `BIF-AUDIT-NUMERIC` boundary |
+| `OVERLAY` | Direct + runtime; admitted baseline audited | [`RexxClassicBifOverlay.crexx`](../../../lib/rxfnsc/RexxClassicBifOverlay.crexx); [`testRexxClassicBifOverlay`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifOverlay.crexx); `BIF-AUDIT-TEXT` boundary |
+| `POS` | Direct + runtime; admitted baseline audited | [`RexxClassicBifPos.crexx`](../../../lib/rxfnsc/RexxClassicBifPos.crexx); [`testRexxClassicBifPos`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifPos.crexx); `BIF-AUDIT-TEXT` boundary |
+| `QUALIFY` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `QUEUED` | Direct + runtime; admitted baseline audited | LC-STEP-90C/D family receipt; [`testRexxClassicBifQueued`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifQueued.crexx); `BIF-AUDIT-QUEUE` boundary |
+| `RANDOM` | Direct + runtime; admitted baseline audited | [`RexxClassicBifRandom.crexx`](../../../lib/rxfnsc/RexxClassicBifRandom.crexx); [`testRexxClassicBifRandom`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifRandom.crexx); `BIF-AUDIT-STATE` boundary |
+| `REVERSE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifReverse.crexx`](../../../lib/rxfnsc/RexxClassicBifReverse.crexx); [`testRexxClassicBifReverse`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifReverse.crexx); `BIF-AUDIT-TEXT` boundary |
+| `RIGHT` | Direct + runtime; admitted baseline audited | [`RexxClassicBifRight.crexx`](../../../lib/rxfnsc/RexxClassicBifRight.crexx); [`testRexxClassicBifRight`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifRight.crexx); `BIF-AUDIT-TEXT` boundary |
+| `SIGN` | Direct + runtime; admitted baseline audited | [`RexxClassicBifSign.crexx`](../../../lib/rxfnsc/RexxClassicBifSign.crexx); [`testRexxClassicBifSign`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSign.crexx); `BIF-AUDIT-NUMERIC` boundary |
+| `SOURCELINE` | Direct + runtime; admitted baseline audited | LC-STEP-90C/D family receipt; [`testRexxClassicBifSourceline`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSourceline.crexx); `BIF-AUDIT-SOURCE` boundary |
+| `SPACE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifSpace.crexx`](../../../lib/rxfnsc/RexxClassicBifSpace.crexx); [`testRexxClassicBifSpace`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSpace.crexx); `BIF-AUDIT-TEXT` boundary |
+| `STREAM` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `STRIP` | Direct + runtime; admitted baseline audited | [`RexxClassicBifStrip.crexx`](../../../lib/rxfnsc/RexxClassicBifStrip.crexx); [`testRexxClassicBifStrip`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifStrip.crexx); `BIF-AUDIT-TEXT` boundary |
+| `SUBSTR` | Direct + runtime; admitted baseline audited | [`levelc_slice4_bif_substr`](../../../compiler/tests/rexx_src/levelc_slice4_bif_substr.rexx); [`testRexxClassicBifSubstr`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSubstr.crexx); `BIF-AUDIT-TEXT` boundary |
+| `SUBWORD` | Direct + runtime; admitted baseline audited | [`RexxClassicBifSubword.crexx`](../../../lib/rxfnsc/RexxClassicBifSubword.crexx); [`testRexxClassicBifSubword`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSubword.crexx); `BIF-AUDIT-TEXT` boundary |
+| `SYMBOL` | Direct + runtime; admitted baseline audited | [`RexxClassicBifSymbol.crexx`](../../../lib/rxfnsc/RexxClassicBifSymbol.crexx); [`testRexxClassicBifSymbol`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSymbol.crexx); `BIF-AUDIT-POOL` boundary |
+| `TIME` | Direct + runtime; admitted baseline audited | [`RexxClassicBifTime.crexx`](../../../lib/rxfnsc/RexxClassicBifTime.crexx); [`testRexxClassicBifTime`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifTime.crexx); `BIF-AUDIT-STATE` boundary |
+| `TRACE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifTrace.crexx`](../../../lib/rxfnsc/RexxClassicBifTrace.crexx); [`testRexxClassicBifTrace`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifTrace.crexx); `BIF-AUDIT-STATE` boundary |
+| `TRANSLATE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifTranslate.crexx`](../../../lib/rxfnsc/RexxClassicBifTranslate.crexx); [`testRexxClassicBifTranslate`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifTranslate.crexx); `BIF-AUDIT-TEXT` boundary |
+| `TRUNC` | Direct + runtime; admitted baseline audited | [`RexxClassicBifTrunc.crexx`](../../../lib/rxfnsc/RexxClassicBifTrunc.crexx); [`testRexxClassicBifTrunc`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifTrunc.crexx); `BIF-AUDIT-NUMERIC` boundary |
+| `VALUE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifValue.crexx`](../../../lib/rxfnsc/RexxClassicBifValue.crexx); [`testRexxClassicBifValue`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifValue.crexx); `BIF-AUDIT-POOL` boundary |
+| `VERIFY` | Direct + runtime; admitted baseline audited | [`RexxClassicBifVerify.crexx`](../../../lib/rxfnsc/RexxClassicBifVerify.crexx); [`testRexxClassicBifVerify`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifVerify.crexx); `BIF-AUDIT-TEXT` boundary |
+| `WORD` | Direct + runtime; admitted baseline audited | [`RexxClassicBifWord.crexx`](../../../lib/rxfnsc/RexxClassicBifWord.crexx); [`testRexxClassicBifWord`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifWord.crexx); `BIF-AUDIT-TEXT` boundary |
+| `WORDINDEX` | Direct + runtime; admitted baseline audited | [`RexxClassicBifWordindex.crexx`](../../../lib/rxfnsc/RexxClassicBifWordindex.crexx); [`testRexxClassicBifWordindex`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifWordindex.crexx); `BIF-AUDIT-TEXT` boundary |
+| `WORDLENGTH` | Direct + runtime; admitted baseline audited | [`RexxClassicBifWordlength.crexx`](../../../lib/rxfnsc/RexxClassicBifWordlength.crexx); [`testRexxClassicBifWordlength`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifWordlength.crexx); `BIF-AUDIT-TEXT` boundary |
+| `WORDPOS` | Direct + runtime; admitted baseline audited | [`RexxClassicBifWordpos.crexx`](../../../lib/rxfnsc/RexxClassicBifWordpos.crexx); [`testRexxClassicBifWordpos`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifWordpos.crexx); `BIF-AUDIT-TEXT` boundary |
+| `WORDS` | Direct + runtime; admitted baseline audited | [`RexxClassicBifWords.crexx`](../../../lib/rxfnsc/RexxClassicBifWords.crexx); [`testRexxClassicBifWords`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifWords.crexx); `BIF-AUDIT-TEXT` boundary |
+| `XRANGE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifXrange.crexx`](../../../lib/rxfnsc/RexxClassicBifXrange.crexx); [`testRexxClassicBifXrange`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifXrange.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `X2B` | Direct + runtime; admitted baseline audited | [`RexxClassicBifX2b.crexx`](../../../lib/rxfnsc/RexxClassicBifX2b.crexx); [`testRexxClassicBifX2b`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifX2b.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `X2C` | Direct + runtime; admitted baseline audited | [`RexxClassicBifX2c.crexx`](../../../lib/rxfnsc/RexxClassicBifX2c.crexx); [`testRexxClassicBifX2c`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifX2c.crexx); `BIF-AUDIT-ORDINAL` boundary |
+| `X2D` | Direct + runtime; admitted baseline audited | [`RexxClassicBifX2d.crexx`](../../../lib/rxfnsc/RexxClassicBifX2d.crexx); [`testRexxClassicBifX2d`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifX2d.crexx); `BIF-AUDIT-ORDINAL` boundary |
 
 ## Increment receipts
 
