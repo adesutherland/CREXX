@@ -79,6 +79,7 @@ immediate work; January/February is not a reason to postpone their repair.
 | VM-FUSION-OWNERSHIP-01 | Do the current R1/R2 static fusions still justify their maintenance, and should each be retained, removed or selected explicitly by RXAS? | Matched R1-off/R2-off/both-off controls, both-engine semantics and intermediate-entry/debug/signal preservation; explicit ISA decision for migration. |
 | VM-QUICKEN-REVIEW-01 | Is another runtime-dependent site worth adaptive handler specialization beyond existing caches/direct fast paths? | Current expensive client and observed behavior; incremental win over the best existing/direct/cache/static form; worker, invalidation, re-entry and observation contracts. Historical Q7 rejection remains client-specific evidence. |
 | PERF-COMPILER-01 / RXAS-MAINT-01 | Which source/inlining or machine transformations remain useful on the complete C/G/L product? | Current emitted-shape/cost evidence; coherent AST rewriting; common RXAS facts, typed proof plans and edit contracts; no transported compiler-only assertion. |
+| PERF-COMPILE-LATENCY-01 | Can a no-optimizer assembler build and in-memory RXC-to-RXAS handoff materially shorten compile/load/first-result without losing diagnostics or correctness? | Compare current `rxc -n`/`rxas -n` and file-based `crexx` against in-memory text and, only if justified, typed handoff; report cold/repeated latency, RSS, artifact/package size and later execution cost separately. The [compiler-profile roadmap](../docs/ROADMAP.md#compiler-profiles-and-low-latency-compilation--comp-pipe-01) owns language and architecture decisions. |
 | PERF-RUNTIME-01 / PERF-REVIEW-01 / PERF-NEXT-02 | Which numeric/conversion, string-copy, signal or object/graph costs remain material? | Current profiles and representative workloads, including C/G/L and real consumers; equivalent semantics, ownership and exact negative controls. |
 | PERF-LINK-01 | Can loading, binding, dead-code or artifact work improve real application lifecycle? | Separate startup/steady-state/memory/artifact verdicts with late-load, plugin and installed-application correctness. |
 
@@ -128,6 +129,19 @@ are recorded here or appeared in the completed programme ledger:
   finalisation, hoisting, and late-inlining consumers. Start from a current
   profile and reuse the graph/proof service; do not broaden an unsupported
   inline shape as a shortcut.
+- `PERF-COMPILE-LATENCY-01`: Adrian proposed a lean no-optimizer assembler and
+  compiler-to-assembler handoff on 2026-10-07 as foundations for a compiled
+  execution mode and possible later INTERPRET design. The first hypothesis is
+  that removing an intermediate `.rxas` file or unused optimizer setup reduces
+  cold and repeated lifecycle cost. Existing `-n` switches and the RXAS buffer
+  scanner are controls, not evidence of a speedup. A typed direct interface
+  risks duplicated validation, metadata/source drift and a new cross-tool ABI;
+  a separate executable risks package and code-size growth. Require matched
+  correctness and first ordinary Release verdicts for any production edit.
+  Product-contract design may be selected before Beta 6; this ledger records
+  the performance hypothesis, not its schedule. Candidate only: no
+  implementation or architecture selection follows from recording it here;
+  Classic INTERPRET remains parked in its own worklist.
 - `PERF-RUNTIME-01`: numeric value caching, string-copy fast paths, signal
   specialization, and related runtime ideas. Each needs an attributable current
   workload, semantic guards, and a regression budget before selection.

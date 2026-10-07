@@ -2,7 +2,8 @@
 
 Status: consolidated project direction; core/functional/performance milestones
 and the parallel application track revised by Adrian on 2026-09-18; beta 3
-documentation baseline finalized 2026-09-30. This is not a release contract.
+documentation baseline finalized 2026-09-30; compiler-profile and fast-path
+study recorded 2026-10-07. This is not a release contract.
 
 This is the single portfolio-ordering view for CREXX. It ranks product outcomes
 rather than every issue, experiment, or completed programme stage. Detailed
@@ -41,15 +42,13 @@ Use this authority split:
 - Level B is the principal implemented language surface. The initial Level G
   concurrency and provider layers are implemented development content, not a
   claim that the full Level G language contract is stable.
-- Level C has progressed beyond parser-only and early lowering slices. Whole
-  instruction reviews are closed for SAY, DROP, assignment, NOP, OPTIONS, IF,
-  SELECT, DO, LEAVE and ITERATE. ARG has substantial bounded execution proof
-  but remains open; the approved one-frame label/SIGNAL AST architecture is its
-  next shared dependency. PARSE has a shared template engine, while the other
-  Classic instructions and host/condition contracts remain open. The
+- Level C has closed whole-instruction reviews `LC-I-01–24`, including ARG,
+  PARSE, CALL, SIGNAL and TRACE on their agreed contracts. INTERPRET is parked
+  as not implemented, without a Release 1 "won't implement" decision. BIF,
+  host, source, expression, shared-AST and full qualification gaps remain. The
   [Level C worklist](planning/release-1/levelc-compatibility-worklist.md)
-  owns current status and evidence. Unsupported shapes still reject rather
-  than silently changing semantics.
+  owns the current ten-point gap register, status and evidence. Unsupported
+  shapes still reject rather than silently changing semantics.
 - RexxScript is already a distinct standalone and embedded interpreted product.
   It is sandboxed and string-first, shares Classic BIF foundations where
   appropriate, and remains separate from the compiled Level C path.
@@ -240,6 +239,115 @@ assigning a performance phase.
 **Exit:** Beta 6 on 2027-03-31 has measured accepted improvements, explicit
 regression dispositions and retained rejected/deferred ideas. Optimization
 implementation freezes for RC1; April qualifies and repairs the candidate.
+
+## Compiler profiles and low-latency compilation — COMP-PIPE-01
+
+**Status:** Adrian requested this connected roadmap study on 2026-10-07.
+The B/G language boundary, separate executables, fast assembler build, direct
+compiler-to-assembler handoff and compiled execution mode are proposals, not
+approved product architecture or a change to Release 1 dates. The parked
+Level C INTERPRET instruction remains unimplemented under the
+[Level C worklist](planning/release-1/levelc-compatibility-worklist.md#remaining-gap-decision-register-2026-10-07).
+
+**Vision and intended outcome:** give Level B, Classic Level C and Level G
+clear source-language contracts and potentially separate compiler executables,
+while keeping one validated canonical AST/symbol/flow interface to the shared
+optimizer and emitter, one RXAS/RXBIN contract, and compatible build tools.
+Freeze or explicitly delimit Level B before treating Level G as its extension.
+Provide a low-latency route that can compile and execute source without
+optimizing, and examine whether it can later support a fully correct compiled
+INTERPRET. Preserve the ordinary optimized ahead-of-time product and a
+human-readable `.rxas` path for inspection and diagnostics.
+
+**Current basis and dependencies.** One `rxc` selects source levels and emits
+RXAS through a `FILE *`; `rxclib` already links `rxaslib`. Both `rxc -n` and
+`rxas -n` exist. `rxaslib` can initialize its parser from a bounded in-memory
+text buffer, so removing the intermediate `.rxas` *file* can be tried before
+inventing a typed assembler API. Removing RXAS text generation and parsing is
+a further interface change. Level G already gates task/parallel syntax, while
+authored `ASSEMBLER` is Level B only. Certified compiler exits currently lower
+some built-in B/G statements, so deciding that user-defined compiler exits
+belong only to Level G must separately preserve those compiler-owned forms.
+The Level C parser/lowerer already targets the canonical compiler tree.
+
+**Acceptance criteria — all open:**
+
+1. **CP-AC-01 — B/G contract:** record an approved Level B freeze or precise
+   supported baseline and a positive/negative B/G capability matrix, including
+   syntax, libraries, diagnostics, source defaults, imports, authored
+   `ASSEMBLER`, and compiler exits. Distinguish user-defined exits from
+   certified compiler-owned lowering. Prove that an allowed G-only feature is
+   rejected in B, and inventory existing B users before any approved break or
+   migration; preserve Level C behavior.
+2. **CP-AC-02 — shared compiler boundary:** if separate B/C/G executables are
+   selected, they feed one documented canonical AST, symbol, source-anchor and
+   flow contract into shared optimization and emission. Preserve existing `rxc`
+   and `crexx` invocations or define an explicit migration, installed tools,
+   DSLSH/parser mode, imports and supported-platform builds. Verify semantic,
+   optimized/no-opt, diagnostic and artifact parity against the current tool.
+3. **CP-AC-03 — fast assembler:** specify the mandatory parsing, validation,
+   symbol resolution, backpatching, metadata and RXBIN writing steps that a
+   no-optimizer profile must retain. Compare existing `rxas -n` with a lean
+   build or executable before selecting one. The fast path produces valid
+   linked and executable RXBIN with correct errors, source/TRACE information,
+   signals and procedure/label binding.
+4. **CP-AC-04 — direct handoff:** first evaluate compiler output into the
+   existing in-memory RXAS scanner, removing the intermediate file while
+   retaining its text grammar. Select a typed compiler-to-assembler interface
+   only if measured parser/formatting cost warrants its extra contract. Either
+   path must match the file-based RXAS/RXBIN, import, diagnostic, metadata,
+   linking and no-opt behavior, with a retained text-output mode.
+5. **CP-AC-05 — compiled execution mode:** define an explicit compile-and-run
+   entry with optimization disabled in both stages, clear source/argument,
+   output, status, cleanup and installed-product behavior. Compare cold and
+   repeated compile/load/first-result latency, peak memory, artifact size and
+   subsequent execution cost against today's `crexx` and optimized pipeline.
+   This mode does not itself satisfy Classic INTERPRET's current-frame control,
+   local calls, conditions or bounded generated-module lifetime.
+6. **CP-AC-06 — selection and qualification:** retain same-input correctness
+   and exact-output comparisons across B/C/G, both VM engines where relevant,
+   debug/source metadata and supported platforms. Record measured latency,
+   memory, package-size and maintenance tradeoffs before selecting executable
+   splitting, a lean assembler, typed handoff or a public execution mode.
+   Production performance edits follow the first ordinary Release verdict in
+   `performance/AGENTS.md`; unselected alternatives remain proposals.
+
+**Numbered steps and decision gates:**
+
+1. **CP-STEP-01 (CP-AC-01; before the January platform contract freeze):**
+   inventory current B/G differences and certified/custom exits; propose the
+   Level B freeze and G-only features for Adrian's language-design approval.
+2. **CP-STEP-02 (CP-AC-02; depends on 01):** map today's B/G and C parser,
+   validation, symbol and lowering outputs to the shared AST/flow/emitter
+   contract. Prototype executable wrappers or lean front ends only after an
+   approved architecture and prove preservation of existing CLI consumers.
+3. **CP-STEP-03 (CP-AC-03/06; independent of 02):** establish the current
+   `rxc -n` plus `rxas -n` correctness and compile-time baseline, then measure
+   a bounded no-optimizer assembler build against it. Select a separate binary
+   only if it materially improves the chosen latency/size/lifecycle target.
+4. **CP-STEP-04 (CP-AC-04/06; depends on 03):** try the in-memory RXAS text
+   handoff; compare its gain and parity with the file path. Design a typed
+   direct handoff only after that result and a separately approved interface
+   contract. Do not duplicate assembler validation or change RXBIN implicitly.
+5. **CP-STEP-05 (CP-AC-05/06; depends on 03/04):** qualify a compile-and-run
+   mode with exact error, cleanup and repeated-use behavior; choose its public
+   name and artifact/cache policy before exposing it. Keep full INTERPRET
+   parked until Adrian explicitly reopens its semantic architecture decision.
+
+**Concerns to resolve.** Separate binaries may duplicate linked code and
+installed assets without reducing startup or compilation time. A B freeze that
+simply disables all compiler exits would break built-in certified lowering.
+The shared AST/symbol boundary must carry each language's validated meaning;
+it cannot erase Classic pool/condition semantics or silently admit G syntax
+to B. Existing B code using custom exits needs an explicit compatibility
+decision if those exits become G-only.
+The in-memory text handoff saves file I/O but still formats and parses RXAS;
+a typed handoff is more intrusive and must keep assembler validation and
+versioned metadata authoritative. No-opt compilation still needs semantic
+lowering, type/flow checks, label resolution and safe module loading. Faster
+compilation makes a compiled INTERPRET route more plausible, but cannot solve
+its caller-frame transfers, resumable handlers or generated-module reclamation.
+Treat those as separate Level C acceptance and approval gates.
 
 ## Constrained C89 And CMS Portability — PORT-C89
 
