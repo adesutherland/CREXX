@@ -432,7 +432,7 @@ Grouped or partial Level B coverage exists for:
 
 Remaining Level C work items rather than complete standalone surfaces:
 
-- `CONDITION`, `ERRORTEXT`, `QUEUED`, and `SOURCELINE` as stateful BIFs;
+- `CONDITION`, `ERRORTEXT`, and `SOURCELINE` as stateful BIFs;
   `ADDRESS` and `ARG` have direct entries but retain open whole-context proof.
 - `CHARS`, `QUALIFY`, and `STREAM`; the three bit BIFs have direct runtime
   entries and use the Latin-1 ordinal boundary in compiled Level C.
@@ -455,3 +455,11 @@ Remaining Level C work items rather than complete standalone surfaces:
 Keep Level B `.string` UTF-8 guarantees and the approved Level C Unicode scalar
 contract. Raw binary I/O and explicit Unicode BIFs have separate open design
 and qualification rows in the worklist.
+
+QUEUED has a direct compiler/runtime entry. It counts the same execution-local
+selected repository as PULL/PUSH/QUEUE, without consuming a line or falling back
+to default input. The existing Level B RXQUEUE API selects named queues for direct
+hosts; adding a Level C/C host selector remains separate host work. STEP-90C in
+the worklist records focused direct/linked opt/no-opt proof. Adrian deferred
+changes to Unicode and I/O infrastructure on 2026-10-07; Unicode-driven signals
+and logic behavior are currently undefined for this BIF checkpoint.

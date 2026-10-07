@@ -1,0 +1,48 @@
+options levelb comments_dash numeric_classic
+import rxfnsb
+import rexxclassicbifqueued
+import rexxclassicbifs
+import rexxvalue
+
+errors = 0
+context = .RexxBifCallContext("QUEUED")
+args = .RexxValue[]
+exists = .int[]
+call context.setArguments(args,exists)
+errors = errors + check(context,"0")
+call queue "tail"
+call push "頭" || '00'x
+errors = errors + check(context,"2")
+if pull() <> "頭" || '00'x then errors = errors + 1
+errors = errors + check(context,"1")
+previous = rxqueue("QUERY")
+call rxqueue "CREATE","BIF-QUEUE"
+call rxqueue "SET","BIF-QUEUE"
+errors = errors + check(context,"0")
+call queue "named"
+errors = errors + check(context,"1")
+call rxqueue "SET",previous
+errors = errors + check(context,"1")
+if pull() <> "tail" then errors = errors + 1
+errors = errors + check(context,"0")
+call rxqueue "SET","BIF-QUEUE"
+if pull() <> "named" then errors = errors + 1
+call rxqueue "SET",previous
+args[1] = .RexxValue("extra")
+exists[1] = 1
+call context.setArguments(args,exists)
+result = rexxclassicbif_queued(reference context)
+if context.errorCode() <> "RXC-LC-40.4" then errors = errors + 1
+exists[1] = 0
+call context.setArguments(args,exists)
+result = rexxclassicbif_queued(reference context)
+if context.errorCode() <> "RXC-LC-40.4" then errors = errors + 1
+if errors = 0 then say "ok"
+return errors
+
+check: procedure = .int
+  arg context = .RexxBifCallContext, expected = .string
+  result = rexxclassicbif_queued(reference context)
+  if result.asString() = expected & \context.hasError() then return 0
+  say "FAIL QUEUED" expected result.asString() context.errorDetail()
+  return 1

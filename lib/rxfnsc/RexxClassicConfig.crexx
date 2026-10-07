@@ -217,6 +217,10 @@ RexxClassicConfig: class
     call queue text
     return
 
+  /** Count entries in the selected execution-local queue without consuming input. */
+  queuedCount: method = .int
+    return queued()
+
   isByteProfile: method = .boolean
     return profile_name == "BYTE"
 

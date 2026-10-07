@@ -188,6 +188,7 @@ static const LevelCBifEntry levelc_direct_bifs[] = {
     LEVELC_DIRECT_BIF("MIN", "rexxclassicbifmin", "rexxclassicbif_min"),
     LEVELC_DIRECT_BIF("OVERLAY", "rexxclassicbifoverlay", "rexxclassicbif_overlay"),
     LEVELC_DIRECT_BIF("POS", "rexxclassicbifpos", "rexxclassicbif_pos"),
+    LEVELC_DIRECT_BIF("QUEUED", "rexxclassicbifqueued", "rexxclassicbif_queued"),
     LEVELC_DIRECT_BIF("RANDOM", "rexxclassicbifrandom", "rexxclassicbif_random"),
     LEVELC_DIRECT_BIF("REVERSE", "rexxclassicbifreverse", "rexxclassicbif_reverse"),
     LEVELC_DIRECT_BIF("RIGHT", "rexxclassicbifright", "rexxclassicbif_right"),
@@ -216,7 +217,7 @@ static const LevelCBifEntry levelc_direct_bifs[] = {
 };
 #undef LEVELC_DIRECT_BIF
 #define LEVELC_DIRECT_BIF_COUNT (sizeof(levelc_direct_bifs) / sizeof(levelc_direct_bifs[0]))
-_Static_assert(LEVELC_DIRECT_BIF_COUNT <= 64, "Level C BIF use mask is too small");
+
 
 typedef struct {
     ASTNode *instructions;
@@ -236,7 +237,7 @@ typedef struct {
     int has_address;
     int has_trace;
     LevelCLoopBinding *active_loop;
-    uint64_t used_direct_bifs;
+    unsigned char used_direct_bifs[LEVELC_DIRECT_BIF_COUNT];
     char **external_imports;
     size_t external_import_count;
 } LevelCLowerPlan;
@@ -547,7 +548,7 @@ static int levelc_direct_bif_supported(ASTNode *expr,
         arg = arg->sibling;
     }
     if (plan) {
-        plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+        plan->used_direct_bifs[bif_index] = 1;
         if (strcmp(bif->name, "TRACE") == 0 && expr->child &&
             levelc_argument_exists(expr->child)) plan->has_trace = 1;
     }
@@ -1272,7 +1273,7 @@ static int levelc_call_statement_supported(ASTNode *stmt,
                 plan->call_handlers[plan->call_handler_count].source = stmt;
                 plan->call_handlers[plan->call_handler_count].target_name = name;
                 plan->call_handler_count++;
-                if (bif) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+                if (bif) plan->used_direct_bifs[bif_index] = 1;
                 if (!local && !bif &&
                     !levelc_record_external_import(stmt->context, plan, name)) {
                     free(condition_name);
@@ -1297,7 +1298,7 @@ static int levelc_call_statement_supported(ASTNode *stmt,
 
     args = stmt->child ? stmt->child->sibling : NULL;
     if (!args) {
-        if (bif && plan) plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+        if (bif && plan) plan->used_direct_bifs[bif_index] = 1;
         if (!procedure && !bif &&
             !levelc_record_external_import(stmt->context, plan, target_name)) {
             free(target_name);
@@ -1320,7 +1321,7 @@ static int levelc_call_statement_supported(ASTNode *stmt,
         }
     }
     if (bif && plan) {
-        plan->used_direct_bifs |= UINT64_C(1) << bif_index;
+        plan->used_direct_bifs[bif_index] = 1;
         if (strcmp(bif->name, "TRACE") == 0 && args->child &&
             levelc_argument_exists(args->child)) plan->has_trace = 1;
     }
@@ -4320,12 +4321,12 @@ static ASTNode *levelc_build_options(Context *context,
         const char *module;
         ASTNode *import;
         size_t previous;
-        if (!(plan->used_direct_bifs & (UINT64_C(1) << i))) continue;
+        if (!plan->used_direct_bifs[i]) continue;
         module = levelc_direct_bifs[i].module;
         if (!module || (needs_translate &&
                         strcmp(module, "rexxclassicbiftranslate") == 0)) continue;
         for (previous = 0; previous < i; previous++) {
-            if ((plan->used_direct_bifs & (UINT64_C(1) << previous)) &&
+            if (plan->used_direct_bifs[previous] &&
                 levelc_direct_bifs[previous].module &&
                 strcmp(levelc_direct_bifs[previous].module, module) == 0) break;
         }

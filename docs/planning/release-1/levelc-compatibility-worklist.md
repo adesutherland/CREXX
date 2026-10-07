@@ -60,6 +60,125 @@ programme consistency review. Reuse the 741/741 normal Debug and Release
 TRACE-input checkpoints while code/test/build inputs are unchanged; this
 documentation reconciliation does not trigger another product suite.
 
+### LC-GAP-02 BIF completion programme (2026-10-07)
+
+**Vision and intended outcome.** Deliver a coherent running baseline for all
+70 catalogued Classic BIF names through the existing shared direct-BIF path.
+Presence in the compiler table is not closure: each family must cover legal
+arguments and omissions, options, values, state, errors and authored source
+locations against reference behavior, with explicitly labelled approved Unicode
+departures. Preserve valid Unicode scalars/codepoint indexing, the fixed Latin-1
+ordinal bridge, RexxScript's binary-capable RexxValue and sandbox, the static
+signed CALL boundary, and current linker/VM behavior. Implement only narrowly
+necessary BIF host support through approved interfaces. INTERPRET remains parked;
+LC-GAP-01 and LC-GAP-03–10, compiler split/fast-pipeline proposals, wider host
+closure and full Level C/Release 1 qualification remain pending.
+
+**Adrian's infrastructure scope clarification, 2026-10-07.** Work must not
+change Unicode or I/O behavior relative to the current infrastructure. Such
+changes are deferred until an architectural assessment determines the required
+compatibility. Unicode characters causing signals or other logic errors in Level C are
+acceptable and currently undefined by Adrian’s further clarification; do not introduce a codec, host ABI, VM/linker change or compatibility
+rule to suppress them. The stream provider proposal is unapproved and pending.
+Continue independent BIFs and audit the existing admitted paths; keep deferred
+stream/Unicode and wider host proof visibly open.
+
+**Acceptance criteria (all initially open).**
+
+- [ ] **LC-BIF-01 — inventory and contract audit:** recount the 70 names against
+  current compiler/runtime/test code and reconcile every inventory row with
+  family evidence; no entry/example-only closure. Inspect legal argument counts,
+  omissions, types/options, reference values, failures and source identity.
+- [ ] **LC-BIF-02 — streams and positioning:** CHARIN/CHAROUT/CHARS,
+  LINEIN/LINEOUT/LINES, QUALIFY/STREAM implement one stream service. Verify
+  defaults/named streams, EOF, independent positions, line endings, encoding,
+  NUL, availability/state/commands, invalid/nonpositionable resources, close,
+  failure conditions, resource cleanup and context isolation. New language,
+  host ABI or architecture decisions require Adrian's approval first.
+- [ ] **LC-BIF-03 — selected queue:** QUEUED observes the same execution-local
+  selected repository as PULL/PUSH/QUEUE, without consuming input; verify empty,
+  FIFO/LIFO, named selection, omissions/errors and independent executions.
+- [ ] **LC-BIF-04 — source, messages and condition:** SOURCELINE uses retained
+  original source (not a runtime file reread), ERRORTEXT shares the standard
+  catalog, and CONDITION fields follow admitted live producers and frame
+  policy. Verify options/ranges/omissions, source lines and errors, nested and
+  linked contexts, NUL/Unicode and producer/state-field behavior. Real host HALT
+  remains a separately owned host gap, not a falsely passed producer.
+- [ ] **LC-BIF-05 — pure/numeric/text/ordinal audit:** audit every existing
+  entry, caller numeric and configuration context, argument normalization,
+  all 256 ordinals and unmappable scalars; verify actual behavior/errors against
+  IBM/Regina where useful. Preserve Level B/G/L and RexxScript isolation.
+- [ ] **LC-BIF-06 — complete product checkpoint:** freeze final code/test/build
+  inputs; core build, full normal Debug CTest once across B/C/G/L, RexxScript,
+  RXAS/linker/VM/native interfaces; relevant normal Release correctness suites
+  across those levels once with opt/no-opt and linked execution; installed-product
+  and host BIF smoke; focused maintained sanitizer for changed native/ownership
+  paths. Record exact revision/input hashes, commands/results/logs and unrun
+  platform gates. Bound parallelism by observed total/child memory, avoid broad
+  job overlap, use temporary verbose logs, and verify child exit after long runs.
+  Reuse valid unchanged evidence; no routine overnight dispatch.
+- [ ] **LC-BIF-07 — delivery and honest closure:** commit each coherent family
+  with focused evidence and synchronized docs; final report identifies each
+  commit, grouped QA, remaining defects/decisions, exact HEAD and unpublished
+  status. Any blocked behavior stays open; no full Level C/Release 1 claim.
+
+**Implementation steps.**
+
+1. **LC-STEP-90A (LC-BIF-01/07; in progress):** read governing plans/guides,
+   fetch/reconcile develop, recount entries, inspect retained evidence, and
+   record this plan before implementation. Starting verified clean revision:
+   `52fcfb21bd1acd18e8010af83ab65eaae8b7a863`; fetched origin/develop: 0 behind,
+   208 ahead. Previous 741/741 Debug/Release Level C receipt qualifies TRACE
+   inputs only. No existing build/test child jobs were found.
+2. **LC-STEP-90B (LC-BIF-02; pending by Adrian’s 2026-10-07 direction; depends on 90A):** complete the
+   stream family around one service. Existing FOPEN/FREADCDPT/FWRITE and Level B
+   file cache do not expose seek/tell, independent read/write positions or a
+   full Classic status/availability contract. Proposed decision: a narrow RXPA
+   provider with session-owned stream handles, typed checked methods for read,
+   write, positioning, availability, state and close; Level B BIFs own argument
+   and Classic error handling. Reuse existing RXPA factory/method/ownership
+   services; no VM opcode, linker or loader changes. Encoding remains explicit
+   host text encoding, Unicode codepoint positions and NUL-safe length spans;
+   raw binary Level C values remain out of scope. Do not implement this new
+   host contract until approved. Adrian selected “Keep streams pending; finish
+   independent BIFs” on 2026-10-07. Finish later independent steps; this is
+   deferral, not a stream exception or BIF baseline closure.
+3. **LC-STEP-90C (LC-BIF-03/07; implementation and focused proof complete; depends on 90A):** add QUEUED using the
+   existing selected queue/configuration service and shared direct lowering;
+   cover arguments, effects, selection and isolation; commit the family.
+4. **LC-STEP-90D (LC-BIF-04/07; pending; depends on 90A):** retain source lines
+   through compiler-generated activation data, implement SOURCELINE and catalog
+   ERRORTEXT, reconcile diagnostic code range against references, and audit
+   CONDITION producers/fields. Commit coherent source/message/state increments;
+   seek approval for any genuinely new rule or architecture.
+5. **LC-STEP-90E (LC-BIF-01/05/07; pending; depends on 90A):** audit all remaining
+   families, reuse valid character/ordinal receipts, add regressions and repair
+   reproduced defects in family-sized commits. Grow the direct-entry use tracking
+   beyond its current 64-entry bound; do not add another dispatcher.
+6. **LC-STEP-90F (LC-BIF-06/07; pending; depends on final independent code and
+   90B decisions):** perform the single grouped product checkpoint on frozen
+   final inputs, document each unrun platform gate, reconcile inventory/criteria,
+   and report exact HEAD/ahead/behind and any precise blocked behavior.
+
+**LC-STEP-90C receipt, 2026-10-07.** QUEUED now uses the existing
+execution-local selected repository through RexxClassicConfig. No host selector,
+Unicode/I/O transport change or second dispatcher was added. Import-use tracking
+is now a table-sized array, removing the 64-name bound without shifting masks.
+Direct entry count is 60/70; the ten absent names are the eight stream names,
+ERRORTEXT and SOURCELINE. Focused core/runtime build passed with `--parallel 4`
+(`/tmp/crexx-bif-queue-build.kH6o9W`). Final queue harness build and CTest
+`-R '^(testRexxClassicBifQueued|levelc_bif_queued)' --parallel 4
+--output-on-failure` passed 6/6 in 2.30s
+(`/tmp/crexx-bif-queue-final.rauuyG`), covering empty/repeated count, FIFO/LIFO,
+NUL on the admitted path, nested procedures, named queue selection via the
+existing Level B API, excess/omitted arguments, source-anchored SYNTAX and
+linked opt/no-opt. Earlier unchanged PULL/PUSH/QUEUE linked checks passed 6/6.
+Harness setup failures were corrected to create a queue and use the shipped
+QUERY/SET contract; there was no product regression. Build/test processes exited;
+no remaining compiler/assembler/linker/VM/CTest children were observed. Whole-
+product grouped and sanitizer checks remain open until STEP-90F. Wider host queue
+selection remains LC-GAP-03, and Unicode compatibility remains deferred.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A
@@ -7349,7 +7468,7 @@ argument, configured-context, signal and reference proof.
 | `OVERLAY` | Direct + runtime | [`RexxClassicBifOverlay.crexx`](../../../lib/rxfnsc/RexxClassicBifOverlay.crexx); full reference proof open |
 | `POS` | Direct + runtime | [`RexxClassicBifPos.crexx`](../../../lib/rxfnsc/RexxClassicBifPos.crexx); full reference proof open |
 | `QUALIFY` | Open | No standalone Classic BIF module; implementation and proof open |
-| `QUEUED` | Open | No standalone Classic BIF module; implementation and proof open |
+| `QUEUED` | Direct + runtime; focused contract passed | LC-STEP-90C: selected queue, arguments, effects, source, linked opt/no-opt; grouped product proof pending |
 | `RANDOM` | Direct + runtime | [`RexxClassicBifRandom.crexx`](../../../lib/rxfnsc/RexxClassicBifRandom.crexx); full reference proof open |
 | `REVERSE` | Direct + runtime | [`RexxClassicBifReverse.crexx`](../../../lib/rxfnsc/RexxClassicBifReverse.crexx); full reference proof open |
 | `RIGHT` | Direct + runtime | [`RexxClassicBifRight.crexx`](../../../lib/rxfnsc/RexxClassicBifRight.crexx); full reference proof open |

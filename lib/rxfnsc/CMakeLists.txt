@@ -83,6 +83,7 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifNumeric
   RexxClassicBifOverlay
   RexxClassicBifPos
+  RexxClassicBifQueued
   RexxClassicBifRandom
   RexxClassicBifReverse
   RexxClassicBifRight

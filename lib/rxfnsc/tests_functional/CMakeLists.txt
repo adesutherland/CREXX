@@ -44,6 +44,7 @@ set(REXXBINS
   testRexxClassicBifNumeric
   testRexxClassicBifOverlay
   testRexxClassicBifPos
+  testRexxClassicBifQueued
   testRexxClassicBifRandom
   testRexxClassicBifReverse
   testRexxClassicBifRight
