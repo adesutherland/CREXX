@@ -349,6 +349,46 @@ children, with unchanged swap; peak child RSS was 537 MiB. Grouped product and
 sanitizer proof remain LC-STEP-90F. SOURCELINE source-map/physical-NUL behavior
 and Unicode compatibility retain their deferred owners.
 
+**LC-STEP-90F product-preparation repair plan, 2026-10-07.** The frozen
+checkpoint's full Debug build stopped on both modes of `test_trace_exit`:
+source-anchored `CLASS_NOT_FOUND` at `trace results`. Isolated unchanged replay
+reproduces (`/tmp/crexx-bif-trace-prep-replay.log`); a copied source reproduces
+too (`/tmp/crexx-bif-trace-isolation-log.ViuLap`). TRACE's generated helper imports
+`RexxValue` from `rxfnsc`, but the class is exposed by `rexxvalue`. That source is
+identical to the programme's starting revision; this is a pre-existing product
+preparation defect, not numeric/Unicode behavior fallout.
+
+Vision: restore the existing Level B/G TRACE helper's declared class import so
+the requested complete product checkpoint can run. No TRACE language rule,
+host interface, VM/linker or Unicode/I/O change is intended.
+
+1. **LC-BIF-PREP-01:** the existing TRACE exit fixture compiles and executes in
+   opt/no-opt with the declared class import; verify focused normal Debug.
+2. **LC-BIF-PREP-02:** the same focused cases pass through the maintained
+   sanitizer runner, with no first-party diagnostic; leave platform limits open.
+3. **LC-STEP-90F-1:** correct the existing exit descriptor import, using the
+   documented `rexxvalue` namespace; retain the existing regression fixture.
+4. **LC-STEP-90F-2:** run the focused build/tests, commit the repair separately,
+   freeze revised code/test/build inputs, then resume one full normal Debug and
+   one Release correctness run. No broad CTest has yet started.
+
+**LC-STEP-90F product-preparation repair receipt.** The TRACE descriptor now
+imports the existing `rexxvalue` namespace. Its existing exit/results/negated-string
+fixtures built and passed 6/6 normal Debug (1.00s CTest;
+`/tmp/crexx-bif-trace-repair-build.log`, `/tmp/crexx-bif-trace-repair-tests.log`).
+The matching maintained ASan build and 6/6 test run passed (2.34s CTest;
+`/tmp/crexx-bif-trace-asan-build.log`, `/tmp/crexx-bif-trace-asan-tests.log`,
+runner `20261007-223123-ctest`), without diagnostics or residual children.
+`LC-BIF-PREP-01/02` are verified on macOS ASan's supported capability; Apple
+LeakSanitizer remains unavailable. The earlier focused BIF ASan run passed 53/53
+(478.02s; `/tmp/crexx-bif-asan-focused.log`, runner `20261007-221739-ctest`).
+Its BIF code/tests remain unchanged by this descriptor-only repair. The serialized
+reference audit measured 160.90s optimized and 162.56s linked optimized under
+ASan, within the explicit 600s hang backstop; no-opt modes took 17.06/18.59s.
+The first all-target normal build failure and isolated reproducer are retained;
+no broad CTest has run yet. Resume product preparation on the revised frozen
+checkpoint rather than report that failed build as passed.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A

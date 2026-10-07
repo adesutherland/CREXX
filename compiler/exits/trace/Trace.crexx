@@ -43,7 +43,7 @@ traceexit: class
         call desc.add_flag("certified")
         call desc.add_flag("reserved_keyword")
         call desc.add_import("rxfnsb", "trace", "")
-        call desc.add_import("rxfnsc", "RexxValue", "")
+        call desc.add_import("rexxvalue", "RexxValue", "")
         return desc
 
     pre_process: method = .exitplan
