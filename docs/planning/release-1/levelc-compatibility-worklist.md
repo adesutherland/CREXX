@@ -497,6 +497,38 @@ The earlier opt golden mismatch was corrected by keeping mode-specific source
 expectations; no product edit was needed. LC-BIF-PREP-05 is verified for these
 fixtures; optimized general source equivalence remains LC-GAP-06.
 
+**LC-STEP-90F assembly provenance follow-up.** The next Debug attempt on
+`91e2a2416` was interrupted after 404.17s when four compiler goldens disagreed
+with the intended source-anchor repair. In `13_stems` and
+`repro_multi_tail_stems`, both modes still expected `.srcstep` flags 6
+(GENERATED|SYNTHETIC), whereas authored setter clauses correctly emit flags 33
+(AUTHORED|INHERITED). The third field is provenance flags, not AST statement
+type. Comparing the entire four generated assembly files establishes that
+only these provenance fields differ: every executable instruction and every
+other metadata line is identical. Log:
+`/tmp/crexx-bif-checkpoint-debug-ctest-final.log`; no timeout or sanitizer finding.
+The interrupted run left no children; its owned empty stdin lock is removed.
+
+1. **LC-BIF-PREP-06:** maintained assembly goldens assert authored/inherited
+   provenance for the repaired setter clauses, while executable code is byte
+   for byte unchanged. Verify four compiler goldens, their four runtime modes
+   and the existing TRACE stem test in normal Debug and maintained ASan.
+2. **LC-STEP-90F-6:** update only the proven flags in those four existing golden
+   files. No native/compiler edit, workload expansion, language/ABI rule or
+   source contract change. Retain earlier focused repair evidence; freeze the
+   revised tests and complete the final full Debug run once on those inputs.
+
+**LC-BIF-PREP-06 receipt.** The four maintained compiler goldens now contain
+only the proven generated/synthetic → authored/inherited flag changes (4 setter
+clauses in each `13_stems` mode, 6 in each multi-tail mode). Full assembly
+comparison confirms every executable instruction and other metadata byte is
+unchanged. The four compiler checks, four runtime modes and TRACE stem check
+passed normal Debug 9/9 in 2.57s (`/tmp/crexx-bif-golden-debug-tests.log`) and
+maintained ASan 9/9 in 8.65s (`/tmp/crexx-bif-golden-asan-tests.log`, runner
+`20261007-232214-ctest`). No sanitizer diagnostic, residual children or swap
+increase occurred. This is a golden synchronization for the earlier reviewed
+source repair; no compiler/native code was changed. LC-BIF-PREP-06 is verified.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A

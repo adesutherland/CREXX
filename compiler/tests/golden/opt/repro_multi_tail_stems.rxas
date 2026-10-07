@@ -18,7 +18,7 @@ main() .locals=6
    call r1,§rxfnsb.stem.§factory(),r3
    .traceevent "F" 4 "R" "O" "r" 1 2 2 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 1 2 2 0 "root" ""
-   .srcstep 3 3 6 "repro_multi_tail_stems.crexx" 7 1 27 "root.tail1.tail2 = \"Jenny\""
+   .srcstep 3 3 33 "repro_multi_tail_stems.crexx" 7 1 27 "root.tail1.tail2 = \"Jenny\""
    .meta "repro_multi_tail_stems.main.tail1"="b" ".string" "tail1"
    .meta "repro_multi_tail_stems.main.tail2"="b" ".string" "tail2"
    load r2,"tail1.tail2"
@@ -75,14 +75,14 @@ l35iffalse:
    .traceevent "O" 4 "R" "S" "r" 3 9 9 0 "" ""
    say r3
 l55iffalse:
-   .srcstep 12 12 6 "repro_multi_tail_stems.crexx" 17 1 29 "root.123.45 = \"numeric-left\""
+   .srcstep 12 12 33 "repro_multi_tail_stems.crexx" 17 1 29 "root.123.45 = \"numeric-left\""
    load r2,"123.45"
    .traceevent "C" 4 "R" "S" "r" 2 12 12 0 "root" ""
    load r3,"numeric-left"
    .traceevent "L" 4 "R" "S" "r" 3 12 12 0 "" ""
    stemset r1,r2,r3
    .traceevent "A" 6 "R" "S" "r" 3 12 12 0 "root" ""
-   .srcstep 13 13 6 "repro_multi_tail_stems.crexx" 18 1 30 "root.12.345 = \"numeric-right\""
+   .srcstep 13 13 33 "repro_multi_tail_stems.crexx" 18 1 30 "root.12.345 = \"numeric-right\""
    load r2,"12.345"
    .traceevent "C" 4 "R" "S" "r" 2 13 13 0 "root" ""
    load r3,"numeric-right"
@@ -162,7 +162,7 @@ l103iffalse:
    .traceevent "O" 4 "R" "S" "r" 3 23 23 0 "" ""
    say r3
 l123iffalse:
-   .srcstep 26 26 6 "repro_multi_tail_stems.crexx" 35 1 39 "root.customer.invoice.field = \"149.95\""
+   .srcstep 26 26 33 "repro_multi_tail_stems.crexx" 35 1 39 "root.customer.invoice.field = \"149.95\""
    .meta "repro_multi_tail_stems.main.us"="b" ".string" "us"
    .meta "repro_multi_tail_stems.main.address"="b" ".string" "address"
    .meta "repro_multi_tail_stems.main.customer"="b" ".string" "acme"
@@ -220,14 +220,14 @@ l158iffalse:
    .srcstep 32 32 17 "repro_multi_tail_stems.crexx" 42 3 47 "  say \"Variable multi-tail used literal names\""
    say "Variable multi-tail used literal names"
 l173iffalse:
-   .srcstep 35 35 6 "repro_multi_tail_stems.crexx" 45 1 34 "root.address.us.ca = \"California\""
+   .srcstep 35 35 33 "repro_multi_tail_stems.crexx" 45 1 34 "root.address.us.ca = \"California\""
    load r2,"address.us.ca"
    .traceevent "C" 4 "R" "S" "r" 2 35 35 0 "root" ""
    load r3,"California"
    .traceevent "L" 4 "R" "S" "r" 3 35 35 0 "" ""
    stemset r1,r2,r3
    .traceevent "A" 6 "R" "S" "r" 3 35 35 0 "root" ""
-   .srcstep 36 36 6 "repro_multi_tail_stems.crexx" 46 1 57 "root.address.usc.a = \"University of Southern California\""
+   .srcstep 36 36 33 "repro_multi_tail_stems.crexx" 46 1 57 "root.address.usc.a = \"University of Southern California\""
    load r2,"address.usc.a"
    .traceevent "C" 4 "R" "S" "r" 2 36 36 0 "root" ""
    load r3,"University of Southern California"

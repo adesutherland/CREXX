@@ -18,7 +18,7 @@ main() .locals=11
    call r4,§rxfnsb.stem.§factory(),r5
    .traceevent "F" 4 "R" "O" "r" 4 2 2 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 4 2 2 0 "root" ""
-   .srcstep 3 3 6 "repro_multi_tail_stems.crexx" 7 1 27 "root.tail1.tail2 = \"Jenny\""
+   .srcstep 3 3 33 "repro_multi_tail_stems.crexx" 7 1 27 "root.tail1.tail2 = \"Jenny\""
    .meta "repro_multi_tail_stems.main.tail1"="b" ".string" "tail1"
    .meta "repro_multi_tail_stems.main.tail2"="b" ".string" "tail2"
    load r9,"."
@@ -81,7 +81,7 @@ l35iffalse:
    .traceevent "O" 4 "R" "S" "r" 8 9 9 0 "" ""
    say r8
 l55iffalse:
-   .srcstep 12 12 6 "repro_multi_tail_stems.crexx" 17 1 29 "root.123.45 = \"numeric-left\""
+   .srcstep 12 12 33 "repro_multi_tail_stems.crexx" 17 1 29 "root.123.45 = \"numeric-left\""
    load r5,123
    itos r5
    concat r5,r5,"."
@@ -93,7 +93,7 @@ l55iffalse:
    .traceevent "L" 4 "R" "S" "r" 9 12 12 0 "" ""
    stemset r4,r8,r9
    .traceevent "A" 6 "R" "S" "r" 9 12 12 0 "root" ""
-   .srcstep 13 13 6 "repro_multi_tail_stems.crexx" 18 1 30 "root.12.345 = \"numeric-right\""
+   .srcstep 13 13 33 "repro_multi_tail_stems.crexx" 18 1 30 "root.12.345 = \"numeric-right\""
    load r6,12
    itos r6
    concat r6,r6,"."
@@ -203,7 +203,7 @@ l123iffalse:
    load r2,"total"
    .traceevent "L" 4 "R" "S" "r" 2 28 28 0 "" ""
    .traceevent "A" 6 "R" "S" "r" 2 28 28 0 "field" ""
-   .srcstep 29 29 6 "repro_multi_tail_stems.crexx" 35 1 39 "root.customer.invoice.field = \"149.95\""
+   .srcstep 29 29 33 "repro_multi_tail_stems.crexx" 35 1 39 "root.customer.invoice.field = \"149.95\""
    .meta "repro_multi_tail_stems.main.us"="b" ".string" "us"
    .meta "repro_multi_tail_stems.main.address"="b" ".string" "address"
    .traceevent "V" 6 "R" "S" "r" 0 29 29 0 "customer" ""
@@ -264,7 +264,7 @@ l158iffalse:
    .srcstep 35 35 17 "repro_multi_tail_stems.crexx" 42 3 47 "  say \"Variable multi-tail used literal names\""
    say "Variable multi-tail used literal names"
 l173iffalse:
-   .srcstep 38 38 6 "repro_multi_tail_stems.crexx" 45 1 34 "root.address.us.ca = \"California\""
+   .srcstep 38 38 33 "repro_multi_tail_stems.crexx" 45 1 34 "root.address.us.ca = \"California\""
    load r6,"."
    concat r6,"address",r6
    concat r6,r6,"us"
@@ -275,7 +275,7 @@ l173iffalse:
    .traceevent "L" 4 "R" "S" "r" 10 38 38 0 "" ""
    stemset r4,r9,r10
    .traceevent "A" 6 "R" "S" "r" 10 38 38 0 "root" ""
-   .srcstep 39 39 6 "repro_multi_tail_stems.crexx" 46 1 57 "root.address.usc.a = \"University of Southern California\""
+   .srcstep 39 39 33 "repro_multi_tail_stems.crexx" 46 1 57 "root.address.usc.a = \"University of Southern California\""
    load r6,"."
    concat r6,"address",r6
    concat r6,r6,"usc"

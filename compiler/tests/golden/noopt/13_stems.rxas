@@ -42,7 +42,7 @@ main() .locals=7
    .traceevent "O" 4 "R" "S" "r" 6 4 4 0 "" ""
    say r6
 l28iffalse:
-   .srcstep 7 7 6 "13_stems.crexx" 12 1 16 "s.alpha = \"one\""
+   .srcstep 7 7 33 "13_stems.crexx" 12 1 16 "s.alpha = \"one\""
    .meta "13_stems.main.alpha"="b" ".string" "alpha"
    load r5,"alpha"
    .traceevent "C" 4 "R" "S" "r" 5 7 7 0 "s" ""
@@ -50,7 +50,7 @@ l28iffalse:
    .traceevent "L" 4 "R" "S" "r" 6 7 7 0 "" ""
    stemset r1,r5,r6
    .traceevent "A" 6 "R" "S" "r" 6 7 7 0 "s" ""
-   .srcstep 8 8 6 "13_stems.crexx" 13 1 18 "s[\"beta\"] = \"two\""
+   .srcstep 8 8 33 "13_stems.crexx" 13 1 18 "s[\"beta\"] = \"two\""
    .meta "13_stems.main.gamma"="b" ".string" "gamma"
    load r5,"beta"
    .traceevent "C" 4 "R" "S" "r" 5 8 8 0 "s" ""
@@ -58,7 +58,7 @@ l28iffalse:
    .traceevent "L" 4 "R" "S" "r" 6 8 8 0 "" ""
    stemset r1,r5,r6
    .traceevent "A" 6 "R" "S" "r" 6 8 8 0 "s" ""
-   .srcstep 9 9 6 "13_stems.crexx" 14 1 18 "s.gamma = \"three\""
+   .srcstep 9 9 33 "13_stems.crexx" 14 1 18 "s.gamma = \"three\""
    load r5,"gamma"
    .traceevent "C" 4 "R" "S" "r" 5 9 9 0 "s" ""
    load r6,"three"
@@ -111,7 +111,7 @@ l56iffalse:
    .traceevent "O" 4 "R" "S" "r" 5 15 15 0 "" ""
    say r5
 l72iffalse:
-   .srcstep 18 18 6 "13_stems.crexx" 26 1 20 "s.alpha = \"updated\""
+   .srcstep 18 18 33 "13_stems.crexx" 26 1 20 "s.alpha = \"updated\""
    load r5,"alpha"
    .traceevent "C" 4 "R" "S" "r" 5 18 18 0 "s" ""
    load r6,"updated"
