@@ -182,65 +182,72 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "source" (10:6) [Type: .unknown]
             CLASS : ".string" (10:13) [Type: .string]
         NOP : "" (10:20) [Type: .unknown]
-      FACTORY : "input_array" (11:2) [Type: .unknown]
-        VOID : "" (11:14) [Type: .void]
+      FACTORY : "input_binary" (11:2) [Type: .unknown]
+        VOID : "" (11:15) [Type: .void]
         ARGS : "" (12:6) [Type: .unknown]
           ARG : "" (12:6) [Type: .unknown]
             VAR_TARGET : "source" (12:6) [Type: .unknown]
-            CLASS : ".string" (12:13) [Type: .string]
-              RANGE : "" (12:21) [Type: .unknown]
-                NOVAL : "" (12:20) [Type: .unknown]
-                NOVAL : "*" (12:21) [Type: .unknown]
-        NOP : "" (12:22) [Type: .unknown]
-      FACTORY : "output_string" (13:2) [Type: .unknown]
-        VOID : "" (13:16) [Type: .void]
+            CLASS : ".binary" (12:13) [Type: .binary]
+        NOP : "" (12:20) [Type: .unknown]
+      FACTORY : "input_array" (13:2) [Type: .unknown]
+        VOID : "" (13:14) [Type: .void]
         ARGS : "" (14:6) [Type: .unknown]
           ARG : "" (14:6) [Type: .unknown]
-            VAR_TARGET : "target" (14:6) [Type: .unknown]
-            TYPE_REFERENCE : "reference" (14:13) [Type: reference .unknown]
-              CLASS : ".string" (14:23) [Type: .string]
-        NOP : "" (14:30) [Type: .unknown]
-      FACTORY : "output_array" (15:2) [Type: .unknown]
-        VOID : "" (15:15) [Type: .void]
+            VAR_TARGET : "source" (14:6) [Type: .unknown]
+            CLASS : ".string" (14:13) [Type: .string]
+              RANGE : "" (14:21) [Type: .unknown]
+                NOVAL : "" (14:20) [Type: .unknown]
+                NOVAL : "*" (14:21) [Type: .unknown]
+        NOP : "" (14:22) [Type: .unknown]
+      FACTORY : "output_string" (15:2) [Type: .unknown]
+        VOID : "" (15:16) [Type: .void]
         ARGS : "" (16:6) [Type: .unknown]
           ARG : "" (16:6) [Type: .unknown]
             VAR_TARGET : "target" (16:6) [Type: .unknown]
             TYPE_REFERENCE : "reference" (16:13) [Type: reference .unknown]
               CLASS : ".string" (16:23) [Type: .string]
-                RANGE : "" (16:31) [Type: .unknown]
-                  NOVAL : "" (16:30) [Type: .unknown]
-                  NOVAL : "*" (16:31) [Type: .unknown]
-        NOP : "" (16:32) [Type: .unknown]
-      METHOD : "has_input" (17:2) [Type: .boolean]
-        CLASS : ".boolean" (17:22) [Type: .boolean]
-        ARGS : "" (17:30) [Type: .unknown]
-        NOP : "" (17:30) [Type: .unknown]
-      METHOD : "captures_output" (18:2) [Type: .boolean]
-        CLASS : ".boolean" (18:28) [Type: .boolean]
-        ARGS : "" (18:36) [Type: .unknown]
-        NOP : "" (18:36) [Type: .unknown]
-      METHOD : "input_snapshot" (19:2) [Type: .binary]
-        CLASS : ".binary" (19:27) [Type: .binary]
-        ARGS : "" (19:34) [Type: .unknown]
-        NOP : "" (19:34) [Type: .unknown]
-      METHOD : "append_bytes" (20:2) [Type: .void]
-        CLASS : ".void" (20:25) [Type: .void]
-        ARGS : "" (21:6) [Type: .unknown]
-          ARG : "" (21:6) [Type: .unknown]
-            VAR_TARGET : "bytes" (21:6) [Type: .unknown]
-            CLASS : ".binary" (21:12) [Type: .binary]
-        NOP : "" (21:19) [Type: .unknown]
-      METHOD : "native_emit" (22:2) [Type: .int]
-        CLASS : ".int" (22:24) [Type: .int]
+        NOP : "" (16:30) [Type: .unknown]
+      FACTORY : "output_array" (17:2) [Type: .unknown]
+        VOID : "" (17:15) [Type: .void]
+        ARGS : "" (18:6) [Type: .unknown]
+          ARG : "" (18:6) [Type: .unknown]
+            VAR_TARGET : "target" (18:6) [Type: .unknown]
+            TYPE_REFERENCE : "reference" (18:13) [Type: reference .unknown]
+              CLASS : ".string" (18:23) [Type: .string]
+                RANGE : "" (18:31) [Type: .unknown]
+                  NOVAL : "" (18:30) [Type: .unknown]
+                  NOVAL : "*" (18:31) [Type: .unknown]
+        NOP : "" (18:32) [Type: .unknown]
+      METHOD : "has_input" (19:2) [Type: .boolean]
+        CLASS : ".boolean" (19:22) [Type: .boolean]
+        ARGS : "" (19:30) [Type: .unknown]
+        NOP : "" (19:30) [Type: .unknown]
+      METHOD : "captures_output" (20:2) [Type: .boolean]
+        CLASS : ".boolean" (20:28) [Type: .boolean]
+        ARGS : "" (20:36) [Type: .unknown]
+        NOP : "" (20:36) [Type: .unknown]
+      METHOD : "input_snapshot" (21:2) [Type: .binary]
+        CLASS : ".binary" (21:27) [Type: .binary]
+        ARGS : "" (21:34) [Type: .unknown]
+        NOP : "" (21:34) [Type: .unknown]
+      METHOD : "append_bytes" (22:2) [Type: .void]
+        CLASS : ".void" (22:25) [Type: .void]
         ARGS : "" (23:6) [Type: .unknown]
           ARG : "" (23:6) [Type: .unknown]
-            VAR_TARGET : "text" (23:6) [Type: .unknown]
-            CLASS : ".string" (23:11) [Type: .string]
-        NOP : "" (23:18) [Type: .unknown]
-      METHOD : "finish" (24:2) [Type: .void]
-        CLASS : ".void" (24:19) [Type: .void]
-        ARGS : "" (24:24) [Type: .unknown]
-        NOP : "" (24:24) [Type: .unknown]
+            VAR_TARGET : "bytes" (23:6) [Type: .unknown]
+            CLASS : ".binary" (23:12) [Type: .binary]
+        NOP : "" (23:19) [Type: .unknown]
+      METHOD : "native_emit" (24:2) [Type: .int]
+        CLASS : ".int" (24:24) [Type: .int]
+        ARGS : "" (25:6) [Type: .unknown]
+          ARG : "" (25:6) [Type: .unknown]
+            VAR_TARGET : "text" (25:6) [Type: .unknown]
+            CLASS : ".string" (25:11) [Type: .string]
+        NOP : "" (25:18) [Type: .unknown]
+      METHOD : "finish" (26:2) [Type: .void]
+        CLASS : ".void" (26:19) [Type: .void]
+        ARGS : "" (26:24) [Type: .unknown]
+        NOP : "" (26:24) [Type: .unknown]
 Scope [0]: Unnamed
   _rxsysb (Namespace) -> .unknown
   address_inline_then (Namespace) -> .unknown
@@ -274,6 +281,7 @@ Scope [0]: Unnamed
       input_snapshot (Function) -> .binary
       native_emit (Function) -> .int
       §factory.input_array (Function) -> .addressredirect
+      §factory.input_binary (Function) -> .addressredirect
       §factory.input_string (Function) -> .addressredirect
       §factory.none (Function) -> .addressredirect
       §factory.output_array (Function) -> .addressredirect
@@ -282,6 +290,9 @@ Scope [0]: Unnamed
         §factory (Variable) -> .addressredirect
       Scope [3]: §factory.input_string
         source (Variable) -> .string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.input_binary
+        source (Variable) -> .binary
         §factory (Variable) -> .addressredirect
       Scope [3]: §factory.input_array
         source (Variable) -> .string[*]
@@ -314,13 +325,14 @@ DEBUG_INLINE _noredir @ _address@library.rxbin:2 - reject: procedure has no inst
 DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
 DEBUG_INLINE §factory.none @ _address@library.rxbin:8:2 - reject: procedure has no instruction list
 DEBUG_INLINE §factory.input_string @ _address@library.rxbin:9:2 - reject: procedure has no instruction list
-DEBUG_INLINE §factory.input_array @ _address@library.rxbin:11:2 - reject: procedure has no instruction list
-DEBUG_INLINE §factory.output_string @ _address@library.rxbin:13:2 - reject: procedure has no instruction list
-DEBUG_INLINE §factory.output_array @ _address@library.rxbin:15:2 - reject: procedure has no instruction list
-DEBUG_INLINE input_snapshot @ _address@library.rxbin:19:2 - reject: procedure has no instruction list
-DEBUG_INLINE append_bytes @ _address@library.rxbin:20:2 - reject: procedure has no instruction list
-DEBUG_INLINE native_emit @ _address@library.rxbin:22:2 - reject: procedure has no instruction list
-DEBUG_INLINE finish @ _address@library.rxbin:24:2 - reject: procedure has no instruction list
+DEBUG_INLINE §factory.input_binary @ _address@library.rxbin:11:2 - reject: procedure has no instruction list
+DEBUG_INLINE §factory.input_array @ _address@library.rxbin:13:2 - reject: procedure has no instruction list
+DEBUG_INLINE §factory.output_string @ _address@library.rxbin:15:2 - reject: procedure has no instruction list
+DEBUG_INLINE §factory.output_array @ _address@library.rxbin:17:2 - reject: procedure has no instruction list
+DEBUG_INLINE input_snapshot @ _address@library.rxbin:21:2 - reject: procedure has no instruction list
+DEBUG_INLINE append_bytes @ _address@library.rxbin:22:2 - reject: procedure has no instruction list
+DEBUG_INLINE native_emit @ _address@library.rxbin:24:2 - reject: procedure has no instruction list
+DEBUG_INLINE finish @ _address@library.rxbin:26:2 - reject: procedure has no instruction list
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]
@@ -435,65 +447,72 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
             VAR_TARGET : "source" (10:6) [Type: .string]
             CLASS : ".string" (10:13) [Type: .string]
         NOP : "" (10:20) [Type: .void]
-      FACTORY : "input_array" (11:2) [Type: .void]
-        VOID : "" (11:14) [Type: .void]
+      FACTORY : "input_binary" (11:2) [Type: .void]
+        VOID : "" (11:15) [Type: .void]
         ARGS : "" (12:6) [Type: .unknown]
-          ARG : "" (12:6) [Type: .string]
-            VAR_TARGET : "source" (12:6) [Type: .string]
-            CLASS : ".string" (12:13) [Type: .string]
-              RANGE : "" (12:21) [Type: .void]
-                NOVAL : "" (12:20) [Type: .void]
-                NOVAL : "*" (12:21) [Type: .void]
-        NOP : "" (12:22) [Type: .void]
-      FACTORY : "output_string" (13:2) [Type: .void]
-        VOID : "" (13:16) [Type: .void]
+          ARG : "" (12:6) [Type: .binary]
+            VAR_TARGET : "source" (12:6) [Type: .binary]
+            CLASS : ".binary" (12:13) [Type: .binary]
+        NOP : "" (12:20) [Type: .void]
+      FACTORY : "input_array" (13:2) [Type: .void]
+        VOID : "" (13:14) [Type: .void]
         ARGS : "" (14:6) [Type: .unknown]
-          ARG : "" (14:6) [Type: reference .unknown]
-            VAR_TARGET : "target" (14:6) [Type: reference .unknown]
-            TYPE_REFERENCE : "reference" (14:13) [Type: reference .unknown]
-              CLASS : ".string" (14:23) [Type: .string]
-        NOP : "" (14:30) [Type: .void]
-      FACTORY : "output_array" (15:2) [Type: .void]
-        VOID : "" (15:15) [Type: .void]
+          ARG : "" (14:6) [Type: .string]
+            VAR_TARGET : "source" (14:6) [Type: .string]
+            CLASS : ".string" (14:13) [Type: .string]
+              RANGE : "" (14:21) [Type: .void]
+                NOVAL : "" (14:20) [Type: .void]
+                NOVAL : "*" (14:21) [Type: .void]
+        NOP : "" (14:22) [Type: .void]
+      FACTORY : "output_string" (15:2) [Type: .void]
+        VOID : "" (15:16) [Type: .void]
         ARGS : "" (16:6) [Type: .unknown]
           ARG : "" (16:6) [Type: reference .unknown]
             VAR_TARGET : "target" (16:6) [Type: reference .unknown]
             TYPE_REFERENCE : "reference" (16:13) [Type: reference .unknown]
               CLASS : ".string" (16:23) [Type: .string]
-                RANGE : "" (16:31) [Type: .void]
-                  NOVAL : "" (16:30) [Type: .void]
-                  NOVAL : "*" (16:31) [Type: .void]
-        NOP : "" (16:32) [Type: .void]
-      METHOD : "has_input" (17:2) [Type: .boolean]
-        CLASS : ".boolean" (17:22) [Type: .boolean]
-        ARGS : "" (17:30) [Type: .unknown]
-        NOP : "" (17:30) [Type: .void]
-      METHOD : "captures_output" (18:2) [Type: .boolean]
-        CLASS : ".boolean" (18:28) [Type: .boolean]
-        ARGS : "" (18:36) [Type: .unknown]
-        NOP : "" (18:36) [Type: .void]
-      METHOD : "input_snapshot" (19:2) [Type: .binary]
-        CLASS : ".binary" (19:27) [Type: .binary]
-        ARGS : "" (19:34) [Type: .unknown]
-        NOP : "" (19:34) [Type: .void]
-      METHOD : "append_bytes" (20:2) [Type: .void]
-        CLASS : ".void" (20:25) [Type: .void]
-        ARGS : "" (21:6) [Type: .unknown]
-          ARG : "" (21:6) [Type: .binary]
-            VAR_TARGET : "bytes" (21:6) [Type: .binary]
-            CLASS : ".binary" (21:12) [Type: .binary]
-        NOP : "" (21:19) [Type: .void]
-      METHOD : "native_emit" (22:2) [Type: .int]
-        CLASS : ".int" (22:24) [Type: .int]
+        NOP : "" (16:30) [Type: .void]
+      FACTORY : "output_array" (17:2) [Type: .void]
+        VOID : "" (17:15) [Type: .void]
+        ARGS : "" (18:6) [Type: .unknown]
+          ARG : "" (18:6) [Type: reference .unknown]
+            VAR_TARGET : "target" (18:6) [Type: reference .unknown]
+            TYPE_REFERENCE : "reference" (18:13) [Type: reference .unknown]
+              CLASS : ".string" (18:23) [Type: .string]
+                RANGE : "" (18:31) [Type: .void]
+                  NOVAL : "" (18:30) [Type: .void]
+                  NOVAL : "*" (18:31) [Type: .void]
+        NOP : "" (18:32) [Type: .void]
+      METHOD : "has_input" (19:2) [Type: .boolean]
+        CLASS : ".boolean" (19:22) [Type: .boolean]
+        ARGS : "" (19:30) [Type: .unknown]
+        NOP : "" (19:30) [Type: .void]
+      METHOD : "captures_output" (20:2) [Type: .boolean]
+        CLASS : ".boolean" (20:28) [Type: .boolean]
+        ARGS : "" (20:36) [Type: .unknown]
+        NOP : "" (20:36) [Type: .void]
+      METHOD : "input_snapshot" (21:2) [Type: .binary]
+        CLASS : ".binary" (21:27) [Type: .binary]
+        ARGS : "" (21:34) [Type: .unknown]
+        NOP : "" (21:34) [Type: .void]
+      METHOD : "append_bytes" (22:2) [Type: .void]
+        CLASS : ".void" (22:25) [Type: .void]
         ARGS : "" (23:6) [Type: .unknown]
-          ARG : "" (23:6) [Type: .string]
-            VAR_TARGET : "text" (23:6) [Type: .string]
-            CLASS : ".string" (23:11) [Type: .string]
-        NOP : "" (23:18) [Type: .void]
-      METHOD : "finish" (24:2) [Type: .void]
-        CLASS : ".void" (24:19) [Type: .void]
-        ARGS : "" (24:24) [Type: .unknown]
-        NOP : "" (24:24) [Type: .void]
+          ARG : "" (23:6) [Type: .binary]
+            VAR_TARGET : "bytes" (23:6) [Type: .binary]
+            CLASS : ".binary" (23:12) [Type: .binary]
+        NOP : "" (23:19) [Type: .void]
+      METHOD : "native_emit" (24:2) [Type: .int]
+        CLASS : ".int" (24:24) [Type: .int]
+        ARGS : "" (25:6) [Type: .unknown]
+          ARG : "" (25:6) [Type: .string]
+            VAR_TARGET : "text" (25:6) [Type: .string]
+            CLASS : ".string" (25:11) [Type: .string]
+        NOP : "" (25:18) [Type: .void]
+      METHOD : "finish" (26:2) [Type: .void]
+        CLASS : ".void" (26:19) [Type: .void]
+        ARGS : "" (26:24) [Type: .unknown]
+        NOP : "" (26:24) [Type: .void]
 Scope [0]: Unnamed
   _rxsysb (Namespace) -> .unknown
   address_inline_then (Namespace) -> .unknown
@@ -527,6 +546,7 @@ Scope [0]: Unnamed
       input_snapshot (Function) -> .binary
       native_emit (Function) -> .int
       §factory.input_array (Function) -> .addressredirect
+      §factory.input_binary (Function) -> .addressredirect
       §factory.input_string (Function) -> .addressredirect
       §factory.none (Function) -> .addressredirect
       §factory.output_array (Function) -> .addressredirect
@@ -535,6 +555,9 @@ Scope [0]: Unnamed
         §factory (Variable) -> .addressredirect
       Scope [3]: §factory.input_string
         source (Variable) -> .string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.input_binary
+        source (Variable) -> .binary
         §factory (Variable) -> .addressredirect
       Scope [3]: §factory.input_array
         source (Variable) -> .string[*]

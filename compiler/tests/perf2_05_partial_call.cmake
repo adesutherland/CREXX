@@ -6,6 +6,7 @@ set(expected "3\n日🙂\na🙂🙂\nBeta\né日\n233\n")
 function(run_checked label)
     execute_process(
         COMMAND ${ARGN}
+        WORKING_DIRECTORY "${WORK_DIR}"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
         RESULT_VARIABLE res
@@ -32,7 +33,7 @@ function(run_dual_vm label rxbin)
 endfunction()
 
 run_checked("optimized user-body compile"
-    "${RXC}" --no-exe-import -o "${WORK_DIR}/selected_opt" "${SELECTED_SOURCE}")
+    "${RXC}" -x --no-exe-import -o "${WORK_DIR}/selected_opt" "${SELECTED_SOURCE}")
 file(READ "${WORK_DIR}/selected_opt.rxas" opt_rxas)
 if(opt_rxas MATCHES "[ \t]call[0-9]*[ \t]" OR
    opt_rxas MATCHES "[ \t](strlen|substring|strchar|padstr|fndnblnk|fndblnk)[ \t]" OR
@@ -46,7 +47,7 @@ run_checked("optimized user-body assemble"
 run_dual_vm("optimized user body" "${WORK_DIR}/selected_opt.rxbin")
 
 run_checked("no-opt user-body compile"
-    "${RXC}" --no-exe-import -n -o "${WORK_DIR}/selected_noopt" "${SELECTED_SOURCE}")
+    "${RXC}" -x --no-exe-import -n -o "${WORK_DIR}/selected_noopt" "${SELECTED_SOURCE}")
 file(READ "${WORK_DIR}/selected_noopt.rxas" noopt_rxas)
 foreach(proc user_length user_substr user_word user_char)
     if(NOT noopt_rxas MATCHES "call[0-9]* .*${proc}\\(\\)" OR
@@ -64,7 +65,7 @@ foreach(mode opt noopt)
         set(mode_args)
     endif()
     run_checked("${mode} array-result compile"
-        "${RXC}" --no-exe-import ${mode_args}
+        "${RXC}" -x --no-exe-import ${mode_args}
         -o "${WORK_DIR}/array_${mode}" "${ARRAY_SOURCE}")
     run_checked("${mode} array-result assemble"
         "${RXAS}" -o "${WORK_DIR}/array_${mode}.rxbin"
@@ -102,7 +103,7 @@ foreach(mode opt noopt)
         set(mode_args)
     endif()
     run_checked("${mode} cursor-inline compile"
-        "${RXC}" --no-exe-import ${mode_args}
+        "${RXC}" -x --no-exe-import ${mode_args}
         -o "${WORK_DIR}/cursor_${mode}" "${CURSOR_SOURCE}")
     file(READ "${WORK_DIR}/cursor_${mode}.rxas" cursor_rxas)
     if(mode STREQUAL "opt")

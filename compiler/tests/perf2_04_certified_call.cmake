@@ -1,6 +1,16 @@
 file(REMOVE_RECURSE "${WORK_DIR}")
 file(MAKE_DIRECTORY "${WORK_DIR}")
 
+# The consumer's source directory is itself an import root. Keep intentional
+# rxfnsb spoof providers out of the ordinary source/binary import scenarios.
+set(consumer_dir "${WORK_DIR}/consumers")
+file(MAKE_DIRECTORY "${consumer_dir}")
+foreach(consumer SELECTED_SOURCE FALLBACK_SOURCE HUGE_WIDTH_SOURCE)
+    get_filename_component(consumer_name "${${consumer}}" NAME)
+    file(COPY "${${consumer}}" DESTINATION "${consumer_dir}")
+    set(${consumer} "${consumer_dir}/${consumer_name}")
+endforeach()
+
 set(selected_expected "MIXED ÄÖ\nNAMED Ä\n56\n1\n日🙂\nbc\nBC\n1\nmixed äö\n0\n3\n2\né日\n日🙂\na🙂🙂\n🙂🙂a\n1\nabc\n1\nAlpha\nBeta\né日\n🙂\n1\n0\n1\n0\n0\n2\n")
 set(fallback_expected "ené\nRené日🙂\nbc\n1\n...\nMIXED ÄÖ\nMiXeD äÖ\nmixed äö\n6\nRen\né日🙂\na..\n..a\nRené日🙂\n1\n9\n")
 set(spoof_expected "mixed äö\n")
@@ -8,6 +18,7 @@ set(spoof_expected "mixed äö\n")
 function(run_checked label)
     execute_process(
         COMMAND ${ARGN}
+        WORKING_DIRECTORY "${WORK_DIR}"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
         RESULT_VARIABLE res
@@ -105,14 +116,14 @@ foreach(mode opt noopt)
 
     foreach(bif upper lower length left right substr word)
         run_checked("${mode} ${bif} dependency compile"
-            "${RXC}" --no-exe-import ${mode_args}
+            "${RXC}" -x --no-exe-import ${mode_args}
             -o "${mode_dir}/${bif}" "${BIF_SOURCE_DIR}/${bif}.crexx")
         run_checked("${mode} ${bif} dependency assemble"
             "${RXAS}" -o "${mode_dir}/${bif}.rxbin" "${mode_dir}/${bif}.rxas")
     endforeach()
 
     run_checked("${mode} selected source-import compile"
-        "${RXC}" --no-exe-import ${mode_args} -s "${BIF_SOURCE_DIR}"
+        "${RXC}" -x --no-exe-import ${mode_args} -s "${BIF_SOURCE_DIR}"
         -o "${mode_dir}/selected_source" "${SELECTED_SOURCE}")
     check_selected_rxas("${mode} selected source import"
         "${mode_dir}/selected_source.rxas" ${optimized})
@@ -127,7 +138,7 @@ foreach(mode opt noopt)
         "${mode_dir}/selected_source.rxbin")
 
     run_checked("${mode} selected binary-import compile"
-        "${RXC}" --no-exe-import ${mode_args} -i "${mode_dir}"
+        "${RXC}" -x --no-exe-import ${mode_args} -i "${mode_dir}"
         -o "${mode_dir}/selected_binary" "${SELECTED_SOURCE}")
     check_selected_rxas("${mode} selected binary import"
         "${mode_dir}/selected_binary.rxas" ${optimized})
@@ -142,7 +153,7 @@ foreach(mode opt noopt)
         "${mode_dir}/selected_binary.rxbin")
 
     run_checked("${mode} fallback source-import compile"
-        "${RXC}" --no-exe-import ${mode_args} -s "${BIF_SOURCE_DIR}"
+        "${RXC}" -x --no-exe-import ${mode_args} -s "${BIF_SOURCE_DIR}"
         -o "${mode_dir}/fallback" "${FALLBACK_SOURCE}")
     check_fallback_rxas("${mode} fallback" "${mode_dir}/fallback.rxas" ${optimized})
     run_checked("${mode} fallback assemble"
@@ -156,7 +167,7 @@ foreach(mode opt noopt)
 endforeach()
 
 run_checked("bounded-result fallback compile"
-    "${RXC}" --no-exe-import -s "${BIF_SOURCE_DIR}"
+    "${RXC}" -x --no-exe-import -s "${BIF_SOURCE_DIR}"
     -o "${WORK_DIR}/huge_width" "${HUGE_WIDTH_SOURCE}")
 file(READ "${WORK_DIR}/huge_width.rxas" huge_width_rxas)
 if(NOT huge_width_rxas MATCHES "left\\.crexx" OR
@@ -166,7 +177,7 @@ if(NOT huge_width_rxas MATCHES "left\\.crexx" OR
 endif()
 
 run_checked("spoof provider compile"
-    "${RXC}" --no-exe-import -o "${WORK_DIR}/spoof_upper" "${SPOOF_SOURCE}")
+    "${RXC}" -x --no-exe-import -o "${WORK_DIR}/spoof_upper" "${SPOOF_SOURCE}")
 file(READ "${WORK_DIR}/spoof_upper.rxas" spoof_rxas)
 if(spoof_rxas MATCHES "[ \t]call[ \t]")
     message(FATAL_ERROR "body-driven evaluation retained spoof UPPER runtime work:\n${spoof_rxas}")
@@ -187,7 +198,7 @@ foreach(vm RXVM RXBVM)
 endforeach()
 
 run_checked("spoof word provider compile"
-    "${RXC}" --no-exe-import -s "${SPOOF_WORD_DIR}"
+    "${RXC}" -x --no-exe-import -s "${SPOOF_WORD_DIR}"
     -o "${WORK_DIR}/spoof_word" "${SPOOF_WORD_DIR}/main.crexx")
 file(READ "${WORK_DIR}/spoof_word.rxas" spoof_word_rxas)
 if(spoof_word_rxas MATCHES "[ \t](fndnblnk|fndblnk|substring)[ \t]" OR
@@ -210,7 +221,7 @@ foreach(vm RXVM RXBVM)
 endforeach()
 
 run_checked("spoof lower provider compile"
-    "${RXC}" --no-exe-import -o "${WORK_DIR}/spoof_lower" "${SPOOF_LOWER_SOURCE}")
+    "${RXC}" -x --no-exe-import -o "${WORK_DIR}/spoof_lower" "${SPOOF_LOWER_SOURCE}")
 file(READ "${WORK_DIR}/spoof_lower.rxas" spoof_lower_rxas)
 if(spoof_lower_rxas MATCHES "[ \t]call[ \t]")
     message(FATAL_ERROR "body-driven evaluation retained spoof LOWER runtime work:\n${spoof_lower_rxas}")

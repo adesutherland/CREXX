@@ -529,6 +529,111 @@ maintained ASan 9/9 in 8.65s (`/tmp/crexx-bif-golden-asan-tests.log`, runner
 increase occurred. This is a golden synchronization for the earlier reviewed
 source repair; no compiler/native code was changed. LC-BIF-PREP-06 is verified.
 
+**LC-STEP-90F whole-product snapshot follow-up plan.** The completed-family
+checkpoint's full Debug run on `902fee62a` has exposed three stale test
+expectations: two ADDRESS parser snapshots predate the existing `input_binary`
+factory before `input_array`; the channel metadata assertion hard-codes 660
+opcodes, predating the approved SIGNALORIGIN entry at index 660 (current count
+661). The relevant ADDRESS implementation, opcode table and native metadata
+source are identical to the programme's starting revision. Both ADDRESS
+factories remain implemented. No BIF, I/O/Unicode transport, VM/linker or native
+API repair is needed. Retain this failed run as evidence; it cannot be called a
+passing gate.
+
+Vision: make existing normal-product tests reflect the current approved product
+contract, preserving all runtime behavior and the independent BIF checkpoint.
+
+1. **LC-BIF-PREP-07:** the two maintained ADDRESS AST snapshots match the current
+   shipped descriptor declarations; opcode-table width is verified by the
+   existing common consistency assertions, while the channel-specific test
+   still verifies every channel effect/component/signal condition. Verify the
+   three repaired tests and adjacent ADDRESS behavior in normal Debug and
+   matching maintained ASan. No product or I/O behavior changes.
+2. **LC-STEP-90F-7:** after this full run finishes, reconcile the two snapshots,
+   replace only the obsolete duplicate hard-coded table-width check with the
+   stable channel opcode identity, build the native test, run focused proof and
+   commit one QA-fixture increment. Freeze revised final inputs; complete the
+   required full normal Debug and Release correctness and installed/host smoke.
+
+**LC-STEP-90F import-resolution repair plan, 2026-10-08.** The first
+completed full Debug run on `902fee62a` ran all 3296 tests: 3280 passed and
+16 failed (`/tmp/crexx-bif-checkpoint-debug-ctest-qualified.log`). Ten parser
+fixtures reproduced unchanged in isolation. A native process sample
+(`/tmp/crexx-bif-parser-stall.sample`) shows nested binary metadata signature
+imports in class resolution; parser_tester reaches its internal cutoff and
+returns a fallback lexer tree. Raising the cutoff would conceal the unresolved
+import work. The existing `syntaxhighlight_parse_keywords.crexx` is the minimal
+product reproducer. Six other failures are stale ADDRESS/opcode snapshots or
+isolated compiler fixtures lacking the documented exit-disabled bootstrap.
+
+Vision: restore current approved compiler import resolution and existing
+whole-product QA without changing syntax, numeric policy, Unicode/I/O, host ABI,
+VM/linker behavior, or performance production policy. Keep broader scopes open.
+
+1. **LC-BIF-PREP-08:** identify the exact nested import cause and repair the
+   existing resolver, retaining real contract validation and the shared loader.
+   Verify the ten parser fixtures and adjacent import/cache/exit checks in
+   normal Debug and maintained ASan; preserve a permanent reproducer.
+2. **LC-STEP-90F-8:** trace bounded import evidence, repair the owning existing
+   path, run focused normal and sanitizer proof, and commit separately from
+   stale QA expectations. Any genuine architecture decision remains gated.
+3. **LC-BIF-PREP-09:** all six non-parser failing fixtures retain their original
+   isolation and behavioral assertions while using current descriptors, opcode
+   consistency and the documented `-x` bootstrap. Verify normal Debug/ASan;
+   the three compiler correctness fixtures also run in Release even though
+   their existing label excludes them from the ordinary Release lane.
+4. **LC-STEP-90F-9:** reconcile those six fixtures in one QA commit, freeze final
+   code/test/build inputs, then complete final Debug/Release and installed/host
+   qualification. The failed completed Debug gate remains retained, not passed.
+
+**LC-BIF-PREP-08 diagnosis refinement.** Bounded diagnostic-only tracing showed
+finite discovery of unrelated generated/linked modules from the shared compiler
+CTest working directory, not a repeated-file cycle. The same authored parser
+reproducer returns the complete semantic tree in a dedicated directory (2.08 s
+monitor, versus the 12.20 s fallback in the polluted directory). Temporary
+compiler tracing was removed and `rxcpfunc.c` matches HEAD byte-for-byte. No
+resolver change was necessary or made. Existing parser fixtures now run in
+per-case directories, retain their exact semantic assertions, parser lock and
+serialized scheduling, and still discover packaged runtime/exit modules.
+Broader import discovery/scalability design remains pending; this is QA input
+isolation, not a production performance or architectural change.
+
+The isolated certified BIF fixture additionally shared its consumer source root
+with deliberate `rxfnsb` spoof providers. The existing approved source-root
+precedence correctly selects those providers and shadows the later library
+root, leaving unrelated BIF names unavailable. Copying its three ordinary
+consumers to an owned separate source root restores source/binary certification
+checks while keeping spoof scenarios unchanged. All three isolated compiler
+fixtures use `-x --no-exe-import` and owned working directories; no exit/runtime
+provider is silently injected. The six snapshot/bootstrap repairs are test-only.
+
+Focused normal proof: 74/75 passed in the initial 22.37 s focused run; the
+remaining certified case passed 1/1 in 3.97 s after source-root isolation.
+Logs `/tmp/crexx-bif-qa-final-repair-debug.log` and
+`/tmp/crexx-bif-certified-final-debug.log` qualify 75 unique final-input cases;
+no completed child processes remained. The peak was 229.8 MiB descendants,
+17203.2 MiB total, and unchanged 347.94 MiB swap. These measurements include
+all 69 maintained parser fixtures, the two AST snapshots, native opcode
+metadata and three source/binary/opt/no-opt compiler correctness fixtures.
+Maintained sanitizer confirmation and final grouped qualification remain open.
+
+**LC-BIF-PREP-07/08/09 focused receipt, 2026-10-08.** Matching maintained
+ASan passed 73/75 in 55.53 s; the two snapshot mismatches contained only stale
+`packednumeric@rxfnsg.rxbin` inline-summary diagnostics. Rebuilding the existing
+`rxfnsg` prerequisite (237.60 s monitor, runner `20261008-000756-build`) removed
+those stale generated inputs; the two unchanged snapshots then passed 2/2 in
+1.76 s (runner `20261008-001157-ctest`). Logs:
+`/tmp/crexx-bif-qa-final-repair-asan-build.log`,
+`/tmp/crexx-bif-qa-final-repair-asan.log`,
+`/tmp/crexx-bif-qa-snapshot-asan-rebuild.log`, and
+`/tmp/crexx-bif-qa-snapshot-asan-final.log`. This verifies 75 unique final-input
+focused cases in both normal Debug and maintained macOS ASan; no sanitizer
+finding occurred. Peak rebuild descendants 933.1 MiB / total 17088.5 MiB,
+no residual children, unchanged 347.94 MiB swap. Apple LSan is unavailable,
+not passed. The existing 69 parser assertions/lock/serialization and six product
+QA assertions are preserved; broader import-discovery design remains pending.
+These preparation criteria are verified. Final grouped QA still remains open.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A

@@ -111,11 +111,15 @@ endif()
 
         set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
         set(SCRIPT_CONTENT "")
+        # Syntax probes have no dependency on bytecode from other test cases.
+        # Keep generated runtime images out of the compiler's cwd import root.
+        set(HIGHLIGHT_WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/highlighting/${NAME}")
+        string(APPEND SCRIPT_CONTENT "file(MAKE_DIRECTORY \"${HIGHLIGHT_WORK_DIR}\")\n")
 
         string(APPEND SCRIPT_CONTENT
                "execute_process(\n"
                "    COMMAND \"$<TARGET_FILE:parser_tester>\" -q -p \"$<TARGET_FILE:rxc>\" -s \"${SOURCE_FILE}\" \"${CMAKE_CURRENT_SOURCE_DIR}/highlighting/dump_ast.txt\"\n"
-               "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+               "    WORKING_DIRECTORY \"${HIGHLIGHT_WORK_DIR}\"\n"
                "    OUTPUT_VARIABLE out\n"
                "    ERROR_VARIABLE err\n"
                "    RESULT_VARIABLE res\n"

@@ -6,6 +6,7 @@ set(expected "LITERAL\nMIXED ÄÖ\näöüé\nAB\nMiXeD äÖ\n")
 function(run_checked label)
     execute_process(
         COMMAND ${ARGN}
+        WORKING_DIRECTORY "${WORK_DIR}"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
         RESULT_VARIABLE res
@@ -62,7 +63,7 @@ foreach(mode opt noopt)
     endif()
 
     run_checked("${mode} dependency compile"
-        "${RXC}" --no-exe-import ${mode_args}
+        "${RXC}" -x --no-exe-import ${mode_args}
         -o "${mode_dir}/case_helpers" "${DEP_SOURCE}")
     run_checked("${mode} dependency assemble"
         "${RXAS}" -o "${mode_dir}/case_helpers.rxbin"
@@ -75,7 +76,7 @@ foreach(mode opt noopt)
     endif()
 
     run_checked("${mode} source-import compile"
-        "${RXC}" --no-exe-import ${mode_args} -s "${DEP_DIR}"
+        "${RXC}" -x --no-exe-import ${mode_args} -s "${DEP_DIR}"
         -o "${mode_dir}/source_main" "${MAIN_SOURCE}")
     check_main_rxas("${mode} source import"
         "${mode_dir}/source_main.rxas" ${optimized})
@@ -86,7 +87,7 @@ foreach(mode opt noopt)
         "${mode_dir}/case_helpers.rxbin" "${mode_dir}/source_main.rxbin")
 
     run_checked("${mode} binary-import compile"
-        "${RXC}" --no-exe-import ${mode_args} -i "${mode_dir}"
+        "${RXC}" -x --no-exe-import ${mode_args} -i "${mode_dir}"
         -o "${mode_dir}/binary_main" "${MAIN_SOURCE}")
     check_main_rxas("${mode} binary import"
         "${mode_dir}/binary_main.rxas" ${optimized})
