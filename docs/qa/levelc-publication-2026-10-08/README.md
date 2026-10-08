@@ -1,7 +1,7 @@
 # Level C local publication QA — 2026-10-08
 
-Status: all requested local build, normal Debug and maintained macOS ASan gates
-are verified. Publication is pending the final commit/push. The authoritative scope and acceptance
+Status: all requested local gates are verified and the accumulated work is
+published to develop. Normal automatic hosted checks are running. The authoritative scope and acceptance
 record is [LC-QA-PUB](../../planning/release-1/levelc-compatibility-worklist.md).
 This receipt does not close wider Level C, Release 1 or cross-platform obligations.
 
@@ -118,3 +118,13 @@ worklist. This qualifies development publication, not full Classic/Release 1
 completion. No additional hosted overnight
 matrix is dispatched for this development publication. Normal automatic
 publication workflows are checked after pushing the qualified develop inputs.
+
+Publication of qualification receipt/code at `0e891a567909b6a5b7b8df355c8198dd79738c92`
+was verified against the live remote develop ref. Automatic
+[Build CREXX](https://github.com/adesutherland/CREXX/actions/runs/37780108886)
+and [CodeQL](https://github.com/adesutherland/CREXX/actions/runs/37780108321)
+were observed in progress for that revision. This final publication-status
+update changes only receipts and preserves the qualified source/test/build
+fingerprint. Hosted success is not claimed; latest automatic runs can be found
+on the repository's develop Actions page. Separate concurrent proposal edits
+and the local PDF remain outside this publication.

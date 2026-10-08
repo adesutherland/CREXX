@@ -105,7 +105,7 @@ its documented closure gate. Apple LeakSanitizer is unsupported here.
   full correctness CTest gate pass on final inputs via tools/asan-run.sh, with
   unsupported Apple leak detection recorded. Any first-party finding receives
   a stable SAN entry and remains open until all required platform closure proof.
-- [ ] **LC-QA-PUB-AC-05:** coherent repairs and evidence are committed on develop,
+- [x] **LC-QA-PUB-AC-05:** coherent repairs and evidence are committed on develop,
   qualified code/test/build input identity is unchanged by evidence-only commits,
   develop is pushed and its normal automatic publication workflows are checked.
   Report exact revision, counts, capability limits and any outstanding findings.
@@ -126,7 +126,7 @@ its documented closure gate. Apple LeakSanitizer is unsupported here.
    full local macOS ASan runner, build/test leaks off for Apple's documented
    capability limit, excluding only performance-measurement timing assertions
    from the instrumented gate. Record and repair actual findings under SAN rules.
-5. **LC-QA-PUB-STEP-05 (AC-05; pending; depends on STEP-04):** retain final input
+5. **LC-QA-PUB-STEP-05 (AC-05; complete; depends on STEP-04):** retain final input
    hashes and receipts, commit, push develop and inspect normal automatic CI.
    Reuse unchanged qualification and preserve all wider Level C open criteria.
 
@@ -311,6 +311,20 @@ No first-party sanitizer finding occurred. Existing compatibility obligations,
 including LC-DOC-ISSUE-01 TIME clause refresh, remain open; no full Level C,
 Release 1 or cross-platform sanitizer-clean claim is made. Only publication
 criterion AC-05 remains pending commit/push and normal automatic workflow check.
+
+**LC-QA-PUB publication receipt.** Repairs were committed separately as
+`e9c9d9cf0` (TRACE dependency), `f69d564bf` (debug fixture isolation) and
+`17d862778` (SDK timestamp prerequisite); retained qualification was committed
+as `0e891a567`. The accumulated develop history was pushed, and the live remote
+ref matches `0e891a567909b6a5b7b8df355c8198dd79738c92`. Automatic Build CREXX
+run `37780108886` and CodeQL run `37780108321` are in progress for that pushed
+revision; no extra overnight lane was dispatched and hosted success is not
+claimed. AC-05 and STEP-05 are complete: the requested local qualification and
+development publication outcome is achieved. The final receipt-only update
+preserves source/test/build fingerprint `bdd088acf09b0b1102634adadc428b92bbc804fa418ecfbba39b8fec1d089bad`.
+All wider Level C compatibility/Release 1 obligations retain their prior status.
+Unrelated concurrent architecture/roadmap drafts and the untracked PDF are
+preserved outside this publication.
 
 ### LC-GAP-02 BIF completion programme (2026-10-07)
 
