@@ -1,0 +1,27 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure --stop-on-failure -R \^rxpa_external_sdk_consumer\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 3167: rxpa_external_sdk_consumer
+1/1 Test #3167: rxpa_external_sdk_consumer .......   Passed   52.31 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+crexx-rag            =  52.31 sec*proc (1 test)
+external-consumer    =  52.31 sec*proc (1 test)
+hash                 =  52.31 sec*proc (1 test)
+install              =  52.31 sec*proc (1 test)
+native               =  52.31 sec*proc (1 test)
+package              =  52.31 sec*proc (1 test)
+packed               =  52.31 sec*proc (1 test)
+qualification        =  52.31 sec*proc (1 test)
+rcc-5d               =  52.31 sec*proc (1 test)
+rcc-5e               =  52.31 sec*proc (1 test)
+rcc-5f               =  52.31 sec*proc (1 test)
+rxpa                 =  52.31 sec*proc (1 test)
+sqlite               =  52.31 sec*proc (1 test)
+stats                =  52.31 sec*proc (1 test)
+vector               =  52.31 sec*proc (1 test)
+
+Total Test time (real) =  52.38 sec

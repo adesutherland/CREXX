@@ -1,0 +1,119 @@
+[0/2] Re-checking globbed directories...
+[1/26] Generating source-mapped Text Inspector application with RXPP
+CRX0010I [13:42:35.158579] Pre-Compile started RXPP build 2026-10-08 11:04:12 UTC
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/generated/text_inspector.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0100I [13:42:35.160614] Pre-Compile pass one
+CRX0110I [13:42:35.160620] Syslib Path /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0110I [13:42:35.160621] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0110I [13:42:35.160623] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [13:42:35.160625] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0110I [13:42:35.160626] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/generated/
+CRX0120I [13:42:35.161577] Maclib loaded:      68 records
+CRX0130I [13:42:35.161582] Macros extracted:   35
+CRX0120I [13:42:35.162601] System Maclib loaded: 50 records
+CRX0130I [13:42:35.162606] Macros extracted:     27
+CRX0140I [13:42:35.163076] Rexx Source loaded: 210 records
+CRX0110I [13:42:35.163485] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [13:42:35.168827] Macros extracted:   0
+CRX0160I [13:42:35.168915] Macros arranged:    62
+CRX0200I [13:42:35.169112] Pre-Compile pass two
+CRX0171I Script macro ##ui_command selected from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/ui_command.rxpm
+CRX0171I Script macro ##ui_node selected from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/ui_node.rxpm
+CRX0300I [13:42:35.190149] Pre-Compiled REXX generated 
+CRX0310I [13:42:35.190171] Pre-Compiled REXX saved
+CRX0510I [13:42:35.190969] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/generated/text_inspector.inc
+CRX0500I [13:42:35.190982] Pre-Compile completed, 8 macro calls expanded, total source lines 600
+CRX0101I [13:42:35.190989] Elapsed Time 0.032899 seconds, 32.899 milliseconds
+[2/26] Building optimized arraydump function example
+[3/26] Building optimized arrayformat function example
+[4/26] Bundling array-formatting function example
+[5/26] Compiling ollama_generate.crexx ...
+[6/26] Compiling openai_generate.crexx ...
+[7/26] Compiling anthropic_generate.crexx ...
+[8/26] Compiling gemini_generate.crexx ...
+[9/26] Building the rxsqlite ADDRESS consumer demo ...
+[10/26] Compiling llm_address_demo.crexx ...
+Warning in llm_address_demo.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file
+[11/26] Compiling and assembling Text Inspector application
+[12/26] Compiling llm_address_environment.crexx ...
+[13/26] Generating generated/text_inspector_ansi.crexx
+CRX0010I [13:42:35.796774] Pre-Compile started RXPP build 2026-10-08 11:04:12 UTC
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector_ansi.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/generated/text_inspector_ansi.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0100I [13:42:35.797648] Pre-Compile pass one
+CRX0110I [13:42:35.797655] Syslib Path /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0110I [13:42:35.797658] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0110I [13:42:35.797660] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [13:42:35.797663] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0110I [13:42:35.797674] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/generated/
+CRX0120I [13:42:35.799035] Maclib loaded:      68 records
+CRX0130I [13:42:35.799042] Macros extracted:   35
+CRX0120I [13:42:35.799838] System Maclib loaded: 50 records
+CRX0130I [13:42:35.799842] Macros extracted:     27
+CRX0140I [13:42:35.800193] Rexx Source loaded: 7 records
+CRX0110I [13:42:35.800310] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [13:42:35.800665] Macros extracted:   0
+CRX0160I [13:42:35.800739] Macros arranged:    62
+CRX0200I [13:42:35.800791] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [13:42:35.803871] Pre-Compiled REXX generated 
+CRX0310I [13:42:35.803882] Pre-Compiled REXX saved
+CRX0510I [13:42:35.804363] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/generated/text_inspector_ansi.inc
+CRX0500I [13:42:35.804382] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [13:42:35.804390] Elapsed Time 0.008161 seconds, 8.161 milliseconds
+[14/26] Generating Text Inspector TUI launcher with RXPP
+CRX0010I [13:42:35.804108] Pre-Compile started RXPP build 2026-10-08 11:04:12 UTC
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector_tui.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/generated/text_inspector_tui.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0100I [13:42:35.805574] Pre-Compile pass one
+CRX0110I [13:42:35.805579] Syslib Path /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0110I [13:42:35.805582] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0110I [13:42:35.805584] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [13:42:35.805587] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/
+CRX0110I [13:42:35.805589] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/generated/
+CRX0120I [13:42:35.806469] Maclib loaded:      68 records
+CRX0130I [13:42:35.806476] Macros extracted:   35
+CRX0120I [13:42:35.807228] System Maclib loaded: 50 records
+CRX0130I [13:42:35.807232] Macros extracted:     27
+CRX0140I [13:42:35.807455] Rexx Source loaded: 7 records
+CRX0110I [13:42:35.807582] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [13:42:35.807939] Macros extracted:   0
+CRX0160I [13:42:35.808008] Macros arranged:    62
+CRX0200I [13:42:35.808056] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [13:42:35.810265] Pre-Compiled REXX generated 
+CRX0310I [13:42:35.810275] Pre-Compiled REXX saved
+CRX0510I [13:42:35.810591] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-release/examples/ui/text-inspector/generated/text_inspector_tui.inc
+CRX0500I [13:42:35.810617] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [13:42:35.810625] Elapsed Time 0.006958 seconds, 6.958 milliseconds
+[15/26] Building optimized array-formatting example program
+[16/26] Generating text_inspector_core_noopt.rxbin
+[17/26] Generating text_inspector_test_host.rxbin
+[18/26] Generating text_inspector_ansi.rxbin
+[19/26] Building Text Inspector TUI launcher
+[20/26] Generating text_inspector_core_opt.rxbin
+[21/26] Building optimized pprint compiler-exit example
+[22/26] Bundling standalone pprint compiler-exit example
+[23/26] Generating text_inspector_tui_noopt.rxbin
+[24/26] Building program with standalone pprint exit example
+[25/26] Generating text_inspector_tui_opt.rxbin

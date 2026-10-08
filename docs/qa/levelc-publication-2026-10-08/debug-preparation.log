@@ -1,0 +1,332 @@
+[0/2] Re-checking globbed directories...
+[1/133] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/rxinteger.c.o
+[2/133] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/text_codec.c.o
+[3/133] Building C object tests/performance/CMakeFiles/_rcc5f_stats_direct.dir/rcc5f_stats_direct.c.o
+[4/133] Building C object tests/performance/CMakeFiles/_crexxrag_sha256_gate.dir/crexxrag_sha256_gate_plugin.c.o
+[5/133] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/platform_native.c.o
+[6/133] Building C object tests/performance/CMakeFiles/_rcc5f_stats_boxed.dir/rcc5f_stats_boxed.c.o
+[7/133] Building C object tests/performance/CMakeFiles/_rxvector01_direct.dir/rxvector01_direct.c.o
+[8/133] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/__/compiler/rxc_main.c.o
+[9/133] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/platform.c.o
+[10/133] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/platform_tso.c.o
+[11/133] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/oom.c.o
+[12/133] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/platform_native.c.o
+[13/133] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/platform_tso.c.o
+[14/133] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/oom.c.o
+[15/133] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/tests/mainframe_console_mock.c.o
+[16/133] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/platform_native.c.o
+[17/133] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/__/interpreter/rxvmmain.c.o
+[18/133] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/rxinteger.c.o
+[19/133] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/tests/cms_text_mock.c.o
+[20/133] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/platform_tso.c.o
+[21/133] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/text_codec.c.o
+[22/133] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/text_codec.c.o
+[23/133] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/rxinteger.c.o
+[24/133] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/tests/cms_text_mock.c.o
+[25/133] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/__/assembler/rxasmain.c.o
+[26/133] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/__/interpreter/exitfunc.c.o
+[27/133] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/platform.c.o
+[28/133] Building C object tests/performance/CMakeFiles/rcc5f_stats_kernel.dir/__/__/lib/plugins/stats/rxstats.c.o
+[29/133] Building C object tests/performance/CMakeFiles/rxvector01_kernel.dir/__/__/lib/plugins/vector/rxvector.c.o
+[30/133] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/oom.c.o
+[31/133] Linking C shared module tests/performance/rx_crexxrag_sha256_gate.rxplugin
+[32/133] Linking C shared module tests/performance/rx_rcc5f_stats_boxed.rxplugin
+[33/133] Building C object tests/rxpa/CMakeFiles/objects_rxbvm.dir/__/__/interpreter/rxvmmain.c.o
+[34/133] Linking C executable bin/rxas_cms_text_harness
+[35/133] Linking C static library tests/performance/librcc5f_stats_kernel.a
+[36/133] Linking C static library tests/performance/librxvector01_kernel.a
+[37/133] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/platform.c.o
+[38/133] Building C object tests/rxpa/CMakeFiles/objects_rxtvm.dir/__/__/interpreter/rxvmmain.c.o
+[39/133] Linking C executable bin/rxvm_mainframe_console_harness
+[40/133] Linking C shared module tests/performance/rx_rcc5f_stats_direct.rxplugin
+[41/133] Linking C shared module tests/performance/rx_rxvector01_direct.rxplugin
+[42/133] Linking C executable bin/rxc_cms_text_harness
+[43/133] cd /Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama && /opt/homebrew/bin/cmake -DINPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/rxllama-package-Debug.cmake -P /Users/adrian/CLionProjects/CREXX/rxpa/WriteProviderPackage.cmake
+[44/133] Generating source-mapped Text Inspector application with RXPP
+CRX0010I [11:30:06.424337] Pre-Compile started RXPP build 2026-10-08 10:26:49 UTC
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/generated/text_inspector.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_label registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0170I Script macro ##ui registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0170I Script macro ##ui_button registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0100I [11:30:06.428388] Pre-Compile pass one
+CRX0110I [11:30:06.428393] Syslib Path /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0110I [11:30:06.428396] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0110I [11:30:06.428399] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [11:30:06.428401] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0110I [11:30:06.428404] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/generated/
+CRX0120I [11:30:06.431451] Maclib loaded:      68 records
+CRX0130I [11:30:06.431459] Macros extracted:   35
+CRX0120I [11:30:06.433973] System Maclib loaded: 50 records
+CRX0130I [11:30:06.433982] Macros extracted:     27
+CRX0140I [11:30:06.435393] Rexx Source loaded: 210 records
+CRX0110I [11:30:06.437246] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [11:30:06.504055] Macros extracted:   0
+CRX0160I [11:30:06.508377] Macros arranged:    62
+CRX0200I [11:30:06.530916] Pre-Compile pass two
+CRX0171I Script macro ##ui_command selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/ui_command.rxpm
+CRX0171I Script macro ##ui_node selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/ui_node.rxpm
+CRX0300I [11:30:07.106655] Pre-Compiled REXX generated 
+CRX0310I [11:30:07.106690] Pre-Compiled REXX saved
+CRX0510I [11:30:07.111299] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/generated/text_inspector.inc
+CRX0500I [11:30:07.111328] Pre-Compile completed, 8 macro calls expanded, total source lines 600
+CRX0101I [11:30:07.111341] Elapsed Time 0.688718 seconds, 688.718 milliseconds
+[45/133] Building optimized arraydump function example
+[46/133] Building optimized arrayformat function example
+[47/133] Bundling array-formatting function example
+[48/133] Generating san002_wide_decimal_extract_rxbvm_noopt.rxbin
+[49/133] Generating inlining_simple_opt.rxbin
+[50/133] Generating san002_wide_decimal_extract_rxtvm_noopt.rxbin
+[51/133] Generating decimal_gate1_common18_noopt.rxbin
+[52/133] Generating san002_concat_after_wide_decimal_rxtvm_opt.rxbin
+[53/133] Generating decimal_gate1_common18_opt.rxbin
+[54/133] Generating decimal_gate1_common18_opt_rxas_noopt.rxbin
+[55/133] Generating san002_concat_after_wide_decimal_rxbvm_noopt.rxbin
+[56/133] Generating san002_concat_after_wide_decimal_rxbvm_opt.rxbin
+[57/133] Generating decimal_gate1_classic9_opt.rxbin
+[58/133] Generating san002_wide_decimal_extract_rxbvm_opt.rxbin
+[59/133] Generating inlining_simple_noopt.rxbin
+[60/133] Generating decimal_gate1_classic9_opt_rxas_noopt.rxbin
+[61/133] Generating san002_concat_after_wide_decimal_rxtvm_noopt.rxbin
+[62/133] Generating reference_iterator_compare_rxvm_opt.rxbin
+[63/133] Generating reference_iterator_compare_rxvm_noopt.rxbin
+[64/133] Generating stringarraylist_iterator_compare_rxvm_noopt.rxbin
+[65/133] Generating decimal_gate1_classic9_noopt.rxbin
+[66/133] Generating san002_wide_decimal_extract_rxtvm_opt.rxbin
+[67/133] Generating stringarraylist_iterator_compare_rxvm_opt.rxbin
+[68/133] Compiling gemini_generate.crexx ...
+[69/133] Compiling anthropic_generate.crexx ...
+[70/133] Compiling openai_generate.crexx ...
+[71/133] Building the rxsqlite ADDRESS consumer demo ...
+[72/133] Compiling ollama_generate.crexx ...
+[73/133] Generating crexxrag_sha256_a_vs_d_noopt.rxbin
+Warning in crexxrag_sha256_a_vs_d.crexx @ 62:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 45, column 8. Declare this binding explicitly if intentional., "word_index"
+Warning in crexxrag_sha256_a_vs_d.crexx @ 108:5 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 46, column 7. Declare this binding explicitly if intentional., "value"
+Warning in crexxrag_sha256_a_vs_d.crexx @ 245:35 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 242, column 28. Declare this binding explicitly if intentional., "iteration"
+Warning in crexxrag_sha256_a_vs_d.crexx @ 248:11 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 242, column 28. Declare this binding explicitly if intentional., "iteration"
+4 warning(s) in source file
+[74/133] Compiling and assembling Text Inspector application
+[75/133] Generating Text Inspector TUI launcher with RXPP
+CRX0010I [11:30:11.240071] Pre-Compile started RXPP build 2026-10-08 10:26:49 UTC
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector_tui.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/generated/text_inspector_tui.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_label registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0170I Script macro ##ui registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0170I Script macro ##ui_button registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0100I [11:30:11.242672] Pre-Compile pass one
+CRX0110I [11:30:11.242682] Syslib Path /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0110I [11:30:11.242689] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0110I [11:30:11.242696] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [11:30:11.242702] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0110I [11:30:11.242708] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/generated/
+CRX0120I [11:30:11.249329] Maclib loaded:      68 records
+CRX0130I [11:30:11.249343] Macros extracted:   35
+CRX0120I [11:30:11.273324] System Maclib loaded: 50 records
+CRX0130I [11:30:11.273373] Macros extracted:     27
+CRX0140I [11:30:11.273819] Rexx Source loaded: 7 records
+CRX0110I [11:30:11.274269] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [11:30:11.274992] Macros extracted:   0
+CRX0160I [11:30:11.278641] Macros arranged:    62
+CRX0200I [11:30:11.279212] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [11:30:11.289851] Pre-Compiled REXX generated 
+CRX0310I [11:30:11.289879] Pre-Compiled REXX saved
+CRX0510I [11:30:11.290355] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/generated/text_inspector_tui.inc
+CRX0500I [11:30:11.290379] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [11:30:11.290390] Elapsed Time 0.051284 seconds, 51.284 milliseconds
+[76/133] Generating generated/text_inspector_ansi.crexx
+CRX0010I [11:30:11.393920] Pre-Compile started RXPP build 2026-10-08 10:26:49 UTC
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector_ansi.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/generated/text_inspector_ansi.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_label registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0170I Script macro ##ui registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0170I Script macro ##ui_button registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0100I [11:30:11.397534] Pre-Compile pass one
+CRX0110I [11:30:11.397544] Syslib Path /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0110I [11:30:11.397551] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0110I [11:30:11.397558] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [11:30:11.397564] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/
+CRX0110I [11:30:11.397576] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/generated/
+CRX0120I [11:30:11.404333] Maclib loaded:      68 records
+CRX0130I [11:30:11.404353] Macros extracted:   35
+CRX0120I [11:30:11.443016] System Maclib loaded: 50 records
+CRX0130I [11:30:11.443031] Macros extracted:     27
+CRX0140I [11:30:11.443433] Rexx Source loaded: 7 records
+CRX0110I [11:30:11.443867] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [11:30:11.444582] Macros extracted:   0
+CRX0160I [11:30:11.448172] Macros arranged:    62
+CRX0200I [11:30:11.448732] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [11:30:11.483490] Pre-Compiled REXX generated 
+CRX0310I [11:30:11.483543] Pre-Compiled REXX saved
+CRX0510I [11:30:11.484243] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-debug/examples/ui/text-inspector/generated/text_inspector_ansi.inc
+CRX0500I [11:30:11.484291] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [11:30:11.484320] Elapsed Time 0.091294 seconds, 91.294 milliseconds
+[77/133] Compiling llm_address_environment.crexx ...
+[78/133] Building optimized array-formatting example program
+[79/133] Generating crexxrag_sha256_a_vs_d_opt.rxbin
+Warning in crexxrag_sha256_a_vs_d.crexx @ 62:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 45, column 8. Declare this binding explicitly if intentional., "word_index"
+Warning in crexxrag_sha256_a_vs_d.crexx @ 108:5 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 46, column 7. Declare this binding explicitly if intentional., "value"
+Warning in crexxrag_sha256_a_vs_d.crexx @ 245:35 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 242, column 28. Declare this binding explicitly if intentional., "iteration"
+Warning in crexxrag_sha256_a_vs_d.crexx @ 248:11 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 242, column 28. Declare this binding explicitly if intentional., "iteration"
+4 warning(s) in source file
+[80/133] Compiling llm_address_demo.crexx ...
+Warning in llm_address_demo.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file
+[81/133] Generating packed_numeric_class_compare_noopt.rxbin
+Warning in packed_numeric_class_compare.crexx @ 63:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 57, column 6. Declare this binding explicitly if intentional., "index"
+Warning in packed_numeric_class_compare.crexx @ 125:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 119, column 6. Declare this binding explicitly if intentional., "index"
+Warning in packed_numeric_class_compare.crexx @ 143:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 137, column 6. Declare this binding explicitly if intentional., "index"
+3 warning(s) in source file
+[82/133] Generating stringtreemap_insert_compare_noopt.rxbin
+[83/133] Generating decimal_gate1_rexxcps_family_noopt.rxbin
+[84/133] Generating packed_numeric_class_compare_opt.rxbin
+Warning in packed_numeric_class_compare.crexx @ 63:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 57, column 6. Declare this binding explicitly if intentional., "index"
+Warning in packed_numeric_class_compare.crexx @ 125:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 119, column 6. Declare this binding explicitly if intentional., "index"
+Warning in packed_numeric_class_compare.crexx @ 143:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 137, column 6. Declare this binding explicitly if intentional., "index"
+3 warning(s) in source file
+[85/133] Generating tinyexpr_dispatch_compare_noopt.rxbin
+[86/133] Generating stringtreemap_insert_compare_opt.rxbin
+[87/133] Generating binary_fastpath_compare_noopt.rxbin
+[88/133] Generating binary_byvalue_compare_rxvm_noopt.rxbin
+[89/133] Generating binary_packed_float_compare_noopt.rxbin
+[90/133] Generating rcc5f_rxstats_packed_noopt.rxbin
+[91/133] Generating postperf04_scalar_access_compare_noopt.rxbin
+[92/133] Generating rxjson_parser_compare_noopt.rxbin
+[93/133] Generating binary_byvalue_compare_rxvm_opt.rxbin
+[94/133] Generating rcc5f_rxstats_packed_opt.rxbin
+[95/133] Generating rxjson_numeric_materialization_compare_noopt.rxbin
+[96/133] Generating rcc5f_rxstats_boxed_noopt.rxbin
+[97/133] Generating binary_packed_float_compare_opt.rxbin
+[98/133] Linking C executable tests/objects_rxbvm
+[99/133] Generating binary_fastpath_compare_opt.rxbin
+[100/133] Linking C executable tests/objects_rxtvm
+[101/133] Generating rcc5f_rxstats_boxed_opt.rxbin
+[102/133] Generating rcc5f_rxstats_direct_noopt.rxbin
+[103/133] Generating rxjson_parser_compare_opt.rxbin
+[104/133] Generating rcc5f_rxstats_direct_opt.rxbin
+[105/133] Generating rxvector01_compare_noopt.rxbin
+Warning in rxvector01_compare.crexx @ 38:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 28, column 6. Declare this binding explicitly if intentional., "dimension_index"
+Warning in rxvector01_compare.crexx @ 40:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 29, column 5. Declare this binding explicitly if intentional., "query_value"
+Warning in rxvector01_compare.crexx @ 56:10 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 47, column 8. Declare this binding explicitly if intentional., "result_index"
+Warning in rxvector01_compare.crexx @ 65:6 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 47, column 8. Declare this binding explicitly if intentional., "result_index"
+Warning in rxvector01_compare.crexx @ 117:38 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 114, column 31. Declare this binding explicitly if intentional., "iteration"
+5 warning(s) in source file
+[106/133] Building optimized pprint compiler-exit example
+[107/133] Bundling standalone pprint compiler-exit example
+[108/133] Generating rxvector01_compare_opt.rxbin
+Warning in rxvector01_compare.crexx @ 38:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 28, column 6. Declare this binding explicitly if intentional., "dimension_index"
+Warning in rxvector01_compare.crexx @ 40:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 29, column 5. Declare this binding explicitly if intentional., "query_value"
+Warning in rxvector01_compare.crexx @ 56:10 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 47, column 8. Declare this binding explicitly if intentional., "result_index"
+Warning in rxvector01_compare.crexx @ 65:6 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 47, column 8. Declare this binding explicitly if intentional., "result_index"
+Warning in rxvector01_compare.crexx @ 117:38 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 114, column 31. Declare this binding explicitly if intentional., "iteration"
+5 warning(s) in source file
+[109/133] Generating decimal_gate1_rexxcps_family_opt.rxbin
+[110/133] Generating tinyexpr_dispatch_compare_opt.rxbin
+[111/133] Building Text Inspector TUI launcher
+[112/133] Generating text_inspector_test_host.rxbin
+[113/133] Generating text_inspector_ansi.rxbin
+[114/133] Generating text_inspector_core_noopt.rxbin
+[115/133] Generating jump_dispatch_compare_noopt.rxbin
+[116/133] Generating text_inspector_core_opt.rxbin
+[117/133] Generating runtime_interface_lookup_compare_noopt.rxbin
+[118/133] Generating inlining_complex_noopt.rxbin
+[119/133] Generating runtime_interface_lookup_compare_opt.rxbin
+[120/133] Generating inlining_complex_opt.rxbin
+[121/133] Generating nr15_stem_semantics_rxvm_noopt.rxbin
+Warning in nr15_stem_semantics.crexx @ 93:4 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 89, column 4. Declare this binding explicitly if intentional., "i"
+1 warning(s) in source file
+[122/133] Generating jump_dispatch_compare_opt.rxbin
+[123/133] Generating nr15_stem_access_rxvm_noopt.rxbin
+Warning in nr15_stem_access_compare.crexx @ 31:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 38:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 43:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 44:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 50:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 51:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 56:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 57:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 63:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 64:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 45, column 7. Declare this binding explicitly if intentional., "key"
+Warning in nr15_stem_access_compare.crexx @ 70:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 76:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 77:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 85:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 90:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 91:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 92:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 86, column 7. Declare this binding explicitly if intentional., "left"
+Warning in nr15_stem_access_compare.crexx @ 93:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 87, column 7. Declare this binding explicitly if intentional., "right"
+Warning in nr15_stem_access_compare.crexx @ 100:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+19 warning(s) in source file
+[124/133] Generating nr15_stem_access_rxvm_opt.rxbin
+Warning in nr15_stem_access_compare.crexx @ 31:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 38:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 43:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 44:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 50:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 51:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 56:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 57:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 63:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 64:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 45, column 7. Declare this binding explicitly if intentional., "key"
+Warning in nr15_stem_access_compare.crexx @ 70:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 76:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 77:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 85:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 90:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+Warning in nr15_stem_access_compare.crexx @ 91:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 32, column 7. Declare this binding explicitly if intentional., "index"
+Warning in nr15_stem_access_compare.crexx @ 92:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 86, column 7. Declare this binding explicitly if intentional., "left"
+Warning in nr15_stem_access_compare.crexx @ 93:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 87, column 7. Declare this binding explicitly if intentional., "right"
+Warning in nr15_stem_access_compare.crexx @ 100:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 21, column 4. Declare this binding explicitly if intentional., "i"
+19 warning(s) in source file
+[125/133] Building program with standalone pprint exit example
+[126/133] Generating nr16_17_stable_state_rxvm_noopt.rxbin
+Warning in nr16_17_stable_state_compare.crexx @ 27:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 33:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 39:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 46:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 52:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 58:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 64:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 70:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 77:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+9 warning(s) in source file
+[127/133] Generating text_inspector_tui_noopt.rxbin
+[128/133] Generating text_inspector_tui_opt.rxbin
+[129/133] Generating nr16_17_stable_state_rxvm_opt.rxbin
+Warning in nr16_17_stable_state_compare.crexx @ 27:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 33:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 39:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 46:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 52:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 58:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 64:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 70:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+Warning in nr16_17_stable_state_compare.crexx @ 77:8 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 22, column 8. Declare this binding explicitly if intentional., "i"
+9 warning(s) in source file
+[130/133] Generating rxjson_numeric_materialization_compare_opt.rxbin
+[131/133] Generating nr15_stem_semantics_rxvm_opt.rxbin
+Warning in nr15_stem_semantics.crexx @ 93:4 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 89, column 4. Declare this binding explicitly if intentional., "i"
+1 warning(s) in source file
+[132/133] Generating postperf04_scalar_access_compare_opt.rxbin
+real 13.52
+user 94.52
+sys 7.38

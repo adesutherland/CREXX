@@ -1,0 +1,40 @@
+{
+  "path": "cmake-build-debug/compiler/tests/structured_exit_debug_d2.log",
+  "bytes": 5835992727,
+  "disposition": "Bounded excerpt retained; generated raw trace removed after its passing test."
+}
+FIRST LINES
+Combined binary import roots: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin
+Input file is /Users/adrian/CLionProjects/CREXX/compiler/tests/rexx_src/structured_exit_debug_main.crexx
+Binary import location 0: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests
+Binary import location 1: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin
+Binary import location 2: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin
+Using Decimal Plugin mcdecimal
+[OPTIONS] Input 'TK_OPTIONS' in state 0
+[OPTIONS] Shift 'TK_OPTIONS', go to state 1
+[OPTIONS] Return. Stack=[TK_OPTIONS]
+[OPTIONS] Input 'TK_LEVELB' in state 1
+[OPTIONS] Shift 'TK_LEVELB', go to state 18
+[OPTIONS] Return. Stack=[TK_OPTIONS TK_LEVELB]
+
+LAST LINES
+Importing Procedures - Analysing procedure rxfnsg.llmchunk.tokens
+Importing Procedures - Analysing procedure rxfnsg.llmchunk.finish
+Importing Procedures - Analysing procedure rxfnsg.llmchunk.row
+Importing Procedures - Analysing procedure rxfnsg.llmchunk.status
+Importing Procedures - Analysing procedure rxfnsg.llmchunk.error
+Importing Procedures - Analysing procedure rxfnsg.llmresult.§factory
+DEBUG: Error in llm@address_llm_linked.rxbin @ 3:1 - #SYNTAX_ERROR, "\xc2"
+DEBUG: Error in llm@address_llm_linked.rxbin @ 3:1 - #SYNTAX_ERROR, "\xc2"
+DEBUG: Error in llm@address_llm_linked.rxbin @ 3:1 - #SYNTAX_ERROR, "\xc2"
+DEBUG: Error in llm@address_llm_linked.rxbin @ 3:1 - #SYNTAX_ERROR, "\xc2"
+Importing Procedures - Analysing procedure rxfnsg.llmresult.text
+Importing Procedures - Analysing procedure rxfnsg.llmresult.status
+Importing Procedures - Analysing procedure rxfnsg.llmresult.error
+Importing Procedures - Analysing procedure rxfnsg.llmresult.driver
+Importing Procedures - Analysing procedure rxfnsg.llmresult.category
+Importing Procedures - Analysing procedure rxfnsg.llmresult.finish
+Importing Procedures - Analysing procedure rxfnsg.llmresult.tokens
+Importing Procedures - Analysing procedure _rxsysb.cmsaddressenvironment.invoke
+DEBUG: Error in address_cms_provider@address_cms_provider.rxbin @ 6:3 - #SYNTAX_ERROR, "\xc2"
+DEBUG: Error in address_cms_provider@address_cms_provider.rxbin @ 6:3 - #SYNTAX_ERROR, "\xc2"

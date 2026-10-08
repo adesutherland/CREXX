@@ -78,6 +78,240 @@ programme consistency review. Reuse the 741/741 normal Debug and Release
 TRACE-input checkpoints while code/test/build inputs are unchanged; this
 documentation reconciliation does not trigger another product suite.
 
+### LC-QA-PUB — local rebuild and publication qualification (2026-10-08)
+
+**Vision and intended outcome.** Adrian requested publication of the accumulated
+Level C work after repairing CLion rebuild regressions and obtaining the strongest
+local green result: working Debug/Release builds, all normal Debug CTests and the
+full maintained local AddressSanitizer gate. Preserve the approved language and
+architecture, all existing open compatibility obligations and unrelated local
+artifacts. This is development publication, not a release or full Level C closure.
+The explicit full local ASan request gates this publication; additional hosted
+nightly matrices are not required unless an actual sanitizer finding requires
+its documented closure gate. Apple LeakSanitizer is unsupported here.
+
+**Numbered acceptance criteria.**
+
+- [x] **LC-QA-PUB-AC-01:** fetched develop is reconciled without discarding local
+  work; reproduce and retain the original rebuild failure and identify its cause.
+  Starting HEAD `36bced241`, 222 ahead/0 behind fetched origin/develop; only
+  untracked `output/` exists and is preserved.
+- [x] **LC-QA-PUB-AC-02:** clean Debug and Release builds in the existing CLion
+  trees pass, including generated product/toolchain inputs; focused regression
+  evidence covers each repaired cause. Retain commands, logs and input identity.
+- [x] **LC-QA-PUB-AC-03:** all configured normal Debug CTests pass on final
+  code/test/build inputs after qa-prep, with failure causes repaired and verified.
+- [x] **LC-QA-PUB-AC-04:** maintained macOS ASan full build, qa-prep and applicable
+  full correctness CTest gate pass on final inputs via tools/asan-run.sh, with
+  unsupported Apple leak detection recorded. Any first-party finding receives
+  a stable SAN entry and remains open until all required platform closure proof.
+- [ ] **LC-QA-PUB-AC-05:** coherent repairs and evidence are committed on develop,
+  qualified code/test/build input identity is unchanged by evidence-only commits,
+  develop is pushed and its normal automatic publication workflows are checked.
+  Report exact revision, counts, capability limits and any outstanding findings.
+
+**Numbered implementation steps.**
+
+1. **LC-QA-PUB-STEP-01 (AC-01; complete):** fetch/reconcile, inspect CLion
+   profiles and current worklist/runner, reproduce a clean rebuild into a bounded
+   temporary log. No build/test jobs were active at initial inspection.
+2. **LC-QA-PUB-STEP-02 (AC-02; complete; depends on STEP-01):** inspect relevant
+   owning documentation and repair reproduced causes with the smallest faithful
+   change; record minimal repro/focused evidence. Pause only for a new language
+   design or architecture decision. Verify clean Debug and Release builds.
+3. **LC-QA-PUB-STEP-03 (AC-03; complete; depends on STEP-02):** prepare generated
+   QA artifacts and run full normal Debug CTest with deliberate parallelism;
+   investigate failures and repeat only invalidated or failed evidence.
+4. **LC-QA-PUB-STEP-04 (AC-04; complete; depends on STEP-03):** run the maintained
+   full local macOS ASan runner, build/test leaks off for Apple's documented
+   capability limit, excluding only performance-measurement timing assertions
+   from the instrumented gate. Record and repair actual findings under SAN rules.
+5. **LC-QA-PUB-STEP-05 (AC-05; pending; depends on STEP-04):** retain final input
+   hashes and receipts, commit, push develop and inspect normal automatic CI.
+   Reuse unchanged qualification and preserve all wider Level C open criteria.
+
+**LC-QA-PUB-STEP-01/02 diagnosis and repair, 2026-10-08.** CLion's
+retained clean Debug build and the independent `cmake --build
+cmake-build-debug --clean-first --parallel 32` reproduce `CLASS_NOT_FOUND`
+in the existing TRACE consumer fixtures (RESULTS, REXX, LLM, output/environment
+and event variants). Original independent log:
+`/tmp/crexx-publish-debug-rebuild.XXXXXX.log`. TRACE's descriptor already imports
+the correct `rexxvalue.RexxValue` namespace; its generated helper declares that
+class for parent-value conversion. The consumer build actions depended only
+on the exit bundle, which becomes available before the consolidated `rxfnsc`
+image that exports RexxValue. Incremental qualification masked the missing edge.
+
+Repair the existing TRACE runtime/capture consumers' build dependencies on
+`rxfnsc` and `bin/rxfnsc.rxbin`, leaving the bootstrap exit bundle independent
+of its downstream runtime. The existing opt/no-opt TRACE fixtures are permanent
+regressions, and both clean CLion builds will test the missing-artifact ordering.
+No compiler, syntax, runtime, ABI or architecture change is intended. Build/test
+confirmation and all broad qualification remain open.
+
+**LC-QA-PUB Debug rebuild receipt.** Repaired clean Debug rebuild
+`cmake --build cmake-build-debug --clean-first --parallel 32` passed in the
+existing CLion tree (`/tmp/crexx-publish-debug-fixed.Beq3R6`). The build log
+orders the consolidated runtime publication at action 1642 before both
+`test_trace_exit` compiler modes (1682/1693); all formerly failing consumers
+compile successfully. Ninja query shows the published RXBIN as an input.
+Frozen 7,905 tracked source/test/build files (non-Markdown, excluding docs and
+historical performance evidence) fingerprint:
+`2d2e790dd89a6a196ffb6ab02d5810108293918062417228f0503e5ba7d4b71a`.
+Manifest `/tmp/crexx-publish-qualified-inputs.json` records individual hashes.
+Normal QA preparation and full CTest are running; Release and ASan remain open.
+A separate concurrent `docs/ROADMAP.md` modification appeared after initial
+inspection and is preserved outside this repair.
+
+**LC-QA-PUB-STEP-03 QA isolation repair plan.** Full Debug has passed
+2,933 cases including `structured_exit_debug_run`, but that fixture took 684.03s
+and generated multiple GiB of parser trace while importing the shared compiler
+test directory's unrelated generated modules. The prior passing checkpoint
+already took 441.53s. An unchanged generated-script copy with only the work/import
+root replaced by a private temporary directory passed in 4.45s and emitted 97MiB
+(`/tmp/crexx-publish-structured-exit-probe.A443dH`, work
+`/tmp/crexx-publish-structured-exit.JDzBSA`). This is QA input pollution, not a
+product value/signal or sanitizer finding.
+
+Vision: keep the existing debug-stage nested-exit regression decisive and bounded
+by its intended source/bundle inputs, with unchanged compiler flags and output
+assertions. **LC-QA-PUB-AC-03A:** the existing four-tool debug fixture passes with
+its own work/import root in normal Debug and maintained macOS ASan; compare full
+CTest registries to establish that all other commands/properties are unchanged.
+**LC-QA-PUB-STEP-03A:** move this fixture's outputs, debug log, working directory
+and explicit exit-bundle import root to one private build directory. Retain
+`rxc -d2 -n`, assembly/VM execution, exact golden output and all existing tests.
+After the current full run, rerun only this changed fixture and reuse unchanged
+suite evidence; no production optimization, language or architecture change.
+
+**LC-QA-PUB normal Debug receipt.** QA preparation
+`cmake --build cmake-build-debug --target qa-prep qa-prep-measurement --parallel 32`
+passed in 13.52s (`/tmp/crexx-publish-debug-prep.Bu6lFZ`). Full normal Debug
+`ctest --test-dir cmake-build-debug --parallel 30 --output-on-failure` passed
+**3296/3296**, zero failures/timeouts, in 1828.68s
+(`/tmp/crexx-publish-debug-ctest.QbyHoS`). No test was disabled or excluded.
+
+The private-workspace repair then passed the unchanged structured-exit debug
+assertions as CTest **1/1** in 3.93s
+(`/tmp/crexx-publish-structured-fixed-debug.dnFtas`). Before/after JSON registry
+comparison proves all 3,295 other test registrations/commands/properties are
+identical. Source/test/build manifest comparison finds only
+`compiler/tests/CMakeLists.txt` changed after the broad run; its only affected
+fixture is the one replayed. Thus all 3,296 normal cases have valid final-input
+passing evidence without a redundant broad repeat. Final 7,905-file fingerprint:
+`20330163ea7e91639d89d33dd8c8cd41bfc359fd14ab25cdaa4a5627859fab5e`
+(`/tmp/crexx-publish-final-inputs.json`). ASan confirmation of AC-03A, clean
+Release and the full local ASan gate remain open; Release rebuild is underway.
+
+**LC-QA-PUB Release rebuild receipt.** Existing CLion Release tree
+`cmake --build cmake-build-release --clean-first --parallel 32` passed in
+189.00s (`/tmp/crexx-publish-release-rebuild.zKf2kl`), including both formerly
+failing TRACE modes after consolidated runtime publication. Product source is
+unchanged by the test-directory repair, so the earlier clean Debug build remains
+valid; normal Debug CTest covers all final test inputs as recorded above.
+
+Full local maintained ASan has started through `tools/asan-run.sh --phase full
+--build-jobs 4 --test-jobs 8 --build-leaks off --leaks off --exclude-label
+'^performance-measurement$' --stop-on-failure --no-live-tail --tail-lines 12`.
+Apple's documented LeakSanitizer capability limit applies; no supported-platform
+sanitizer is disabled. Build, qa-prep and the full correctness gate remain open.
+Concurrent compiler/architecture Markdown proposal edits are also preserved
+outside this repair; they do not alter the frozen source/test/build fingerprint.
+
+**LC-QA-PUB ASan build/preparation milestone.** Maintained runner
+`cmake-build-debugasan/asan-logs/20261008-120648-full` completed its full build
+and qa-prep stages with no AddressSanitizer diagnostic. The full correctness
+CTest stage is running with eight jobs, stop-on-failure and Apple's documented
+leak-detection limit. AC-04 and AC-03A remain open until it completes.
+Completed logs, both source manifests, selected build configurations and the
+one-fixture registry reuse proof are now retained in
+`docs/qa/levelc-publication-2026-10-08/`; this evidence directory is a receipt,
+not a second scope/implementation plan. Publication remains pending.
+
+**LC-QA-PUB-STEP-04 SDK QA failure and repair plan.** The full macOS
+ASan build/preparation passed; CTest stopped after 2,943 passes on
+`rxpa_external_sdk_consumer` (one failure, 168 unrun cases; CTest 2518.52s).
+No memory-safety diagnostic occurred. The nested external consumer uses Apple
+GNU Make 3.81, which compares whole-second timestamps. The static archive was
+rebuilt with value 42 at nanosecond timestamp 1791461294996762059, but its old
+value-41 executable was built at 1791461294106769945; both become second
+1791461294 to Make. The generated Makefile already contains the correct archive
+relink dependency. Declaration/relative consumers relinked across the next tick.
+Retained `sdk-original-commands.log`, `sdk-timestamp-failure.json` and
+`asan-initial-ctest.log` are in the QA evidence directory. A timestamp-only
+archive touch, with no source/executable change, caused the existing helper to
+relink correctly and return 42 (`sdk-timestamp-only-probe.log`).
+
+Vision: make the existing archive-freshness regression observe a real timestamp
+change on generators with whole-second resolution, preserving its 41-to-42 value
+assertions and actual archive dependency. Do not remove/rewrite the consumer or
+force relinking, which would hide a missing dependency.
+**LC-QA-PUB-AC-03B (verified):** the same external SDK fixture passes normal Debug
+and maintained macOS ASan with a filesystem timestamp barrier before the library
+source edit, and unchanged install/native/plugin/SDK assertions.
+**LC-QA-PUB-STEP-04A:** derive the latest initial executable timestamp, touch a
+private timestamp probe and wait only until its filesystem timestamp is newer;
+then perform the existing source mutation/rebuild/assertions. This test-only
+prerequisite avoids dependence on fixed wall-clock windows or SOURCE_DATE_EPOCH.
+Retain original failure evidence, focused Debug then ASan proof, and resume only
+uncovered ASan cases by excluding completed passing test names through the
+maintained runner. All other passing source/test inputs remain valid.
+
+**LC-QA-PUB SDK repair focused receipt.** The same fixture passed normal
+Debug **1/1** in 31.40s (`sdk-fixed-debug.log`) and maintained macOS ASan
+**1/1** in 52.31s (`sdk-fixed-asan.log`, runner `20261008-131342-ctest`).
+The original static/declaration/relative 41-to-42 assertions and all installed
+SDK/plugin/native/SQLite/hash/stats/vector checks remain enabled. No AddressSanitizer
+diagnostic occurred. AC-03B is verified. Only the SDK test script changed after
+the initial ASan run; the 2,943 other passes remain valid. Normal Debug's final
+coverage is 3,294 unchanged broad passes plus the two repaired focused fixtures.
+Final source/test/build fingerprint:
+`bdd088acf09b0b1102634adadc428b92bbc804fa418ecfbba39b8fec1d089bad`.
+
+The maintained runner now resumes the 168 uncovered cases, excluding the 2,944
+unique passing names recorded in `asan-completed-before-resume.json` via
+`--exclude-regex-file`, preserving the same correctness label filter and eight
+jobs. The original failed attempt stays retained, not relabelled as a pass.
+Full local ASan coverage and publication remain open until this remainder passes.
+
+**LC-QA-PUB complete local ASan receipt.** The maintained continuation
+`20261008-132201-ctest` passed **168/168** in 918.48s. Set comparison against
+all 3,112 eligible test names proves complete passing final-input coverage:
+2,943 unchanged passes from the initial full attempt, repaired SDK **1/1**,
+and remaining **168/168**. Build, qa-prep, all three CTest logs and the structured
+fixture's redirected trace contain no AddressSanitizer diagnostic. AC-04 is
+verified locally; unsupported Apple LeakSanitizer and unrun cross-platform proof
+are not claimed. `structured_exit_debug_run` passed ASan in 12.42s in the
+initial run, verifying AC-03A with the normal Debug 3.93s receipt.
+
+The first literal completed-name exclusion exceeded CTest's regex size limit;
+that controller attempt was stopped without accepting duplicate results.
+An equivalent compact 2,937-character selector was checked against the entire
+eligible registry: exactly 2,944 passes excluded and exactly 168 cases retained.
+`asan-resume-selection.json`, the compact regex and `asan-coverage-summary.json`
+retain that proof. No product source or runtime behavior was changed.
+The 7,905-file final fingerprint remains `bdd088acf09b0b1102634adadc428b92bbc804fa418ecfbba39b8fec1d089bad`.
+
+Final Release replay of the two altered fixtures verifies the debug fixture
+**1/1** in 1.29s. The SDK fixture initially lacked its declared `stage-optional`
+prerequisite after the clean rebuild (install could not find arrayformatdemo);
+retained before-staging logs identify that preparation failure. Build its
+registered prerequisite targets and rerun only that one fixture. Earlier
+unchanged Release suite evidence remains valid; no broad repetition is required.
+Publication remains pending until this final focused replay and commit/push.
+
+**LC-QA-PUB final local closure receipt.** Release SDK preparation of its
+registered `cri07_rxpa_sdk_consumer_prereqs stage-optional` targets passed; its
+focused replay passed **1/1** in 20.63s (`release-sdk-final.log`). Together with
+the 1.29s structured debug replay, both altered Release fixtures are verified.
+All local criteria AC-01–04 plus AC-03A/03B are verified. Full normal Debug
+3,296-case final-input coverage, complete 3,112-case macOS ASan correctness
+coverage, clean Debug/Release builds, both Release replays and source reuse
+proof are retained in `docs/qa/levelc-publication-2026-10-08/README.md`.
+No first-party sanitizer finding occurred. Existing compatibility obligations,
+including LC-DOC-ISSUE-01 TIME clause refresh, remain open; no full Level C,
+Release 1 or cross-platform sanitizer-clean claim is made. Only publication
+criterion AC-05 remains pending commit/push and normal automatic workflow check.
+
 ### LC-GAP-02 BIF completion programme (2026-10-07)
 
 **Vision and intended outcome.** Deliver a coherent running baseline for all

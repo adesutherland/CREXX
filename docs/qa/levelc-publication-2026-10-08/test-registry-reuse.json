@@ -1,0 +1,70 @@
+{
+  "count": 3296,
+  "unchanged_count": 3294,
+  "changed": {
+    "structured_exit_debug_run": {
+      "before": {
+        "backtrace": 1941,
+        "command": [
+          "/opt/homebrew/bin/cmake",
+          "-P",
+          "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_structured_exit_debug.cmake"
+        ],
+        "name": "structured_exit_debug_run",
+        "properties": [
+          {
+            "name": "ENVIRONMENT",
+            "value": [
+              "CREXX_DIAGNOSTICS=raw"
+            ]
+          },
+          {
+            "name": "LABELS",
+            "value": [
+              "comprehensive"
+            ]
+          },
+          {
+            "name": "WORKING_DIRECTORY",
+            "value": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests"
+          }
+        ]
+      },
+      "after": {
+        "backtrace": 1941,
+        "command": [
+          "/opt/homebrew/bin/cmake",
+          "-P",
+          "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/run_structured_exit_debug.cmake"
+        ],
+        "name": "structured_exit_debug_run",
+        "properties": [
+          {
+            "name": "ENVIRONMENT",
+            "value": [
+              "CREXX_DIAGNOSTICS=raw"
+            ]
+          },
+          {
+            "name": "LABELS",
+            "value": [
+              "comprehensive"
+            ]
+          },
+          {
+            "name": "WORKING_DIRECTORY",
+            "value": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/structured_exit_debug_ws"
+          }
+        ]
+      }
+    }
+  },
+  "changed_source_inputs": {
+    "compiler/tests/CMakeLists.txt": [
+      "structured_exit_debug_run"
+    ],
+    "tests/rxpa/rxpa_external_sdk_consumer.cmake": [
+      "rxpa_external_sdk_consumer"
+    ]
+  }
+}

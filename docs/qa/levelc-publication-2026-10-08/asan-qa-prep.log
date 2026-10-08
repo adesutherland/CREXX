@@ -1,0 +1,1601 @@
+Command: cmake --build cmake-build-debugasan --target qa-prep --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[  0%] Built target rxvmmemory
+[  1%] Built target rxbin
+[  1%] Built target rxvm_platform_objects
+[  1%] Built target _e5native_static
+[  1%] Built target rxpashim
+[  2%] Built target rxtvm_core_objects
+[  2%] Built target dslsyntax_parser
+[  2%] Built target lemon
+[  2%] Built target re2c_objects_autogen_ver_to_vernum
+[  3%] Built target re2c_objects_autogen
+[  3%] Built target platform
+[  4%] Built target avl_tree
+[  4%] Built target decnumber
+[  4%] Built target rxpa
+[  4%] Built target rxlink
+[  4%] Built target _e5native
+[  5%] Built target rxbvm_core_objects
+[  5%] Built target address_spawn_group_fixture
+[  5%] Built target dslsyntax_editor
+[  5%] Stage rxpp macro support files ...
+[  5%] Built target fs
+[  6%] Built target console
+[  6%] Built target precomp_static
+[  6%] Built target precomp
+[  6%] Built target rxpp_support_files
+[  6%] Built target _keyaccess
+[  6%] Built target id
+[  6%] Built target _platform
+[  6%] Built target fs_static
+[  6%] Built target _platform_static
+[  6%] Built target rxcpack
+[  6%] Built target test_rxop_metadata
+[  6%] Built target test_rxinteger_contract
+[  6%] Built target signal_tester
+[  6%] Built target float
+[  6%] Built target _cri17_attached_static
+[  6%] Built target _cri17_attached
+[  6%] Built target _rcc_provider
+[  7%] Built target _rcc_provider_static
+[  7%] Built target _rxpa_objects_static
+[  8%] Built target _rxpa_objects
+[  8%] Built target rxvm_platform_notls_objects
+[  8%] Built target _hash
+[  8%] Built target _rxpalink_decl
+[  8%] Built target _rxpalink_static
+[  8%] Built target _rxpa_classdecl_static_decl
+[  8%] Built target _rxpa_callmethod_static
+[  9%] Built target _testfuncs_static
+[  9%] Built target _hash_static
+[  9%] Built target float_static
+[  9%] Built target _keyaccess_static
+[ 10%] Built target _llist
+[ 10%] Built target _llist_static
+[ 10%] Built target _treemap
+[ 10%] Built target _treemap_static
+[ 10%] Built target rxdas
+[ 10%] Built target test_rxseqfile
+[ 10%] Built target test_rxspawn_posix_termination
+[ 10%] Built target test_rxvmmemory
+[ 10%] Built target rxbvm_instrumented_core_objects
+[ 10%] Built target test_rxvmworker
+[ 10%] Built target _rxpa_session_failure
+[ 10%] Built target stats
+[ 10%] Built target stats_static
+[ 10%] Built target vector
+[ 10%] Built target vector_static
+[ 10%] Built target _stack_static
+[ 10%] Built target _cipher
+[ 10%] Built target _stack
+[ 10%] Built target _cipher_static
+[ 10%] Built target _strings
+[ 10%] Built target _getpi
+[ 10%] Built target id_static
+[ 10%] Built target rxpa_host_fixture_modern
+[ 10%] Built target test_jtable_policy
+[ 11%] Built target rxpa_host_fixture_old
+[ 11%] Built target test_signal_mask
+[ 11%] Built target _odbc_mock
+[ 11%] Built target decnumber_test
+[ 11%] Built target mutate_jtable_rxbin
+[ 11%] Built target linein_stdin_harness
+[ 11%] Built target mutate_retired_process_opcode
+[ 11%] Built target address_spawn_transfer_fixture
+[ 11%] Built target linein_tty_harness
+[ 11%] Built target address_argv_fixture
+[ 11%] Built target _arrays
+[ 11%] Built target rxvector_index_core_test
+[ 11%] Built target crexx_sqlite3_objects
+[ 11%] Built target crexx-provider-package
+[ 12%] Built target ggml-base
+[ 12%] Built target rxconsole_decoder_test
+[ 12%] Built target rxllama_package_utf8_cxx17
+[ 12%] Built target console_static
+[ 12%] Built target rxllama_package_utf8_cxx20
+[ 12%] Built target _recv390
+[ 12%] Built target _map
+[ 12%] Built target _rxtcp
+[ 12%] Built target project_failure_helper
+[ 12%] Built target rxlink_concat_files
+[ 12%] Built target mutate_graph_rxbin
+[ 12%] Built target test_rxvmfile
+[ 13%] Built target keyaccess_compact_failure_test
+[ 13%] Built target test_record_allocation
+[ 13%] Built target test_compression_workspace
+[ 13%] Built target test_rxsha256
+[ 13%] Built target crexx-contract
+[ 14%] Built target parser_tester
+[ 14%] Built target test_mainframe_handlers_utf8
+[ 14%] Built target test_mainframe_handlers_byte
+[ 15%] Built target test_mainframe_stdio
+[ 15%] Built target platform_cms_harness
+[ 15%] Built target platform_cms31_harness
+[ 15%] Built target test_native_raw_cms
+[ 15%] Built target test_native_raw_tso
+[ 15%] Built target text_fixture_codec
+[ 15%] Built target test_oom_mainframe
+[ 16%] Built target platform_cms_directory_harness
+[ 16%] Built target platform_terminal_harness
+[ 17%] Built target test_oom_diagnostic
+[ 17%] Built target test_text_codec
+[ 17%] Built target test_rxgraph
+[ 17%] Built target mutate_rxbin_feature
+[ 17%] Built target rxseq
+[ 17%] Built target rxvmref
+[ 18%] Built target test_rxpa_odbc_old_host
+[ 18%] Built target rxsqlite_thread_test
+[ 18%] Built target sqlite
+[ 18%] Built target sqlite_static
+[ 18%] Built target ts_regvalue_tester
+[ 20%] Built target ggml-metal
+[ 20%] Built target ggml-cpu
+[ 20%] Built target test_rxpa_utf_validation
+[ 20%] Built target test_value_factory_allocation
+[ 23%] Built target re2c
+[ 23%] Built target rxvmplugin
+[ 23%] Built target test_rxvmstem
+[ 23%] Built target test_rxvmstem_allocator_family
+[ 23%] Built target ggml
+[ 23%] Built target mc_decimal_manual
+[ 25%] Built target mc_decimal_dynamic
+[ 25%] Built target rxaslib
+[ 25%] Built target db_decimal_dynamic
+[ 25%] Built target db_decimal_manual
+[ 25%] Built target mc_decimal
+[ 25%] Built target mc_decimal_dyn_test_harness
+[ 25%] Built target mc_decimal_manual_test_harness
+[ 25%] Built target mc_decimal_full_tests
+[ 25%] Built target db_decimal_tests
+[ 25%] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/__/assembler/rxasmain.c.o
+[ 25%] Built target decimal_gate1_adapter
+[ 25%] Built target rxbvml
+[ 25%] Built target rxas
+[ 25%] Built target rxbvm
+/Users/adrian/CLionProjects/CREXX/assembler/rxasmain.c:275:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  275 |         sprintf(combined_location, ".;%s;%s", scanner.location, exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/assembler/rxasmain.c:283:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  283 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+[ 25%] Built target rxvml
+2 warnings generated.
+[ 25%] Built target test_rxas_flow_graph
+[ 25%] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/platform.c.o
+[ 25%] Built target rxtvm
+[ 25%] Building C object tests/rxpa/CMakeFiles/objects_rxbvm.dir/__/__/interpreter/rxvmmain.c.o
+[ 25%] Building C object tests/rxpa/CMakeFiles/objects_rxtvm.dir/__/__/interpreter/rxvmmain.c.o
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:387:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  387 |             sprintf(installed_provider_path, "%s/providers", exe_path);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:404:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  404 |         sprintf(combined_location, ".;%s;%s", context.location, exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:408:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  408 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+[ 25%] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/platform_tso.c.o
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:387:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  387 |             sprintf(installed_provider_path, "%s/providers", exe_path);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:404:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  404 |         sprintf(combined_location, ".;%s;%s", context.location, exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:408:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  408 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+3 warnings generated.
+[ 25%] Linking C executable ../objects_rxbvm
+[ 25%] Linking C executable ../objects_rxtvm
+[ 25%] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/platform_native.c.o
+[ 25%] Built target objects_rxbvm
+[ 25%] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/text_codec.c.o
+[ 25%] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/oom.c.o
+[ 25%] Built target objects_rxtvm
+[ 25%] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/rxinteger.c.o
+[ 25%] Built target testvm
+[ 26%] Building C object platform/CMakeFiles/rxas_cms_text_harness.dir/tests/cms_text_mock.c.o
+[ 26%] Built target funcvm
+[ 33%] Built target llama
+[ 33%] Built target rxbvm_instrumented
+[ 33%] Built target test_rxcrexxcmd_flush
+[ 33%] Linking C executable ../bin/rxas_cms_text_harness
+[ 33%] Built target test_rxspawn_diagnostics
+[ 33%] Built target crexxsaa
+[ 33%] Built target test_rxvmchannel_registry
+[ 33%] Built target test_gate_f_channel_process_bin
+[ 33%] Built target test_rxvmbyteendpoint
+[ 34%] Built target test_rxvmchannel_byte
+[ 34%] Built target test_rxvmchannel_lifetime
+[ 34%] Built target rxas_cms_text_harness
+[ 34%] Built target test_rxvmactive
+[ 34%] Built target test_rxvmplugin_context
+[ 34%] Built target test_rxpa_concurrency
+[ 34%] Built target test_rxpa_host_services
+[ 34%] Built target test_rxpa_worker_startup
+[ 34%] Built target test_rxpa_odbc
+[ 34%] Built target test_gate_f_channel_local_bin
+[ 35%] Built target test_retired_process_opcode_bin
+[ 35%] Built target prepare_tests_jump_table_corruption_linear
+[ 35%] Built target prepare_tests_jump_table_corruption_openhash
+[ 35%] Built target prepare_tests_jump_table_corruption_acph
+[ 35%] Built target test_db_decimal_archive_link_bin
+[ 35%] Built target mc_decimal_test_harness
+[ 35%] Built target rxas_optimizer_test_prereqs
+[ 36%] Built target crexx_llama_bridge
+[ 36%] Built target rxllama_model_geometry
+[ 36%] Built target test_rxspawn_inheritance
+[ 36%] Built target crexxsaa_tool
+[ 36%] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/__/interpreter/rxvmmain.c.o
+[ 36%] Built target test_rxvml_utf_boundaries
+[ 36%] Built target rxllama_release_engine_smoke
+[ 37%] Built target library-rxas
+[ 37%] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/__/interpreter/exitfunc.c.o
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:387:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  387 |             sprintf(installed_provider_path, "%s/provi[ 37%] Built target test_persistent_worker_sparse_bin
+ders", exe_path);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:404:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  404 |         sprintf(combined_location, ".;%s;%s", context.location, exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:408:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  408 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+[ 37%] Built target rxvm
+[ 37%] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/platform.c.o
+[ 40%] Built target rxclib
+[ 40%] Built target test_rxvmchannel_process
+[ 40%] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/platform_tso.c.o
+[ 40%] Built target run_tests_panic_source
+[ 40%] Built target run_tests_signals
+[ 40%] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/platform_native.c.o
+[ 40%] Built target run_tests_register_flags
+[ 40%] Built target run_tests_breakpoint_address
+[ 40%] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/text_codec.c.o
+[ 40%] Built target run_tests_attributes
+[ 40%] Built target run_tests_utf_flags
+[ 40%] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/oom.c.o
+[ 40%] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/rxinteger.c.o
+[ 40%] Built target run_tests_references
+[ 40%] Building C object platform/CMakeFiles/rxvm_mainframe_console_harness.dir/tests/mainframe_console_mock.c.o
+[ 40%] Built target run_tests_perf2_reference_guards
+[ 40%] Built target run_tests_perf2_partial_reference_materialization
+[ 40%] Built target run_tests_perf2_exact_relink
+[ 40%] Built target run_tests_object_initialization
+[ 40%] Built target run_tests_signal_call_attrs
+[ 40%] Linking C executable ../bin/rxvm_mainframe_console_harness
+[ 40%] Built target run_tests_signal_handler_modes
+[ 40%] Built target run_tests_signal_call_unwind
+[ 40%] Built target run_tests_signal_mask_bounds
+[ 40%] Built target run_tests_signal_frame_scope
+[ 40%] Built target run_tests_signal_silent_halt
+[ 40%] Built target run_tests_signal_nested_pending
+[ 40%] Built target run_tests_signal_actions
+[ 40%] Built target run_tests_signal_retry_retired
+[ 40%] Built target run_tests_signal_pushpop
+[ 40%] Built target rxvm_mainframe_console_harness
+[ 40%] Built target run_tests_nr09_superinstructions
+[ 40%] Built target run_tests_signal_branch_value
+[ 40%] Built target run_tests_basic
+[ 40%] Built target run_tests_int_math
+[ 40%] Built target run_tests_int_contract
+[ 40%] Built target run_tests_float_math
+[ 40%] Built target run_tests_float_pool
+[ 40%] Built target run_tests_compact_format
+[ 40%] Built target run_tests_logic_flow
+[ 40%] Built target run_tests_string
+[ 40%] Built target run_tests_system_io
+[ 40%] Built target run_tests_binary_memory
+[ 40%] Built target run_tests_binary
+[ 40%] Built target run_tests_jump_table
+[ 40%] Built target run_tests_jump_table_linear_sources
+[ 40%] Built target run_tests_jump_table_openhash_sources
+[ 40%] Built target run_tests_jump_table_auto_sources
+[ 40%] Built target run_tests_jump_table_acph_sources
+[ 40%] Built target run_tests_jump_table_hash_edges
+[ 40%] Built target run_tests_jump_table_rexx_strings
+[ 41%] Built target run_tests_jump_table_boundaries
+[ 41%] Built target run_tests_jump_table_auto_edges
+[ 41%] Built target run_rxasjtablecorruptalgorithm
+[ 41%] Built target run_rxasjtablecorruptlineartarget
+[ 41%] Built target run_rxasjtablecorruptheader
+[ 41%] Built target run_rxasjtablecorruptlinearkey
+[ 41%] Built target run_rxasjtablecorruptopenslot
+[ 41%] Built target run_rxasjtablecorruptacphtarget
+[ 41%] Built target run_rxasjtablecorruptacphslot
+[ 41%] Built target run_tests_socket
+[ 41%] Built target run_tests_decimal
+[ 41%] Built target run_tests_conversion
+[ 41%] Built target run_tests_objects
+[ 41%] Built target run_tests_reflection
+[ 41%] Built target run_tests_interfaces
+[ 41%] Built target run_tests_selector_descriptors
+[ 41%] Built target run_tests_wide_operands
+[ 41%] Built target run_tests_instruction_gaps
+[ 41%] Built target llama_provider
+[ 41%] Built target llama_provider_static
+[ 41%] Built target test_source_semantics
+[ 41%] Built target rxllama_bridge_lifecycle
+[ 41%] Built target rxllama_model_compatibility
+[ 41%] Built target intr_test
+[ 41%] Built target rxlink_test_prereqs
+[ 41%] Built target tests_linked_inline_artifact
+[ 41%] Built target tests_linked_success_artifact
+[ 42%] Built target tests_linked_omit_artifact
+[ 42%] Built target tests_linked_interface_artifact
+[ 42%] Built target tests_linked_stripped_artifact
+[ 42%] Built target tests_record_stream_combo_artifact
+[ 42%] Built target test_compact_format
+[ 42%] Built target test_import_directory_errors
+[ 42%] Built target test_symbol_allocation
+[ 42%] Built target test_ast_allocation
+[ 42%] Built target test_frame_control_ast
+[ 42%] Built target test_source_provenance
+[ 42%] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/__/compiler/rxc_main.c.o
+[ 42%] Built target test_levelc_tree_boundary
+[ 42%] Built target test_import_discovery_snapshot
+[ 42%] Built target test_project_dependencies
+[ 42%] Built target test_import_resolution_report
+[ 42%] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/platform.c.o
+[ 42%] Built target test_rxcp_super_combiner
+[ 42%] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/platform_tso.c.o
+[ 42%] Built target test_highlight_cache
+[ 42%] Built target rxc
+[ 42%] Built target run_tests_stress
+[ 42%] Built target whole_procedure_runtime_rxvm_noopt_artifact
+[ 42%] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/platform_native.c.o
+[ 43%] Built target whole_procedure_runtime_rxvm_opt_artifact
+[ 43%] Built target nr18_flow_runtime_rxvm_noopt_artifact
+[ 43%] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/text_codec.c.o
+[ 43%] Built target nr18_flow_runtime_rxvm_opt_artifact
+[ 43%] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/oom.c.o
+[ 43%] Built target storage_identity_runtime_rxvm_noopt_artifact
+[ 44%] Built target storage_identity_runtime_rxvm_opt_artifact
+[ 44%] Built target entry_alias_runtime_rxvm_noopt_artifact
+[ 44%] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/rxinteger.c.o
+[ 44%] Built target entry_alias_runtime_rxvm_opt_artifact
+[ 44%] Built target redundant_itos_runtime_rxvm_noopt_artifact
+[ 44%] Building C object platform/CMakeFiles/rxc_cms_text_harness.dir/tests/cms_text_mock.c.o
+[ 44%] Built target redundant_itos_runtime_rxvm_opt_artifact
+[ 44%] Built target signal_contract_runtime_rxvm_noopt_artifact
+[ 44%] Built target signal_contract_runtime_rxvm_opt_artifact
+[ 44%] Built target copied_xtoy_component_placement_runtime_rxvm_noopt_artifact
+[ 44%] Built target copied_xtoy_component_placement_runtime_rxvm_opt_artifact
+[ 44%] Linking C executable ../bin/rxc_cms_text_harness
+[ 44%] Built target branch_thread_runtime_rxvm_noopt_artifact
+[ 44%] Built target branch_thread_runtime_rxvm_opt_artifact
+[ 44%] Built target reference_iterator_system_rxvm_noopt_artifact
+[ 44%] Built target reference_iterator_system_rxvm_opt_artifact
+[ 44%] Built target reference_generated_contract_rxvm_noopt_artifact
+[ 44%] Built target reference_generated_contract_rxvm_opt_artifact
+[ 44%] Built target tests_linked_srcfproc_artifact
+[ 44%] Built target _rxpa_invalid_manifest
+[ 44%] Built target tests_linked_srcmethod_artifact
+[ 44%] Built target rxdas_test_prereqs
+[ 45%] Built target test_float_pool_format
+[ 45%] Built target rxc_cms_text_harness
+[ 45%] Built target tests_link_signature_bad_impl_fixture
+[ 45%] Built target test_linked_format
+[ 45%] Built target rxdas_roundtrip_large_binary_alias_artifact
+[ 45%] Built target test_disassembler_dump
+[ 45%] Built target qa-prep-essential
+[ 46%] Built target crexx_test_driver
+[ 46%] Built target stage-c1-toolchain
+[ 46%] Built target token_bin
+[ 52%] Built target library-rexx
+[ 52%] Built target test_highlight_editor_diagnostics
+[ 52%] Built target rxdas_roundtrip_basic_artifact
+[ 52%] Built target rxdas_roundtrip_int64_contract_artifact
+[ 53%] Built target rxdas_roundtrip_float_pool_artifact
+[ 53%] Built target rxdas_roundtrip_compact_format_artifact
+[ 53%] Built target rxdas_roundtrip_wide_operands_artifact
+[ 53%] Built target rxdas_roundtrip_interfaces_artifact
+[ 53%] Built target rxdas_roundtrip_metadata_artifact
+[ 53%] Built target rxdas_roundtrip_imported_artifact
+[ 53%] Built target rxdas_roundtrip_binary_artifact
+[ 53%] Built target rxdas_roundtrip_jtable_linear_artifact
+[ 53%] Built target rxdas_roundtrip_jtable_hash_artifact
+[ 53%] Built target rxdas_roundtrip_jtable_rexx_strings_artifact
+[ 53%] Built target rxdas_graph_error_artifact
+[ 53%] Built target library
+[ 53%] Staging deterministic compiler-exit imports ...
+[ 53%] Building optimized arrayformat function example
+[ 53%] Built target _rxpa_classdecl
+[ 53%] Built target _rxpa_callmethod
+[ 53%] Built target compiler_exit_imports
+[ 53%] Built target _rxpa_bad_signatures
+[ 53%] Built target rxc_staticlink
+[ 53%] Built target rxc_classdecl_static
+[ 53%] Built target _rxpa_dynlink
+[ 53%] Building optimized arraydump function example
+[ 53%] Built target _testfuncs_dynamic
+[ 53%] Built target _plugin1
+[ 53%] Built target _plugin2
+[ 53%] Built target exit_test_support_bin
+[ 53%] Built target rxfnsl_imports
+[ 53%] Built target exit_dump_bin
+[ 53%] Built target llama_provider_runtime_package
+[ 53%] Built target exit_query_bin
+[ 53%] Built target exit_sort_bin
+[ 53%] Built target exit_sortx_bin
+[ 53%] Built target exit_address_bin
+[ 53%] Built target exit_execio_bin
+[ 53%] Built target exit_add_bin
+[ 53%] Built target exit_fsay_bin
+[ 53%] Built target exit_msay_bin
+[ 53%] Built target exit_parse_bin
+[ 54%] Built target exit_signal_bin
+[ 54%] Built target exit_trace_bin
+[ 54%] Built target exit_rexxscript_bin
+[ 54%] Built target exit_substr_bin
+[ 54%] Built target exit_dummy_bin
+[ 54%] Built target exit_rxqueue_bin
+[ 54%] Built target rxfnsl
+[ 54%] Built target compiler_exit_bin
+[ 54%] Built target stage-l-libraries
+[ 54%] Built target test_persistent_worker_executor_bin
+[ 54%] Staging immutable class library compiler imports ...
+[ 54%] Built target ui
+[ 54%] Built target classlib_native_imports
+[ 54%] Built target classlib_imports
+[ 55%] Generating san002_concat_after_wide_decimal_rxbvm_noopt.rxbin
+[ 55%] Generating san002_concat_after_wide_decimal_rxbvm_opt.rxbin
+[ 55%] Generating san002_concat_after_wide_decimal_rxtvm_noopt.rxbin
+[ 55%] Bundling array-formatting function example
+[ 55%] Building optimized array-formatting example program
+[ 55%] Built target san002_concat_after_wide_decimal_rxbvm_noopt_artifact
+[ 55%] Built target san002_concat_after_wide_decimal_rxbvm_opt_artifact
+[ 55%] Generating san002_concat_after_wide_decimal_rxtvm_opt.rxbin
+[ 55%] Generating san002_wide_decimal_extract_rxbvm_noopt.rxbin
+[ 55%] Built target example_array_formatting_artifacts
+[ 55%] Generating san002_wide_decimal_extract_rxbvm_opt.rxbin
+[ 55%] Built target san002_concat_after_wide_decimal_rxtvm_noopt_artifact
+[ 55%] Generating san002_wide_decimal_extract_rxtvm_noopt.rxbin
+[ 55%] Built target san002_wide_decimal_extract_rxbvm_noopt_artifact
+[ 55%] Built target san002_concat_after_wide_decimal_rxtvm_opt_artifact
+[ 55%] Generating san002_wide_decimal_extract_rxtvm_opt.rxbin
+[ 55%] Built target ascommon_noopt_artifact
+[ 55%] Built target ascommon_opt_artifact
+[ 55%] Built target concatenation_noopt_artifact
+[ 55%] Built target concatenation_opt_artifact
+[ 55%] Built target benchmark_awfy_sieve_noopt_artifact
+[ 55%] Built target benchmark_awfy_permute_noopt_artifact
+[ 55%] Built target benchmark_awfy_mandelbrot_noopt_artifact
+[ 55%] Built target benchmark_awfy_mandelbrot_hoisted_control_noopt_artifact
+[ 55%] Built target benchmark_awfy_towers_noopt_artifact
+[ 55%] Built target benchmark_awfy_bounce_noopt_artifact
+[ 55%] Built target benchmark_awfy_storage_noopt_artifact
+[ 55%] Built target benchmark_awfy_list_noopt_artifact
+[ 55%] Built target benchmark_awfy_richards_noopt_artifact
+[ 55%] Built target benchmark_awfy_queens_noopt_artifact
+[ 55%] Built target benchmark_awfy_deltablue_noopt_artifact
+[ 55%] Built target benchmark_awfy_cd_noopt_artifact
+[ 55%] Built target benchmark_awfy_havlak_noopt_artifact
+[ 55%] Built target benchmark_awfy_json_noopt_artifact
+[ 55%] Built target benchmark_json_parser_noopt_artifact
+[ 55%] Built target benchmark_json_parse_noopt_artifact
+[ 55%] Built target benchmark_json_query_noopt_artifact
+[ 55%] Built target benchmark_base64_roundtrip_noopt_artifact
+[ 55%] Built target benchmark_base64_roundtrip_v2_noopt_artifact
+[ 55%] Built target benchmark_parse_frozen_noopt_artifact
+[ 55%] Built target benchmark_parse_frozen_generic_noopt_artifact
+[ 55%] Built target benchmark_parse_frozen_generic_opt_artifact
+[ 55%] Built target benchmark_rexxcps_levelb_noopt_artifact
+[ 55%] Built target benchmark_awfy_nbody_noopt_artifact
+[ 55%] Built target benchmark_rexxcps_levelb_opaque_noopt_artifact
+[ 55%] Built target benchmark_runner_noopt_artifact
+[ 55%] Built target rcc_provider_autoload_noopt_artifact
+[ 55%] Built target rcc_provider_autoload_opt_artifact
+[ 55%] Built target rxpa_callmethod_run_noopt_artifact
+[ 55%] Built target rxpa_callmethod_run_opt_artifact
+[ 55%] Built target rxpa_dynlink_run_opt_artifact
+[ 55%] Built target rxpa_staticlink_run_opt_artifact
+[ 55%] Built target rxpa_callmethod_static_run_noopt_artifact
+[ 55%] Built target rxpa_callmethod_static_run_opt_artifact
+[ 55%] Built target rxpa_signal_funcs_dynamic_opt_artifact
+[ 56%] Built target rxpa_signal_funcs_static_noopt_artifact
+[ 56%] Built target rxpa_signal_funcs_static_opt_artifact
+[ 56%] Built target rxpa_string_funcs_dynamic_noopt_artifact
+[ 56%] Built target rxpa_string_funcs_dynamic_opt_artifact
+[ 56%] Built target rxpa_string_funcs_static_noopt_artifact
+[ 56%] Built target rxpa_string_funcs_static_opt_artifact
+[ 56%] Built target rxpa_int_funcs_dynamic_noopt_artifact
+[ 56%] Built target rxpa_int_funcs_dynamic_opt_artifact
+[ 56%] Built target rxpa_int_funcs_static_noopt_artifact
+[ 56%] Built target rxpa_int_funcs_static_opt_artifact
+[ 56%] Built target rxpa_float_funcs_dynamic_noopt_artifact
+[ 56%] Built target rxpa_float_funcs_dynamic_opt_artifact
+[ 56%] Built target rxpa_float_funcs_static_noopt_artifact
+[ 56%] Built target rxpa_float_funcs_static_opt_artifact
+[ 56%] Built target rxpa_array_push_funcs_dynamic_noopt_artifact
+[ 56%] Built target rxpa_array_push_funcs_dynamic_opt_artifact
+[ 56%] Built target rxpa_array_push_funcs_static_noopt_artifact
+[ 56%] Built target san002_wide_decimal_extract_rxbvm_opt_artifact
+[ 56%] Built target rxpa_array_push_funcs_static_opt_artifact
+[ 56%] Built target rxpa_native_payload_funcs_dynamic_opt_artifact
+[ 56%] Built target rxpa_native_payload_funcs_static_noopt_artifact
+[ 56%] Built target rxpa_native_payload_funcs_static_opt_artifact
+[ 56%] Built target rxpa_native_unwind_funcs_dynamic_opt_artifact
+[ 56%] Built target rxpa_native_unwind_funcs_static_noopt_artifact
+[ 56%] Built target rxpa_native_unwind_funcs_static_opt_artifact
+[ 56%] Built target rxpa_mult_test_opt_artifact
+[ 56%] Built target test_rxqueue_bin
+[ 56%] Built target test_dump_bin
+[ 56%] Built target test_query_bin
+[ 56%] Built target test_sort_bin
+[ 56%] Built target test_sortx_bin
+[ 56%] Built target test_address_bin
+[ 56%] Built target test_address_direct_bin
+[ 56%] Built target test_address_after_signal_block_bin
+[ 56%] Built target test_execio_bin
+[ 56%] Built target test_add_bin
+[ 56%] Built target test_fsay_bin
+[ 56%] Built target test_msay_bin
+[ 56%] Built target test_parse_bin
+[ 56%] Built target test_parse_direct_bin
+[ 56%] Built target san002_wide_decimal_extract_rxtvm_noopt_artifact
+[ 56%] Built target test_parse_compiled_patterns_bin
+[ 56%] Built target test_signal_bin
+[ 56%] Built target test_signal_direct_bin
+[ 57%] Built target test_signal_block_bin
+[ 57%] Built target test_signal_block_levelg_bin
+[ 57%] Built target reference_source_invalid_signal_bin
+[ 57%] Built target test_trace_direct_bin
+[ 57%] Built target test_substr_bin
+[ 57%] Built target test_dummy_bin
+[ 57%] Built target test_reentrancy_bin
+[ 57%] Built target test_program_generation_control_bins
+[ 57%] Built target test_module_initializer_bins
+[ 57%] Built target tlinesz_noopt_artifact
+[ 57%] Built target tlinesz_opt_artifact
+[ 57%] Built target ts_abbrev_noopt_artifact
+[ 57%] Built target ts_abbrev_opt_artifact
+[ 57%] Built target ts_abs_noopt_artifact
+[ 57%] Built target ts_abs_opt_artifact
+[ 57%] Built target ts_typed_numeric_noopt_artifact
+[ 57%] Built target ts_address_protocol_noopt_artifact
+[ 57%] Built target ts_typed_numeric_opt_artifact
+[ 57%] Built target ts_address_protocol_opt_artifact
+[ 57%] Built target ts_address_opt_artifact
+[ 57%] Built target ts_address_crexx_noopt_artifact
+[ 57%] Built target ts_address_crexx_opt_artifact
+[ 57%] Built target ts_address_capture_opt_artifact
+[ 57%] Built target ts_address_capture_noopt_artifact
+[ 57%] Built target ts_address_argv_noopt_artifact
+[ 57%] Built target ts_address_argv_opt_artifact
+[ 57%] Built target ts_address_array_lifecycle_noopt_artifact
+[ 58%] Built target ts_address_array_lifecycle_opt_artifact
+[ 58%] Built target ts_address_spawn_transfer_noopt_artifact
+[ 58%] Built target ts_address_spawn_transfer_opt_artifact
+[ 58%] Built target ts_binary_noopt_artifact
+[ 58%] Built target ts_c2x_noopt_artifact
+[ 58%] Built target ts_binary_opt_artifact
+[ 58%] Built target ts_c2x_opt_artifact
+[ 58%] Built target ts_center_opt_artifact
+[ 58%] Built target ts_center_noopt_artifact
+[ 58%] Built target ts_changestr_noopt_artifact
+[ 58%] Built target ts_compare_noopt_artifact
+[ 58%] Built target ts_changestr_opt_artifact
+[ 58%] Built target ts_compare_opt_artifact
+[ 58%] Built target ts_countstr_noopt_artifact
+[ 58%] Built target ts_countstr_opt_artifact
+[ 58%] Built target ts_d2c_noopt_artifact
+[ 58%] Built target ts_d2x_noopt_artifact
+[ 58%] Built target ts_d2c_opt_artifact
+[ 58%] Built target ts_d2x_opt_artifact
+[ 58%] Built target ts_date_opt_artifact
+[ 58%] Built target ts_date_noopt_artifact
+[ 58%] Built target ts_date2_noopt_artifact
+[ 58%] Built target ts_date_core_noopt_artifact
+[ 58%] Built target ts_date2_opt_artifact
+[ 58%] Built target ts_date_core_opt_artifact
+[ 58%] Built target ts_delstr_noopt_artifact
+[ 58%] Built target ts_delstr_opt_artifact
+[ 58%] Built target ts_delword_noopt_artifact
+[ 58%] Built target ts_fileio_binary_noopt_artifact
+[ 58%] Built target ts_delword_opt_artifact
+[ 58%] Built target ts_fileio_binary_opt_artifact
+[ 58%] Built target ts_fileio_chars_noopt_artifact
+[ 58%] Built target ts_fileio_chars_opt_artifact
+[ 58%] Built target ts_format_noopt_artifact
+[ 58%] Built target san002_wide_decimal_extract_rxtvm_opt_artifact
+[ 58%] Built target ts_format_opt_artifact
+[ 58%] Built target ts_fnv_noopt_artifact
+[ 58%] Built target ts_fnv_opt_artifact
+[ 58%] Built target ts_fsayfmt_noopt_artifact
+[ 58%] Built target ts_insert_noopt_artifact
+[ 58%] Built target ts_fsayfmt_opt_artifact
+[ 58%] Built target ts_insert_opt_artifact
+[ 58%] Built target ts_left_noopt_artifact
+[ 58%] Built target ts_left_opt_artifact
+[ 58%] Built target ts_length_noopt_artifact
+[ 58%] Built target ts_length_opt_artifact
+[ 58%] Built target ts_lower_noopt_artifact
+[ 58%] Built target ts_lower_opt_artifact
+[ 58%] Built target ts_min_max_noopt_artifact
+[ 58%] Built target ts_min_max_opt_artifact
+[ 58%] Built target ts_overlay_noopt_artifact
+[ 58%] Built target ts_pos_noopt_artifact
+[ 58%] Built target ts_overlay_opt_artifact
+[ 58%] Built target ts_pos_opt_artifact
+[ 58%] Built target ts_qpos_noopt_artifact
+[ 58%] Built target ts_qlibrary_noopt_artifact
+[ 58%] Built target ts_qpos_opt_artifact
+[ 58%] Built target ts_qlibrary_opt_artifact
+[ 58%] Built target ts_random_noopt_artifact
+[ 58%] Built target ts_reverse_noopt_artifact
+[ 58%] Built target ts_random_opt_artifact
+[ 58%] Built target ts_regex_noopt_artifact
+[ 58%] Built target ts_reverse_opt_artifact
+[ 58%] Built target ts_right_noopt_artifact
+[ 58%] Built target ts_regex_opt_artifact
+[ 58%] Built target ts_right_opt_artifact
+[ 58%] Built target ts_sign_noopt_artifact
+[ 58%] Built target ts_sign_opt_artifact
+[ 58%] Built target ts_space_noopt_artifact
+[ 58%] Built target ts_strip_noopt_artifact
+[ 58%] Built target ts_space_opt_artifact
+[ 58%] Built target ts_strip_opt_artifact
+[ 58%] Built target ts_symbol_noopt_artifact
+[ 58%] Built target ts_symbol_opt_artifact
+[ 58%] Built target ts_test_noopt_artifact
+[ 58%] Built target ts_test_opt_artifact
+[ 58%] Built target ts_time_noopt_artifact
+[ 58%] Built target ts_time_opt_artifact
+[ 58%] Built target ts_trace_noopt_artifact
+[ 58%] Built target ts_translate_noopt_artifact
+[ 58%] Built target ts_trace_opt_artifact
+[ 58%] Built target ts_trunc_noopt_artifact
+[ 58%] Built target ts_translate_opt_artifact
+[ 58%] Built target ts_trunc_opt_artifact
+[ 58%] Built target ts_upper_noopt_artifact
+[ 58%] Built target ts_upper_lower_noopt_artifact
+[ 58%] Built target ts_upper_opt_artifact
+[ 58%] Built target ts_upper_lower_opt_artifact
+[ 58%] Built target ts_version_noopt_artifact
+[ 58%] Built target ts_sourceinfo_noopt_artifact
+[ 58%] Built target ts_version_opt_artifact
+[ 58%] Built target ts_value_noopt_artifact
+[ 58%] Built target ts_sourceinfo_opt_artifact
+[ 58%] Built target ts_value_opt_artifact
+[ 58%] Built target ts_verify_noopt_artifact
+[ 58%] Built target ts_verify_opt_artifact
+[ 58%] Built target ts_wordlength_noopt_artifact
+[ 58%] Built target ts_wordpos_noopt_artifact
+[ 58%] Built target ts_wordlength_opt_artifact
+[ 58%] Built target ts_wrdix_noopt_artifact
+[ 58%] Built target ts_wordpos_opt_artifact
+[ 58%] Built target ts_wrdix_opt_artifact
+[ 58%] Built target ts_x2b_noopt_artifact
+[ 58%] Built target ts_x2b_opt_artifact
+[ 58%] Built target ts_x2c_noopt_artifact
+[ 58%] Built target ts_x2c_opt_artifact
+[ 58%] Built target ts_x2d_noopt_artifact
+[ 58%] Built target ts_x2d_opt_artifact
+[ 58%] Built target tscopies_noopt_artifact
+[ 58%] Built target tslastpos_noopt_artifact
+[ 58%] Built target tscopies_opt_artifact
+[ 58%] Built target tslastpos_opt_artifact
+[ 58%] Built target tsubstr_noopt_artifact
+[ 58%] Built target tsword_noopt_artifact
+[ 58%] Built target tsubstr_opt_artifact
+[ 58%] Built target tsword_opt_artifact
+[ 58%] Built target ts_words_noopt_artifact
+[ 59%] Built target ts_reradix_noopt_artifact
+[ 59%] Built target ts_words_opt_artifact
+[ 59%] Built target ts_reradix_opt_artifact
+[ 59%] Built target ts_sequence_noopt_artifact
+[ 59%] Built target ts_find_noopt_artifact
+[ 59%] Built target ts_sequence_opt_artifact
+[ 59%] Built target ts_index_noopt_artifact
+[ 59%] Built target ts_find_opt_artifact
+[ 59%] Built target ts_parse_opt_artifact
+[ 59%] Built target ts_index_opt_artifact
+[ 60%] Built target ts_datatype_opt_artifact
+[ 60%] Built target ts_datatype_noopt_artifact
+[ 60%] Built target ts_numeric_opt_artifact
+[ 60%] Built target ts_numeric_noopt_artifact
+[ 60%] Built target ts_splice_noopt_artifact
+[ 60%] Built target ts_splice_opt_artifact
+[ 60%] Built target ts_arraydelete_noopt_artifact
+[ 60%] Built target ts_arraydelete_opt_artifact
+[ 60%] Built target ts_arraydelete_focused_noopt_artifact
+[ 60%] Built target ts_arraydelete_focused_opt_artifact
+[ 60%] Built target ts_arrayappend_noopt_artifact
+[ 60%] Built target ts_arrayappend_opt_artifact
+[ 60%] Built target ts_arraycontains_noopt_artifact
+[ 60%] Built target ts_arraycontains_opt_artifact
+[ 60%] Built target ts_arraycopy_noopt_artifact
+[ 60%] Built target ts_arraycopy_opt_artifact
+[ 60%] Built target ts_arraydrop_opt_artifact
+[ 60%] Built target ts_arraydrop_noopt_artifact
+[ 60%] Built target ts_arrayfind_opt_artifact
+[ 60%] Built target ts_arrayfind_noopt_artifact
+[ 61%] Built target ts_arrayget_opt_artifact
+[ 61%] Built target ts_arrayget_noopt_artifact
+[ 61%] Built target ts_arrayhi_opt_artifact
+[ 61%] Built target ts_arrayhi_noopt_artifact
+[ 61%] Built target ts_arrayindexof_noopt_artifact
+[ 61%] Built target ts_arrayindexof_opt_artifact
+[ 61%] Built target ts_arrayinsert_opt_artifact
+[ 61%] Built target ts_arrayinsert_noopt_artifact
+[ 61%] Built target ts_arrayjoin_noopt_artifact
+[ 61%] Built target ts_arrayjoin_opt_artifact
+[ 61%] Built target ts_arraymove_noopt_artifact
+[ 61%] Built target ts_arraymove_opt_artifact
+[ 61%] Built target ts_arraypop_noopt_artifact
+[ 61%] Built target ts_arraypop_opt_artifact
+[ 61%] Built target ts_arrayprepend_opt_artifact
+[ 61%] Built target ts_arrayprepend_noopt_artifact
+[ 61%] Built target ts_arrayreverse_noopt_artifact
+[ 61%] Built target ts_arrayreverse_opt_artifact
+[ 61%] Built target ts_arrayset_opt_artifact
+[ 61%] Built target ts_arrayset_noopt_artifact
+[ 61%] Built target ts_arrayshift_opt_artifact
+[ 61%] Built target ts_arrayshift_noopt_artifact
+[ 61%] Built target ts_arraysort_noopt_artifact
+[ 61%] Built target ts_arraysort_opt_artifact
+[ 61%] Built target ts_b2d_noopt_artifact
+[ 62%] Built target ts_b2d_opt_artifact
+[ 62%] Built target ts_b2x_opt_artifact
+[ 62%] Built target ts_b2x_noopt_artifact
+[ 62%] Built target ts_c2d_noopt_artifact
+[ 62%] Built target ts_c2d_opt_artifact
+[ 62%] Built target ts_centre_opt_artifact
+[ 62%] Built target ts_centre_noopt_artifact
+[ 62%] Built target ts_d2b_opt_artifact
+[ 62%] Built target ts_d2b_noopt_artifact
+[ 62%] Built target ts_ftrunc_noopt_artifact
+[ 62%] Built target ts_ftrunc_opt_artifact
+[ 62%] Built target ts_getenv_noopt_artifact
+[ 62%] Built target ts_getenv_opt_artifact
+[ 62%] Built target ts_itrunc_opt_artifact
+[ 62%] Built target ts_itrunc_noopt_artifact
+[ 62%] Built target ts_loadmodule_provider_artifact
+[ 62%] Built target ts_max_noopt_artifact
+[ 62%] Built target ts_max_opt_artifact
+[ 62%] Built target ts_min_noopt_artifact
+[ 62%] Built target ts_min_opt_artifact
+[ 63%] Built target ts_objectarrayappend_noopt_artifact
+[ 63%] Built target ts_objectarraydelete_noopt_artifact
+[ 63%] Built target ts_objectarrayappend_opt_artifact
+[ 63%] Built target ts_objectarraydrop_noopt_artifact
+[ 63%] Built target ts_objectarraydelete_opt_artifact
+[ 63%] Built target ts_objectarrayinsert_noopt_artifact
+[ 63%] Built target ts_objectarraydrop_opt_artifact
+[ 63%] Built target ts_objectarrayinsert_opt_artifact
+[ 63%] Built target ts_objectarraymove_noopt_artifact
+[ 63%] Built target ts_objectarraymove_opt_artifact
+[ 63%] Built target ts_objectarrayprepend_noopt_artifact
+[ 63%] Built target ts_qwordlength_noopt_artifact
+[ 63%] Built target ts_objectarrayprepend_opt_artifact
+[ 63%] Built target ts_raise_noopt_artifact
+[ 64%] Built target ts_qwordlength_opt_artifact
+[ 64%] Built target ts_raise_opt_artifact
+[ 64%] Built target ts_rxsystem_noopt_artifact
+[ 64%] Built target ts_rxsystem_exit_noopt_artifact
+[ 64%] Built target ts_rxsystem_opt_artifact
+[ 64%] Built target ts_rxsystem_exit_opt_artifact
+[ 64%] Built target ts_rxqueue_noopt_artifact
+[ 64%] Built target ts_rxqueue_opt_artifact
+[ 64%] Built target ts_signal_noopt_artifact
+[ 64%] Built target ts_signal_opt_artifact
+[ 64%] Built target ts_substro_noopt_artifact
+[ 65%] Built target ts_substro_opt_artifact
+[ 65%] Built target ts_subword_noopt_artifact
+[ 65%] Built target ts_xrange_noopt_artifact
+[ 65%] Built target ts_subword_opt_artifact
+[ 65%] Built target ts_xrange_opt_artifact
+[ 65%] Built target ts_objectarray_noopt_artifact
+[ 65%] Built target ts_objectarray_opt_artifact
+[ 65%] Built target ts_stem_opt_artifact
+[ 65%] Built target ts_rxjson_opt_artifact
+[ 65%] Built target ts_rxjson_document_noopt_artifact
+[ 65%] Built target ts_rxjson_numeric_projection_noopt_artifact
+[ 65%] Built target ts_rxjson_document_opt_artifact
+[ 65%] Built target ts_rxjson_noisy_contract_noopt_artifact
+[ 65%] Built target ts_rxjson_numeric_projection_opt_artifact
+[ 65%] Built target ts_rxjson_noisy_contract_opt_artifact
+[ 66%] Built target ts_rxsocket_opt_artifact
+[ 66%] Built target ts_socket_tls_live_opt_artifact
+[ 66%] Built target ts_socket_tls_live_noopt_artifact
+[ 66%] Built target ts_afterword_opt_artifact
+[ 66%] Built target ts_afterword_noopt_artifact
+[ 66%] Built target ts_arraysort_errors_noopt_artifact
+[ 66%] Built target ts_arraysort_errors_opt_artifact
+[ 66%] Built target ts_stem_errors_noopt_artifact
+[ 66%] Built target ts_stem_errors_opt_artifact
+[ 66%] Built target we_noopt_artifact
+[ 66%] Built target we_opt_artifact
+[ 66%] Built target ts_tinyexpr_opt_artifact
+[ 66%] Built target arrays_test_noopt_artifact
+[ 66%] Built target arrays_test_opt_artifact
+[ 66%] Built target rxfloat_numeric_test_support
+[ 66%] Built target stack_test_opt_artifact
+[ 66%] Built target cipher_test_noopt_artifact
+[ 66%] Built target cipher_test_opt_artifact
+[ 66%] Built target rx_hash_rxbvm_noopt_artifact
+[ 66%] Built target rx_hash_rxtvm_noopt_artifact
+[ 66%] Built target rx_hash_rxbvm_opt_artifact
+[ 66%] Built target rx_hash_rxtvm_opt_artifact
+[ 66%] Built target rxsqlite_typed_rxbvm_noopt_artifact
+[ 66%] Built target rxsqlite_typed_rxbvm_opt_artifact
+[ 66%] Built target rxsqlite_file_rxbvm_noopt_artifact
+[ 66%] Built target rxsqlite_typed_rxtvm_noopt_artifact
+[ 66%] Built target rxsqlite_file_rxbvm_opt_artifact
+[ 66%] Built target rxsqlite_typed_rxtvm_opt_artifact
+[ 66%] Built target rxsqlite_file_rxtvm_noopt_artifact
+[ 66%] Built target rxsqlite_file_rxtvm_opt_artifact
+[ 66%] Built target strings_test_opt_artifact
+[ 66%] Built target getpi_test_noopt_artifact
+[ 66%] Built target getpi_test_opt_artifact
+[ 66%] Built target keyaccess_test_opt_artifact
+[ 66%] Built target llist_test_noopt_artifact
+[ 66%] Built target rxid_rxbvm_noopt_artifact
+[ 66%] Built target llist_test_opt_artifact
+[ 66%] Built target rxid_rxtvm_noopt_artifact
+[ 66%] Built target rxid_rxbvm_opt_artifact
+[ 66%] Built target rxfs_rxbvm_noopt_artifact
+[ 66%] Built target rxid_rxtvm_opt_artifact
+[ 66%] Built target rxfs_rxbvm_opt_artifact
+[ 66%] Built target rxfs_rxtvm_noopt_artifact
+[ 66%] Built target rxconsole_pty_artifact
+[ 66%] Built target rxfs_rxtvm_opt_artifact
+[ 66%] Built target rxconsole_levelb_noopt_artifact
+[ 66%] Built target rxconsole_levelb_opt_artifact
+[ 66%] Built target rxplatform_rxbvm_noopt_artifact
+[ 66%] Built target rxplatform_rxbvm_opt_artifact
+[ 66%] Built target rxplatform_rxtvm_noopt_artifact
+[ 66%] Built target rxplatform_rxtvm_opt_artifact
+[ 66%] Built target tcp_test_opt_artifact
+[ 66%] Built target tcp_test_noopt_artifact
+[ 66%] Built target odbc_mock_prepared_runtime
+[ 66%] Built target rxfnsg_numeric_test_support
+[ 66%] Built target benchmark_awfy_sieve_opt_artifact
+[ 66%] Built target benchmark_awfy_permute_opt_artifact
+[ 66%] Built target benchmark_awfy_mandelbrot_hoisted_control_opt_artifact
+[ 66%] Built target benchmark_awfy_mandelbrot_opt_artifact
+[ 66%] Built target benchmark_awfy_towers_opt_artifact
+[ 66%] Built target benchmark_awfy_bounce_opt_artifact
+[ 66%] Built target benchmark_awfy_list_opt_artifact
+[ 66%] Built target benchmark_awfy_storage_opt_artifact
+[ 67%] Built target benchmark_awfy_queens_opt_artifact
+[ 67%] Built target benchmark_awfy_richards_opt_artifact
+[ 67%] Built target benchmark_awfy_cd_opt_artifact
+[ 67%] Built target benchmark_awfy_deltablue_opt_artifact
+[ 67%] Built target benchmark_awfy_havlak_opt_artifact
+[ 67%] Built target benchmark_awfy_json_opt_artifact
+[ 67%] Built target benchmark_json_parser_opt_artifact
+[ 67%] Built target benchmark_json_parse_opt_artifact
+[ 67%] Built target benchmark_base64_roundtrip_opt_artifact
+[ 67%] Built target benchmark_json_query_opt_artifact
+[ 67%] Built target benchmark_parse_frozen_opt_artifact
+[ 67%] Built target benchmark_base64_roundtrip_v2_opt_artifact
+[ 67%] Built target benchmark_awfy_nbody_opt_artifact
+[ 67%] Built target benchmark_rexxcps_levelb_opt_artifact
+[ 67%] Built target benchmark_runner_opt_artifact
+[ 67%] Built target benchmark_rexxcps_levelb_opaque_opt_artifact
+[ 67%] Built target rxpa_dynlink_run_noopt_artifact
+[ 67%] Built target rxpa_staticlink_run_noopt_artifact
+[ 67%] Built target rxpa_signal_funcs_dynamic_noopt_artifact
+[ 67%] Built target rxpa_native_payload_funcs_dynamic_noopt_artifact
+[ 67%] Built target rxpa_native_unwind_funcs_dynamic_noopt_artifact
+[ 67%] Built target rxpa_mult_test_noopt_artifact
+[ 67%] Built target ts_address_noopt_artifact
+[ 67%] Built target test_reentrancy
+[ 67%] Built target ts_parse_noopt_artifact
+[ 67%] Built target ts_stem_noopt_artifact
+[ 67%] Built target ts_rxjson_noopt_artifact
+[ 67%] Built target ts_rxsocket_noopt_artifact
+[ 67%] Built target stack_test_noopt_artifact
+[ 67%] Built target ts_tinyexpr_noopt_artifact
+[ 67%] Built target strings_test_noopt_artifact
+[ 67%] Built target keyaccess_test_noopt_artifact
+[ 67%] Built target address_cms_fixture_bin
+[ 67%] Built target address_callback_host_bin
+[ 67%] Built target dynamic_load_fixture_bin
+[ 67%] Built target crexxsaa_variables_host_bin
+[ 67%] Built target crexxsaa_arg_length_hosted_bin
+[ 67%] Built target test_crexxsaa_status
+[ 67%] Built target stub_plugin_bin
+[ 67%] Built target debugger_imports
+[ 68%] Built target e2_active_context_bin
+[ 68%] Built target native_kv_address_demo_bin
+[ 68%] Generating decimal_gate1_common18_opt.rxbin
+[ 68%] Generating decimal_gate1_common18_noopt.rxbin
+[ 68%] Generating decimal_gate1_classic9_opt.rxbin
+[ 68%] Generating decimal_gate1_classic9_noopt.rxbin
+[ 68%] Built target decimal_gate1_common18_noopt_artifact
+[ 68%] Built target decimal_gate1_classic9_noopt_artifact
+[ 68%] Generating decimal_gate1_rexxcps_family_noopt.rxbin
+[ 68%] Generating decimal_gate1_rexxcps_family_opt.rxbin
+[ 68%] Built target decimal_gate1_common18_opt_artifact
+[ 68%] Built target decimal_gate1_classic9_opt_artifact
+[ 70%] Built target classlib
+[ 70%] Built target persistent_worker_executor-rxtvml
+[ 70%] Built target persistent_worker_executor-rxbvml
+[ 70%] Built target persistent_worker_executor-rxvml
+[ 70%] Built target ui_catalog
+[ 70%] Staging immutable rxfnsc compiler imports ...
+[ 70%] Built target classlib_native
+[ 70%] Building optimized pprint compiler-exit example
+[ 70%] Built target rxfnsc_imports
+[ 70%] Built target asutf_noopt_artifact
+[ 70%] Built target asutf_opt_artifact
+[ 70%] Built target cri17_attached_provider_noopt_artifact
+[ 70%] Built target cri17_attached_provider_opt_artifact
+[ 70%] Built target cri17_attached_provider_control-rxvml
+[ 70%] Built target cri17_attached_provider_control-rxbvml
+[ 70%] Staging exact imports for the Level B Level G builder ...
+[ 70%] Built target stage_g_builder_imports
+[ 70%] Built target module_initializers-rxvml
+[ 70%] Built target module_initializers-rxbvml
+[ 70%] Built target module_initializers-rxtvml
+[ 70%] Built target program_generation_control-rxvml
+[ 70%] Built target program_generation_control-rxbvml
+[ 71%] Built target program_generation_control-rxtvml
+[ 72%] Built target ts_loadmodule_noopt_artifact
+[ 72%] Built target ts_loadmodule_opt_artifact
+[ 72%] Built target test1_noopt_artifact
+[ 72%] Built target test1_opt_artifact
+[ 72%] Built target rxfloat_rxbvm_noopt_artifact
+[ 72%] Built target rxfloat_rxbvm_opt_artifact
+[ 72%] Built target rxfloat_rxtvm_noopt_artifact
+[ 72%] Built target rxfloat_rxtvm_opt_artifact
+[ 73%] Built target rxsqlite_address_imports
+[ 73%] Built target rxconsole_test_artifacts
+[ 73%] Built target testrexx0_noopt_artifact
+[ 73%] Built target testrexx0_opt_artifact
+[ 73%] Built target testrexx_noopt_artifact
+[ 73%] Built target testrexx_opt_artifact
+[ 73%] Built target testStringArrayList_opt_artifact
+[ 73%] Built target testStringHashMap_opt_artifact
+[ 73%] Built target testStringHashSet_noopt_artifact
+[ 73%] Built target testStringHashSet_opt_artifact
+[ 73%] Built target testStringLinkedList_noopt_artifact
+[ 73%] Built target testStringLinkedList_opt_artifact
+[ 73%] Built target testStringTreeMap_noopt_artifact
+[ 75%] Built target testStringTreeMap_opt_artifact
+[ 75%] Built target testStringTreeSet_noopt_artifact
+[ 75%] Built target testStringTreeSet_opt_artifact
+[ 75%] Built target testStringStack_noopt_artifact
+[ 75%] Built target testStringStack_opt_artifact
+[ 75%] Built target testObjectCollections_opt_artifact
+[ 75%] Built target testStringObjectMaps_noopt_artifact
+[ 75%] Built target testStringObjectMaps_opt_artifact
+[ 75%] Built target testObjectObjectTreeMap_noopt_artifact
+[ 75%] Built target testObjectObjectTreeMap_opt_artifact
+[ 75%] Built target testObjectObjectHashMap_noopt_artifact
+[ 75%] Built target testObjectObjectHashMap_opt_artifact
+[ 75%] Built target testObjectEquality_noopt_artifact
+[ 75%] Built target testObjectEquality_opt_artifact
+[ 75%] Built target testTreeMap_noopt_artifact
+[ 75%] Built target testTreeMap_opt_artifact
+[ 75%] Built target testRexxComparator_noopt_artifact
+[ 75%] Built target testRexxComparator_opt_artifact
+[ 75%] Built target testQfind_noopt_artifact
+[ 75%] Built target testQfind_opt_artifact
+[ 75%] Built target testTokenise_noopt_artifact
+[ 75%] Built target testTokenise_opt_artifact
+[ 75%] Built target testJSON_opt_artifact
+[ 75%] Built target testConcurrency_noopt_artifact
+[ 75%] Built target testConcurrency_opt_artifact
+[ 75%] Built target testDateTime_noopt_artifact
+[ 75%] Built target testDateTime_opt_artifact
+[ 75%] Built target testid_noopt_artifact
+[ 75%] Built target testid_opt_artifact
+[ 75%] Built target docs_concurrency_basic_rxbvm_noopt_artifact
+[ 75%] Built target docs_concurrency_basic_rxbvm_opt_artifact
+[ 75%] Built target docs_concurrency_basic_rxtvm_noopt_artifact
+[ 75%] Built target docs_concurrency_basic_rxtvm_opt_artifact
+[ 75%] Built target docs_concurrency_providers_rxbvm_noopt_artifact
+[ 75%] Built target docs_concurrency_providers_rxbvm_opt_artifact
+[ 75%] Built target docs_concurrency_providers_rxtvm_noopt_artifact
+[ 75%] Built target docs_concurrency_providers_rxtvm_opt_artifact
+[ 75%] Built target docs_concurrency_transferable_objects_rxbvm_noopt_artifact
+[ 75%] Built target docs_concurrency_transferable_objects_rxbvm_opt_artifact
+[ 75%] Built target docs_concurrency_transferable_objects_rxtvm_noopt_artifact
+[ 75%] Built target docs_concurrency_transferable_objects_rxtvm_opt_artifact
+[ 75%] Built target docs_concurrency_taskwork_rxbvm_noopt_artifact
+[ 76%] Built target docs_concurrency_taskwork_rxbvm_opt_artifact
+[ 76%] Built target docs_concurrency_taskwork_rxtvm_noopt_artifact
+[ 76%] Built target docs_concurrency_taskwork_rxtvm_opt_artifact
+[ 76%] Built target testTaskContextEndpoint_rxbvm_noopt_artifact
+[ 76%] Built target testTaskContextEndpoint_rxbvm_opt_artifact
+[ 76%] Built target testTaskContextEndpoint_rxtvm_noopt_artifact
+[ 76%] Built target testTaskContextEndpoint_rxtvm_opt_artifact
+[ 76%] Built target testChannelRequestRelease_rxbvm_noopt_artifact
+[ 76%] Built target testChannelRequestRelease_rxbvm_opt_artifact
+[ 76%] Built target testChannelRequestWait_rxbvm_noopt_artifact
+[ 76%] Built target testChannelRequestWait_rxbvm_opt_artifact
+[ 76%] Bundling standalone pprint compiler-exit example
+[ 76%] Built target testChannelRequestRelease_rxtvm_noopt_artifact
+[ 76%] Built target testChannelRequestRelease_rxtvm_opt_artifact
+[ 76%] Building program with standalone pprint exit example
+[ 76%] Built target testChannelRequestWait_rxtvm_noopt_artifact
+[ 76%] Built target testChannelRequestWait_rxtvm_opt_artifact
+[ 76%] Built target testStringArrayList_noopt_artifact
+[ 76%] Built target testStringHashMap_noopt_artifact
+[ 76%] Built target testObjectCollections_noopt_artifact
+[ 76%] Built target testJSON_noopt_artifact
+[ 76%] Built target test_address_bridge
+[ 76%] Built target test_address_callback_host
+[ 76%] Built target test_dynamic_load
+[ 76%] Built target test_crexxsaa_variables
+[ 76%] Built target test_crexxsaa_arg_lengths
+[ 77%] Built target debugger_gui_imports
+[ 77%] Built target qa-prep-compiler-import-regressions
+[ 78%] Built target test_bridge
+[ 78%] Built target native_kv_address_demo
+[ 78%] Built target test_e2_active_context
+[ 78%] Generating decimal_gate1_common18_opt_rxas_noopt.rxbin
+[ 78%] Built target decimal_gate1_common18_opt_rxas_noopt_artifact
+[ 78%] Generating decimal_gate1_classic9_opt_rxas_noopt.rxbin
+[ 78%] Built target decimal_gate1_classic9_opt_rxas_noopt_artifact
+[ 78%] Built target test_address_parallel_spawn_bin
+[ 81%] Built target rxfnsc
+[ 81%] Built target ui_contract
+[ 81%] Built target rexxscript_imports
+[ 81%] Built target basic_noopt_artifact
+[ 81%] Built target basic_opt_artifact
+[ 81%] Building Level G and Unicode with the Level B builder ...
+[ 81%] Built target decimal_gate1_rexxcps_family_noopt_artifact
+[ 81%] Built target test_trace_exit_bin
+[ 81%] Built target test_trace_negated_string_bin
+[ 81%] Built target test_trace_results_bin
+[ 81%] Built target test_trace_llm_bin
+[ 81%] Built target test_trace_namespace_commands_bin
+[ 82%] Built target test_trace_stderr_bin
+[ 82%] Built target test_trace_file_bin
+[ 82%] Built target test_trace_normal_quiet_bin
+[ 82%] Built target test_trace_normal_command_bin
+[ 82%] Built target test_trace_env_bin
+[ 82%] Built target test_trace_event_batch_bin
+[ 82%] Built target test_trace_env_invalid_bin
+[ 83%] Built target test_trace_env_ignored_bin
+[ 83%] Built target test_trace_source_jump_bin
+[ 83%] Built target crexxbrexx_noopt_artifact
+[ 83%] Built target crexxbrexx_opt_artifact
+[ 83%] Built target rxsqlite_address
+[ 83%] Built target testKeyDB_noopt_artifact
+[ 84%] Built target testKeyDB_opt_artifact
+[ 84%] Built target testRexxValue_opt_artifact
+[ 84%] Built target testRexxActivationArguments_noopt_artifact
+[ 84%] Built target testRexxActivationArguments_opt_artifact
+[ 85%] Built target testRexxClassicConditionEvent_noopt_artifact
+[ 85%] Built target testRexxClassicConditionEvent_opt_artifact
+[ 85%] Built target testRexxRuntimePools_opt_artifact
+[ 85%] Built target testRexxDoState_noopt_artifact
+[ 85%] Built target testRexxDoState_opt_artifact
+[ 85%] Built target testRexxClassicBifs_opt_artifact
+[ 85%] Built target testRexxClassicBifAbbrev_noopt_artifact
+[ 85%] Built target testRexxClassicBifAbbrev_opt_artifact
+[ 85%] Built target testRexxClassicBifAbs_noopt_artifact
+[ 85%] Built target testRexxClassicBifAbs_opt_artifact
+[ 85%] Built target testRexxClassicBifAddress_noopt_artifact
+[ 85%] Built target testRexxClassicBifAddress_opt_artifact
+[ 85%] Built target testRexxClassicBifArg_noopt_artifact
+[ 85%] Built target testRexxClassicBifArg_opt_artifact
+[ 85%] Built target testRexxClassicBifB2x_noopt_artifact
+[ 85%] Built target testRexxClassicBifB2x_opt_artifact
+[ 85%] Built target testRexxClassicBifBitwise_noopt_artifact
+[ 85%] Built target testRexxClassicBifBitwise_opt_artifact
+[ 86%] Built target testRexxClassicBifC2d_noopt_artifact
+[ 86%] Built target testRexxClassicBifC2d_opt_artifact
+[ 86%] Built target testRexxClassicBifC2x_noopt_artifact
+[ 86%] Built target testRexxClassicBifC2x_opt_artifact
+[ 86%] Built target testRexxClassicBifCenter_noopt_artifact
+[ 86%] Built target testRexxClassicBifCenter_opt_artifact
+[ 86%] Built target testRexxClassicBifCentre_noopt_artifact
+[ 86%] Built target testRexxClassicBifCentre_opt_artifact
+[ 86%] Built target testRexxClassicBifChangestr_noopt_artifact
+[ 86%] Built target testRexxClassicBifChangestr_opt_artifact
+[ 86%] Built target testRexxClassicBifCompare_noopt_artifact
+[ 86%] Built target testRexxClassicBifCompare_opt_artifact
+[ 86%] Built target testRexxClassicBifCondition_noopt_artifact
+[ 86%] Built target testRexxClassicBifCondition_opt_artifact
+[ 86%] Built target example_pprint_exit_artifacts
+[ 86%] Built target decimal_gate1_rexxcps_family_opt_artifact
+[ 86%] Built target testRexxClassicBifCopies_noopt_artifact
+[ 86%] Built target testRexxClassicBifCopies_opt_artifact
+[ 86%] Built target testRexxClassicBifCountstr_noopt_artifact
+[ 86%] Built target testRexxClassicBifCountstr_opt_artifact
+[ 86%] Built target testRexxClassicBifD2x_noopt_artifact
+[ 86%] Built target testRexxClassicBifD2c_noopt_artifact
+[ 86%] Built target testRexxClassicBifD2x_opt_artifact
+[ 86%] Built target testRexxClassicBifD2c_opt_artifact
+[ 86%] Built target testRexxClassicBifDate_opt_artifact
+[ 86%] Built target testRexxClassicBifDate_noopt_artifact
+[ 86%] Built target testRexxClassicBifDatatype_noopt_artifact
+[ 86%] Built target testRexxClassicBifDatatype_opt_artifact
+[ 87%] Built target testRexxClassicBifDelstr_noopt_artifact
+[ 87%] Built target testRexxClassicBifDelstr_opt_artifact
+[ 87%] Built target testRexxClassicBifDelword_noopt_artifact
+[ 87%] Built target testRexxClassicBifDelword_opt_artifact
+[ 87%] Built target testRexxClassicBifErrortext_noopt_artifact
+[ 87%] Built target testRexxClassicBifErrortext_opt_artifact
+[ 87%] Built target testRexxClassicBifFormat_noopt_artifact
+[ 87%] Built target testRexxClassicBifFormat_opt_artifact
+[ 87%] Built target testRexxClassicBifInsert_opt_artifact
+[ 87%] Built target testRexxClassicBifInsert_noopt_artifact
+[ 87%] Built target testRexxClassicBifLastpos_noopt_artifact
+[ 87%] Built target testRexxClassicBifLastpos_opt_artifact
+[ 87%] Built target testRexxClassicBifLeft_noopt_artifact
+[ 87%] Built target testRexxClassicBifLeft_opt_artifact
+[ 87%] Built target testRexxClassicBifLength_opt_artifact
+[ 87%] Built target testRexxClassicBifLength_noopt_artifact
+[ 87%] Built target testRexxClassicBifMax_noopt_artifact
+[ 87%] Built target testRexxClassicBifMin_noopt_artifact
+[ 87%] Built target testRexxClassicBifMin_opt_artifact
+[ 87%] Built target testRexxClassicBifMax_opt_artifact
+[ 87%] Built target testRexxClassicBifNumeric_opt_artifact
+[ 87%] Built target testRexxClassicBifOverlay_noopt_artifact
+[ 87%] Built target testRexxClassicBifNumeric_noopt_artifact
+[ 87%] Built target testRexxClassicBifPos_noopt_artifact
+[ 87%] Built target testRexxClassicBifPos_opt_artifact
+[ 87%] Built target testRexxClassicBifOverlay_opt_artifact
+[ 87%] Built target testRexxClassicBifQueued_noopt_artifact
+[ 87%] Built target testRexxClassicBifRandom_noopt_artifact
+[ 88%] Built target testRexxClassicBifQueued_opt_artifact
+[ 88%] Built target testRexxClassicBifReverse_opt_artifact
+[ 88%] Built target testRexxClassicBifRandom_opt_artifact
+[ 88%] Built target testRexxClassicBifReverse_noopt_artifact
+[ 88%] Built target testRexxClassicBifRight_opt_artifact
+[ 88%] Built target testRexxClassicBifSign_noopt_artifact
+[ 88%] Built target testRexxClassicBifRight_noopt_artifact
+[ 88%] Built target testRexxClassicBifSign_opt_artifact
+[ 88%] Built target testRexxClassicBifSourceline_noopt_artifact
+[ 88%] Built target testRexxClassicBifSourceline_opt_artifact
+[ 88%] Built target testRexxClassicBifSpace_opt_artifact
+[ 88%] Built target testRexxClassicBifSpace_noopt_artifact
+[ 88%] Built target testRexxClassicBifStrip_noopt_artifact
+[ 88%] Built target testRexxValue_noopt_artifact
+[ 88%] Built target testRexxRuntimePools_noopt_artifact
+[ 88%] Built target testOS_noopt_artifact
+[ 88%] Built target levelc_say_host_output_bin
+[ 88%] Built target testRexxClassicBifs_noopt_artifact
+[ 88%] Built target rxdb
+[ 88%] Built target levelc_address_host_callback_bin
+[ 88%] Built target levelc_arg_host_entry_bin
+[ 88%] Built target levelc_call_host_entry_bin
+[ 88%] Built target levelc_return_status7_bin
+[ 88%] Built target performance_decimal_gate1
+[ 88%] Built target levelc_exit_status7_bin
+[ 88%] Built target qa-prep-stress
+[ 88%] Built target testRexxClassicBifStrip_opt_artifact
+[ 88%] Building the rxsqlite ADDRESS consumer demo ...
+[ 88%] Built target testRexxClassicBifSubstr_noopt_artifact
+[ 88%] Built target testRexxClassicBifSubstr_opt_artifact
+[ 88%] Built target testRexxClassicBifSubword_noopt_artifact
+[ 88%] Built target testRexxClassicBifSubword_opt_artifact
+[ 88%] Built target testRexxClassicBifSymbol_noopt_artifact
+[ 88%] Built target testRexxClassicBifSymbol_opt_artifact
+[ 88%] Built target testRexxClassicBifTime_opt_artifact
+[ 88%] Built target testRexxClassicBifTime_noopt_artifact
+[ 88%] Built target testRexxClassicBifTrace_opt_artifact
+[ 88%] Built target testRexxClassicBifTrace_noopt_artifact
+[ 88%] Built target testRexxClassicBifTranslate_opt_artifact
+[ 88%] Built target testRexxClassicBifTranslate_noopt_artifact
+[ 89%] Built target testRexxClassicBifTrunc_opt_artifact
+[ 89%] Built target testRexxClassicBifTrunc_noopt_artifact
+[ 89%] Built target testRexxClassicBifValue_opt_artifact
+[ 89%] Built target testRexxClassicBifValue_noopt_artifact
+[ 89%] Built target testRexxClassicBifVerify_noopt_artifact
+[ 89%] Built target testRexxClassicBifVerify_opt_artifact
+[ 89%] Built target testRexxClassicBifWord_noopt_artifact
+[ 89%] Built target testRexxClassicBifWord_opt_artifact
+[ 89%] Built target testRexxClassicBifWordindex_opt_artifact
+[ 89%] Built target testRexxClassicBifWordindex_noopt_artifact
+[ 89%] Built target testRexxClassicBifWordlength_noopt_artifact
+[ 89%] Built target testRexxClassicBifWordlength_opt_artifact
+[ 89%] Built target testRexxClassicBifWordpos_opt_artifact
+[ 89%] Built target testRexxClassicBifWordpos_noopt_artifact
+[ 89%] Built target testRexxClassicBifWords_noopt_artifact
+[ 89%] Built target testRexxClassicBifWords_opt_artifact
+[ 89%] Built target testRexxClassicBifX2b_opt_artifact
+[ 89%] Built target testRexxClassicBifX2b_noopt_artifact
+[ 89%] Built target testRexxClassicBifX2c_opt_artifact
+[ 89%] Built target testRexxClassicBifX2c_noopt_artifact
+[ 89%] Built target testRexxClassicBifX2d_opt_artifact
+[ 89%] Built target testRexxClassicBifX2d_noopt_artifact
+[ 89%] Built target testRexxClassicBifXrange_opt_artifact
+[ 89%] Built target testRexxClassicBifXrange_noopt_artifact
+[ 89%] Built target ui_dialogs
+[ 89%] Built target ui_terminal_view
+[ 89%] Built target ui_local_resources
+[ 89%] Built target ui_driver_probe
+[ 89%] Built target ui_contract_v0_noopt_artifact
+[ 90%] Built target ui_contract_v0_opt_artifact
+[ 90%] Built target rexxscript
+[ 90%] Built target ui_tui
+[ 90%] Built target levelbfunc_noopt_artifact
+[ 90%] Built target levelbfunc_opt_artifact
+[ 90%] Built target test_rexxscript_bin
+[ 90%] Built target crexx_driver_imports
+[ 90%] Built target rxsqlite_attached_noopt_artifact
+[ 90%] Built target test_rexxscript_direct_bin
+[ 90%] Built target rxsqlite_attached_opt_artifact
+[ 90%] Built target rxsqlite_address_noopt_artifact
+[ 90%] Built target rxsqlite_address_opt_artifact
+[ 90%] Built target testOS_opt_artifact
+[ 90%] Built target testRexxScriptRuntime_noopt_artifact
+[ 90%] Built target rexxscript_runner_imports
+[ 90%] Built target testRexxScriptCompat_noopt_artifact
+[ 90%] Built target test_levelc_say_host_output
+[ 90%] Built target test_levelc_address_host_callback
+[ 90%] Built target test_levelc_arg_host_entry
+[ 90%] Built target test_levelc_return_host_entry
+[ 90%] Built target test_levelc_call_host_entry
+[ 90%] Built target ui_ansi
+[ 91%] Built target test_levelc_exit_host_entry
+[ 91%] Built target ui_standard_dialogs_noopt_artifact
+[ 91%] Built target ui_standard_dialogs_opt_artifact
+[ 91%] Built target ui_tui_contract_noopt_artifact
+[ 91%] Built target ui_tui_contract_opt_artifact
+[ 91%] Built target testRexxScriptCompat_opt_artifact
+[ 91%] Built target testRexxScriptRuntime_opt_artifact
+[ 91%] Built target rxpp_compiler_imports
+[ 91%] Built target crexx_build_worker
+[ 91%] Built target ui_ansi_edges_noopt_artifact
+[ 91%] Built target qa-prep-compiler-exits
+[ 91%] Built target ui_ansi_edges_opt_artifact
+[ 91%] Built target rxpp
+[ 91%] Built target treemap_test_noopt_artifact
+[ 91%] Generating source-mapped Text Inspector application with RXPP
+[ 91%] Built target treemap_test_opt_artifact
+[ 91%] Built target recv390_test_noopt_artifact
+[ 91%] Built target recv390_test_opt_artifact
+[ 91%] Built target map_test_opt_artifact
+[ 91%] Built target rxpp_sh
+[ 91%] Built target map_test_noopt_artifact
+[ 91%] Built target stage-c-rexx-tools
+CRX0010I [12:25:59.246253] Pre-Compile started RXPP build 2026-10-08 11:23:58 UTC
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0100I [12:25:59.256307] Pre-Compile pass one
+CRX0110I [12:25:59.256325] Syslib Path /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [12:25:59.256339] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [12:25:59.256350] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [12:25:59.256362] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [12:25:59.256373] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/
+CRX0120I [12:25:59.267842] Maclib loaded:      68 records
+CRX0130I [12:25:59.267864] Macros extracted:   35
+CRX0120I [12:25:59.278414] System Maclib loaded: 50 records
+CRX0130I [12:25:59.278438] Macros extracted:     27
+CRX0140I [12:25:59.282576] Rexx Source loaded: 210 records
+CRX0110I [12:25:59.290812] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [12:25:59.319663] Macros extracted:   0
+CRX0160I [12:25:59.328264] Macros arranged:    62
+CRX0200I [12:25:59.336898] Pre-Compile pass two
+CRX0171I Script macro ##ui_command selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/ui_command.rxpm
+CRX0171I Script macro ##ui_node selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/ui_node.rxpm
+CRX0300I [12:25:59.826521] Pre-Compiled REXX generated 
+CRX0310I [12:25:59.826606] Pre-Compiled REXX saved
+CRX0510I [12:25:59.835459] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector.inc
+CRX0500I [12:25:59.835548] Pre-Compile completed, 8 macro calls expanded, total source lines 600
+CRX0101I [12:25:59.835580] Elapsed Time 0.589778 seconds, 589.778 milliseconds
+[ 91%] Compiling and assembling Text Inspector application
+[ 91%] Built target sqlite_address_demo_bin
+SKIP: G member integer
+SKIP: G member decimal
+SKIP: G member packednumeric
+SKIP: G member httpcodec
+SKIP: G member httpcore
+SKIP: G member http
+SKIP: G member httpserver
+SKIP: G member llm
+[ 91%] Built target text_inspector_module_artifact
+[ 91%] Generating Text Inspector TUI launcher with RXPP
+[ 92%] Generating text_inspector_core_noopt.rxbin
+[ 92%] Generating generated/text_inspector_ansi.crexx
+CRX0010I [12:26:02.085799] Pre-Compile started RXPP build 2026-10-08 11:23:58 UTC
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector_tui.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector_tui.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0100I [12:26:02.091656] Pre-Compile pass one
+CRX0110I [12:26:02.091676] Syslib Path /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [12:26:02.091688] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [12:26:02.091698] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [12:26:02.091708] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [12:26:02.091718] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/
+CRX0010I [12:26:02.092410] Pre-Compile started RXPP build 2026-10-08 11:23:58 UTC
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector_ansi.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector_ansi.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0100I [12:26:02.098266] Pre-Compile pass one
+CRX0110I [12:26:02.098283] Syslib Path /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [12:26:02.098294] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [12:26:02.098304] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [12:26:02.098314] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [12:26:02.098323] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/
+CRX0120I [12:26:02.102103] Maclib loaded:      68 records
+CRX0130I [12:26:02.102133] Macros extracted:   35
+CRX0120I [12:26:02.108608] Maclib loaded:      68 records
+CRX0130I [12:26:02.108627] Macros extracted:   35
+CRX0120I [12:26:02.111652] System Maclib loaded: 50 records
+CRX0130I [12:26:02.111670] Macros extracted:     27
+CRX0140I [12:26:02.114494] Rexx Source loaded: 7 records
+CRX0110I [12:26:02.115916] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [12:26:02.117464] Macros extracted:   0
+CRX0120I [12:26:02.118449] System Maclib loaded: 50 records
+CRX0130I [12:26:02.118476] Macros extracted:     27
+CRX0140I [12:26:02.119037] Rexx Source loaded: 7 records
+CRX0110I [12:26:02.120432] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [12:26:02.122114] Macros extracted:   0
+CRX0160I [12:26:02.125521] Macros arranged:    62
+CRX0200I [12:26:02.126688] Pre-Compile pass two
+CRX0160I [12:26:02.130130] Macros arranged:    62
+CRX0171I Script macro ##ui_launcher selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0200I [12:26:02.139077] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [12:26:02.175430] Pre-Compiled REXX generated 
+CRX0310I [12:26:02.175518] Pre-Compiled REXX saved
+CRX0510I [12:26:02.176671] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector_tui.inc
+CRX0500I [12:26:02.176746] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [12:26:02.176775] Elapsed Time 0.091474 seconds, 91.474 milliseconds
+CRX0300I [12:26:02.186197] Pre-Compiled REXX generated 
+CRX0310I [12:26:02.186284] Pre-Compiled REXX saved
+CRX0510I [12:26:02.187455] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector_ansi.inc
+CRX0500I [12:26:02.187534] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [12:26:02.187565] Elapsed Time 0.095608 seconds, 95.608 milliseconds
+[ 92%] Building Text Inspector TUI launcher
+[ 92%] Generating text_inspector_ansi.rxbin
+SKIP: G member level_l_gennorm2
+SKIP: G member unicode_normprops
+SKIP: G member encoding_table
+SKIP: G member casefold_table
+SKIP: G member case_mapping_table
+SKIP: G member grapheme_table
+[ 92%] Built target text_inspector_core_noopt_artifact
+[ 92%] Generating text_inspector_core_opt.rxbin
+[ 92%] Built target text_inspector_tui_artifact
+[ 92%] Built target text_inspector_ansi_artifact
+[ 92%] Generating text_inspector_test_host.rxbin
+SKIP: G member unicode_gennorm2
+SKIP: G member generate_encoding
+SKIP: G member generate_casefold
+SKIP: G member generate_case_mapping
+SKIP: G member generate_grapheme
+SKIP: G member unicode_data
+SKIP: G member unicode_d
+[ 92%] Built target text_inspector_test_host
+[ 92%] Generating text_inspector_tui_noopt.rxbin
+[ 92%] Generating text_inspector_tui_opt.rxbin
+SKIP: G member generate_normalization
+[ 92%] Built target text_inspector_core_opt_artifact
+SKIP: link encoding generator
+SKIP: link case-fold generator
+SKIP: link case-mapping generator
+SKIP: link grapheme generator
+SKIP: link normalization generator
+SKIP: generate case-fold source
+SKIP: generate case-mapping source
+SKIP: generate encoding source
+SKIP: generate grapheme source
+[ 92%] Built target text_inspector_tui_noopt_artifact
+[ 92%] Built target text_inspector_tui_opt_artifact
+[ 92%] Built target example_text_inspector_artifacts
+[ 92%] Built target qa-prep-examples
+[ 92%] Built target crexx-examples
+SKIP: generate normalization source
+SKIP: G member unicode_casefold
+SKIP: G member unicode_case_mapping
+SKIP: G member unicode_codec
+SKIP: G member unicode_grapheme
+SKIP: G member unicode_normalization
+SKIP: G member unicode
+SKIP: Level G link
+SKIP: Level G publish
+[ 92%] Built target rxfnsg
+[ 92%] Built target rxstats_rxbvm_opt_artifact
+[ 92%] Built target rxpa_objects_artifacts
+[ 92%] Built target rxstats_rxbvm_noopt_artifact
+[ 92%] Built target packed_library
+[ 92%] Built target rxvector_rxbvm_noopt_artifact
+[ 92%] Built target rxstats_rxtvm_noopt_artifact
+[ 92%] Built target rxvector_rxbvm_opt_artifact
+[ 92%] Built target rxstats_rxtvm_opt_artifact
+[ 93%] Built target rxvector_index_rxbvm_opt_artifact
+[ 93%] Built target rxvector_rxtvm_noopt_artifact
+[ 93%] Built target rxvector_rxtvm_opt_artifact
+[ 93%] Built target rxvector_index_rxbvm_noopt_artifact
+[ 93%] Built target rxvector_index_rxtvm_opt_artifact
+[ 93%] Built target rxllama_common_prerequisites
+[ 93%] Built target ts_math_numeric_rxbvm_noopt_artifact
+[ 93%] Built target rxvector_index_rxtvm_noopt_artifact
+[ 93%] Built target ts_math_numeric_rxbvm_opt_artifact
+[ 93%] Built target ts_packed_numeric_rxbvm_noopt_artifact
+[ 93%] Built target ts_math_numeric_rxtvm_opt_artifact
+[ 93%] Built target ts_math_numeric_rxtvm_noopt_artifact
+[ 93%] Built target rxunicode_casefold_source
+[ 93%] Built target ts_packed_numeric_rxbvm_opt_artifact
+[ 93%] Built target ts_packed_numeric_rxtvm_noopt_artifact
+[ 93%] Built target ts_packed_numeric_rxtvm_opt_artifact
+[ 93%] Built target ts_unicode_grapheme_rxbvm_noopt_artifact
+[ 93%] Built target ts_unicode_grapheme_rxbvm_opt_artifact
+[ 93%] Built target rxunicode_case_mapping_source
+[ 93%] Built target ts_unicode_grapheme_rxtvm_noopt_artifact
+[ 93%] Built target ts_unicode_codec_rxtvm_noopt_artifact
+[ 93%] Built target ts_unicode_grapheme_rxtvm_opt_artifact
+[ 94%] Built target ts_unicode_codec_rxbvm_noopt_artifact
+[ 94%] Built target ts_unicode_codec_rxbvm_opt_artifact
+[ 94%] Built target ts_unicode_normalization_rxbvm_opt_artifact
+[ 94%] Built target ts_unicode_normalization_rxtvm_noopt_artifact
+[ 94%] Built target ts_unicode_codec_rxtvm_opt_artifact
+[ 94%] Built target ts_unicode_normalization_rxbvm_noopt_artifact
+[ 94%] Built target ts_http_service_contract_noopt_artifact
+[ 94%] Built target ts_unicode_normalization_rxtvm_opt_artifact
+[ 94%] Built target ts_http_service_contract_opt_artifact
+[ 94%] Built target ts_llm_ollama_noopt_artifact
+[ 94%] Built target ts_llm_ollama_opt_artifact
+[ 94%] Built target ts_llm_providers_opt_artifact
+[ 94%] Built target ts_llm_common_noopt_artifact
+[ 94%] Built target ts_llm_common_opt_artifact
+[ 94%] Built target ts_http_server_rxbvm_noopt_artifact
+[ 94%] Built target ts_http_server_rxbvm_opt_artifact
+[ 94%] Built target ts_http_server_rxtvm_noopt_artifact
+[ 94%] Built target ts_http_server_rxtvm_opt_artifact
+[ 94%] Built target ts_http_server_failures_rxbvm_noopt_artifact
+[ 94%] Built target ts_http_server_failures_rxbvm_opt_artifact
+[ 94%] Built target ts_http_server_failures_rxtvm_noopt_artifact
+[ 94%] Built target ts_http_server_failures_rxtvm_opt_artifact
+[ 94%] Built target ts_http_pooled_rxbvm_noopt_artifact
+[ 94%] Built target ts_http_pooled_rxbvm_opt_artifact
+[ 94%] Built target ts_http_pooled_rxtvm_noopt_artifact
+[ 94%] Built target ts_http_pooled_rxtvm_opt_artifact
+[ 94%] Built target ts_http_streaming_rxtvm_noopt_artifact
+[ 94%] Built target ts_http_streaming_rxbvm_noopt_artifact
+[ 95%] Built target ts_http_streaming_rxbvm_opt_artifact
+[ 95%] Built target ts_http_streaming_rxtvm_opt_artifact
+[ 95%] Built target ts_http_crexx_rag_rxbvm_opt_artifact
+[ 95%] Built target ts_http_crexx_rag_rxbvm_noopt_artifact
+[ 95%] Built target ts_http_crexx_rag_rxtvm_noopt_artifact
+[ 95%] Built target ts_http_crexx_rag_rxtvm_opt_artifact
+[ 95%] Built target ts_http_tls_live_rxbvm_opt_artifact
+[ 95%] Built target ts_http_tls_live_rxbvm_noopt_artifact
+[ 95%] Built target ts_http_tls_live_rxtvm_noopt_artifact
+[ 95%] Built target ts_http_tls_live_rxtvm_opt_artifact
+[ 95%] Built target ts_http_policy_rxbvm_noopt_artifact
+[ 95%] Built target ts_http_policy_rxbvm_opt_artifact
+[ 95%] Built target ts_http_policy_rxtvm_noopt_artifact
+[ 95%] Built target ts_http_policy_rxtvm_opt_artifact
+[ 96%] Built target ts_http_codec_rxbvm_noopt_artifact
+[ 96%] Built target ts_http_codec_rxbvm_opt_artifact
+[ 96%] Built target ts_http_codec_rxtvm_opt_artifact
+[ 96%] Built target ts_http_codec_rxtvm_noopt_artifact
+[ 96%] Built target ts_llm_http_fixture_noopt
+[ 96%] Built target ts_llm_http_fixture_opt
+[ 96%] Built target ts_math_integer_contract_rxbvm_opt_artifact
+[ 96%] Built target ts_math_integer_contract_rxbvm_noopt_artifact
+[ 96%] Built target ts_math_integer_contract_rxtvm_noopt_artifact
+[ 96%] Built target ts_math_integer_contract_rxtvm_opt_artifact
+[ 96%] Built target ts_math_decimal_contract_rxbvm_opt_artifact
+[ 96%] Built target ts_math_decimal_contract_rxbvm_noopt_artifact
+[ 96%] Built target ts_math_decimal_contract_rxtvm_opt_artifact
+[ 96%] Built target ts_math_decimal_contract_rxtvm_noopt_artifact
+[ 96%] Built target ts_llm_providers_noopt_artifact
+[ 96%] Built target stage-g-library
+[ 96%] Built target address_llm_fixture_bin
+[ 96%] Compiling gemini_generate.crexx ...
+[ 96%] Compiling openai_generate.crexx ...
+[ 96%] Compiling ollama_generate.crexx ...
+[ 96%] Compiling anthropic_generate.crexx ...
+[ 96%] Built target llm_openai_generate_demo_bin
+[ 96%] Built target llm_anthropic_generate_demo_bin
+[ 96%] Built target llm_gemini_generate_demo_bin
+[ 96%] Built target llm_ollama_generate_demo_bin
+[ 96%] Compiling llm_address_environment.crexx ...
+[ 96%] Built target ts_unicode_casefold_rxbvm_noopt_artifact
+[ 96%] Built target rxvme
+[ 97%] Built target rxbvme
+[ 97%] Built target ts_unicode_casefold_rxbvm_opt_artifact
+[ 97%] Built target ts_unicode_casefold_rxtvm_opt_artifact
+[ 97%] Built target ts_unicode_casefold_rxtvm_noopt_artifact
+[ 97%] Compiling llm_address_demo.crexx ...
+[ 97%] Built target ts_unicode_case_mapping_rxbvm_noopt_artifact
+[ 97%] Built target ts_unicode_case_mapping_rxbvm_opt_artifact
+[ 97%] Built target ts_unicode_case_mapping_rxtvm_noopt_artifact
+[ 97%] Built target ts_unicode_case_mapping_rxtvm_opt_artifact
+[ 98%] Built target rexxscript_cli
+[ 98%] Built target llm_generate_demos_bin
+[ 98%] Built target crexx
+[ 98%] Built target ts_linein_stdin_artifact
+[ 98%] Built target stage-product
+[ 98%] Built target qa-prep-smoke
+[ 98%] Built target cri07_rxpa_sdk_consumer_prereqs
+[100%] Built target dynamic_interface_fixture_bin
+[100%] Built target qa-prep-comprehensive
+Warning in llm_address_demo.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file
+[100%] Built target llm_address_demos_bin
+[100%] Built target crexx-demos
+[100%] Built target stage-optional
+[100%] Built target rxllama_release_smoke_prerequisites
+[100%] Built target qa-prep-qualification
+[100%] Built target qa-prep

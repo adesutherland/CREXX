@@ -1,0 +1,24 @@
+Change Dir: '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build'
+
+Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile incremental_static_consumer
+/opt/homebrew/bin/cmake -S/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source -B/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build --check-build-system CMakeFiles/Makefile.cmake 0
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/Makefile2 incremental_static_consumer
+/opt/homebrew/bin/cmake -S/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source -B/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build --check-build-system CMakeFiles/Makefile.cmake 0
+/opt/homebrew/bin/cmake -E cmake_progress_start /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/CMakeFiles 4
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/Makefile2 CMakeFiles/incremental_static_consumer.dir/all
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/incremental_static.dir/build.make CMakeFiles/incremental_static.dir/depend
+cd /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build && /opt/homebrew/bin/cmake -E cmake_depends "Unix Makefiles" /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/CMakeFiles/incremental_static.dir/DependInfo.cmake "--color=" incremental_static
+Dependencies file "CMakeFiles/incremental_static.dir/incremental-library.c.o.d" is newer than depends file "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/CMakeFiles/incremental_static.dir/compiler_depend.internal".
+Consolidate compiler generated dependencies of target incremental_static
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/incremental_static.dir/build.make CMakeFiles/incremental_static.dir/build
+make[3]: Nothing to be done for `CMakeFiles/incremental_static.dir/build'.
+[ 50%] Built target incremental_static
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/incremental_static_consumer.dir/build.make CMakeFiles/incremental_static_consumer.dir/depend
+cd /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build && /opt/homebrew/bin/cmake -E cmake_depends "Unix Makefiles" /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-source /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/CMakeFiles/incremental_static_consumer.dir/DependInfo.cmake "--color=" incremental_static_consumer
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/incremental_static_consumer.dir/build.make CMakeFiles/incremental_static_consumer.dir/build
+[ 75%] Linking C executable incremental_static_consumer
+/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/incremental_static_consumer.dir/link.txt --verbose=1
+/usr/bin/cc  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names "CMakeFiles/incremental_static_consumer.dir/incremental-main.c.o" -o incremental_static_consumer  -Wl,-force_load,"/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/libincremental_static.a"
+[100%] Built target incremental_static_consumer
+/opt/homebrew/bin/cmake -E cmake_progress_start /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/tests/rxpa/rxpa_external_sdk_consumer_ws/consumer-build/CMakeFiles 0
+

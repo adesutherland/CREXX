@@ -1,0 +1,12 @@
+[0/2] Re-checking globbed directories...
+ninja: no work to do.
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 690: structured_exit_debug_run
+1/1 Test #690: structured_exit_debug_run ........   Passed    3.93 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+comprehensive    =   3.93 sec*proc (1 test)
+
+Total Test time (real) =   4.00 sec

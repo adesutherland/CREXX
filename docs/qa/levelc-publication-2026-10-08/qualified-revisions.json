@@ -1,0 +1,18 @@
+{
+  "qualified_code_revision": "17d8627788a82d8e3d8f304275bc2171ff7c3688",
+  "repairs": [
+    {
+      "revision": "e9c9d9cf04c4dc1cbcd852bf0def5c348f643382",
+      "subject": "Order TRACE consumer builds after the Classic runtime"
+    },
+    {
+      "revision": "f69d564bf43190e0dfc5daa558d3c7bd04e6da0a",
+      "subject": "Isolate the structured exit debug fixture imports"
+    },
+    {
+      "revision": "17d8627788a82d8e3d8f304275bc2171ff7c3688",
+      "subject": "Respect coarse timestamps in SDK relink regression"
+    }
+  ],
+  "final_input_sha256": "bdd088acf09b0b1102634adadc428b92bbc804fa418ecfbba39b8fec1d089bad"
+}

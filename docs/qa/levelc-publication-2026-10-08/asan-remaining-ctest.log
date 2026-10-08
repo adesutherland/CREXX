@@ -1,0 +1,399 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure --stop-on-failure -E \^\(0.\*\|1.\*\|B.\*\|a.\*\|b.\*\|ca.\*\|ci.\*\|cl.\*\|compa.\*\|compr.\*\|con.\*\|cop.\*\|crexx_a.\*\|crexx_contract_g.\*\|crexx_cr.\*\|crexx_di.\*\|crexx_driver_c.\*\|crexx_driver_r.\*\|crexx_e.\*\|crexx_h.\*\|crexx_l.\*\|crexx_n.\*\|crexx_proc.\*\|crexx_project_b.\*\|crexx_r.\*\|crexx_s.\*\|crexx_t.\*\|crexxb.\*\|crexxs.\*\|cri.\*\|crx.\*\|d.\*\|e.\*\|f.\*\|g.\*\|highlight_e.\*\|i.\*\|k.\*\|leg.\*\|levelb.\*\|levelc_address_h.\*\|levelc_address_inv.\*\|levelc_ar.\*\|levelc_as.\*\|levelc_ba.\*\|levelc_bif_c.\*\|levelc_bif_e.\*\|levelc_bif_i.\*\|levelc_bif_m.\*\|levelc_bif_n.\*\|levelc_bif_q.\*\|levelc_bif_reference_audit_linked_o.\*\|levelc_bif_reference_audit_o.\*\|levelc_bif_s.\*\|levelc_bif_w.\*\|levelc_bin.\*\|levelc_call_di.\*\|levelc_call_exp.\*\|levelc_call_h.\*\|levelc_call_r.\*\|levelc_call_s.\*\|levelc_call_w.\*\|levelc_co.\*\|levelc_d.\*\|levelc_exit_c.\*\|levelc_exit_ho.\*\|levelc_exit_i.\*\|levelc_exit_s.\*\|levelc_exit_w.\*\|levelc_f.\*\|levelc_g.\*\|levelc_if.\*\|levelc_implicit_i.\*\|levelc_it.\*\|levelc_l.\*\|levelc_no.\*\|levelc_numeric_d.\*\|levelc_numeric_f.\*\|levelc_numeric_i.\*\|levelc_numeric_l.\*\|levelc_numeric_w.\*\|levelc_o.\*\|levelc_parse_b.\*\|levelc_parse_source_t.\*\|levelc_pr.\*\|levelc_pull_b.\*\|levelc_pull_i.\*\|levelc_pull_s.\*\|levelc_push_i.\*\|levelc_push_s.\*\|levelc_queue_i.\*\|levelc_queue_s.\*\|levelc_r.\*\|levelc_sa.\*\|levelc_se.\*\|levelc_signal_c.\*\|levelc_signal_d.\*\|levelc_signal_i.\*\|levelc_signal_m.\*\|levelc_signal_n.\*\|levelc_signal_o.\*\|levelc_signal_p.\*\|levelc_signal_q.\*\|levelc_signal_s.\*\|levelc_signal_u.\*\|levelc_signal_v.\*\|levelc_sl.\*\|levelc_st.\*\|levelc_trace_i.\*\|levelc_trace_s.\*\|levelc_tran.\*\|levelc_tre.\*\|levelc_u.\*\|levelg.\*\|li.\*\|ll.\*\|lo.\*\|mainframe_h.\*\|mainframe_s.\*\|map.\*\|mc.\*\|mi.\*\|mo.\*\|mu.\*\|n.\*\|o.\*\|pa.\*\|persistent_worker_executor\\-rxbvml\|persistent_worker_executor\\-rxbvml\\-d.\*\|persistent_worker_executor\\-rxbvml\\-n.\*\|persistent_worker_executor\\-rxbvml\\-s.\*\|persistent_worker_executor\\-rxtvml\|persistent_worker_executor\\-rxtvml\\-d.\*\|persistent_worker_executor\\-rxtvml\\-n.\*\|persistent_worker_executor\\-rxtvml\\-s.\*\|persistent_worker_executor\\-rxvml\|persistent_worker_executor\\-rxvml\\-d.\*\|persistent_worker_executor\\-rxvml\\-n.\*\|persistent_worker_executor\\-rxvml\\-s.\*\|platform_cms3.\*\|platform_cms_d.\*\|platform_cms_s.\*\|platform_t.\*\|pr.\*\|q.\*\|rc.\*\|re.\*\|ro.\*\|rx_.\*\|rxa.\*\|rxb.\*\|rxc.\*\|rxd.\*\|rxf.\*\|rxg.\*\|rxi.\*\|rxli.\*\|rxllama_c.\*\|rxllama_m.\*\|rxllama_p.\*\|rxpa.\*\|rxpl.\*\|rxpp_di.\*\|rxpp_l.\*\|rxpp_m.\*\|rxpp_r.\*\|rxpp_sc.\*\|rxpp_sm.\*\|rxpp_sr.\*\|rxs.\*\|rxu.\*\|rxv.\*\|sa.\*\|sc.\*\|se.\*\|sh.\*\|si.\*\|source_e.\*\|source_import_c.\*\|source_import_d.\*\|source_import_o.\*\|source_import_s.\*\|source_p.\*\|source_s.\*\|st.\*\|sym.\*\|tc.\*\|tes.\*\|text_c.\*\|text_i.\*\|tl.\*\|tr.\*\|ts_ab.\*\|ts_address_a.\*\|ts_address_c.\*\|ts_address_p.\*\|ts_address_s.\*\|ts_af.\*\|ts_ar.\*\|ts_b.\*\|ts_c.\*\|ts_d.\*\|ts_fileio_b.\*\|ts_fin.\*\|ts_fn.\*\|ts_fo.\*\|ts_fs.\*\|ts_ft.\*\|ts_g.\*\|ts_http_c.\*\|ts_http_p.\*\|ts_http_servi.\*\|ts_http_st.\*\|ts_http_t.\*\|ts_i.\*\|ts_le.\*\|ts_li.\*\|ts_llm_c.\*\|ts_llm_o.\*\|ts_llm_p.\*\|ts_lo.\*\|ts_m.\*\|ts_n.\*\|ts_o.\*\|ts_p.\*\|ts_q.\*\|ts_r.\*\|ts_s.\*\|ts_t.\*\|ts_u.\*\|ts_v.\*\|ts_w.\*\|ts_x.\*\|tsc.\*\|tsl.\*\|tsu.\*\|tsw.\*\|ty.\*\|u.\*\|v.\*\|w.\*\)\$ -LE \^performance-measurement\$ --parallel 8
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+        Start 181: rxllama_bridge_smol_required-gpu
+  1/168 Test #181: rxllama_bridge_smol_required-gpu ..............................   Passed   22.69 sec
+        Start 138: levelc_bif_reference_audit_linked_noopt
+  2/168 Test #138: levelc_bif_reference_audit_linked_noopt .......................   Passed   18.38 sec
+        Start 178: rxllama_bridge_smol_cpu
+  3/168 Test #178: rxllama_bridge_smol_cpu .......................................   Passed   24.20 sec
+        Start 137: levelc_bif_reference_audit_noopt
+  4/168 Test #137: levelc_bif_reference_audit_noopt ..............................   Passed   17.35 sec
+        Start  88: levelc_call_external_opt
+  5/168 Test  #88: levelc_call_external_opt ......................................   Passed   29.72 sec
+        Start  89: levelc_call_external_noopt
+  6/168 Test  #89: levelc_call_external_noopt ....................................   Passed   29.69 sec
+        Start  90: levelc_call_missing_external_opt
+  7/168 Test  #90: levelc_call_missing_external_opt ..............................   Passed   10.51 sec
+        Start  91: levelc_call_missing_external_noopt
+  8/168 Test  #91: levelc_call_missing_external_noopt ............................   Passed   10.40 sec
+        Start 112: levelc_parse_whole_opt
+  9/168 Test #112: levelc_parse_whole_opt ........................................   Passed   28.37 sec
+        Start 116: levelc_address_whole_opt
+ 10/168 Test #116: levelc_address_whole_opt ......................................   Passed   15.26 sec
+        Start 182: rxllama_bridge_both_required-gpu
+ 11/168 Test #182: rxllama_bridge_both_required-gpu ..............................   Passed    8.80 sec
+        Start 179: rxllama_bridge_both_cpu
+ 12/168 Test #179: rxllama_bridge_both_cpu .......................................   Passed    9.16 sec
+        Start 185: ts_llm_http_fixture_opt
+ 13/168 Test #185: ts_llm_http_fixture_opt .......................................   Passed    6.46 sec
+        Start  86: levelc_exit_external_noopt
+ 14/168 Test  #86: levelc_exit_external_noopt ....................................   Passed    7.19 sec
+        Start 184: ts_llm_http_fixture_noopt
+ 15/168 Test #184: ts_llm_http_fixture_noopt .....................................   Passed    6.30 sec
+        Start  84: levelc_exit_external_opt
+ 16/168 Test  #84: levelc_exit_external_opt ......................................   Passed    7.25 sec
+        Start 124: levelc_implicit_whole_opt
+ 17/168 Test #124: levelc_implicit_whole_opt .....................................   Passed    7.44 sec
+        Start 183: rxllama_toolchain_lifecycle
+ 18/168 Test #183: rxllama_toolchain_lifecycle ...................................   Passed    5.95 sec
+        Start 118: levelc_address_external_opt
+ 19/168 Test #118: levelc_address_external_opt ...................................   Passed    5.67 sec
+        Start 110: levelc_queue_linked_opt
+ 20/168 Test #110: levelc_queue_linked_opt .......................................   Passed    7.15 sec
+        Start 175: rxllama_release_package_smoke
+ 21/168 Test #175: rxllama_release_package_smoke .................................   Passed   86.19 sec
+        Start 113: levelc_parse_source_external_opt
+ 22/168 Test #113: levelc_parse_source_external_opt ..............................   Passed    5.30 sec
+        Start 120: levelc_address_whole_noopt
+ 23/168 Test #120: levelc_address_whole_noopt ....................................   Passed    6.67 sec
+        Start 122: levelc_address_external_noopt
+ 24/168 Test #122: levelc_address_external_noopt .................................   Passed    5.12 sec
+        Start 129: levelc_address_source_tree
+ 25/168 Test #129: levelc_address_source_tree ....................................   Passed   11.51 sec
+        Start 126: levelc_implicit_whole_noopt
+ 26/168 Test #126: levelc_implicit_whole_noopt ...................................   Passed    4.80 sec
+        Start  85: levelc_exit_handler_opt
+ 27/168 Test  #85: levelc_exit_handler_opt .......................................   Passed    4.93 sec
+        Start 108: levelc_push_linked_opt
+ 28/168 Test #108: levelc_push_linked_opt ........................................   Passed    5.87 sec
+        Start   4: crexx_contract_installed_consumer
+ 29/168 Test   #4: crexx_contract_installed_consumer .............................   Passed    5.62 sec
+        Start  87: levelc_exit_handler_noopt
+ 30/168 Test  #87: levelc_exit_handler_noopt .....................................   Passed    4.91 sec
+        Start 115: levelc_parse_source_external_noopt
+ 31/168 Test #115: levelc_parse_source_external_noopt ............................   Passed    4.93 sec
+        Start 119: levelc_address_input_exact_opt
+ 32/168 Test #119: levelc_address_input_exact_opt ................................   Passed    4.99 sec
+        Start  93: levelc_call_condition_matrix_opt
+ 33/168 Test  #93: levelc_call_condition_matrix_opt ..............................   Passed    3.62 sec
+        Start 111: levelc_queue_linked_noopt
+ 34/168 Test #111: levelc_queue_linked_noopt .....................................   Passed    4.63 sec
+        Start 114: levelc_parse_whole_noopt
+ 35/168 Test #114: levelc_parse_whole_noopt ......................................   Passed    9.23 sec
+        Start 180: rxllama_bridge_bge_required-gpu
+ 36/168 Test #180: rxllama_bridge_bge_required-gpu ...............................   Passed    4.35 sec
+        Start 117: levelc_address_notready_opt
+ 37/168 Test #117: levelc_address_notready_opt ...................................   Passed    5.26 sec
+        Start 128: levelc_implicit_source_tree
+ 38/168 Test #128: levelc_implicit_source_tree ...................................   Passed    4.38 sec
+        Start 109: levelc_push_linked_noopt
+ 39/168 Test #109: levelc_push_linked_noopt ......................................   Passed    4.21 sec
+        Start 123: levelc_address_input_exact_noopt
+ 40/168 Test #123: levelc_address_input_exact_noopt ..............................   Passed    4.46 sec
+        Start 193: ts_http_server_failures_rxtvm_opt
+ 41/168 Test #193: ts_http_server_failures_rxtvm_opt .............................   Passed    4.26 sec
+        Start 187: ts_http_server_rxbvm_opt
+ 42/168 Test #187: ts_http_server_rxbvm_opt ......................................   Passed    4.21 sec
+        Start 186: ts_http_server_rxbvm_noopt
+ 43/168 Test #186: ts_http_server_rxbvm_noopt ....................................   Passed    4.24 sec
+        Start 190: ts_http_server_failures_rxbvm_noopt
+ 44/168 Test #190: ts_http_server_failures_rxbvm_noopt ...........................   Passed    4.25 sec
+        Start 191: ts_http_server_failures_rxbvm_opt
+ 45/168 Test #191: ts_http_server_failures_rxbvm_opt .............................   Passed    4.28 sec
+        Start 192: ts_http_server_failures_rxtvm_noopt
+ 46/168 Test #192: ts_http_server_failures_rxtvm_noopt ...........................   Passed    4.26 sec
+        Start 121: levelc_address_notready_noopt
+ 47/168 Test #121: levelc_address_notready_noopt .................................   Passed    4.13 sec
+        Start 188: ts_http_server_rxtvm_noopt
+ 48/168 Test #188: ts_http_server_rxtvm_noopt ....................................   Passed    4.18 sec
+        Start 189: ts_http_server_rxtvm_opt
+ 49/168 Test #189: ts_http_server_rxtvm_opt ......................................   Passed    4.23 sec
+        Start 127: levelc_implicit_signal_error_noopt
+ 50/168 Test #127: levelc_implicit_signal_error_noopt ............................   Passed    3.29 sec
+        Start  97: levelc_call_buffered_halt_opt
+ 51/168 Test  #97: levelc_call_buffered_halt_opt .................................   Passed    2.41 sec
+        Start 125: levelc_implicit_signal_error_opt
+ 52/168 Test #125: levelc_implicit_signal_error_opt ..............................   Passed    3.31 sec
+        Start  96: levelc_call_policy_lifecycle_opt
+ 53/168 Test  #96: levelc_call_policy_lifecycle_opt ..............................   Passed    3.33 sec
+        Start 103: levelc_call_policy_lifecycle_noopt
+ 54/168 Test #103: levelc_call_policy_lifecycle_noopt ............................   Passed    2.73 sec
+        Start 136: highlight_cache
+ 55/168 Test #136: highlight_cache ...............................................   Passed   94.52 sec
+        Start 106: levelc_pull_linked_opt
+ 56/168 Test #106: levelc_pull_linked_opt ........................................   Passed    5.12 sec
+        Start  23: syntaxhighlight_trace_keywords
+ 57/168 Test  #23: syntaxhighlight_trace_keywords ................................   Passed    1.66 sec
+        Start 169: rxpp_sh_default_lookup
+ 58/168 Test #169: rxpp_sh_default_lookup ........................................   Passed    2.99 sec
+        Start 100: levelc_call_condition_matrix_noopt
+ 59/168 Test #100: levelc_call_condition_matrix_noopt ............................   Passed    2.89 sec
+        Start  22: syntaxhighlight_parse_keywords
+ 60/168 Test  #22: syntaxhighlight_parse_keywords ................................   Passed    1.42 sec
+        Start 107: levelc_pull_linked_noopt
+ 61/168 Test #107: levelc_pull_linked_noopt ......................................   Passed    4.06 sec
+        Start  15: syntaxhighlight_root_file
+ 62/168 Test  #15: syntaxhighlight_root_file .....................................   Passed    1.34 sec
+        Start  21: syntaxhighlight_address_keywords
+ 63/168 Test  #21: syntaxhighlight_address_keywords ..............................   Passed    1.38 sec
+        Start  18: syntaxhighlight_compound_names
+ 64/168 Test  #18: syntaxhighlight_compound_names ................................   Passed    1.34 sec
+        Start 177: rxllama_bridge_bge_cpu
+ 65/168 Test #177: rxllama_bridge_bge_cpu ........................................   Passed    4.37 sec
+        Start  80: syntaxhighlight_block_comment
+ 66/168 Test  #80: syntaxhighlight_block_comment .................................   Passed    1.36 sec
+        Start  83: syntaxhighlight_comments_dash
+ 67/168 Test  #83: syntaxhighlight_comments_dash .................................   Passed    1.35 sec
+        Start  19: syntaxhighlight_structure_nodes
+ 68/168 Test  #19: syntaxhighlight_structure_nodes ...............................   Passed    1.34 sec
+        Start  17: syntaxhighlight_srcmap_generated
+ 69/168 Test  #17: syntaxhighlight_srcmap_generated ..............................   Passed    1.35 sec
+        Start  24: syntaxhighlight_top_level_statements
+ 70/168 Test  #24: syntaxhighlight_top_level_statements ..........................   Passed    1.35 sec
+        Start  98: levelc_call_missing_delayed_handler_opt
+ 71/168 Test  #98: levelc_call_missing_delayed_handler_opt .......................   Passed    2.05 sec
+        Start 105: levelc_call_missing_delayed_handler_noopt
+ 72/168 Test #105: levelc_call_missing_delayed_handler_noopt .....................   Passed    2.04 sec
+        Start 104: levelc_call_buffered_halt_noopt
+ 73/168 Test #104: levelc_call_buffered_halt_noopt ...............................   Passed    2.24 sec
+        Start 168: rxpp_sh_srcmap
+ 74/168 Test #168: rxpp_sh_srcmap ................................................   Passed    2.47 sec
+        Start  20: syntaxhighlight_exit_keyword
+ 75/168 Test  #20: syntaxhighlight_exit_keyword ..................................   Passed    1.28 sec
+        Start 170: rxpp_sh_tokens
+ 76/168 Test #170: rxpp_sh_tokens ................................................   Passed    1.70 sec
+        Start 172: ts_address_opt
+ 77/168 Test #172: ts_address_opt ................................................   Passed    0.77 sec
+        Start  94: levelc_call_clause_boundaries_opt
+ 78/168 Test  #94: levelc_call_clause_boundaries_opt .............................   Passed    3.05 sec
+        Start 171: ts_address_noopt
+ 79/168 Test #171: ts_address_noopt ..............................................   Passed    0.67 sec
+        Start 101: levelc_call_clause_boundaries_noopt
+ 80/168 Test #101: levelc_call_clause_boundaries_noopt ...........................   Passed    2.57 sec
+        Start  95: levelc_call_transfer_boundaries_opt
+ 81/168 Test  #95: levelc_call_transfer_boundaries_opt ...........................   Passed    2.66 sec
+        Start 102: levelc_call_transfer_boundaries_noopt
+ 82/168 Test #102: levelc_call_transfer_boundaries_noopt .........................   Passed    2.37 sec
+        Start  38: syntaxhighlight_levelc_parse_templates
+ 83/168 Test  #38: syntaxhighlight_levelc_parse_templates ........................   Passed    0.44 sec
+        Start  66: syntaxhighlight_levelc_select_missing_end
+ 84/168 Test  #66: syntaxhighlight_levelc_select_missing_end .....................   Passed    0.44 sec
+        Start  28: syntaxhighlight_levelc_command_instructions
+ 85/168 Test  #28: syntaxhighlight_levelc_command_instructions ...................   Passed    0.44 sec
+        Start  26: syntaxhighlight_levelc_keyword_variables
+ 86/168 Test  #26: syntaxhighlight_levelc_keyword_variables ......................   Passed    0.44 sec
+        Start  64: syntaxhighlight_levelc_select_keyword_variables
+ 87/168 Test  #64: syntaxhighlight_levelc_select_keyword_variables ...............   Passed    0.44 sec
+        Start  27: syntaxhighlight_levelc_simple_instructions
+ 88/168 Test  #27: syntaxhighlight_levelc_simple_instructions ....................   Passed    0.44 sec
+        Start  82: syntaxhighlight_empty
+ 89/168 Test  #82: syntaxhighlight_empty .........................................   Passed    0.43 sec
+        Start  60: syntaxhighlight_levelc_do_forever_bad_tail
+ 90/168 Test  #60: syntaxhighlight_levelc_do_forever_bad_tail ....................   Passed    0.44 sec
+        Start  39: syntaxhighlight_levelc_parse_bad_forms
+ 91/168 Test  #39: syntaxhighlight_levelc_parse_bad_forms ........................   Passed    0.44 sec
+        Start  72: syntaxhighlight_levelc_expression_comparisons
+ 92/168 Test  #72: syntaxhighlight_levelc_expression_comparisons .................   Passed    0.44 sec
+        Start  79: syntaxhighlight_levelc_expression_bad_paren
+ 93/168 Test  #79: syntaxhighlight_levelc_expression_bad_paren ...................   Passed    0.44 sec
+        Start  77: syntaxhighlight_levelc_expression_bad_prefix_operator
+ 94/168 Test  #77: syntaxhighlight_levelc_expression_bad_prefix_operator .........   Passed    0.44 sec
+        Start  65: syntaxhighlight_levelc_select_missing_when
+ 95/168 Test  #65: syntaxhighlight_levelc_select_missing_when ....................   Passed    0.42 sec
+        Start  74: syntaxhighlight_levelc_expression_bad_rparen
+ 96/168 Test  #74: syntaxhighlight_levelc_expression_bad_rparen ..................   Passed    0.43 sec
+        Start  67: syntaxhighlight_levelc_loose_when
+ 97/168 Test  #67: syntaxhighlight_levelc_loose_when .............................   Passed    0.43 sec
+        Start  81: syntaxhighlight_comment_only
+ 98/168 Test  #81: syntaxhighlight_comment_only ..................................   Passed    0.43 sec
+        Start  51: syntaxhighlight_levelc_select_do_otherwise_upper
+ 99/168 Test  #51: syntaxhighlight_levelc_select_do_otherwise_upper ..............   Passed    0.44 sec
+        Start  76: syntaxhighlight_levelc_expression_bad_trailing_operator
+100/168 Test  #76: syntaxhighlight_levelc_expression_bad_trailing_operator .......   Passed    0.44 sec
+        Start  70: syntaxhighlight_levelc_when_missing_then
+101/168 Test  #70: syntaxhighlight_levelc_when_missing_then ......................   Passed    0.44 sec
+        Start  78: syntaxhighlight_levelc_expression_bad_leading_operator
+102/168 Test  #78: syntaxhighlight_levelc_expression_bad_leading_operator ........   Passed    0.44 sec
+        Start  30: syntaxhighlight_levelc_instruction_bad_forms
+103/168 Test  #30: syntaxhighlight_levelc_instruction_bad_forms ..................   Passed    0.43 sec
+        Start  50: syntaxhighlight_levelc_select_do_otherwise
+104/168 Test  #50: syntaxhighlight_levelc_select_do_otherwise ....................   Passed    0.43 sec
+        Start  54: syntaxhighlight_levelc_do_conditions_leave
+105/168 Test  #54: syntaxhighlight_levelc_do_conditions_leave ....................   Passed    0.44 sec
+        Start  25: syntaxhighlight_levelc_tracer
+106/168 Test  #25: syntaxhighlight_levelc_tracer .................................   Passed    0.44 sec
+        Start  46: syntaxhighlight_levelc_loose_then
+107/168 Test  #46: syntaxhighlight_levelc_loose_then .............................   Passed    0.44 sec
+        Start  49: syntaxhighlight_levelc_select_when_otherwise
+108/168 Test  #49: syntaxhighlight_levelc_select_when_otherwise ..................   Passed    0.43 sec
+        Start  45: syntaxhighlight_levelc_if_missing_then
+109/168 Test  #45: syntaxhighlight_levelc_if_missing_then ........................   Passed    0.44 sec
+        Start  71: syntaxhighlight_levelc_expression_precedence
+110/168 Test  #71: syntaxhighlight_levelc_expression_precedence ..................   Passed    0.44 sec
+        Start  52: syntaxhighlight_levelc_do_keyword_variables
+111/168 Test  #52: syntaxhighlight_levelc_do_keyword_variables ...................   Passed    0.44 sec
+        Start  16: syntaxhighlight_syntax_error
+112/168 Test  #16: syntaxhighlight_syntax_error ..................................   Passed    0.44 sec
+        Start  48: syntaxhighlight_levelc_multiline_if_else
+113/168 Test  #48: syntaxhighlight_levelc_multiline_if_else ......................   Passed    0.44 sec
+        Start  68: syntaxhighlight_levelc_loose_otherwise
+114/168 Test  #68: syntaxhighlight_levelc_loose_otherwise ........................   Passed    0.44 sec
+        Start  47: syntaxhighlight_levelc_loose_else
+115/168 Test  #47: syntaxhighlight_levelc_loose_else .............................   Passed    0.43 sec
+        Start  44: syntaxhighlight_levelc_then_boundary
+116/168 Test  #44: syntaxhighlight_levelc_then_boundary ..........................   Passed    0.44 sec
+        Start  55: syntaxhighlight_levelc_do_end_bad_symbol
+117/168 Test  #55: syntaxhighlight_levelc_do_end_bad_symbol ......................   Passed    0.43 sec
+        Start  42: syntaxhighlight_levelc_labels_literals
+118/168 Test  #42: syntaxhighlight_levelc_labels_literals ........................   Passed    0.44 sec
+        Start  69: syntaxhighlight_levelc_loose_end
+119/168 Test  #69: syntaxhighlight_levelc_loose_end ..............................   Passed    0.43 sec
+        Start  73: syntaxhighlight_levelc_expression_bad_comma
+120/168 Test  #73: syntaxhighlight_levelc_expression_bad_comma ...................   Passed    0.44 sec
+        Start  61: syntaxhighlight_levelc_do_invalid_initial_to
+121/168 Test  #61: syntaxhighlight_levelc_do_invalid_initial_to ..................   Passed    0.44 sec
+        Start  53: syntaxhighlight_levelc_do_control
+122/168 Test  #53: syntaxhighlight_levelc_do_control .............................   Passed    0.43 sec
+        Start  56: syntaxhighlight_levelc_do_end_uncontrolled_symbol
+123/168 Test  #56: syntaxhighlight_levelc_do_end_uncontrolled_symbol .............   Passed    0.44 sec
+        Start  75: syntaxhighlight_levelc_expression_bad_trailing_compare
+124/168 Test  #75: syntaxhighlight_levelc_expression_bad_trailing_compare ........   Passed    0.43 sec
+        Start  59: syntaxhighlight_levelc_iterate_bad_target
+125/168 Test  #59: syntaxhighlight_levelc_iterate_bad_target .....................   Passed    0.43 sec
+        Start  57: syntaxhighlight_levelc_select_end_symbol
+126/168 Test  #57: syntaxhighlight_levelc_select_end_symbol ......................   Passed    0.44 sec
+        Start  58: syntaxhighlight_levelc_leave_outside_loop
+127/168 Test  #58: syntaxhighlight_levelc_leave_outside_loop .....................   Passed    0.44 sec
+        Start  29: syntaxhighlight_levelc_implicit_command_warning
+128/168 Test  #29: syntaxhighlight_levelc_implicit_command_warning ...............   Passed    0.44 sec
+        Start  41: syntaxhighlight_levelc_if_else
+129/168 Test  #41: syntaxhighlight_levelc_if_else ................................   Passed    0.43 sec
+        Start  35: syntaxhighlight_levelc_deep_validation
+130/168 Test  #35: syntaxhighlight_levelc_deep_validation ........................   Passed    0.44 sec
+        Start  34: syntaxhighlight_levelc_numeric_validation
+131/168 Test  #34: syntaxhighlight_levelc_numeric_validation .....................   Passed    0.43 sec
+        Start  32: syntaxhighlight_levelc_instruction_tail_bad_forms
+132/168 Test  #32: syntaxhighlight_levelc_instruction_tail_bad_forms .............   Passed    0.45 sec
+        Start  37: syntaxhighlight_levelc_simple_instruction_keyword_variables
+133/168 Test  #37: syntaxhighlight_levelc_simple_instruction_keyword_variables ...   Passed    0.43 sec
+        Start  33: syntaxhighlight_levelc_labels_validation
+134/168 Test  #33: syntaxhighlight_levelc_labels_validation ......................   Passed    0.44 sec
+        Start  36: syntaxhighlight_levelc_deep_validation_ok
+135/168 Test  #36: syntaxhighlight_levelc_deep_validation_ok .....................   Passed    0.43 sec
+        Start  40: syntaxhighlight_levelc_parse_excluded_sources
+136/168 Test  #40: syntaxhighlight_levelc_parse_excluded_sources .................   Passed    0.44 sec
+        Start  92: levelc_call_delayed_handler_opt
+137/168 Test  #92: levelc_call_delayed_handler_opt ...............................   Passed    2.99 sec
+        Start  99: levelc_call_delayed_handler_noopt
+138/168 Test  #99: levelc_call_delayed_handler_noopt .............................   Passed    2.55 sec
+        Start  62: syntaxhighlight_levelc_do_missing_to
+139/168 Test  #62: syntaxhighlight_levelc_do_missing_to ..........................   Passed    0.44 sec
+        Start  63: syntaxhighlight_levelc_do_duplicate_to
+140/168 Test  #63: syntaxhighlight_levelc_do_duplicate_to ........................   Passed    0.43 sec
+        Start  43: syntaxhighlight_levelc_constant_symbols
+141/168 Test  #43: syntaxhighlight_levelc_constant_symbols .......................   Passed    0.42 sec
+        Start 194: QUIT
+142/168 Test #194: QUIT ..........................................................   Passed    0.21 sec
+        Start 195: TERM
+143/168 Test #195: TERM ..........................................................   Passed    0.17 sec
+        Start 196: INT
+144/168 Test #196: INT ...........................................................   Passed    0.20 sec
+        Start 174: ts_fileio_chars_opt
+145/168 Test #174: ts_fileio_chars_opt ...........................................   Passed    0.16 sec
+        Start 173: ts_fileio_chars_noopt
+146/168 Test #173: ts_fileio_chars_noopt .........................................   Passed    0.15 sec
+        Start 176: rxllama_backend_probe_cycle
+147/168 Test #176: rxllama_backend_probe_cycle ...................................   Passed    0.25 sec
+        Start  31: syntaxhighlight_levelc_instruction_recovery_boundaries
+148/168 Test  #31: syntaxhighlight_levelc_instruction_recovery_boundaries ........   Passed    0.44 sec
+        Start 139: persistent_worker_executor-rxvml-e6-worker-topology-w8
+149/168 Test #139: persistent_worker_executor-rxvml-e6-worker-topology-w8 ........   Passed    0.06 sec
+        Start 148: persistent_worker_executor-rxbvml-e6-worker-topology-w8
+150/168 Test #148: persistent_worker_executor-rxbvml-e6-worker-topology-w8 .......   Passed    0.06 sec
+        Start 157: persistent_worker_executor-rxtvml-e6-worker-topology-w8
+151/168 Test #157: persistent_worker_executor-rxtvml-e6-worker-topology-w8 .......   Passed    0.06 sec
+        Start   1: mainframe_console_signals
+152/168 Test   #1: mainframe_console_signals .....................................   Passed    2.30 sec
+        Start   2: text_selector_cli
+153/168 Test   #2: text_selector_cli .............................................   Passed    0.52 sec
+        Start   3: platform_cms_text
+154/168 Test   #3: platform_cms_text .............................................   Passed    7.73 sec
+        Start   5: source_root_namespace_order
+155/168 Test   #5: source_root_namespace_order ...................................   Passed    2.21 sec
+        Start   6: compiler_load_failures
+156/168 Test   #6: compiler_load_failures ........................................   Passed    2.55 sec
+        Start   7: source_import_private_dependency_convergence
+157/168 Test   #7: source_import_private_dependency_convergence ..................   Passed   25.31 sec
+        Start   8: source_import_private_dependency_provider
+158/168 Test   #8: source_import_private_dependency_provider .....................   Passed   33.28 sec
+        Start 130: levelc_signal_event_matrix_opt
+159/168 Test #130: levelc_signal_event_matrix_opt ................................   Passed   25.52 sec
+        Start 131: levelc_signal_event_matrix_noopt
+160/168 Test #131: levelc_signal_event_matrix_noopt ..............................   Passed    9.66 sec
+        Start 132: levelc_numeric_external_opt
+161/168 Test #132: levelc_numeric_external_opt ...................................   Passed    5.24 sec
+        Start 133: levelc_numeric_external_noopt
+162/168 Test #133: levelc_numeric_external_noopt .................................   Passed    4.94 sec
+        Start 134: levelc_trace_values_opt
+163/168 Test #134: levelc_trace_values_opt .......................................   Passed   25.07 sec
+        Start 135: levelc_trace_values_noopt
+164/168 Test #135: levelc_trace_values_noopt .....................................   Passed   24.69 sec
+        Start 166: rxpp_dalias_opt
+165/168 Test #166: rxpp_dalias_opt ...............................................   Passed    2.85 sec
+        Start 167: rxpp_dalias_noopt
+166/168 Test #167: rxpp_dalias_noopt .............................................   Passed    2.85 sec
+        Start 218: crexx_driver_output_lock
+167/168 Test #218: crexx_driver_output_lock ......................................   Passed   32.59 sec
+        Start 219: crexx_project_worker_diagnostics
+168/168 Test #219: crexx_project_worker_diagnostics ..............................   Passed    5.19 sec
+
+100% tests passed, 0 tests failed out of 168
+
+Label Time Summary:
+cms                    =  10.03 sec*proc (2 tests)
+compiler               = 636.45 sec*proc (128 tests)
+comprehensive          = 672.92 sec*proc (151 tests)
+concurrency            =  73.20 sec*proc (13 tests)
+concurrency-sp01       =   1.51 sec*proc (3 tests)
+concurrency-sp07       =  33.91 sec*proc (8 tests)
+concurrency-sp08       =  35.42 sec*proc (11 tests)
+contract               =   5.62 sec*proc (1 test)
+data                   =   5.70 sec*proc (2 tests)
+diagnostics            =   5.19 sec*proc (1 test)
+driver                 =  37.78 sec*proc (2 tests)
+e6                     =   1.51 sec*proc (3 tests)
+external-consumer      =   5.62 sec*proc (1 test)
+failure                =  17.04 sec*proc (4 tests)
+gate-e                 =   1.51 sec*proc (3 tests)
+http                   =  46.67 sec*proc (10 tests)
+imports                =  63.35 sec*proc (4 tests)
+incremental            =  58.59 sec*proc (2 tests)
+inline                 =  58.59 sec*proc (2 tests)
+install                =   5.62 sec*proc (1 test)
+interpreter            =   1.51 sec*proc (3 tests)
+levelc                 = 462.09 sec*proc (109 tests)
+levelg                 =  46.67 sec*proc (10 tests)
+library                = 212.63 sec*proc (19 tests)
+linked                 =  16.93 sec*proc (4 tests)
+linked_opt             =  17.91 sec*proc (6 tests)
+llama                  = 165.96 sec*proc (9 tests)
+llm                    =  12.76 sec*proc (2 tests)
+macos                  =   1.51 sec*proc (3 tests)
+model-provisioned      =  79.51 sec*proc (7 tests)
+native_signal          =   0.57 sec*proc (3 tests)
+optimizer-parity       =  35.66 sec*proc (12 tests)
+platform               =  10.55 sec*proc (3 tests)
+preprocessor           =  12.86 sec*proc (5 tests)
+private                =   1.51 sec*proc (3 tests)
+qualification          =  91.82 sec*proc (2 tests)
+regression             = 107.08 sec*proc (9 tests)
+rxbvm                  =  16.98 sec*proc (4 tests)
+rxpa                   = 165.96 sec*proc (9 tests)
+rxtvm                  =  16.93 sec*proc (4 tests)
+server                 =  33.91 sec*proc (8 tests)
+smoke                  = 119.26 sec*proc (13 tests)
+spawn                  =   5.19 sec*proc (1 test)
+srcmap                 =   5.46 sec*proc (2 tests)
+stage0                 =  15.13 sec*proc (13 tests)
+stage1                 =  25.36 sec*proc (56 tests)
+stage4                 =  94.52 sec*proc (1 test)
+syntax_highlighting    = 142.17 sec*proc (73 tests)
+text                   =  10.55 sec*proc (3 tests)
+tools                  =   0.52 sec*proc (1 test)
+topology               =   1.51 sec*proc (3 tests)
+vm                     =   2.30 sec*proc (1 test)
+worker                 =   1.51 sec*proc (3 tests)
+
+Total Test time (real) = 918.48 sec

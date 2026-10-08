@@ -1,0 +1,24 @@
+{
+  "unique_asan_passes": 3112,
+  "eligible_cases": 3112,
+  "missing_tests": [],
+  "parts": [
+    {
+      "run": "20261008-120648-full",
+      "unique_passes": 2943
+    },
+    {
+      "run": "20261008-131342-ctest",
+      "unique_passes": 1
+    },
+    {
+      "run": "20261008-132201-ctest",
+      "unique_passes": 168
+    }
+  ],
+  "final_input_sha256": "bdd088acf09b0b1102634adadc428b92bbc804fa418ecfbba39b8fec1d089bad",
+  "unsupported": "Apple LeakSanitizer",
+  "excluded_label": "^performance-measurement$",
+  "initial_failure": "SDK fixture whole-second archive timestamp collision; fixed and requalified",
+  "selector_attempt": "Exact-name exclusion exceeded CTest regex size; stopped and replaced with compact selector verified against all eligible names."
+}

@@ -1,0 +1,41 @@
+{
+  "debug": {
+    "CMAKE_BUILD_TYPE": "Debug",
+    "CMAKE_CXX_FLAGS": "",
+    "CMAKE_C_COMPILER": "/usr/bin/cc",
+    "CMAKE_C_FLAGS": "",
+    "CMAKE_EXE_LINKER_FLAGS": "",
+    "CREXX_BUILD_SQLITE_ADDRESS_DEMO": "OFF",
+    "CREXX_ENABLE_TLS": "NETWORK",
+    "CREXX_LLAMA_ARCHIVE": "/Users/adrian/Library/Caches/crexx/native-inference/llama.cpp-5266f24da75dc449bd56cbed7addb9c8e4a6a73e.tar.gz",
+    "CREXX_LLAMA_TEST_MODELS": "/Users/adrian/Library/Caches/crexx/native-inference",
+    "ENABLE_LLAMA": "ON",
+    "CMAKE_GENERATOR": "Ninja"
+  },
+  "release": {
+    "CMAKE_BUILD_TYPE": "Release",
+    "CMAKE_CXX_FLAGS": "",
+    "CMAKE_C_COMPILER": "/usr/bin/cc",
+    "CMAKE_C_FLAGS": "",
+    "CMAKE_EXE_LINKER_FLAGS": "",
+    "CREXX_BUILD_SQLITE_ADDRESS_DEMO": "OFF",
+    "CREXX_ENABLE_TLS": "NETWORK",
+    "CREXX_LLAMA_ARCHIVE": "/Users/adrian/Library/Caches/crexx/native-inference/llama.cpp-5266f24da75dc449bd56cbed7addb9c8e4a6a73e.tar.gz",
+    "CREXX_LLAMA_TEST_MODELS": "/Users/adrian/Library/Caches/crexx/native-inference",
+    "ENABLE_LLAMA": "ON",
+    "CMAKE_GENERATOR": "Ninja"
+  },
+  "debugasan": {
+    "CMAKE_BUILD_TYPE": "Debug",
+    "CMAKE_CXX_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
+    "CMAKE_C_COMPILER": "/usr/bin/cc",
+    "CMAKE_C_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
+    "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address",
+    "CREXX_BUILD_SQLITE_ADDRESS_DEMO": "ON",
+    "CREXX_ENABLE_TLS": "NETWORK",
+    "CREXX_LLAMA_ARCHIVE": "/Users/adrian/Library/Caches/crexx/native-inference/llama.cpp-5266f24da75dc449bd56cbed7addb9c8e4a6a73e.tar.gz",
+    "CREXX_LLAMA_TEST_MODELS": "/Users/adrian/Library/Caches/crexx/native-inference",
+    "ENABLE_LLAMA": "ON",
+    "CMAKE_GENERATOR": "Unix Makefiles"
+  }
+}
