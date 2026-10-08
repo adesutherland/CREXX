@@ -155,6 +155,26 @@ foreach(consumer IN LISTS incremental_consumers)
     run_checked("initial static archive value: ${consumer}"
         COMMAND "${consumer}" 41 WORKING_DIRECTORY "${WORK_ROOT}")
 endforeach()
+# Older Make implementations compare whole-second mtimes. A fresh archive can
+# otherwise share the initial executable's second and legitimately look current.
+# Advance a private filesystem timestamp before editing the library; retain the
+# real archive dependency and value assertion rather than forcing the relink.
+set(latest_consumer_timestamp 0)
+foreach(consumer IN LISTS incremental_consumers)
+    file(TIMESTAMP "${consumer}" consumer_timestamp "%s" UTC)
+    if(consumer_timestamp GREATER latest_consumer_timestamp)
+        set(latest_consumer_timestamp "${consumer_timestamp}")
+    endif()
+endforeach()
+set(timestamp_probe "${consumer_build}/incremental-timestamp-probe")
+file(TOUCH "${timestamp_probe}")
+file(TIMESTAMP "${timestamp_probe}" probe_timestamp "%s" UTC)
+while(probe_timestamp LESS_EQUAL latest_consumer_timestamp)
+    run_checked("wait for filesystem timestamp tick"
+        COMMAND "${CMAKE_COMMAND}" -E sleep 1 WORKING_DIRECTORY "${WORK_ROOT}")
+    file(TOUCH "${timestamp_probe}")
+    file(TIMESTAMP "${timestamp_probe}" probe_timestamp "%s" UTC)
+endwhile()
 file(WRITE "${consumer_build}/incremental-library.c"
     "int rxincremental_init_;\nint incremental_value(void) { return 42; }\n")
 run_checked("rebuild after static archive source changes"
