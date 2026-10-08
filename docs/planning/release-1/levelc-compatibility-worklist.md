@@ -6,7 +6,20 @@ contract (`R1-AC-01/02`) and the roadmap owns portfolio order. This worklist
 records coverage, incremental evidence and Adrian-approved scope revisions;
 it does not change the 2026-11-30 target.
 
-**Current status, 2026-10-07.** `LC-I-01`–`LC-I-18` (SAY, DROP, assignment,
+**Current status, 2026-10-08.** The independent BIF checkpoint is locally
+qualified on `d7b58e17d8d49979445543676c2bcd56fb1f351b` code/test inputs:
+core product builds, full normal Debug 3296/3296, 3113 unique normal Release
+correctness checks using retained unchanged results plus focused completion,
+19 installed BIF cases and the installed host callback fixture. Focused
+maintained macOS ASan receipts cover the changed native/ownership paths.
+The exact commands, input/reuse proof, process/memory receipts and unrun gates
+are in LC-STEP-90F below. All 70 names have an audit row; 62 have direct entries.
+The eight stream BIFs, deferred Unicode/I/O compatibility and wider source/host
+obligations remain open. ANSI numeric rules and the same infrastructure scope
+apply to B/G as Adrian directed. This completes the admitted independent phase,
+not the full 70-name contract, full Level C or Release 1 qualification.
+
+`LC-I-01`–`LC-I-18` (SAY, DROP, assignment,
 NOP, OPTIONS, IF, SELECT, DO, LEAVE, ITERATE, ARG, PROCEDURE, CALL, RETURN,
 EXIT, PULL, PUSH and QUEUE) have closed
 whole-instruction reviews. ARG uses the shared PARSE template executor and
@@ -35,7 +48,7 @@ implementation or architecture choice is approved by its research note below.
 Its instruction and Release 1 acceptance remain open pending a separate
 disposition. The full
 compatibility, host, condition, BIF, AST and cross-consumer criteria remain
-open even where a supporting slice or helper passes. The latest grouped normal
+open even where a supporting slice or helper passes. The earlier grouped normal
 Debug and Release Level C checkpoints passed 741/741 each for TRACE. The
 earlier matched
 focused macOS ASan passed 27/27 for ADDRESS plus implicit command. The earlier normal Debug Level C
@@ -111,7 +124,7 @@ proof separated from deferred/unverified obligations.
   entry, caller numeric and configuration context, argument normalization,
   all 256 ordinals and unmappable scalars; verify actual behavior/errors against
   IBM/Regina where useful. Preserve Level B/G/L and RexxScript isolation.
-- [ ] **LC-BIF-06 — complete product checkpoint:** freeze final code/test/build
+- [x] **LC-BIF-06 — complete product checkpoint:** freeze final code/test/build
   inputs; core build, full normal Debug CTest once across B/C/G/L, RexxScript,
   RXAS/linker/VM/native interfaces; relevant normal Release correctness suites
   across those levels once with opt/no-opt and linked execution; installed-product
@@ -120,7 +133,7 @@ proof separated from deferred/unverified obligations.
   platform gates. Bound parallelism by observed total/child memory, avoid broad
   job overlap, use temporary verbose logs, and verify child exit after long runs.
   Reuse valid unchanged evidence; no routine overnight dispatch.
-- [ ] **LC-BIF-07 — delivery and honest closure:** commit each coherent family
+- [x] **LC-BIF-07 — delivery and honest closure:** commit each coherent family
   with focused evidence and synchronized docs; final report identifies each
   commit, grouped QA, remaining defects/decisions, exact HEAD and unpublished
   status. Any blocked behavior stays open; no full Level C/Release 1 claim.
@@ -158,7 +171,7 @@ proof separated from deferred/unverified obligations.
    families, reuse valid character/ordinal receipts, add regressions and repair
    reproduced defects in family-sized commits. Direct-entry use tracking is now table-sized rather than a 64-bit mask; no
    second dispatcher was added. Deferred Unicode/resource proof remains open.
-6. **LC-STEP-90F (LC-BIF-06/07; pending; depends on final independent code and
+6. **LC-STEP-90F (LC-BIF-06/07; local independent checkpoint complete; depends on final independent code and
    90B deferral already recorded):** perform the single grouped product checkpoint on frozen
    final inputs, document each unrun platform gate, reconcile inventory/criteria,
    and report exact HEAD/ahead/behind and any precise blocked behavior.
@@ -634,6 +647,256 @@ not passed. The existing 69 parser assertions/lock/serialization and six product
 QA assertions are preserved; broader import-discovery design remains pending.
 These preparation criteria are verified. Final grouped QA still remains open.
 
+**LC-STEP-90F final-input Debug receipt / Release preparation follow-up,
+2026-10-08 (recorded during the Release run; final disposition follows).**
+Frozen code/test checkpoint `d7b58e17d8d49979445543676c2bcd56fb1f351b`,
+tree `61c42a32455585746301a26cceb6861334dee671`; code/test/build fingerprint
+excluding this receipt and the BIF guide:
+`a199e7f76671a87128c1cfe008794f4e24ccc40344cab2ee9cb083a65dbf933b`.
+Core/preparation `cmake --build cmake-build-debug --target all qa-prep
+qa-prep-measurement --parallel 4` passed (380.46 s monitor). Full normal Debug
+`ctest --test-dir cmake-build-debug --parallel 10 --output-on-failure` passed
+3296/3296 (1597.93 s CTest / 1599.28 s monitor), including 771 Level C-labelled
+cases, configured B/G/L, RexxScript, RXAS/linker/VM and native interfaces. Logs
+`/tmp/crexx-bif-product-final-debug-build.log` and
+`/tmp/crexx-bif-product-final-debug-ctest.log`. Test peak descendant/total RSS
+5108.2/21215.5 MiB, unchanged 347.94 MiB swap, no remaining children.
+
+Release core `cmake --build cmake-build-release --target all qa-prep --parallel 4`
+passed (189.14 s monitor, peak 1969.0/17984.7 MiB, no children). The ongoing
+normal Release lane contains 3103 tests, not Debug's 3110 non-measurement tests:
+its model cache was unset, omitting seven existing optional Llama model/lifecycle
+checks. Debug has the available cache `/Users/adrian/Library/Caches/crexx/native-inference`.
+Enabling that existing test-only setting after the current run will qualify the
+seven checks once, with unchanged registry commands/properties and product
+hashes proving reuse of other results. No model download or new provider work.
+
+The Release run initially reproduced four Text Inspector failures (both core/TUI
+modes); the completed log also failed generation and ANSI-PTY, six total. Their
+staged owned `rxpp/ui/UI_NODE.rxpm` retains an old uppercase
+filename on the case-insensitive host; its bytes match the authored lowercase
+`ui_node.rxpm` (SHA256 `3a423c24d28730e67a73389628cf6da02acb1bd3801153b654574b771f489b05`).
+Current RXPP intentionally admits lowercase package filenames, as documented in
+`docs/ai-context/RXPP_PREPROCESSOR.md`; Debug's owned copy is already lowercase.
+Release generated output consequently contains nine unexpanded `##UI_NODE`
+statements. This is a stale build input, not a numeric BIF or new I/O rule.
+
+Vision: restore the existing documented build-input contract and finish the
+required whole-product checkpoint without changing product/test source or
+repeating unchanged broad evidence.
+
+1. **LC-BIF-PREP-10:** normalize only the owned staged macro filename to its
+   declared lowercase path, regenerate the affected example artifacts, and
+   pass all six failures plus the adjacent package
+   checks in normal Release. Verify the generated macro expansions and retain
+   the failed full-lane log; reuse unchanged Debug proof and other Release cases.
+2. **LC-STEP-90F-10:** after the current run and child-exit proof, restore that
+   staged input and enable the existing cached-model Release QA setting; build
+   required artifacts, compare existing test command/property and product
+   hashes, then run the affected Release cases, the seven added native checks
+   and the three repaired compiler fixtures once. Product/ABI/Unicode/I/O rules
+   and the whole Debug code/test inputs remain unchanged. Complete installed
+   and host BIF smoke, final inventory, documents and unpublished-state report.
+
+**LC-BIF-PREP-10 receipt, 2026-10-08.** The Release lane completed with
+3097/3103 passing and six Text Inspector failures in 509.91 s CTest / 511.23 s
+monitor. The initial four-failure update counted the core/TUI cases; the completed
+lane has six including generation/ANSI-PTY. The full failed log remains
+`/tmp/crexx-bif-product-final-release-ctest.log`.
+Only the owned staged macro filename was normalized to the declared lowercase
+path; bytes remained identical to the authored macro. Regeneration changed
+nine unexpanded `##UI_NODE` occurrences into the nine expected `view.add_spec`
+calls. No product/test source, I/O policy or macro language was changed.
+
+Commands after the broad lane and child-exit proof:
+
+```sh
+cmake -S . -B cmake-build-release -DCREXX_LLAMA_TEST_MODELS=/Users/adrian/Library/Caches/crexx/native-inference
+cmake --build cmake-build-release --target example_text_inspector_artifacts llama_provider_runtime_package rxllama_bridge_lifecycle rxc rxas rxlink rxbvm library --parallel 4
+ctest --test-dir cmake-build-release --parallel 2 --output-on-failure -R '^(text_inspector_.*|rxllama_release_package_smoke|rxllama_bridge_(bge|smol|both)_(cpu|required-gpu)|rxllama_toolchain_lifecycle|perf2_04_(certified_call|inline_assembler_imports)|perf2_05_partial_call)$'
+```
+
+Configuration and affected build passed in 4.08/2.08 s monitor; completion panel
+passed 17/17 in 38.48 s CTest / 38.69 s monitor. This covers all six failures,
+one adjacent package check, seven newly enabled cached-model CPU/required-GPU
+and lifecycle checks, and three compiler correctness fixtures carrying the
+performance-measurement label. Logs `/tmp/crexx-bif-release-model-configure.log`,
+`/tmp/crexx-bif-release-affected-build.log`, and
+`/tmp/crexx-bif-release-completion-focused.log` with command/memory JSON siblings.
+Peak completion descendants/total RSS 1590.0/17432.8 MiB; no children remained.
+The registry comparison has **zero changed commands/properties for all 3289
+previous tests**, exactly seven additions; SHA256 of ten core product/compiler
+and runtime images is unchanged before/after model-cache configuration.
+Proof: `/tmp/crexx-bif-release-model-registry-proof.json` and
+`/tmp/crexx-bif-release-products-{before,after}-models.json`.
+The final registry is 3296 tests, of which 3110 are normal correctness and 186
+carry the measurement label; the three labelled compiler correctness fixtures
+are qualified separately. Thus **3113 unique Release correctness checks have
+passing evidence**: retained unchanged passes plus the focused completion,
+not a falsely passed first broad run or a second broad suite.
+LC-BIF-PREP-10 is verified. Debug code/test/build inputs were unaffected.
+
+**LC-STEP-90F final grouped local product receipt, 2026-10-08.**
+
+Qualified source revision: `d7b58e17d8d49979445543676c2bcd56fb1f351b`, tree
+`61c42a32455585746301a26cceb6861334dee671`. SHA256 of the NUL-terminated records
+from `git ls-tree --full-tree -rz <revision>` in Git's output order, excluding
+exactly this worklist and `compiler/docs/levelc_classic_bifs.md`:
+`a199e7f76671a87128c1cfe008794f4e24ccc40344cab2ee9cb083a65dbf933b`.
+The subsequent receipt/guide commit changes only those two documents, so this
+product/test/build fingerprint is the reuse condition; no broad suite is
+repeated for receipt-only changes. `/tmp/crexx-bif-checkpoint-inputs.json`
+retains the qualification revision, trees and superseded checkpoints.
+
+Host: Darwin arm64, 10 logical CPUs, 24 GiB physical RAM. Ordinary Debug/Release
+use Ninja, `/usr/bin/cc`, `-g` / `-O3 -DNDEBUG`, VM profiling OFF, Llama ON;
+existing available model cache is enabled in both final normal configurations.
+The local syntax-highlighter dependency is
+`383e5daab0ffcf6ec83e02db7a01a27709dabb2c`; its unrelated dirty `AGENTS.md`
+is preserved. Maintained Debug ASan uses address/frame-pointer flags and GNU
+Make; its ordinary upstream Llama engine is uninstrumented. No new platform,
+ABI, VM/linker or Unicode/I/O configuration was introduced.
+
+```sh
+cmake --build cmake-build-debug --target all qa-prep qa-prep-measurement --parallel 4
+ctest --test-dir cmake-build-debug --parallel 10 --output-on-failure
+cmake --build cmake-build-release --target all qa-prep --parallel 4
+ctest --test-dir cmake-build-release --label-exclude '^performance-measurement$' --parallel 10 --output-on-failure
+cmake --install cmake-build-release --prefix /tmp/crexx-bif-install.6v6bvmo_
+python3 /tmp/crexx-bif-installed-smoke.py /tmp/crexx-bif-install.6v6bvmo_ /tmp/crexx-bif-installed-checks.bfbex8vo
+```
+
+The Release lane's six failed cases are repaired/requalified by PREP-10 above;
+its unchanged passing results remain valid. The full normal Debug gate passed
+**3296/3296** in 1597.93 s CTest / 1599.28 s monitor, including 771 Level C-labelled
+cases and configured B/G/L, RexxScript, RXAS, linker, VM, native interfaces and
+measurement-labelled tests. The Debug all-target/preparation build passed in
+380.46 s monitor; Release core/preparation in 189.14 s. No required normal
+correctness case is skipped or called passed while unrun. The final normal
+Release coverage is **3113 unique checks**, with optimized/no-opt and linked
+execution across the configured levels. The 183 remaining Release measurement
+cases were not run; this is not a Release performance qualification.
+
+Verbose logs: `/tmp/crexx-bif-product-final-debug-{build,ctest}.log`,
+`/tmp/crexx-bif-product-final-release-{build,ctest}.log`,
+`/tmp/crexx-bif-product-final-install.log`, and
+`/tmp/crexx-bif-product-final-installed-smoke.log`; JSON siblings retain literal
+argv, exit, elapsed time, sampled descendant/total RSS, swap and child-exit proof.
+Listed commands were launched through `python3 /tmp/crexx-bif-monitor.py <log>
+<command...>` with both output streams redirected to that temporary log.
+Runs were serialized across broad jobs, build parallelism 4 / normal CTest 10 /
+focused sanitizer and Release completion 2. Full Debug peak descendants/total
+RSS was 5108.2/21215.5 MiB; Release broad peak 2159.3/17931.4 MiB. Every completed
+long run left zero children, with unchanged 347.94 MiB swap. Final executable
+process inventory also found no compiler/assembler/linker/VM/parser/CTest/build
+processes. Only the exact owned empty stdin lock and Python cache generated by
+these tests were removed; unrelated work was preserved.
+
+Installation passed in 2.07 s monitor. Installed smoke passed **19/19 BIF cases
+plus one RXVML callback lifecycle fixture** in 38.65 s monitor: B/C/G ANSI
+numeric context in direct/linked optimized/no-opt modes (12), queue/source/message
+linked optimized/no-opt (6), and the 104-value reference audit linked optimized
+(1). Each BIF case uses the maintained `compiler/tests/levelc_queue_linked.cmake`
+with all tools and runtime bytecode from the installation; it performs
+`rxc -> rxas -> rxlink -> rxvm` or the maintained direct mode. The host fixture
+is `compiler/tests/src/test_levelc_address_host_callback.c`, compiled against
+installed static libraries and freshly compiled installed-toolchain source.
+Its 12 callbacks verify existing ADDRESS/CONDITION ERROR/FAILURE/NOTREADY paths,
+values and owned output/error file cleanup; the RXVML context is destroyed.
+No new host provider is implemented or approved by this smoke.
+Installed peak descendants/total RSS 344.4/15716.3 MiB; zero children/files remain.
+Receipt with exact expanded argv and eight installed/Release product SHA256
+matches: `/tmp/crexx-bif-installed-checks.bfbex8vo/receipt.json`.
+Installed smoke script SHA256: `b6aacee8da273564b8461250d8b789c9baaea589dfe4ee907f96a8edfd0964b0`.
+
+The exact installed BIF invocation is the following maintained recipe, repeated
+for the 19 cases/modes listed above; NAME is `installed_` plus the source basename,
+SOURCE/EXPECTED are in `compiler/tests/rexx_src`, and BINDIR/RXC/RXAS/RXLINK/RXVM
+are `/tmp/crexx-bif-install.6v6bvmo_/bin` and its named executables. BUILD_DIR is
+`/tmp/crexx-bif-installed-checks.bfbex8vo`. NOOPT/DIRECT are ON or OFF for the
+stated modes. The host compile/run literal argv is retained in the receipt/log.
+
+```sh
+cmake -DRXC="$BINDIR/rxc" -DRXAS="$BINDIR/rxas" -DRXLINK="$BINDIR/rxlink" -DRXVM="$BINDIR/rxvm" -DBINDIR="$BINDIR" -DNAME="$NAME" -DSOURCE="$SOURCE" -DEXPECTED="$EXPECTED" -DBUILD_DIR="$BUILD_DIR" -DNOOPT="$NOOPT" -DDIRECT="$DIRECT" -P compiler/tests/levelc_queue_linked.cmake
+```
+
+**Focused maintained sanitizer evidence.** The 53-case BIF panel on
+`c6e03a62d65a2dcebf474d9166a969965f88a087` remains valid for unchanged BIF
+implementation/test inputs. Later changed native/source ownership and fixture
+paths have matching normal Debug and ASan overlay receipts, rather than a
+redundant broad sanitizer run. No first-party sanitizer finding occurred.
+All commands use `tools/asan-run.sh`, test jobs 2 and `--leaks off` because
+Apple LSan is unavailable; this is ASan evidence, not leak-clean proof.
+The exact retained test commands are:
+
+```sh
+tools/asan-run.sh --phase ctest --regex '^(testRexxClassicBif(Datatype|Queued|Sourceline|Errortext|Format|Condition)_|level[bcg]_bif_(queued|sourceline|errortext|whole|integer_limits|numeric_context|reference_audit)|levelc_call_external_|levelc_address_host_callback$)' --test-jobs 2 --leaks off --stop-on-failure --no-live-tail --tail-lines 20
+tools/asan-run.sh --phase ctest --regex '^test_trace_(exit|results|negated_string)_' --test-jobs 2 --leaks off --no-live-tail --tail-lines 10
+tools/asan-run.sh --phase ctest --regex '^(source_extension_direct_defaults$|rxc_diagnostic_catalogs$|levelc_numeric_whole_(opt|noopt)$|trace_stem_sugar$|trace_event_metadata$|levelc_bif_sourceline|levelc_call_external_)' --test-jobs 2 --leaks off --no-live-tail --tail-lines 15
+tools/asan-run.sh --phase ctest --regex '^(interface_no_impl|interface_match_reject_single|interface_named_factory_no_impl|type_ops_fail)_run_(noopt|opt)$' --test-jobs 2 --leaks off --no-live-tail --tail-lines 10
+tools/asan-run.sh --phase ctest --regex '^((13_stems|repro_multi_tail_stems)(_run)?_(noopt|opt)|trace_stem_sugar)$' --test-jobs 2 --leaks off --no-live-tail --tail-lines 10
+tools/asan-run.sh --phase ctest --test-jobs 2 --leaks off --regex '^(syntaxhighlight_.*|address_(exit_extended_parse|inline_then_parse)|rxas_optimizer_metadata|perf2_04_inline_assembler_imports|perf2_04_certified_call|perf2_05_partial_call)$' --no-live-tail --tail-lines 30
+tools/asan-run.sh --phase ctest --test-jobs 2 --leaks off --regex '^address_(exit_extended_parse|inline_then_parse)$' --no-live-tail --tail-lines 20
+```
+
+| Focus | Passing normal/ASan proof | Retained receipt |
+| --- | --- | --- |
+| BIF/selected queue/source/message/numeric/context/host panel | focused normal family receipts above; ASan 53/53, 478.02 s | `/tmp/crexx-bif-asan-focused.log`, runner `20261007-221739-ctest` |
+| TRACE descriptor import | 6/6 + 6/6, ASan 2.34 s | `/tmp/crexx-bif-trace-{repair,asan}-tests.log` |
+| Authored setter provenance/source/provider paths | 6 adjacent + 8 source/provider normal; ASan 14/14, 94.27 s | `/tmp/crexx-bif-provenance-asan-tests.log` |
+| Exact negative panic/source fixtures | 8/8 + 8/8, ASan 6.33 s | `/tmp/crexx-bif-negative-{debug-final,asan-tests}.log` |
+| Four source provenance assembly goldens + runtime/TRACE | 9/9 + 9/9, ASan 8.65 s | `/tmp/crexx-bif-golden-{debug,asan}-tests.log` |
+| Parser input isolation, AST/opcode snapshots, three compiler fixtures | 75 unique normal; 75 unique ASan (73 retained + 2 after stale prerequisite rebuild) | PREP-07/08/09 receipt above; `/tmp/crexx-bif-qa-final-repair-asan.log`, `/tmp/crexx-bif-qa-snapshot-asan-final.log` |
+
+Build/preparation literal commands and process metrics remain in the corresponding
+`*-asan-build.log.json` / `*-asan-rebuild.log.json` siblings named by the focused
+receipts. Aggregate workload and serialized 600 s reference-audit timeout were
+measured in normal Debug and maintained ASan; no deadline was silently shortened.
+No sanitizer suppression or supported-platform leak exception was added.
+
+**Unrun gates/capability limits.** No Linux or Windows normal/platform sanitizer,
+full macOS sanitizer matrix, hosted overnight/deep/stress/build-graph/CodeQL or
+release-platform gate was dispatched or called passed. Apple LSan is unsupported;
+Linux LSan proof is unrun. Focused first-party ASan does not instrument the ordinary
+upstream Llama engine. GTK was disabled in normal builds; real ODBC driver coverage
+was disabled (configured mock/interface checks ran). Stream positioning, encoding,
+EOF and resource matrices are unrun because the eight BIFs remain deferred.
+Existing Unicode regressions passing do not define the currently undefined
+Unicode error/logic behavior. These limits prevent full Level C/Release 1,
+70-name conformance, cross-platform sanitizer-clean or release-ready claims.
+
+**Committed delivery ledger (all unpublished).**
+
+| Commit | Coherent increment | Focused proof |
+| --- | --- | --- |
+| `6eeb9c988` | QUEUED/shared direct-use tracking | 6/6 |
+| `f69ab852f` | retained SOURCELINE and provider isolation | 10/10 |
+| `22b6fa48f` | exact decimal/exponent WHOLE | 10/10 |
+| `5f49de7e2` | shared-catalog ERRORTEXT | 6/6 |
+| `04bbd17d5` | signed WHOLE limit, ANSI B/C/G numeric context, ASCII symbol audit | 59 unique final-input checks |
+| `c6e03a62d` | CONDITION admitted producers/fields/frame policy | 35 unique final-input checks |
+| `de676ee9c` | existing TRACE class import repair | Debug 6/6; ASan 6/6 |
+| `acdced207` | source-default/numeric/catalog QA reconciliation | Debug 6/6 |
+| `15b8f9e1b` | authored setter source ownership | Debug adjacent 6 + source/provider 8; ASan 14/14 |
+| `91e2a2416` | negative fixture exact source assertions | Debug 8/8; ASan 8/8 |
+| `902fee62a` | assembly provenance goldens | Debug 9/9; ASan 9/9 |
+| `d7b58e17d` | isolated QA inputs and current metadata snapshots | 75 unique Debug and 75 unique ASan |
+
+The final receipt/guide commit is documentation-only and preserves the frozen
+fingerprint above. The last fetched source checkpoint is 0 behind / 220 ahead of
+origin/develop; the receipt commit advances the unpublished ledger by one.
+All work remains unpublished on develop; release/hosted gates remain unrun.
+LC-BIF-03/06/07 and admitted LC-STEP-90C/D/E/F phase delivery are verified.
+LC-BIF-01/02/04/05 remain open for the full contracts, with the deferred obligations
+preserved rather than removed. Remaining exact BIF limits: eight absent stream
+entries pending architectural/compatibility assessment; SOURCELINE mapped inputs
+unavailable/count zero and physical-source NUL truncation under LC-GAP-06;
+CONDITION real host HALT producer under LC-GAP-04; full resource/reference/platform
+proof and undefined Unicode behavior. No admitted focused ASCII behavior failure
+remains reproduced. The proposed narrow stream provider remains unapproved; no
+new decision was assumed. INTERPRET, LC-GAP-01/03–10, wider host criteria and B/G
+compiler split/fast-pipeline proposals remain pending.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A
@@ -646,7 +909,7 @@ with the later whole-instruction receipts before the fresh review.
 | ID | Remaining point and current boundary | Owner / disposition needed |
 | --- | --- | --- |
 | LC-GAP-01 | `INTERPRET` is recognized but not executable. `LC-87-01–05` cover exact generated Unicode source, nested groups, current frame and condition/control transfers, and bounded code lifetime. The compiled-fragment and RexxScript-inspired routes below are research, not approved designs. | `LC-I-25`, `LC-AC-59/04`, `LC-REF-062`, `R1-AC-01/02`: parked now. Later choose implementation or individually approve a Release 1 "won't implement" entry with diagnostic and documentation. |
-| LC-GAP-02 | Of 70 catalogued Classic BIF names, 62 have direct compiler entries; eight do not: `CHARIN`, `CHAROUT`, `CHARS`, `LINEIN`, `LINEOUT`, `LINES`, `QUALIFY`, `STREAM`. QUEUED, SOURCELINE and ERRORTEXT have focused contract receipts in LC-STEP-90C/D; grouped QA remains open. `CONDITION` has admitted producer/field proof in LC-STEP-90D; real host HALT remains separately open. Entry presence does not prove arguments, errors, context or reference behavior for any of the 70. | `LC-AC-01/04/06/73`, `LC-REF-018/019/071/072/074`: finish the stream, queue, source and diagnostic services and audit the reachable BIFs; decide any exact exceptions individually. |
+| LC-GAP-02 | Of 70 catalogued Classic BIF names, 62 have direct compiler entries; eight do not: `CHARIN`, `CHAROUT`, `CHARS`, `LINEIN`, `LINEOUT`, `LINES`, `QUALIFY`, `STREAM`. Every name has a grouped audit/individual evidence row. QUEUED, SOURCELINE and ERRORTEXT have focused receipts in LC-STEP-90C/D; the independent whole-product checkpoint is locally qualified under LC-STEP-90F. `CONDITION` has admitted producer/field proof; real host HALT remains separately open. Streams and Unicode/I/O changes are deferred by Adrian pending architectural assessment. Source, wider host/resource and platform proof remain open; entry presence alone closes no BIF. | `LC-AC-01/04/06/73`, `LC-REF-018/019/071/072/074`: retain the independent baseline and deferred stream proposal; finish full reference/source/host/resource obligations only within Adrian's assessed compatibility direction. No wider host criterion or full 70-name closure follows from this checkpoint. |
 | LC-GAP-03 | Configured command, stream, default input, queue selection and external routine services need an end-to-end host contract, including resource lifecycle and condition/result reporting. ADDRESS, implicit command, PULL/PUSH/QUEUE and CALL are instruction-closed on their admitted paths. CALL's approved static signed Level B/G boundary and unchanged linker/VM remain in force. | `LC-AC-06/04`, `LC-REF-003/015–020`: distinguish missing host APIs from closed instruction behavior; implement or explicitly disposition each required adapter. General Classic/non-Classic interoperation remains outside this programme. |
 | LC-GAP-04 | Invocation modes, caller trap overrides, completion classes and an externally visible variable-pool API/access window are not fully qualified. The C-string `rxvml_run()` cannot carry an embedded-NUL argument; its length-aware entry exists, but the C-string obligation is not an approved exclusion. Real host HALT production remains open. | `LC-AC-06/04`, `LC-REF-001/004–006/021–024/057/071/073`: specify and qualify required host behavior or request precise scope decisions; preserve the existing VM/linker approval boundary. |
 | LC-GAP-05 | `LC-HOST-ADDRESS-NUL` remains an approved instruction-level FAILURE diagnostic when the command host path cannot represent NUL; length-aware delivery is still a separate host-interface obligation. TRACE's practical divergences are agreed, and displayed scalar values must remain correct. PARSE EXTERNAL/NUMERIC are outside Adrian's initial Level C scope as mainframe-specific sources; their final Release 1 disposition is not yet recorded. | `LC-AC-06/04`, `LC-REF-015/018/070`: decide the remaining host-transport and final PARSE-source dispositions without reopening the closed ADDRESS/TRACE/PARSE reviews merely to gather more evidence. |
@@ -7903,7 +8166,7 @@ below owns exact-input grouped execution and supported sanitizer results.
 ### Individual BIF inventory
 
 The source list is `component-catalogue/raw-levelc-bifs.md` (recognition only).
-Recount on `15b8f9e1b`: 70 catalogued names, 62 in the existing compiler direct
+Final recount on `d7b58e17d`: 70 catalogued names, 62 in the existing compiler direct
 entry table, and eight deferred stream names. LOWER/UPPER are two additional
 entries outside this catalog. No second dispatcher was added. Shared aliases,
 numeric wrappers and bitwise methods retain their existing common bodies.

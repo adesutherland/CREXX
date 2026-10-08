@@ -1,7 +1,7 @@
 # Level C Classic BIF Implementation Notes
 
 Status: Classic BIF semantic reference with current cREXX boundary notes
-Last updated: 2026-10-07
+Last updated: 2026-10-08
 
 Source: publicly available Classic REXX language specification.
 
@@ -25,6 +25,10 @@ use the fixed Latin-1 ordinal bridge and signal for unmappable scalars.
 `RexxValue` still has binary storage for direct clients and future facilities.
 No BIF is fully reference-qualified merely because its direct runtime entry
 exists.
+Adrian's 2026-10-07 scope clarification preserves current Unicode/I/O
+infrastructure; Unicode-caused signals and logic errors are currently undefined
+in B/C/G pending compatibility and architectural assessment. It does not approve
+new stream support or revise RexxScript's separate binary-capable value model.
 
 ## Fixed Direction
 
@@ -137,15 +141,24 @@ standalone `RexxClassicBif*.crexx` modules in the same runtime image with
 `RexxValue`, `RexxStem`, and `RexxVariablePool`; direct harnesses do not rely on
 compiler lowering or the common dispatcher.
 
-Standalone direct BIF modules:
+Classic BIF names reachable through the compiler's direct table (62 of 70):
 
 ```text
-ABBREV ABS ADDRESS ARG B2X BITAND BITOR BITXOR C2D C2X CENTER CHANGESTR
-COMPARE COPIES COUNTSTR D2C D2X DATE DATATYPE DELSTR DELWORD FORMAT INSERT
-LASTPOS LEFT LENGTH MAX MIN NUMERIC OVERLAY POS RANDOM REVERSE RIGHT SIGN SPACE STRIP SUBSTR
-SUBWORD SYMBOL TIME TRACE TRANSLATE TRUNC VALUE VERIFY WORD WORDINDEX
-WORDLENGTH WORDPOS WORDS X2B X2C X2D XRANGE
+ABBREV ABS ADDRESS ARG B2X BITAND BITOR BITXOR C2D C2X CENTER CENTRE
+CHANGESTR COMPARE CONDITION COPIES COUNTSTR D2C D2X DATE DATATYPE DELSTR
+DELWORD DIGITS ERRORTEXT FORM FORMAT FUZZ INSERT LASTPOS LEFT LENGTH MAX
+MIN OVERLAY POS QUEUED RANDOM REVERSE RIGHT SIGN SOURCELINE SPACE STRIP
+SUBSTR SUBWORD SYMBOL TIME TRACE TRANSLATE TRUNC VALUE VERIFY WORD
+WORDINDEX WORDLENGTH WORDPOS WORDS X2B X2C X2D XRANGE
 ```
+
+Aliases and the bitwise entries share their existing implementations. LOWER and
+UPPER are additional direct names outside the 70-name Classic catalog. CHARIN,
+CHAROUT, CHARS, LINEIN, LINEOUT, LINES, QUALIFY and STREAM remain pending by
+Adrian's 2026-10-07 direction: no new stream/Unicode infrastructure is approved.
+QUEUED uses the existing selected queue; SOURCELINE retains the compilation
+unit's original physical lines; ERRORTEXT shares the standard diagnostic catalog.
+The worklist owns their contract receipts and remaining source/host limits.
 
 The legacy proof dispatcher remains for compatibility tests. New direct
 harnesses call the named standalone module and do not use it.
@@ -171,11 +184,27 @@ its expression path. RexxScript calls
 the available standalone entries directly, passes only its sandbox/script pool,
 and adapts the returned `RexxValue` back to its public string result model.
 
-The current `CheckArgs` subset supports:
+The shared `CheckArgs` validator supports:
 
 ```text
-ANY NUM WHOLE WHOLE>=0 WHOLE>0 PAD ABLMNSUWX LTB MN
+ANY NUM WHOLE WHOLE>=0 WHOLE>0 WHOLENUM WHOLENUM>=0 0_90 PAD BIN HEX SYM
 ```
+
+Option-set rules are supplied by each BIF (for example `ABLMNSUWX`, `LTB`,
+`CDEIS`, `SN` and `EO`). Stream-name validation is still a pending host contract.
+Positional/count WHOLE operands use the approved inclusive signed 64-bit range;
+outside it they report source-anchored `40.12` before VM conversion. WHOLENUM
+radix numeric operands retain arbitrary precision. This integer argument limit
+is not a promise that every in-range allocation can be fulfilled.
+
+ANSI/Classic caller-DIGITS initial rounding applies to ABS, MAX, MIN, SIGN,
+TRUNC and FORMAT. The existing B/G decimal BIFs use the same rounding and
+inherited DIGITS/FORM while retaining their typed arguments, results and
+signals. The common numeric implementation performs normalization once; direct
+ABS/MAX/MIN/SIGN entries are wrappers over it. Regina 3.9.7's preserved-operand
+behavior at reduced DIGITS differs from the approved ANSI rule. Unicode-caused
+signals or other logic errors in B/C/G remain undefined within the current infrastructure
+until Adrian's compatibility/architecture assessment.
 
 `RexxClassicDatatype.crexx` is the shared implementation for `NUM`, `WHOLE`,
 `BIN`, `HEX`, and `SYM`. It uses the call context's character configuration, configured
