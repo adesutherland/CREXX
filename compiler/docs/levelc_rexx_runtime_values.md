@@ -11,6 +11,12 @@ execution. It is intentionally smaller than full Level C lowering. The goal is
 to prove the value representation and Level B low-level register access before
 the compiler depends on it for broad tree surgery.
 
+For the current per-instruction and BIF mapping, test coverage, accepted
+boundaries and known defects, use the
+[detailed compatibility-layer review](levelc_compatibility_layer.md). The
+earlier slices retain their original evidence and status; they do not establish
+current full conformance.
+
 ## Scope
 
 The approved initial slice covered:

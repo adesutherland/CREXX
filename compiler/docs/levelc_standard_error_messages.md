@@ -1,14 +1,19 @@
 # Level C Standard Error Messages
 
 Status: extracted reference for Level C diagnostics
-Last updated: 2026-10-05
+Last updated: 2026-10-08
 
 Source: publicly available Classic REXX language specification.
 
 This file records the standard `#ErrorText.` catalog in a normalized
 one-message-per-line form. Parser recovery and validation use stable identities
-through the localized diagnostic catalogs. Full `ERRORTEXT` and runtime
-condition reporting remain open in the Level C worklist.
+through the localized diagnostic catalogs. ERRORTEXT's admitted English
+catalog path and focused CONDITION fields/producers now have baseline evidence;
+complete diagnostic, source, locale and host-condition equivalence remains open
+in the [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
+The [detailed compatibility-layer review](levelc_compatibility_layer.md) maps
+current producers, transport and source anchors. This extracted table is a
+reference inventory, not evidence that every message can be produced correctly.
 
 The public language-specification source is the source of truth. An older
 repository copy exists under `docs/bifs/`, but it differs in several entries
@@ -55,9 +60,9 @@ RXC-LC-<standard-code> [insert-name="escaped value" ...]
 Examples:
 
 ```text
-RXC-LC-18.1 linenumber="12"
+RXC-LC-18.1 linenumber="12" token="end-of-clause"
 RXC-LC-35.1 token="then"
-RXC-LC-40.4 name="FOO"
+RXC-LC-40.4 bif="FOO" argnumber="2"
 ```
 
 Tests that compare diagnostic goldens force raw diagnostics. User-facing CLI
@@ -69,10 +74,15 @@ The Level C runtime generates its English template lookup from the same
 complete named inserts records the expanded `Error n.s: ...` text for
 `CONDITION('D')`; an unknown or incomplete entry uses the earlier
 `Error n.s: <raw remainder>` fallback. This bounds current runtime reporting
-and does not complete `ERRORTEXT`, all condition producers, or locale selection
-for trapped events. Required empty inserts and repeated `value` inserts retain
-their catalog order in shared BIF error records; invalid-data 23.1 still needs
-a hex-encoding producer before its full description can be rendered.
+and does not complete all condition producers, source/.MN integration, or
+locale selection for trapped events. ERRORTEXT's direct entry uses the same
+generated lookup, returns unexpanded `<...>` placeholders, preserves decimal
+subcode keys and returns empty for zero/undefined entries; N currently falls
+back to the shipped English wording. Its 0–90/.9 range error is 40.17, not the
+older extracted helper's 40.16. Required empty inserts and repeated `value`
+inserts retain their catalog order in shared BIF error records. Invalid-data
+23.1 still needs a hex-encoding producer before its full description can be
+rendered.
 
 ## Output Prefixes
 

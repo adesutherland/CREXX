@@ -284,6 +284,14 @@ Unicode BIFs remain separate future designs; no implicit BYTE/UTF8 or
 `bytetext` Level C mode is planned. The
 [Level C worklist](../planning/release-1/levelc-compatibility-worklist.md)
 tracks qualification and the deliberate byte-exact Classic departures.
+Adrian's 2026-10-07 compatibility scope preserves the current Unicode/I/O
+infrastructure and defers changes pending architectural assessment. Within
+that B/C/G compatibility work, Unicode-caused signals and logic errors are
+currently undefined. This does not change the concrete typed text/binary
+mechanisms described here or implicitly add Level G Unicode APIs to Classic C.
+The [detailed Level C layer](../../compiler/docs/levelc_compatibility_layer.md)
+distinguishes accepted direction, actual implementations, tests and open proof.
+
 Level G and library work use the explicit `rxunicode` extension path above the
 core codepoint-level VM string contract. The current Unicode 17.0.0 baseline
 provides normalization, full default case mapping, case folding, default

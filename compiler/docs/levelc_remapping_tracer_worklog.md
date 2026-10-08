@@ -15,6 +15,12 @@ The Stage 19 short-circuit `&`/`|` lowering below is historical. Classic
 logical operators evaluate both operands; the current eager Level C rewrite
 and its evidence are recorded in the Release 1 Level C compatibility worklist.
 
+For the current per-instruction and BIF mapping, test coverage, accepted
+boundaries and known defects, use the
+[detailed compatibility-layer review](levelc_compatibility_layer.md). The
+earlier slices retain their original evidence and status; they do not establish
+current full conformance.
+
 ## 2026-06-21: Inlining-First Tracer Start
 
 ### Goal

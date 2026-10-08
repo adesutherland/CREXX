@@ -2,22 +2,24 @@
 
 Status: active Level C architecture design; the original parser design record
 is retained below for implementation history
-Last updated: 2026-10-06
+Last updated: 2026-10-08
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
 re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
-The first DSLSH syntax-highlighting milestone is complete. Compiled Level C
-has twenty-one closed whole-instruction reviews through implicit command,
-including ARG, PROCEDURE, CALL, RETURN and PARSE, and substantial BIF
-foundations; the
+The first DSLSH syntax-highlighting milestone is complete. All 24 admitted
+whole-instruction reviews (`LC-I-01–24`) are closed; INTERPRET (`LC-I-25`)
+is parked and unimplemented. Of 70 catalogued Classic BIF names, 62 have direct
+compiler entries; eight stream BIFs remain deferred. Entry presence and
+instruction closure do not establish full Classic conformance. The
 [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
-owns their exact status and evidence. The approved one-frame label/SIGNAL
-architecture is the shared ARG/PROCEDURE/CALL foundation. Its reference
-review and canonical frame-control nodes are complete, and the one-body
-lowerer has bounded passing invocation and SIGNAL checkpoints. Accepted shapes lower to the ordinary compiler and bytecode
-toolchain; unsupported shapes fail closed.
+owns decisions, acceptance criteria and retained evidence. The detailed
+[compatibility-layer review](levelc_compatibility_layer.md) maps each instruction
+and BIF to current AST/lowering, libraries, tests and outstanding obligations.
+The approved one-frame label/SIGNAL architecture shares the
+ARG/PROCEDURE/CALL activation foundation and uses the ordinary compiler,
+assembler, linker and VM; unsupported shapes fail closed.
 
 ## Current architecture and product boundary
 
@@ -25,8 +27,30 @@ This is the architecture companion to the
 [Release 1 Level C compatibility worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
 The [Release 1 plan](../../docs/release-1-plan.md) owns the completion target;
 the worklist owns feature status, acceptance criteria, and increment evidence.
-The compliance and BIF references own Classic semantics. Historical parser
-exploration later in this document does not override these current contracts.
+The compliance and BIF references describe the Classic target alongside current
+cREXX boundaries. Dated implementation checkpoints later in this document
+preserve their earlier status and evidence; their counts and “remaining” notes
+are historical, not current delivery instructions. The detailed compatibility
+review owns the current source/test crosswalk; the worklist remains the sole
+programme plan. The final local BIF product checkpoint is not full Level C or
+Release 1 qualification.
+
+Adrian's 2026-10-07 clarification defers changes to Unicode and I/O
+infrastructure pending a compatibility and architectural assessment. Unicode-caused signals
+and logic errors are currently undefined for B/C/G. Existing valid-text,
+codepoint, Latin-1 ordinal and explicit Level G Unicode mechanisms remain
+observable implementation boundaries; this clarification does not change
+RexxScript's separate binary-capable `RexxValue` use. Stream support, broader
+host services, the B/G compiler split and fast-pipeline proposals remain pending.
+
+The documentation review also exposed a shared DATE/TIME clock defect: ordinary
+linked optimized/no-opt execution retains TIME(L) and TIME(E)=0 after a one-second
+host sleep because no production caller refreshes the pool's clause sample.
+DATE uses that same cached sample; a calendar-boundary crossing was not probed.
+Explicit-date/time conversions and injected-clock tests retain their evidence.
+The worklist and detailed review record the defect and the owner of its host
+and lifecycle investigation;
+this documentation change does not repair it.
 
 ```text
 Classic source -> Level C scanner/glue/grammar -> source tree + guarded AST
@@ -120,10 +144,11 @@ through the shared Classic TRANSLATE call before template execution. The
 callee's visible pool receives the resulting fields. The approved Unicode
 contract requires codepoint template and uppercase behavior; the whole ARG
 instruction closed under LC-AC-71 after this shared path and its admitted
-Classic invocation matrix passed. Future external CALL/INTERPRET must reuse
-the same activation frame under their own instruction rows. Adrian later
-permitted Level C CALL to reach Level B/G routines through a fixed signature;
-general cross-dialect invocation remains outside this review.
+Classic invocation matrix passed. The approved signed external CALL uses
+the same activation frame; parked INTERPRET would need a separately approved
+design. Adrian permitted Level C CALL to reach Level B/G routines through
+a fixed signature. General cross-dialect invocation remains outside this
+review.
 
 An external direct `CALL` now follows the same source-ordered activation-frame
 builder and optional `RESULT`/`.RESULT` update as a local call. The compiler
@@ -170,8 +195,9 @@ caller-environment rule and the external programme's implicit private pool.
 Regina's external CALL ON path raises 16.1, so this exact handler observation
 rests on the documented rule and the compiled fixture rather than a
 byte-for-byte Regina comparison. CALL policy and handler lifecycle are
-qualified with controlled events; real ADDRESS, stream and host HALT
-producers retain their own instruction and host owners. No linker or VM rule
+qualified with controlled events and admitted live ADDRESS
+ERROR/FAILURE/NOTREADY producers. Stream producers, real host HALT and broader
+host lifecycle retain their separate owners. No linker or VM rule
 was added.
 
 A native `rxvml` host can load the signed Level C provider and its caller as
@@ -312,8 +338,9 @@ is the highest explicitly supplied position, so trailing omitted CALL slots
 do not increase the count. Its E/O options use each slot's presence bit; an
 explicit empty string is present. The standalone `rxfnsc` BIF module receives
 the activation frame in addition to the usual BIF call context. The compiler
-uses the same direct BIF argument builder and source-anchored result check, adding
-the activation argument only for this activation-scoped BIF.
+uses the same direct BIF argument builder and source-anchored result check.
+ARG, ADDRESS, CONDITION and TRACE receive the current activation as a second
+helper argument.
 The active CALL review now routes an unquoted local label before the shared
 direct-BIF table, while a quoted uppercase name bypasses local labels and
 reaches its matching BIF. Quoted spelling is decoded without uppercasing.
@@ -345,12 +372,14 @@ After an ordinary CALL, one `RexxVariablePool.applyCallResult` operation sets
 both `RESULT` and `.RESULT` for an explicit value (including empty text), or
 drops both after a value-less return. The local frame's result-presence bit
 drives that operation; BIF calls always supply a value. CALL does not assign
-`RC`. This is bounded local/BIF evidence within the open whole CALL review.
-External Classic resolution remains unlowered; its proposed
-configuration-owned host/VM boundary and the CALL reference matrix are
-in `docs/planning/release-1/levelc-compatibility-worklist.md` under LC-STEP-75.
+`RC`. This account records the earlier bounded local/BIF proof; the subsequent
+whole CALL review is closed on the admitted signed boundary in the worklist.
+The early bounded checkpoint left external resolution unlowered. Current
+external CALL uses the approved static signed route described above; Classic
+late lookup and the wider configuration/host interface remain open in the
+worklist.
 
-The active CALL review now also lowers `CALL ON/OFF` for ERROR, FAILURE, HALT
+The admitted CALL path also lowers `CALL ON/OFF` for ERROR, FAILURE, HALT
 and NOTREADY into the per-activation condition policy. A negative policy slot
 identifies a delayed CALL handler; positive slots retain immediate SIGNAL
 handlers, so later ON/OFF replaces the previous mode. A producer can queue a
@@ -380,14 +409,16 @@ their logical result before a checkpoint, so a delayed handler cannot alter
 the branch decision already made. Counted/controlled DO setup checks before
 the first body; empty repetitive bodies check on each iteration. LEAVE,
 ITERATE, RETURN and EXIT check before their transfer. These checks use the
-same generated dispatcher as ordinary completed statements. ADDRESS, stream
-and host-interrupt producers are still owned by their later rows, so this is
-bounded CALL infrastructure rather than complete delayed-condition delivery.
+same generated dispatcher as ordinary completed statements. These controlled
+receipts predate the admitted live ADDRESS producers. Stream and real
+host-interrupt producers remain separate host obligations; controlled delivery
+proof alone does not close their lifecycle.
 The controlled four-event lifecycle also covers repeated ON delivery, OFF,
 re-ON and isolation of a child CALL OFF from its caller. A missing handler
-reports at the raising `NOP` clause in both optimization modes. External
-trap targets, real producer source identity, remaining clause/lifecycle
-forms and host HALT capture remain open in the whole CALL review. No VM ISA
+reports at the raising `NOP` clause in both optimization modes. The signed
+external trap route now has admitted proof. Broader producer source identity, clause and lifecycle forms, and real host
+HALT capture remain host obligations. They do not reopen the closed admitted
+CALL instruction review. No VM ISA
 or frame change was made.
 
 The CALL source grammar has explicit recovery for surplus policy tails. A
@@ -441,6 +472,14 @@ use the changed contract. Compatibility differences belong in the caller's
 explicit adapter or configuration, not in duplicate BIF algorithms. The
 [RexxScript developer guide](../../rexxscript/doc/developer-guide.md) describes
 its evaluator and sandbox boundary.
+
+## Historical implementation checkpoints
+
+The accounts below retain the implementation state at their original dates.
+For current instruction/BIF status and known defects, use the opening boundary
+summary, [detailed review](levelc_compatibility_layer.md), and worklist. In
+particular, older “twelve closed” counts, bounded CALL/SIGNAL gates and BIF-table
+counts are historical evidence, not current inventories.
 
 The completed `SAY` review exposed a control-flow dependency: a shared BIF can
 raise VM `CLASSIC_SYNTAX`, while the former Level C lowering put each label
@@ -3044,7 +3083,7 @@ ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-
 Result after the deep-validation slice: full build passes; all
 1084 CTest tests pass.
 
-## Current Level C NUMERIC execution route (2026-10-06)
+## Current Level C NUMERIC execution route (updated 2026-10-08)
 
 The earlier parser and highlighter history above predates execution lowering.
 `LEVELC_NUMERIC` stays intact through source validation. The Level C lowerer
@@ -3066,11 +3105,15 @@ operands in source order and, only when the inherited LOSTDIGITS policy is
 enabled, asks `RexxValue` whether significant nonzero operand digits would be
 discarded. It raises the existing `RexxClassicConditionEvent` at the operator
 source. Numeric BIF queries read the existing RXAS context, and FORMAT obtains
-Classic display through `RexxValue`. ABS normalizes the configured numeric
-alphabet, sign and exponent form through the same decimal-text formatter while
-preserving the received argument's significant digits. Expression evaluation
-before a BIF call uses the active context. MAX and MIN keep exact numeric
-selection, independent of ordinary comparison FUZZ.
+Classic display through `RexxValue`. The shared NUM validator initially rounds
+ABS, MAX, MIN, SIGN, TRUNC and FORMAT operands as `number + 0` under caller
+DIGITS/FORM, following Adrian's ANSI/Classic decision. Existing B/G typed
+decimal APIs use the same rule while preserving their typed signatures and
+signals. MAX/MIN selection is independent of ordinary comparison FUZZ.
+Positional/count WHOLE arguments accept exact whole decimal/exponent spellings
+within the approved inclusive signed64 range; radix WHOLENUM operands retain
+arbitrary precision after caller-context normalization. Full expression and
+limit/resource conformance remains open in the worklist.
 
 The following first-implementation sequence is retained as historical context:
 

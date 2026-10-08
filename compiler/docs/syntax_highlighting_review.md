@@ -10,6 +10,11 @@ That material has now been folded into the enduring documentation:
 - [cREXX DSLSH Integration](dslsh_integration.md) for the DSLSH/editor contract
   as implemented,
 - [cREXX Architecture](../../docs/ai-context/CREXX_ARCHITECTURE.md) for the
-  top-level architecture signpost.
+  top-level architecture signpost,
+- [Level C compatibility layer](levelc_compatibility_layer.md) for current
+  Classic front-end/lowering, instruction/BIF coverage and known gaps.
+
+The earlier highlighting milestone does not imply full executable Classic
+conformance; the Level C worklist retains those acceptance criteria.
 
 For historical detail, use git history for earlier revisions of this file.

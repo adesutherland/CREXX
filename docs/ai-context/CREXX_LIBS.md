@@ -13,9 +13,9 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, housing the
   Rexx value, stem, and variable-pool classes plus directly callable Classic
-  BIF implementations; `rexxclassicbif_call` is a deprecated compatibility
-  path for current compiler output, while name-based intrinsic dispatch belongs
-  to RexxScript)
+  BIF implementations; compiled Level C uses the named direct-entry table and
+  shared context/error builder. `rexxclassicbif_call` is retained for legacy
+  compatibility clients/tests; RexxScript owns its own intrinsic allow-list)
 
 - `lib/plugins/float/` (native scalar binary-float mathematics)
 
@@ -51,9 +51,12 @@ Same-named Level B and Level C functions are separate APIs. For example,
 `lib/rxfnsb/rexx/value.crexx` is a read-only, immediate-caller metadata helper,
 whereas `lib/rxfnsc/RexxClassicBifValue.crexx` implements the Classic
 old-value/optional-assignment contract over `RexxValue` and
-`RexxVariablePool`. Direct Level C harnesses call selector functions without
-`rexxclassicbif_call`; compiler lowering to those entries is deferred to the
-later bulk lowering change.
+`RexxVariablePool`. Direct Level C harnesses and compiled lowering call the
+named entries through the shared BIF context, without name-based
+`rexxclassicbif_call` dispatch.
+The [detailed compatibility layer](../../compiler/docs/levelc_compatibility_layer.md)
+maps each current entry, actual test path and outstanding contract. A same-named
+standalone string wrapper or legacy unit is not automatically the compiled path.
 
 The CMake build treats each `rxfnsc` member as an isolated source compilation.
 Its own source and only its declared transitive `rxfnsc` source dependencies

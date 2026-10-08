@@ -24,7 +24,12 @@ compiled Level C contract: visible scalars are Unicode text; byte-valued BIFs
 use the fixed Latin-1 ordinal bridge and signal for unmappable scalars.
 `RexxValue` still has binary storage for direct clients and future facilities.
 No BIF is fully reference-qualified merely because its direct runtime entry
-exists.
+exists. The [detailed compatibility-layer review](levelc_compatibility_layer.md)
+records every name's actual compiler and runtime entry, arguments, state, tests
+and remaining conformance proof. It also distinguishes verified defects from
+unprobed inspection concerns; this guide's target tables are not blanket
+claims that the full contract is implemented.
+
 Adrian's 2026-10-07 scope clarification preserves current Unicode/I/O
 infrastructure; Unicode-caused signals and logic errors are currently undefined
 in B/C/G pending compatibility and architectural assessment. It does not approve
@@ -123,7 +128,7 @@ starts with `r` for required or `o` for optional, followed by a type rule.
 | `SYM` | Valid symbol according to `DATATYPE(value, "S")`. | `40.26` |
 | `STREAM` | Valid stream name according to `Config_Stream_Qualify`. | `40.27` |
 | Option set, for example `LTB` | Non-null; first character, uppercased, must be in the option set. | `40.21`, `40.28` |
-| `ACEFILNOR` | TRACE option set; leading `?` characters are allowed before the option letter. | `40.28` |
+| `ACEFILNOR` | Normalized Classic TRACE option reference; the current direct TRACE BIF actually validates `oANY` and sends the full string to its existing state parser, including documented extensions. | `40.28` |
 
 The message catalog is in `compiler/docs/levelc_standard_error_messages.md`.
 The extracted helper calls `40.16` for the `0_90` range failure. The standard
@@ -138,8 +143,13 @@ return empty text; `N` falls back to the shipped English catalog.
 The shared context and legacy proof dispatcher live in
 `lib/rxfnsc/RexxClassicBifs.crexx`. New direct BIF implementations are
 standalone `RexxClassicBif*.crexx` modules in the same runtime image with
-`RexxValue`, `RexxStem`, and `RexxVariablePool`; direct harnesses do not rely on
-compiler lowering or the common dispatcher.
+`RexxValue`, `RexxStem`, and `RexxVariablePool`. Most per-name harnesses call
+those context entries directly, without compiler lowering or the common
+name dispatcher. Important exceptions remain: the bitwise compiler entries
+call context functions in `RexxClassicBifs`, and the named SUBWORD unit still
+exercises its retained shared-module body rather than the standalone compiler
+target. Compiled SUBWORD panels reach the standalone entry, but the unit
+name alone does not qualify that entry's complete error/configuration matrix.
 
 Classic BIF names reachable through the compiler's direct table (62 of 70):
 
@@ -160,8 +170,10 @@ QUEUED uses the existing selected queue; SOURCELINE retains the compilation
 unit's original physical lines; ERRORTEXT shares the standard diagnostic catalog.
 The worklist owns their contract receipts and remaining source/host limits.
 
-The legacy proof dispatcher remains for compatibility tests. New direct
-harnesses call the named standalone module and do not use it.
+The legacy proof dispatcher remains for compatibility tests. Compiled Level C
+uses the existing direct table and one common argument/result path; it does
+not call the dispatcher. Retained same-named shared bodies and typed wrappers
+must be distinguished from that table's actual targets.
 
 The public proof API is:
 
@@ -175,8 +187,9 @@ rexxclassicbif_length(value)
 `RexxBifCallContext` carries the uppercased BIF name, `RexxValue` argument
 values, argument presence flags, a live caller `RexxVariablePool` reference,
 and the active `RexxClassicConfig` reference.
-The argument count is derived from the presence mask, not from the value array,
-so omitted positions such as `xxx(,a,,b)` can be represented faithfully. Level
+The BIF operand count is the presence-vector slot count (`exists[0]`). It
+counts positions, including omissions, rather than true presence flags or
+nonblank values. This preserves omitted positions such as `xxx(,a,,b)`. Level
 C compiler lowering was unchanged by the original library programme. Current
 Level C lowering calls direct BIF entries with the visible activation pool,
 argument presence and configuration; the legacy dispatcher is no longer on
@@ -219,7 +232,8 @@ failure it returns a blank value and records the error on the context through
 `hasError()`, `errorCode()`, and `errorMessage()`. This keeps the shared BIF
 engine value-native for Level C and future optimising rewrites while preserving
 a single place for Classic message construction. Level C direct helpers such as
-`rexxclassicbif_length(value)` return freshly materialised `RexxValue` results;
+`rexxclassicbiflength.rexxclassicbif_length(context_ref)` return freshly
+materialised `RexxValue` results;
 they do not return aliases to values held by a variable pool.
 
 Level C must remain Classic Rexx compliant: Classic argument validation,
@@ -251,11 +265,18 @@ as in `POS("", haystack)` versus `POS(" ", haystack)`.
 - `Time2Date(timestamp)` validates timestamp bounds and returns year, month,
   day, hour, minute, second, microsecond, base-day count, and day-of-year.
 - `Leap(year)` returns whether the Gregorian year is a leap year.
-- The current time is frozen per clause through `#ClauseTime.#Level` and
-  `#ClauseLocal.#Level`.
+- The Classic target freezes one clock sample per clause through
+  `#ClauseTime.#Level` and `#ClauseLocal.#Level`. Current shared runtime state
+  is not refreshed by production clause lowering: DATE/TIME call
+  `ensureClauseTime()`, and no production caller invokes `beginClauseTime()`.
+  A linked opt/no-opt probe confirms unchanged TIME(L) and TIME(E)=0 across
+  a one-second host sleep. DATE shares that cached sample, with calendar
+  crossing itself unprobed. Injected-clock unit results do not qualify this
+  known integration defect.
 
-Level B implementation should make this a shared helper module, not duplicate
-the conversion in both `DATE` and `TIME`.
+DATE and TIME share `RexxDateTimeState` and Gregorian helpers.
+Their conversion tests remain valid while clause refresh and platform clock
+lifecycle remain open under LC-GAP-02/04 and LC-REF-057.
 
 ### Radix Helper
 
@@ -271,9 +292,13 @@ bridge; arbitrary encoded bytes are not valid Level C `.string` payloads.
 The extracted `Raise` helper raises `SYNTAX` and always includes the BIF name as
 the first insert for `40.*` errors. It does not return.
 
-The current `lib/rxfnsb/rexx/raise.crexx` is only a placeholder printer. Level C
-needs a real condition/message bridge using the specification message catalog and
-the runtime condition model.
+The older `lib/rxfnsb/rexx/raise.crexx` placeholder is not the compiled-C
+condition bridge. Current direct BIFs record a standard identity and message inserts on
+`RexxBifCallContext` through the shared error builder. The common compiler
+result guard raises `CLASSIC_SYNTAX` at the authored call; the activation and
+generated diagnostic catalog supply admitted trap/CONDITION reporting. A
+direct library caller can inspect the context without raising. Full producer,
+.MN, locale and source traceback equivalence remains open in the worklist.
 
 ### Character Configuration
 
@@ -295,8 +320,9 @@ configuration explicitly; the shared BYTE default is for direct clients only.
 
 ### Configuration Dependencies
 
-Several BIFs are not pure string/numeric functions. They depend on host or
-configuration services:
+Several BIFs are not pure string/numeric functions. The following table maps
+Classic service obligations; presence in it does not mean every hook is a
+shipped cREXX host API:
 
 | Service area | Needed by |
 | --- | --- |
@@ -336,6 +362,10 @@ conditions:
 
 ## Function Catalog
 
+Rows normalize the Classic target and identify current implementation notes.
+The detailed compatibility-layer review supplies each name's actual paths,
+tests and remaining obligations; stream rows below describe deferred target behavior.
+
 Argument checklist values are normalized from the public language-specification
 source for planning. This is implementation guidance, not a code copy.
 
@@ -343,13 +373,13 @@ source for planning. This is implementation guidance, not a code copy.
 
 | Function | Signature | Checklist | Definition summary | Level B/RexxValue notes |
 | --- | --- | --- | --- | --- |
-| `ABBREV` | `ABBREV(string, abbrev [,length])` | `rANY rANY oWHOLE>=0` | Returns `1` when `abbrev` matches the leading characters of `string` and is at least `length` characters long. | Pure string helper over `RexxValue.asString()`. |
+| `ABBREV` | `ABBREV(string, abbrev [,length])` | `rANY rANY oWHOLE>=0` | Returns `1` when `abbrev` matches the leading characters of `string` and is at least `length` characters long. | Direct configured prefix helper over RexxValue; default C positions are codepoints. |
 | `CENTER` | `CENTER(string, length [,pad])` | `rANY rWHOLE>=0 oPAD` | Centers or trims `string` to `length`, using `pad` or blank. | Alias target for `CENTRE`; preserve one-character pad rule. |
-| `CENTRE` | `CENTRE(string, length [,pad])` | same as `CENTER` | Alternative spelling of `CENTER`. | Implement as direct alias, not duplicate logic. |
-| `CHANGESTR` | `CHANGESTR(needle, haystack, replacement)` | `rANY rANY rANY` | Replaces all non-overlapping occurrences of `needle` in `haystack`. | Define empty-needle behavior from compatibility tests before optimizing. |
+| `CENTRE` | `CENTRE(string, length [,pad])` | same as `CENTER` | Alternative spelling of `CENTER`. | Direct alias already forwards to the shared CENTER implementation. |
+| `CHANGESTR` | `CHANGESTR(needle, haystack, replacement)` | `rANY rANY rANY` | Replaces all non-overlapping occurrences of `needle` in `haystack`. | Empty needle returns unchanged haystack; the named runtime unit asserts it. Compiled reference cases cover nonempty replacement. |
 | `COMPARE` | `COMPARE(left, right [,pad])` | `rANY rANY oPAD` | Returns `0` if equal, otherwise the first differing 1-based character position after padding the shorter side. | Compiled Level C positions count Unicode codepoints. |
-| `COPIES` | `COPIES(string, count)` | `rANY rWHOLE>=0` | Concatenates `count` copies of `string`. | Guard resource exhaustion through normal string limits. |
-| `COUNTSTR` | `COUNTSTR(needle, haystack)` | `rANY rANY` | Counts non-overlapping appearances of `needle` in `haystack`. | Same search rules as `POS`; empty-needle behavior needs tests. |
+| `COPIES` | `COPIES(string, count)` | `rANY rWHOLE>=0` | Concatenates `count` copies of `string`. | Existing VM allocation mechanisms apply; full limit/exhaustion behavior remains unqualified. |
+| `COUNTSTR` | `COUNTSTR(needle, haystack)` | `rANY rANY` | Counts non-overlapping appearances of `needle` in `haystack`. | Shared configured search; empty needle returns zero and is tested. |
 | `DATATYPE` | `DATATYPE(string [,type])` | `rANY oABLMNSUWX` | With no type, returns numeric/character classification. With type, tests alphanumeric, binary, lowercase, mixed letters, number, symbol, uppercase, whole, or hex. | This is a core helper for `CheckArgs`; it must match Classic syntax, not current Level B keyword rules. |
 | `DELSTR` | `DELSTR(string, start [,length])` | `rANY rWHOLE>0 oWHOLE>=0` | Deletes a character substring from `start`; omitted length deletes through the end. | 1-based character indexes. |
 | `DELWORD` | `DELWORD(string, start [,count])` | `rANY rWHOLE>0 oWHOLE>=0` | Deletes words beginning at word `start`; omitted count deletes through the end. | Word boundaries are blank/equivalent blank based on Classic rules. |
@@ -379,7 +409,7 @@ source for planning. This is implementation guidance, not a code copy.
 | Function | Signature | Checklist | Definition summary | Level B/RexxValue notes |
 | --- | --- | --- | --- | --- |
 | `ABS` | `ABS(number)` | `rNUM` | Returns the absolute value after caller-context numeric normalization. | Use `RexxValue.asDecimal()` under caller numeric settings. |
-| `FORMAT` | `FORMAT(number [,before [,after [,expp [,expt]]]])` | `rNUM oWHOLE>=0 oWHOLE>=0 oWHOLE>=0 oWHOLE>=0` | Formats a number with requested integer, fractional, and exponent widths, using caller form/scientific/engineering rules. | Raises `40.38` when the number cannot fit. This should become a shared numeric formatter, not copied into callers. |
+| `FORMAT` | `FORMAT(number [,before [,after [,expp [,expt]]]])` | `rNUM oWHOLE>=0 oWHOLE>=0 oWHOLE>=0 oWHOLE>=0` | Formats a number with requested integer, fractional, and exponent widths, using caller form/scientific/engineering rules. | Initial caller-DIGITS rounding follows the approved ANSI rule; 40.38 reports insufficient width. C and typed B/G paths retain distinct validation and error APIs. |
 | `MAX` | `MAX(number, ...)` | generated `rNUM...` | Returns the largest numeric argument. At least one argument is required. | `MAX()` with zero args raises `40.3`. |
 | `MIN` | `MIN(number, ...)` | generated `rNUM...` | Returns the smallest numeric argument. At least one argument is required. | `MIN()` with zero args raises `40.3`. |
 | `SIGN` | `SIGN(number)` | `rNUM` | Returns `-1`, `0`, or `1` according to numeric sign. | Use normalized numeric comparison. |
@@ -390,14 +420,14 @@ source for planning. This is implementation guidance, not a code copy.
 | Function | Signature | Checklist | Definition summary | Level B/RexxValue notes |
 | --- | --- | --- | --- | --- |
 | `ADDRESS` | `ADDRESS([option])` | `oEINO` | Returns current command environment name, or input/output target position/type/resource for option `E`, `I`, or `O`. | Use current `ADDRESS` runtime state, not command dispatch. |
-| `ARG` | `ARG([n [,option]])` | `oWHOLE>0 oENO`, or required both when option supplied | No args returns argument count. One arg returns argument `n`. With option, returns existence/omission state. | Needs routine/program argument vector and existence flags. |
-| `CONDITION` | `CONDITION([option])` | `oCDEIS` | Returns current condition name, description, extra data, instruction, or enabled state. Null when no current condition. | Direct activation-local BIF covers trapped SYNTAX/NOVALUE and validation; exact catalog description, extra data and other producers remain open. |
+| `ARG` | `ARG([n [,option]])` | `oWHOLE>0 oEO`; option with omitted n is 40.5 | Calling with no arguments returns the highest supplied invocation position, excluding trailing omissions. One argument returns argument n. E/O test whether that position was supplied or omitted. | Direct activation entry preserves supplied-empty versus omitted slots. |
+| `CONDITION` | `CONDITION([option])` | `oCDEIS` | Returns current condition name, description, extra data, instruction, or enabled state. Null when no current condition. | Admitted C/D/E/I/S fields, seven IDs, ON/OFF/DELAY, extra clearing and SYNTAX/NOVALUE/LOSTDIGITS/live ADDRESS producers have evidence. Real host HALT and complete cross-service lifecycle remain open. |
 | `DIGITS` | `DIGITS()` | none | Returns current `NUMERIC DIGITS`. | Existing `numeric.crexx` is relevant but Level C must use Classic current frame settings. |
 | `ERRORTEXT` | `ERRORTEXT(code [,option])` | `r0_90 oSN` | Returns unexpanded message text; `S` requests specification English, `N` allows localized text. | Uses the same generated English catalog as diagnostics; N uses English fallback, and undefined codes return empty. Range errors use 40.17. |
 | `FORM` | `FORM()` | none | Returns current `NUMERIC FORM`. | Must return Classic form wording. |
 | `FUZZ` | `FUZZ()` | none | Returns current `NUMERIC FUZZ`. | Must follow current frame. |
 | `SOURCELINE` | `SOURCELINE([n])` | `oWHOLE>0` | No arg returns visible source line count or `0`; arg returns source line `n`. | Raises `40.34` beyond available source. Uses compiler-retained physical lines on ordinary source input, shared by local routines and isolated per separately compiled Classic unit. Generated source-map input reports unavailable (count zero); full mapped-source inventory remains open. |
-| `TRACE` | `TRACE([option])` | `oACEFILNOR` | Returns prior trace setting, optionally toggling interactive mode with leading `?` and setting new trace mode. | Current trace runtime is a good source, but BIF surface must return previous setting. |
+| `TRACE` | `TRACE([option])` | Current implementation: `oANY` | Returns previous setting and applies the full option string through the existing TRACE state parser. | Compiled entry uses activation state; direct client entry uses pool state. Empty reset, numeric and toggle forms, and AS/ASM/LL/LLM extensions are current behaviors; approved practical divergences are recorded under LC-I-24. |
 
 ### Conversion Built-in Functions
 
@@ -419,7 +449,11 @@ source for planning. This is implementation guidance, not a code copy.
 
 The Classic I/O BIFs are configuration stream APIs. Existing Level B `fileio.crexx`
 functions are UTF text conveniences and should not be treated as conformant
-Level C stream implementations without an audit.
+Level C stream implementations without an audit. The eight names below have
+recognition only, with no direct compiled-C implementation. Adrian deferred
+stream/Unicode infrastructure changes pending a compatibility and architectural
+assessment; these rows retain target obligations and do not approve the RXPA
+stream proposal or a new ABI.
 
 | Function | Signature | Checklist | Definition summary | Level B/RexxValue notes |
 | --- | --- | --- | --- | --- |
@@ -436,11 +470,11 @@ Level C stream implementations without an audit.
 
 | Function | Signature | Checklist | Definition summary | Level B/RexxValue notes |
 | --- | --- | --- | --- | --- |
-| `DATE` | `DATE([option [,date [,inoption]]])` | `oBDEMNOSUW oANY oBDENOSU` | With no date, returns current local date in requested format. With date, converts from `inoption` to output option. | Uses frozen clause time, `Time2Date`, and `Leap`. Raises `40.19` for invalid conversion. |
-| `QUEUED` | `QUEUED()` | none | Returns number of lines in the external data queue. | Needs configuration queue service. |
+| `DATE` | `DATE([option [,date [,inoption]]])` | `oBDEMNOSUW oANY oBDENOSU` | With no date, returns current local date in requested format. With date, converts from `inoption` to output option. | Explicit conversion and injected-sample formatting are tested; current production sample is pool-cached without clause refresh. Calendar-crossing consequences are inferred, not probed. Invalid conversion is 40.19. |
+| `QUEUED` | `QUEUED()` | none | Returns number of lines in the external data queue. | Direct entry counts the existing selected execution-local repository without consuming input. Named host selection uses RXQUEUE; a wider C/Level C selector remains open. |
 | `RANDOM` | `RANDOM([max])` or `RANDOM([min [,max [,seed]]])` | `oWHOLE>=0 oWHOLE>=0 oWHOLE>=0` | Returns pseudo-random whole number in range. One argument means `0..arg`; defaults are `0..999`. | Range must be no wider than `100000`; raises `40.31`, `40.32`, `40.33`. |
 | `SYMBOL` | `SYMBOL(name)` | prose-defined | Returns `BAD` if argument is not a valid symbol, `LIT` if symbol is valid but dropped/literal, or `VAR` if it has a value. | Must use Level C symbol recognition and `RexxVariablePool`, not Level B keyword metadata. |
-| `TIME` | `TIME([option [,time [,inoption]]])` | `oCEHLMNORS oANY oCHLMNS` | With no time, returns current local time, elapsed time, reset elapsed time, or offset. With time, converts from `inoption` to output option. | Conversion to `E`, `R`, or `O` is invalid (`40.29`). Uses frozen clause time. |
+| `TIME` | `TIME([option [,time [,inoption]]])` | `oCEHLMNORS oANY oCHLMNS` | With no time, returns current local time, elapsed time, reset elapsed time, or offset. With time, converts from `inoption` to output option. | Conversion to E/R/O is invalid (40.29). Injected tests cover formatting/elapsed/reset, but a linked opt/no-opt probe reproduces missing real clause refresh and elapsed zero after one second. |
 | `VALUE` | `VALUE(name [,newvalue [,pool]])` | `rSYM oANY oANY`, or `rANY oANY oANY` with external pool | Returns old value of a variable and optionally assigns a new value. With external pool, calls configuration get/set. | Internal form must expand compound tails through `RexxVariablePool`; external form raises `40.36`/`40.37` from pool failures. |
 
 ## Level B source material and Level C status
@@ -463,27 +497,46 @@ Grouped or partial Level B coverage exists for:
 - command-environment runtime internals in `_address.crexx`.
 - trace runtime internals in `trace.crexx`.
 
-Remaining Level C work items rather than complete standalone surfaces:
+Current admitted stateful surfaces include ADDRESS, ARG, CONDITION, ERRORTEXT,
+QUEUED and SOURCELINE. CONDITION fields/producers and the shared English catalog
+have focused receipts; SOURCELINE retains original ordinary physical source
+lines but source-map input reports unavailable/count zero. Physical source NUL
+truncation remains a known source defect. These entries do not close wider
+host, mapped-source, locale or lifecycle obligations.
 
-- `CONDITION`, `ERRORTEXT`, and `SOURCELINE` as stateful BIFs;
-  `ADDRESS` and `ARG` have direct entries but retain open whole-context proof.
-- `CHARS`, `QUALIFY`, and `STREAM`; the three bit BIFs have direct runtime
-  entries and use the Latin-1 ordinal boundary in compiled Level C.
-- `CHARIN`/`CHAROUT`/`LINEIN`/`LINEOUT`/`LINES` as Classic stream functions rather
-  than current Level B UTF text helpers.
-- A real `Raise`/condition bridge and `ERRORTEXT` catalog lookup.
+The eight missing compiled-C surfaces are CHARIN, CHAROUT, CHARS, LINEIN,
+LINEOUT, LINES, QUALIFY and STREAM. The bit BIFs already have direct entries
+over the current fixed Latin-1 boundary. The shared condition/message bridge
+is implemented on admitted producers; real host HALT, complete cross-service
+state and full diagnostic/source proof remain open.
 
-## Remaining Implementation Sequencing
+## Remaining obligations and known issues
 
-1. Complete the remaining stateful BIFs and the real condition/message bridge.
-2. Finish reference and out-of-range qualification for byte-valued BIFs on
-   the approved Latin-1 ordinal bridge.
-3. Add stream and external data queue BIFs once the Level C configuration
-   adapter surface is settled.
-4. Route the remaining RexxScript intrinsics through standalone entries where
-   doing so does not grant extra authority to the sandbox.
-5. Retire the legacy proof dispatcher only after its remaining direct
-   consumers and compatibility tests have migrated.
+The worklist owns delivery order and decisions. This guide does not create a
+competing implementation plan. Current outstanding items are:
+
+1. The reproduced TIME clause-clock integration defect. DATE shares the
+   inspected cache; calendar crossing was not probed. Pure conversion and
+   manually injected clock tests do not establish real clock progression.
+2. Complete per-name reference/error/source/resource proof for the 62-entry
+   admitted baseline, including mapped/NUL source, real host HALT and wider
+   host/context isolation obligations. Positional range acceptance is not an
+   all-in-range allocation promise.
+3. Configured BIN/HEX extra blank/digit validation versus ASCII-only conversion
+   loops: an inspected custom-context concern needing a focused probe, not a
+   reproduced default-ASCII failure. Unicode-caused behavior is currently
+   undefined within Adrian's deferred assessment.
+4. SUBWORD's retained shared body versus standalone compiler target: its named
+   unit covers the retained body, while compiled panels cover the standalone
+   entry. Full per-name unit-matrix equivalence/migration remains open.
+5. The eight stream BIFs and new Unicode/I/O infrastructure remain deferred
+   pending assessment. Existing selected-queue count is implemented; a wider
+   host selector does not follow from QUEUED.
+6. RexxScript retains its sandbox allow-list and separate binary-capable value
+   behavior. Any future intrinsic migration must preserve that authority
+   boundary. Legacy dispatcher consumers remain distinct from the compiler
+   direct path; source comments describing current compiler use are stale
+   cleanup items, left unchanged by this documentation-only review.
 
 Keep Level B `.string` UTF-8 guarantees and the approved Level C Unicode scalar
 contract. Raw binary I/O and explicit Unicode BIFs have separate open design

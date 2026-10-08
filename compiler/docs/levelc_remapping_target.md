@@ -9,6 +9,12 @@ for live coverage and the
 Unicode-first and one-frame label/SIGNAL design. This record does not
 introduce approved source syntax or change compiler behaviour by itself.
 
+For the current per-instruction and BIF mapping, test coverage, accepted
+boundaries and known defects, use the
+[detailed compatibility-layer review](levelc_compatibility_layer.md). The
+earlier slices retain their original evidence and status; they do not establish
+current full conformance.
+
 ## Purpose
 
 Level C lowering needs a controlled way to transform a parsed source tree into

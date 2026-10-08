@@ -1,5 +1,9 @@
 # cREXX Compiler Parsing Pipeline Anatomy & Syntax Report
 
+Last reviewed for Level C: 2026-10-08. The
+[Level C compatibility-layer review](levelc_compatibility_layer.md) supplies
+the complete Classic AST/lowering/test map and current known gaps.
+
 ## 1. Introduction
 This document details the internal anatomy of the cREXX compiler's front-end parsing pipeline. It analyzes the flow of source code from raw text to the Abstract Syntax Tree (AST), identifying how syntax rules are enforced at each stage: Lexing, Glue (Parser Wrapper), Parsing, and the initial AST Walker.
 
@@ -8,11 +12,24 @@ Before the main compilation pipeline begins, the compiler performs a lightweight
 
 *   **Mechanism**: The function `opt_pars` (in `compiler/rxcpopar.c`) drives this process.
 *   **Components**:
-    *   **Scanner**: `compiler/rxcposcn.re` (re2c). It scans for the `OPTIONS` keyword and level tokens (e.g., `LEVELB`), while skipping comments and whitespace. It stops scanning upon encountering any token that is not a valid option.
+    *   **Scanner**: `compiler/rxcposcn.re` (re2c) recognizes the first OPTIONS clause and its tokens while skipping eligible comments/whitespace. `opt_pars()` inspects that complete clause before applying static words; punctuation or other nonstatic content leaves it as an executable OPTIONS expression instead of partially applying directives.
     *   **Parser**: `compiler/rxcpopgr.y` (Lemon). A simplified grammar that only recognizes the `OPTIONS` instruction.
-*   **Outcome**: The process sets the `context->level` (defaults to Level C if unspecified, or to the CLI `--level` default when one is supplied), records whether the source actually began with an `OPTIONS` instruction, and sets `context->numeric_standard`. Once the options are processed or a non-option token is found, the context is reset (tokens freed, buffer rewound), and the main pipeline (`rexbpars`) begins.
+*   **Outcome**: The process sets `context->level`, records an authored OPTIONS clause and sets `context->numeric_standard`. An explicit static source level selects that level; otherwise the CLI `--level` supplies the default.
+
+    Without that CLI default, `rxcp_source_default_level_for_extension()` selects Classic C for `.rexx`, G for `.crexx`/`.crx` and other non-reserved custom extensions, and C for an absent or reserved extension.
+
+    The helper and header parser fall back to C when no extension is present. The rxc CLI first normalizes an extensionless input to its `.crexx` default, so that ordinary CLI path selects G unless a source or CLI level overrides it. Normal compilation passes the resulting extension-derived default into the header parser.
+
+    A dynamic `OPTIONS expression` is not treated as a static level directive. Tokens and the buffer are reset before the selected main parser runs.
+*   **Dispatch**: Classic C uses `rexcpars()` and its separate `rxcpcscn.re`/`rxcpcpar.c`/`rxcpcgmr.y` front end. It prepares authored source and diagnostics, then lowers supported Classic AST shapes through `rxcp_levelc_lower_to_canonical()` before shared validation. B/G/L use `rexbpars()` and `rxcpbscn.re`/`rxcpbpar.c`/`rxcpbgmr.y`. The B/G/L scanner/glue/grammar examples in §§3.1–3.4 must not be read as the Classic lexer or keyword policy.
 
 ## 3. Pipeline Anatomy
+
+Sections 3.1–3.4 describe the B/G/L entry path unless explicitly stated. Level C
+uses contextual Classic words, its own continuation/recovery glue and a raw
+Classic tree before canonical lowering. Both paths share the later validation,
+source provenance, optimizer and emitter infrastructure. A syntax-highlighting
+pass alone supplies no execution-conformance verdict.
 
 ### 3.1 Lexical Analysis (Scanner)
 **Source**: `compiler/rxcpbscn.re` (re2c)
@@ -137,6 +154,10 @@ For the DSLSH mapping, editor contract, and retained-cache behavior, see
 [cREXX DSLSH Integration](dslsh_integration.md).
 
 ## 4. Syntax Rules Implemented by Step
+
+The scanner/grammar rules summarized here belong to the B/G/L path above.
+Classic C's neutral and contextual symbols, numeric spellings, source literals and
+statement forms are catalogued separately in the compatibility-layer review.
 
 ### Step 1: Lexical Rules (Scanner)
 Rules enforced on the character stream:

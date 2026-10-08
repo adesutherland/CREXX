@@ -2,7 +2,7 @@
 
 Status: extracted implementation reference for Level C syntax, evaluation,
 execution, configuration, and diagnostics
-Last updated: 2026-10-05
+Last updated: 2026-10-08
 
 Source: publicly available Classic REXX language specification, with BIF details
 separated into
@@ -11,7 +11,14 @@ separated into
 This is an implementation guide for cREXX Level C. Current implementation
 status, exceptions and evidence are in the
 [compatibility worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md).
-This guide is intentionally not a
+The [detailed compatibility-layer review](levelc_compatibility_layer.md)
+maps the current source AST, lowering, library and tests for each instruction
+and BIF.
+The configuration/API names in this reference are Classic conceptual
+obligations, not declarations that cREXX has shipped every corresponding host
+ABI. The admitted 24 instruction reviews and independent 62-entry BIF baseline
+do not close the full host/source/expression contract; INTERPRET and eight
+stream BIFs remain pending. This guide is intentionally not a
 verbatim copy of the language-specification source. The goal is to capture the
 rules that compiler, lowering, runtime, and library code must respect while
 Level C is implemented in Level B.
@@ -128,8 +135,10 @@ and I/O belong to a later explicit facility.
 
 `RexxValue` retains binary storage, numeric caches and representation flags for
 RexxScript and future uses; this Level C scalar contract does not remove them.
-The configuration object still owns host services, extra character tables,
-blank behavior and numeric limits. Unicode 17.0.0 `White_Space` is the default
+The current `RexxClassicConfig` supplies character tables and blanks, numeric
+classification limits, RANDOM state and registered VALUE-pool services. The
+wider stream and host configuration obligations below are not all implemented
+by that object. Unicode 17.0.0 `White_Space` is the default
 word-blank set, with configured additions. There is no implicit normalization.
 Level G owns grapheme, normalization, full folding and segmentation algorithms;
 new explicit Unicode Level C BIFs require a separate approved design.
@@ -137,8 +146,14 @@ new explicit Unicode Level C BIFs require a separate approved design.
 The configured blank set controls right-grouped binary/hexadecimal validation,
 and the exponent-digit limit defaults to nine. `RexxClassicDatatype` applies
 these services consistently to DATATYPE, SYMBOL, and CheckArgs rather than
-duplicating ASCII-only validators. Existing BYTE/UTF8 implementation branches
-are transitional until the single Unicode path is qualified.
+duplicating ASCII-only validators. Existing BYTE/UTF8 branches also serve
+direct binary clients; they are not a compiled-C profile switch. Adrian's
+2026-10-07 scope clarification defers changes to Unicode and I/O infrastructure
+pending a compatibility and architectural assessment. Unicode-caused signals
+and logic errors are currently
+undefined in B/C/G. Preserve current concrete typed/explicit Unicode API
+mechanisms and RexxScript's binary-capable values; do not infer a new Unicode
+error policy, codec or stream ABI from this reference.
 
 ### Commands, Routines, Queues, Streams
 
@@ -158,9 +173,17 @@ dispatch:
 - stream hooks back `CHARIN`, `CHAROUT`, `CHARS`, `LINEIN`, `LINEOUT`,
   `LINES`, `QUALIFY`, `STREAM`, default I/O, and `ADDRESS WITH` redirection.
 
-The stream adapter must cover character input/output, stream positioning,
-stream commands, stream state, stream qualification, unique temporary stream
-names, stream queries, close, and count/availability queries.
+The full Classic target requires character input/output, positioning, commands,
+state, qualification, temporary names, queries, close and count/availability.
+Adrian has deferred the eight Classic stream BIFs and new I/O infrastructure
+pending assessment; the RXPA Classic-stream proposal is unapproved.
+QUEUED is implemented over the same execution-local selected queue as
+PULL/PUSH/QUEUE and does not consume input. The existing RXQUEUE host API can
+select named queues; a broader C/Level C configuration selector remains open.
+CALL currently uses the approved static signed provider boundary documented in
+the detailed review, with ordinary compiler type checking and unchanged VM/linker
+behavior. Classic late routine lookup and general cross-dialect invocation are
+not thereby implemented.
 
 ### Traps And API Variable Pools
 
@@ -410,6 +433,13 @@ label search when a matching label is found.
 
 ### Numeric And Logical Semantics
 
+Current BIF boundary: ABS, MAX, MIN, SIGN, TRUNC and FORMAT initially round numeric
+operands under caller DIGITS/FORM by the approved ANSI rule, including existing
+B/G typed decimal APIs. BIF positional/count WHOLE arguments use the inclusive
+signed64 range and source-anchored 40.12 outside it; radix WHOLENUM remains
+arbitrary precision. These are specific accepted BIF rules, not complete proof
+of all expression, resource or implementation-limit behavior.
+
 Numeric checks use Classic `DATATYPE` behavior:
 
 - numeric strings may include surrounding blanks and an optional sign;
@@ -437,6 +467,12 @@ configuration comparison. Strict comparison is character-by-character with no
 numeric conversion and no blank stripping.
 
 ### Function And CALL Evaluation
+
+The order below is the Classic target. Current expression lowering supports
+local functions and direct BIFs; signed external subroutines are reached through
+CALL. The approved compiled CALL boundary requires a provider visible at caller
+compilation and present in the image. Later providers require recompilation;
+this is an explicit departure from Classic late lookup.
 
 Arguments preserve omitted positions. The call frame needs both argument value
 and argument-exists state.
@@ -466,9 +502,15 @@ Program initialization sets invocation mode, source, initial environment,
 arguments, default numeric settings, configuration constants, message catalog,
 condition enablement, trace state, and variable pools.
 
-Clause termination is not just a sequence point. It is where the runtime checks
-for `HALT`, handles delayed `CALL ON` conditions, and performs trace/pause
-activity.
+Clause termination is not just a sequence point. The target checks HALT,
+delayed CALL ON conditions, trace/pause activity and a refreshed DATE/TIME
+clause sample. Admitted trap/TRACE paths have instruction evidence; real host
+HALT and wider processor lifecycle remain open. The current DATE/TIME code
+uses `ensureClauseTime()` without a production `beginClauseTime()` caller.
+A linked opt/no-opt probe reproduces unchanged TIME(L) and elapsed zero after
+one second; DATE's shared sample is consequently also cached, with calendar
+crossing itself unprobed. This known integration defect remains documented,
+not repaired, by the review.
 
 ### Core Instructions
 
@@ -558,7 +600,11 @@ the stem default and its old explicit tails.
 - falling off the end of the program is equivalent to `EXIT` without an
   expression.
 
-`INTERPRET`:
+`INTERPRET` target (parked and unimplemented in current cREXX):
+
+The parser recognizes this instruction, but execution lowering rejects it.
+The following Classic obligations remain pending and do not describe an
+available runtime facility:
 
 - evaluates an expression to source text;
 - checks `HALT` before recognition;
@@ -579,7 +625,7 @@ the stem default and its old explicit tails.
 the exact-length value to the shared Classic configuration service. The
 leading bare-word clause also selects source-level compiler settings before
 parsing. Later clauses never reparse source. Bare `OPTIONS` is a no-op in the
-Regina-compatible Level C dialect. The current BYTE and UTF8 profiles have no
+Regina-compatible Level C dialect. The current configuration has no
 recognized runtime option words, so all evaluated words, including IBM's
 EBCDIC DBCS-specific `ETMODE`/`EXMODE` family, are ignored. Unknown words do
 not raise an error. Level C permits explicit hash/dash line-comment source
@@ -665,8 +711,14 @@ Raising non-`SYNTAX` conditions:
 - delayed events are not generally stacked, except one extra `HALT` can be
   held while a first `HALT` is being handled.
 
-The `CONDITION` BIF reads condition name, description, extra data, and
-instruction type from this state.
+The `CONDITION` BIF reads the C/D/E/I/S fields: condition name, description,
+extra data, trapping instruction and current ON/OFF/DELAY state. Focused evidence covers
+seven record identities and admitted SYNTAX/NOVALUE, ADDRESS
+ERROR/FAILURE/NOTREADY and NUMERIC LOSTDIGITS producers; real host HALT and
+complete cross-service producer/lifecycle proof remain open. ERRORTEXT now
+shares the generated English catalog with diagnostics, returns unexpanded
+Classic placeholders and uses English fallback for N. That baseline does not
+close full .MN, source traceback or trapped-event locale obligations.
 
 Message identities and normalized catalog text live in
 `compiler/docs/levelc_standard_error_messages.md`. BIF-specific message usage

@@ -18,6 +18,11 @@ The eight stream BIFs, deferred Unicode/I/O compatibility and wider source/host
 obligations remain open. ANSI numeric rules and the same infrastructure scope
 apply to B/G as Adrian directed. This completes the admitted independent phase,
 not the full 70-name contract, full Level C or Release 1 qualification.
+A later documentation probe reproduced `LC-DOC-ISSUE-01`: linked optimized/no-opt
+TIME retains its first pool clock sample across a one-second sleep. DATE shares
+the inspected cache, with calendar crossing unprobed. Earlier passing QA remains
+evidence for its actual cases; it did not cover this missing clause refresh.
+
 
 `LC-I-01`–`LC-I-18` (SAY, DROP, assignment,
 NOP, OPTIONS, IF, SELECT, DO, LEAVE, ITERATE, ARG, PROCEDURE, CALL, RETURN,
@@ -27,7 +32,7 @@ one activation argument frame; the complete admitted Classic invocation and
 template matrix has passing evidence in the closure receipt below. Cross-dialect
 Classic/non-Classic invocation is outside this programme's scope by Adrian's
 2026-10-05 clarification, except the fixed-signature Level B/G CALL entry
-Adrian subsequently allowed on 2026-10-05. Future external CALL/INTERPRET and broader C host
+Adrian subsequently allowed on 2026-10-05. Remaining external-routine services, parked INTERPRET and broader C host
 interfaces retain their own open owners; they are not ARG closure gates. The
 approved `LC-STEP-63T`
 one-frame label and SIGNAL design has a
@@ -892,10 +897,150 @@ preserved rather than removed. Remaining exact BIF limits: eight absent stream
 entries pending architectural/compatibility assessment; SOURCELINE mapped inputs
 unavailable/count zero and physical-source NUL truncation under LC-GAP-06;
 CONDITION real host HALT producer under LC-GAP-04; full resource/reference/platform
-proof and undefined Unicode behavior. No admitted focused ASCII behavior failure
-remains reproduced. The proposed narrow stream provider remains unapproved; no
+proof and undefined Unicode behavior. At that checkpoint, no failure remained in the admitted focused ASCII
+fixtures; the later LC-DOC-ISSUE-01 probe exposed clause-refresh coverage absent
+from them. The proposed narrow stream provider remains unapproved; no
 new decision was assumed. INTERPRET, LC-GAP-01/03–10, wider host criteria and B/G
 compiler split/fast-pipeline proposals remain pending.
+
+### Level C documentation review programme (2026-10-08)
+
+**Vision and intended outcome.** Adrian requested a complete, readable review
+of the Level C compatibility layer. Produce one detailed current-state document
+at `compiler/docs/levelc_compatibility_layer.md`, with an explicit section and
+subsection structure before investigation, every instruction and all 70 Classic
+BIFs, their source AST/canonical lowering and library paths, tests and precise
+conformance boundaries. Explain agreed and outstanding principles, Unicode,
+messages, I/O, B/G integration, RexxScript separation and OS/platform services.
+Review and reconcile the existing Level C guides without rewriting historical
+evidence as current behavior. This existing worklist remains the sole delivery
+plan and authority for scope/decisions. Document known issues; change no product,
+test, build or language code and make no new architecture/compatibility decision.
+Use subagents for detailed investigations, integrate sections in outline order,
+then perform an independent summary validation task after detailed sections are
+complete and a separate careful human-language review section by section.
+Reuse the qualified BIF/product evidence; documentation work does not trigger
+new broad builds, tests, hosted gates or release qualification.
+
+**Checkable acceptance criteria.**
+
+- [x] **LC-DOC-AC-01:** complete outline lists every major section/subsection,
+  all 25 instruction review rows plus structural clause/label forms, all 70
+  catalogued BIFs and additional direct extensions; no silent omissions.
+- [x] **LC-DOC-AC-02:** principles and infrastructure chapters distinguish
+  accepted direction, observed implementation, approved departures, undefined
+  Unicode behavior and pending decisions, including B/G, RexxScript, native
+  host lifecycle, messages/I/O and supported/unrun OS/platform proof.
+- [x] **LC-DOC-AC-03:** each instruction has a checked contract, source AST,
+  canonical lowering, helper/native ownership, concrete maintained test names,
+  evidence limits and honest conformance status with worklist/reference owners.
+- [x] **LC-DOC-AC-04:** each BIF has the same per-name mapping/argument/state/error
+  and test/status detail; recount recognition/direct entries independently and
+  keep eight deferred stream implementations visibly absent.
+- [x] **LC-DOC-AC-05:** reconcile current claims in existing architecture,
+  compliance, BIF, runtime-value, remapping, source-highlighting, message and
+  reference-obligation guides; preserve historical records with clear labels.
+  Every discovered issue has an owning gap or documented new observation,
+  evidence and next investigation rather than an unrequested code repair.
+- [x] **LC-DOC-AC-06:** after all detailed chapters are integrated, a separate
+  subagent task checks every summary claim against them and reports contradictions,
+  omissions and unsupported closure; resolve the document findings.
+- [x] **LC-DOC-AC-07:** a subsequent human-language review reads every section in
+  sequence for clarity, terminology, repetition and status precision. Verify
+  structure, inventory, links and source-symbol/test references, preserve frozen
+  product/test inputs, commit coherent documentation and report exact Git state.
+
+**Numbered work steps.**
+
+1. **LC-DOC-STEP-01 (AC-01):** read instructions/current plan, fetch develop,
+   inspect document inventory and create the full outline. Starting clean HEAD
+   `c1d971502f5f0ee4804192918e77efb5f7e5d0be`, fetched 0 behind / 221 ahead.
+2. **LC-DOC-STEP-02 (AC-02/03/04):** delegate instruction and BIF investigations
+   to subagents with disjoint section ownership; read and verify shared principles,
+   front end, runtime, messages/I/O and platform sources. Each investigation
+   returns source/test citations and discrepancies. Integrate chapters in order.
+3. **LC-DOC-STEP-03 (AC-05):** reconcile the existing guide family and reference
+   obligations against detailed findings; record known issues and owning gaps.
+4. **LC-DOC-STEP-04 (AC-06; depends on STEP-02/03):** write summary chapters from
+   the completed details, then assign a distinct independent summary-validation
+   task. Resolve its document findings without fixing code.
+5. **LC-DOC-STEP-05 (AC-07; depends on STEP-04):** assign a separate prose review,
+   review sections in sequence, validate inventories/links/mappings, verify only
+   documentation changed and the qualified code/test fingerprint is unchanged,
+   commit the reviewed documents and report current unpublished state.
+
+**Section progress:** complete outline and detailed principles/front-end/runtime/platform
+chapters verified; instructions 25/25; Classic BIFs 70/70 plus common/extensions;
+existing-guide reconciliation complete; independent summary validation passed;
+section-by-section human-language review complete. All LC-DOC criteria are
+verified for documentation delivery; product gaps and decisions remain open.
+The new document carries the complete outline; intermediate investigator notes
+stay in temporary files, not competing plans or per-case evidence files.
+
+**LC-DOC-STEP-02/03/04 receipt, 2026-10-08.** Three detailed investigation
+agents supplied all 25 instruction and 70 BIF sections plus the shared BIF
+path and LOWER/UPPER. Each records legal forms/arguments, actual source AST,
+canonical helpers/libraries/ownership, maintained tests and conformance limits.
+Root integrated the common principles/source/runtime/platform/evidence chapters;
+a separate infrastructure cross-check confirmed their source/API/QA claims
+with two wording corrections (queue lifetime and TIME-versus-DATE evidence).
+The existing guide family was reconciled while retaining labelled history;
+shared architecture, Unicode and libraries guides also gained current scope/path
+signposts. All changes are Markdown; stale .crexx source comments are recorded
+for later cleanup under Adrian's no-code instruction.
+
+A distinct independent `summary_validation` task then checked every summary
+against the completed details and source/evidence boundaries. It passed after
+three corrections: CHANGESTR empty-needle proof belongs to the runtime unit,
+not the nonempty compiled reference case; reconciled guide status must use
+past tense; the worklist opening/historical QA receipt must distinguish the
+later clock defect from earlier passing finite test cases. The report is
+`/tmp/crexx-levelc-doc-summary-validation.md`; essential outcomes are retained
+here and in the document's validation chapter. No new broad suite, build or
+hosted gate was run. Separate section-by-section language review remains active.
+
+**LC-DOC-STEP-05 final review receipt, 2026-10-08.** Separate core and BIF
+language tasks reviewed all 12 chapters, all 25 instruction and 70 BIF entries,
+common/extensions and all 16 amended companion guides outside this worklist.
+Root reviewed this worklist and the final validation receipt. Both passes
+preserved technical identities, headings/links, error/gap IDs, examples,
+qualification counts and status boundaries, with no unresolved concern.
+Checklists: `/tmp/crexx-levelc-doc-language-{core,bifs}.md`.
+
+The new `compiler/docs/levelc_compatibility_layer.md` consolidates the detailed
+review; 17 existing Markdown records were reconciled. Inventory/subsection,
+local path/anchor, source/test identifier and `git diff --check` inspections
+passed. No product/test/build/source-comment input changed. Remaining-tree
+SHA256 excluding exactly the 18 review Markdown paths:
+`3dd063299baf9fe1be8ab2cd5fc6420c0a22dd26290197b74a9d7503c200f01c`; final staged/committed tree must match the starting
+`c1d971502f5f0ee4804192918e77efb5f7e5d0be` comparison. Exact exclusion list and
+verification receipt: `/tmp/crexx-levelc-doc-inputs.json`.
+The previous BIF qualification fingerprint is retained with its original
+exclusions; no broad QA is repeated or new gate called passed. The only fresh
+execution is the explicitly logged TIME probe, which exposed LC-DOC-ISSUE-01
+without a code fix. LC-DOC-AC-01–07 / STEP-01–05 are complete for this document
+review. Full Level C/BIF/Release 1, INTERPRET, Unicode/I/O/host assessment,
+other gap decisions and B/G split/fast-pipeline proposals remain pending.
+
+**LC-DOC-ISSUE-01 — TIME clause-clock refresh, reproduced 2026-10-08; DATE shares the inspected state.**
+Owned by LC-GAP-02/04, LC-REF-057/053. Both BIFs call
+`RexxVariablePool.ensureClauseTime()`, which captures only the first sample.
+`beginClauseTime()` can refresh it but current production compiler/library/script
+paths have no identified caller. On unchanged Release tools at
+`c1d971502f5f0ee4804192918e77efb5f7e5d0be`, linked opt and no-opt both return
+identical TIME('L') values and TIME('E') = 0 across `ADDRESS SYSTEM 'sleep 1'`.
+Regina 3.9.7 advances the long timestamp and reports 1.137237 elapsed seconds.
+Temporary source, literal toolchain/reference argv and output are retained in
+`/tmp/crexx-levelc-doc-clock.x18y6bki/receipt.json` and `probe.log`.
+The maintained DATE/TIME units inject samples and therefore do not establish
+compiled clause refresh. DATE uses the same clock; calendar/year-window effects
+are inferred from code, with calendar crossing unprobed. This is a known
+integration defect, not a failed current Unicode or new I/O rule. No product,
+test/build source or architecture is changed by this documentation task.
+Next work: investigate the existing clause-boundary refresh integration and
+maintain a regression for same-clause consistency versus next-clause freshness.
+The earlier broad QA remains valid for its actual test cases; it did not detect
+or close this missing producer. Full BIF conformance remains open.
 
 ### Remaining-gap decision register (2026-10-07)
 
@@ -917,7 +1062,7 @@ with the later whole-instruction receipts before the fresh review.
 | LC-GAP-07 | Expression semantics still need whole-family audit: power association, arithmetic precedence and numeric errors, normal/strict comparison, logical operand errors, concatenation and configuration effects across optimized/no-opt execution. `NUMERIC` as an instruction is closed; that does not close all expression consumers. | `LC-AC-04/72/73`, `LC-REF-043–046/053/054`: reconcile specific failing forms against the reference and qualify one shared expression path. |
 | LC-GAP-08 | The Unicode-first scalar route and fixed Latin-1 ordinal bridge have substantial passing slices, but complete source, BIF, host and cross-consumer proof is open. `RexxValue` binary capability remains for RexxScript. Explicit Unicode BIF names/codecs and the later raw-binary boundary still require their own design decision. | `LC-AC-06/72/73/75`, `LC-REF-008–014`: complete whole-program proof; decide whether the new Unicode BIF design belongs to this Level C closure or a separately approved later scope. No implicit raw-byte behavior. |
 | LC-GAP-09 | AST ownership/provenance, duplicate lowering paths and the earlier-instruction baseline have many retained receipts but no final complete crosswalk. Some coverage and reference rows still describe pre-closure slices; this register corrects the active status, not every historical receipt. | `LC-AC-08/58/61`: inspect current parser-to-emitter paths and remove real duplication or stale claims. Reserve a fresh independent consistency review for the new session after closeout. |
-| LC-GAP-10 | Exact-head full compatibility and Release 1 qualification are unproved. The latest normal Level C Debug/Release 741/741 checkpoints qualify TRACE code/test inputs, not the outstanding host/BIF/source/expression surface or Beta 4 packaging/platform matrix. | `LC-AC-01/04/59`, `R1-AC-01/02`: after dispositions and product changes, run the smallest relevant grouped checks and the required candidate qualification once on final inputs; do not repeat unchanged gates per item. |
+| LC-GAP-10 | Exact-head full compatibility and Release 1 qualification are unproved. The 2026-10-08 local product checkpoint (full Debug 3296/3296; 3113 unique Release correctness checks; installed/focused ASan receipts) qualifies its recorded cases, not the complete reference surface or Beta 4 platform matrix; LC-DOC-ISSUE-01 demonstrates a clock behavior absent from those fixtures. | `LC-AC-01/04/59`, `R1-AC-01/02`: after dispositions and product changes, run the smallest relevant grouped checks and the required candidate qualification once on final inputs; do not repeat unchanged gates per item. |
 
 1. **LC-STEP-89A (`LC-AC-01/04/06/08/58/59/61/72/73/75`; complete 2026-10-07):** reconcile the active instruction queue, current BIF entries, accepted boundaries and open cross-cutting criteria into `LC-GAP-01–10` without treating a closed instruction as full compatibility.
 2. **LC-STEP-89B (`R1-AC-01/02`; pending Adrian's decisions; depends on 89A):** record each chosen item as required work, a specifically approved and documented "won't implement" exception, or an explicitly open Release 1 blocker. Parking alone never approves an exception.
@@ -6764,9 +6909,10 @@ configuration and complete BIF behavior stay open under `LC-AC-06/04`.
 Historical SAY-adjacent findings and their remaining cross-cutting owners:
 
 - Reconcile every expression form admitted by the Classic grammar with the
-  shared expression/BIF path under `LC-AC-04/06/08`. The direct table reaches
-  59 of 70 recognised Classic BIF names plus LOWER/UPPER; eleven recognised
-  names still need direct runtime services. External functions, configured state and
+  shared expression/BIF path under `LC-AC-04/06/08`. At this historical SAY
+  review the direct table reached 59 of 70 recognised Classic BIF names plus
+  LOWER/UPPER, with eleven missing services. The current LC-GAP-02 recount is
+  62 of 70 with eight deferred stream names; each has its own audit/status row. External functions, configured state and
   reference error/trap behavior remain open. The SAY instruction adds no
   separate restriction to a supported expression.
 - **Resolved compiler-only variable-read limit (LC-STEP-63A):** Regina writes
@@ -8139,8 +8285,12 @@ establishes required/optional arguments and option sets; the shared validator
 owns omitted-position count, normalization and Classic error construction.
 BIF-specific checks own value/range and state changes. Compiler fixtures verify
 the authored SYNTAX bridge rather than accepting a raw VM conversion failure.
-Each existing standalone fixture below includes value or error assertions; the
-bitwise and numeric-state aliases use their named shared fixtures. This is an
+Each named fixture below includes value or error assertions; the bitwise and
+numeric-state aliases use their named shared fixtures. SUBWORD's named unit
+exercises the retained common body while compiled panels reach its standalone
+entry; TRACE's unit uses pool state while compiled matrices use frame state.
+Those distinctions are documented in the detailed compatibility layer and
+prevent attributing a unit pass to every compiled path. This is an
 admitted-path audit, not an exhaustive conformance assertion for undefined
 Unicode behavior or unapproved stream infrastructure.
 
@@ -8150,7 +8300,7 @@ Unicode behavior or unapproved stream infrastructure.
 | `BIF-AUDIT-ORDINAL` (12) | B2X, BITAND/BITOR/BITXOR, C2D/C2X, D2C/D2X, XRANGE, X2B/X2C/X2D; direct units, shared Bitwise fixture, LC-STEP-88B and Latin-1 compiled fixtures | HEX/BIN rules, omitted length/pad, signed/unsigned and arbitrary-precision radix values, bitwise padding, NUL/high ordinals, all 256 C2X/X2C round trips and XRANGE wrap. Existing fixed Latin-1 bridge and conversion signals remain; no codec/raw-byte I/O change or new Unicode compatibility claim. |
 | `BIF-AUDIT-NUMERIC` (6) | ABS, FORMAT, MAX/MIN, SIGN, TRUNC; direct units, common legacy unit, `level[b/c/g]_bif_numeric_context` in four execution modes | ANSI caller-DIGITS initial +0, FORM, variadic required operands, ties, fixed truncation/scale, FORMAT fields/overflow/errors and caller restoration. B/G decimal families use the same approved rule with typed results/signals; independent float/int families remain unchanged. Reduced-DIGITS Regina behavior differs from the approved ANSI rule. |
 | `BIF-AUDIT-POOL` (3) | DATATYPE, SYMBOL, VALUE; per-name units, shared datatype/pool tests and reference audit | AB(L)MNSUWX options, configured classes, constant versus variable symbol, exact symbol spelling, uninitialized/set/drop/compound and named external pool behavior, omitted new value versus empty value and errors. Shared ASCII symbol classification repaired; scanner/encoded source LC-GAP-06 and wider host variable-pool LC-GAP-04 stay open. |
-| `BIF-AUDIT-STATE` (10) | ADDRESS, ARG, CONDITION, DIGITS/FORM/FUZZ, TRACE, DATE, TIME, RANDOM; per-name/shared Numeric units, existing instruction/host fixtures and LC-STEP-90D CONDITION receipt | Omitted/count/options, selected environment, omitted/empty argument state, numeric/trace restoration, frozen clause time and elapsed/reset state, date/time conversions, random ranges/seed/config isolation; CONDITION C/D/E/I/S, ON/OFF/DELAY and all seven admitted IDs. Live ERROR/FAILURE/NOTREADY, SYNTAX/NOVALUE/LOSTDIGITS and controlled typed CALL events have field proof. Real host HALT stays LC-GAP-04; no wider host-service or full source closure. |
+| `BIF-AUDIT-STATE` (10) | ADDRESS, ARG, CONDITION, DIGITS/FORM/FUZZ, TRACE, DATE, TIME, RANDOM; per-name/shared Numeric units, existing instruction/host fixtures and LC-STEP-90D CONDITION receipt | Omitted/count/options, selected environment, omitted/empty argument state, numeric/trace restoration, injected/frozen clock unit behavior and date/time conversions (compiled clause refresh is a reproduced gap in LC-DOC-ISSUE-01), random ranges/seed/config isolation; CONDITION C/D/E/I/S, ON/OFF/DELAY and all seven admitted IDs. Live ERROR/FAILURE/NOTREADY, SYNTAX/NOVALUE/LOSTDIGITS and controlled typed CALL events have field proof. Real host HALT stays LC-GAP-04; no wider host-service or full source closure. |
 | `BIF-AUDIT-QUEUE` (1) | QUEUED; LC-STEP-90C, direct unit and direct/linked opt/no-opt fixture | Same selected execution-local repository as PULL/PUSH/QUEUE; non-consuming counts, FIFO/LIFO, named selection, NUL, errors/source and context isolation. Wider Level C/C host selector stays LC-GAP-03. |
 | `BIF-AUDIT-SOURCE` (1) | SOURCELINE; LC-STEP-90D, direct unit and direct/linked/provider opt/no-opt fixtures | Retained original comments/blanks, CRLF/CR/LF and final line, no runtime reread, count/index/omissions/errors/source, local unit sharing and separate binary provider isolation. Mapped inputs return unavailable/count zero; physical source NUL truncation and full mapping remain LC-GAP-06. |
 | `BIF-AUDIT-MESSAGE` (1) | ERRORTEXT; LC-STEP-90D, direct unit and direct/linked opt/no-opt fixture | Shared standard English catalog; S/N fallback, major/minor/undefined codes, decimal subcode zeros, range 40.17, omissions/count/options and authored error source. No localization service/host ABI was added. |

@@ -13,6 +13,12 @@ Classic rules are in `levelc_compliance_reference.md`. This file preserves
 the milestone's implemented shape, manual test workflow, parser gaps at that
 date, and the original route into canonical compiler integration.
 
+For the current per-instruction and BIF mapping, test coverage, accepted
+boundaries and known defects, use the
+[detailed compatibility-layer review](levelc_compatibility_layer.md). The
+earlier slices retain their original evidence and status; they do not establish
+current full conformance.
+
 ## Scope
 
 At this milestone, the main Level C path was a parser-mode and

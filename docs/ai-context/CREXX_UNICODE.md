@@ -8,6 +8,14 @@ mathematical algorithms in `docs/books/crexx_vm_spec/unicode_algorithms.md`.
 Decisions and future work remain in
 `docs/planning/unicode/PRODUCT-SURFACE-AND-ROADMAP.md`.
 
+The current [Level C compatibility review](../../compiler/docs/levelc_compatibility_layer.md#32-classic-scalar-values-and-the-current-unicode-boundary)
+records Adrian's deferred Unicode/I/O assessment for B/C/G compatibility work.
+Unicode-caused signals and logic errors remain undefined in that scope. The
+explicit Unicode algorithms described here do not establish full Classic
+conformance. This guide describes existing
+typed mechanisms; the compatibility programme introduces no new codec,
+normalization, grapheme or stream rule.
+
 ## Non-negotiable boundary
 
 - `.string` is valid UTF-8 text and ordinary Level B positions count
