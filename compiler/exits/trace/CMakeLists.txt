@@ -4,9 +4,15 @@ set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 
 crexx_add_compiler_exit_component(exit_trace_bin Trace)
 
+# The generated TRACE helper imports RexxValue from the consolidated runtime.
+# Keep that dependency on consumers, not the bootstrap exit bundle: rxfnsc
+# itself needs compiler_exit_bin before it can be compiled.
+set(TRACE_RUNTIME_DEPENDS rxfnsc "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
+
 crexx_add_compiler_exit_runtime_test(
         test_trace_exit
         test_trace_exit.crexx
+        EXTRA_DEPENDS ${TRACE_RUNTIME_DEPENDS}
         PASS_REGULAR_EXPRESSION "SUCCESS"
         RUN_SUFFIX ${LIBRPATH}
 )
@@ -14,6 +20,7 @@ crexx_add_compiler_exit_runtime_test(
 crexx_add_compiler_exit_runtime_test(
         test_trace_negated_string
         test_trace_negated_string.crexx
+        EXTRA_DEPENDS ${TRACE_RUNTIME_DEPENDS}
         PASS_REGULAR_EXPRESSION "[ ]*6 \\*-\\*[ ]+return \\\\\\\\flag"
         RUN_SUFFIX ${LIBRPATH}
 )
@@ -21,6 +28,7 @@ crexx_add_compiler_exit_runtime_test(
 crexx_add_compiler_exit_runtime_test(
         test_trace_results
         test_trace_results.crexx
+        EXTRA_DEPENDS ${TRACE_RUNTIME_DEPENDS}
         PASS_REGULAR_EXPRESSION ">=>[ ]+\"42\""
         RUN_SUFFIX ${LIBRPATH}
 )
@@ -28,6 +36,7 @@ crexx_add_compiler_exit_runtime_test(
 crexx_add_compiler_exit_runtime_test(
         test_trace_llm
         test_trace_llm.crexx
+        EXTRA_DEPENDS ${TRACE_RUNTIME_DEPENDS}
         PASS_REGULAR_EXPRESSION "\"format\":\"llm\".*\"file\":\"test_trace_llm\\.crexx\".*\"source\":\"[ ]*return"
         RUN_SUFFIX ${LIBRPATH}
 )
@@ -139,7 +148,7 @@ function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
                 OUTPUT ${_output}
                 COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${_rxc_flags} -o ${_base} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}
                 COMMAND $<TARGET_FILE:rxas> ${_rxas_flags} -o ${_base} ${_base}
-                DEPENDS rxc rxas ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} ${TRACE_CAPTURE_EXTRA_DEPENDS} ${_extra_outputs}
+                DEPENDS rxc rxas ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${TRACE_RUNTIME_DEPENDS} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} ${TRACE_CAPTURE_EXTRA_DEPENDS} ${_extra_outputs}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 COMMENT "Compiling ${SOURCE_FILE} with exit (${_mode})"
         )
@@ -264,6 +273,7 @@ crexx_add_trace_capture_test(
 crexx_add_compiler_exit_runtime_test(
         test_trace_namespace_commands
         test_trace_namespace_commands.crexx
+        EXTRA_DEPENDS ${TRACE_RUNTIME_DEPENDS}
         PASS_REGULAR_EXPRESSION "TRACE NAMESPACE COMMANDS DONE"
         RUN_SUFFIX ${LIBRPATH}
 )

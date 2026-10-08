@@ -73,6 +73,12 @@ action replaces `bin/rxfnsc.rxbin` through a temporary-file-and-rename step.
 Member actions never delete or rewrite another member's output or the public
 image.
 
+The certified TRACE exit emits a helper that imports `rexxvalue.RexxValue`
+from this consolidated runtime. TRACE consumer compilation must depend on
+`rxfnsc` and its published RXBIN; depending only on `compiler_exit_bin` can
+fail with `CLASS_NOT_FOUND` in a clean parallel rebuild. Keep that dependency
+on the consumers: the exit bundle is a bootstrap prerequisite of `rxfnsc`.
+
 The coherent source route is deliberate. The previous shared work directory
 could resolve some internal dependencies from source and others from generated
 RXBIN metadata depending on what was already present. Source/RXAS/RXBIN route
