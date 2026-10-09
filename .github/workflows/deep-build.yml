@@ -95,7 +95,7 @@ jobs:
   documents:
     name: Required Linux books
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.full_gate == 'true'
     uses: ./.github/workflows/build-docs.yml
     with:
       commit: ${{ needs.assurance-gate.outputs.target_sha }}

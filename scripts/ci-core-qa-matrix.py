@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def select(requested, event, ref):
-    if event != 'workflow_dispatch' or not ref.startswith('refs/heads/temp/llama-release-'):
+    if event != 'workflow_dispatch':
         requested = 'all'
     rows = json.loads((Path(__file__).resolve().parents[1] / '.github/qa/core-matrix.json').read_text())
     rows = [row for row in rows if requested in ('all', row['selection'])]

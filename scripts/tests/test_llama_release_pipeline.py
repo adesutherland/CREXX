@@ -148,7 +148,7 @@ class PackageSigningTests(unittest.TestCase):
 class MatrixTests(unittest.TestCase):
     def test_deep_subset_cannot_replace_ordinary_or_scheduled_full_gate(self):
         for event, ref in [('schedule', 'refs/heads/develop'),
-                           ('workflow_dispatch', 'refs/heads/develop'),
+                           ('push', 'refs/heads/develop'),
                            ('push', 'refs/heads/temp/llama-release-qa')]:
             rows, full = core_qa.select('windows-msvc', event, ref)
             self.assertTrue(full)
@@ -156,13 +156,16 @@ class MatrixTests(unittest.TestCase):
             self.assertEqual({r.get('toolchain') for r in rows['include'] if r['platform'] == 'windows'},
                              {'msvc', 'mingw'})
 
-    def test_deep_candidate_retry_selects_only_requested_core(self):
-        rows, full = core_qa.select('windows-msvc', 'workflow_dispatch',
-                                   'refs/heads/temp/llama-release-combined')
-        self.assertFalse(full)
-        self.assertEqual([r['toolchain'] for r in rows['include']], ['msvc'])
-        with self.assertRaises(ValueError):
-            core_qa.select('unknown', 'workflow_dispatch', 'refs/heads/temp/llama-release-qa')
+    def test_deep_manual_retry_selects_only_requested_core(self):
+        for ref in ('refs/heads/develop', 'refs/heads/temp/llama-release-combined'):
+            rows, full = core_qa.select('windows-msvc', 'workflow_dispatch', ref)
+            self.assertFalse(full)
+            self.assertEqual([r['toolchain'] for r in rows['include']], ['msvc'])
+            rows, full = core_qa.select('all', 'workflow_dispatch', ref)
+            self.assertTrue(full)
+            self.assertEqual(len(rows['include']), 5)
+            with self.assertRaises(ValueError):
+                core_qa.select('unknown', 'workflow_dispatch', ref)
 
     def test_cuda_only_for_release_or_explicit_manual_selection(self):
         for ref in ('refs/heads/develop', 'refs/heads/temp/llama-release-combined'):
