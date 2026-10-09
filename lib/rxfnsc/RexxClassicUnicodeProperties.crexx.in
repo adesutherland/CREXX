@@ -1,0 +1,80 @@
+/* cREXX License (MIT). Generated from the compiler's Unicode category input.
+ * This exact shared authority keeps SYMBOL/DATATYPE and lexical names aligned.
+ */
+options levelb comments_dash numeric_classic
+namespace rexxclassicunicodeproperties expose rexxclassic_unicode_letter rexxclassic_unicode_lowercase rexxclassic_unicode_uppercase rexxclassic_unicode_upper rexxclassic_unicode_lower
+
+unicode_properties_constants: procedure expose RXCLASSIC_UNICODE_CATEGORIES
+  constant RXCLASSIC_UNICODE_CATEGORIES = "@RXCLASSIC_UNICODE_CATEGORIES@"x
+  return
+
+/** @return whether the scalar is a letter admitted by the source scanner */
+rexxclassic_unicode_letter: procedure = .boolean
+  arg codepoint = .int
+  return _category(codepoint,0)
+
+/** @return whether the scalar belongs to the scanner's lowercase category */
+rexxclassic_unicode_lowercase: procedure = .boolean
+  arg codepoint = .int
+  return _category(codepoint,1)
+
+/** @return whether the scalar belongs to the scanner's uppercase category */
+rexxclassic_unicode_uppercase: procedure = .boolean
+  arg codepoint = .int
+  return _category(codepoint,2)
+
+_category: procedure = .boolean expose RXCLASSIC_UNICODE_CATEGORIES
+  arg codepoint = .int, category = .int
+  if codepoint < 0 | codepoint > 0x10FFFF then return 0
+  start = <at..u32>(category * 8) RXCLASSIC_UNICODE_CATEGORIES
+  count = <at..u32>(category * 8 + 4) RXCLASSIC_UNICODE_CATEGORIES
+  low = 0
+  high = count - 1
+  do while low <= high
+    middle = (low + high) % 2
+    offset = 40 + (start + middle) * 8
+    first = <at..u32>(offset) RXCLASSIC_UNICODE_CATEGORIES
+    last = <at..u32>(offset + 4) RXCLASSIC_UNICODE_CATEGORIES
+    if codepoint < first then high = middle - 1
+    else if codepoint > last then low = middle + 1
+    else return 1
+  end
+  return 0
+
+/** @return simple Unicode uppercase, one scalar for each input scalar */
+rexxclassic_unicode_upper: procedure = .string
+  arg value = .string
+  return _case(value,3)
+
+/** @return simple Unicode lowercase without expansion or normalization */
+rexxclassic_unicode_lower: procedure = .string
+  arg value = .string
+  return _case(value,4)
+
+_case: procedure = .string
+  arg value = .string, category = .int
+  result = ""
+  count = .int
+  cp = .int
+  assembler strlen count,value
+  do index = 0 to count - 1
+    assembler strchar cp,value,index
+    cp = _case_scalar(cp,category)
+    assembler appendchar result,cp
+  end
+  return result
+
+_case_scalar: procedure = .int expose RXCLASSIC_UNICODE_CATEGORIES
+  arg cp = .int, category = .int
+  start = <at..u32>(category * 8) RXCLASSIC_UNICODE_CATEGORIES
+  low = 0
+  high = <at..u32>(category * 8 + 4) RXCLASSIC_UNICODE_CATEGORIES - 1
+  do while low <= high
+    middle = (low + high) % 2
+    offset = 40 + (start + middle) * 8
+    first = <at..u32>(offset) RXCLASSIC_UNICODE_CATEGORIES
+    if cp < first then high = middle - 1
+    else if cp > first then low = middle + 1
+    else return <at..u32>(offset + 4) RXCLASSIC_UNICODE_CATEGORIES
+  end
+  return cp

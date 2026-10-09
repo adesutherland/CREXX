@@ -6,7 +6,218 @@ contract (`R1-AC-01/02`) and the roadmap owns portfolio order. This worklist
 records coverage, incremental evidence and Adrian-approved scope revisions;
 it does not change the 2026-11-30 target.
 
-**Current status, 2026-10-08.** The independent BIF checkpoint is locally
+## LC-UNICODE — compatible byte ordinals, Unicode and encoded streams (2026-10-09)
+
+**Status:** approved implementation and local qualification complete, 2026-10-09;
+Adrian subsequently authorized publication to `origin/develop`. The expected
+final delivery status is published development code with unchanged local
+qualification. Normal automatic publication workflows are expected to pass;
+GitHub run records own observed hosted status. This section is the authoritative
+action plan for Adrian's request. All eight criteria have retained evidence in
+[the development receipt](../../qa/levelc-unicode-2026-10-09/README.md).
+It supersedes the earlier Unicode/source-conversion and stream design deferrals
+for the work specified here. Older dated receipts retain their original scope.
+Compiler splitting, INTERPRET, broader host invocation/HALT APIs and full
+Release 1 qualification remain separately owned; this programme does not
+silently close them. Starting HEAD: `6127b168f`; origin/develop is contained in
+HEAD and the checkout was clean. Delivery was initially local; publication was
+authorized after completion of the local qualification.
+
+**Vision and intended outcomes.** A Classic Level C program can preserve and
+manipulate every byte value in an ordinary string, while the same scalar model
+also supports Unicode symbols and text. Each byte ordinal 00–FF maps exactly
+to U+0000–U+00FF; internal UTF-8 storage size is invisible to the program.
+General character operations count codepoints and table TRANSLATE handles
+Unicode. Byte-dependent conversions/bitwise operations signal on scalars
+outside that ordinal domain instead of truncating or interpreting UTF-8 bytes.
+Raw streams preserve the ordinal mapping; encoded streams decode/encode using
+an explicitly selected external encoding. Compact single-byte mappings are
+preferred where the real codepage permits them, never fabricated: a codepage
+may map a byte above U+00FF (for example Windows-1252 Euro). Such decoded text
+works in ordinary operations and signals when passed to a byte-only BIF.
+
+Adrian accepted the principles restated in this session and requested an action
+plan and implementation. Ordinary values must not normalize or replace
+implicitly. Existing simple, non-expanding case mappings serve Classic casing;
+full Unicode case mapping/folding/normalization/graphemes are explicit BIFs,
+with names and algorithms reused from rxunicode/TUTOR where semantics match.
+Binary I/O bypasses codecs. Text conversion is strict by default; explicitly
+requested replacement has a separate documented contract. External codepage
+selection never changes C2X/X2C ordinal semantics. Stream ENCODING commands
+use the established STREAM extension point and TUTOR vocabulary; they are a
+cREXX extension, not a universally standardized Classic command string.
+
+**Implementation boundary.** Use existing canonical C lowering, RexxValue,
+activation/configuration ownership, the fixed ordinal bridge, and rxunicode
+algorithms. Keep B/G .string/.binary contracts and RexxScript binary/sandbox
+behavior. Native stream mechanics, if required, use existing RXPA C factories,
+method bindings, session ownership and checked SETOBJECTTYPE; do not add a
+second Rexx forwarding/construction layer or change RXBIN/VM opcodes. Preserve
+Classic argument/omission/error/source reporting through the direct BIF context.
+Define raw versus decoded stream positions explicitly; do not pretend UTF-8
+byte offsets are character positions. Functional deadlines protect against
+hangs rather than asserting incidental performance.
+
+**Numbered acceptance criteria (verified for this approved local scope).**
+
+- [x] **LC-U-AC-01 — ordinal/binary compatibility:** all 256 ordinals, embedded
+  NUL, literals and arbitrary byte sequences preserve values through assignment,
+  concatenation, substring/PARSE, C2X/X2C, C2D/D2C and bitwise families.
+  LENGTH counts ordinal codepoints. Permanent compiled opt/no-opt/direct/linked
+  regressions exercise the whole toolchain and non-Latin errors/source identity.
+- [x] **LC-U-AC-02 — Unicode symbols and character operations:** valid Unicode
+  names/labels work consistently through compiler normalization, pool lookup,
+  indirect operations, SIGNAL/CALL, source/imported/linked routes, including
+  uppercase mappings that change UTF-8 width. Character/PARSE/TRANSLATE/count/
+  comparison operations use codepoints and exact text, with no implicit NFC.
+  Permanent positive/negative source and runtime fixtures define the boundary.
+- [x] **LC-U-AC-03 — Classic defaults and conversion errors:** audit blanks,
+  simple casing, symbol/data classification, padding, ordinal ordering and
+  validator/consumer parity. Retain agreed Classic behavior in the byte domain;
+  document intended Unicode extensions. Every byte-only family rejects an
+  out-of-domain scalar with a trapped/untrapped source-anchored Classic error.
+  Undefined Unicode behavior is removed only for verified admitted operations.
+- [x] **LC-U-AC-04 — explicit Unicode BIFs:** expose normalization/predicates,
+  full/simple/default/Turkic folding, full casing, grapheme operations, version
+  and encode/decode/support/validity queries using the shared rxunicode algorithms.
+  Level C encode results are ordinal-mapped byte strings; decode consumes that
+  domain and returns Unicode text. Verify omissions/options, invalid arguments,
+  conversion errors, no normalization side effects, opt/no-opt/linked use and
+  shared-data ownership; retain the existing independent algorithm oracles.
+- [x] **LC-U-AC-05 — complete Classic stream family:** implement CHARIN,
+  CHAROUT, CHARS, LINEIN, LINEOUT, LINES, QUALIFY and STREAM through one service.
+  Verify defaults/named streams, raw all-byte round trips, EOF, independent
+  read/write positions, character/line counts, line endings, state/availability,
+  close/reopen, nonpositionable and invalid resources, Classic conditions and
+  exact-length NUL-safe arguments/results. Exercise file and default transports.
+- [x] **LC-U-AC-06 — external codepages:** STREAM OPEN/QUERY ENCODING selects
+  and reports supported names/aliases per stream; reuse the pinned UTF-8,
+  UTF-16/32 endian, ASCII, Latin-1, Windows-1252, IBM437/850/1047 repertoire.
+  Verify strict malformed/unrepresentable failures, explicitly requested
+  replacement, BOM policy and codepage line endings; show mappings above
+  U+00FF without changing byte BIF ordinals. Source/default-console selection
+  and stream selection have documented separate ownership and tests.
+- [x] **LC-U-AC-07 — lifecycle/isolation/packaging:** handles/codecs belong to
+  the execution/configuration and close on explicit close and final teardown;
+  independent VM sessions/root configurations do not share stream state;
+  internal/recursive calls and private PROCEDURE pools share the execution's
+  configuration, preserving the Classic stream model.
+  Failures leave coherent positions/resources. Native provider registration,
+  static/portable supported builds and installed product dependencies work.
+  B/G/RexxScript isolation and native ownership regressions pass. Unsupported
+  platform facilities are explicit limits, not false passes.
+- [x] **LC-U-AC-08 — qualification and documentation:** retain exact qualified
+  code/test/build inputs, focused normal Debug/Release and maintained sanitizer
+  evidence for native/ownership changes, core product build and one relevant
+  normal whole-product correctness sweep. Measure new aggregate workloads in
+  isolation in Debug/ASan before registration with explicit scheduling/timeouts.
+  Reuse unchanged valid evidence; do not dispatch routine overnight matrices.
+  Synchronize human/agent guides, BIF inventory, gap register and receipts;
+  preserve RexxDoc coverage. Local delivery only unless publication is requested.
+
+**Numbered implementation steps and dependencies.**
+
+1. **LC-U-STEP-01 (AC-01–08; audit/plan complete):** record the accepted principles,
+   inspect source/runtime/codec/stream/build ownership, retain minimal new
+   reproducers and a per-family contract/regression crosswalk. Reconcile
+   historical deferrals and guides without claiming implementation completion.
+2. **LC-U-STEP-02 (AC-01/02/03; implementation/focused proof complete; depends on 01):** repair ordinal/character/name
+   inconsistencies in their owning layer, pin Classic defaults and conversion
+   errors, and validate focused compiler/runtime cases before further expansion.
+3. **LC-U-STEP-03 (AC-04/07; implementation/focused proof complete; depends on 02):** add Classic Unicode BIF adapters
+   to shared algorithms and explicit build/import dependencies; qualify all
+   families, error/source transport and installed/link parity.
+4. **LC-U-STEP-04 (AC-05/06/07; implementation/focused proof complete; depends on 01/02, codecs from 03):** implement
+   one session-owned raw/encoded stream service and eight Classic BIF adapters;
+   validate raw ordinals, decoded positions/line rules, commands/errors and
+   cleanup. Reuse RXPA construction/ownership. A required VM/ABI redesign is
+   a new decision gate; do independent authorized work before asking for it.
+5. **LC-U-STEP-05 (AC-01–08; qualification/documentation complete; develop publication authorized; depends on 02–04):** freeze inputs, perform the
+   smallest decisive focused and normal whole-product gates, retain evidence,
+   reconcile docs/remaining criteria and locally commit coherent final changes.
+   Report full programme completion only when all eight criteria are verified.
+
+**Continuity:** start by reading AGENTS.md and this complete section. Preserve
+all AC/STEP IDs and the full intended outcome across sessions. Every partial
+checkpoint must list unverified criteria, reproducer/evidence paths and next
+steps; phase completion is not overall completion.
+
+**Confirmed defaults (2026-10-09):** Adrian selected "Keep existing console and
+whitespace defaults": UTF-8 console streams, raw named files unless ENCODING
+is selected, existing Unicode White_Space/configured additions. The default
+input and output transports are independent; STREAM on the empty name targets
+its last explicitly opened direction (input initially). Source remains UTF-8.
+
+**Findings repaired within this programme:** LC-U-FIND-01: an imported invalid
+constant outside a routine reached signature/type discovery and crashed the
+compiler; the minimal `invalid_import` case now receives the ordinary syntax
+diagnostic before import discovery. LC-U-FIND-02: SYNTAX main identities such
+as RXC-LC-40 were recorded with RC=0 because only dotted subcodes were parsed;
+`command_error_*` and `unicode_option_error` retain RC=40 and authored SIGL.
+LC-U-FIND-03: configured BIN/HEX digits/blanks validated successfully but
+converters consumed ASCII; shared argument normalization now preserves the
+validated value for both UTF8 and BYTE profiles (`radix_validator_parity`).
+LC-U-FIND-04: RXVML direct native descriptors reached bytecode-only external
+entry with no bytecode space and crashed. Entry validation now returns a clear
+error; the lifecycle regression invokes the compiled stream class, whose ordinary
+VM calls dispatch the native provider. Direct native external-entry support
+remains a separate host API capability, not a new wrapper or VM/ABI design.
+All four findings are closed by the final focused and combined normal
+qualification retained in the development receipt, rather than by source edits
+alone.
+The native install probe initially wrote a growing log inside its project input
+directory; the driver correctly rejected moving inputs. Moving that harness log
+outside the source roots fixed the probe without a product change.
+
+**Qualification gate selection:** all cases run in four modes in normal Debug
+and Release; the maintained ASan build runs the complete optimized direct
+contract and native lifecycle regression. The optimized contract is the new
+normal CTest aggregate; opt-in targets retain the other three mode checks.
+Only the registered aggregate needs its exact Debug/ASan workload measurement.
+It is serialized with a generous timeout. B/G/RexxScript/native regressions
+run in the normal correctness sweep. Its normal label selection excludes the
+parity-labelled independent G Unicode oracles, so the five existing algorithm
+oracles run once in optimized portable Release, separately from the full parity
+matrix. No full platform sanitizer/overnight/release matrix is required for this
+local development delivery in the absence of an actual sanitizer finding.
+
+**Final-sweep QA closure:** the new imported `RexxClassicConfig.stream`
+body adds two identical DEBUG_INLINE reconstruction-trace lines to each of 18
+parser snapshots. Removing exactly those lines leaves the complete remaining
+output identical to the old golden. The goldens retain both traces and pass
+18/18 focused replay; no compiler inline policy or diagnostic filter changed.
+Four empty-provider-path embedding fixtures now use the standard runtime
+provider directory and pass Debug/Release/ASan replay. The two old 60-second
+loop deadlines expired under broad host load; unchanged isolated replay under
+those original limits passes in 3.33/3.62 s. Both opt/no-opt pairs now use
+verified serial scheduling and a 300-second hang-protection limit. This is a
+QA scheduling repair, not a product or sanitizer finding.
+
+**Final implementation/qualification receipt:** Unicode compiler/pool simple
+mapping and classification, 23 shared-algorithm adapters, session-owned native
+byte transport and all eight stream adapters are implemented. The family
+contract and permanent regression crosswalk are in
+[levelc_unicode_and_streams.md](../../../compiler/docs/levelc_unicode_and_streams.md).
+Final Debug and Release four-mode contracts pass (156 direct / 207 linked
+commands per mode). The optimized direct workload passes maintained macOS ASan
+(745 s); native lifecycle/registry teardown passes Debug (1.61 s), Release
+(1.32 s) and ASan (7.41 s). Installed dynamic and relocated static consumers
+pass, as does the Release threaded VM contract; ordinary product VM is portable
+rxbvm. Five independent G algorithm oracles pass optimized portable Release.
+The 2286-check normal Debug sweep plus closure of its 24 identified QA fixture/
+deadline failures and the retained optimized contract establishes 2287 unique
+passing normal checks. Core Debug/Release builds and normal QA preparation pass.
+[The receipt](../../qa/levelc-unicode-2026-10-09/README.md) records final input
+hashes, all results, exact reuse proof, preserved RexxDoc coverage and log paths
+under `output/levelc-unicode-20261009.BLUGKe/`.
+All eight LC-U criteria are verified for this local development programme;
+this does not close the separately owned wider reference/host/Release 1 work.
+Apple ASan is available; Apple LSan is unsupported and is not a pass claim.
+Publication to `origin/develop` is now authorized and prepared with retained
+qualification and expected automatic workflow success. No release/tag or
+manual overnight dispatch is part of this delivery.
+
+**Historical independent checkpoint, 2026-10-08.** The independent BIF checkpoint is locally
 qualified on `d7b58e17d8d49979445543676c2bcd56fb1f351b` code/test inputs:
 core product builds, full normal Debug 3296/3296, 3113 unique normal Release
 correctness checks using retained unchanged results plus focused completion,
@@ -328,6 +539,11 @@ preserved outside this publication.
 
 ### LC-GAP-02 BIF completion programme (2026-10-07)
 
+**2026-10-09 scope update:** LC-UNICODE above supersedes the dated stream and
+Unicode deferral below. It owns the approved implementation and its final
+qualification. The older independent receipts retain their original scope;
+the remaining full-reference audit criteria are not closed by adding entries.
+
 **Vision and intended outcome.** Deliver a coherent running baseline for all
 70 catalogued Classic BIF names through the existing shared direct-BIF path.
 Presence in the compiler table is not closure: each family must cover legal
@@ -340,7 +556,8 @@ necessary BIF host support through approved interfaces. INTERPRET remains parked
 LC-GAP-01 and LC-GAP-03–10, compiler split/fast-pipeline proposals, wider host
 closure and full Level C/Release 1 qualification remain pending.
 
-**Adrian's infrastructure scope clarification, 2026-10-07.** Work must not
+**Historical infrastructure scope clarification, 2026-10-07 (superseded for
+LC-UNICODE on 2026-10-09).** Work must not
 change Unicode or I/O behavior relative to the current infrastructure. Such
 changes are deferred until an architectural assessment determines the required
 compatibility. Unicode characters causing signals or other logic errors in Level C are
@@ -358,12 +575,13 @@ proof separated from deferred/unverified obligations.
   current compiler/runtime/test code and reconcile every inventory row with
   family evidence; no entry/example-only closure. Inspect legal argument counts,
   omissions, types/options, reference values, failures and source identity.
-- [ ] **LC-BIF-02 — streams and positioning:** CHARIN/CHAROUT/CHARS,
+- [x] **LC-BIF-02 — streams and positioning:** CHARIN/CHAROUT/CHARS,
   LINEIN/LINEOUT/LINES, QUALIFY/STREAM implement one stream service. Verify
   defaults/named streams, EOF, independent positions, line endings, encoding,
   NUL, availability/state/commands, invalid/nonpositionable resources, close,
   failure conditions, resource cleanup and context isolation. New language,
   host ABI or architecture decisions require Adrian's approval first.
+  Approved and qualified by LC-UNICODE (2026-10-09); see its development receipt.
 - [x] **LC-BIF-03 — selected queue:** QUEUED observes the same execution-local
   selected repository as PULL/PUSH/QUEUE, without consuming input; verify empty,
   FIFO/LIFO, named selection, omissions/errors and independent executions.
@@ -399,8 +617,10 @@ proof separated from deferred/unverified obligations.
    `52fcfb21bd1acd18e8010af83ab65eaae8b7a863`; fetched origin/develop: 0 behind,
    208 ahead. Previous 741/741 Debug/Release Level C receipt qualifies TRACE
    inputs only. No existing build/test child jobs were found.
-2. **LC-STEP-90B (LC-BIF-02; pending by Adrian’s 2026-10-07 direction; depends on 90A):** complete the
-   stream family around one service. Existing FOPEN/FREADCDPT/FWRITE and Level B
+2. **LC-STEP-90B (LC-BIF-02; completed by qualified LC-UNICODE on 2026-10-09; depends on 90A):** complete the
+   stream family around one service. The following proposal and deferral are
+   retained historical scope; the current contract and qualification are in
+   LC-UNICODE above. Existing FOPEN/FREADCDPT/FWRITE and Level B
    file cache do not expose seek/tell, independent read/write positions or a
    full Classic status/availability contract. Proposed decision: a narrow RXPA
    provider with session-owned stream handles, typed checked methods for read,
@@ -1292,6 +1512,10 @@ or close this missing producer. Full BIF conformance remains open.
 
 ### Agreed expression, clock and source closeout (2026-10-08)
 
+**2026-10-09 continuity:** this is the retained completed earlier phase. Its
+non-Latin/stream deferrals are superseded by LC-UNICODE above, without changing
+the scope or evidence of the original expression/clock/source receipt.
+
 **Vision and intended outcomes.** Adrian approved repairing expression
 conformance, DATE/TIME clause lifecycle and source diagnostics after the gap
 review. Ordinary Classic expressions must produce the reference values and
@@ -1822,13 +2046,13 @@ with the later whole-instruction receipts before the fresh review.
 | ID | Remaining point and current boundary | Owner / disposition needed |
 | --- | --- | --- |
 | LC-GAP-01 | `INTERPRET` is recognized but not executable. `LC-87-01–05` cover exact generated Unicode source, nested groups, current frame and condition/control transfers, and bounded code lifetime. The compiled-fragment and RexxScript-inspired routes below are research, not approved designs. | `LC-I-25`, `LC-AC-59/04`, `LC-REF-062`, `R1-AC-01/02`: parked now. Later choose implementation or individually approve a Release 1 "won't implement" entry with diagnostic and documentation. |
-| LC-GAP-02 | Of 70 catalogued Classic BIF names, 62 have direct compiler entries; eight do not: `CHARIN`, `CHAROUT`, `CHARS`, `LINEIN`, `LINEOUT`, `LINES`, `QUALIFY`, `STREAM`. Every name has a grouped audit/individual evidence row. QUEUED, SOURCELINE and ERRORTEXT have focused receipts in LC-STEP-90C/D; the independent whole-product checkpoint is locally qualified under LC-STEP-90F. `CONDITION` has admitted producer/field proof; real host HALT remains separately open. Streams and Unicode/I/O changes are deferred by Adrian pending architectural assessment. Source, wider host/resource and platform proof remain open; entry presence alone closes no BIF. | `LC-AC-01/04/06/73`, `LC-REF-018/019/071/072/074`: retain the independent baseline and deferred stream proposal; finish full reference/source/host/resource obligations only within Adrian's assessed compatibility direction. No wider host criterion or full 70-name closure follows from this checkpoint. |
+| LC-GAP-02 | All 70 catalogued names now have direct entries, including eight stream BIFs. LC-UNICODE qualifies ordinals, symbols, 23 Unicode extensions, codecs and stream ownership. Existing independent BIF receipts remain valid for unchanged cases; entry presence alone is not complete reference/resource/host proof. | LC-U-AC-01–08 and LC-REF-018/019/071/072/074: use the new contract/receipt; wider host/HALT/resource/platform obligations remain open. |
 | LC-GAP-03 | Configured command, stream, default input, queue selection and external routine services need an end-to-end host contract, including resource lifecycle and condition/result reporting. ADDRESS, implicit command, PULL/PUSH/QUEUE and CALL are instruction-closed on their admitted paths. CALL's approved static signed Level B/G boundary and unchanged linker/VM remain in force. | `LC-AC-06/04`, `LC-REF-003/015–020`: distinguish missing host APIs from closed instruction behavior; implement or explicitly disposition each required adapter. General Classic/non-Classic interoperation remains outside this programme. |
 | LC-GAP-04 | Invocation modes, caller trap overrides, completion classes and an externally visible variable-pool API/access window are not fully qualified. The C-string `rxvml_run()` cannot carry an embedded-NUL argument; its length-aware entry exists, but the C-string obligation is not an approved exclusion. Real host HALT production remains open. | `LC-AC-06/04`, `LC-REF-001/004–006/021–024/057/071/073`: specify and qualify required host behavior or request precise scope decisions; preserve the existing VM/linker approval boundary. |
 | LC-GAP-05 | `LC-HOST-ADDRESS-NUL` remains an approved instruction-level FAILURE diagnostic when the command host path cannot represent NUL; length-aware delivery is still a separate host-interface obligation. TRACE's practical divergences are agreed, and displayed scalar values must remain correct. PARSE EXTERNAL/NUMERIC are outside Adrian's initial Level C scope as mainframe-specific sources; their final Release 1 disposition is not yet recorded. | `LC-AC-06/04`, `LC-REF-015/018/070`: decide the remaining host-transport and final PARSE-source dispositions without reopening the closed ADDRESS/TRACE/PARSE reviews merely to gather more evidence. |
-| LC-GAP-06 | LC-CLOSE repairs physical source NUL truncation across B/C/G/L, retained/imported source lengths, .MN/.SIGL and the agreed Latin lexical/diagnostic cases. Its source/expression matrix and final-input qualification own that phase. Full mapped-source identity, source-conversion semantics, configured/non-Latin scanner rules and resource limits remain open. | `LC-AC-01/04/08/72`, `LC-REF-002/007/025–036/042/052/072`: retain the proven phase separately from deferred Unicode/conversion design and broader source/host/resource obligations. |
-| LC-GAP-07 | LC-CLOSE audits ordinary expression families, evaluation order, numeric contexts and Classic conditions in four modes, repairing shared B/G Classic integer arithmetic and whole powers. `NUMERIC` remains instruction-closed. Configured/non-Latin comparisons, exhaustive numeric/resource limits and wider shared-consumer qualification remain open. | `LC-AC-04/72/73`, `LC-REF-043–046/053/054`: finish LC-CLOSE final-input gates; retain wider resource/platform/design obligations without calling the full Level C reference qualified. |
-| LC-GAP-08 | The Unicode-first scalar route and fixed Latin-1 ordinal bridge have substantial passing slices, but complete source, BIF, host and cross-consumer proof is open. `RexxValue` binary capability remains for RexxScript. Explicit Unicode BIF names/codecs and the later raw-binary boundary still require their own design decision. | `LC-AC-06/72/73/75`, `LC-REF-008–014`: complete whole-program proof; decide whether the new Unicode BIF design belongs to this Level C closure or a separately approved later scope. No implicit raw-byte behavior. |
+| LC-GAP-06 | LC-CLOSE repairs physical source NUL truncation across B/C/G/L, retained/imported source lengths, .MN/.SIGL and the agreed Latin lexical/diagnostic cases. Its source/expression matrix and final-input qualification own that phase. LC-UNICODE defines UTF-8 source and Unicode letter/name policy. Full mapped-source identity, wider source-conversion/configured scanner rules and resource limits remain open. | `LC-AC-01/04/08/72`, `LC-REF-002/007/025–036/042/052/072`: retain the proven LC-CLOSE/LC-UNICODE phases separately from broader source/host/resource obligations. |
+| LC-GAP-07 | LC-CLOSE audits ordinary expression families, evaluation order, numeric contexts and Classic conditions in four modes, repairing shared B/G Classic integer arithmetic and whole powers. `NUMERIC` remains instruction-closed. LC-UNICODE defines admitted exact Unicode comparison and ordinal behavior; wider configured comparison, exhaustive numeric/resource limits and shared-consumer qualification remain open. | `LC-AC-04/72/73`, `LC-REF-043–046/053/054`: finish LC-CLOSE final-input gates; retain wider resource/platform/design obligations without calling the full Level C reference qualified. |
+| LC-GAP-08 | Adrian approved the 2026-10-09 LC-UNICODE contract: ordinary codepoints and exact text, fixed byte ordinals, Unicode symbols/simple casing, explicit algorithms and raw/encoded streams. RexxScript binary/sandbox and typed B/G contracts are retained. | LC-U-AC-01–08 is qualified by the 2026-10-09 development receipt; general source/host/configuration/resource limits remain separately open. The earlier blanket Unicode/stream deferral is superseded. |
 | LC-GAP-09 | AST ownership/provenance, duplicate lowering paths and the earlier-instruction baseline have many retained receipts but no final complete crosswalk. Some coverage and reference rows still describe pre-closure slices; this register corrects the active status, not every historical receipt. | `LC-AC-08/58/61`: inspect current parser-to-emitter paths and remove real duplication or stale claims. Reserve a fresh independent consistency review for the new session after closeout. |
 | LC-GAP-10 | Exact-head full compatibility and Release 1 qualification are unproved. The 2026-10-08 local product checkpoint (full Debug 3296/3296; 3113 unique Release correctness checks; installed/focused ASan receipts) qualifies its recorded cases, not the complete reference surface or Beta 4 platform matrix; LC-DOC-ISSUE-01 demonstrates a clock behavior absent from those fixtures. | `LC-AC-01/04/59`, `R1-AC-01/02`: after dispositions and product changes, run the smallest relevant grouped checks and the required candidate qualification once on final inputs; do not repeat unchanged gates per item. |
 
@@ -9072,7 +9296,7 @@ Unicode behavior or unapproved stream infrastructure.
 | `BIF-AUDIT-QUEUE` (1) | QUEUED; LC-STEP-90C, direct unit and direct/linked opt/no-opt fixture | Same selected execution-local repository as PULL/PUSH/QUEUE; non-consuming counts, FIFO/LIFO, named selection, NUL, errors/source and context isolation. Wider Level C/C host selector stays LC-GAP-03. |
 | `BIF-AUDIT-SOURCE` (1) | SOURCELINE; LC-STEP-90D, direct unit and direct/linked/provider opt/no-opt fixtures | Retained original comments/blanks, CRLF/CR/LF and final line, no runtime reread, count/index/omissions/errors/source, local unit sharing and separate binary provider isolation. Mapped inputs return unavailable/count zero; physical source NUL truncation and full mapping remain LC-GAP-06. |
 | `BIF-AUDIT-MESSAGE` (1) | ERRORTEXT; LC-STEP-90D, direct unit and direct/linked opt/no-opt fixture | Shared standard English catalog; S/N fallback, major/minor/undefined codes, decimal subcode zeros, range 40.17, omissions/count/options and authored error source. No localization service/host ABI was added. |
-| `BIF-AUDIT-STREAM` (8) | CHARIN, CHAROUT, CHARS, LINEIN, LINEOUT, LINES, QUALIFY, STREAM | No direct entry or standalone Classic implementation. All defaults/named streams, EOF, positioning, encoding/NUL, state/commands, resource cleanup and isolation criteria remain unrun/open. Adrian deferred new I/O/Unicode infrastructure pending architectural assessment; LC-STEP-90B proposal is not approved. |
+| `BIF-AUDIT-STREAM` (8) | CHARIN, CHAROUT, CHARS, LINEIN, LINEOUT, LINES, QUALIFY, STREAM | Direct adapters over execution-owned raw/encoded state and checked native RXPA transport. LC-UNICODE qualifies defaults, all-byte/NUL, positions/counts, codecs/BOM/EOL, state/errors/close/isolation and packaging; wider host APIs remain separate. |
 
 The compiled reference audit records 104 expected values in one maintained
 fixture/output pair, checked with Regina 3.9.7. ANSI numeric rounding is separately
@@ -9111,9 +9335,9 @@ not complete while the eight stream names and those obligations remain open.
 | `CENTER` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCenter.crexx`](../../../lib/rxfnsc/RexxClassicBifCenter.crexx); [`testRexxClassicBifCenter`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCenter.crexx); `BIF-AUDIT-TEXT` boundary |
 | `CENTRE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCenter.crexx`](../../../lib/rxfnsc/RexxClassicBifCenter.crexx); [`testRexxClassicBifCentre`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCentre.crexx); `BIF-AUDIT-TEXT` boundary |
 | `CHANGESTR` | Direct + runtime; admitted baseline audited | [`RexxClassicBifChangestr.crexx`](../../../lib/rxfnsc/RexxClassicBifChangestr.crexx); [`testRexxClassicBifChangestr`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifChangestr.crexx); `BIF-AUDIT-TEXT` boundary |
-| `CHARIN` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
-| `CHAROUT` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
-| `CHARS` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `CHARIN` | Direct `RexxClassicBifStream` entry | LC-UNICODE contract and four-mode Unicode/stream aggregate; final receipt owns qualified inputs and platform limits |
+| `CHAROUT` | Direct `RexxClassicBifStream` entry | LC-UNICODE contract and four-mode Unicode/stream aggregate; final receipt owns qualified inputs and platform limits |
+| `CHARS` | Direct `RexxClassicBifStream` entry | LC-UNICODE contract and four-mode Unicode/stream aggregate; final receipt owns qualified inputs and platform limits |
 | `COMPARE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCompare.crexx`](../../../lib/rxfnsc/RexxClassicBifCompare.crexx); [`testRexxClassicBifCompare`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCompare.crexx); `BIF-AUDIT-TEXT` boundary |
 | `CONDITION` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCondition.crexx`](../../../lib/rxfnsc/RexxClassicBifCondition.crexx); [`testRexxClassicBifCondition`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCondition.crexx); `BIF-AUDIT-STATE` boundary |
 | `COPIES` | Direct + runtime; admitted baseline audited | [`RexxClassicBifCopies.crexx`](../../../lib/rxfnsc/RexxClassicBifCopies.crexx); [`testRexxClassicBifCopies`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifCopies.crexx); `BIF-AUDIT-TEXT` boundary |
@@ -9133,14 +9357,14 @@ not complete while the eight stream names and those obligations remain open.
 | `LASTPOS` | Direct + runtime; admitted baseline audited | [`RexxClassicBifLastpos.crexx`](../../../lib/rxfnsc/RexxClassicBifLastpos.crexx); [`testRexxClassicBifLastpos`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifLastpos.crexx); `BIF-AUDIT-TEXT` boundary |
 | `LEFT` | Direct + runtime; admitted baseline audited | [`RexxClassicBifLeft.crexx`](../../../lib/rxfnsc/RexxClassicBifLeft.crexx); [`testRexxClassicBifLeft`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifLeft.crexx); `BIF-AUDIT-TEXT` boundary |
 | `LENGTH` | Direct + runtime; admitted baseline audited | [`levelc_slice3_bif_length`](../../../compiler/tests/rexx_src/levelc_slice3_bif_length.rexx); [`testRexxClassicBifLength`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifLength.crexx); `BIF-AUDIT-TEXT` boundary |
-| `LINEIN` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
-| `LINEOUT` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
-| `LINES` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `LINEIN` | Direct `RexxClassicBifStream` entry | LC-UNICODE contract and four-mode Unicode/stream aggregate; final receipt owns qualified inputs and platform limits |
+| `LINEOUT` | Direct `RexxClassicBifStream` entry | LC-UNICODE contract and four-mode Unicode/stream aggregate; final receipt owns qualified inputs and platform limits |
+| `LINES` | Direct `RexxClassicBifStream` entry | LC-UNICODE contract and four-mode Unicode/stream aggregate; final receipt owns qualified inputs and platform limits |
 | `MAX` | Direct + runtime; admitted baseline audited | [`RexxClassicBifMax.crexx`](../../../lib/rxfnsc/RexxClassicBifMax.crexx); [`testRexxClassicBifMax`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifMax.crexx); `BIF-AUDIT-NUMERIC` boundary |
 | `MIN` | Direct + runtime; admitted baseline audited | [`RexxClassicBifMin.crexx`](../../../lib/rxfnsc/RexxClassicBifMin.crexx); [`testRexxClassicBifMin`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifMin.crexx); `BIF-AUDIT-NUMERIC` boundary |
 | `OVERLAY` | Direct + runtime; admitted baseline audited | [`RexxClassicBifOverlay.crexx`](../../../lib/rxfnsc/RexxClassicBifOverlay.crexx); [`testRexxClassicBifOverlay`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifOverlay.crexx); `BIF-AUDIT-TEXT` boundary |
 | `POS` | Direct + runtime; admitted baseline audited | [`RexxClassicBifPos.crexx`](../../../lib/rxfnsc/RexxClassicBifPos.crexx); [`testRexxClassicBifPos`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifPos.crexx); `BIF-AUDIT-TEXT` boundary |
-| `QUALIFY` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `QUALIFY` | Direct `RexxClassicBifStream` entry | LC-UNICODE contract and four-mode Unicode/stream aggregate; final receipt owns qualified inputs and platform limits |
 | `QUEUED` | Direct + runtime; admitted baseline audited | LC-STEP-90C/D family receipt; [`testRexxClassicBifQueued`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifQueued.crexx); `BIF-AUDIT-QUEUE` boundary |
 | `RANDOM` | Direct + runtime; admitted baseline audited | [`RexxClassicBifRandom.crexx`](../../../lib/rxfnsc/RexxClassicBifRandom.crexx); [`testRexxClassicBifRandom`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifRandom.crexx); `BIF-AUDIT-STATE` boundary |
 | `REVERSE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifReverse.crexx`](../../../lib/rxfnsc/RexxClassicBifReverse.crexx); [`testRexxClassicBifReverse`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifReverse.crexx); `BIF-AUDIT-TEXT` boundary |
@@ -9148,7 +9372,7 @@ not complete while the eight stream names and those obligations remain open.
 | `SIGN` | Direct + runtime; admitted baseline audited | [`RexxClassicBifSign.crexx`](../../../lib/rxfnsc/RexxClassicBifSign.crexx); [`testRexxClassicBifSign`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSign.crexx); `BIF-AUDIT-NUMERIC` boundary |
 | `SOURCELINE` | Direct + runtime; admitted baseline audited | LC-STEP-90C/D family receipt; [`testRexxClassicBifSourceline`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSourceline.crexx); `BIF-AUDIT-SOURCE` boundary |
 | `SPACE` | Direct + runtime; admitted baseline audited | [`RexxClassicBifSpace.crexx`](../../../lib/rxfnsc/RexxClassicBifSpace.crexx); [`testRexxClassicBifSpace`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSpace.crexx); `BIF-AUDIT-TEXT` boundary |
-| `STREAM` | Deferred; no direct entry | `BIF-AUDIT-STREAM`: LC-STEP-90B; implementation and complete stream contract await Adrian’s architecture/compatibility assessment |
+| `STREAM` | Direct `RexxClassicBifStream` entry | LC-UNICODE contract and four-mode Unicode/stream aggregate; final receipt owns qualified inputs and platform limits |
 | `STRIP` | Direct + runtime; admitted baseline audited | [`RexxClassicBifStrip.crexx`](../../../lib/rxfnsc/RexxClassicBifStrip.crexx); [`testRexxClassicBifStrip`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifStrip.crexx); `BIF-AUDIT-TEXT` boundary |
 | `SUBSTR` | Direct + runtime; admitted baseline audited | [`levelc_slice4_bif_substr`](../../../compiler/tests/rexx_src/levelc_slice4_bif_substr.rexx); [`testRexxClassicBifSubstr`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSubstr.crexx); `BIF-AUDIT-TEXT` boundary |
 | `SUBWORD` | Direct + runtime; admitted baseline audited | [`RexxClassicBifSubword.crexx`](../../../lib/rxfnsc/RexxClassicBifSubword.crexx); [`testRexxClassicBifSubword`](../../../lib/rxfnsc/tests_functional/testRexxClassicBifSubword.crexx); `BIF-AUDIT-TEXT` boundary |

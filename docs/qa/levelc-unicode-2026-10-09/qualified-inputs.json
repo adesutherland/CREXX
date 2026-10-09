@@ -1,0 +1,216 @@
+{
+  "base_revision": "6127b168faca664d1f17dcbad1157003bd74c4e7",
+  "base_tree": "07e0bc7f67daf67bc9c699cd3a68b4b603d7013a",
+  "branch": "develop",
+  "delta_sha256": {
+    "cmake/CrexxClassicUnicode.cmake": "e72ed3076a2a57285a51ab4b76477c1e9b7f6be11031353f9bbfa83debfd7d7a",
+    "compiler/CMakeLists.txt": "e9b7a336d44ece140081d7ddf9e67dddf589b4acb50ec80690cf6193cf79f1b1",
+    "compiler/rxcp_levelc_lower.c": "686e439fe56c31131a0f3542fa7f35d0ab5504d38c34c83c5e51fd6465ef596a",
+    "compiler/rxcpcsym.c": "95b944c4c2c74380c1105bad13c6b30bcdfb974e5318afe9da4c81496641e9b4",
+    "compiler/rxcpfunc.c": "87cc7ad58b987c19d2c7468f6ae3dcbb50f2f4e17bd848775a6b237450fb12c5",
+    "compiler/tests/CMakeLists.txt": "6afe4437e3f13da206a2557296a40bdfff332a7331d20430785218020211dca1",
+    "compiler/tests/classic_unicode_contract.py": "9faae71d4a207c89eedfd9c3007bf1d86d8e10ca7c92a3837680f0cd0c9ff92d",
+    "compiler/tests/golden/parsing/16_classes.txt": "888b96ee00e90913120e7b29183e1f48adf643f9437656cb06779c4d772dfdc3",
+    "compiler/tests/golden/parsing/address_exit_extended.txt": "cb2c5537b6118f126c5c72f73fe7ac7f6279d1fe4e7d3d4c3da11730ec1a1185",
+    "compiler/tests/golden/parsing/address_inline_then.txt": "5788a59cb0ef65de3d9ae6d1b3017b4c65677d76d716db74552d18243976bc9c",
+    "compiler/tests/golden/parsing/binary_intrinsics_parse.txt": "4fcf9b452a084729a483f4ef2a488d8a26c8ae1fdc131c2044a22e8e3b16cb86",
+    "compiler/tests/golden/parsing/block_expr_parse.txt": "9f66ca91fb4610c36c19f3329cb4ded2175a7b2b78532847eb425655029a7476",
+    "compiler/tests/golden/parsing/do_counted_parse.txt": "8b9eecb1126f9fa216180af88beb2a18636ab283429cd0c50a5a7e41a68ba120",
+    "compiler/tests/golden/parsing/do_simple_parse.txt": "6f539d64266d0202b3b902b833904bcf1146552ce3f493cd9fe71e22488a83a9",
+    "compiler/tests/golden/parsing/do_until_parse.txt": "da48b006b306c8d246318c5decbb8a5cd387d90037bfa96f634d73c72981a575",
+    "compiler/tests/golden/parsing/do_while_parse.txt": "38d7dfb49855007f07caa362e88f0d2f2870b9e823e8745d87995e9266bffd2c",
+    "compiler/tests/golden/parsing/expr_abut_01.txt": "4232f198e72eeede3317f8cf1c2ef3269be892f99bc9fd5199ea791d17291b57",
+    "compiler/tests/golden/parsing/expr_abut_02.txt": "151374eb68847c0ae3567bcfd54e2d0a7afa20942493b557a5c8c9e901764dce",
+    "compiler/tests/golden/parsing/expr_abut_03.txt": "5a3a89528f97f343cfddb08d321d323239ad4da81f527fdb298fe9acb97d6b9f",
+    "compiler/tests/golden/parsing/expr_abut_04.txt": "98beac0d1bde2950adb13bd3b549bd5c62c25ff33f2f0e916fdfcccee516a911",
+    "compiler/tests/golden/parsing/expr_ambig_01.txt": "f1b3b50df324f2c943f050518e44607c2952643b544cc3ead62ad85db2242fe5",
+    "compiler/tests/golden/parsing/expr_ambig_02.txt": "80f4fa796edeea35b51734af54de344e141dc52f847fac99d2aa63a12032b99f",
+    "compiler/tests/golden/parsing/expr_ambig_03.txt": "bf45f5403bd7f6606290de833b57f39693a2fdf8440b19fdbff497452b2a85c2",
+    "compiler/tests/golden/parsing/select_c_parse.txt": "786c6071b6c05a2a7563d345b265bd19c379ad24340346e2327d1095a475c3ec",
+    "compiler/tests/golden/parsing/select_classic_parse.txt": "c2fd7c4227dd5583502698f6fe24f84ad62e8ecb560b113aaeeaa5d3b1e366f4",
+    "compiler/tests/rexx_src/levelc_unicode_services.expected": "15b8af2851c45c6b9cb03fd33161570365ec59977a9e918b97d116a3578f5025",
+    "compiler/tests/rexx_src/levelc_unicode_services.rexx": "b4aba99d85e6c268851b749824b6e0e150237c2e0a888598681f07b9b7aeb9f4",
+    "compiler/tests/rexx_src/levelc_unicode_symbols.expected": "842a863af45b15d97136f266dd4ff835232d881e9a79e96e183a1a6daf06dbbd",
+    "compiler/tests/rexx_src/levelc_unicode_symbols.rexx": "93835ff4594d8e15bd6b8527586e506d7466bd82fa5e5ef5df0a8a6bfcf8fced",
+    "compiler/tests/src/test_classic_stream_lifecycle.c": "7265021c49eaf63e855e66e742ec3d9de6767e7523d0ec7f54e2bc1f8cb37baf",
+    "compiler/tests/src/test_levelc_address_host_callback.c": "bfafb6ea9c69778447579804622ec5977b22e636967c855db4a4f0d523c432b1",
+    "compiler/tests/src/test_levelc_arg_host_entry.c": "f16d78c81fe00a7980115e08536a5d6515593c189777097558a696731083a9d5",
+    "compiler/tests/src/test_levelc_call_host_entry.c": "1d51b3e40063d1f7f3b703387bb60217f47c5587b6a499adfcf28e3a62608b65",
+    "compiler/tests/src/test_levelc_say_host_output.c": "bfd55ff1f8bfc5e01e0317e4252a9a7e723a456884323ccccf0dbb85c4e1fe11",
+    "interpreter/rxvml.c": "3fa9a421e6fabdd1097c230dc13b7a82cc5f59bf244f23fdbe90a922ec75d98b",
+    "lib/plugins/CMakeLists.txt": "fc1014653f3b7081597060202df5a668476ba6aa24e6b78df7dd819fddcbd35e",
+    "lib/plugins/cstream/CMakeLists.txt": "8ddb2fc9f1377f7eef55feb5cfb2dc1217cf40f11e161e5b3d9068a1411961da",
+    "lib/plugins/cstream/rxcstream.c": "9f95afcff807469b68bd2d3d5b64bf9b479429226674d8084997f13977de7f12",
+    "lib/rxfnsc/CMakeLists.txt": "632f2d7f76ac7dbfb63702a1dee3458761fc5bf36662e1e47699f0e19ba971d8",
+    "lib/rxfnsc/RexxClassicBifStream.crexx": "e90933bc4ddc1919dcb948d9a3e5ee97ddf967b50f14aabdc5709ae6dd79276c",
+    "lib/rxfnsc/RexxClassicBifTranslate.crexx": "75c92fa342aa0e728ec9c69516d4073f67532b5e644c7523f92c481bbf78fd04",
+    "lib/rxfnsc/RexxClassicBifUnicode.crexx": "ac1485f54ba55ef0aa03fc78f307eb8169fea7bd27f4003f253d521ed4fad398",
+    "lib/rxfnsc/RexxClassicBifs.crexx": "8f331395cf7c1a69771a63907b89940451fb610fb651a21853ce53aeeae8f898",
+    "lib/rxfnsc/RexxClassicConfig.crexx": "ee58651b4cede3db6542e46e3a484fba74a934a0e8603a4ef7a89127aa539e4a",
+    "lib/rxfnsc/RexxClassicDatatype.crexx": "15f7d651a346e8c3fe8ebc26105360ad593c8f62c59220c74101bd46c39cef6c",
+    "lib/rxfnsc/RexxClassicStream.crexx": "c1800374d682ca9509185b183e4c796fce75167fe457649edca264ad6c8bb15c",
+    "lib/rxfnsc/RexxClassicUnicodeProperties.crexx.in": "b5c39d6dcd9333b0c9672c5f2366fed09bc8c6e89b9ac4956f0e02487631ac4b",
+    "lib/rxfnsc/RexxVariablePool.crexx": "a6ebb5a63f642922e38377ff49360ab2e9a1c4cf60a83dd95e24e33035c127e9"
+  },
+  "build_settings": {
+    "cmake-build-debug": {
+      "BUILD_TESTING": "ON",
+      "CMAKE_BUILD_TYPE": "Debug",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_C_COMPILER": "/usr/bin/cc",
+      "CMAKE_C_FLAGS": "",
+      "CMAKE_C_FLAGS_DEBUG": "-g",
+      "CMAKE_C_FLAGS_RELEASE": "-O3 -DNDEBUG",
+      "CREXX_VM_PROFILING": "OFF",
+      "ENABLE_GTK": "OFF",
+      "ENABLE_LLAMA": "ON",
+      "ENABLE_ODBC": "OFF"
+    },
+    "cmake-build-release": {
+      "BUILD_TESTING": "ON",
+      "CMAKE_BUILD_TYPE": "Release",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_C_COMPILER": "/usr/bin/cc",
+      "CMAKE_C_FLAGS": "",
+      "CMAKE_C_FLAGS_DEBUG": "-g",
+      "CMAKE_C_FLAGS_RELEASE": "-O3 -DNDEBUG",
+      "CREXX_VM_PROFILING": "OFF",
+      "ENABLE_GTK": "OFF",
+      "ENABLE_LLAMA": "ON",
+      "ENABLE_ODBC": "OFF"
+    },
+    "cmake-build-debugasan": {
+      "BUILD_TESTING": "ON",
+      "CMAKE_BUILD_TYPE": "Debug",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_C_COMPILER": "/usr/bin/cc",
+      "CMAKE_C_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
+      "CMAKE_C_FLAGS_DEBUG": "-g",
+      "CMAKE_C_FLAGS_RELEASE": "-O3 -DNDEBUG",
+      "CREXX_VM_PROFILING": "OFF",
+      "ENABLE_GTK": "OFF",
+      "ENABLE_LLAMA": "ON",
+      "ENABLE_ODBC": "ON"
+    }
+  },
+  "contract_input_reuse": {
+    "unchanged_runtime_and_contract_inputs": false,
+    "later_test_only_deltas": {
+      "compiler/tests/CMakeLists.txt": {
+        "contract_freeze": "9265da0ec47b404c70c557b6783be4ca74930feb0cb0f76a0c5269d87014fb28",
+        "final": "6afe4437e3f13da206a2557296a40bdfff332a7331d20430785218020211dca1"
+      },
+      "compiler/tests/golden/parsing/16_classes.txt": {
+        "contract_freeze": null,
+        "final": "888b96ee00e90913120e7b29183e1f48adf643f9437656cb06779c4d772dfdc3"
+      },
+      "compiler/tests/golden/parsing/address_exit_extended.txt": {
+        "contract_freeze": null,
+        "final": "cb2c5537b6118f126c5c72f73fe7ac7f6279d1fe4e7d3d4c3da11730ec1a1185"
+      },
+      "compiler/tests/golden/parsing/address_inline_then.txt": {
+        "contract_freeze": null,
+        "final": "5788a59cb0ef65de3d9ae6d1b3017b4c65677d76d716db74552d18243976bc9c"
+      },
+      "compiler/tests/golden/parsing/binary_intrinsics_parse.txt": {
+        "contract_freeze": null,
+        "final": "4fcf9b452a084729a483f4ef2a488d8a26c8ae1fdc131c2044a22e8e3b16cb86"
+      },
+      "compiler/tests/golden/parsing/block_expr_parse.txt": {
+        "contract_freeze": null,
+        "final": "9f66ca91fb4610c36c19f3329cb4ded2175a7b2b78532847eb425655029a7476"
+      },
+      "compiler/tests/golden/parsing/do_counted_parse.txt": {
+        "contract_freeze": null,
+        "final": "8b9eecb1126f9fa216180af88beb2a18636ab283429cd0c50a5a7e41a68ba120"
+      },
+      "compiler/tests/golden/parsing/do_simple_parse.txt": {
+        "contract_freeze": null,
+        "final": "6f539d64266d0202b3b902b833904bcf1146552ce3f493cd9fe71e22488a83a9"
+      },
+      "compiler/tests/golden/parsing/do_until_parse.txt": {
+        "contract_freeze": null,
+        "final": "da48b006b306c8d246318c5decbb8a5cd387d90037bfa96f634d73c72981a575"
+      },
+      "compiler/tests/golden/parsing/do_while_parse.txt": {
+        "contract_freeze": null,
+        "final": "38d7dfb49855007f07caa362e88f0d2f2870b9e823e8745d87995e9266bffd2c"
+      },
+      "compiler/tests/golden/parsing/expr_abut_01.txt": {
+        "contract_freeze": null,
+        "final": "4232f198e72eeede3317f8cf1c2ef3269be892f99bc9fd5199ea791d17291b57"
+      },
+      "compiler/tests/golden/parsing/expr_abut_02.txt": {
+        "contract_freeze": null,
+        "final": "151374eb68847c0ae3567bcfd54e2d0a7afa20942493b557a5c8c9e901764dce"
+      },
+      "compiler/tests/golden/parsing/expr_abut_03.txt": {
+        "contract_freeze": null,
+        "final": "5a3a89528f97f343cfddb08d321d323239ad4da81f527fdb298fe9acb97d6b9f"
+      },
+      "compiler/tests/golden/parsing/expr_abut_04.txt": {
+        "contract_freeze": null,
+        "final": "98beac0d1bde2950adb13bd3b549bd5c62c25ff33f2f0e916fdfcccee516a911"
+      },
+      "compiler/tests/golden/parsing/expr_ambig_01.txt": {
+        "contract_freeze": null,
+        "final": "f1b3b50df324f2c943f050518e44607c2952643b544cc3ead62ad85db2242fe5"
+      },
+      "compiler/tests/golden/parsing/expr_ambig_02.txt": {
+        "contract_freeze": null,
+        "final": "80f4fa796edeea35b51734af54de344e141dc52f847fac99d2aa63a12032b99f"
+      },
+      "compiler/tests/golden/parsing/expr_ambig_03.txt": {
+        "contract_freeze": null,
+        "final": "bf45f5403bd7f6606290de833b57f39693a2fdf8440b19fdbff497452b2a85c2"
+      },
+      "compiler/tests/golden/parsing/select_c_parse.txt": {
+        "contract_freeze": null,
+        "final": "786c6071b6c05a2a7563d345b265bd19c379ad24340346e2327d1095a475c3ec"
+      },
+      "compiler/tests/golden/parsing/select_classic_parse.txt": {
+        "contract_freeze": null,
+        "final": "c2fd7c4227dd5583502698f6fe24f84ad62e8ecb560b113aaeeaa5d3b1e366f4"
+      },
+      "compiler/tests/src/test_classic_stream_lifecycle.c": {
+        "contract_freeze": "e4c466c9e80d30588b25719a97c57360e483bf4014a7fad7f267cb0a0995e46f",
+        "final": "7265021c49eaf63e855e66e742ec3d9de6767e7523d0ec7f54e2bc1f8cb37baf"
+      },
+      "compiler/tests/src/test_levelc_address_host_callback.c": {
+        "contract_freeze": null,
+        "final": "bfafb6ea9c69778447579804622ec5977b22e636967c855db4a4f0d523c432b1"
+      },
+      "compiler/tests/src/test_levelc_arg_host_entry.c": {
+        "contract_freeze": null,
+        "final": "f16d78c81fe00a7980115e08536a5d6515593c189777097558a696731083a9d5"
+      },
+      "compiler/tests/src/test_levelc_call_host_entry.c": {
+        "contract_freeze": null,
+        "final": "1d51b3e40063d1f7f3b703387bb60217f47c5587b6a499adfcf28e3a62608b65"
+      },
+      "compiler/tests/src/test_levelc_say_host_output.c": {
+        "contract_freeze": null,
+        "final": "bfd55ff1f8bfc5e01e0317e4252a9a7e723a456884323ccccf0dbb85c4e1fe11"
+      }
+    },
+    "unchanged_executable_behavior_and_fixture_values": true,
+    "nonfunctional_final_whitespace_cleanup": {
+      "compiler/tests/classic_unicode_contract.py": {
+        "qualified_before_sha256": "84c0f744b0013d40722c8590d90954389201edc04afed19af452d3e63a008ad4",
+        "delivery_sha256": "9faae71d4a207c89eedfd9c3007bf1d86d8e10ca7c92a3837680f0cd0c9ff92d",
+        "reason": "remove trailing spaces only; line counts and executable semantics unchanged",
+        "proof": "Python parsed AST identical"
+      },
+      "lib/rxfnsc/RexxClassicBifUnicode.crexx": {
+        "qualified_before_sha256": "aa0d65c423e4c48bae73b77c55aa9a445fb3f56d06b2018362565251a31d3b21",
+        "delivery_sha256": "ac1485f54ba55ef0aa03fc78f307eb8169fea7bd27f4003f253d521ed4fad398",
+        "reason": "remove trailing spaces only; line counts and executable semantics unchanged",
+        "proof": "only whitespace after empty RexxDoc @checkargs tag changed"
+      }
+    }
+  },
+  "unicode_authority_sha256": {
+    "re2c/include/unicode_categories.re": "3d0a319806e42a7b476f9d474c104f7e734c42eeab8fb36b2b82591cd55b0689",
+    "lib/rxfnsg/unicode/data/unicode-17.0.0/UnicodeData.txt": "2e1efc1dcb59c575eedf5ccae60f95229f706ee6d031835247d843c11d96470c"
+  }
+}

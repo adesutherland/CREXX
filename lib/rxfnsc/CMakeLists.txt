@@ -50,7 +50,13 @@ file(WRITE "${RXFNSC_CLASSIC_CATALOG_SOURCE}.tmp"
 configure_file("${RXFNSC_CLASSIC_CATALOG_SOURCE}.tmp"
   "${RXFNSC_CLASSIC_CATALOG_SOURCE}" COPYONLY)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxClassicUnicode.cmake)
+set(RXFNSC_UNICODE_PROPERTIES_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/generated/RexxClassicUnicodeProperties.crexx")
+crexx_classic_unicode_source("${RXFNSC_UNICODE_PROPERTIES_SOURCE}")
+
 set(RXFNSC_DIRECT_BIF_MODULES
+  RexxClassicBifUnicode
+  RexxClassicBifStream
   RexxClassicBifAbbrev
   RexxClassicBifAbs
   RexxClassicBifAddress
@@ -116,7 +122,9 @@ set(RXFNSC_MODULES
   RexxValue
   RexxStem
   RexxClassicConfig
+  RexxClassicStream
   RexxClassicDatatype
+  RexxClassicUnicodeProperties
   RexxClassicCharacterScan
   RexxClassicCharacterOps
   RexxClassicEncoding
@@ -148,12 +156,18 @@ set(RXFNSC_MEMBER_BUILD_DEPS
 set(RXFNSC_IMPORT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/imports")
 set(RXFNSC_IMPORT_LIBRARY "${RXFNSC_IMPORT_ROOT}/library.rxbin")
 set(RXFNSC_IMPORT_CLASSLIB "${RXFNSC_IMPORT_ROOT}/classlib.rxbin")
+set(RXFNSC_IMPORT_STREAM "${RXFNSC_IMPORT_ROOT}/rxcstream.rxplugin")
+set(RXFNSC_IMPORT_FS "${RXFNSC_IMPORT_ROOT}/rxfs.rxplugin")
+set(RXFNSC_IMPORT_UNICODE "${RXFNSC_IMPORT_ROOT}/rxfnsg.rxbin")
 set(RXFNSC_IMPORT_EXITS "${RXFNSC_IMPORT_ROOT}/rxcexits.rxbin")
 add_custom_command(
   OUTPUT
     "${RXFNSC_IMPORT_LIBRARY}"
     "${RXFNSC_IMPORT_CLASSLIB}"
     "${RXFNSC_IMPORT_EXITS}"
+    "${RXFNSC_IMPORT_UNICODE}"
+    "${RXFNSC_IMPORT_STREAM}"
+    "${RXFNSC_IMPORT_FS}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${RXFNSC_IMPORT_ROOT}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_BINARY_DIR}/bin/library.rxbin"
@@ -164,7 +178,16 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
     "${RXFNSC_IMPORT_EXITS}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+    "${RXFNSC_IMPORT_UNICODE}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:cstream> "${RXFNSC_IMPORT_STREAM}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:fs> "${RXFNSC_IMPORT_FS}"
   DEPENDS
+    cstream
+    fs
+    rxfnsg
+    "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
     library
     classlib
     compiler_exit_bin
@@ -179,23 +202,29 @@ add_custom_target(rxfnsc_imports
     "${RXFNSC_IMPORT_LIBRARY}"
     "${RXFNSC_IMPORT_CLASSLIB}"
     "${RXFNSC_IMPORT_EXITS}"
+    "${RXFNSC_IMPORT_UNICODE}"
+    "${RXFNSC_IMPORT_STREAM}"
+    "${RXFNSC_IMPORT_FS}"
 )
 
 set(RXFNSC_SELECTORS ${RXFNSC_MODULES})
 set(RXFNSC_DEPS_RexxStem RexxValue)
 set(RXFNSC_DEPS_RexxClassicState RexxValue)
 set(RXFNSC_DEPS_RexxClassicAddress RexxClassicState RexxActivationArguments RexxVariablePool RexxValue)
-set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan)
+set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicUnicodeProperties)
 set(RXFNSC_DEPS_RexxActivationArguments RexxValue RexxClassicState RexxVariablePool)
 set(RXFNSC_DEPS_RexxDoState RexxValue RexxVariablePool)
-set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxClassicConditionEvent RexxClassicDiagnosticCatalog RexxActivationArguments RexxVariablePool)
-set(RXFNSC_DEPS_RexxClassicConfig RexxValue)
-set(RXFNSC_DEPS_RexxClassicDatatype RexxValue RexxClassicConfig)
+set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxClassicConditionEvent RexxClassicDiagnosticCatalog RexxActivationArguments RexxVariablePool RexxClassicUnicodeProperties)
+set(RXFNSC_DEPS_RexxClassicConfig RexxValue RexxClassicStream)
+set(RXFNSC_DEPS_RexxClassicStream RexxClassicEncoding)
+set(RXFNSC_DEPS_RexxClassicDatatype RexxValue RexxClassicConfig RexxClassicUnicodeProperties RexxClassicEncoding)
 set(RXFNSC_DEPS_RexxClassicCharacterOps RexxValue RexxClassicConfig RexxClassicCharacterScan)
 set(RXFNSC_DEPS_RexxClassicBitFunctions RexxClassicEncoding)
 foreach(MOD IN LISTS RXFNSC_DIRECT_BIF_MODULES)
   set(RXFNSC_DEPS_${MOD} RexxClassicBifs)
 endforeach()
+set(RXFNSC_DEPS_RexxClassicBifStream RexxClassicBifs RexxClassicConfig RexxClassicStream)
+set(RXFNSC_DEPS_RexxClassicBifUnicode RexxClassicBifs RexxClassicEncoding)
 set(RXFNSC_DEPS_RexxClassicBifAddress RexxClassicBifs RexxActivationArguments RexxClassicState)
 set(RXFNSC_DEPS_RexxClassicBifArg RexxClassicBifs RexxActivationArguments)
 set(RXFNSC_DEPS_RexxClassicBifCondition RexxClassicBifs RexxActivationArguments)
@@ -205,7 +234,7 @@ set(RXFNSC_DEPS_RexxClassicBifBitxor RexxClassicBitFunctions)
 set(RXFNSC_DEPS_RexxClassicBifC2d RexxClassicBifs RexxClassicEncoding RexxClassicBifX2d)
 set(RXFNSC_DEPS_RexxClassicBifC2x RexxClassicBifs RexxClassicEncoding)
 set(RXFNSC_DEPS_RexxClassicBifD2c RexxClassicBifs RexxClassicEncoding RexxClassicBifD2x)
-set(RXFNSC_DEPS_RexxClassicBifTranslate RexxClassicBifs RexxClassicEncoding)
+set(RXFNSC_DEPS_RexxClassicBifTranslate RexxClassicBifs RexxClassicEncoding RexxClassicUnicodeProperties)
 set(RXFNSC_DEPS_RexxClassicBifDatatype RexxClassicBifs RexxClassicDatatype)
 set(RXFNSC_DEPS_RexxClassicBifSymbol RexxClassicBifs RexxClassicDatatype)
 set(RXFNSC_DEPS_RexxClassicBifX2c RexxClassicBifs RexxClassicEncoding)
@@ -263,7 +292,9 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
     "${_member_dir}/sources-${_rxfnsc_dep_signature_short}")
   set(_member_source "${_member_source_root}/${_basename}.crexx")
   foreach(_dep IN LISTS _rxfnsc_dep_closure)
-    if(_dep STREQUAL "RexxClassicDiagnosticCatalog")
+    if(_dep STREQUAL "RexxClassicUnicodeProperties")
+      set(_rxfnsc_dep_source "${RXFNSC_UNICODE_PROPERTIES_SOURCE}")
+    elseif(_dep STREQUAL "RexxClassicDiagnosticCatalog")
       set(_rxfnsc_dep_source "${RXFNSC_CLASSIC_CATALOG_SOURCE}")
     else()
       set(_rxfnsc_dep_source "${CMAKE_CURRENT_SOURCE_DIR}/${_dep}.crexx")
@@ -276,7 +307,9 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
         "${_rxfnsc_dep_source}"
         "${_rxfnsc_staged_source}")
   endforeach()
-  if(_basename STREQUAL "RexxClassicDiagnosticCatalog")
+  if(_basename STREQUAL "RexxClassicUnicodeProperties")
+    set(_rxfnsc_primary_source "${RXFNSC_UNICODE_PROPERTIES_SOURCE}")
+  elseif(_basename STREQUAL "RexxClassicDiagnosticCatalog")
     set(_rxfnsc_primary_source "${RXFNSC_CLASSIC_CATALOG_SOURCE}")
   else()
     set(_rxfnsc_primary_source "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")

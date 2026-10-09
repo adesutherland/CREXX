@@ -3,6 +3,10 @@
 
 #include "rxvml.h"
 
+#ifndef CREXX_TEST_BINDIR
+#define CREXX_TEST_BINDIR "."
+#endif
+
 #ifndef CREXX_TEST_LIBRARY_PATH
 #define CREXX_TEST_LIBRARY_PATH "library"
 #endif
@@ -44,7 +48,7 @@ int main(void) {
     const char *error = NULL;
     int program_rc = -1;
     int failed = 0;
-    rxvml_context *ctx = rxvml_create(NULL, 0);
+    rxvml_context *ctx = rxvml_create(CREXX_TEST_BINDIR, 0);
     if (!ctx) {
         fprintf(stderr, "could not create SAY host context\n");
         return 1;

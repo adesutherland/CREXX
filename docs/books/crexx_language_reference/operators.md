@@ -80,11 +80,11 @@ For example, `"09" = 9` is true numerically, while `"a" > 1` is a padded string 
 
 * The numeric comparison is affected by the **`NUMERIC FUZZ`** setting.
 
-> **cRexx Level B Unicode String Comparison**
+> **Unicode string comparison**
 >
-> To ensure accuracy with Unicode, cRexx Level B enhances the standard string comparison. Before the padding and 
-> comparison steps, both strings are first brought into a consistent representation by applying Unicode Normalization 
-> Form C (NFC). 
+> Ordinary B/C/G comparisons preserve exact text. They do not normalize. Use
+> the explicit TONFC/rxunicode.toNFC operation when canonical normalization is
+> wanted before comparison.
 
 | Operator(s)      | Description                        |
 |:-----------------|:-----------------------------------|

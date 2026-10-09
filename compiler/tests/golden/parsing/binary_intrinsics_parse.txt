@@ -108,6 +108,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
                 VAR_SYMBOL : "whole_key" (10:17) [Type: .unknown]
               VAR_SYMBOL : "text_key" (10:29) [Type: .unknown]
             VAR_SYMBOL : "hash_key" (10:40) [Type: .unknown]
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
 
 --- STAGE_SYMBOLS (Iteration 0) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]

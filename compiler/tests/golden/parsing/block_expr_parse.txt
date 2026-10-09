@@ -52,6 +52,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
                 LEAVE_WITH : "leave" (5:2) [Type: .unknown]
                   INTEGER : "0" (5:13) [Type: .unknown]
         RETURN : "" (2:67) [Type: .unknown]
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
 
 --- STAGE_SYMBOLS (Iteration 0) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]

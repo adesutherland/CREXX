@@ -1,7 +1,7 @@
 # Level C Classic BIF Implementation Notes
 
 Status: Classic BIF semantic reference with current cREXX boundary notes
-Last updated: 2026-10-08
+Last updated: 2026-10-09
 
 Source: publicly available Classic REXX language specification.
 
@@ -30,10 +30,11 @@ and remaining conformance proof. It also distinguishes verified defects from
 unprobed inspection concerns; this guide's target tables are not blanket
 claims that the full contract is implemented.
 
-Adrian's 2026-10-07 scope clarification preserves current Unicode/I/O
-infrastructure; Unicode-caused signals and logic errors are currently undefined
-in B/C/G pending compatibility and architectural assessment. It does not approve
-new stream support or revise RexxScript's separate binary-capable value model.
+Adrian's 2026-10-09 approval supersedes the earlier Unicode/I/O deferral.
+The [Unicode/stream contract](levelc_unicode_and_streams.md) defines ordinary
+codepoints, byte ordinals, symbols, explicit algorithms/codecs and eight streams.
+The LC-UNICODE plan owns final qualification. RexxScript retains its binary
+value model and sandbox. Earlier dated checkpoints describe their original scope.
 
 ## Fixed Direction
 
@@ -151,21 +152,21 @@ exercises its retained shared-module body rather than the standalone compiler
 target. Compiled SUBWORD panels reach the standalone entry, but the unit
 name alone does not qualify that entry's complete error/configuration matrix.
 
-Classic BIF names reachable through the compiler's direct table (62 of 70):
+Classic BIF names reachable through the compiler's direct table (70 of 70):
 
 ```text
 ABBREV ABS ADDRESS ARG B2X BITAND BITOR BITXOR C2D C2X CENTER CENTRE
-CHANGESTR COMPARE CONDITION COPIES COUNTSTR D2C D2X DATE DATATYPE DELSTR
+CHARIN CHAROUT CHARS CHANGESTR COMPARE CONDITION COPIES COUNTSTR D2C D2X DATE DATATYPE DELSTR
 DELWORD DIGITS ERRORTEXT FORM FORMAT FUZZ INSERT LASTPOS LEFT LENGTH MAX
-MIN OVERLAY POS QUEUED RANDOM REVERSE RIGHT SIGN SOURCELINE SPACE STRIP
+LINEIN LINEOUT LINES MIN OVERLAY POS QUALIFY QUEUED RANDOM REVERSE RIGHT SIGN SOURCELINE SPACE STREAM STRIP
 SUBSTR SUBWORD SYMBOL TIME TRACE TRANSLATE TRUNC VALUE VERIFY WORD
 WORDINDEX WORDLENGTH WORDPOS WORDS X2B X2C X2D XRANGE
 ```
 
 Aliases and the bitwise entries share their existing implementations. LOWER and
-UPPER are additional direct names outside the 70-name Classic catalog. CHARIN,
-CHAROUT, CHARS, LINEIN, LINEOUT, LINES, QUALIFY and STREAM remain pending by
-Adrian's 2026-10-07 direction: no new stream/Unicode infrastructure is approved.
+UPPER are additional direct names outside the 70-name Classic catalog.
+The 23 explicit Unicode extensions and eight stream implementations are
+listed in [the current contract](levelc_unicode_and_streams.md).
 QUEUED uses the existing selected queue; SOURCELINE retains the compilation
 unit's original physical lines; ERRORTEXT shares the standard diagnostic catalog.
 The worklist owns their contract receipts and remaining source/host limits.
@@ -204,7 +205,7 @@ ANY NUM WHOLE WHOLE>=0 WHOLE>0 WHOLENUM WHOLENUM>=0 0_90 PAD BIN HEX SYM
 ```
 
 Option-set rules are supplied by each BIF (for example `ABLMNSUWX`, `LTB`,
-`CDEIS`, `SN` and `EO`). Stream-name validation is still a pending host contract.
+`CDEIS`, `SN` and `EO`). Stream names use exact-length NUL rejection (40.27); broader host APIs remain separate.
 Positional/count WHOLE operands use the approved inclusive signed 64-bit range;
 outside it they report source-anchored `40.12` before VM conversion. WHOLENUM
 radix numeric operands retain arbitrary precision. This integer argument limit
@@ -215,9 +216,7 @@ TRUNC and FORMAT. The existing B/G decimal BIFs use the same rounding and
 inherited DIGITS/FORM while retaining their typed arguments, results and
 signals. The common numeric implementation performs normalization once; direct
 ABS/MAX/MIN/SIGN entries are wrappers over it. Regina 3.9.7's preserved-operand
-behavior at reduced DIGITS differs from the approved ANSI rule. Unicode-caused
-signals or other logic errors in B/C/G remain undefined within the current infrastructure
-until Adrian's compatibility/architecture assessment.
+behavior at reduced DIGITS differs from the approved ANSI rule. The 2026-10-09 Unicode/stream contract defines the admitted Level C operations.
 
 `RexxClassicDatatype.crexx` is the shared implementation for `NUM`, `WHOLE`,
 `BIN`, `HEX`, and `SYM`. It uses the call context's character configuration, configured
@@ -360,7 +359,7 @@ conditions:
 
 Rows normalize the Classic target and identify current implementation notes.
 The detailed compatibility-layer review supplies each name's actual paths,
-tests and remaining obligations; stream rows below describe deferred target behavior.
+tests and remaining obligations; the stream rows below describe the implemented contract.
 
 Argument checklist values are normalized from the public language-specification
 source for planning. This is implementation guidance, not a code copy.
@@ -443,24 +442,26 @@ source for planning. This is implementation guidance, not a code copy.
 
 ### Input/Output Built-in Functions
 
-The Classic I/O BIFs are configuration stream APIs. Existing Level B `fileio.crexx`
-functions are UTF text conveniences and should not be treated as conformant
-Level C stream implementations without an audit. The eight names below have
-recognition only, with no direct compiled-C implementation. Adrian deferred
-stream/Unicode infrastructure changes pending a compatibility and architectural
-assessment; these rows retain target obligations and do not approve the RXPA
-stream proposal or a new ABI.
+The eight names use RexxClassicBifStream over one configuration-owned stream
+service and private RXPA byte transport. Named files default to raw ordinals;
+consoles default to UTF-8. The [full contract](levelc_unicode_and_streams.md)
+defines ENCODING, counts/positions, line endings, failures and lifecycle.
+The legacy typed fileio helpers retain their own contract.
 
-| Function | Signature | Checklist | Definition summary | Level B/RexxValue notes |
-| --- | --- | --- | --- | --- |
-| `CHARIN` | `CHARIN([stream [,position [,count]]])` | `oSTREAM oWHOLE>0 oWHOLE>=0` | Reads `count` characters from a stream, optionally positioning first. Count defaults to `1`; count `0` touches the stream and returns null. | Raises `40.41`, `40.42`, or `NOTREADY`. Binary-mode streams use encoding conversion. |
-| `CHAROUT` | `CHAROUT([stream [,string [,position]]])` | `oSTREAM oANY oWHOLE>0` | Writes string characters, optionally positioning first. With no string and no position, closes/positions to end. Returns remaining character count. | Raises `40.41`, `40.42`, or `NOTREADY`. |
-| `CHARS` | `CHARS([stream [,option]])` | `oSTREAM oCN` | Indicates whether characters remain, or returns an immediately available count. | Delegates to stream count service. |
-| `LINEIN` | `LINEIN([stream [,line [,count]]])` | `oSTREAM oWHOLE>0 oWHOLE>=0` | Reads one line unless count is `0`; positioning is optional. Count greater than `1` is invalid. | Raises `40.39`, `40.41`, `40.42`, or `NOTREADY`. |
-| `LINEOUT` | `LINEOUT([stream [,string [,line]]])` | `oSTREAM oANY oWHOLE>0` | Writes string followed by an end-of-line marker; returns `0` for success and `1` for unsuccessful write. | Raises `40.41`, `40.42`, or `NOTREADY`. |
-| `LINES` | `LINES([stream [,option]])` | `oSTREAM oCN` | Returns line availability/count according to stream count option. | The specification rationale constrains when `LINES(stream,"N")` may return zero. |
-| `QUALIFY` | `QUALIFY([stream])` | `oSTREAM` | Returns a qualified stream name more persistently associated with the resource. | Requires configuration stream qualification. |
-| `STREAM` | `STREAM(stream [,operation [,command]])` | `rSTREAM oCDS`, or `rSTREAM rCDS rANY` for command | Operation `C` sends a stream command, `D` returns detailed state, and `S` returns `READY`, `NOTREADY`, `UNKNOWN`, or `ERROR`. | `ERROR` can come from cached stream state after failed I/O. |
+| Function | Signature | Checklist | Implemented behavior |
+| --- | --- | --- | --- |
+| CHARIN | CHARIN([name [,position [,count]]]) | oANY oWHOLE>0 oWHOLE>=0 | Codepoint/ordinal read; count defaults to one; EOF records NOTREADY. |
+| CHAROUT | CHAROUT([name [,text [,position]]]) | oANY oANY oWHOLE>0 | Returns unwritten codepoints; omitted text positions if supplied, otherwise closes. |
+| CHARS | CHARS([name [,option]]) | oANY oCNI | N/C count remaining persistent scalars; I indicates availability; transient count is availability. |
+| LINEIN | LINEIN([name [,line [,count]]]) | oANY oWHOLE>0 oWHOLE>=0 | Reads LF/CRLF line without terminator; count zero positions without consuming, count above one is 40.39. |
+| LINEOUT | LINEOUT([name [,text [,line]]]) | oANY oANY oWHOLE>0 | Writes text plus encoded LF; returns zero/one; omitted text positions or closes. |
+| LINES | LINES([name [,option]]) | oANY oCNI | Remaining persistent lines or availability; no input consumption. |
+| QUALIFY | QUALIFY([name]) | oANY | Host absolute path; default name returns empty. |
+| STREAM | STREAM(name [,S/D/C [,command]]) | rANY oANY oANY | State/description, OPEN/CLOSE and documented QUERY commands; explicit ENCODING extension. |
+
+Explicit transient positioning is SYNTAX 40.42. NUL paths are 40.27.
+Strict codec/raw-domain errors are 23.1; OS/EOF failures use NOTREADY.
+No full reference, resource or cross-platform claim follows from entry presence.
 
 ### Other Built-in Functions
 
@@ -496,20 +497,24 @@ Grouped or partial Level B coverage exists for:
 Current admitted stateful surfaces include ADDRESS, ARG, CONDITION, ERRORTEXT,
 QUEUED and SOURCELINE. CONDITION fields/producers and the shared English catalog
 have focused receipts; SOURCELINE retains original ordinary physical source
-lines but source-map input reports unavailable/count zero. Physical source NUL
-truncation remains a known source defect. These entries do not close wider
+lines but source-map input reports unavailable/count zero. LC-CLOSE repaired physical source NUL
+truncation and retains its source/diagnostic qualification. These entries do not close wider
 host, mapped-source, locale or lifecycle obligations.
 
-The eight missing compiled-C surfaces are CHARIN, CHAROUT, CHARS, LINEIN,
-LINEOUT, LINES, QUALIFY and STREAM. The bit BIFs already have direct entries
+The eight stream surfaces are now direct compiled-C entries. The bit BIFs already have direct entries
 over the current fixed Latin-1 boundary. The shared condition/message bridge
 is implemented on admitted producers; real host HALT, complete cross-service
 state and full diagnostic/source proof remain open.
 
-## Remaining obligations and known issues
+## Earlier checkpoint obligations (2026-10-08)
+
+The entries below are the historical independent BIF checkpoint. LC-CLOSE
+repaired the clock/source issues and LC-UNICODE supersedes stream/Unicode
+deferral and repairs BIN/HEX validator-consumer normalization. The authoritative
+worklist owns remaining full reference, host/resource and platform obligations.
 
 The worklist owns delivery order and decisions. This guide does not create a
-competing implementation plan. Current outstanding items are:
+competing implementation plan. The earlier checkpoint listed:
 
 1. The reproduced TIME clause-clock integration defect. DATE shares the
    inspected cache; calendar crossing was not probed. Pure conversion and

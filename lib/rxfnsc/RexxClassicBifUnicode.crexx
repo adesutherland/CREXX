@@ -1,0 +1,574 @@
+/* cREXX License (MIT). Classic adapters reuse the shared Unicode algorithms. */
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifunicode expose rexxclassicbif_unicodeversion rexxclassicbif_tonfd rexxclassicbif_tonfc rexxclassicbif_tonfkd rexxclassicbif_tonfkc rexxclassicbif_isnfd rexxclassicbif_isnfc rexxclassicbif_isnfkd rexxclassicbif_isnfkc rexxclassicbif_touppercase rexxclassicbif_tolowercase rexxclassicbif_tocasefold rexxclassicbif_tosimplecasefold rexxclassicbif_toturkiccasefold rexxclassicbif_toturkicsimplecasefold rexxclassicbif_graphemecount rexxclassicbif_graphemereverse rexxclassicbif_graphemesubstr rexxclassicbif_graphemepos rexxclassicbif_encode rexxclassicbif_decode rexxclassicbif_isdecodable rexxclassicbif_isencodingsupported
+import rexxclassicbifs
+import rexxclassicencoding
+import rexxvalue
+import rxunicode
+
+/**
+ * Explicit unicodeVersion over Classic codepoint/ordinal strings.
+ * @bif UNICODEVERSION
+ * @checkargs
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_unicodeversion: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..version())
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toNFD over Classic codepoint/ordinal strings.
+ * @bif TONFD
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_tonfd: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toNFD(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toNFC over Classic codepoint/ordinal strings.
+ * @bif TONFC
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_tonfc: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toNFC(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toNFKD over Classic codepoint/ordinal strings.
+ * @bif TONFKD
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_tonfkd: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toNFKD(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toNFKC over Classic codepoint/ordinal strings.
+ * @bif TONFKC
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_tonfkc: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toNFKC(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit isNFD over Classic codepoint/ordinal strings.
+ * @bif ISNFD
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_isnfd: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..isNFD(context.argumentText(1)) || "")
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit isNFC over Classic codepoint/ordinal strings.
+ * @bif ISNFC
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_isnfc: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..isNFC(context.argumentText(1)) || "")
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit isNFKD over Classic codepoint/ordinal strings.
+ * @bif ISNFKD
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_isnfkd: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..isNFKD(context.argumentText(1)) || "")
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit isNFKC over Classic codepoint/ordinal strings.
+ * @bif ISNFKC
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_isnfkc: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..isNFKC(context.argumentText(1)) || "")
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toUppercase over Classic codepoint/ordinal strings.
+ * @bif TOUPPERCASE
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_touppercase: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toUppercase(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toLowercase over Classic codepoint/ordinal strings.
+ * @bif TOLOWERCASE
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_tolowercase: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toLowercase(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toCasefold over Classic codepoint/ordinal strings.
+ * @bif TOCASEFOLD
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_tocasefold: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toCasefold(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toSimpleCasefold over Classic codepoint/ordinal strings.
+ * @bif TOSIMPLECASEFOLD
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_tosimplecasefold: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toSimpleCasefold(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toTurkicCasefold over Classic codepoint/ordinal strings.
+ * @bif TOTURKICCASEFOLD
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_toturkiccasefold: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toTurkicCasefold(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit toTurkicSimpleCasefold over Classic codepoint/ordinal strings.
+ * @bif TOTURKICSIMPLECASEFOLD
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_toturkicsimplecasefold: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..toTurkicSimpleCasefold(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit graphemeCount over Classic codepoint/ordinal strings.
+ * @bif GRAPHEMECOUNT
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_graphemecount: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..graphemeCount(context.argumentText(1)) || "")
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit graphemeReverse over Classic codepoint/ordinal strings.
+ * @bif GRAPHEMEREVERSE
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_graphemereverse: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..graphemeReverse(context.argumentText(1)))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit isEncodingSupported over Classic codepoint/ordinal strings.
+ * @bif ISENCODINGSUPPORTED
+ * @checkargs rANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_isencodingsupported: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+  do
+    return .RexxValue(rxunicode..isEncodingSupported(context.argumentText(1)) || "")
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit graphemeSubstr over Classic codepoint/ordinal strings.
+ * @bif GRAPHEMESUBSTR
+ * @checkargs rANY rWHOLE>0 oWHOLE>=0 oANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_graphemesubstr: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0 oANY") = 0 then return .RexxValue("")
+  do
+    start = context.argumentText(2) + 0
+    if context.argumentExists(3) then do
+      count = context.argumentText(3) + 0
+      if context.argumentExists(4) then return .RexxValue(rxunicode..graphemeSubstr(context.argumentText(1),start,count,context.argumentText(4)))
+      return .RexxValue(rxunicode..graphemeSubstr(context.argumentText(1),start,count))
+    end
+    if context.argumentExists(4) then return .RexxValue(rxunicode..graphemeSubstr(context.argumentText(1),start,,context.argumentText(4)))
+    return .RexxValue(rxunicode..graphemeSubstr(context.argumentText(1),start))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit graphemePos over Classic codepoint/ordinal strings.
+ * @bif GRAPHEMEPOS
+ * @checkargs rANY rANY oWHOLE>0
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_graphemepos: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>0") = 0 then return .RexxValue("")
+  do
+    start = 1
+    if context.argumentExists(3) then start = context.argumentText(3) + 0
+    return .RexxValue(rxunicode..graphemePos(context.argumentText(1),context.argumentText(2),start) || "")
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit encode over Classic codepoint/ordinal strings.
+ * @bif ENCODE
+ * @checkargs rANY oANY oANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_encode: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY oANY oANY") = 0 then return .RexxValue("")
+  do
+    encoding = "UTF-8"
+    if context.argumentExists(2) then encoding = context.argumentText(2)
+    bytes = .binary
+    if context.argumentExists(3) then do
+      replacement = _ordinal_argument(context_ref,3)
+      if context.hasError() then return .RexxValue("")
+      bytes = rxunicode..encode(context.argumentText(1),encoding,replacement)
+    end
+    else bytes = rxunicode..encode(context.argumentText(1),encoding)
+    return .RexxValue(rexxclassic_latin1_to_text(bytes))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit decode over Classic codepoint/ordinal strings.
+ * @bif DECODE
+ * @checkargs rANY oANY oANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_decode: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY oANY oANY") = 0 then return .RexxValue("")
+  do
+    encoding = "UTF-8"
+    if context.argumentExists(2) then encoding = context.argumentText(2)
+    bytes = _ordinal_argument(context_ref,1)
+    if context.hasError() then return .RexxValue("")
+    if context.argumentExists(3) then return .RexxValue(rxunicode..decode(bytes,encoding,context.argumentText(3)))
+    return .RexxValue(rxunicode..decode(bytes,encoding))
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/**
+ * Explicit isDecodable over Classic codepoint/ordinal strings.
+ * @bif ISDECODABLE
+ * @checkargs rANY oANY
+ * @return Unicode text, an ordinal byte string, or an exact scalar result
+ * @signal CLASSIC_SYNTAX argument/conversion failures at the authored call
+ */
+rexxclassicbif_isdecodable: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY oANY") = 0 then return .RexxValue("")
+  do
+    encoding = "UTF-8"
+    if context.argumentExists(2) then encoding = context.argumentText(2)
+    bytes = _ordinal_argument(context_ref,1)
+    if context.hasError() then return .RexxValue("")
+    return .RexxValue(rxunicode..isDecodable(bytes,encoding) || "")
+  on signal unicode_error as problem
+    call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")
+  on signal invalid_arguments as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  on signal out_of_range as problem
+    call rexxclassicbif_set_error(context_ref,"40",0,problem.message(),"")
+  end
+  return .RexxValue("")
+
+/** Materialize encoded bytes from the fixed Classic ordinal domain. */
+_ordinal_argument: procedure = .binary
+  arg context_ref = reference .RexxBifCallContext, index = .int
+  context = dereference context_ref
+  text = context.argumentText(index)
+  if \rexxclassic_text_is_latin1(text) then do
+    call rexxclassicbif_set_error(context_ref,"23.1",index,text,"")
+    return "" as .binary
+  end
+  return rexxclassic_text_to_latin1(text)

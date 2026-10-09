@@ -120,6 +120,8 @@ REXX_UNIVERSE : "" (1:0) [Type: .unknown]
               SAY : "say" (28:4) [Type: .unknown]
                 STRING : "Other in Do" (28:8) [Type: .unknown]
         RETURN : "" (25:71) [Type: .unknown]
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
 
 --- STAGE_SYMBOLS (Iteration 0) ---
 REXX_UNIVERSE : "" (1:0) [Type: .unknown]

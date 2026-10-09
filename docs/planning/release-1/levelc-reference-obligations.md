@@ -20,10 +20,16 @@ depend on open host or condition rows. The
 [worklist](levelc-compatibility-worklist.md#whole-instruction-programme) owns
 instruction closure and detailed receipts. The
 [detailed compatibility-layer review](../../../compiler/docs/levelc_compatibility_layer.md)
-maps the current source/runtime/test paths. Adrian's later clarification keeps
-changes to Unicode/I/O infrastructure pending assessment and leaves
-Unicode-caused signals and logic errors undefined in B/C/G; existing explicit typed/Unicode mechanisms
-and RexxScript's separate binary-capable values remain distinct.
+maps the source/runtime/test paths. LC-UNICODE supersedes the earlier
+Unicode/I/O deferral for the new contract; typed B/G mechanisms and RexxScript's
+binary-capable values remain distinct.
+
+**Unicode/stream reconciliation, 2026-10-09.** LC-UNICODE supersedes the prior
+Unicode/stream deferral: all 70 names have entries, 23 explicit Unicode adapters
+share rxunicode, byte ordinals and Unicode symbols are defined, and streams have
+raw/encoded state and native ownership. The plan/receipt owns exact qualification.
+Source remains UTF-8; mapped-source/full host APIs and Release 1 proof remain open.
+Older rows below retain wider obligations rather than blanket Unicode exclusions.
 
 **Status reconciliation, 2026-10-08.** LC-CLOSE implements and locally qualifies the agreed expression, clock and source repairs; its worklist retains the exact input/results. `LC-I-01–24` have closed whole-
 instruction reviews; `LC-I-25` INTERPRET is parked and not implemented.
@@ -36,23 +42,23 @@ close an unfinished host/source/BIF obligation.
 | --- | --- | --- | --- |
 | LC-REF-001 | Invocation modes COMMAND, FUNCTION, SUBROUTINE | host | Open: `API_Start`-equivalent entry and lifecycle |
 | LC-REF-002 | Initial source identity and line inventory | source | Ordinary SOURCELINE retains physical lines, including NUL, with local sharing and separate provider inventories. LC-CLOSE source-data matrix adds imported-source and newline proof; full initial identity/PARSE SOURCE and mapped-source inventory remain LC-GAP-06 |
-| LC-REF-003 | Initial environment and stream selection | host | Admitted ADDRESS/default input/selected queue state exists; full configuration/stream initialization remains LC-GAP-03; new stream infrastructure is deferred by Adrian |
+| LC-REF-003 | Initial environment and stream selection | host | Admitted ADDRESS/queue/default input remains; LC-UNICODE supplies execution-owned raw/encoded streams and UTF-8 console defaults. Full embedding/configuration invocation APIs remain LC-GAP-03. |
 | LC-REF-004 | Invocation arguments and omitted positions | host | ARG, CALL, PROCEDURE and RETURN instruction reviews closed on the shared frame; wider host invocation modes and the C-string `rxvml_run()` NUL limit remain under LC-GAP-04 |
 | LC-REF-005 | Caller-provided trap overrides | host | Open: trap/configuration lifecycle |
 | LC-REF-006 | Completion classes: no value, result, condition, resource failure, unable to continue | host | Open: observable result/error contract |
-| LC-REF-007 | Source characters, EOL/EOS and invalid-encoding `22.1` | source | LC-CLOSE scanners use bounded EOF across B/C/G/L; NUL literals/comments and later clauses survive, invalid NUL positions receive explicit diagnostics, and UTF-8 input is retained. Source-conversion semantics, non-Latin C behavior and invalid-encoding design remain deferred under LC-GAP-06/08 |
-| LC-REF-008 | Configured extra blank characters and uppercase mapping | text | Runtime foundations and selected instruction proof; scanner-to-runtime parity open |
+| LC-REF-007 | Source characters, EOL/EOS and invalid-encoding `22.1` | source | LC-CLOSE scanners use bounded EOF across B/C/G/L; NUL literals/comments and later clauses survive, invalid NUL positions receive explicit diagnostics, and UTF-8 input is retained. LC-UNICODE defines non-Latin C symbols/text and keeps source UTF-8; full mapped-source/host/configuration limits remain LC-GAP-06/08 |
+| LC-REF-008 | Configured extra blank characters and uppercase mapping | text | LC-UNICODE preserves existing Unicode blanks/configured additions and shares simple mapping between compiler and pool. Radix consumers normalize validated configured digits/blanks. Wider scanner configuration remains open. |
 | LC-REF-009 | Configured compare, substring, length and range ordering | text | Unicode character BIF sweep and implicit TRANSLATE ordinals pass focused checks; complete reference/context integration open |
 | LC-REF-010 | Binary-digit/character conversion hooks | text | Fixed Latin-1 ordinal bridge for Level C byte-valued BIFs; complete reference/context proof open |
 | LC-REF-011 | Fixed `00`–`FF` ↔ `U+0000`–`U+00FF` bridge, PAD/XRANGE and out-of-range signal | text | All 256 round trips and selected conversion/BIF cases pass; complete error and host proof open |
 | LC-REF-012 | Unicode scalar text and codepoint character positions | text | Literal, SAY, PARSE/ARG and character-BIF slices pass; complete instruction/source/host proof open |
 | LC-REF-013 | No implicit BYTE/UTF8 switch, normalization or grapheme behavior | text | Approved language boundary; positive/negative whole-program proof open |
-| LC-REF-014 | DATATYPE extra letter/digit families, blanks and exponent limit | text | Shared classifier and focused extra letter/digit/blank/exponent tests exist; downstream BIN/HEX converter parity is an inspection-only custom-context concern, with complete caller/scanner/context proof open under LC-GAP-02/08 |
+| LC-REF-014 | DATATYPE extra letter/digit families, blanks and exponent limit | text | Shared classifier and focused extra letter/digit/blank/exponent tests exist; LC-UNICODE normalizes validated BIN/HEX arguments for converters, with Unicode/BYTE configured-digit regressions. Wider caller/scanner/context proof remains LC-GAP-02/08 |
 | LC-REF-015 | Configured command completion, RC/.RC/.RS and ERROR/FAILURE | host | ADDRESS and implicit-command instruction reviews closed on the admitted adapter; complete host configuration and transport remain under LC-GAP-03/05 |
 | LC-REF-016 | External routine lookup with arguments, environment, streams and pool access | host | CALL closed at Adrian's approved static signed boundary; broader host routine/pool services remain under LC-GAP-03/04 |
 | LC-REF-017 | Queue push, queue, pull and count services | host | PULL/PUSH/QUEUE and direct QUEUED share the execution-local selected repository; QUEUED direct/linked opt/no-opt proof checks nonconsumption, NUL and isolation. Existing RXQUEUE selects named queues for hosts; wider C/Level C selector/configuration remains LC-GAP-03 |
-| LC-REF-018 | Character and line stream input/output, positioning, state and close | host | Open and deferred by Adrian: eight Classic stream BIFs have no direct implementations; current B fileio/PARSE LINEIN/ADDRESS services do not close positioning, count, state and lifecycle obligations |
-| LC-REF-019 | Stream qualification, temporary names and availability queries | host | Open and deferred pending compatibility/architectural assessment: stream qualification/temporary names/availability adapter; RXPA stream proposal is unapproved |
+| LC-REF-018 | Character and line stream input/output, positioning, state and close | host | LC-UNICODE implements all eight stream BIFs, raw/encoded positions/counts, EOF/NOTREADY and ownership. Contract tests and final receipt own qualified inputs/platform limits; full host APIs remain separate. |
+| LC-REF-019 | Stream qualification, temporary names and availability queries | host | QUALIFY and STREAM EXISTS/type/count queries are implemented. Temporary-name/host facilities beyond the documented command vocabulary remain open. |
 | LC-REF-020 | Trap override/fallthrough for configuration hooks | host | Open: null-result and replacement behavior |
 | LC-REF-021 | API_Set, API_Value, API_Drop with compound substitution | host | Open: externally visible pool API |
 | LC-REF-022 | Direct API set/value/drop without substitution | host | Open: externally visible pool API |
@@ -78,7 +84,7 @@ close an unfinished host/source/BIF obligation.
 | LC-REF-042 | END-name matching and group-label branch restrictions | source | Front end diagnostics; complete reference matrix open |
 | LC-REF-043 | Expression terms, prefix, power and arithmetic precedence | text | LC-CLOSE whole-family expression contract covers prefix/power/arithmetic/concatenation, evaluation order, errors and numeric context in four execution modes; B/G NUMERIC_CLASSIC is included. Full resource/configuration/platform limits remain LC-GAP-07 |
 | LC-REF-044 | Left-associative Classic power | text | Classic left association and prefix/power precedence are covered by LC-CLOSE values and B/G Classic/common-mode comparisons in direct/linked opt/no-opt |
-| LC-REF-045 | Normal/strict comparisons and configured character ordering | text | LC-CLOSE adds padded numeric normalization and normal/strict comparison proof. Configured/non-Latin character ordering awaits the Unicode assessment |
+| LC-REF-045 | Normal/strict comparisons and configured character ordering | text | LC-CLOSE covers numeric/normal/strict comparisons; LC-UNICODE adds exact Unicode/codepoint ordering and no NFC. Wider configured comparison/resource qualification remains open. |
 | LC-REF-046 | Logical AND/OR/XOR and prefix negation with exact values | text | LC-CLOSE checks eager AND/OR/XOR, NOT, exact values and contextual 34.5/34.6 through the existing SYNTAX bridge in four modes |
 | LC-REF-047 | PARSE ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR and UPPER | host | Whole PARSE instruction closed on seven agreed sources through shared `parseplan`; EXTERNAL/NUMERIC sources excluded from initial Level C by Adrian; configured host input remains under LC-GAP-03 |
 | LC-REF-048 | PARSE targets, placeholders, literal/variable patterns and positions | text | Whole PARSE instruction closed on the shared template executor, including errors, source positions, opt/no-opt and linked execution; cross-source/host lifecycle remains in its owning rows |

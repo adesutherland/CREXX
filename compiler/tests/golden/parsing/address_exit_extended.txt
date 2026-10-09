@@ -82,6 +82,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           EXIT_TOKEN : "expose" (8:79) [Type: .unknown]
           EXIT_TOKEN : "user" (8:86) [Type: .unknown]
         RETURN : "return" (9:2) [Type: .unknown]
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
 
 --- STAGE_SYMBOLS (Iteration 0) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]

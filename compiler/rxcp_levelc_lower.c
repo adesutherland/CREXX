@@ -215,7 +215,38 @@ static const LevelCBifEntry levelc_direct_bifs[] = {
     LEVELC_DIRECT_BIF("X2B", "rexxclassicbifx2b", "rexxclassicbif_x2b"),
     LEVELC_DIRECT_BIF("X2C", "rexxclassicbifx2c", "rexxclassicbif_x2c"),
     LEVELC_DIRECT_BIF("X2D", "rexxclassicbifx2d", "rexxclassicbif_x2d"),
-    LEVELC_DIRECT_BIF("XRANGE", "rexxclassicbifxrange", "rexxclassicbif_xrange")
+    LEVELC_DIRECT_BIF("XRANGE", "rexxclassicbifxrange", "rexxclassicbif_xrange"),
+    LEVELC_DIRECT_BIF("CHARIN", "rexxclassicbifstream", "rexxclassicbif_charin"),
+    LEVELC_DIRECT_BIF("CHAROUT", "rexxclassicbifstream", "rexxclassicbif_charout"),
+    LEVELC_DIRECT_BIF("CHARS", "rexxclassicbifstream", "rexxclassicbif_chars"),
+    LEVELC_DIRECT_BIF("LINEIN", "rexxclassicbifstream", "rexxclassicbif_linein"),
+    LEVELC_DIRECT_BIF("LINEOUT", "rexxclassicbifstream", "rexxclassicbif_lineout"),
+    LEVELC_DIRECT_BIF("LINES", "rexxclassicbifstream", "rexxclassicbif_lines"),
+    LEVELC_DIRECT_BIF("QUALIFY", "rexxclassicbifstream", "rexxclassicbif_qualify"),
+    LEVELC_DIRECT_BIF("STREAM", "rexxclassicbifstream", "rexxclassicbif_stream"),
+    LEVELC_DIRECT_BIF("UNICODEVERSION", "rexxclassicbifunicode", "rexxclassicbif_unicodeversion"),
+    LEVELC_DIRECT_BIF("TONFD", "rexxclassicbifunicode", "rexxclassicbif_tonfd"),
+    LEVELC_DIRECT_BIF("TONFC", "rexxclassicbifunicode", "rexxclassicbif_tonfc"),
+    LEVELC_DIRECT_BIF("TONFKD", "rexxclassicbifunicode", "rexxclassicbif_tonfkd"),
+    LEVELC_DIRECT_BIF("TONFKC", "rexxclassicbifunicode", "rexxclassicbif_tonfkc"),
+    LEVELC_DIRECT_BIF("ISNFD", "rexxclassicbifunicode", "rexxclassicbif_isnfd"),
+    LEVELC_DIRECT_BIF("ISNFC", "rexxclassicbifunicode", "rexxclassicbif_isnfc"),
+    LEVELC_DIRECT_BIF("ISNFKD", "rexxclassicbifunicode", "rexxclassicbif_isnfkd"),
+    LEVELC_DIRECT_BIF("ISNFKC", "rexxclassicbifunicode", "rexxclassicbif_isnfkc"),
+    LEVELC_DIRECT_BIF("TOUPPERCASE", "rexxclassicbifunicode", "rexxclassicbif_touppercase"),
+    LEVELC_DIRECT_BIF("TOLOWERCASE", "rexxclassicbifunicode", "rexxclassicbif_tolowercase"),
+    LEVELC_DIRECT_BIF("TOCASEFOLD", "rexxclassicbifunicode", "rexxclassicbif_tocasefold"),
+    LEVELC_DIRECT_BIF("TOSIMPLECASEFOLD", "rexxclassicbifunicode", "rexxclassicbif_tosimplecasefold"),
+    LEVELC_DIRECT_BIF("TOTURKICCASEFOLD", "rexxclassicbifunicode", "rexxclassicbif_toturkiccasefold"),
+    LEVELC_DIRECT_BIF("TOTURKICSIMPLECASEFOLD", "rexxclassicbifunicode", "rexxclassicbif_toturkicsimplecasefold"),
+    LEVELC_DIRECT_BIF("GRAPHEMECOUNT", "rexxclassicbifunicode", "rexxclassicbif_graphemecount"),
+    LEVELC_DIRECT_BIF("GRAPHEMEREVERSE", "rexxclassicbifunicode", "rexxclassicbif_graphemereverse"),
+    LEVELC_DIRECT_BIF("GRAPHEMESUBSTR", "rexxclassicbifunicode", "rexxclassicbif_graphemesubstr"),
+    LEVELC_DIRECT_BIF("GRAPHEMEPOS", "rexxclassicbifunicode", "rexxclassicbif_graphemepos"),
+    LEVELC_DIRECT_BIF("ENCODE", "rexxclassicbifunicode", "rexxclassicbif_encode"),
+    LEVELC_DIRECT_BIF("DECODE", "rexxclassicbifunicode", "rexxclassicbif_decode"),
+    LEVELC_DIRECT_BIF("ISDECODABLE", "rexxclassicbifunicode", "rexxclassicbif_isdecodable"),
+    LEVELC_DIRECT_BIF("ISENCODINGSUPPORTED", "rexxclassicbifunicode", "rexxclassicbif_isencodingsupported")
 };
 #undef LEVELC_DIRECT_BIF
 #define LEVELC_DIRECT_BIF_COUNT (sizeof(levelc_direct_bifs) / sizeof(levelc_direct_bifs[0]))
@@ -286,6 +317,9 @@ static int levelc_node_is_source_only(NodeType type) {
             return 0;
     }
 }
+
+static int levelc_append_address_condition(Context *context, ASTNode *instructions,
+                                           ASTNode *stmt, const char *command_name);
 
 static int levelc_verify_lowered_chain(ASTNode *node,
                                        ASTNode *expected_parent,
@@ -1733,6 +1767,10 @@ static int levelc_parse_shape(ASTNode *stmt,
         } else if (expr) goto unsupported;
     } else goto unsupported;
 
+    if (kind == LEVELC_PARSE_LINEIN && plan) {
+        size_t index;
+        if (levelc_find_direct_bif("LINEIN", &index)) plan->used_direct_bifs[index] = 1;
+    }
     if (source_out) *source_out = source;
     if (templates_out) *templates_out = templates;
     if (kind_out) *kind_out = kind;
@@ -3263,6 +3301,9 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
         !levelc_append_classic_error_if_expr(context, prelude, expr,
                                              condition, detail)) goto fail;
 
+    if (strstr(callee_name, "rexxclassicbifstream.") == callee_name &&
+        !levelc_append_address_condition(context, prelude, expr, context_name)) goto fail;
+
     if (strcmp(bif_name, "TRACE") == 0 && argument_count > 0 &&
         levelc_argument_exists(first_argument) &&
         !levelc_append_trace_activation_exit(context, prelude, expr,
@@ -3589,17 +3630,20 @@ static ASTNode *levelc_pool_setup_statement(Context *context, ASTNode *anchor_no
     ASTNode *assign;
     ASTNode *lhs;
     ASTNode *rhs;
+    ASTNode *args[1];
 
     assign = ast_f(context, ASSIGN, anchor_node ? anchor_node->token : NULL);
     if (!assign) return NULL;
     if (anchor_node) rxcp_remap_anchor_synthetic(assign, anchor_node);
 
     lhs = levelc_pool_ref(context, anchor_node ? anchor_node : assign, VAR_TARGET);
+    args[0] = rxcp_remap_create_integer_constant(context,
+        anchor_node ? anchor_node : assign, 1, TP_BOOLEAN);
     rhs = rxcp_remap_create_factory_call(context,
                                          anchor_node ? anchor_node : assign,
                                          "RexxVariablePool",
-                                         NULL,
-                                         0);
+                                         args,
+                                         1);
     if (!lhs || !rhs) return NULL;
 
     add_ast(assign, lhs);
@@ -5331,8 +5375,9 @@ static int levelc_lower_direct_parse(Context *context,
                                                "pullText");
             break;
         case LEVELC_PARSE_LINEIN:
-            value = levelc_config_text_source(context, stmt, prelude,
-                                               "lineinText");
+            value = levelc_lower_bif_dispatch_call(context, stmt, NULL, 0,
+                "LINEIN", plan, prelude,
+                "rexxclassicbifstream.rexxclassicbif_linein", NULL, NULL);
             break;
         case LEVELC_PARSE_VERSION:
             value = levelc_config_text_source(context, stmt, prelude,

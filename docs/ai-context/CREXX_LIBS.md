@@ -788,7 +788,7 @@ Current bundled classification is deliberately conservative:
 | --- | --- | --- |
 | Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxid`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
 | Mixed V2 procedures | `rxstats`, `rxfs`, `rxvector` | `rxfs` filesystem functions are process-reentrant; native fileguard factories/methods are VM-session-affine. Scalar statistics and immutable `linearfit` accessors remain process-reentrant. The C `linearfit` factory and regression result publication use the owning VM's checked type service through session-affine calls. The four original `rxvector` packed procedures are process-reentrant; its immutable `vectorindex` factory, import procedures and methods use VM-session host services. |
-| Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
+| Per-VM session | `odbc`, private `rxcstream` | Classic transport handles and methods are session-affine with native finalization; database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
 | Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
 
 ODBC testing has two layers. The test-only mock driver is always built when
@@ -1454,3 +1454,32 @@ when the payload was deliberately designed to tolerate duplicate finalization,
 such as a registry handle or refcounted pointer. Use
 `RXVM_NATIVE_PAYLOAD_FLAG_BITCOPY_SAFE` to document that intent on such
 payloads.
+
+## Classic Unicode and streams (2026-10-09)
+
+Compiled Level C rxfnsc now provides all 70 catalogued Classic names and 23
+explicit Unicode BIFs using rxfnsg algorithms. RexxClassicConfig owns stream
+values, positions and codec selection; local calls share configuration, while
+independent root configurations own separate handles. The private rxcstream
+RXPA provider uses checked C factories/method bindings and session-affine
+native payload ownership. Copies share a handle; explicit close closes aliases
+and finalization closes remaining resources. No forwarding construction class
+or VM opcode is added. Dynamic metadata and static archives are packaged through
+the ordinary provider catalogue; rxfnsc stages rxfnsg, rxcstream and rxfs imports.
+
+Read [the Classic contract](../../compiler/docs/levelc_unicode_and_streams.md)
+for raw ordinals versus decoded text, ENCODING, strict/replacement failures,
+default streams and whole-file conversion cost. Typed B/G APIs and RexxScript
+keep their existing value and sandbox boundaries.
+
+RXVML descriptor entry calls require a bytecode procedure. A direct native
+provider descriptor returns an entry-validation error; compiled bytecode calls
+perform RXPA native dispatch. The two-session Classic stream lifecycle harness
+checks this failure boundary and uses RexxClassicStream's compiled behavior.
+
+Classic embeddings that load `rxfnsc` must configure the runtime/provider
+directory with the existing `rxvml_create(runtime_bin_directory, ...)` option.
+An empty library path supplies no dynamic-provider search directories. The
+packaged runtime includes `rxcstream`, `rxfs` and `rxfnsg`; explicit bytecode
+module paths do not themselves configure the provider search path. The SAY,
+ADDRESS, ARG and CALL embedding fixtures now exercise this installed layout.

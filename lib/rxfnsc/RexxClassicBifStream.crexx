@@ -1,0 +1,332 @@
+/* MIT licence. One adapter family for Classic stream and codec ownership. */
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifstream expose rexxclassicbif_charin rexxclassicbif_charout rexxclassicbif_chars rexxclassicbif_linein rexxclassicbif_lineout rexxclassicbif_lines rexxclassicbif_qualify rexxclassicbif_stream
+import rxfnsb
+import rxfs
+import rexxvalue
+import rexxclassicbifs
+import rexxclassicconfig
+import rexxclassicstream
+
+/** @bif CHARIN @checkargs oANY oWHOLE>0 oWHOLE>=0 @return codepoint string */
+rexxclassicbif_charin: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"oANY oWHOLE>0 oWHOLE>=0") = 0 then return .RexxValue("")
+  name = context.argumentText(1)
+  if \_name_valid(context_ref,name) then return .RexxValue("")
+  stream = _open(context_ref,name,1)
+  start = -1
+  count = 1
+  if context.argumentExists(2) then start = context.argumentText(2) - 1
+  if context.argumentExists(3) then count = context.argumentText(3) + 0
+  if context.argumentExists(2) & \stream.positionable() then return _position_error(context_ref,name)
+  value = stream.readCharacters(start,count)
+  call _save(context_ref,name,1,stream)
+  if stream.error() <> "" & \context.hasError() then call context.streamNotReady(name)
+  return .RexxValue(value)
+
+/** @bif LINEIN @checkargs oANY oWHOLE>0 oWHOLE>=0 @return line without terminator */
+rexxclassicbif_linein: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"oANY oWHOLE>0 oWHOLE>=0") = 0 then return .RexxValue("")
+  if context.argumentExists(3) & context.argumentText(3) + 0 > 1 then do
+    call rexxclassicbif_set_error(context_ref,"40.39",3,context.argumentText(3),"")
+    return .RexxValue("")
+  end
+  name = context.argumentText(1)
+  if \_name_valid(context_ref,name) then return .RexxValue("")
+  stream = _open(context_ref,name,1)
+  start = -1
+  count = 1
+  if context.argumentExists(2) then start = context.argumentText(2) - 1
+  if context.argumentExists(3) then count = context.argumentText(3) + 0
+  if context.argumentExists(2) & \stream.positionable() then return _position_error(context_ref,name)
+  value = stream.readLine(start,count)
+  call _save(context_ref,name,1,stream)
+  if stream.error() <> "" & \context.hasError() then call context.streamNotReady(name)
+  return .RexxValue(value)
+
+/** @bif CHAROUT @checkargs oANY oANY oWHOLE>0 @return unwritten codepoint count */
+rexxclassicbif_charout: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"oANY oANY oWHOLE>0") = 0 then return .RexxValue("")
+  name = context.argumentText(1)
+  if \_name_valid(context_ref,name) then return .RexxValue("")
+  stream = _open(context_ref,name,2)
+  if context.argumentExists(3) & \stream.positionable() then return _position_error(context_ref,name)
+  result = .int
+  if \context.argumentExists(2) then do
+    if context.argumentExists(3) then result = stream.positionOutput(context.argumentText(3) - 1,0)
+    else result = stream.close()
+  end
+  else do
+    start = -1
+    if context.argumentExists(3) then start = context.argumentText(3) - 1
+    result = stream.writeCharacters(context.argumentText(2),start)
+  end
+  call _save(context_ref,name,2,stream)
+  if stream.error() <> "" & \context.hasError() then call context.streamNotReady(name)
+  return .RexxValue(result || "")
+
+/** @bif LINEOUT @checkargs oANY oANY oWHOLE>0 @return one on write/close failure */
+rexxclassicbif_lineout: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"oANY oANY oWHOLE>0") = 0 then return .RexxValue("")
+  name = context.argumentText(1)
+  if \_name_valid(context_ref,name) then return .RexxValue("")
+  stream = _open(context_ref,name,2)
+  if context.argumentExists(3) & \stream.positionable() then return _position_error(context_ref,name)
+  result = .int
+  if \context.argumentExists(2) then do
+    if context.argumentExists(3) then result = stream.positionOutput(context.argumentText(3) - 1,1)
+    else result = stream.close()
+  end
+  else do
+    start = -1
+    if context.argumentExists(3) then start = context.argumentText(3) - 1
+    result = stream.writeLine(context.argumentText(2),start)
+  end
+  call _save(context_ref,name,2,stream)
+  if stream.error() <> "" & \context.hasError() then call context.streamNotReady(name)
+  return .RexxValue(result || "")
+
+/** @bif CHARS @checkargs oANY oCNI @return remaining scalars or availability */
+rexxclassicbif_chars: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  return _count(context_ref,0)
+
+/** @bif LINES @checkargs oANY oCNI @return remaining lines or availability */
+rexxclassicbif_lines: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  return _count(context_ref,1)
+
+_count: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext, lines = .boolean
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"oANY oCNI") = 0 then return .RexxValue("")
+  name = context.argumentText(1)
+  if \_name_valid(context_ref,name) then return .RexxValue("")
+  stream = _open(context_ref,name,1)
+  result = .int
+  if lines then result = stream.lines()
+  else result = stream.characters()
+  if context.argumentExists(2) then do
+    if context.argumentText(2) = "I" then result = result > 0
+  end
+  call _save(context_ref,name,1,stream)
+  if stream.error() <> "" & \context.hasError() then call context.streamNotReady(name)
+  return .RexxValue(result || "")
+
+/** @bif QUALIFY @checkargs oANY @return host-qualified Unicode stream name */
+rexxclassicbif_qualify: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"oANY") = 0 then return .RexxValue("")
+  name = context.argumentText(1)
+  if \_name_valid(context_ref,name) then return .RexxValue("")
+  if name = "" then return .RexxValue("")
+  return .RexxValue(rxfs..abspath(name))
+
+/**
+ * STREAM(name,[S|D|C],[command]). OPEN selects raw ordinals by default.
+ * ENCODING <name> CODEPOINTS [ERROR SYNTAX|REPLACE] is an explicit extension.
+ * @bif STREAM @checkargs rANY oANY oANY
+ * @return state, description, command result or queried stream property
+ */
+rexxclassicbif_stream: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"rANY oANY oANY") = 0 then return .RexxValue("")
+  name = context.argumentText(1)
+  if \_name_valid(context_ref,name) then return .RexxValue("")
+  selector = "S"
+  if context.argumentExists(2) then selector = translate(context.argumentText(2))
+  if selector <> "S" & selector <> "D" & selector <> "C" then return _command_error(context_ref,"STREAM option must be S, D or C")
+  config_ref = context.configReference()
+  config = dereference config_ref
+  stream = .RexxClassicStream
+  query_text = .string
+  direction = 1
+  if name = "" then direction = config.streamCommandDirection()
+  slot = config.streamSlot(name,direction)
+  if selector <> "C" then do
+    if context.argumentExists(3) then return _command_error(context_ref,"A STREAM command requires option C")
+    if slot = 0 then return .RexxValue("UNKNOWN")
+    stream = config.stream(slot)
+    if selector = "D" then return .RexxValue(stream.error())
+    if stream.closed() then return .RexxValue("UNKNOWN")
+    if stream.ready() then return .RexxValue("READY")
+    return .RexxValue("NOTREADY")
+  end
+  if \context.argumentExists(3) then return _command_error(context_ref,"STREAM C requires a command")
+  command = translate(strip(context.argumentText(3)))
+  action = word(command,1)
+  if action = "OPEN" then do
+    mode = "BOTH"
+    encoding = ""
+    replacing = 0
+    direction = 1
+    index = 2
+    do while index <= words(command)
+      option = word(command,index)
+      select
+        when option = "READ" then mode = "READ"
+        when option = "WRITE" then do
+          mode = "WRITE"
+          direction = 2
+        end
+        when option = "BOTH" then mode = "BOTH"
+        when option = "REPLACE" then do
+          mode = "REPLACE"
+          direction = 2
+        end
+        when option = "APPEND" then do
+          mode = "WRITE"
+          direction = 2
+        end
+        when option = "ENCODING" then do
+          index = index + 1
+          if index > words(command) then return _command_error(context_ref,"ENCODING requires a name")
+          encoding = rexxclassic_stream_encoding(word(command,index))
+          if encoding = "UNSUPPORTED" then return _command_error(context_ref,"Unsupported stream encoding")
+        end
+        when option = "CODEPOINTS" then nop
+        when option = "ERROR" then do
+          index = index + 1
+          policy = word(command,index)
+          if policy <> "SYNTAX" & policy <> "REPLACE" then return _command_error(context_ref,"ERROR requires SYNTAX or REPLACE")
+          replacing = policy = "REPLACE"
+        end
+        otherwise return _command_error(context_ref,"Unsupported OPEN option " || option)
+      end
+      index = index + 1
+    end
+    if name = "" & mode = "BOTH" then mode = "READ"
+    /* Validate all command arguments before closing the prior stream. */
+    slot = config.streamSlot(name,direction)
+    if slot > 0 then do
+      previous = config.stream(slot)
+      call previous.close()
+    end
+    stream = .RexxClassicStream(name,mode,encoding,replacing)
+    call config.storeStream(name,direction,stream)
+    if name = "" then call config.setStreamCommandDirection(direction)
+    if stream.codecFailure() then do
+      call rexxclassicbif_set_error(context_ref,"23.1",0,stream.error(),"")
+      return .RexxValue("")
+    end
+    if stream.ready() then return .RexxValue("READY:")
+    call context.streamNotReady(name)
+    return .RexxValue("ERROR:")
+  end
+  if action = "QUERY" then do
+    query_text = strip(substr(command,6))
+    if query_text = "EXISTS" then do
+      if name = "" then return .RexxValue("")
+      if rxfs..isfile(name) then return .RexxValue(rxfs..abspath(name))
+      return .RexxValue("")
+    end
+    if query_text = "WRITE POSITION" | query_text = "POSITION WRITE" then do
+      if name = "" then do
+        direction = 2
+        slot = config.streamSlot(name,direction)
+      end
+    end
+    else if query_text = "READ POSITION" | query_text = "POSITION READ" then do
+      if name = "" then do
+        direction = 1
+        slot = config.streamSlot(name,direction)
+      end
+    end
+    else if query_text <> "ENCODING" & query_text <> "ENCODING NAME" & query_text <> "ENCODING TARGET" & query_text <> "ENCODING ERROR" & query_text <> "ENCODING LASTERROR" & query_text <> "STREAMTYPE" then return _command_error(context_ref,"Unsupported QUERY command")
+  end
+  else if action <> "CLOSE" | words(command) <> 1 then return _command_error(context_ref,"Unsupported STREAM command")
+  if slot = 0 then return .RexxValue("UNKNOWN")
+  stream = config.stream(slot)
+  if action = "CLOSE" & words(command) = 1 then do
+    result = stream.close()
+    call config.storeStream(name,direction,stream)
+    if result = 0 then return .RexxValue("READY:")
+    call context.streamNotReady(name)
+    return .RexxValue("ERROR:")
+  end
+  if action = "QUERY" then do
+    query_text = strip(substr(command,6))
+    select
+      when query_text = "ENCODING" | query_text = "ENCODING NAME" then return .RexxValue(stream.encoding())
+      when query_text = "ENCODING TARGET" then return .RexxValue("CODEPOINTS")
+      when query_text = "ENCODING ERROR" then do
+        if stream.replacing() then return .RexxValue("REPLACE")
+        return .RexxValue("SYNTAX")
+      end
+      when query_text = "ENCODING LASTERROR" then return .RexxValue(stream.error())
+      when query_text = "READ POSITION" | query_text = "POSITION READ" then return .RexxValue(stream.readPosition() || "")
+      when query_text = "WRITE POSITION" | query_text = "POSITION WRITE" then return .RexxValue(stream.writePosition() || "")
+      when query_text = "STREAMTYPE" then do
+        if stream.positionable() then return .RexxValue("PERSISTENT")
+        return .RexxValue("TRANSIENT")
+      end
+      otherwise return _command_error(context_ref,"Unsupported QUERY command")
+    end
+  end
+  return _command_error(context_ref,"Unsupported STREAM command")
+
+_command_error: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext, detail = .string
+  call rexxclassicbif_set_error(context_ref,"40",3,detail,"")
+  return .RexxValue("")
+
+_position_error: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext, name = .string
+  call rexxclassicbif_set_error(context_ref,"40.42",1,name,"")
+  return .RexxValue("")
+
+_name_valid: procedure = .boolean
+  arg context_ref = reference .RexxBifCallContext, name = .string
+  if pos("00"x as .string,name) > 0 then do
+    call rexxclassicbif_set_error(context_ref,"40.27",1,name,"")
+    return 0
+  end
+  return 1
+
+_open: procedure = .RexxClassicStream
+  arg context_ref = reference .RexxBifCallContext, name = .string, direction = .int
+  context = dereference context_ref
+  config_ref = context.configReference()
+  config = dereference config_ref
+  stream = .RexxClassicStream
+  slot = config.streamSlot(name,direction)
+  if slot > 0 then do
+    stream = config.stream(slot)
+    if \stream.closed() then return stream
+  end
+  mode = "AUTO"
+  if direction = 2 then mode = "BOTH"
+  if name = "" then do
+    mode = "READ"
+    if direction = 2 then mode = "WRITE"
+  end
+  if name = "" then stream = .RexxClassicStream(name,mode,"UTF-8")
+  else stream = .RexxClassicStream(name,mode)
+  call config.storeStream(name,direction,stream)
+  return stream
+
+_save: procedure = .void
+  arg context_ref = reference .RexxBifCallContext, name = .string, direction = .int, stream = .RexxClassicStream
+  context = dereference context_ref
+  config_ref = context.configReference()
+  config = dereference config_ref
+  call config.storeStream(name,direction,stream)
+  if stream.codecFailure() then call rexxclassicbif_set_error(context_ref,"23.1",0,stream.error(),"")
+  return

@@ -1,0 +1,369 @@
+/* MIT licence. Classic stream semantics over an owning RXPA byte transport. */
+options levelb comments_dash numeric_classic
+namespace rexxclassicstream expose RexxClassicStream rexxclassic_stream_encoding
+import rxfnsb
+import rxunicode
+import rexxclassicencoding
+import _rxcstream
+
+/**
+ * One configured Classic stream. Native copies share a handle; this class owns
+ * codepoint/line positions and codec policy. Configurations retain this value.
+ * No ordinary string is normalized. Named-file conversion validates the whole
+ * current file before an operation mutates positions or publishes output.
+ * @docType runtime-class
+ */
+RexxClassicStream: class
+  transport = ._rxcstream..transport
+  stream_name = .string
+  stream_mode = .string
+  encoding_name = .string
+  replacement_policy = .boolean
+  read_position = .int
+  write_position = .int
+  pending_input = .string
+  last_error = .string
+  stream_closed = .boolean
+  codec_error = .boolean
+
+  *: factory
+    arg name = .string, mode = .string, encoding = "", replacing = 0
+    stream_name = name
+    stream_mode = mode
+    encoding_name = encoding
+    replacement_policy = replacing
+    read_position = 0
+    write_position = 0
+    pending_input = ""
+    last_error = ""
+    codec_error = 0
+    stream_closed = 0
+    transport = ._rxcstream..transport(name,mode)
+    if \transport.ready() then last_error = "Stream could not be opened"
+    else if mode <> "READ" & transport.positionable() then do
+      bytes = transport.load()
+      contents = bytes
+      if transport.error() <> 0 then last_error = "Stream read failed"
+      else if encoding_name <> "" then do
+        do
+          if replacement_policy then contents = rxunicode..decode(rexxclassic_text_to_latin1(bytes),encoding_name,"�")
+          else contents = rxunicode..decode(rexxclassic_text_to_latin1(bytes),encoding_name)
+        on signal unicode_error as problem
+          last_error = problem.message()
+          codec_error = 1
+        end
+      end
+      if last_error = "" then write_position = length(contents)
+    end
+    return
+
+  /** @return selected external encoding, or BYTE for ordinal I/O */
+  encoding: method = .string
+    if encoding_name = "" then return "BYTE"
+    return encoding_name
+
+  replacing: method = .boolean
+    return replacement_policy
+
+  positionable: method = .boolean
+    return transport.positionable() <> 0
+
+  closed: method = .boolean
+    return stream_closed
+
+  ready: method = .boolean
+    return \stream_closed & transport.ready() <> 0 & last_error = ""
+
+  codecFailure: method = .boolean
+    return codec_error
+
+  error: method = .string
+    return last_error
+
+  readPosition: method = .int
+    return read_position + 1
+
+  writePosition: method = .int
+    return write_position + 1
+
+  close: method = .int
+    result = transport.close()
+    stream_closed = 1
+    if result <> 0 then last_error = "Stream close failed"
+    return result <> 0
+
+  /** Load a named file without changing either logical position. */
+  readContents: method = .string
+    bytes = transport.load()
+    if transport.error() <> 0 then do
+      last_error = "Stream read failed"
+      return ""
+    end
+    return decodeBytes(bytes)
+
+  decodeBytes: method = .string
+    arg bytes = .string
+    if encoding_name = "" then return bytes
+    do
+      if replacement_policy then return rxunicode..decode(rexxclassic_text_to_latin1(bytes),encoding_name,"�")
+      return rxunicode..decode(rexxclassic_text_to_latin1(bytes),encoding_name)
+    on signal unicode_error as problem
+      last_error = problem.message()
+      codec_error = 1
+    end
+    return ""
+
+  encodeText: method = .string
+    arg text = .string
+    if encoding_name = "" then do
+      if \rexxclassic_text_is_latin1(text) then do
+        last_error = "Raw stream output contains a scalar above U+00FF"
+        codec_error = 1
+        return ""
+      end
+      return text
+    end
+    do
+      if replacement_policy then do
+        substitute = rxunicode..encode("?",encoding_name)
+        return rexxclassic_latin1_to_text(rxunicode..encode(text,encoding_name,substitute))
+      end
+      return rexxclassic_latin1_to_text(rxunicode..encode(text,encoding_name))
+    on signal unicode_error as problem
+      last_error = problem.message()
+      codec_error = 1
+    end
+    return ""
+
+  readRecord: method = .string
+    delimiter = "0A"x as .string
+    if encoding_name <> "" then delimiter = rexxclassic_latin1_to_text(rxunicode..encode(delimiter,encoding_name))
+    bytes = transport.record(delimiter)
+    if transport.error() <> 0 then do
+      last_error = "Stream read failed"
+      return ""
+    end
+    return decodeBytes(bytes)
+
+  /** @return at most count codepoints; start is zero-based or -1 to continue */
+  readCharacters: method = .string
+    arg start = .int, count = .int
+    last_error = ""
+    codec_error = 0
+    if stream_closed | stream_mode = "WRITE" | stream_mode = "REPLACE" then do
+      last_error = "Stream is not open for reading"
+      return ""
+    end
+    result = .string
+    next_position = read_position
+    if start >= 0 then next_position = start
+    if transport.positionable() then do
+      contents = readContents()
+      if last_error <> "" then return ""
+      result = substr(contents,next_position + 1,min(count,max(0,length(contents) - next_position)))
+    end
+    else do
+      if start >= 0 then do
+        last_error = "Stream cannot be positioned"
+        return ""
+      end
+      if encoding_name = "" & pending_input = "" then do
+        result = transport.read(count)
+        if transport.error() <> 0 then last_error = "Stream read failed"
+      end
+      else do
+        do while length(pending_input) < count & \transport.eof()
+          record = readRecord()
+          if last_error <> "" then return ""
+          pending_input = pending_input || record
+        end
+        take = min(count,length(pending_input))
+        result = left(pending_input,take)
+        pending_input = substr(pending_input,take + 1)
+      end
+    end
+    if last_error = "" then read_position = next_position + length(result)
+    if length(result) < count & last_error = "" then last_error = "End of stream"
+    return result
+
+  /** @return one line without LF or its immediately preceding CR */
+  readLine: method = .string
+    arg start_line = .int, count = .int
+    last_error = ""
+    codec_error = 0
+    if stream_closed | stream_mode = "WRITE" | stream_mode = "REPLACE" then do
+      last_error = "Stream is not open for reading"
+      return ""
+    end
+    contents = .string
+    next_position = read_position
+    if transport.positionable() then do
+      contents = readContents()
+      if last_error <> "" then return ""
+      if start_line >= 0 then next_position = linePosition(contents,start_line)
+      if count = 0 then do
+        read_position = next_position
+        return ""
+      end
+      contents = substr(contents,next_position + 1)
+    end
+    else do
+      if start_line >= 0 then do
+        last_error = "Stream cannot be positioned"
+        return ""
+      end
+      if count = 0 then return ""
+      do while pos("0A"x as .string,pending_input) = 0 & \transport.eof()
+        record = readRecord()
+        if last_error <> "" then return ""
+        pending_input = pending_input || record
+      end
+      contents = pending_input
+    end
+    finish = pos("0A"x as .string,contents)
+    if finish = 0 then finish = length(contents)
+    else finish = finish - 1
+    result = left(contents,finish)
+    consumed = finish
+    if substr(contents,finish + 1,1) = "0A"x as .string then consumed = consumed + 1
+    if consumed > finish & right(result,1) = "0D"x as .string then result = left(result,max(0,length(result) - 1))
+    if \transport.positionable() then pending_input = substr(contents,consumed + 1)
+    read_position = next_position + consumed
+    if consumed = 0 then last_error = "End of stream"
+    return result
+
+  linePosition: method = .int
+    arg text = .string, line = .int
+    position = 0
+    do index = 1 to line
+      found = pos("0A"x as .string,text,position + 1)
+      if found = 0 then return length(text)
+      position = found
+    end
+    return position
+
+  /** Write characters at a scalar position, preserving the following scalars. */
+  writeCharacters: method = .int
+    arg text = .string, start = .int
+    last_error = ""
+    codec_error = 0
+    if stream_closed | stream_mode = "READ" then do
+      last_error = "Stream is not open for writing"
+      return length(text)
+    end
+    bytes = .string
+    written = .int
+    next_position = write_position
+    if start >= 0 then next_position = start
+    if transport.positionable() then do
+      contents = readContents()
+      if last_error <> "" then return length(text)
+      updated = left(contents,next_position,"00"x as .string) || text || substr(contents,next_position + length(text) + 1)
+      bytes = encodeText(updated)
+      if last_error <> "" then return length(text)
+      written = transport.replace(bytes)
+    end
+    else do
+      if start >= 0 then do
+        last_error = "Stream cannot be positioned"
+        return length(text)
+      end
+      bytes = encodeText(text)
+      if last_error <> "" then return length(text)
+      written = transport.write(bytes,-1)
+    end
+    if written < 0 then do
+      last_error = "Stream write failed"
+      return length(text)
+    end
+    write_position = next_position + length(text)
+    return 0
+
+  writeLine: method = .int
+    arg text = .string, start_line = .int
+    start = -1
+    last_error = ""
+    codec_error = 0
+    if start_line >= 0 then do
+      if \transport.positionable() then do
+        last_error = "Stream cannot be positioned"
+        return 1
+      end
+      contents = readContents()
+      if last_error <> "" then return 1
+      start = linePosition(contents,start_line)
+    end
+    return writeCharacters(text || "0A"x as .string,start) <> 0 | last_error <> ""
+
+  /** Position omitted-string output without writing padding or closing it. */
+  positionOutput: method = .int
+    arg start = .int, lines = .boolean
+    last_error = ""
+    codec_error = 0
+    if stream_closed | stream_mode = "READ" | \transport.positionable() then do
+      last_error = "Stream cannot be positioned for output"
+      return 1
+    end
+    if lines then do
+      contents = readContents()
+      if last_error <> "" then return 1
+      start = linePosition(contents,start)
+    end
+    write_position = start
+    return 0
+
+  characters: method = .int
+    last_error = ""
+    codec_error = 0
+    if stream_closed then do
+      last_error = "Stream is closed"
+      return 0
+    end
+    if \transport.positionable() then return length(pending_input) > 0 | \transport.eof()
+    contents = readContents()
+    if last_error <> "" then return 0
+    return max(0,length(contents) - read_position)
+
+  lines: method = .int
+    last_error = ""
+    codec_error = 0
+    if stream_closed then do
+      last_error = "Stream is closed"
+      return 0
+    end
+    if \transport.positionable() then return length(pending_input) > 0 | \transport.eof()
+    contents = substr(readContents(),read_position + 1)
+    if last_error <> "" then return 0
+    count = 0
+    position = 1
+    do while position <= length(contents)
+      count = count + 1
+      finish = pos("0A"x as .string,contents,position)
+      if finish = 0 then leave
+      position = finish + 1
+    end
+    return count
+
+/** Canonicalize exactly the existing rxunicode codec repertoire and aliases. */
+rexxclassic_stream_encoding: procedure = .string
+  arg name = .string
+  compact = translate(name)
+  compact = changestr("-",compact,"")
+  compact = changestr("_",compact,"")
+  compact = changestr(" ",compact,"")
+  select
+    when compact = "BYTE" | compact = "BINARY" | compact = "RAW" then return ""
+    when compact = "UTF8" then return "UTF-8"
+    when compact = "UTF16LE" then return "UTF-16LE"
+    when compact = "UTF16BE" then return "UTF-16BE"
+    when compact = "UTF32LE" then return "UTF-32LE"
+    when compact = "UTF32BE" then return "UTF-32BE"
+    when compact = "ASCII" | compact = "USASCII" | compact = "ISO646US" then return "US-ASCII"
+    when compact = "ISO88591" | compact = "LATIN1" | compact = "ISOLATIN1" | compact = "CP819" | compact = "IBM819" | compact = "819" then return "ISO-8859-1"
+    when compact = "WINDOWS1252" | compact = "CP1252" | compact = "1252" then return "Windows-1252"
+    when compact = "IBM437" | compact = "CP437" | compact = "437" then return "IBM437"
+    when compact = "IBM850" | compact = "CP850" | compact = "850" then return "IBM850"
+    when compact = "IBM1047" | compact = "CP1047" | compact = "1047" then return "IBM1047"
+    otherwise return "UNSUPPORTED"
+  end
+  return "UNSUPPORTED"

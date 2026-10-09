@@ -23,9 +23,11 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicdatatype expose rexxclassic_datatype_number_is_whole rexxclassic_datatype_expand_whole rexxclassic_datatype_classify rexxclassic_datatype_test rexxclassic_datatype_normalize_number rexxclassic_datatype_normalize_whole rexxclassic_datatype_binary rexxclassic_datatype_hex rexxclassic_datatype_symbol_kind
+namespace rexxclassicdatatype expose rexxclassic_datatype_number_is_whole rexxclassic_datatype_expand_whole rexxclassic_datatype_classify rexxclassic_datatype_test rexxclassic_datatype_normalize_number rexxclassic_datatype_normalize_whole rexxclassic_datatype_normalize_radix rexxclassic_datatype_binary rexxclassic_datatype_hex rexxclassic_datatype_symbol_kind
+import rexxclassicunicodeproperties
 import rexxclassicconfig
 import rexxvalue
+import rexxclassicencoding
 
 /** Return NUM or CHAR using the configured Classic numeric alphabet. */
 rexxclassic_datatype_classify: procedure = .string
@@ -106,6 +108,35 @@ rexxclassic_datatype_hex: procedure = .boolean
   text_digits = config.textDatatypeDigits()
   return _grouped_text(text,2,0,text_blanks,text_digits)
 
+/** Normalize already validated BIN/HEX digits and configured blanks for consumers. */
+rexxclassic_datatype_normalize_radix: procedure = .string
+  arg value = .RexxValue, config = .RexxClassicConfig
+  text = .string
+  blanks = .string
+  digits = .string
+  if config.isByteProfile() then do
+    text = rexxclassic_latin1_to_text(value.asBinary())
+    blanks = rexxclassic_latin1_to_text(config.byteOtherBlanks())
+    digits = rexxclassic_latin1_to_text(config.byteDatatypeDigits())
+  end
+  else do
+    text = value.asString()
+    blanks = config.textOtherBlanks()
+    digits = config.textDatatypeDigits()
+  end
+  text_length = .int
+  codepoint = .int
+  assembler strlen text_length,text
+  normalized = ""
+  do index = 0 to text_length - 1
+    assembler strchar codepoint,text,index
+    if _text_blank(codepoint,blanks) then iterate
+    digit = _text_digit(codepoint,digits)
+    if digit >= 0 then codepoint = digit + 48
+    assembler appendchar normalized,codepoint
+  end
+  return normalized
+
 /** Return 0 invalid, 1 variable/non-numeric symbol, or 2 constant symbol. */
 rexxclassic_datatype_symbol_kind: procedure = .int
   arg value = .RexxValue, config = .RexxClassicConfig
@@ -167,11 +198,11 @@ _text_character_class: procedure = .boolean
   do index = 0 to text_length - 1
     assembler strchar codepoint,text,index
     is_digit = _text_digit(codepoint,digits) >= 0
-    is_lower = (codepoint >= 97 & codepoint <= 122) | _text_position(codepoint,lower) >= 0
-    is_upper = (codepoint >= 65 & codepoint <= 90) | _text_position(codepoint,upper) >= 0
-    if option = "A" then valid = is_digit | is_lower | is_upper
+    is_lower = rexxclassic_unicode_lowercase(codepoint) | _text_position(codepoint,lower) >= 0
+    is_upper = rexxclassic_unicode_uppercase(codepoint) | _text_position(codepoint,upper) >= 0
+    if option = "A" then valid = is_digit | rexxclassic_unicode_letter(codepoint) | is_lower | is_upper
     else if option = "L" then valid = is_lower
-    else if option = "M" then valid = is_lower | is_upper
+    else if option = "M" then valid = rexxclassic_unicode_letter(codepoint) | is_lower | is_upper
     else valid = is_upper
     if \valid then return 0
   end
@@ -543,16 +574,14 @@ _text_symbol_kind: procedure = .int
   first = 0
   assembler strchar codepoint,text,first
   first_digit = _text_digit(codepoint,digits) >= 0
-  first_general = (codepoint >= 65 & codepoint <= 90) |,
-                  (codepoint >= 97 & codepoint <= 122) |,
+  first_general = rexxclassic_unicode_letter(codepoint) |,
                   _text_position(codepoint,lower) >= 0 | _text_position(codepoint,upper) >= 0 |,
                   codepoint = 33 | codepoint = 63 | codepoint = 95 |,
                   codepoint = 64 | codepoint = 35 | codepoint = 36
   if \first_digit & \first_general & codepoint <> 46 then return 0
   do index = 1 to text_length - 1
     assembler strchar codepoint,text,index
-    if (codepoint >= 65 & codepoint <= 90) |,
-       (codepoint >= 97 & codepoint <= 122) |,
+    if rexxclassic_unicode_letter(codepoint) |,
        _text_digit(codepoint,digits) >= 0 | _text_position(codepoint,lower) >= 0 |,
        _text_position(codepoint,upper) >= 0 | codepoint = 33 | codepoint = 63 |,
        codepoint = 95 | codepoint = 64 | codepoint = 35 | codepoint = 36 |,

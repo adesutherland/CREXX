@@ -1,0 +1,95 @@
+{
+  "evidence_root": "/Users/adrian/CLionProjects/CREXX/output/levelc-unicode-20261009.BLUGKe",
+  "host": "Darwin 25.6.0 arm64; 10 logical CPUs",
+  "gates": [
+    {
+      "gate": "debug_host_setup",
+      "result": "pass",
+      "tests": 4,
+      "seconds": 3.32,
+      "log": "debug-host-setup-replay.log",
+      "log_sha256": "8fa1bfaf600929aceecf8c5d84a10a9e34176ca5b143b8028f214b1c757921a6"
+    },
+    {
+      "gate": "release_host_setup",
+      "result": "pass",
+      "tests": 4,
+      "seconds": 1.11,
+      "log": "release-host-setup-replay.log",
+      "log_sha256": "3ae50d429e912427121420b124fe133adee043e084fee9ddac3466e5a97c147b"
+    },
+    {
+      "gate": "asan_host_setup",
+      "result": "pass",
+      "tests": 4,
+      "seconds": 6.07,
+      "log": "asan/20261009-210920-ctest/ctest.log",
+      "log_sha256": "dc3aa0a570a30b7ec928498f2d981b796531bd05b464a5481b50588e0d9766c6"
+    },
+    {
+      "gate": "parser_goldens",
+      "result": "pass",
+      "tests": 18,
+      "seconds": 3.46,
+      "log": "debug-parser-snapshot-replay.log",
+      "log_sha256": "a05ef791c26d438a658725ecaa607420ac037d67a0de9f4fcb3e18e90d946f1f"
+    },
+    {
+      "gate": "release_native_lifecycle",
+      "result": "pass",
+      "tests": 1,
+      "seconds": 1.32,
+      "log": "stream-lifecycle-release-final.log",
+      "log_sha256": "17fcad9ede3ebe2f8c5a0a5ae6e00e7df2e516b64d55eeafc9b21f3696b6d96b"
+    },
+    {
+      "gate": "asan_native_lifecycle",
+      "result": "pass",
+      "tests": 1,
+      "seconds": 7.41,
+      "log": "asan/20261009-203241-ctest/ctest.log",
+      "log_sha256": "d7dd94c2613d394b67fd2c8e6cc6e8a5ae4b7123b94dfec4b0db31fe190b215d"
+    },
+    {
+      "gate": "release_g_unicode_oracles",
+      "result": "pass",
+      "tests": 5,
+      "seconds": 10.62,
+      "log": "release-unicode-oracles.log",
+      "log_sha256": "dcbb555da003dadbdd9cffc5cb7e4f28d003628a0567a6b500a96b156a4bde1c"
+    },
+    {
+      "gate": "installed_static_consumer",
+      "result": "pass",
+      "tests": null,
+      "seconds": null,
+      "log": "install-static-final.log",
+      "log_sha256": "7ed6bce2efbba8277cc68dd2d75f06fc928072bb01ee1dd296d60a2ce89bf708"
+    }
+  ],
+  "install_commands": [
+    [
+      "cmake",
+      "--install",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-release",
+      "--prefix",
+      "/Users/adrian/CLionProjects/CREXX/output/levelc-unicode-20261009.BLUGKe/installed-probe/installed \u03a9"
+    ],
+    [
+      "/Users/adrian/CLionProjects/CREXX/output/levelc-unicode-20261009.BLUGKe/installed-probe/installed \u03a9/bin/crexx",
+      "/Users/adrian/CLionProjects/CREXX/output/levelc-unicode-20261009.BLUGKe/installed-probe/unicode.rexx"
+    ],
+    [
+      "/Users/adrian/CLionProjects/CREXX/output/levelc-unicode-20261009.BLUGKe/installed-probe/installed \u03a9/bin/crexx",
+      "--program",
+      "/Users/adrian/CLionProjects/CREXX/output/levelc-unicode-20261009.BLUGKe/installed-probe/native/unicode",
+      "/Users/adrian/CLionProjects/CREXX/output/levelc-unicode-20261009.BLUGKe/installed-probe/unicode.rexx",
+      "--jobs",
+      "1",
+      "--native"
+    ],
+    [
+      "/Users/adrian/CLionProjects/CREXX/output/levelc-unicode-20261009.BLUGKe/installed-probe/relocated \u00c5/unicode"
+    ]
+  ]
+}

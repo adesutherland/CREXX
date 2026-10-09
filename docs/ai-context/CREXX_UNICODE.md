@@ -8,23 +8,23 @@ mathematical algorithms in `docs/books/crexx_vm_spec/unicode_algorithms.md`.
 Decisions and future work remain in
 `docs/planning/unicode/PRODUCT-SURFACE-AND-ROADMAP.md`.
 
-The current [Level C compatibility review](../../compiler/docs/levelc_compatibility_layer.md#32-classic-scalar-values-and-the-current-unicode-boundary)
-records Adrian's deferred Unicode/I/O assessment for B/C/G compatibility work.
-Unicode-caused signals and logic errors remain undefined in that scope. The
-explicit Unicode algorithms described here do not establish full Classic
-conformance. This guide describes existing
-typed mechanisms; the compatibility programme introduces no new codec,
-normalization, grapheme or stream rule.
+The 2026-10-09 [Level C Unicode and stream contract](../../compiler/docs/levelc_unicode_and_streams.md) supersedes the earlier Level C
+Unicode/I/O deferral. Classic ordinary strings preserve codepoints, with the
+fixed U+0000–U+00FF byte ordinal bridge. Unicode symbols/simple casing,
+23 explicit algorithm/codec BIFs and eight stream BIFs are implemented through
+rxfnsc. Stream ENCODING is an explicit extension; named files default to raw
+ordinals and consoles to UTF-8. Existing Unicode whitespace defaults remain.
+No implicit normalization is added. B/G typed values and RexxScript retain
+their separate contracts. The LC-UNICODE worklist owns qualification.
 
-## Agreed source boundary (2026-10-08)
+## Agreed source boundary (2026-10-08, clarified 2026-10-09)
 
-Source input is Unicode across B/C/G/L. NUL is source data rather than EOF:
-literals/comments and imported source preserve it; invalid lexical positions
-receive a diagnostic. No implicit encoding-conversion or new normalization
-rule follows from this repair. Existing conversion tools remain available;
-their source/language semantics will be agreed later. Level C may assume
-Unicode input, while code containing non-Latin characters remains undefined
-until that design. The LC-CLOSE plan owns source/diagnostic qualification.
+Source input remains UTF-8 Unicode across B/C/G/L. NUL is source data rather
+than EOF: literals/comments and imported source preserve it; invalid lexical
+positions receive a diagnostic. STREAM encoding selection changes external
+stream conversion, never source decoding. Non-Latin Level C behavior admitted
+by the new contract is defined; general mapped-source and host APIs remain
+separate Release 1 obligations.
 
 ## Non-negotiable boundary
 
@@ -32,7 +32,7 @@ until that design. The LC-CLOSE plan owns source/diagnostic qualification.
   codepoints.
 - `.binary` is arbitrary bytes. Only an explicit codec assigns an encoding.
 - Normalization, full case mapping, folding, and grapheme segmentation are
-  explicit Level G services; none changes equality, assignment, or ordinary
+  explicit Level G services and Classic adapters; none changes equality, assignment, or ordinary
   BIF semantics.
 - Public Level G source contains no assembler. It delegates VM-adjacent work to
   the private Level B `_rxunicode` namespace.

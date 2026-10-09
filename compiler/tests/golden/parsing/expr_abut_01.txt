@@ -26,6 +26,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_SYMBOL : "b" (1:4) [Type: .unknown]
             VAR_SYMBOL : "c" (1:6) [Type: .unknown]
         RETURN : "" (1:7) [Type: .unknown]
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
+DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
 
 --- STAGE_SYMBOLS (Iteration 0) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]

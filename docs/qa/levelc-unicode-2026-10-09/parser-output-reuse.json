@@ -1,0 +1,131 @@
+{
+  "trace": "DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed",
+  "snapshots": [
+    {
+      "path": "compiler/tests/golden/parsing/16_classes.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "ef5ac4d2268923496b6cb2bc01ec97b6bdc970aa8efb7041febdef82041bff2d",
+      "after_sha256": "888b96ee00e90913120e7b29183e1f48adf643f9437656cb06779c4d772dfdc3"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/address_exit_extended.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "eb528a3292937af4d7b47dfd456b83972e3256795cd08461729ec1e563739f4a",
+      "after_sha256": "cb2c5537b6118f126c5c72f73fe7ac7f6279d1fe4e7d3d4c3da11730ec1a1185"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/address_inline_then.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "9929f7c396ea4852015331b7df87ca34b4d4123af2312847e8e439a6fd8c0fab",
+      "after_sha256": "5788a59cb0ef65de3d9ae6d1b3017b4c65677d76d716db74552d18243976bc9c"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/binary_intrinsics_parse.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "3cd1b8040c52ad96b5a4e8a4c9da9dc08e96d08f9dff60fcebbfe5dfbfd29da5",
+      "after_sha256": "4fcf9b452a084729a483f4ef2a488d8a26c8ae1fdc131c2044a22e8e3b16cb86"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/block_expr_parse.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "5f41e25fa2dea5ba117914bc4c77b7f8cc0febc89340d45ddfafc486222b5639",
+      "after_sha256": "9f66ca91fb4610c36c19f3329cb4ded2175a7b2b78532847eb425655029a7476"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/do_counted_parse.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "fc14c423e883d3b589f8ce2829f7715e8d37bae28751350045e28df673b39366",
+      "after_sha256": "8b9eecb1126f9fa216180af88beb2a18636ab283429cd0c50a5a7e41a68ba120"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/do_simple_parse.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "709716dae0e814b87a400918c74204517bc995c4e4c0de15188b6cf186e19dba",
+      "after_sha256": "6f539d64266d0202b3b902b833904bcf1146552ce3f493cd9fe71e22488a83a9"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/do_until_parse.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "be8074eec2a65ef5657ae9e6ede9ca288282932f4663c572daaa711ffee594ab",
+      "after_sha256": "da48b006b306c8d246318c5decbb8a5cd387d90037bfa96f634d73c72981a575"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/do_while_parse.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "7e3bee606e1252b6923a86aa3cc5aa55abe3ff1f73f81e2e93f1d946d193db91",
+      "after_sha256": "38d7dfb49855007f07caa362e88f0d2f2870b9e823e8745d87995e9266bffd2c"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/expr_abut_01.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "c62641b6f059f0a1b7ac1d6ccbcd48255efeecb210512d4140a6f3f104e294ab",
+      "after_sha256": "4232f198e72eeede3317f8cf1c2ef3269be892f99bc9fd5199ea791d17291b57"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/expr_abut_02.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "4ccfe2067ce9e0c946c49ecc6e2a000a40f54acf4ce76403916ae0d3faf23c4a",
+      "after_sha256": "151374eb68847c0ae3567bcfd54e2d0a7afa20942493b557a5c8c9e901764dce"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/expr_abut_03.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "82f97bf1c0d527fe5d5095d8d2eaf57a5188febd461d706c1cc42294b929f338",
+      "after_sha256": "5a3a89528f97f343cfddb08d321d323239ad4da81f527fdb298fe9acb97d6b9f"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/expr_abut_04.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "c932970d05dc27f2df9e88509b67ca3f1ae7612d4eef398f92a6e32361bebe5d",
+      "after_sha256": "98beac0d1bde2950adb13bd3b549bd5c62c25ff33f2f0e916fdfcccee516a911"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/expr_ambig_01.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "aa7d865566d83d68563c8d3c136224019eaa31f9c315c65a1f87917c0754cf1c",
+      "after_sha256": "f1b3b50df324f2c943f050518e44607c2952643b544cc3ead62ad85db2242fe5"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/expr_ambig_02.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "5e17c2a128c0b2ad393d36112ab991a4ed9cbedc174e9685b13adf07ed958ecb",
+      "after_sha256": "80f4fa796edeea35b51734af54de344e141dc52f847fac99d2aa63a12032b99f"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/expr_ambig_03.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "371983586a59b1c09c96aa09f4c66ca4c952b765f6cbb1383ede465c63a2ce07",
+      "after_sha256": "bf45f5403bd7f6606290de833b57f39693a2fdf8440b19fdbff497452b2a85c2"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/select_c_parse.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "606710d51986507e7b0810da2170528d7cfa6e2a61db6ba210afbc5b9e227b4b",
+      "after_sha256": "786c6071b6c05a2a7563d345b265bd19c379ad24340346e2327d1095a475c3ec"
+    },
+    {
+      "path": "compiler/tests/golden/parsing/select_classic_parse.txt",
+      "added_identical_trace_lines": 2,
+      "remaining_output_identical": true,
+      "before_sha256": "863dfb8fdd8f0103ff43d9167e4f2ac24c70d4d017ca65cf0212135e9dbc85e3",
+      "after_sha256": "c2fd7c4227dd5583502698f6fe24f84ad62e8ecb560b113aaeeaa5d3b1e366f4"
+    }
+  ]
+}

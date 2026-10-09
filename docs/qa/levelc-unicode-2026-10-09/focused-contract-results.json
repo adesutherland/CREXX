@@ -1,0 +1,82 @@
+[
+  {
+    "log": "contract-debug-final-pilot2.log",
+    "commands": 156,
+    "seconds": 366.03,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-qkswepdz",
+    "result": "pass",
+    "log_sha256": "bc5cea6266a4b30070ade8638b28fee12ff31fc2d65841fdadebc3d352fbcbed"
+  },
+  {
+    "log": "contract-debug-noopt-final.log",
+    "commands": 156,
+    "seconds": 323.28,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-4x9tty9d",
+    "result": "pass",
+    "log_sha256": "324970d32abf83b6f895497e0ff5db0225ff1270e65412ad6f4c9c692b2c3f0c"
+  },
+  {
+    "log": "contract-debug-linked_opt-final.log",
+    "commands": 207,
+    "seconds": 511.44,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-u06srzv5",
+    "result": "pass",
+    "log_sha256": "61d9cff4c6db5c718f1fa8e54cbd2dd09bf8a1d992e173a8022b64058103b21f"
+  },
+  {
+    "log": "contract-debug-linked_noopt-final.log",
+    "commands": 207,
+    "seconds": 1321.18,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-n1o_rp5y",
+    "result": "pass",
+    "log_sha256": "9d7371a1d4077d3c61102edcb2f1efe7db75932bdce7b6ead270c784ac28446d"
+  },
+  {
+    "log": "contract-release-opt-final.log",
+    "commands": 156,
+    "seconds": 106.1,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-tk66hcxm",
+    "result": "pass",
+    "log_sha256": "54ef140f5ce4eb77cc3732ff5f252a5d4b58832c9e44d5b90372727e9b8db717"
+  },
+  {
+    "log": "contract-release-noopt-final.log",
+    "commands": 156,
+    "seconds": 92.8,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-2jgile8c",
+    "result": "pass",
+    "log_sha256": "39cd6c3df6415a626102f631382bbd20c8bbe023e78ca587193fbdfe60aa445a"
+  },
+  {
+    "log": "contract-release-linked_opt-final.log",
+    "commands": 207,
+    "seconds": 227.06,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-c8m20ir8",
+    "result": "pass",
+    "log_sha256": "4a26170dc09f7ea6c3e50fb4dfb63b15c7af069ec1ad52da7f4b50928adda51c"
+  },
+  {
+    "log": "contract-release-linked_noopt-final.log",
+    "commands": 207,
+    "seconds": 215.98,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-tpz2ni8a",
+    "result": "pass",
+    "log_sha256": "118462ffad05cf80f417414cd64b3dbefbaeda41db009315db4f069f5f4e6745"
+  },
+  {
+    "log": "contract-release-threaded-final.log",
+    "commands": 156,
+    "seconds": 88.8,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-cjw_o1ye",
+    "result": "pass",
+    "log_sha256": "5eaf02ef97c50f2e955ca8f861424e50ef127a23a16a27b534d0a4c91dd3f903"
+  },
+  {
+    "log": "asan/20261009-200125-build/build.log",
+    "commands": 156,
+    "seconds": 745.01,
+    "work_directory": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-unicode-contract-88j1iw0z",
+    "result": "pass",
+    "log_sha256": "499e7768f95ce98bd881815dfe967ad499c33ea946153df142b0f1177d025dcb"
+  }
+]

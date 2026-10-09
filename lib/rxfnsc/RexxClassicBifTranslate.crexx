@@ -24,6 +24,7 @@
 
 options levelb comments_dash numeric_classic
 namespace rexxclassicbiftranslate expose rexxclassicbif_translate
+import rexxclassicunicodeproperties
 import rexxclassicbifs
 import rexxvalue
 
@@ -98,7 +99,7 @@ rexxclassicbif_translate: procedure = .RexxValue
   source_text = context.argumentText(1)
   if \output_supplied & \input_supplied then do
     result_text = ""
-    assembler strupper result_text,source_text
+    result_text = rexxclassic_unicode_upper(source_text)
     return .RexxValue(result_text)
   end
 

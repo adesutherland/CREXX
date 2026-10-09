@@ -3,6 +3,10 @@
 
 #include "rxvml.h"
 
+#ifndef CREXX_TEST_BINDIR
+#define CREXX_TEST_BINDIR "."
+#endif
+
 #ifndef CREXX_TEST_LIBRARY_PATH
 #define CREXX_TEST_LIBRARY_PATH "library"
 #endif
@@ -112,7 +116,7 @@ static int editor_command(rxvml_context *ctx,
 }
 
 int main(void) {
-    rxvml_context *ctx = rxvml_create(NULL, 0);
+    rxvml_context *ctx = rxvml_create(CREXX_TEST_BINDIR, 0);
     callback_state state = {0, 0};
     const char *error = NULL;
     int program_rc = -1;

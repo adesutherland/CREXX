@@ -101,26 +101,26 @@ guide.
 
 ## Level C
 
-**Approved design, implementation in progress (2026-10-04):** compiled Level C
-uses valid Unicode text for ordinary scalar strings. Character positions,
-including PARSE positions, count codepoints; SAY writes text through the
-configured host output encoding. There is no implicit BYTE/UTF8 profile
-switch. Unicode 17.0.0 `White_Space` plus configured additions is the default
-word-blank policy. No ordinary operation normalizes implicitly.
+The approved 2026-10-09 contract uses Unicode scalar strings. LENGTH,
+substring/search, PARSE positions and table TRANSLATE count codepoints.
+Unicode White_Space plus configured additions remains the word-blank default.
+Values and comparisons preserve exact text without implicit normalization.
+Symbols use Unicode letters and simple non-expanding case mappings; full case
+mapping, folding, normalization and grapheme operations are explicit BIFs.
 
-Byte-valued conversion and bitwise BIFs use a fixed, reversible Latin-1
-ordinal bridge: byte `XX` maps to Unicode `U+00XX` for every `00`–`FF` value.
-`X2C('FF')` produces `U+00FF`; `C2X` maps that scalar back to `FF`. A scalar
-above `U+00FF` in a byte-valued operation raises a conversion signal. For
-example, `C2X('é')` is `E9`, while `C2X('漢')` signals. `X2C('C3A9')` is two
-characters, `U+00C3 U+00A9`, and SAY encodes them as text rather than emitting
-the input bytes. These are deliberate differences from byte-exact Classic
-implementations. Raw binary values and I/O are reserved for a later explicit
-facility; explicit Unicode BIFs/codecs will receive a separate language design.
+Byte `XX` maps exactly to U+00XX for all 256 values, including NUL. Each is one
+character irrespective of internal UTF-8 storage size. C2X('é') is E9;
+C2X('漢') raises Classic SYNTAX 23.1. X2C('C3A9') is two ordinal characters.
+SAY writes them as text; raw CHAROUT writes the two original bytes.
 
-The shared `RexxValue` class retains binary storage and numeric caches for
-RexxScript and future APIs. That flexibility does not change Level C's visible
-text-scalar contract. Current BYTE/UTF8 runtime branches and some compiler
-paths still implement the former design; the Level C worklist tracks their
-migration, so this paragraph describes the approved target rather than a
-completed product claim.
+Named streams default to raw ordinals. Default console streams retain UTF-8.
+STREAM OPEN ENCODING selects external codepages explicitly; CP1252 byte 80
+maps to Euro even though it is above U+00FF. ENCODE returns byte ordinals and
+DECODE consumes them. Source remains UTF-8. No codec adds a BOM or NFC.
+
+See the [complete Classic contract](../../../compiler/docs/levelc_unicode_and_streams.md)
+for the 23 Unicode BIFs, eight stream BIFs, commands, positions, line endings,
+strict/replacement policy and whole-file conversion cost. The authoritative
+LC-UNICODE worklist retains qualification; this does not claim complete Classic
+or Release 1 conformance. RexxValue's binary caches remain available to direct
+B/G clients and RexxScript without changing their existing policy.

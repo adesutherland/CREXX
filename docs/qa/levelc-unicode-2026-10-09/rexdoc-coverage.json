@@ -1,0 +1,95 @@
+[
+  {
+    "path": "lib/rxfnsc/RexxClassicBifTranslate.crexx",
+    "before": {
+      "blocks": 1,
+      "tags": {}
+    },
+    "after": {
+      "blocks": 1,
+      "tags": {}
+    }
+  },
+  {
+    "path": "lib/rxfnsc/RexxClassicBifs.crexx",
+    "before": {
+      "blocks": 43,
+      "tags": {
+        "bif": 23,
+        "checkargs": 22,
+        "deprecated": 14,
+        "docType": 1,
+        "note": 4,
+        "param": 19,
+        "return": 34,
+        "sandbox": 24,
+        "signal": 1,
+        "signature": 23
+      }
+    },
+    "after": {
+      "blocks": 44,
+      "tags": {
+        "bif": 23,
+        "checkargs": 22,
+        "deprecated": 14,
+        "docType": 1,
+        "note": 4,
+        "param": 19,
+        "return": 34,
+        "sandbox": 24,
+        "signal": 1,
+        "signature": 23
+      }
+    }
+  },
+  {
+    "path": "lib/rxfnsc/RexxClassicConfig.crexx",
+    "before": {
+      "blocks": 24,
+      "tags": {
+        "docType": 1,
+        "param": 3,
+        "return": 2,
+        "unicodeVersion": 1
+      }
+    },
+    "after": {
+      "blocks": 26,
+      "tags": {
+        "docType": 1,
+        "param": 3,
+        "return": 2,
+        "unicodeVersion": 1
+      }
+    }
+  },
+  {
+    "path": "lib/rxfnsc/RexxClassicDatatype.crexx",
+    "before": {
+      "blocks": 8,
+      "tags": {}
+    },
+    "after": {
+      "blocks": 9,
+      "tags": {}
+    }
+  },
+  {
+    "path": "lib/rxfnsc/RexxVariablePool.crexx",
+    "before": {
+      "blocks": 27,
+      "tags": {
+        "param": 8,
+        "return": 3
+      }
+    },
+    "after": {
+      "blocks": 27,
+      "tags": {
+        "param": 8,
+        "return": 3
+      }
+    }
+  }
+]
