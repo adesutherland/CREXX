@@ -1,5 +1,13 @@
 # cREXX Compiler Architecture and Technical Debt Analysis
 
+For the 2026-10-08 source audit and proposed B/C/G physical decomposition, see
+[Separate language compilers with one common backend](compiler_frontend_split_proposal.md).
+The resolved file-grouping work recorded below does not establish separate
+front-end dependency closures or an embeddable/lite compiler. The proposal
+identifies the remaining import, exit, semantic and optimizer coupling;
+[COMP-PIPE-01](../../docs/ROADMAP.md#compiler-profiles-and-low-latency-compilation--comp-pipe-01)
+owns its implementation criteria.
+
 ## 1. High-Level Flow
 The cREXX compiler (`rxc`) follows a traditional multi-pass architecture, transforming Rexx source code into cREXX Assembly (`.rxas`).
 

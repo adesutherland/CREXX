@@ -28,6 +28,26 @@ The platform layer wraps raw native text files with the shared codec and convert
 first-party stdout/stderr diagnostics. Binary opens remain raw; sequential text
 update modes are rejected before opening. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md).
 
+## Proposed language-compiler separation
+
+The [B/C/G compiler split proposal](../../compiler/docs/compiler_frontend_split_proposal.md)
+is a source-grounded architecture review dated 2026-10-08, with the
+[COMP-PIPE-01 plan](../ROADMAP.md#compiler-profiles-and-low-latency-compilation--comp-pipe-01)
+owning implementation acceptance. It proposes separate level front ends and
+mappers feeding one validated canonical AST and the existing common backend.
+It defines B's bootstrap/infrastructure role, G's application/extension role,
+and C's Classic runtime mapping, including a reusable compilation service for
+future INTERPRET. G exits may be implemented in B but must emit G source.
+All stored B class attributes would require explicit mappings; authored G
+classes would use automatic layout only, while still importing B layouts.
+
+Fast compilation and physically lite builds are separate choices. Mandatory
+constant evaluation, semantic lowering, ownership and metadata remain in all
+profiles. The 24-bit target runs compiler, assembler and VM as separate stages.
+The proposal records current hidden parser/exit/optimizer dependencies and
+unverified runtime/footprint proof obligations. It is not an implementation or
+an approved change to the current behaviour described below.
+
 ## The Compilation Pipeline
 
 The pipeline of transforming Rexx source code into executable bytecode is structured as follows:

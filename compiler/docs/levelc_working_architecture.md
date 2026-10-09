@@ -40,8 +40,13 @@ infrastructure pending a compatibility and architectural assessment. Unicode-cau
 and logic errors are currently undefined for B/C/G. Existing valid-text,
 codepoint, Latin-1 ordinal and explicit Level G Unicode mechanisms remain
 observable implementation boundaries; this clarification does not change
-RexxScript's separate binary-capable `RexxValue` use. Stream support, broader
-host services, the B/G compiler split and fast-pipeline proposals remain pending.
+RexxScript's separate binary-capable `RexxValue` use. Stream support and broader
+host services remain pending. The
+[B/C/G compiler split proposal](compiler_frontend_split_proposal.md) now reviews
+separate level front ends, their common canonical AST/backend, fast/lite builds
+and a reusable C-first compilation service for INTERPRET. It does not approve
+implementation of the parked instruction or close the Classic worklist's
+semantic and lifecycle obligations.
 
 The documentation review also exposed a shared DATE/TIME clock defect: ordinary
 linked optimized/no-opt execution retains TIME(L) and TIME(E)=0 after a one-second

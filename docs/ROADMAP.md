@@ -242,15 +242,33 @@ implementation freezes for RC1; April qualifies and repairs the candidate.
 
 ## Compiler profiles and low-latency compilation — COMP-PIPE-01
 
-**Status:** Adrian requested this connected roadmap study on 2026-10-07.
-The B/G language boundary, separate executables, fast assembler build, direct
-compiler-to-assembler handoff and compiled execution mode are proposals, not
-approved product architecture or a change to Release 1 dates. The parked
+**Status:** Adrian requested this connected roadmap study on 2026-10-07 and
+expanded the architecture review on 2026-10-08. The detailed
+[compiler split proposal](../compiler/docs/compiler_frontend_split_proposal.md)
+records the source audit, language principles/capability matrix, physical
+module boundaries and proof obligations. This section remains the authoritative
+implementation plan. The current task is review and proposal, not implementation
+or architectural acceptance. Adrian's requested direction is a compiler per
+B/C/G level with a common backend; B serves bootstrap/infrastructure integration,
+G general-purpose evolution, and C Classic compatibility. B requires explicit
+mapping for all stored class attributes; Adrian's later 2026-10-08 clarification
+supersedes the earlier infrastructure-only rule. G permits only automatic
+source-authored layout.
+B owns authored assembly and G language extensions. INTERPRET starts with C
+through a reusable service. The 24-bit target runs the standalone compiler,
+assembler and VM separately, not together in memory. The proposal distinguishes
+these requirements from the remaining decisions. G compiler exits may be
+implemented in B, but all returned replacement/helper source must be G; this
+separates implementation language from generated-language authority.
+Separate B/C/G compilers are the requested direction. Their detailed physical
+decomposition, remaining B/G capability choices, fast assembler build, direct
+compiler-to-assembler handoff and compiled execution mode remain proposals,
+not approved implementation work or a change to Release 1 dates. The parked
 Level C INTERPRET instruction remains unimplemented under the
 [Level C worklist](planning/release-1/levelc-compatibility-worklist.md#remaining-gap-decision-register-2026-10-07).
 
 **Vision and intended outcome:** give Level B, Classic Level C and Level G
-clear source-language contracts and potentially separate compiler executables,
+clear source-language contracts and separate compiler executables,
 while keeping one validated canonical AST/symbol/flow interface to the shared
 optimizer and emitter, one RXAS/RXBIN contract, and compatible build tools.
 Freeze or explicitly delimit Level B before treating Level G as its extension.
@@ -279,8 +297,8 @@ The Level C parser/lowerer already targets the canonical compiler tree.
    certified compiler-owned lowering. Prove that an allowed G-only feature is
    rejected in B, and inventory existing B users before any approved break or
    migration; preserve Level C behavior.
-2. **CP-AC-02 — shared compiler boundary:** if separate B/C/G executables are
-   selected, they feed one documented canonical AST, symbol, source-anchor and
+2. **CP-AC-02 — shared compiler boundary:** separate B/C/G executables
+   feed one documented canonical AST, symbol, source-anchor and
    flow contract into shared optimization and emission. Preserve existing `rxc`
    and `crexx` invocations or define an explicit migration, installed tools,
    DSLSH/parser mode, imports and supported-platform builds. Verify semantic,
@@ -307,10 +325,30 @@ The Level C parser/lowerer already targets the canonical compiler tree.
 6. **CP-AC-06 — selection and qualification:** retain same-input correctness
    and exact-output comparisons across B/C/G, both VM engines where relevant,
    debug/source metadata and supported platforms. Record measured latency,
-   memory, package-size and maintenance tradeoffs before selecting executable
-   splitting, a lean assembler, typed handoff or a public execution mode.
+   memory, package-size and maintenance tradeoffs when qualifying the physical
+   split and selecting packaging, a lean assembler, typed handoff or a public
+   execution mode.
    Production performance edits follow the first ordinary Release verdict in
    `performance/AGENTS.md`; unselected alternatives remain proposals.
+7. **CP-AC-07 — compiled INTERPRET:** specify the reusable, exact-length runtime
+   compilation service and its Classic activation/control/lifetime bridge.
+   Demonstrate nested INTERPRET, pool replacement, arguments, local calls,
+   RETURN/EXIT/SIGNAL and resumable CALL ON, bounded generated-code residency,
+   failures and installed operation. Reuse `LC-87-01–05` as the semantic
+   acceptance authority; review authorization does not reopen implementation
+   of the parked instruction or approve a VM lifecycle change.
+8. **CP-AC-08 — physically lite profiles:** define independent language,
+   optimization, tool-service and host-capability choices. Prove by link maps
+   that a lite compiler omits optional optimization code while preserving
+   mandatory constant evaluation, validation, lowering, metadata and emission.
+   Measure full resident and peak working memory for each standalone stage on
+   the selected 24-bit target, including that stage's runtime dependencies and
+   working buffers; compiler, assembler and VM run separately. Concurrent
+   compiler/assembler/VM residency is outside this target by Adrian's explicit
+   2026-10-08 clarification. Do not substitute host executable size for this
+   proof. Preserve language semantics within the declared host capabilities and
+   document unsupported services. Embedded runtime compilation has a separate
+   budget under CP-AC-07 and is not implied for the 24-bit profile.
 
 **Numbered steps and decision gates:**
 
@@ -333,6 +371,24 @@ The Level C parser/lowerer already targets the canonical compiler tree.
    mode with exact error, cleanup and repeated-use behavior; choose its public
    name and artifact/cache policy before exposing it. Keep full INTERPRET
    parked until Adrian explicitly reopens its semantic architecture decision.
+6. **CP-STEP-06 (CP-AC-01–08; architecture review, 2026-10-08):** audit the
+   current source and retained Level C evidence; document B/C/G principles and
+   the capability matrix, canonical AST invariants, current-to-target module
+   ownership, bootstrap/import boundaries, INTERPRET service and lite profiles.
+   Check the proposal against actual callers and failure/lifecycle paths;
+   distinguish source-supported findings from future experimental proof.
+   Present the concrete proposal and outstanding decisions to Adrian before
+   product implementation. This review may proceed before CP-STEP-01's final
+   language approval; no proposed language restriction takes effect here.
+7. **CP-STEP-07 (CP-AC-07; after architecture approval and CP-STEP-02/04):**
+   prove the embedded compilation API and Classic activation bridge in bounded
+   experiments under the existing LC-87 plan. Obtain a specific decision on
+   any necessary VM module-lifecycle interface before changing it.
+8. **CP-STEP-08 (CP-AC-08/06; after architecture approval):** separate mandatory
+   semantic services from optional optimizers, prove language/profile parity,
+   and measure actual target residency against agreed budgets. Keep a failed
+   memory or lifecycle criterion open; do not silently remove language features
+   to fit. Production performance changes retain the Release verdict gate.
 
 **Concerns to resolve.** Separate binaries may duplicate linked code and
 installed assets without reducing startup or compilation time. A B freeze that
