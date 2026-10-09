@@ -33,9 +33,14 @@ fetch() {
   (cd "$tools/downloads" && echo "$digest  $name" | sha256sum --check)
 }
 
+case "$(uname -m)" in
+  x86_64) pandoc_arch=amd64; pandoc_digest=37edb3bbcf722f921a009941bf5874e2e0c09263226c9b4a2d980788cb062ab6 ;;
+  aarch64|arm64) pandoc_arch=arm64; pandoc_digest=56ed5566ec41d22ec9ee0704e6ac0b98ba102e92384efd5306173a22d314c79a ;;
+  *) echo "Unsupported Linux documentation architecture: $(uname -m)" >&2; exit 1 ;;
+esac
 fetch pandoc.tar.gz \
-  https://github.com/jgm/pandoc/releases/download/3.11/pandoc-3.11-linux-amd64.tar.gz \
-  37edb3bbcf722f921a009941bf5874e2e0c09263226c9b4a2d980788cb062ab6
+  "https://github.com/jgm/pandoc/releases/download/3.11/pandoc-3.11-linux-${pandoc_arch}.tar.gz" \
+  "$pandoc_digest"
 tar -xzf "$tools/downloads/pandoc.tar.gz" -C "$tools" --strip-components=1
 fetch juliamono.tar.gz \
   https://github.com/cormullion/juliamono/releases/download/v0.63.2/JuliaMono-ttf.tar.gz \
