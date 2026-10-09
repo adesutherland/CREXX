@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import tempfile
+import os
 from pathlib import Path
 
 p = argparse.ArgumentParser()
@@ -26,7 +27,7 @@ def run(argv):
     if result.returncode:
         raise AssertionError(f'exit {result.returncode}; {log}\n'
                              + output[-12000:].decode(errors='replace'))
-    return output
+    return output.replace(b"\r\n", b"\n") if os.name == "nt" else output
 
 
 try:
@@ -72,7 +73,7 @@ return time('L')
 """.replace('PAUSE', pause).replace('-- Condition sampling repeats even when a loop body has no statements.',
                                     '/* Condition sampling repeats for an empty loop body. */')
     path = work / 'clock.rexx'
-    path.write_text(source)
+    path.write_text(source, encoding="utf-8")
     output = work / 'clock'
     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
          '-o', output, path])
@@ -86,5 +87,5 @@ return time('L')
     assert run([a.bindir / 'rxvm', image, *libraries]) == b'PASS: compiled Classic clock lifetime\n'
     print(f'PASS: clock contract, noopt={a.noopt}, linked={a.linked}')
 finally:
-    (work / 'commands.json').write_text(json.dumps(commands, indent=2))
+    (work / 'commands.json').write_text(json.dumps(commands, indent=2), encoding="utf-8")
     print(f'Clock evidence: {work}')

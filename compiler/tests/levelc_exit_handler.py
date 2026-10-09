@@ -8,12 +8,14 @@ import sys
 
 sys.dont_write_bytecode = True
 from levelc_call_delayed_injection import inject_boundaries
+from levelc_test_io import native_stdout
 
 
 def run(command, workdir, label, status=0, output=b""):
     result = subprocess.run(command, cwd=workdir, capture_output=True,
                             timeout=120, check=False)
     (workdir / f"{label}.log").write_bytes(result.stdout + result.stderr)
+    output = native_stdout(output)
     if result.returncode != status or result.stdout != output:
         raise RuntimeError(
             f"{label}: exit={result.returncode}, stdout={result.stdout!r}, "
@@ -41,7 +43,7 @@ def main():
         compile_command.append("-n")
     compile_command += ["-o", str(assembly), args.source]
     run(compile_command, workdir, "compile")
-    injected.write_text(inject_boundaries(assembly.read_text(), ((3, "exit"),)),
+    injected.write_text(inject_boundaries(assembly.read_text(encoding="utf-8"), ((3, "exit"),)),
                         encoding="utf-8")
     run([args.rxas, "-o", str(binary), str(injected)], workdir, "assemble")
     run([args.rxlink, "-o", str(image), str(binary),

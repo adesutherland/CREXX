@@ -4,6 +4,7 @@
 import argparse
 from pathlib import Path
 import subprocess
+import os
 
 
 def run(command, workdir, name, expect_success=True):
@@ -13,7 +14,7 @@ def run(command, workdir, name, expect_success=True):
     (workdir / f"{name}.log").write_bytes(output)
     if (completed.returncode == 0) != expect_success:
         raise RuntimeError(f"{name} exited {completed.returncode}; see {name}.log")
-    return output
+    return output.replace(b"\r\n", b"\n") if os.name == "nt" else output
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
             command.append("-n")
         command += ["-o", str(assembly), str(sourcedir / f"{stem}.rexx")]
         run(command, workdir, f"{stem}_compile")
-        text = assembly.read_text()
+        text = assembly.read_text(encoding="utf-8")
         if "RXC-LC-43.1" not in text or "missing_provider()" in text:
             raise RuntimeError(f"{stem}: missing target emitted a static import")
         run([args.rxas, "-o", str(binary), str(assembly)], workdir,
@@ -77,7 +78,7 @@ def main():
     consumer_command += ["-o", str(consumer_assembly),
                          str(sourcedir / "levelc_call_alias_consumer.rexx")]
     run(consumer_command, workdir, "alias_consumer_compile")
-    assembly_text = consumer_assembly.read_text()
+    assembly_text = consumer_assembly.read_text(encoding="utf-8")
     if ("levelc_call_alias.typedentry()" not in assembly_text or
             "levelc_call_alias_provider.typedentry()" in assembly_text):
         raise RuntimeError("source namespace did not determine CALL import")

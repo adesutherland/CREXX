@@ -5627,6 +5627,19 @@ function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
 endfunction()
 
 function(add_runtime_bytes_test NAME SOURCE_FILE EXPECTED_HEX LEVEL)
+    if(WIN32)
+        # The captured process stdout is a CRT text stream. Keep payload hex
+        # exact and construct its native newline bytes in the expectation.
+        string(REGEX REPLACE "(..)" "\\1;" _expected_bytes "${EXPECTED_HEX}")
+        set(EXPECTED_HEX "")
+        foreach(_byte IN LISTS _expected_bytes)
+            if(_byte STREQUAL "0a")
+                string(APPEND EXPECTED_HEX "0d0a")
+            else()
+                string(APPEND EXPECTED_HEX "${_byte}")
+            endif()
+        endforeach()
+    endif()
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
     string(APPEND SCRIPT_CONTENT
@@ -8832,7 +8845,8 @@ add_test(NAME e2_active_context_isolation COMMAND test_e2_active_context)
 set_tests_properties(e2_active_context_isolation PROPERTIES LABELS "compiler;stage3")
 crexx_label_concurrency_tests(SP01 e2_active_context_isolation)
 add_test(NAME say_bytes_host_callbacks COMMAND test_say_bytes_host)
-set_tests_properties(say_bytes_host_callbacks PROPERTIES LABELS "compiler;levelc")
+set_tests_properties(say_bytes_host_callbacks PROPERTIES LABELS "compiler;levelc"
+        CREXX_PREP_TARGETS "test_say_bytes_host")
 add_test(NAME levelc_say_host_output COMMAND test_levelc_say_host_output)
 set_tests_properties(levelc_say_host_output PROPERTIES LABELS "compiler;levelc"
         CREXX_PREP_TARGETS "test_levelc_say_host_output")

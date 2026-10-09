@@ -3,6 +3,7 @@ import argparse
 import json
 import subprocess
 import tempfile
+import os
 from pathlib import Path
 
 p = argparse.ArgumentParser()
@@ -26,7 +27,7 @@ def run(argv, expected=0):
     if (result.returncode == 0) != (expected == 0):
         raise AssertionError(f'{commands[-1]}: exit {result.returncode}; {log}\n'
                              + output[-12000:].decode(errors='replace'))
-    return output
+    return output.replace(b"\r\n", b"\n") if os.name == "nt" else output
 
 
 def compile_run(stem, source):
@@ -89,5 +90,5 @@ try:
     assert (b'bad.crexx:3:' in diagnostic or b'bad.crexx @ 3:' in diagnostic), diagnostic[-12000:]
     print(f'PASS: source data level {a.level}, noopt={a.noopt}, linked={a.linked}')
 finally:
-    (work / 'commands.json').write_text(json.dumps(commands, indent=2))
+    (work / 'commands.json').write_text(json.dumps(commands, indent=2), encoding="utf-8")
     print(f'Source data evidence: {work}')

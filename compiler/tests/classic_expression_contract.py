@@ -32,7 +32,7 @@ def execute(stem, source, classic=True, expected_exit=0):
     case = work / stem
     case.mkdir()
     path = case / ('program.rexx' if classic else 'program.crexx')
-    path.write_text(source)
+    path.write_text(source, encoding="utf-8")
     output = case / 'program'
     run([a.bindir / 'rxc', *(['-n'] if a.noopt else []), '-i', a.bindir,
          '-o', output, path])
@@ -45,7 +45,7 @@ def execute(stem, source, classic=True, expected_exit=0):
         image = str(output) + '_image.rxbin'
         run([a.bindir / 'rxlink', '-o', image, str(output) + '.rxbin', *libraries])
         libraries = []
-    return run([a.bindir / 'rxvm', image, *libraries], expected_exit).decode()
+    return run([a.bindir / 'rxvm', image, *libraries], expected_exit).decode('utf-8').replace('\r\n', '\n')
 
 
 try:
@@ -202,11 +202,11 @@ exit
         case = work / f'source_error{i}'
         case.mkdir()
         path = case / 'invalid.rexx'
-        path.write_text('options levelc\n' + body + '\n')
+        path.write_text('options levelc\n' + body + '\n', encoding="utf-8")
         diagnostic = run([a.bindir / 'rxc', '--diagnostics', 'raw', '-i', a.bindir,
                           '-o', case / 'invalid', path], expected=2).decode()
         assert 'RXC-LC-' + code in diagnostic, (body, diagnostic)
     print(f'PASS: Classic expression contract, noopt={a.noopt}, linked={a.linked}')
 finally:
-    (work / 'commands.json').write_text(json.dumps(commands, indent=2))
+    (work / 'commands.json').write_text(json.dumps(commands, indent=2), encoding="utf-8")
     print(f'Expression evidence: {work}')

@@ -5,6 +5,7 @@ import argparse
 from pathlib import Path
 import re
 import subprocess
+import os
 
 from levelc_call_delayed_injection import (
     inject_after_signal_override, inject_boundaries)
@@ -16,7 +17,8 @@ def run(command, workdir, label, success=True):
     (workdir / f"{label}.log").write_bytes(result.stdout + result.stderr)
     if (result.returncode == 0) != success:
         raise RuntimeError(f"{label}: exit {result.returncode}; see {label}.log")
-    return result.stdout + result.stderr
+    output = result.stdout + result.stderr
+    return output.replace(b"\r\n", b"\n") if os.name == "nt" else output
 
 
 def main():
@@ -61,7 +63,7 @@ def main():
         if provider or stem == "levelc_call_external_bg":
             providers.append(str(binary))
         if provider:
-            text = assembly.read_text()
+            text = assembly.read_text(encoding="utf-8")
             if ".expose=" not in text or "__rxcp_levelc_body()" not in text:
                 raise RuntimeError(f"{stem}: missing exposed one-body provider")
             if re.search(r"(?m)^main\(\) \.locals=", text):
@@ -124,7 +126,7 @@ def main():
     trap_command += ["-o", str(trap_assembly), str(trap_source)]
     run(trap_command, workdir, "trap_compile")
     trap_injected.write_text(
-        inject_boundaries(trap_assembly.read_text(), ((5, "external"),)),
+        inject_boundaries(trap_assembly.read_text(encoding="utf-8"), ((5, "external"),)),
         encoding="utf-8")
     run([args.rxas, "-o", str(trap_binary), str(trap_injected)],
         workdir, "trap_assemble")
@@ -147,7 +149,7 @@ def main():
     run(override_command, workdir, "override_compile")
     override_injected.write_text(
         inject_after_signal_override(
-            override_assembly.read_text(), 4, "replaced"), encoding="utf-8")
+            override_assembly.read_text(encoding="utf-8"), 4, "replaced"), encoding="utf-8")
     run([args.rxas, "-o", str(override_binary), str(override_injected)],
         workdir, "override_assemble")
     override_image = workdir / "levelc_call_signal_override_image.rxbin"

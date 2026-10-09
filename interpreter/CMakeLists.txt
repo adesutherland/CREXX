@@ -1430,6 +1430,8 @@ crexx_add_vm_test(NAME rxassignalbrvpayloadtests RXVM_ARGS tests_signal_branch_v
 
 crexx_add_rxas_vm_binary(tests_signal_origin "source-preserving signal validation")
 crexx_add_vm_test(NAME rxassignalorigininvalidtests RXVM_ARGS tests_signal_origin PASS_REGULAR_EXPRESSION "invalid-origin-rejected")
+set_tests_properties(rxassignalorigininvalidtests PROPERTIES
+        CREXX_PREP_TARGETS "run_tests_signal_origin")
 
 # NR-09 large-instruction batch
 crexx_add_rxas_vm_binary(tests_nr09_superinstructions "NR-09 large instructions")

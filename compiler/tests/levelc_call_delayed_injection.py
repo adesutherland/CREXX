@@ -10,6 +10,7 @@ import argparse
 from pathlib import Path
 import re
 import subprocess
+import os
 
 
 def run(command, cwd, log_path, expect_failure=False):
@@ -26,7 +27,7 @@ def run(command, cwd, log_path, expect_failure=False):
         raise RuntimeError(
             f"{command[0]} exited {process.returncode}; see {log_path}: "
             + output[-2000:].decode("utf-8", errors="replace"))
-    return output
+    return output.replace(b"\r\n", b"\n") if os.name == "nt" else output
 
 
 def queue_snippet(base, line, description, condition=2):
@@ -266,19 +267,19 @@ def main():
     compile_command += ["-o", str(assembly_path), args.source]
     run(compile_command, workdir, workdir / f"{stem}_compile.log")
     if args.scenario == "policy":
-        injected = inject_policy(assembly_path.read_text())
+        injected = inject_policy(assembly_path.read_text(encoding="utf-8"))
     elif args.scenario == "conditions":
-        injected = inject_conditions(assembly_path.read_text())
+        injected = inject_conditions(assembly_path.read_text(encoding="utf-8"))
     elif args.scenario == "lifecycle":
-        injected = inject_lifecycle(assembly_path.read_text())
+        injected = inject_lifecycle(assembly_path.read_text(encoding="utf-8"))
     elif args.scenario == "buffered_halt":
-        injected = inject_buffered_halt(assembly_path.read_text())
+        injected = inject_buffered_halt(assembly_path.read_text(encoding="utf-8"))
     elif args.scenario == "missing":
-        injected = inject_boundaries(assembly_path.read_text(), ((3, "missing"),))
+        injected = inject_boundaries(assembly_path.read_text(encoding="utf-8"), ((3, "missing"),))
     else:
         sites = ((4, "if"), (9, "when"), (15, "do")) if args.scenario == "boundaries" else (
             (4, "leave"), (11, "exit"), (17, "return"))
-        injected = inject_boundaries(assembly_path.read_text(), sites)
+        injected = inject_boundaries(assembly_path.read_text(encoding="utf-8"), sites)
     injected_path.write_text(injected, encoding="utf-8")
     run([args.rxas, "-o", str(binary_path), str(injected_path)],
         workdir, workdir / f"{stem}_assemble.log")

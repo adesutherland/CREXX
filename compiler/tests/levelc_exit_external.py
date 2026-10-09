@@ -5,11 +5,14 @@ import argparse
 from pathlib import Path
 import subprocess
 
+from levelc_test_io import native_stdout
+
 
 def run(command, workdir, label, expected=b""):
     result = subprocess.run(command, cwd=workdir, capture_output=True,
                             timeout=120, check=False)
     (workdir / f"{label}.log").write_bytes(result.stdout + result.stderr)
+    expected = native_stdout(expected)
     if result.returncode != 0 or result.stdout != expected:
         raise RuntimeError(
             f"{label}: exit={result.returncode}, stdout={result.stdout!r}, "
