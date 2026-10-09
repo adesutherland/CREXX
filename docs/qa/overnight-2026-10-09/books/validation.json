@@ -1,0 +1,42 @@
+[
+  {
+    "file": "CREXX-ovn-20261009-language-reference.pdf",
+    "pages": 436,
+    "bytes": 1034701,
+    "sha256": "f3dd4b177e9a0d41e440e6ba0d06eaaf8f26585e50384ab3b4f0d57e5ec583f3",
+    "rendered_pages": [
+      1,
+      34
+    ]
+  },
+  {
+    "file": "CREXX-ovn-20261009-library-reference.pdf",
+    "pages": 544,
+    "bytes": 1384982,
+    "sha256": "62c2dc92d94cf489be8750f77fc74da976908f465474804d7f89f979a899a853",
+    "rendered_pages": [
+      1
+    ],
+    "proof": "affected-book rebuild after cover wrap; final cover visually inspected"
+  },
+  {
+    "file": "CREXX-ovn-20261009-programming-guide.pdf",
+    "pages": 264,
+    "bytes": 698153,
+    "sha256": "88ed7bdd6397461d70e895a2e3545c17c43011f64965d9cf17939f35c90a3cb6",
+    "rendered_pages": [
+      1
+    ]
+  },
+  {
+    "file": "CREXX-ovn-20261009-vm-specification.pdf",
+    "pages": 361,
+    "bytes": 1169254,
+    "sha256": "42b640c6b0f1fe440848e4f519e90a3108dad300c020c013d954f36553118e8e",
+    "rendered_pages": [
+      1,
+      278
+    ],
+    "proof": "targeted VM-book rebuild after decimal documentation update"
+  }
+]

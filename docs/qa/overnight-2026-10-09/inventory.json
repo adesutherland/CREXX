@@ -1,0 +1,35 @@
+{
+  "baseline_local_commit": "b1b8bed2dabf333850441480b1021e556d096715",
+  "overnight_actual_checkout": "0aafdb155b07d2a345193a870cc47922e1e837c0",
+  "scheduled_event_sha": "77ba820c35e40450311823a3e7f171e37a7982f8",
+  "runs": [
+    {
+      "run": 37881640063,
+      "workflow": "Sanitizer QA",
+      "failures": [
+        "Linux x64 ASan/LSan: frame_control_ast 6831 bytes/52 allocations (SAN-010)"
+      ],
+      "passed": [
+        "macOS arm64 ASan"
+      ],
+      "original_log": "failed/linux-sanitizer-ctest.log"
+    },
+    {
+      "run": 37876459501,
+      "workflow": "Deep Build QA",
+      "failures": [
+        "all five core lanes: missing tests_signal_origin fixture producer",
+        "Windows: missing test_say_bytes_host prep target",
+        "Windows: native CRT CRLF stdout expectations",
+        "Windows: Python ACP decoding corrupts UTF-8 assembly section symbol and injection/import matching",
+        "Linux required books: JuliaMono missing U+6F22 inline code glyph"
+      ],
+      "passed": [
+        "isolated stress",
+        "Release product parallel 1/5/30",
+        "deterministic RXBIN comparisons"
+      ]
+    }
+  ],
+  "scope": "No product stdout/encoding policy change. Deferred Unicode/source-conversion, host API and INTERPRET design stays deferred."
+}

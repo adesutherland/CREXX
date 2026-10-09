@@ -1,0 +1,404 @@
+Internal ctest changing into directory: /home/qa/crexx/build-debug
+Test project /home/qa/crexx/build-debug
+    Start 2124: db_decimal_tests
+1/1 Test #2124: db_decimal_tests .................***Failed    0.00 sec
+db_decimal_test - Loading Manual Static Plugin
+Max digits supported = 18
+
+-----------------------
+- test_int_tofrom_conversions()
+
+Testing integer conversions
+
+Testing with 0
+OK - expected 0 got 0 for from int
+OK - expected 0 got 0 for to int
+
+Testing with 9223372036854775807
+OK - expected 9.22337203685477581e+18 got 9.22337203685477581e+18 for from int
+OK - expected signal for int
+
+Testing with -9223372036854775808
+OK - expected -9.22337203685477581e+18 got -9.22337203685477581e+18 for from int
+OK - expected signal for int
+
+Testing with 1
+OK - expected 1 got 1 for from int
+OK - expected 1 got 1 for to int
+
+Testing with -1
+OK - expected -1 got -1 for from int
+OK - expected -1 got -1 for to int
+
+Testing with 4294967295
+OK - expected 4294967295 got 4294967295 for from int
+OK - expected 4294967295 got 4294967295 for to int
+
+Testing with -4294967295
+OK - expected -4294967295 got -4294967295 for from int
+OK - expected -4294967295 got -4294967295 for to int
+
+Testing with 255
+OK - expected 255 got 255 for from int
+OK - expected 255 got 255 for to int
+
+Testing with -255
+OK - expected -255 got -255 for from int
+OK - expected -255 got -255 for to int
+
+Testing with 9223372036854775806
+OK - expected 9.22337203685477581e+18 got 9.22337203685477581e+18 for from int
+OK - expected signal for int
+
+Testing with 9223372036854775800
+OK - expected 9.2233720368547758e+18 got 9.2233720368547758e+18 for from int
+OK - expected 9223372036854775800 got 9223372036854775800 for to int
+
+Testing with -9223372036854775807
+OK - expected -9.22337203685477581e+18 got -9.22337203685477581e+18 for from int
+OK - expected signal for int
+
+Testing with -9223372036854775800
+OK - expected -9.2233720368547758e+18 got -9.2233720368547758e+18 for from int
+OK - expected -9223372036854775800 got -9223372036854775800 for to int
+
+Testing beyond limits with 9223372036854775808
+OK - expected signal and got - 4 "Overflow/Underflow"
+
+Testing beyond limits with -9223372036854775809
+OK - expected signal and got - 4 "Overflow/Underflow"
+
+Testing with 123456789012345678
+OK - expected 123456789012345678 got 123456789012345678 for from int
+OK - expected 123456789012345678 got 123456789012345678 for to int
+
+Testing with -123456789012345678
+OK - expected -123456789012345678 got -123456789012345678 for from int
+OK - expected -123456789012345678 got -123456789012345678 for to int
+
+Testing with 1000000000
+OK - expected 1000000000 got 1000000000 for from int
+OK - expected 1000000000 got 1000000000 for to int
+
+Testing with 100000000000000000
+OK - expected 100000000000000000 got 100000000000000000 for from int
+OK - expected 100000000000000000 got 100000000000000000 for to int
+
+Testing with -1000000000
+OK - expected -1000000000 got -1000000000 for from int
+OK - expected -1000000000 got -1000000000 for to int
+
+Testing with -100000000000000000
+OK - expected -100000000000000000 got -100000000000000000 for from int
+OK - expected -100000000000000000 got -100000000000000000 for to int
+
+Testing with 10
+OK - expected 10 got 10 for from int
+OK - expected 10 got 10 for to int
+
+Testing with -10
+OK - expected -10 got -10 for from int
+OK - expected -10 got -10 for to int
+
+Testing with 999999999999999999
+OK - expected 999999999999999999 got 999999999999999999 for from int
+OK - expected 999999999999999999 got 999999999999999999 for to int
+
+Testing with -999999999999999999
+OK - expected -999999999999999999 got -999999999999999999 for from int
+OK - expected -999999999999999999 got -999999999999999999 for to int
+
+Testing with 123456789012345678
+OK - expected 123456789012345678 got 123456789012345678 for from int
+OK - expected 123456789012345678 got 123456789012345678 for to int
+
+Testing with -123456789012345678
+OK - expected -123456789012345678 got -123456789012345678 for from int
+OK - expected -123456789012345678 got -123456789012345678 for to int
+
+Testing with 987654321098765432
+OK - expected 987654321098765432 got 987654321098765432 for from int
+OK - expected 987654321098765432 got 987654321098765432 for to int
+
+Testing with -987654321098765432
+OK - expected -987654321098765432 got -987654321098765432 for from int
+OK - expected -987654321098765432 got -987654321098765432 for to int
+
+Testing with 314159265358979323
+OK - expected 314159265358979323 got 314159265358979323 for from int
+OK - expected 314159265358979323 got 314159265358979323 for to int
+
+Testing with -314159265358979323
+OK - expected -314159265358979323 got -314159265358979323 for from int
+OK - expected -314159265358979323 got -314159265358979323 for to int
+
+Testing with 271828182845904523
+OK - expected 271828182845904523 got 271828182845904523 for from int
+OK - expected 271828182845904523 got 271828182845904523 for to int
+
+Testing with -271828182845904523
+OK - expected -271828182845904523 got -271828182845904523 for from int
+OK - expected -271828182845904523 got -271828182845904523 for to int
+
+Testing with 900719925474099199
+OK - expected 900719925474099199 got 900719925474099199 for from int
+OK - expected 900719925474099199 got 900719925474099199 for to int
+
+Testing with -900719925474099199
+OK - expected -900719925474099199 got -900719925474099199 for from int
+OK - expected -900719925474099199 got -900719925474099199 for to int
+
+Testing with 112358132134558914
+OK - expected 112358132134558914 got 112358132134558914 for from int
+OK - expected 112358132134558914 got 112358132134558914 for to int
+
+Testing with -112358132134558914
+OK - expected -112358132134558914 got -112358132134558914 for from int
+OK - expected -112358132134558914 got -112358132134558914 for to int
+
+Testing with 707106781186547524
+OK - expected 707106781186547524 got 707106781186547524 for from int
+OK - expected 707106781186547524 got 707106781186547524 for to int
+
+Testing with -707106781186547524
+OK - expected -707106781186547524 got -707106781186547524 for from int
+OK - expected -707106781186547524 got -707106781186547524 for to int
+
+Testing with 555555555555555555
+OK - expected 555555555555555555 got 555555555555555555 for from int
+OK - expected 555555555555555555 got 555555555555555555 for to int
+
+Testing with -555555555555555555
+OK - expected -555555555555555555 got -555555555555555555 for from int
+OK - expected -555555555555555555 got -555555555555555555 for to int
+
+Testing with 100000000000000001
+OK - expected 100000000000000001 got 100000000000000001 for from int
+OK - expected 100000000000000001 got 100000000000000001 for to int
+
+Testing with -100000000000000001
+OK - expected -100000000000000001 got -100000000000000001 for from int
+OK - expected -100000000000000001 got -100000000000000001 for to int
+
+Testing with 999999999999999998
+OK - expected 999999999999999998 got 999999999999999998 for from int
+OK - expected 999999999999999998 got 999999999999999998 for to int
+
+Testing with -999999999999999998
+OK - expected -999999999999999998 got -999999999999999998 for from int
+OK - expected -999999999999999998 got -999999999999999998 for to int
+
+-----------------------
+- test_moreDecimalToInteger()
+
+Testing decimalToInteger()
+OK - signal - decNumber: nan, Result: 0
+OK - signal - decNumber: inf, Result: 0
+OK - signal - decNumber: -inf, Result: 0
+OK - decNumber: 0.0, Result: 0
+OK - decNumber: -0.0, Result: 0
+OK - signal: decNumber: 1.23456789, Result: 0
+OK - decNumber: 1234567890123456789 -> 1234567890123456790, Result: 1234567890123456790 (i.e. rounded to 18 digits)
+
+-----------------------
+- test_decimalFromDouble()
+
+Testing decimalFromDouble()
+OK - Input: nan, decNumber: nan
+OK - Input: inf, decNumber: inf
+OK - Input: -inf, decNumber: -inf
+OK - Input: 0, decNumber: 0
+OK - Input: -0, decNumber: -0
+OK - Input: 1.23456789, decNumber: 1.23456789
+OK - Input: -1.23456789, decNumber: -1.23456789
+
+-----------------------
+- test_decimalFromString()
+
+Testing decimalToDouble()
+OK - decNumber: nan, Result: nan
+OK - decNumber: inf, Result: inf
+OK - decNumber: -inf, Result: -inf
+OK - decNumber: 0.0, Result: 0.000000
+OK - decNumber: -0.0, Result: -0.000000
+OK - decNumber: 1.23456789, Result: 1.234568
+
+-----------------------
+- test_decimalToString() and decimalFromString()
+
+Testing decimalToString() and decimalFromString()
+OK - decNumber: nan, Result: nan
+OK - decNumber: inf, Result: inf
+OK - decNumber: -inf, Result: -inf
+OK - decNumber: 0.0, Result: 0
+OK - decNumber: -0.0, Result: -0
+OK - decNumber: 123456789, Result: 123456789
+OK - decNumber: 1.23456789, Result: 1.23456789
+OK - decNumber: 123e3 -> 123000, Result: 123000
+OK - decNumber: 123e-3 -> 0.123, Result: 0.123
+OK - decNumber: 123456789000000000000000000000 -> 1.23456789e+29, Result: 1.23456789e+29
+FAIL decimal text tie: 1.23445 standard=0 expected=1.2344 actual=1.2345
+FAIL decimal text tie: -1.23445 standard=0 expected=-1.2344 actual=-1.2345
+FAIL decimal text tie: 1.234450000000 standard=0 expected=1.2344 actual=1.2345
+FAIL decimal text tie: 00001.234450000 standard=0 expected=1.2344 actual=1.2345
+FAIL decimal text tie: 123445e-5 standard=0 expected=1.2344 actual=1.2345
+
+-----------------------
+- test_add()
+
+Testing Add
+OK - 1 + 1 = 2
+OK - 1.23456789 + 1.23456789 = 2.46913578
+OK - 123456789012345678 + 987654321098765432 = 1.11111111011111111e+18
+OK - 1234567890123456789 + 9876543210987654321 = 1.11111111011111111e+19 (rounded to 18 digits)
+OK SIGNAL - 7.93154e+4931 + 7.93154e+4931 -> inf
+OK - inf + 1 = inf
+OK - NaN -> Signal
+OK - 1.23456789 + 1.23456789 = 2.4692 (using 5 digits maths)
+
+-----------------------
+- test_subtract()
+
+Testing subtract
+OK - 1 - 1 = 0
+OK - 9.87654321 - 1.23456789 = 8.64197532
+OK - 987654321098765432 - 123456789012345678 = 864197532086419754
+OK - 9876543210987654321 - 1234567890123456789 = 8.64197532086419753e+18 (rounded to 18 digits)
+OK SIGNAL - 7.93154e+4931 - -7.93154e+4931 -> inf
+OK - inf - 1 = inf
+OK - NaN -> Signal
+OK - 9.87654321 - 1.23456789 = 8.6419 (using 5 digits maths)
+
+-----------------------
+- test_multiply()
+
+Testing multiply
+OK - 2 * 2 = 4
+OK - 1.23456789 * 1.23456789 = 1.5241578750190521
+OK - 123456789 * 987654321 = 121932631112635269
+ (18 digits)OK - 1234567890123456789 * 9876543210987654321 = 1.21932631137021795e+37 (rounded to 18 digits)
+OK SIGNAL - 7.93154e+4931 * 7.93154e+4931 -> inf
+OK - inf * 1 = inf
+OK - NaN -> Signal
+OK - 1.23456789 * 1.23456789 = 1.5242 (using 5 digits maths)
+
+-----------------------
+- test_divide()
+
+Testing divide
+OK - 4 / 2 = 2
+OK - 9.87654321 / 1.23456789 = 8.00000007290000066
+OK - 987654321098765432 / 12345678901234567 = 36.2685
+OK - 9876543210987654321 / 1234567890123456789 = 8.00000007290000066 (rounded to 18 digits)
+OK SIGNAL - 7.93154e+4931 / 1.2344e-100 -> inf
+OK - inf / 1 = inf
+OK - NaN -> Signal
+OK - 9.87654321 / 1.23456789 = 7.9998 (using 5 digits maths)
+
+-----------------------
+- test_decimalCompare()
+
+Testing decimalCompare()
+OK - 1 == 1
+OK - 1 < 2
+OK - 2 > 1
+OK - NaN -> Signal
+OK - inf > 1
+OK - 1.11111 == 1.11112 (5 digits)
+
+-----------------------
+- test_decimalCompareString()
+
+Testing decimalCompareString()
+OK - 1 == 1
+OK - 1 < 2
+OK - 2 > 1
+OK - NaN -> Signal
+OK - inf > 1
+OK - 1.11111 == 1.11112 (5 digits)
+
+-----------------------
+- test_decimalNeg()
+
+Testing decimalNeg()
+OK - 1 -> -1
+OK - -1 -> 1
+OK - 0 -> 0
+OK - 1 -> -1 (inplace)
+OK - NaN -> Signal
+OK - inf -> -inf
+OK - -inf -> inf
+OK - 1.23456789 -> -1.23456789
+
+-----------------------
+- test_decimalPow()
+
+Testing decimalPow()
+OK - 2^3 = 8
+OK - 2^0 = 1
+OK - 2^1 = 2
+OK - 2^-1 = 0.5
+OK - NaN -> Signal
+OK - inf^1 = inf
+OK - -inf^1 = -inf
+OK - 2.5^3 = 15.625
+OK - 2.5^3.5 = 24.705 (5 digits)
+
+-----------------------
+- test_decimalExtract()
+
+Testing decimalExtract()
+OK - 0 -> 0
+OK - nan -> nan
+OK - inf -> inf
+OK - -inf -> -inf
+OK - 123456789012345678 -> 1.23456789012345678e17
+OK - -123456789012345678 -> -1.23456789012345678e17
+OK - 1.23456789 -> 1.23456789
+OK - -1.23456789 -> -1.23456789
+OK - 1.23456789e3 -> 1.23456789e3
+OK - -1.23456789e3 -> -1.23456789e3
+OK - 1.23456789e-3 -> 1.23456789e-3
+OK - -1.23456789e-3 -> -1.23456789e-3
+OK - 0000123456789 -> 1.23456789e8
+OK - 123456789000000000000000000000 -> 1.23456789e29
+
+-----------------------
+- test_isZero()
+
+Testing isZero()
+OK - decNumber: 0 -> isZero: 1
+OK - decNumber: -0 -> isZero: 1
+OK - decNumber: 1 -> isZero: 0
+OK - decNumber: -1 -> isZero: 0
+OK - decNumber: 1e-10 -> isZero: 0
+
+-----------------------
+- test_decimalTruncate()
+
+Testing decimalTruncate()
+OK - 1.23456789 -> 1
+OK - -1.23456789 -> -1
+OK - 67890123456789.987654321 -> 67890123456789
+OK - 67890123456789.987654321e2 -> 6789012345678998
+
+-----------------------
+- test_decimalRound()
+
+Testing decimalRound()
+OK - 1.23456789 -> 1
+OK - -1.23456789 -> -1
+OK - 67890123456789.987654321 -> 67890123456790
+OK - 90123456789.987654321e2 -> 9012345678999
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+comprehensive    =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.05 sec
+
+The following tests FAILED:
+	2124 - db_decimal_tests (Failed)
+Errors while running CTest

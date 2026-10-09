@@ -1,0 +1,94 @@
+{
+  "qualified_code_commit": "1ac5995c6f983662e54108b0baa6958bb84cd319",
+  "candidate_inputs": {
+    "count": 9765,
+    "manifest_sha256": "55c3ee29c9ad2d9a67d62925a33b46e0c672598e28f7aa0c5110a4026d8d2614",
+    "manifest_path": "output/overnight-20261009/final/qualification-inputs.json",
+    "linux_guest_matches": true,
+    "unrelated_drafts": "Retained HEAD baseline for four unrelated tracked drafts and their book guide alias; working drafts preserved."
+  },
+  "normal_debug": {
+    "unique_tests": 3320,
+    "passed": true,
+    "seconds": 3310.22,
+    "log": "output/overnight-20261009/final/full-debug.log",
+    "log_sha256": "cd96e68f021d719486e5ede0b01bc764ae5d4b7711212b7f275db814faae5bcd",
+    "additional_changed_DB_inputs": "32 affected checks pass in macOS Debug; Linux normal 4 decimal tests plus 10 direct DB adapters. Unchanged normal cases reuse full-run evidence."
+  },
+  "linux_sanitizer": {
+    "platform": "Ubuntu 24.04 ARM64 local HVF guest",
+    "compiler": "Clang 18",
+    "build_type": "Debug",
+    "CXX_debug_flags": "-g -O1",
+    "flags": "-fsanitize=address -fno-omit-frame-pointer",
+    "build_and_test_leaks": true,
+    "tests": 3116,
+    "passed": true,
+    "seconds": 5010.29,
+    "runner": "tools/asan-run.sh --build-dir build-asan-clang --phase full --build-jobs 4 --test-jobs 8 --exclude-label ^performance-measurement$",
+    "run_directory": "build-asan-clang/asan-logs/20261009-101427-full",
+    "logs": {
+      "build.log": {
+        "path": "output/overnight-20261009/final/linux-full/build.log",
+        "sha256": "329b493d486edaade57140b545d505fa4d5b8487a9487deaba096c070ff4b0ff"
+      },
+      "qa-prep.log": {
+        "path": "output/overnight-20261009/final/linux-full/qa-prep.log",
+        "sha256": "4fb8ee9ef5c52cb9fb009d081892aa2ddcb36ef13b139caad03667e6140f6c8c"
+      },
+      "ctest.log": {
+        "path": "output/overnight-20261009/final/linux-full/ctest.log",
+        "sha256": "fc2b92d700659dd8b602daacfa4b53c170d268e7973a166bb1340c40ff7d557b"
+      }
+    }
+  },
+  "windows_cause_controls": {
+    "passed": 24,
+    "native_platform_proof": "pending hosted replay after qualified publication"
+  },
+  "books": [
+    {
+      "file": "CREXX-ovn-20261009-language-reference.pdf",
+      "pages": 436,
+      "bytes": 1034701,
+      "sha256": "f3dd4b177e9a0d41e440e6ba0d06eaaf8f26585e50384ab3b4f0d57e5ec583f3",
+      "rendered_pages": [
+        1,
+        34
+      ]
+    },
+    {
+      "file": "CREXX-ovn-20261009-library-reference.pdf",
+      "pages": 544,
+      "bytes": 1384982,
+      "sha256": "62c2dc92d94cf489be8750f77fc74da976908f465474804d7f89f979a899a853",
+      "rendered_pages": [
+        1
+      ],
+      "proof": "affected-book rebuild after cover wrap; final cover visually inspected"
+    },
+    {
+      "file": "CREXX-ovn-20261009-programming-guide.pdf",
+      "pages": 264,
+      "bytes": 698153,
+      "sha256": "88ed7bdd6397461d70e895a2e3545c17c43011f64965d9cf17939f35c90a3cb6",
+      "rendered_pages": [
+        1
+      ]
+    },
+    {
+      "file": "CREXX-ovn-20261009-vm-specification.pdf",
+      "pages": 361,
+      "bytes": 1169254,
+      "sha256": "42b640c6b0f1fe440848e4f519e90a3108dad300c020c013d954f36553118e8e",
+      "rendered_pages": [
+        1,
+        278
+      ],
+      "proof": "targeted VM-book rebuild after decimal documentation update"
+    }
+  ],
+  "CI_selector_tests": 14,
+  "publication": "pending",
+  "scope": "Develop publication only; no master/tag/release or Unicode/host/INTERPRET design change."
+}

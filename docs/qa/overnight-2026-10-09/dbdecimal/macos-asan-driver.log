@@ -1,0 +1,22 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20261009-111242-build
+==> build
+    log: cmake-build-debugasan/asan-logs/20261009-111242-build/build.log
+==> build passed
+      |                                                       ^
+13 warnings generated.
+Linking C executable db_decimal_tests
+Built target db_decimal_tests
+ASan run complete: cmake-build-debugasan/asan-logs/20261009-111242-build
+ASan run directory: cmake-build-debugasan/asan-logs/20261009-111250-ctest
+==> ctest
+    log: cmake-build-debugasan/asan-logs/20261009-111250-ctest/ctest.log
+==> ctest passed
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+comprehensive    =   0.72 sec*proc (3 tests)
+smoke            =   0.06 sec*proc (1 test)
+
+Total Test time (real) =   0.84 sec
+ASan run complete: cmake-build-debugasan/asan-logs/20261009-111250-ctest

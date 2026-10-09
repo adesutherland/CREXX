@@ -1,0 +1,94 @@
+Internal ctest changing into directory: /home/qa/crexx/build-debug
+Test project /home/qa/crexx/build-debug
+    Start 2053: rxasdecimaltests-db
+1/1 Test #2053: rxasdecimaltests-db ..............***Failed    0.00 sec
+Decimal Plugin Sanity Tests for Assembler Instructions
+
+Test 0 (DECPLNM_REG_REG_REG) Name=dbdecimal Description=Decimal Plugin based on long double Version=0.1
+Test 1 (load)
+Test 2 (stod and dtos)
+Test 2.1 (stod - conversion syntax)
+Test 3 (itod)
+Test 4 (ftod)
+Test 5 (dtoi)
+Test 5.1 (dtoi - conversion error)
+Test 6 (dtof)
+Test 7 (dadd - reg,reg,reg)
+Test 8 (dadd - reg,reg,decimal)
+Test 9 (dsub - reg,reg,reg)
+Test 10 (dsub - reg,reg,decimal)
+Test 11 (dsub - reg,decimal,reg)
+Test 12 (dmult - reg,reg,reg)
+Test 13 (dmult - reg,reg,decimal)
+Test 14 (ddiv - reg,reg,reg)
+Test 15 (ddiv - reg,reg,decimal)
+Test 16 (ddiv - reg,decimal,reg)
+Test 16.1 (ddiv - reg,decimal,reg - division by zero)
+Test 17 (DEQ_REG_REG_REG)
+Test 18 (DNE_REG_REG_REG)
+Test 19 (DGT_REG_REG_REG)
+Test 20 (DGTE_REG_REG_REG) - test equals
+Test 21 (DGTE_REG_REG_REG) - test greater
+Test 22 (DLT_REG_REG_REG)
+Test 23 (DLTE_REG_REG_REG) - test equals
+Test 24 (DLTE_REG_REG_REG) - test less
+Test 25 (DEQ_REG_REG_DECIMAL)
+Test 26 (DLTBR_ID_REG_REG) - test true
+Test 27 (DLTBR_ID_REG_REG) - test false
+Test 28 (DGTBR_ID_REG_REG) - test true
+Test 29 (DGTBR_ID_REG_REG) - test false
+Test 30 (DEQBR_ID_REG_REG) - test true
+Test 31 (DEQBR_ID_REG_REG) - test false
+Test 32 (DNE_REG_REG_DECIMAL) - test true
+Test 33 (DNE_REG_REG_DECIMAL) - test false
+Test 34 (DGT_REG_REG_DECIMAL) - test true
+Test 35 (DGT_REG_REG_DECIMAL) - test false
+Test 36 (DGT_REG_DECIMAL_REG) - test true
+Test 37 (DGT_REG_DECIMAL_REG) - test false
+Test 38 (DGTE_REG_REG_DECIMAL) - test true
+Test 39 (DGTE_REG_REG_DECIMAL) - test false
+Test 40 (DGTE_REG_DECIMAL_REG) - test true
+Test 41 (DGTE_REG_DECIMAL_REG) - test false
+Test 42 (DLT_REG_REG_DECIMAL) - test true
+Test 43 (DLT_REG_REG_DECIMAL) - test false
+Test 44 (DLT_REG_DECIMAL_REG) - test true
+Test 45 (DLT_REG_DECIMAL_REG) - test false
+Test 46 (DLTE_REG_REG_DECIMAL) - test true
+Test 47 (DLTE_REG_REG_DECIMAL) - test false
+Test 48 (DLTE_REG_DECIMAL_REG) - test true
+Test 49 (DLTE_REG_DECIMAL_REG) - test false
+Test 50 (DCOPY_REG_REG)
+Test 51 (DSEX_REG)
+Test 52 (DPOW_REG_REG_REG)
+Test 53 (DPOW_REG_REG_DECIMAL)
+Test 54 (DPOW_REG_DECIMAL_REG)
+Test 55 (DEXTR_REG_REG_REG)
+Test 56 (SETDGTS_REG & GETDGTS_REG)
+Test 57 (SETDGTS_INT & GETDGTS_REG)
+Test 58 (decimal literal source/result alias)
+Test 59 (immediate numeric-context setters/getters)
+Test 60 (register numeric-context setters/getters)
+Test 61 (NUMSCI state and decimal effect)
+Test 62 (NUMENG state and decimal effect)
+Test 63 (combined/expanded numeric-context equivalence)
+Test 64 (NUMSCI invalid digits preserve context)
+Test 65 (NUMENG invalid case preserve context)
+Test 66 (NUMSCI invalid standard preserve context)
+Test 67 (FUZZ decimal comparison semantics)
+Test 68 (FORM/CASE decimal formatting semantics)
+Test 69 (STANDARD decimal rounding semantics) - failed 1.2345
+
+Tests Run: 73
+Error Count: 1
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+comprehensive    =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.06 sec
+
+The following tests FAILED:
+	2053 - rxasdecimaltests-db (Failed)
+Errors while running CTest

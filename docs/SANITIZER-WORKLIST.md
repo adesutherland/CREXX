@@ -81,7 +81,7 @@ artifact.
 
 ### SAN-010 — frame-control AST unit retains compiler-owned allocations
 
-Status: open. Owner: Codex, overnight QA repair/publication task requested by
+Status: closed 2026-10-09. Owner: Codex, overnight QA repair/publication task requested by
 Adrian on 2026-10-09. Affected candidate: develop `0aafdb155b07d2a345193a870cc47922e1e837c0`;
 the local Level C closeout `b1b8bed2d` still needs the same cleanup repair.
 
@@ -99,12 +99,23 @@ the local Level C closeout `b1b8bed2d` still needs the same cleanup repair.
 - Permanent reproducer/closure test: existing CTest `frame_control_ast`. Repair
   must release output/AST/symbol/scope/flow ownership through canonical Context
   cleanup, preserving all frame-node emission assertions and source bounds.
-- Next action: reproduce/inspect canonical cleanup, repair the fixture, pass
-  matching normal Debug and maintained focused sanitizer checks, then complete
-  the original full supported Linux ASan/LSan gate on final source inputs.
-  Retain full normal product QA and relevant automatic publication checks.
-- Closure remains open until those gates pass. No suppression, leak-off Linux
-  wrapper, test exclusion or ownerless deferral is authorized.
+- Repair `2e8c820c6` uses `cntx_f`, an owned source buffer and `fre_cntx`.
+  All original frame emission and source assertions remain. Normal Debug and
+  Apple ASan focused frame checks pass; Apple LSan is unsupported.
+- Matching supported Linux focused ASan/LSan passes with leaks on in
+  `build-asan-clang/asan-logs/20261009-090042-ctest`. Final full supported
+  Ubuntu ARM64/Clang 18 ASan/LSan passes **3,116/3,116** (5,010.29 seconds)
+  at `build-asan-clang/asan-logs/20261009-101427-full`, with build/test leaks on
+  and only the maintained performance-measurement exclusion. Build/prep/test
+  logs contain no sanitizer report. The first attempt stopped on an ordinary
+  DB-decimal rounding defect, repaired in `1ac5995c6`; the complete gate was
+  rerun after that production input change without using partial passes as an
+  exclusion list. No suppression or unsupported leak-off claim was used.
+- Full normal Debug passes 3,320/3,320 with affected DB consumers requalified
+  after their repair. [Qualification receipt](qa/overnight-2026-10-09/qualification.json)
+  and [full supported summary](qa/overnight-2026-10-09/linux-full/summary.log)
+  identify final input fingerprints, commands, platform and retained full logs.
+  This closes SAN-010, not wider Release 1 platform or language compatibility.
 
 ## Native inference integration finding
 

@@ -1,0 +1,7 @@
+{
+  "rxas": "cmake-build-debug/compiler/tests/levelc_call_delayed_opt.rxas",
+  "utf8": "passes",
+  "cp1252": "expected two CALL ON policy sites, found 0",
+  "native_payload_hex": "410042c3a90d0a",
+  "existing_CR_retained_hex": "410d0d0a"
+}

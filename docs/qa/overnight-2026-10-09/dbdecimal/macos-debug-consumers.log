@@ -1,0 +1,84 @@
+[0/2] Re-checking globbed directories...
+ninja: no work to do.
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start  402: nr09_numeric_context_contract
+ 1/32 Test  #402: nr09_numeric_context_contract ....................   Passed    1.75 sec
+      Start 2120: db_decimal_archive_link
+      Start 2057: rxasdecimaltests-db
+      Start 2128: db_decimal_tests
+      Start 2055: rxasdecimaltests
+      Start 2056: rxasdecimaltests-mc
+ 2/32 Test #2128: db_decimal_tests .................................   Passed    0.00 sec
+ 3/32 Test #2055: rxasdecimaltests .................................   Passed    0.00 sec
+ 4/32 Test #2057: rxasdecimaltests-db ..............................   Passed    0.00 sec
+ 5/32 Test #2056: rxasdecimaltests-mc ..............................   Passed    0.00 sec
+ 6/32 Test #2120: db_decimal_archive_link ..........................   Passed    0.01 sec
+      Start 3132: decimal_gate1_rexxcps_family_rxbvm_db_opt
+ 7/32 Test #3132: decimal_gate1_rexxcps_family_rxbvm_db_opt ........   Passed    0.45 sec
+      Start 3126: decimal_gate1_rexxcps_family_rxvm_db_opt
+ 8/32 Test #3126: decimal_gate1_rexxcps_family_rxvm_db_opt .........   Passed    0.44 sec
+      Start 3125: decimal_gate1_rexxcps_family_rxvm_db_noopt
+ 9/32 Test #3125: decimal_gate1_rexxcps_family_rxvm_db_noopt .......   Passed    0.44 sec
+      Start 3131: decimal_gate1_rexxcps_family_rxbvm_db_noopt
+10/32 Test #3131: decimal_gate1_rexxcps_family_rxbvm_db_noopt ......   Passed    0.45 sec
+      Start 3095: decimal_gate1_common18_rxbvm_db_opt_rxas_noopt
+11/32 Test #3095: decimal_gate1_common18_rxbvm_db_opt_rxas_noopt ...   Passed    0.06 sec
+      Start 3118: decimal_gate1_classic9_rxbvm_db_opt_rxas_noopt
+12/32 Test #3118: decimal_gate1_classic9_rxbvm_db_opt_rxas_noopt ...   Passed    0.06 sec
+      Start 3109: decimal_gate1_classic9_rxvm_db_opt_rxas_noopt
+13/32 Test #3109: decimal_gate1_classic9_rxvm_db_opt_rxas_noopt ....   Passed    0.06 sec
+      Start 3117: decimal_gate1_classic9_rxbvm_db_opt
+14/32 Test #3117: decimal_gate1_classic9_rxbvm_db_opt ..............   Passed    0.06 sec
+      Start 3084: decimal_gate1_common18_rxvm_db_noopt
+15/32 Test #3084: decimal_gate1_common18_rxvm_db_noopt .............   Passed    0.06 sec
+      Start 3094: decimal_gate1_common18_rxbvm_db_opt
+16/32 Test #3094: decimal_gate1_common18_rxbvm_db_opt ..............   Passed    0.06 sec
+      Start 3093: decimal_gate1_common18_rxbvm_db_noopt
+17/32 Test #3093: decimal_gate1_common18_rxbvm_db_noopt ............   Passed    0.06 sec
+      Start 3108: decimal_gate1_classic9_rxvm_db_opt
+18/32 Test #3108: decimal_gate1_classic9_rxvm_db_opt ...............   Passed    0.06 sec
+      Start 3107: decimal_gate1_classic9_rxvm_db_noopt
+19/32 Test #3107: decimal_gate1_classic9_rxvm_db_noopt .............   Passed    0.06 sec
+      Start 3086: decimal_gate1_common18_rxvm_db_opt_rxas_noopt
+20/32 Test #3086: decimal_gate1_common18_rxvm_db_opt_rxas_noopt ....   Passed    0.06 sec
+      Start 3085: decimal_gate1_common18_rxvm_db_opt
+21/32 Test #3085: decimal_gate1_common18_rxvm_db_opt ...............   Passed    0.06 sec
+      Start 3116: decimal_gate1_classic9_rxbvm_db_noopt
+22/32 Test #3116: decimal_gate1_classic9_rxbvm_db_noopt ............   Passed    0.06 sec
+      Start 3063: decimal_gate1_adapter_db_common18_arithmetic
+23/32 Test #3063: decimal_gate1_adapter_db_common18_arithmetic .....   Passed    0.00 sec
+      Start 3064: decimal_gate1_adapter_db_common18_conversion
+24/32 Test #3064: decimal_gate1_adapter_db_common18_conversion .....   Passed    0.00 sec
+      Start 3065: decimal_gate1_adapter_db_common18_compare
+25/32 Test #3065: decimal_gate1_adapter_db_common18_compare ........   Passed    0.00 sec
+      Start 3071: decimal_gate1_adapter_db_classic9_copy-clear
+26/32 Test #3071: decimal_gate1_adapter_db_classic9_copy-clear .....   Passed    0.00 sec
+      Start 3072: decimal_gate1_adapter_db_classic9_sync
+27/32 Test #3072: decimal_gate1_adapter_db_classic9_sync ...........   Passed    0.00 sec
+      Start 3066: decimal_gate1_adapter_db_common18_copy-clear
+28/32 Test #3066: decimal_gate1_adapter_db_common18_copy-clear .....   Passed    0.00 sec
+      Start 3067: decimal_gate1_adapter_db_common18_sync
+29/32 Test #3067: decimal_gate1_adapter_db_common18_sync ...........   Passed    0.00 sec
+      Start 3068: decimal_gate1_adapter_db_classic9_arithmetic
+30/32 Test #3068: decimal_gate1_adapter_db_classic9_arithmetic .....   Passed    0.00 sec
+      Start 3070: decimal_gate1_adapter_db_classic9_compare
+31/32 Test #3070: decimal_gate1_adapter_db_classic9_compare ........   Passed    0.00 sec
+      Start 3069: decimal_gate1_adapter_db_classic9_conversion
+32/32 Test #3069: decimal_gate1_adapter_db_classic9_conversion .....   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 32
+
+Label Time Summary:
+adapter                    =   0.02 sec*proc (10 tests)
+compiler                   =   1.75 sec*proc (1 test)
+comprehensive              =   0.01 sec*proc (3 tests)
+decimal                    =   2.54 sec*proc (26 tests)
+decimal01                  =   2.54 sec*proc (26 tests)
+gate1                      =   2.54 sec*proc (26 tests)
+numeric                    =   1.75 sec*proc (1 test)
+performance                =   4.29 sec*proc (27 tests)
+performance-measurement    =   4.29 sec*proc (27 tests)
+rexxcps-control            =   1.78 sec*proc (4 tests)
+smoke                      =   0.01 sec*proc (2 tests)
+
+Total Test time (real) =   4.39 sec

@@ -1,0 +1,104 @@
+{
+  "environment": "macOS normal product with controlled Windows CRT captured stdout and default cp1252 Path text reads",
+  "driver": "output/overnight-20261009/final/windows-fixture-control/driver.py",
+  "result_count": 24,
+  "results": [
+    {
+      "test": "levelc_exit_whole_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_exit_external_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_exit_handler_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_exit_whole_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_exit_external_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_exit_handler_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_external_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_external_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_missing_external_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_missing_external_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_delayed_handler_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_condition_matrix_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_clause_boundaries_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_transfer_boundaries_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_policy_lifecycle_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_buffered_halt_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_missing_delayed_handler_opt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_delayed_handler_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_condition_matrix_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_clause_boundaries_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_transfer_boundaries_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_policy_lifecycle_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_buffered_halt_noopt",
+      "exit": 0
+    },
+    {
+      "test": "levelc_call_missing_delayed_handler_noopt",
+      "exit": 0
+    }
+  ],
+  "native_platform_limitation": "This cause control is not native Windows qualification."
+}

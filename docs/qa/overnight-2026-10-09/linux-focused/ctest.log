@@ -1,0 +1,18 @@
+Command: ctest --test-dir build-asan-clang --output-on-failure --stop-on-failure -R \^frame_control_ast\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=1
+
+Internal ctest changing into directory: /home/qa/crexx/build-asan-clang
+Test project /home/qa/crexx/build-asan-clang
+    Start 27: frame_control_ast
+1/1 Test #27: frame_control_ast ................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+compiler        =   0.01 sec*proc (1 test)
+control_flow    =   0.01 sec*proc (1 test)
+essential       =   0.01 sec*proc (1 test)
+levelc          =   0.01 sec*proc (1 test)
+unit            =   0.01 sec*proc (1 test)
+
+Total Test time (real) =   0.10 sec

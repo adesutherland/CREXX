@@ -1630,6 +1630,176 @@ non-Latin Level C behavior, host APIs/streams and INTERPRET retain the agreed
 later design boundaries. This closes the requested phase, not full Level C,
 Release 1, resource-limit or cross-platform qualification.
 
+### Overnight QA regression repair and publication (2026-10-09)
+
+**Vision and intended outcomes.** Commit the already qualified Level C work
+locally, diagnose every failed overnight Deep/Sanitizer job, repair the
+reproduced causes in this develop checkout, retain permanent regressions and
+complete the requested full QA before publishing compatible commits together
+to origin/develop. Preserve the unrelated architecture/compiler-split drafts
+and the agreed Unicode/host/INTERPRET design deferrals. Full QA is a publication
+gate explicitly requested for this repair batch; first-party sanitizer closure
+also requires its supported full platform gate. Do not repeat unchanged valid
+evidence or unrelated overnight/build-graph/stress matrices merely for green
+counts. New language or architecture decisions retain Adrian's approval gate.
+
+**Numbered acceptance criteria.**
+
+- [x] **LC-OVN-AC-01 — committed baseline and inventory:** local closeout
+  commit is recorded; failing job/actual checkout/log identities and reproduced
+  causes cover all overnight regressions, with unrun/skipped checks distinct.
+- [x] **LC-OVN-AC-02 — SAN-010 closure:** frame-control ownership is repaired
+  without reducing assertions; permanent original failure and matching normal
+  Debug/focused maintained sanitizer proof plus full supported Linux ASan/LSan
+  closure pass on final inputs. The canonical SAN register records evidence.
+- [ ] **LC-OVN-AC-03 — Windows test/runtime paths:** exact-byte, CALL/EXIT,
+  delayed-condition and missing-factory failures are reproduced/diagnosed and
+  repaired with platform/encoding evidence. Preserve payload bytes, current
+  public behavior, source identities and the deferred host/Unicode boundary.
+- [x] **LC-OVN-AC-04 — RXAS invalid-origin contract:** diagnose and repair the
+  all-platform invalid-origin rejection regression with a focused producer/
+  negative-case check; no stale generated image or NDEBUG-only assertion proof.
+- [x] **LC-OVN-AC-05 — required books:** diagnose the required Linux four-book
+  failure and pass its relevant source/build/validation gate, preserving the
+  existing book pipeline rather than changing unrelated documentation scope.
+- [ ] **LC-OVN-AC-06 — full QA and publication:** final core build, full normal
+  correctness QA and all issue-specific/platform/sanitizer required gates pass;
+  input hashes/logs identify retained versus fresh proof. Commit fixes locally,
+  publish the qualified develop revision, and verify its normal automatic
+  Build/optimizer-parity/CodeQL workflows. No release/tag/master promotion.
+
+**Numbered implementation steps.**
+
+1. **LC-OVN-STEP-01 (AC-01; complete):** fetch/reconcile develop, commit only
+   the qualified Level C files (`b1b8bed2d`), fetch overnight metadata/artifacts
+   and freeze minimal reproducers. Scheduled workflow event SHA names master;
+   actual candidate is resolved develop and must be verified from checkout logs.
+2. **LC-OVN-STEP-02 (AC-02; complete):** register SAN-010 immediately,
+   inspect canonical Context ownership, repair and run focused matched gates;
+   provision/reuse supported Linux QA without publishing unqualified develop.
+3. **LC-OVN-STEP-03 (AC-03/04; after 01):** repair coherent Windows/newline/
+   assembly-encoding/import and RXAS-negative fixture families with focused
+   normal controls and their platform proof; keep causes separate in commits.
+   Honor the existing manual Deep platform input on develop so the repaired
+   Windows lanes can be replayed without repeating passed stress/product graph
+   and book jobs. Scheduled/default-all gates remain complete; focused runs cannot write
+   the scheduled full-assurance marker.
+4. **LC-OVN-STEP-04 (AC-05; complete):** diagnose books artifact and run the
+   smallest decisive book/source/build validator after repair.
+5. **LC-OVN-STEP-05 (AC-06; after 02–04):** freeze final source/test/build
+   inputs, complete one grouped full QA checkpoint and sanitizer closure,
+   reconcile receipts, publish commits together, verify automatic workflows.
+   The full local Debug/Linux sanitizer/book gates precede the push. Native
+   Windows replay needs the committed source in GitHub; launch the two failed
+   Windows configurations immediately after that qualified publication and
+   retain AC-03/06 open until their actual hosted completion. This delivery
+   dependency does not replace native proof with the simulated cause controls.
+
+**LC-OVN-DBDEC-01 - Linux ARM binary-decimal tie repair (active).** The full
+supported Linux run stopped after 1,883 executed checks: 1,882 pass and
+`rxasdecimaltests-db` fails Test 69, COMMON five-digit rounding of decimal
+`1.23445` returning `1.2345` rather than the existing half-even `1.2344`.
+The same focused test fails in normal Linux Debug. There is no ASan/LSan
+report; this is an ordinary backend correctness failure, not a new SAN item.
+SAN-010 remains open while the full supported gate is incomplete.
+
+Vision: preserve COMMON half-even and CLASSIC half-away rounding, repairing
+binary representation/scaling error on the long-double surrogate without
+changing numeric syntax, backend ABI, MC decimal behavior or accepted scope.
+Acceptance: (DBDEC-AC-01) a minimal tie/host-format probe establishes cause;
+(DBDEC-AC-02) permanent exact-tie and representably distinct near-tie controls
+pass for both standards, signs and host formats in normal/maintained sanitizer;
+(DBDEC-AC-03) affected decimal panels pass on macOS and Linux and the supported
+full gate completes, reusing unchanged passes and recording any changed inputs.
+Steps: (DBDEC-STEP-01) retain failure/minimal precision probe; (02) implement
+only the demonstrated repair with boundary regressions and docs; (03) focused
+matched qualification, applicable normal regression and full sanitizer closure.
+The minimal probe establishes `LDBL_MANT_DIG=113`, `LDBL_DIG=33` and a scaled
+value exactly one binary128 ULP above the intended half. The repair uses an
+exact-decimal-text hint only; no general epsilon/tolerance changes arithmetic
+or neighboring values. The existing float conversion formats 16 digits, so
+binary controls use values distinct through that existing conversion boundary.
+Four decimal checks pass in Linux Debug and maintained ASan/LSan and macOS
+Debug. The permanent unit failed the original exact text ties before repair.
+The affected surface also includes NR-09 numeric-context and the maintained
+decimal adapter/integrity cohorts. Requalify those DB-selected consumers;
+unchanged MC/default consumers retain their valid evidence. Reuse the unchanged full Debug cases and requalify all DB-selected consumers.
+Restart the complete supported Linux sanitizer gate after the production input
+change; the first 1,882 passes remain historical partial evidence, not a full
+final-input pass or exclusion list. Record the composition and fingerprints.
+A new rounding policy or architecture direction would need Adrian's decision;
+this repair must implement the already accepted policies.
+
+**Full local gates complete (2026-10-09).** Final Linux ASan/LSan passes
+3,116/3,116 (5,010.29 seconds), build/test leaks on, no sanitizer report, after
+restarting the full gate for the DB production change. SAN-010 is closed in
+its canonical register. DBDEC-AC-01/02/03 and STEP-01/02/03 are verified on
+normal/macOS/maintained supported Linux evidence; host-format native Windows
+replay remains the separate AC-03 delivery gate. The qualified 1ac5995c6 code
+and 9,765-file manifest are unchanged. Normal full 3,320 cases plus affected
+DB requalification, four final PDFs/render checks, Windows cause controls and
+matrix checks are retained in `docs/qa/overnight-2026-10-09/qualification.json`.
+STEP-05 is now publication/automatic-check work. AC-03/06 remain open until
+native Windows and normal publication workflows actually complete.
+
+**Final-input checkpoint after DBDEC repair (2026-10-09).** Current local
+HEAD is `1ac5995c6`, with six commits ahead of unchanged origin/develop. The
+9,765-file candidate manifest now has SHA-256
+`55c3ee29c9ad2d9a67d62925a33b46e0c672598e28f7aa0c5110a4026d8d2614`.
+The only additional changes after the normal full run are DB backend source,
+its permanent unit controls and its VM-book documentation. The affected
+normal panel passes 32/32 on macOS; Linux Debug passes the four decimal tests
+and ten direct DB adapters; matching Linux/Apple sanitizer panels pass 4/4.
+Unchanged normal cases retain the successful 3,320-test full evidence.
+The affected VM book rebuild and page-278 render pass. DBDEC-AC-01/02 and
+STEP-01/02 are verified; DBDEC-AC-03 and SAN-010 full closure remain open.
+Full Linux ASan/LSan is rerunning without exclusions beyond the maintained
+performance-measurement label at
+`build-asan-clang/asan-logs/20261009-101427-full`. The first run stopped on an
+ordinary rounding failure after 1,883 executions, not a sanitizer report.
+Native Windows post-publication proof and the automatic checks remain open.
+
+**Repair checkpoint, 2026-10-09 (qualification active).**
+Full normal Debug passes 3,320/3,320 (3,310.22 seconds), with the core `all`
+and `qa-prep` builds successful. The final affected books, 24 controlled
+Windows fixtures and 14 matrix checks pass. Local repair commits are
+`2e8c820c6` (SAN-010), `7de036086` (Windows/prep), `1243c58b8` (books) and
+`7926b07c2` (targeted CI). Full Linux ASan/LSan and native Windows CI remain
+open; nothing has been pushed. The initial repair candidate input manifest has 9,765
+files and SHA-256 `b5b2dad2ffe06894a558a12af656d9e430bde150a85dc00ba75231a1e1f8d76e`.
+Both Linux and the candidate file contents match. Host-only unrelated drafts
+and the book guide alias use retained HEAD baseline content in that manifest;
+they are not included in these commits. Two final input changes are isolated
+to the library cover (targeted real-PDF rebuild) and manual CI book scheduling
+(14 checks and matching full-gate guard inspection); core/test bytes are unchanged.
+ The local baseline is
+`b1b8bed2dabf333850441480b1021e556d096715`. Both scheduled jobs use event SHA
+`77ba820c35e40450311823a3e7f171e37a7982f8`, but their checkout logs explicitly
+resolve `0aafdb155b07d2a345193a870cc47922e1e837c0` on develop. Inventory, original
+LSan log and bounded Deep diagnostic excerpts are retained in
+`docs/qa/overnight-2026-10-09/`. The ownership repair uses `cntx_f`, an owned
+source buffer and `fre_cntx`; matching macOS Debug/ASan frame checks pass.
+The grouped 32-case local fixture panel passes in
+`/tmp/crexx-overnight-focused-local.B3Rtp7`. Windows ACP control reproduces
+zero injection sites with cp1252 and passes with UTF-8; native expected-byte
+controls retain NUL, UTF-8 and existing CR. Native Windows replay remains open.
+Both missing producers are now present in a fresh Linux comprehensive prep
+graph. Four-book repair adds U+6F22 to the existing Unifont fallback map.
+Actual four-book build passes. Visual QA then found the library cover title
+clipped by its long line in the portable font profile; wrap that authored title
+and rebuild only the affected library book, retaining the other three PDFs.
+The ARM Linux document bootstrap retains pinned versions and x64 hashes.
+
+All four books pass the maintained pipeline and non-empty asset check. The
+repaired Han glyph and all covers were visually inspected; the library cover
+wrap passes its targeted rebuild. Hashes, page counts and rendered evidence
+are retained in `docs/qa/overnight-2026-10-09/books/`. Full normal Debug has passed as recorded above; supported Linux ASan/LSan
+remains in progress and is not a full pass claim. The disposable Ubuntu ARM guest's GCC 13
+ASan build suffered excessive fake-stack allocation cost. It was stopped
+through the maintained runner and restarted with Clang 18 (all ASan and LSan
+checks retained; C++ Debug `-g -O1`). No suppression, sanitizer option disable
+or first-party diagnostic was used to justify that toolchain change.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A
