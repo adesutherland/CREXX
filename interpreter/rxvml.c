@@ -563,6 +563,13 @@ static int rxvml_invoke_external_proc(
 
     if (run_status_out) *run_status_out = 0;
     if (!ctx || !proc) return -1;
+    /* External entry creates a bytecode frame. Native provider members have
+     * no bytecode space; ordinary VM CALL dispatch owns their invocation. */
+    if (!proc->binarySpace || !proc->binarySpace->module) {
+        ctx->last_error = "External descriptor entry requires a bytecode procedure";
+        if (response_out) *response_out = NULL;
+        return -1;
+    }
     if (argc > (size_t)INT_MAX) {
         ctx->last_error = "Too many rxvml call arguments";
         return -1;
