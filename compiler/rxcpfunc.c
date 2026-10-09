@@ -3213,6 +3213,13 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
         goto finish;
     }
 
+    /* Match direct compilation's syntax gate before symbol/type validation.
+     * A rejected top-level CONSTANT has no routine binding; attempting to
+     * extract signatures from it used to dereference a missing symbol. */
+    rxcp_prepare_source_ast(context);
+    source_tree_sync_diagnostics(context);
+    if (prnterrs(context)) goto finish;
+
     /* Recursion Guard - Check if already loading */
     for (i = 0; i < parent_context->master_context->loading_files_count; i++) {
         if (strcmp(parent_context->master_context->loading_files[i], file_name) == 0) {
