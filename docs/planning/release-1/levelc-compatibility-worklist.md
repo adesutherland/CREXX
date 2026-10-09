@@ -1730,37 +1730,15 @@ final-input pass or exclusion list. Record the composition and fingerprints.
 A new rounding policy or architecture direction would need Adrian's decision;
 this repair must implement the already accepted policies.
 
-**Overnight repair/publication complete (2026-10-09).** All LC-OVN-AC-01–06
-and STEP-01–05 pass. Qualified code is published at
-`7870d4fb72a427fee9e3751f7347c192fd5f058e`. [Build CREXX 37925525563](https://github.com/adesutherland/CREXX/actions/runs/37925525563)
-and [CodeQL 37925525069](https://github.com/adesutherland/CREXX/actions/runs/37925525069)
-pass, including ordinary optimizer parity, all core/plugin jobs, Linux books
-and successful dev-snapshot publication. [MSVC Deep 37925543147](https://github.com/adesutherland/CREXX/actions/runs/37925543147)
-passes 2,846 correctness and three install/package cases; [MinGW Deep
-37925649937](https://github.com/adesutherland/CREXX/actions/runs/37925649937)
-passes 2,966 correctness and three install/package cases. Each actual native
-job log confirms all 32 originally failed Windows tests passed, including the
-six exact-byte fixtures, CALL/EXIT/injection families and missing producers.
-The focused runs do not replace scheduled full Deep assurance; unchanged
-stress/product comparisons are retained from the original overnight result.
-Hosted metadata and per-test replay receipts are in
-`docs/qa/overnight-2026-10-09/hosted/`; full job logs remain in the retained
-output bundle. SAN-010 closure and DBDEC-01 remain verified on their recorded
-inputs. This closes this repair task, not full Level C or Release 1 compatibility,
-the agreed later Unicode/source-conversion/host/INTERPRET work, master/tag
-promotion or a fresh release/platform sanitizer matrix. The closeout edit is
-receipt-only; no product, test, build or book input changed after qualification.
-
-**Published candidate / hosted proof pending (2026-10-09).** The compatible
-seven-commit batch is published to origin/develop at
-`7870d4fb72a427fee9e3751f7347c192fd5f058e`. Native MSVC Deep `37925543147`
-is active; MinGW Deep `37925649937` is queued by workflow concurrency.
-Normal Build `37925525563` passes product/Linux books/optimizer parity and
-continues Intel notarization; CodeQL `37925525069` is analyzing. Only the
-requested Windows configurations are replayed: no stress/product-comparison
-or duplicate book jobs. AC-03/06 remain open until terminal hosted results.
-No source/test/book input changed after local qualification; SAN closure is
-receipt-only, and unrelated drafts remain outside the publication.
+**Overnight regression repair complete (2026-10-09).** All LC-OVN-AC-01–06
+and STEP-01–05 are verified for the agreed repair scope. SAN-010 closure and
+DBDEC-01 remain verified on their recorded inputs. The final qualification
+record, qualified revision, native Windows regression replays and hosted
+evidence are retained in
+[the QA record](../../qa/overnight-2026-10-09/qualification.json) and its
+adjacent `hosted/` receipts. This closes this repair task, not full Level C or
+Release 1 compatibility, the agreed later Unicode/source-conversion/host/
+INTERPRET work, or a fresh release/platform sanitizer matrix.
 
 **Full local gates complete (2026-10-09).** Final Linux ASan/LSan passes
 3,116/3,116 (5,010.29 seconds), build/test leaks on, no sanitizer report, after

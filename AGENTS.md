@@ -99,8 +99,30 @@ SAN worklist and closure rules below; overnight scheduling does not waive known
 defects or permit unsupported sanitizer-clean/release-ready claims.
 
 Reuse unchanged valid evidence. Promotion, history-only merges and documentation
-edits do not require repeating broad testing. Check the automatic publication
-workflows for the pushed revision without dispatching extra overnight lanes.
+edits do not require repeating broad testing. Automatic publication workflows
+provide their own run records without requiring extra overnight lanes.
+
+Include documentation, qualification receipts and the expected final publication
+status in the first push of the substantive change. Prepare these updates
+before committing; do not leave pending placeholders for a planned post-CI
+documentation update. After the required pre-publication gates pass, assume
+the normal automatic workflows will succeed when preparing that first push.
+Do not keep the task open merely to wait for green CI and write another
+repository status update.
+
+Do not create a follow-up commit or push solely to mark CI as passed, replace
+pending status with expected success, or archive successful workflow metadata.
+That starts another rebuild without changing the product or its qualification
+inputs. The GitHub run and its logs are the evidence; observed status can be
+reported in the conversation without another commit. Report actual results
+accurately, distinguishing expected success from a verified pass.
+
+If a workflow fails, use that failed run and its logs as the evidence, diagnose
+and repair the cause, and include any needed documentation/status corrections
+in the next substantive fix commit. Do not add a status-only push for the
+failure. Preserve explicitly required hosted, release and sanitizer closure
+gates; this guidance removes redundant status commits, not required proof.
+Keep this standing publication policy in `AGENTS.md`, not component worklists.
 
 ## Working Rules
 
