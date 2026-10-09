@@ -1,0 +1,813 @@
+Command: ctest --test-dir /home/runner/work/_temp/debugasan --output-on-failure --stop-on-failure -LE \^performance-measurement\$ --parallel 8
+ASAN_OPTIONS=detect_leaks=1
+
+Internal ctest changing into directory: /home/runner/work/_temp/debugasan
+Test project /home/runner/work/_temp/debugasan
+          Start    1: platform_cms_selection
+          Start    2: platform_cms31_selection
+          Start    4: native_raw_cms
+          Start    5: native_raw_tso
+          Start    6: platform_cms_directory
+          Start    8: oom_mainframe
+          Start    9: platform_terminal_restore
+          Start   10: platform_terminal_disconnect
+   1/3092 Test    #1: platform_cms_selection ........................................   Passed    0.02 sec
+   2/3092 Test    #2: platform_cms31_selection ......................................   Passed    0.02 sec
+   3/3092 Test    #4: native_raw_cms ................................................   Passed    0.02 sec
+          Start   11: oom_diagnostic
+          Start   12: text_codec
+          Start   13: record_allocation_failure
+   4/3092 Test    #6: platform_cms_directory ........................................   Passed    0.02 sec
+   5/3092 Test    #8: oom_mainframe .................................................   Passed    0.02 sec
+   6/3092 Test    #5: native_raw_tso ................................................   Passed    0.03 sec
+          Start   14: compression_workspace
+          Start   15: rxsha256_unit
+          Start   16: rxgraph_unit
+   7/3092 Test   #10: platform_terminal_disconnect ..................................   Passed    0.02 sec
+   8/3092 Test   #11: oom_diagnostic ................................................   Passed    0.01 sec
+          Start   17: crexx_contract_generation
+          Start   19: test_rxas_01_init
+   9/3092 Test    #9: platform_terminal_restore .....................................   Passed    0.03 sec
+  10/3092 Test   #12: text_codec ....................................................   Passed    0.02 sec
+  11/3092 Test   #13: record_allocation_failure .....................................   Passed    0.02 sec
+          Start   20: test_rxas_02_edits
+          Start   21: test_rxas_03_token_types
+          Start   22: test_rxas_04_errors
+  12/3092 Test   #14: compression_workspace .........................................   Passed    0.03 sec
+          Start   23: rxas_reject_non_source_mnemonics
+  13/3092 Test   #16: rxgraph_unit ..................................................   Passed    0.03 sec
+          Start   24: rxas_constant_aliases
+  14/3092 Test   #19: test_rxas_01_init .............................................   Passed    0.09 sec
+          Start   25: symbol_allocation_failure
+  15/3092 Test   #21: test_rxas_03_token_types ......................................   Passed    0.09 sec
+          Start   26: ast_allocation_failure
+  16/3092 Test   #25: symbol_allocation_failure .....................................   Passed    0.03 sec
+          Start   27: frame_control_ast
+  17/3092 Test   #24: rxas_constant_aliases .........................................   Passed    0.11 sec
+  18/3092 Test   #26: ast_allocation_failure ........................................   Passed    0.03 sec
+          Start   28: import_directory_errors
+          Start   29: import_discovery_snapshot
+  19/3092 Test   #20: test_rxas_02_edits ............................................   Passed    0.14 sec
+          Start   30: rxc_help_syntaxhighlight
+  20/3092 Test   #28: import_directory_errors .......................................   Passed    0.03 sec
+          Start   31: rxc_help_no_exe_import
+  21/3092 Test   #31: rxc_help_no_exe_import ........................................   Passed    0.03 sec
+          Start   32: rxc_help_import_resolution_report
+  22/3092 Test   #30: rxc_help_syntaxhighlight ......................................   Passed    0.08 sec
+          Start   35: project_dependencies
+  23/3092 Test   #32: rxc_help_import_resolution_report .............................   Passed    0.03 sec
+          Start   36: binary_forward_dependencies
+  24/3092 Test   #15: rxsha256_unit .................................................   Passed    0.26 sec
+          Start   39: inline_return_conversions
+  25/3092 Test   #35: project_dependencies ..........................................   Passed    0.06 sec
+          Start   40: global_import_types
+  26/3092 Test   #29: import_discovery_snapshot .....................................   Passed    0.47 sec
+          Start   42: binary_storage_selector_dependencies
+  27/3092 Test   #22: test_rxas_04_errors ...........................................   Passed    0.62 sec
+          Start   43: import_resolution_report
+  28/3092 Test   #27: frame_control_ast .............................................***Failed    0.56 sec
+
+=================================================================
+==17455==ERROR: LeakSanitizer: detected memory leaks
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23f39 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:38
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23fdb in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:44
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23ee8 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:35
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23f54 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:39
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23fc0 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:43
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23f8a in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:41
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23f6f in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:40
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23fa5 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:42
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23f03 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:36
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 536 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdee26a9c in ast_ft /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:251
+    #2 0x557fdee23f1e in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:37
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 120 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb4f5e in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:97
+    #2 0x557fdee241ea in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:54
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 120 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb4f5e in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:97
+    #2 0x557fdee24138 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:52
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 120 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb4f5e in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:97
+    #2 0x557fdee24191 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:53
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 65 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafc778 in realloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:85
+    #1 0x557fdeee1bcc in output_append_text /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:453
+    #2 0x557fdeef2894 in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:747
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee245da in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:77
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb562b in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:133
+    #3 0x557fdee24191 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:53
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb55f4 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:132
+    #3 0x557fdee24191 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:53
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb5699 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:135
+    #3 0x557fdee24138 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:52
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb562b in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:133
+    #3 0x557fdee24138 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:52
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb55f4 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:132
+    #3 0x557fdee24138 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:52
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb5662 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:134
+    #3 0x557fdee241ea in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:54
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb5662 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:134
+    #3 0x557fdee24191 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:53
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb5699 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:135
+    #3 0x557fdee241ea in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:54
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb562b in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:133
+    #3 0x557fdee241ea in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:54
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb55f4 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:132
+    #3 0x557fdee241ea in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:54
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb5699 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:135
+    #3 0x557fdee24191 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:53
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 40 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb43e1 in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:49
+    #2 0x557fdeeb5662 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:134
+    #3 0x557fdee24138 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:52
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 39 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafc778 in realloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:85
+    #1 0x557fdeee1bcc in output_append_text /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:453
+    #2 0x557fdeef30a5 in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:792
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee2461a in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:79
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 35 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafc778 in realloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:85
+    #1 0x557fdeee1bcc in output_append_text /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:453
+    #2 0x557fdeef30a5 in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:792
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee245fa in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:78
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 29 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafc778 in realloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:85
+    #1 0x557fdeee1bcc in output_append_text /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:453
+    #2 0x557fdeef30a5 in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:792
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee24638 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:80
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb55f4 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:132
+    #3 0x557fdee241ea in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:54
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb5699 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:135
+    #3 0x557fdee24191 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:53
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb55f4 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:132
+    #3 0x557fdee24138 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:52
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb5662 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:134
+    #3 0x557fdee24191 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:53
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb562b in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:133
+    #3 0x557fdee24191 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:53
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeee171b in output_fs /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:408
+    #2 0x557fdeef2b8b in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:768
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee24638 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:80
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeee171b in output_fs /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:408
+    #2 0x557fdeef2b8b in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:768
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee2461a in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:79
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb55f4 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:132
+    #3 0x557fdee24191 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:53
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeee171b in output_fs /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:408
+    #2 0x557fdeef2b8b in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:768
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee245fa in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:78
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeee171b in output_fs /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:408
+    #2 0x557fdeef27a5 in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:744
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee245da in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:77
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb5699 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:135
+    #3 0x557fdee24138 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:52
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeee171b in output_fs /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:408
+    #2 0x557fdeef28cd in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:753
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee245ba in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:76
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb5699 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:135
+    #3 0x557fdee241ea in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:54
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb5662 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:134
+    #3 0x557fdee24138 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:52
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb5662 in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:134
+    #3 0x557fdee241ea in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:54
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb562b in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:133
+    #3 0x557fdee241ea in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:54
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 24 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69
+    #1 0x557fdeeb436d in dpa_f /home/runner/work/CREXX/CREXX/compiler/rxcpdary.h:46
+    #2 0x557fdeeb562b in scp_f /home/runner/work/CREXX/CREXX/compiler/rxcpsymb.c:133
+    #3 0x557fdee24138 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:52
+    #4 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 15 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebafc778 in realloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:85
+    #1 0x557fdeee1bcc in output_append_text /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_core.c:453
+    #2 0x557fdeef2b52 in emit_flow /home/runner/work/CREXX/CREXX/compiler/rxcp_emit_flow.c:761
+    #3 0x557fdee23b12 in check_output /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:18
+    #4 0x557fdee245ba in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:76
+    #5 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #6 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #7 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 14 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebaf74e8 in strdup ../../../../src/libsanitizer/asan/asan_interceptors.cpp:578
+    #1 0x557fdee3134f in ast_copy_str /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:1291
+    #2 0x557fdee23ffb in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:45
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 7 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebaf74e8 in strdup ../../../../src/libsanitizer/asan/asan_interceptors.cpp:578
+    #1 0x557fdee3134f in ast_copy_str /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:1291
+    #2 0x557fdee2436f in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:65
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 7 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebaf74e8 in strdup ../../../../src/libsanitizer/asan/asan_interceptors.cpp:578
+    #1 0x557fdee3134f in ast_copy_str /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:1291
+    #2 0x557fdee243a1 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:67
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 7 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebaf74e8 in strdup ../../../../src/libsanitizer/asan/asan_interceptors.cpp:578
+    #1 0x557fdee3134f in ast_copy_str /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:1291
+    #2 0x557fdee24388 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:66
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+Indirect leak of 5 byte(s) in 1 object(s) allocated from:
+    #0 0x7f03ebaf74e8 in strdup ../../../../src/libsanitizer/asan/asan_interceptors.cpp:578
+    #1 0x557fdee3134f in ast_copy_str /home/runner/work/CREXX/CREXX/compiler/rxcp_ast_core.c:1291
+    #2 0x557fdee24356 in main /home/runner/work/CREXX/CREXX/compiler/tests/test_frame_control_ast.c:64
+    #3 0x7f03eae2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #4 0x7f03eae2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)
+    #5 0x557fdee23124 in _start (/home/runner/work/_temp/debugasan/compiler/tests/test_frame_control_ast+0x10c124) (BuildId: 1ebbec0d46166e0e37cb84175f890b350ff93d76)
+
+SUMMARY: AddressSanitizer: 6831 byte(s) leaked in 52 allocation(s).
+
+  29/3092 Test   #23: rxas_reject_non_source_mnemonics ..............................   Passed    0.65 sec
+  30/3092 Test   #43: import_resolution_report ......................................   Passed    0.05 sec
+  31/3092 Test   #17: crexx_contract_generation .....................................   Passed   15.69 sec
+  32/3092 Test   #39: inline_return_conversions .....................................   Passed   60.12 sec
+  33/3092 Test   #36: binary_forward_dependencies ...................................   Passed   62.54 sec
+  34/3092 Test   #40: global_import_types ...........................................   Passed   75.53 sec
+  35/3092 Test   #42: binary_storage_selector_dependencies ..........................   Passed   79.52 sec
+
+97% tests passed, 1 tests failed out of 35
+
+Label Time Summary:
+abi                                  =   0.00 sec*proc (0 test)
+address                              =   0.00 sec*proc (0 test)
+allocation                           =   0.14 sec*proc (6 tests)
+arrays                               =   0.00 sec*proc (0 test)
+assembler                            =   0.00 sec*proc (0 test)
+autoload                             =   0.00 sec*proc (0 test)
+benchmark                            =   0.00 sec*proc (0 test)
+binary                               =  79.52 sec*proc (1 test)
+binary-io                            =   0.00 sec*proc (0 test)
+binary01                             =   0.00 sec*proc (0 test)
+binutils                             =  15.74 sec*proc (3 tests)
+breakpoint                           =   0.00 sec*proc (0 test)
+build                                =   0.00 sec*proc (0 test)
+bundled                              =   0.00 sec*proc (0 test)
+byte-endpoint                        =   0.00 sec*proc (0 test)
+call-postfix                         =   0.00 sec*proc (0 test)
+callback                             =   0.00 sec*proc (0 test)
+canonical-contract                   =   0.00 sec*proc (0 test)
+case                                 =   0.00 sec*proc (0 test)
+case_mapping                         =   0.00 sec*proc (0 test)
+casefold                             =   0.00 sec*proc (0 test)
+channel                              =   0.00 sec*proc (0 test)
+channels                             =   0.00 sec*proc (0 test)
+checksum                             =   0.00 sec*proc (0 test)
+class                                =   0.00 sec*proc (0 test)
+classes                              =   0.00 sec*proc (0 test)
+classlib                             =   0.00 sec*proc (0 test)
+cmake                                =   0.00 sec*proc (0 test)
+cms                                  =   0.06 sec*proc (3 tests)
+codec                                =   0.00 sec*proc (0 test)
+codegen                              =   0.00 sec*proc (0 test)
+compatibility                        =   0.00 sec*proc (0 test)
+compiler                             = 294.76 sec*proc (15 tests)
+compiler-exit                        =   0.00 sec*proc (0 test)
+comprehensive                        = 278.73 sec*proc (21 tests)
+compression                          =   0.00 sec*proc (0 test)
+concurrency                          =   0.49 sec*proc (2 tests)
+concurrency-sp01                     =   0.47 sec*proc (1 test)
+concurrency-sp02                     =   0.00 sec*proc (0 test)
+concurrency-sp03                     =   0.03 sec*proc (1 test)
+concurrency-sp04                     =   0.00 sec*proc (0 test)
+concurrency-sp05                     =   0.00 sec*proc (0 test)
+concurrency-sp06                     =   0.00 sec*proc (0 test)
+concurrency-sp07                     =   0.00 sec*proc (0 test)
+concurrency-sp08                     =   0.00 sec*proc (0 test)
+concurrency-sp09                     =   0.00 sec*proc (0 test)
+concurrency-stress                   =   0.00 sec*proc (0 test)
+conformance                          =   0.00 sec*proc (0 test)
+console                              =   0.00 sec*proc (0 test)
+contextual                           =   0.00 sec*proc (0 test)
+contract                             =  15.69 sec*proc (1 test)
+control-flow                         =   0.00 sec*proc (0 test)
+control_flow                         =   0.56 sec*proc (1 test)
+conversion                           =   0.00 sec*proc (0 test)
+correctness                          =   0.00 sec*proc (0 test)
+corruption                           =   0.00 sec*proc (0 test)
+coverage                             =   0.00 sec*proc (0 test)
+crash                                =   0.00 sec*proc (0 test)
+crexx-rag                            =   0.00 sec*proc (0 test)
+crexx_rag                            =   0.00 sec*proc (0 test)
+cri-17                               =   0.00 sec*proc (0 test)
+cri-18                               =   0.00 sec*proc (0 test)
+data                                 =   0.00 sec*proc (0 test)
+deadline                             =   0.00 sec*proc (0 test)
+decimal                              =   0.00 sec*proc (0 test)
+deprecated                           =   0.00 sec*proc (0 test)
+diagnostic                           =   0.00 sec*proc (0 test)
+diagnostics                          =   0.00 sec*proc (0 test)
+dialogs                              =   0.00 sec*proc (0 test)
+disconnect                           =   0.02 sec*proc (1 test)
+dispatch                             =   0.00 sec*proc (0 test)
+docs                                 =   0.00 sec*proc (0 test)
+driver                               =   0.00 sec*proc (0 test)
+dynamic                              =   0.00 sec*proc (0 test)
+e4a                                  =   0.00 sec*proc (0 test)
+e4b                                  =   0.00 sec*proc (0 test)
+e5                                   =   0.00 sec*proc (0 test)
+e6                                   =   0.00 sec*proc (0 test)
+effects                              =   0.00 sec*proc (0 test)
+endpoint                             =   0.00 sec*proc (0 test)
+essential                            =  16.65 sec*proc (8 tests)
+event-loop                           =   0.00 sec*proc (0 test)
+events                               =   0.00 sec*proc (0 test)
+exact                                =   0.00 sec*proc (0 test)
+examples                             =   0.00 sec*proc (0 test)
+exits                                =   0.00 sec*proc (0 test)
+extensions                           =   0.00 sec*proc (0 test)
+external-consumer                    =   0.00 sec*proc (0 test)
+f1c                                  =   0.00 sec*proc (0 test)
+f1d                                  =   0.00 sec*proc (0 test)
+f1e                                  =   0.00 sec*proc (0 test)
+f1f                                  =   0.00 sec*proc (0 test)
+f1g                                  =   0.00 sec*proc (0 test)
+failure                              =   0.00 sec*proc (0 test)
+fallback                             =   0.00 sec*proc (0 test)
+file                                 =   0.26 sec*proc (1 test)
+filesystem                           =   0.00 sec*proc (0 test)
+float                                =   0.00 sec*proc (0 test)
+flow                                 =   0.00 sec*proc (0 test)
+gate-e                               =   0.00 sec*proc (0 test)
+gate-f                               =   0.00 sec*proc (0 test)
+gate_f                               =   0.00 sec*proc (0 test)
+grapheme                             =   0.00 sec*proc (0 test)
+hash                                 =   0.26 sec*proc (1 test)
+http                                 =   0.00 sec*proc (0 test)
+id                                   =   0.00 sec*proc (0 test)
+import                               =   0.00 sec*proc (0 test)
+imports                              = 278.38 sec*proc (10 tests)
+includes                             =   0.00 sec*proc (0 test)
+incremental                          = 142.12 sec*proc (3 tests)
+indexed-red-black-tree-adaptation    =   0.00 sec*proc (0 test)
+industrial                           =   0.00 sec*proc (0 test)
+initializers                         =   0.00 sec*proc (0 test)
+inline                               =  60.12 sec*proc (1 test)
+inlining                             =   0.00 sec*proc (0 test)
+input                                =   0.00 sec*proc (0 test)
+inspection                           =   0.00 sec*proc (0 test)
+install                              =   0.00 sec*proc (0 test)
+instrumentation                      =   0.00 sec*proc (0 test)
+integer                              =   0.00 sec*proc (0 test)
+interfaces                           =   0.00 sec*proc (0 test)
+interpreter                          =   0.00 sec*proc (0 test)
+issue-680                            =   0.00 sec*proc (0 test)
+job-control                          =   0.00 sec*proc (0 test)
+jtable                               =   0.00 sec*proc (0 test)
+language                             =   0.00 sec*proc (0 test)
+late-load                            =   0.00 sec*proc (0 test)
+level-l                              =   0.00 sec*proc (0 test)
+levelb                               =   0.00 sec*proc (0 test)
+levelc                               =   0.56 sec*proc (1 test)
+levelg                               =   0.00 sec*proc (0 test)
+library                              =   0.26 sec*proc (1 test)
+lifecycle                            =   0.00 sec*proc (0 test)
+linked                               =   0.00 sec*proc (0 test)
+linked_opt                           =   0.00 sec*proc (0 test)
+linker                               =   0.00 sec*proc (0 test)
+linux                                =   0.00 sec*proc (0 test)
+llm                                  =   0.00 sec*proc (0 test)
+macros                               =   0.00 sec*proc (0 test)
+math                                 =   0.00 sec*proc (0 test)
+memory                               =   0.00 sec*proc (0 test)
+metadata                             =   0.00 sec*proc (0 test)
+method                               =   0.00 sec*proc (0 test)
+native                               =   0.00 sec*proc (0 test)
+native-adapter                       =   0.00 sec*proc (0 test)
+native-math-control                  =   0.00 sec*proc (0 test)
+native-objects                       =   0.00 sec*proc (0 test)
+native_signal                        =   0.00 sec*proc (0 test)
+negative                             =   0.00 sec*proc (0 test)
+newbuild                             =   0.08 sec*proc (2 tests)
+noncanonical                         =   0.00 sec*proc (0 test)
+noopt                                =   0.00 sec*proc (0 test)
+normalization                        =   0.00 sec*proc (0 test)
+nr15                                 =   0.00 sec*proc (0 test)
+objects                              =   0.00 sec*proc (0 test)
+odbc                                 =   0.00 sec*proc (0 test)
+opt                                  =   0.00 sec*proc (0 test)
+optimizer                            =   0.00 sec*proc (0 test)
+optimizer-parity                     =   0.00 sec*proc (0 test)
+optimizer-resistance                 =   0.00 sec*proc (0 test)
+optional                             =   0.00 sec*proc (0 test)
+owner                                =   0.00 sec*proc (0 test)
+package                              =   0.00 sec*proc (0 test)
+packed                               =   0.00 sec*proc (0 test)
+parallel                             =   0.00 sec*proc (0 test)
+parse                                =   0.00 sec*proc (0 test)
+parser                               =   0.00 sec*proc (0 test)
+perf3                                =   0.00 sec*proc (0 test)
+platform                             =   0.22 sec*proc (10 tests)
+plugin_arrays                        =   0.00 sec*proc (0 test)
+plugins                              =   0.00 sec*proc (0 test)
+policy                               =   0.00 sec*proc (0 test)
+posix                                =   0.00 sec*proc (0 test)
+preprocessor                         =   0.00 sec*proc (0 test)
+private                              =   0.00 sec*proc (0 test)
+process                              =   0.00 sec*proc (0 test)
+profiling                            =   0.00 sec*proc (0 test)
+provider                             =   0.00 sec*proc (0 test)
+provider-reference                   =   0.00 sec*proc (0 test)
+provider-registry                    =   0.00 sec*proc (0 test)
+pty                                  =   0.00 sec*proc (0 test)
+qualification                        =   0.00 sec*proc (0 test)
+race                                 =   0.00 sec*proc (0 test)
+raw                                  =   0.05 sec*proc (2 tests)
+rcc-3                                =   0.00 sec*proc (0 test)
+rcc-5d                               =   0.00 sec*proc (0 test)
+rcc-5e                               =   0.00 sec*proc (0 test)
+rcc-5f                               =   0.00 sec*proc (0 test)
+receiver                             =   0.00 sec*proc (0 test)
+reference                            =   0.00 sec*proc (0 test)
+references                           =   0.00 sec*proc (0 test)
+register-lifetime                    =   0.00 sec*proc (0 test)
+registers                            =   0.00 sec*proc (0 test)
+regression                           = 277.77 sec*proc (5 tests)
+resource                             =   0.00 sec*proc (0 test)
+rexxcps-smoke                        =   0.00 sec*proc (0 test)
+runner                               =   0.00 sec*proc (0 test)
+runtime                              =   0.00 sec*proc (0 test)
+rxas                                 =   0.00 sec*proc (0 test)
+rxbin                                =   0.00 sec*proc (0 test)
+rxbvm                                =   0.00 sec*proc (0 test)
+rxdas                                =   0.00 sec*proc (0 test)
+rxpa                                 =   0.00 sec*proc (0 test)
+rxpp                                 =   0.00 sec*proc (0 test)
+rxtvm                                =   0.00 sec*proc (0 test)
+rxvml                                =   0.00 sec*proc (0 test)
+san-002                              =   0.00 sec*proc (0 test)
+san-003                              =   0.00 sec*proc (0 test)
+san-004                              =   0.00 sec*proc (0 test)
+san-006                              =   0.00 sec*proc (0 test)
+san-007                              =   0.00 sec*proc (0 test)
+sanitizer                            =   0.00 sec*proc (0 test)
+scalar-access                        =   0.00 sec*proc (0 test)
+scope                                =   0.00 sec*proc (0 test)
+sequence                             =   0.00 sec*proc (0 test)
+server                               =   0.00 sec*proc (0 test)
+sha256                               =   0.26 sec*proc (1 test)
+shape                                =   0.00 sec*proc (0 test)
+signal                               =   0.00 sec*proc (0 test)
+signals                              =   0.00 sec*proc (0 test)
+slow                                 =   0.00 sec*proc (0 test)
+smoke                                =   1.64 sec*proc (6 tests)
+source                               =   0.00 sec*proc (0 test)
+source-map                           =   0.00 sec*proc (0 test)
+sparse                               =   0.00 sec*proc (0 test)
+spawn                                =   0.00 sec*proc (0 test)
+sqlite                               =   0.00 sec*proc (0 test)
+srcmap                               =   0.00 sec*proc (0 test)
+stable-indexed-cfg-adaptation        =   0.00 sec*proc (0 test)
+stable-indexed-graph-adaptation      =   0.00 sec*proc (0 test)
+stage0                               =   0.05 sec*proc (1 test)
+stage1                               =   0.00 sec*proc (0 test)
+stage2                               =   0.00 sec*proc (0 test)
+stage3                               =   0.00 sec*proc (0 test)
+stage4                               =   0.00 sec*proc (0 test)
+stage5                               =   0.00 sec*proc (0 test)
+standard-library-adaptation          =   0.00 sec*proc (0 test)
+static                               =   0.00 sec*proc (0 test)
+stats                                =   0.00 sec*proc (0 test)
+stdin                                =   0.00 sec*proc (0 test)
+stem                                 =   0.00 sec*proc (0 test)
+streaming                            =   0.00 sec*proc (0 test)
+stress                               =   0.00 sec*proc (0 test)
+syntax_highlighting                  =   0.08 sec*proc (1 test)
+system                               =   0.00 sec*proc (0 test)
+taskcontext                          =   0.00 sec*proc (0 test)
+taskwork                             =   0.00 sec*proc (0 test)
+terminal                             =   0.06 sec*proc (2 tests)
+text                                 =   0.09 sec*proc (4 tests)
+tls                                  =   0.00 sec*proc (0 test)
+tools                                =   0.00 sec*proc (0 test)
+topology                             =   0.00 sec*proc (0 test)
+tty                                  =   0.06 sec*proc (2 tests)
+tui                                  =   0.00 sec*proc (0 test)
+ui                                   =   0.00 sec*proc (0 test)
+unicode                              =   0.00 sec*proc (0 test)
+unit                                 =   0.96 sec*proc (7 tests)
+utf                                  =   0.00 sec*proc (0 test)
+vararg                               =   0.00 sec*proc (0 test)
+vector                               =   0.00 sec*proc (0 test)
+vm                                   =   0.00 sec*proc (0 test)
+worker                               =   0.00 sec*proc (0 test)
+
+Total Test time (real) =  80.43 sec
+
+The following tests FAILED:
+	 27 - frame_control_ast (Failed)                        compiler control_flow essential levelc unit
+Errors while running CTest

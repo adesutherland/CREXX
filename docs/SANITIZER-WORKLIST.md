@@ -77,6 +77,35 @@ CTest phases take 3,708.62 seconds on macOS and 4,385.57 seconds on Linux. No
 AddressSanitizer or LeakSanitizer diagnostic appears in either retained
 artifact.
 
+## Current overnight regression — 9 October 2026
+
+### SAN-010 — frame-control AST unit retains compiler-owned allocations
+
+Status: open. Owner: Codex, overnight QA repair/publication task requested by
+Adrian on 2026-10-09. Affected candidate: develop `0aafdb155b07d2a345193a870cc47922e1e837c0`;
+the local Level C closeout `b1b8bed2d` still needs the same cleanup repair.
+
+- Observed first-party Linux LeakSanitizer finding: 6,831 bytes in 52
+  allocations, all rooted in `compiler/tests/test_frame_control_ast.c` AST,
+  scopes, symbol metadata and emitted output fragments. The fixture creates a
+  stack Context and never releases its compiler-owned objects.
+- Original trigger: scheduled [Sanitizer QA 37881640063](https://github.com/adesutherland/CREXX/actions/runs/37881640063),
+  Linux x64 ASan/LSan job 113662450534, maintained runner `tools/asan-run.sh
+  --phase full --build-jobs 4 --test-jobs 8 --exclude-label '^performance-measurement$'`
+  with build/test `detect_leaks=1`. The run stops at `frame_control_ast`;
+  unexecuted cases are not passes. The macOS ASan lane passes but cannot supply
+  LSan proof.
+- Retained original log: [linux-sanitizer-ctest.log](qa/overnight-2026-10-09/failed/linux-sanitizer-ctest.log).
+- Permanent reproducer/closure test: existing CTest `frame_control_ast`. Repair
+  must release output/AST/symbol/scope/flow ownership through canonical Context
+  cleanup, preserving all frame-node emission assertions and source bounds.
+- Next action: reproduce/inspect canonical cleanup, repair the fixture, pass
+  matching normal Debug and maintained focused sanitizer checks, then complete
+  the original full supported Linux ASan/LSan gate on final source inputs.
+  Retain full normal product QA and relevant automatic publication checks.
+- Closure remains open until those gates pass. No suppression, leak-off Linux
+  wrapper, test exclusion or ownerless deferral is authorized.
+
 ## Native inference integration finding
 
 Status at 2026-09-16: SAN-009 is closed within the approved first-party scope.
