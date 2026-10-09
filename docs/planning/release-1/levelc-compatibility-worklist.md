@@ -1652,7 +1652,7 @@ counts. New language or architecture decisions retain Adrian's approval gate.
   without reducing assertions; permanent original failure and matching normal
   Debug/focused maintained sanitizer proof plus full supported Linux ASan/LSan
   closure pass on final inputs. The canonical SAN register records evidence.
-- [ ] **LC-OVN-AC-03 — Windows test/runtime paths:** exact-byte, CALL/EXIT,
+- [x] **LC-OVN-AC-03 — Windows test/runtime paths:** exact-byte, CALL/EXIT,
   delayed-condition and missing-factory failures are reproduced/diagnosed and
   repaired with platform/encoding evidence. Preserve payload bytes, current
   public behavior, source identities and the deferred host/Unicode boundary.
@@ -1662,7 +1662,7 @@ counts. New language or architecture decisions retain Adrian's approval gate.
 - [x] **LC-OVN-AC-05 — required books:** diagnose the required Linux four-book
   failure and pass its relevant source/build/validation gate, preserving the
   existing book pipeline rather than changing unrelated documentation scope.
-- [ ] **LC-OVN-AC-06 — full QA and publication:** final core build, full normal
+- [x] **LC-OVN-AC-06 — full QA and publication:** final core build, full normal
   correctness QA and all issue-specific/platform/sanitizer required gates pass;
   input hashes/logs identify retained versus fresh proof. Commit fixes locally,
   publish the qualified develop revision, and verify its normal automatic
@@ -1677,7 +1677,7 @@ counts. New language or architecture decisions retain Adrian's approval gate.
 2. **LC-OVN-STEP-02 (AC-02; complete):** register SAN-010 immediately,
    inspect canonical Context ownership, repair and run focused matched gates;
    provision/reuse supported Linux QA without publishing unqualified develop.
-3. **LC-OVN-STEP-03 (AC-03/04; after 01):** repair coherent Windows/newline/
+3. **LC-OVN-STEP-03 (AC-03/04; complete):** repair coherent Windows/newline/
    assembly-encoding/import and RXAS-negative fixture families with focused
    normal controls and their platform proof; keep causes separate in commits.
    Honor the existing manual Deep platform input on develop so the repaired
@@ -1686,7 +1686,7 @@ counts. New language or architecture decisions retain Adrian's approval gate.
    the scheduled full-assurance marker.
 4. **LC-OVN-STEP-04 (AC-05; complete):** diagnose books artifact and run the
    smallest decisive book/source/build validator after repair.
-5. **LC-OVN-STEP-05 (AC-06; after 02–04):** freeze final source/test/build
+5. **LC-OVN-STEP-05 (AC-06; complete):** freeze final source/test/build
    inputs, complete one grouped full QA checkpoint and sanitizer closure,
    reconcile receipts, publish commits together, verify automatic workflows.
    The full local Debug/Linux sanitizer/book gates precede the push. Native
@@ -1729,6 +1729,38 @@ change; the first 1,882 passes remain historical partial evidence, not a full
 final-input pass or exclusion list. Record the composition and fingerprints.
 A new rounding policy or architecture direction would need Adrian's decision;
 this repair must implement the already accepted policies.
+
+**Overnight repair/publication complete (2026-10-09).** All LC-OVN-AC-01–06
+and STEP-01–05 pass. Qualified code is published at
+`7870d4fb72a427fee9e3751f7347c192fd5f058e`. [Build CREXX 37925525563](https://github.com/adesutherland/CREXX/actions/runs/37925525563)
+and [CodeQL 37925525069](https://github.com/adesutherland/CREXX/actions/runs/37925525069)
+pass, including ordinary optimizer parity, all core/plugin jobs, Linux books
+and successful dev-snapshot publication. [MSVC Deep 37925543147](https://github.com/adesutherland/CREXX/actions/runs/37925543147)
+passes 2,846 correctness and three install/package cases; [MinGW Deep
+37925649937](https://github.com/adesutherland/CREXX/actions/runs/37925649937)
+passes 2,966 correctness and three install/package cases. Each actual native
+job log confirms all 32 originally failed Windows tests passed, including the
+six exact-byte fixtures, CALL/EXIT/injection families and missing producers.
+The focused runs do not replace scheduled full Deep assurance; unchanged
+stress/product comparisons are retained from the original overnight result.
+Hosted metadata and per-test replay receipts are in
+`docs/qa/overnight-2026-10-09/hosted/`; full job logs remain in the retained
+output bundle. SAN-010 closure and DBDEC-01 remain verified on their recorded
+inputs. This closes this repair task, not full Level C or Release 1 compatibility,
+the agreed later Unicode/source-conversion/host/INTERPRET work, master/tag
+promotion or a fresh release/platform sanitizer matrix. The closeout edit is
+receipt-only; no product, test, build or book input changed after qualification.
+
+**Published candidate / hosted proof pending (2026-10-09).** The compatible
+seven-commit batch is published to origin/develop at
+`7870d4fb72a427fee9e3751f7347c192fd5f058e`. Native MSVC Deep `37925543147`
+is active; MinGW Deep `37925649937` is queued by workflow concurrency.
+Normal Build `37925525563` passes product/Linux books/optimizer parity and
+continues Intel notarization; CodeQL `37925525069` is analyzing. Only the
+requested Windows configurations are replayed: no stress/product-comparison
+or duplicate book jobs. AC-03/06 remain open until terminal hosted results.
+No source/test/book input changed after local qualification; SAN closure is
+receipt-only, and unrelated drafts remain outside the publication.
 
 **Full local gates complete (2026-10-09).** Final Linux ASan/LSan passes
 3,116/3,116 (5,010.29 seconds), build/test leaks on, no sanitizer report, after

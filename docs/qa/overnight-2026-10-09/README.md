@@ -20,4 +20,7 @@ The authoritative scope, acceptance and qualification status are in
 `docs/planning/release-1/levelc-compatibility-worklist.md` under the overnight
 repair phase. Full local QA has passed; `qualification.json` records the normal and supported
 Linux sanitizer results, qualified inputs, decimal requalification and final
-book hashes. Publication and native Windows/automatic CI proof remain in progress.
+book hashes. Published code `7870d4fb7` passes Build CREXX, CodeQL and both native Windows
+Deep replays. All 32 original Windows failure-family cases pass in each native
+job. The authoritative overnight criteria and steps are complete; broader
+Level C/Release 1 design and platform obligations retain their existing scope.

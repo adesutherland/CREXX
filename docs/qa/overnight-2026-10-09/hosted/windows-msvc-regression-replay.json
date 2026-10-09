@@ -1,0 +1,162 @@
+[
+  {
+    "test": "levelc_say_bytes",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:10:07.8318533Z  989/2846 Test #1008: levelc_say_bytes .............................................   Passed    1.14 sec"
+  },
+  {
+    "test": "levelc_say_bytes_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:10:08.8630592Z  990/2846 Test #1009: levelc_say_bytes_noopt .......................................   Passed    1.18 sec"
+  },
+  {
+    "test": "levelc_arg_exact_bytes",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:10:08.9880936Z  991/2846 Test #1010: levelc_arg_exact_bytes .......................................   Passed    1.15 sec"
+  },
+  {
+    "test": "levelc_arg_exact_bytes_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:10:10.1391077Z  992/2846 Test #1011: levelc_arg_exact_bytes_noopt .................................   Passed    1.27 sec"
+  },
+  {
+    "test": "levelg_say_bytes",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:10:10.1814693Z  993/2846 Test #1012: levelg_say_bytes .............................................   Passed    1.19 sec"
+  },
+  {
+    "test": "levelg_say_bytes_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:10:11.1558009Z  994/2846 Test #1013: levelg_say_bytes_noopt .......................................   Passed    1.02 sec"
+  },
+  {
+    "test": "levelc_exit_whole_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:21:28.9718464Z 1650/2846 Test #1174: levelc_exit_whole_opt ........................................   Passed   12.00 sec"
+  },
+  {
+    "test": "levelc_exit_external_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:21:32.7263124Z 1651/2846 Test #1175: levelc_exit_external_opt .....................................   Passed    3.75 sec"
+  },
+  {
+    "test": "levelc_exit_handler_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:21:34.3440130Z 1652/2846 Test #1176: levelc_exit_handler_opt ......................................   Passed    1.62 sec"
+  },
+  {
+    "test": "levelc_exit_whole_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:21:45.3668182Z 1653/2846 Test #1177: levelc_exit_whole_noopt ......................................   Passed   11.02 sec"
+  },
+  {
+    "test": "levelc_exit_external_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:21:49.0718971Z 1654/2846 Test #1178: levelc_exit_external_noopt ...................................   Passed    3.70 sec"
+  },
+  {
+    "test": "levelc_exit_handler_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:21:50.6888135Z 1655/2846 Test #1179: levelc_exit_handler_noopt ....................................   Passed    1.62 sec"
+  },
+  {
+    "test": "levelc_call_external_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:04.2356513Z 1656/2846 Test #1184: levelc_call_external_opt .....................................   Passed   13.55 sec"
+  },
+  {
+    "test": "levelc_call_external_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:17.3852370Z 1657/2846 Test #1185: levelc_call_external_noopt ...................................   Passed   13.15 sec"
+  },
+  {
+    "test": "levelc_call_missing_external_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:22.2970846Z 1658/2846 Test #1186: levelc_call_missing_external_opt .............................   Passed    4.91 sec"
+  },
+  {
+    "test": "levelc_call_missing_external_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:27.2185734Z 1659/2846 Test #1187: levelc_call_missing_external_noopt ...........................   Passed    4.92 sec"
+  },
+  {
+    "test": "levelc_call_delayed_handler_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:28.6091857Z 1660/2846 Test #1188: levelc_call_delayed_handler_opt ..............................   Passed    1.39 sec"
+  },
+  {
+    "test": "levelc_call_condition_matrix_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:30.2945516Z 1661/2846 Test #1189: levelc_call_condition_matrix_opt .............................   Passed    1.68 sec"
+  },
+  {
+    "test": "levelc_call_clause_boundaries_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:31.7324685Z 1662/2846 Test #1190: levelc_call_clause_boundaries_opt ............................   Passed    1.44 sec"
+  },
+  {
+    "test": "levelc_call_transfer_boundaries_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:32.9647967Z 1663/2846 Test #1191: levelc_call_transfer_boundaries_opt ..........................   Passed    1.23 sec"
+  },
+  {
+    "test": "levelc_call_policy_lifecycle_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:34.4909403Z 1664/2846 Test #1192: levelc_call_policy_lifecycle_opt .............................   Passed    1.52 sec"
+  },
+  {
+    "test": "levelc_call_buffered_halt_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:35.6825440Z 1665/2846 Test #1193: levelc_call_buffered_halt_opt ................................   Passed    1.19 sec"
+  },
+  {
+    "test": "levelc_call_missing_delayed_handler_opt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:36.5933114Z 1666/2846 Test #1194: levelc_call_missing_delayed_handler_opt ......................   Passed    0.91 sec"
+  },
+  {
+    "test": "levelc_call_delayed_handler_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:37.8348885Z 1667/2846 Test #1195: levelc_call_delayed_handler_noopt ............................   Passed    1.24 sec"
+  },
+  {
+    "test": "levelc_call_condition_matrix_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:39.2426570Z 1668/2846 Test #1196: levelc_call_condition_matrix_noopt ...........................   Passed    1.41 sec"
+  },
+  {
+    "test": "levelc_call_clause_boundaries_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:40.5448841Z 1669/2846 Test #1197: levelc_call_clause_boundaries_noopt ..........................   Passed    1.30 sec"
+  },
+  {
+    "test": "levelc_call_transfer_boundaries_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:41.6620460Z 1670/2846 Test #1198: levelc_call_transfer_boundaries_noopt ........................   Passed    1.12 sec"
+  },
+  {
+    "test": "levelc_call_policy_lifecycle_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:42.9745679Z 1671/2846 Test #1199: levelc_call_policy_lifecycle_noopt ...........................   Passed    1.31 sec"
+  },
+  {
+    "test": "levelc_call_buffered_halt_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:44.0537775Z 1672/2846 Test #1200: levelc_call_buffered_halt_noopt ..............................   Passed    1.08 sec"
+  },
+  {
+    "test": "levelc_call_missing_delayed_handler_noopt",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:22:44.9469011Z 1673/2846 Test #1201: levelc_call_missing_delayed_handler_noopt ....................   Passed    0.89 sec"
+  },
+  {
+    "test": "say_bytes_host_callbacks",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:17:36.3058566Z 1504/2846 Test #1572: say_bytes_host_callbacks .....................................   Passed    0.06 sec"
+  },
+  {
+    "test": "rxassignalorigininvalidtests",
+    "passed": true,
+    "evidence": "Comprehensive Windows x64 MSVC\tRun comprehensive correctness QA\t2026-10-09T12:30:34.2497155Z 1816/2846 Test #1870: rxassignalorigininvalidtests .................................   Passed    0.01 sec"
+  }
+]

@@ -44,7 +44,7 @@
   },
   "windows_cause_controls": {
     "passed": 24,
-    "native_platform_proof": "pending hosted replay after qualified publication"
+    "native_platform_proof": "Both native MSVC and MinGW comprehensive replays pass all 32 original failed tests."
   },
   "books": [
     {
@@ -89,6 +89,42 @@
     }
   ],
   "CI_selector_tests": 14,
-  "publication": "pending",
+  "publication": {
+    "commit": "7870d4fb72a427fee9e3751f7347c192fd5f058e",
+    "branch": "origin/develop",
+    "status": "complete; all required hosted gates passed",
+    "runs": {
+      "build": 37925525563,
+      "codeql": 37925525069,
+      "windows-msvc-deep": 37925543147,
+      "windows-mingw-deep": 37925649937
+    },
+    "build_result": "success",
+    "build_url": "https://github.com/adesutherland/CREXX/actions/runs/37925525563",
+    "results": {
+      "build": {
+        "run": 37925525563,
+        "result": "success"
+      },
+      "codeql": {
+        "run": 37925525069,
+        "result": "success"
+      },
+      "windows-msvc-deep": {
+        "run": 37925543147,
+        "result": "success",
+        "correctness_tests": 2846,
+        "install_package_tests": 3,
+        "original_failure_family": 32
+      },
+      "windows-mingw-deep": {
+        "run": 37925649937,
+        "result": "success",
+        "correctness_tests": 2966,
+        "install_package_tests": 3,
+        "original_failure_family": 32
+      }
+    }
+  },
   "scope": "Develop publication only; no master/tag/release or Unicode/host/INTERPRET design change."
 }
