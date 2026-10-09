@@ -2010,6 +2010,69 @@ int test_decimalRound() {
     return errors;
 }
 
+/* Decimal text carries exact tie information that binary storage can lose. */
+static int test_decimal_text_rounding_ties(void) {
+    static const char *cases[][3] = {
+        {"1.23445", "1.2344", "1.2345"},
+        {"1.23455", "1.2346", "1.2346"},
+        {"-1.23445", "-1.2344", "-1.2345"},
+        {"-1.23455", "-1.2346", "-1.2346"},
+        {"1.234450000000", "1.2344", "1.2345"},
+        {"00001.234450000", "1.2344", "1.2345"},
+        {"1.23445e2", "123.44", "123.45"},
+        {"123445e-5", "1.2344", "1.2345"},
+        {"1.2344499999", "1.2344", "1.2344"},
+        {"1.2344500001", "1.2345", "1.2345"},
+        {"-1.2344499999", "-1.2344", "-1.2344"},
+        {"-1.2344500001", "-1.2345", "-1.2345"},
+        {"1.2345499999", "1.2345", "1.2345"},
+        {"1.2345500001", "1.2346", "1.2346"}
+    };
+    numeric_context saved = *plugin->num_context;
+    value number;
+    char actual[128], expected[32];
+    size_t i;
+    int standard, direction, sign, errors = 0;
+    value_init(&number);
+    plugin->num_context->digits = 5;
+    plugin->num_context->fuzz = 0;
+    plugin->num_context->form = NUMERIC_FORM_SCIENTIFIC;
+    plugin->num_context->casetype = CASE_LOWER;
+    for (standard = 0; standard < 2; ++standard) {
+        plugin->num_context->standard = standard ? NUMERIC_STANDARD_CLASSIC : NUMERIC_STANDARD_COMMON;
+        plugin->syncNumericContext(plugin);
+        for (i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i) {
+            plugin->decimalFromString(plugin, &number, cases[i][0]);
+            plugin->decimalToString(plugin, &number, actual);
+            if (strcmp(actual, cases[i][standard + 1])) {
+                printf("FAIL decimal text tie: %s standard=%d expected=%s actual=%s\n",
+                       cases[i][0], standard, cases[i][standard + 1], actual);
+                ++errors;
+            }
+        }
+        /* Nearby binary inputs remain distinct through the existing 16-digit
+         * float-to-text conversion; immediate ULP neighbors need not. */
+        for (direction = 0; direction < 2; ++direction) {
+            double neighbor = direction ? 1.2344500001 : 1.2344499999;
+            for (sign = 0; sign < 2; ++sign) {
+                plugin->decimalFromDouble(plugin, &number, sign ? -neighbor : neighbor);
+                plugin->decimalToString(plugin, &number, actual);
+                snprintf(expected, sizeof(expected), "%s%s", sign ? "-" : "",
+                         direction ? "1.2345" : "1.2344");
+                if (strcmp(actual, expected)) {
+                    printf("FAIL binary neighbor: standard=%d direction=%d sign=%d expected=%s actual=%s\n",
+                           standard, direction, sign, expected, actual);
+                    ++errors;
+                }
+            }
+        }
+    }
+    clear_value(&number);
+    *plugin->num_context = saved;
+    plugin->syncNumericContext(plugin);
+    return errors;
+}
+
 // Main function
 int main(int argc, char *argv[]) {
     int errors = 0;
@@ -2058,6 +2121,7 @@ int main(int argc, char *argv[]) {
 
     printf("\n-----------------------\n- test_decimalToString() and decimalFromString()\n");
     errors += test_decimalToString_decimalFromString();
+    errors += test_decimal_text_rounding_ties();
     errors += test_decimalToString_total_contract();
     errors += test_decimalFromInt_total_contract();
 

@@ -179,8 +179,8 @@ static long double round_scaled(long double value, numeric_standard standard) {
 
 
 // Rounding a long double to a given number of significant digits
-static long double round_decimal(long double value, size_t significant_digits,
-                                 numeric_standard standard) {
+static long double round_decimal_with_tie(long double value, size_t significant_digits,
+                                          numeric_standard standard, int exact_half_tie) {
     // NaN is preserved for the caller's normal decimal signal handling.
     if (isnan(value)) {
         return value;
@@ -260,11 +260,47 @@ static long double round_decimal(long double value, size_t significant_digits,
     // Scale the value
     long double scaled = value * multiplier;
 
+    /* Decimal text can identify an exact half before strtold/scaling moves it
+     * by a binary ULP. Do not infer ties for other binary values. */
+    if (exact_half_tie) scaled = floorl(scaled) + 0.5L;
+
     // Round to the nearest integer
     long double rounded = round_scaled(scaled, standard);
 
     // Scale back to the original magnitude
     return rounded / multiplier;
+}
+
+static long double round_decimal(long double value, size_t significant_digits,
+                                 numeric_standard standard) {
+    return round_decimal_with_tie(value, significant_digits, standard, 0);
+}
+
+/* Exponents move the radix point but do not change significant-digit order.
+ * Restrict this hint to decimal text consumed by strtold, retaining its existing
+ * parsing boundary and binary/hex behavior. */
+static int decimal_text_half_tie(const char *text, const char *end, size_t digits) {
+    const char *p = text;
+    size_t significant = 0;
+    int started = 0, radix = 0, half = 0;
+    while (p < end && isspace((unsigned char)*p)) ++p;
+    if (p < end && (*p == '+' || *p == '-')) ++p;
+    for (; p < end; ++p) {
+        if (*p == '.' && !radix) { radix = 1; continue; }
+        if (*p < '0' || *p > '9') break;
+        if (!started && *p == '0') continue;
+        started = 1;
+        ++significant;
+        if (significant == digits + 1) half = *p == '5';
+        else if (significant > digits + 1 && *p != '0') half = 0;
+    }
+    if (p < end && (*p == 'e' || *p == 'E')) {
+        ++p;
+        if (p < end && (*p == '+' || *p == '-')) ++p;
+        if (p == end) return 0;
+        for (; p < end && *p >= '0' && *p <= '9'; ++p) {}
+    }
+    return p == end && half;
 }
 
 /* Ensure that the decNumber is big enough to hold the number */
@@ -339,9 +375,11 @@ static void decimalFromString(decplugin *plugin, value *result, const char *stri
     // Convert to double
     *number = strtold(string, &endptr);
     if (endptr == string) *number = NAN;
-    else *number = round_decimal(*number,
-                                 ((dbcontext*)(plugin->base.private_context))->digits,
-                                 getNumericStandard(plugin));
+    else {
+        size_t digits = ((dbcontext*)(plugin->base.private_context))->digits;
+        *number = round_decimal_with_tie(*number, digits, getNumericStandard(plugin),
+                                        decimal_text_half_tie(string, endptr, digits));
+    }
     check_signal(plugin, *number);
 }
 

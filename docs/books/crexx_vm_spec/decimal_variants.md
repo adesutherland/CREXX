@@ -48,3 +48,10 @@ On macOS ARM64 (Arch/OS `ARM64/6`), `db decimal` is therefore limited to about
 15-17 significant decimal digits. Programs that require higher precision, such
 as `numeric digits 1000`, must use the `mc decimal` backend instead of
 `db decimal`.
+
+The long-double backend recognizes exact decimal text ties before binary
+conversion and scaling. COMMON rounds such ties to even; CLASSIC rounds away
+from zero. For example, at five significant digits, decimal text `1.23445`
+becomes `1.2344` in COMMON and `1.2345` in CLASSIC. Nearby non-tie values remain
+distinct. This does not increase the backend's host precision or turn its
+binary arithmetic into arbitrary-precision decimal arithmetic.
