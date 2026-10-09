@@ -1922,6 +1922,129 @@ static void free_decimal_literal_value(value *literal_value) {
     value_free(literal_value);
 }
 
+/* Integer arithmetic must truncate an unrounded quotient, not DDIV's
+ * rounded value. Use the existing opaque plugin API and a temporary context;
+ * no plugin ABI/opcode changes and no backend representation assumptions. */
+static value *decimal_integer_literal_value(decplugin *decimal, const char *text) {
+    numeric_context *saved = decimal->num_context;
+    numeric_context work;
+    value *number;
+    size_t length = strlen(text);
+    if (!saved || saved->standard != NUMERIC_STANDARD_CLASSIC || length > INT_MAX)
+        return decimal_literal_value(decimal, text);
+    work = *saved;
+    if ((size_t)work.digits < length) work.digits = (int)length;
+    decimal->num_context = &work;
+    decimal->syncNumericContext(decimal);
+    number = decimal_literal_value(decimal, text);
+    decimal->num_context = saved;
+    decimal->syncNumericContext(decimal);
+    return number;
+}
+
+static int decimal_integer_guard_value(decplugin *decimal, value *prepared,
+                                       const value *input, int digits) {
+    size_t capacity = decimal->getRequiredStringSize(decimal, input);
+    char *coefficient;
+    char *text;
+    rxinteger exponent;
+    size_t i, out = 0, count = 0;
+    if (capacity > SIZE_MAX - 48) RX_PANIC_OOM("decimal integer operand", capacity, "guard digits");
+    coefficient = malloc(capacity);
+    text = malloc(capacity + 48);
+    if (!coefficient || !text) RX_PANIC_OOM("decimal integer operand", capacity, "guard digits");
+    decimal->decimalExtract(decimal, coefficient, &exponent, (value *)input);
+    if (decimal->base.signal_number) goto done;
+    i = 0;
+    if (coefficient[i] == '-' || coefficient[i] == '+') text[out++] = coefficient[i++];
+    while (coefficient[i] && count < (size_t)digits + 1) {
+        unsigned char ch = (unsigned char)coefficient[i++];
+        if (ch == '.') continue;
+        if (ch < '0' || ch > '9') {
+            decimal->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
+            decimal->base.signal_string = "Non-finite Classic integer operand";
+            goto done;
+        }
+        if (count == 1) text[out++] = '.';
+        text[out++] = (char)ch;
+        count++;
+    }
+    snprintf(text + out, capacity + 48 - out, "E%lld", (long long)exponent);
+    decimal->decimalFromString(decimal, prepared, text);
+ done:
+    free(coefficient);
+    free(text);
+    return decimal->base.signal_number == 0;
+}
+
+static void decimal_integer_arithmetic(decplugin *decimal, value *result,
+                                       const value *left, const value *right,
+                                       int remainder) {
+    numeric_context *saved = decimal->num_context;
+    numeric_context work_context;
+    int classic = saved && saved->standard == NUMERIC_STANDARD_CLASSIC;
+    value *prepared_left = NULL, *prepared_right = NULL;
+    value *quotient = value_f(), *product = value_f(), *zero = value_f();
+    int original_digits = saved ? saved->digits : (int)decimal->getDigits(decimal);
+    decimal->base.signal_number = 0;
+    decimal->base.signal_string = NULL;
+    if (classic) {
+        work_context = *saved;
+        if (original_digits > (INT_MAX - 3) / 2) {
+            decimal->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
+            decimal->base.signal_string = "Classic integer work precision exceeds supported range";
+            goto done;
+        }
+        work_context.digits = original_digits * 2 + 3;
+        work_context.fuzz = 0;
+        decimal->num_context = &work_context;
+        decimal->syncNumericContext(decimal);
+        prepared_left = value_f();
+        prepared_right = value_f();
+        if (!decimal_integer_guard_value(decimal, prepared_left, left, original_digits) ||
+            !decimal_integer_guard_value(decimal, prepared_right, right, original_digits)) goto done;
+        left = prepared_left;
+        right = prepared_right;
+    }
+    decimal->decimalDiv(decimal, quotient, left, right);
+    /* Preserve the first error; a later truncate/multiply must not erase it. */
+    if (decimal->base.signal_number) goto done;
+    decimal->decimalTruncate(decimal, quotient, quotient);
+    if (decimal->base.signal_number) goto done;
+    if (classic) {
+        size_t capacity = decimal->getRequiredStringSize(decimal, quotient);
+        char *coefficient = malloc(capacity);
+        rxinteger exponent;
+        if (!coefficient) RX_PANIC_OOM("decimal integer result", capacity, "DIGITS limit");
+        decimal->decimalExtract(decimal, coefficient, &exponent, quotient);
+        free(coefficient);
+        if (decimal->base.signal_number) goto done;
+        if (!decimal->decimalIsZero(decimal, quotient) && exponent >= original_digits) {
+            decimal->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
+            decimal->base.signal_string = "Classic integer quotient exceeds NUMERIC DIGITS";
+            goto done;
+        }
+    }
+    if (remainder) {
+        decimal->decimalMul(decimal, product, quotient, right);
+        if (decimal->base.signal_number) goto done;
+        decimal->decimalSub(decimal, quotient, left, product);
+        if (decimal->base.signal_number) goto done;
+    }
+    decimal->num_context = saved;
+    decimal->syncNumericContext(decimal);
+    decimal->decimalFromInt(decimal, zero, 0);
+    decimal->decimalAdd(decimal, result, quotient, zero);
+ done:
+    decimal->num_context = saved;
+    decimal->syncNumericContext(decimal);
+    if (prepared_left) value_free(prepared_left);
+    if (prepared_right) value_free(prepared_right);
+    value_free(quotient);
+    value_free(product);
+    value_free(zero);
+}
+
 static char *build_runtime_member_name(const char *class_name, size_t class_name_length,
                                        const char *member_name, size_t member_name_length) {
     char *proc_name;
@@ -2794,6 +2917,23 @@ static void resolve_runtime_source_context(module *mod, size_t address, rxvm_sou
     }
 }
 
+static void print_runtime_source_line(const string_constant *source) {
+    const char *cursor = source->string;
+    size_t remaining = source->string_len;
+    while (remaining) {
+        const char *nul = memchr(cursor, 0, remaining);
+        size_t count = nul ? (size_t)(nul - cursor) : remaining;
+        if (count) fwrite(cursor, 1, count, stderr);
+        cursor += count;
+        remaining -= count;
+        if (nul) {
+            fputs("\\0", stderr);
+            cursor++;
+            remaining--;
+        }
+    }
+}
+
 static void print_runtime_panic_location(rxvm_context *context, rxinteger module_number, rxinteger address) {
     module *mod;
     rxvm_source_context source_context;
@@ -2818,11 +2958,11 @@ static void print_runtime_panic_location(rxvm_context *context, rxinteger module
         if (source_context.file) {
             fprintf(stderr, "%.*s:", (int) source_context.file->string_len, source_context.file->string);
         }
-        fprintf(stderr, "%zu:%zu: %.*s\n",
+        fprintf(stderr, "%zu:%zu: ",
                 source_context.line,
-                source_context.column,
-                (int) source_context.source->string_len,
-                source_context.source->string);
+                source_context.column);
+        print_runtime_source_line(source_context.source);
+        fputc('\n', stderr);
     }
 }
 

@@ -6165,7 +6165,7 @@ add_levelc_lowered_tree_shape_test(levelc_signal_direct_frame_tree
         rexx_src/levelc_signal_direct.rexx
         "FRAME_BRANCH"
         "FRAME_LABEL"
-        "setSymbolValue")
+        "setSignalLine")
 add_levelc_lowered_tree_shape_test(levelc_signal_value_frame_tree
         rexx_src/levelc_signal_value_once.rexx
         "FRAME_BRANCH"
@@ -9568,4 +9568,37 @@ foreach(_bif_mode IN ITEMS opt noopt)
             -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_queue_linked.cmake)
     set_tests_properties(levelc_bif_reference_audit_linked_${_bif_mode} PROPERTIES
         LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 600 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+endforeach()
+
+# LC-CLOSE: isolated Debug/ASan pilot measurements are recorded in the Level C
+# worklist. Keep these nested toolchain aggregates out of the broad worker pool;
+# the generous timeout protects against hangs and is not a performance target.
+foreach(_closeout_mode IN ITEMS opt noopt linked_opt linked_noopt)
+    set(_closeout_flags)
+    if(_closeout_mode MATCHES "noopt")
+        list(APPEND _closeout_flags --noopt)
+    endif()
+    if(_closeout_mode MATCHES "linked")
+        list(APPEND _closeout_flags --linked)
+    endif()
+    foreach(_closeout_family IN ITEMS expression clock)
+        set(_closeout_name classic_${_closeout_family}_contract_${_closeout_mode})
+        add_test(NAME ${_closeout_name} COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/classic_${_closeout_family}_contract.py
+            --bindir ${CMAKE_BINARY_DIR}/bin ${_closeout_flags})
+        set_tests_properties(${_closeout_name} PROPERTIES
+            LABELS "compiler;levelc;comprehensive"
+            RUN_SERIAL TRUE TIMEOUT 1200
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    endforeach()
+    foreach(_source_level IN ITEMS b c g l)
+        set(_closeout_name source_data_contract_${_source_level}_${_closeout_mode})
+        add_test(NAME ${_closeout_name} COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/source_data_contract.py
+            --bindir ${CMAKE_BINARY_DIR}/bin --level ${_source_level} ${_closeout_flags})
+        set_tests_properties(${_closeout_name} PROPERTIES
+            LABELS "compiler;source;level${_source_level};comprehensive"
+            RUN_SERIAL TRUE TIMEOUT 600
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    endforeach()
 endforeach()

@@ -16,6 +16,16 @@ conformance. This guide describes existing
 typed mechanisms; the compatibility programme introduces no new codec,
 normalization, grapheme or stream rule.
 
+## Agreed source boundary (2026-10-08)
+
+Source input is Unicode across B/C/G/L. NUL is source data rather than EOF:
+literals/comments and imported source preserve it; invalid lexical positions
+receive a diagnostic. No implicit encoding-conversion or new normalization
+rule follows from this repair. Existing conversion tools remain available;
+their source/language semantics will be agreed later. Level C may assume
+Unicode input, while code containing non-Latin characters remains undefined
+until that design. The LC-CLOSE plan owns source/diagnostic qualification.
+
 ## Non-negotiable boundary
 
 - `.string` is valid UTF-8 text and ordinary Level B positions count

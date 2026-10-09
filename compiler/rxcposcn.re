@@ -54,8 +54,7 @@ int opt_scan(Context* s) {
 
     eol2 = "\r\n";
     eol1 = [\r] | [\n];
-    eof = [\000] ;
-    any = [^] \ eof ;
+    any = [^]; /* NUL is source data; only YYLIMIT ends input. */
     digit = [0-9];
     symchr = letter|digit|[._];
     symbol = symchr+;
@@ -82,7 +81,6 @@ int opt_scan(Context* s) {
     'NUMERIC_COMMON' { return(TK_NUMERIC_COMMON); }
     'NUMERIC_CLASSIC' { return(TK_NUMERIC_CLASSIC); }
     symbol { return(TK_SYMBOL); }
-    eof { return(TK_EOS); }
     $ { return(TK_EOS); }
     whitespace {
         s->top = s->cursor;
@@ -137,7 +135,6 @@ int opt_scan(Context* s) {
         ++depth;
         goto comment;
     }
-    eof { return(TK_EOS); }
     $ { return(TK_EOS); }
     * { goto comment; }
 */
@@ -158,7 +155,6 @@ skip_line_comment:
     s->top = s->cursor - 1;
     return(TK_EOC);
   }
-  eof { return(TK_EOS); }
   $ { return(TK_EOS); }
   * {
     goto skip_line_comment;

@@ -5,6 +5,7 @@
 #include "rxcpmain.h"
 #include "rxcp_ast_rewrite.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_util.h"
 
 static int failures = 0;
 
@@ -47,7 +48,7 @@ static void test_add_ast_inherits_source_anchor(void) {
     Context *context;
     ASTNode *parent;
     ASTNode *child;
-    SourceNode dummy_source;
+    SourceNode dummy_source = {0};
 
     context = cntx_f();
     parent = ast_ft(context, PROGRAM_FILE);
@@ -67,7 +68,7 @@ static void test_ast_fstk_preserves_source_anchor(void) {
     Context *context;
     ASTNode *source_node;
     ASTNode *copy_node;
-    SourceNode dummy_source;
+    SourceNode dummy_source = {0};
 
     context = cntx_f();
     source_node = ast_ftt(context, VAR_SYMBOL, "value");
@@ -89,7 +90,7 @@ static void test_ast_execute_rewrite_marks_synthetic(void) {
     ASTNode *target;
     ASTNode *rewritten;
     ASTRewriteTemplate *template;
-    SourceNode dummy_source;
+    SourceNode dummy_source = {0};
 
     context = cntx_f();
     root = ast_ft(context, REXX_UNIVERSE);
@@ -280,6 +281,16 @@ static void test_reporting_anchor_helpers(void) {
     call_b->source_start = call_b_line;
     call_b->source_end = call_b_line + strlen(call_b_line) - 2;
 
+    {
+        char *owned_a = strdup(call_a_line);
+        char *owned_b = strdup(call_b_line);
+        expect_true(rxcp_retain_buffer(context, owned_a, strlen(call_a_line)), "retain first source range");
+        expect_true(rxcp_retain_buffer(context, owned_b, strlen(call_b_line)), "retain second source range");
+        call_a->source_start = owned_a;
+        call_a->source_end = owned_a + strlen(call_a_line) - 2;
+        call_b->source_start = owned_b;
+        call_b->source_end = owned_b + strlen(call_b_line) - 2;
+    }
     add_ast(root, file_node);
     add_ast(file_node, instructions);
     add_ast(instructions, call_a);

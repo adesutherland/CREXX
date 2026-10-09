@@ -734,6 +734,15 @@ void emit_flow(ASTNode *node, void *pl) {
             break;
 
         case TRACE_CLAUSE:
+            if (node->child) {
+                /* Inlining retains an authored value event after argument
+                 * evaluation and before the callee mutates its storage. */
+                node->output = output_f();
+                output_concat(node->output, node->child->output);
+                append_classic_value_trace_event(node->output, node, node->child);
+                output_concat(node->output, node->child->cleanup);
+                break;
+            }
             comment_meta = get_metaline(node);
             node->output = output_fs(comment_meta);
             free(comment_meta);

@@ -42,15 +42,15 @@ rexxclassicbif_time: procedure = .RexxValue
 
   pool_ref = context.callerPool()
   pool = dereference pool_ref
-  call pool.ensureClauseTime()
+  call context.ensureClauseTime()
   option = "N"
   if context.argumentExists(1) then option = context.argumentText(1)
 
   if \context.argumentExists(2) then do
     if option = "E" | option = "R" then
-      return .RexxValue(_lc_time_microseconds_text(pool.clauseElapsedMicroseconds(option = "R")))
-    if option = "O" then return .RexxValue(_lc_time_signed_text(pool.clauseOffsetMicroseconds()))
-    return .RexxValue(_lc_time_format(pool.clauseLocalMicroseconds(),option))
+      return .RexxValue(_lc_time_microseconds_text(context.clauseElapsedMicroseconds(option = "R")))
+    if option = "O" then return .RexxValue(_lc_time_signed_text(context.clauseOffsetMicroseconds()))
+    return .RexxValue(_lc_time_format(context.clauseLocalMicroseconds(),option))
   end
 
   if option = "E" | option = "R" | option = "O" then do

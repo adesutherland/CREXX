@@ -64,14 +64,21 @@ void reset_metaline_source_file(const char *file_name) {
     next_source_step_id = 1;
 }
 
-static int source_span_is_emit_safe(const char *start, const char *end) {
+static int source_anchor_range(Context *, SourceNode *, const char *, const char **, const char **);
+
+static int source_span_is_emit_safe(Context *context, SourceNode *source_node,
+                                    const char *start, const char *end) {
     size_t length;
+    const char *range_start, *range_end;
 
     if (!start || !end) return 0;
     if (end < start) return end + 1 == start;
     length = (size_t)(end - start) + 1;
     if (length > 2048) return 0;
-    return memchr(start, 0, length) == NULL;
+    /* Synthetic/inlined spans may lack a backing range. Never read past a
+     * source buffer merely because there was no embedded C-string terminator. */
+    return source_anchor_range(context, source_node, start, &range_start, &range_end) &&
+           end < range_end;
 }
 
 static char *empty_metaline(void) {
@@ -252,26 +259,37 @@ static unsigned int source_step_flags(char provenance, int compiler_added, Sourc
 }
 
 static int pointer_in_range(const char *ptr, const char *range_start, const char *range_end) {
-    return ptr && range_start && range_end && ptr >= range_start && ptr <= range_end;
+    return ptr && range_start && range_end && (uintptr_t)ptr >= (uintptr_t)range_start &&
+           (uintptr_t)ptr <= (uintptr_t)range_end;
 }
 
-static int context_source_range(Context *context, const char *ptr, const char **range_start, const char **range_end) {
-    if (!context || !context->buff_start || !context->buff_end || !ptr) return 0;
-    if (ptr < context->buff_start || ptr > context->buff_end) return 0;
-    if (range_start) *range_start = context->buff_start;
-    if (range_end) *range_end = context->buff_end;
-    return 1;
+static int context_source_range(Context *context, const char *ptr,
+                                 const char **range_start, const char **range_end) {
+    return rxcp_context_source_range(context, ptr, range_start, range_end);
 }
 
 static int owned_source_range(SourceNode *source_node, const char *ptr, const char **range_start, const char **range_end) {
     size_t length;
 
     if (!source_node || !source_node->owned_source_text || !ptr) return 0;
-    length = strlen(source_node->owned_source_text);
+    length = source_node->owned_source_text_length;
     if (!pointer_in_range(ptr, source_node->owned_source_text, source_node->owned_source_text + length)) return 0;
     if (range_start) *range_start = source_node->owned_source_text;
     if (range_end) *range_end = source_node->owned_source_text + length;
     return 1;
+}
+
+/* Token neighbours in a grafted contract need not belong to the node's
+ * authored file. Only derive lexical ranges from its own retained source. */
+static int source_token_span_is_emit_safe(Context *context, SourceNode *source_node,
+                                          const char *start, const char *end) {
+    const char *range_start, *range_end;
+    if (!start || !end) return 0;
+    if (!(owned_source_range(source_node, start, &range_start, &range_end) ||
+          rxcp_local_source_range(context, start, &range_start, &range_end) ||
+          (source_node && rxcp_local_source_range(source_node->context, start, &range_start, &range_end)))) return 0;
+    return (uintptr_t)end < (uintptr_t)range_end &&
+           source_span_is_emit_safe(context, source_node, start, end);
 }
 
 static int source_line_bounds(const char *ptr,
@@ -295,8 +313,7 @@ static int source_line_bounds(const char *ptr,
     line_end = ptr;
     while (line_end < range_end &&
            *line_end != '\n' &&
-           *line_end != '\r' &&
-           *line_end != 0) {
+           *line_end != '\r') {
         line_end++;
     }
 
@@ -339,7 +356,16 @@ static char *source_step_metaline(Context *context,
     char *result;
 
     if (!source_start || !source_end || line < 0) return empty_metaline();
-    if (!source_span_is_emit_safe(source_start, source_end)) return empty_metaline();
+    if (!source_span_is_emit_safe(context, source_node, source_start, source_end)) return empty_metaline();
+    if (source_node && source_node->owned_source_text && source_node->file_name &&
+        file_name && strcmp(source_node->file_name, file_name) != 0) return empty_metaline();
+    if (!(owned_source_range(source_node, source_start, &range_start, &range_end) ||
+          rxcp_local_source_range(context, source_start, &range_start, &range_end) ||
+          (source_node && rxcp_local_source_range(source_node->context, source_start, &range_start, &range_end)))) {
+        const char *owner_file = NULL;
+        if (!rxcp_import_source_range(context, source_start, &range_start, &range_end, &owner_file) ||
+            !owner_file || !file_name || strcmp(owner_file, file_name) != 0) return empty_metaline();
+    }
 
     range_start = 0;
     range_end = 0;
@@ -364,7 +390,7 @@ static char *source_step_metaline(Context *context,
 
     line_length = (size_t)(line_end - line_start);
     if (line_length == 0) return empty_metaline();
-    if (line_length > 4096 || memchr(line_start, 0, line_length)) return empty_metaline();
+    if (line_length > 4096) return empty_metaline();
 
     if (active_end_column < active_start_column) active_end_column = active_start_column;
     if (active_end_column > (int)line_length + 1) active_end_column = (int)line_length + 1;
@@ -944,7 +970,7 @@ char* get_metaline_between(ASTNode *from, ASTNode *to) {
     }
 
     if (!start || !end ||
-        !source_span_is_emit_safe(start->token_string, end->token_string + end->length - 1)) {
+        !source_token_span_is_emit_safe(from->context, from->source_node, start->token_string, end->token_string + end->length - 1)) {
         return empty_metaline();
     }
     return source_step_metaline(from->context,
@@ -969,7 +995,7 @@ char* get_metaline_token_after(ASTNode *node) {
         start = start->token_next;
     }
 
-    if (!start || !source_span_is_emit_safe(start->token_string, start->token_string + start->length - 1)) {
+    if (!start || !source_token_span_is_emit_safe(node->context, node->source_node, start->token_string, start->token_string + start->length - 1)) {
         return empty_metaline();
     }
     return source_step_metaline(node->context,
@@ -989,15 +1015,15 @@ char* get_metaline_clause(ASTNode *node) {
 
     if (node->token_start) start = node->token_start;
 
-    if (!start || !source_span_is_emit_safe(start->token_string, start->token_string + start->length - 1)) {
+    if (!start || !source_token_span_is_emit_safe(node->context, node->source_node, start->token_string, start->token_string + start->length - 1)) {
         return empty_metaline();
     }
     else {
         end = start;
-        while (end->token_next->token_type != TK_EOC && end->token_next->token_type != TK_EOS)
+        while (end->token_next && end->token_next->token_type != TK_EOC && end->token_next->token_type != TK_EOS)
             end = end->token_next;
 
-        if (!source_span_is_emit_safe(start->token_string, end->token_string + end->length - 1)) {
+        if (!source_token_span_is_emit_safe(node->context, node->source_node, start->token_string, end->token_string + end->length - 1)) {
             return empty_metaline();
         } else {
             return source_step_metaline(node->context,

@@ -398,10 +398,158 @@ static void decimalDiv(decplugin *plugin, value *result, const value *op1, const
     check_signal(plugin);
 }
 
+/* Whole-number checks inspect packed digits without expanding an exponent. */
+static int classic_power_whole(const decNumber *number) {
+    int remaining;
+    int unit = 0;
+    uInt value;
+    if (decNumberIsSpecial(number)) return 0;
+    if (decNumberIsZero(number) || number->exponent >= 0) return 1;
+    remaining = -number->exponent;
+    if (remaining >= number->digits) return 0;
+    while (remaining > 0) {
+        int count = remaining < DECDPUN ? remaining : DECDPUN;
+        value = number->lsu[unit++];
+        while (count--) {
+            if (value % 10) return 0;
+            value /= 10;
+            remaining--;
+        }
+    }
+    return 1;
+}
+
+static int classic_power_odd(const decNumber *number) {
+    int shift;
+    uInt value;
+    if (number->exponent > 0 || decNumberIsZero(number)) return 0;
+    shift = -number->exponent;
+    value = number->lsu[shift / DECDPUN];
+    shift %= DECDPUN;
+    while (shift--) value /= 10;
+    return (int)(value % 2);
+}
+
+/* decNumber's general transcendental fallback rejects the ordinary exponent
+ * limits for whole powers above its small-integer path. Classic uses binary
+ * reduction at DIGITS + exponent-length + 1, through the same backend ops. */
+static void classic_large_power(decplugin *plugin, value *result,
+                                 const decNumber *base, const decNumber *power) {
+    decContext *context = plugin->base.private_context;
+    decContext work = *context;
+    decNumber two, one, comparison;
+    value exponent = {0}, accumulator = {0}, quotient = {0}, residue = {0};
+    unsigned char *bits = NULL;
+    size_t count = 0, capacity;
+    int length = power->digits + power->exponent;
+    int invert = decNumberIsNegative(power);
+    uInt status = 0;
+    decNumberFromInt32(&one, 1);
+    /* A typed caller can retain more coefficient digits than the callee's
+     * current DIGITS. Include those digits in the overflow proof. */
+    if ((int64_t)length > (int64_t)context->digits + 10 &&
+        (int64_t)length > (int64_t)base->digits + 10) {
+        decNumberCompare(&comparison, base, &one, context);
+        /* Unit/zero bases are handled by decimalPow before this routine. */
+        if (decNumberIsNegative(base)) {
+            decNumberFromInt32(&one, -1);
+            decNumberCompare(&comparison, base, &one, context);
+            invert = !invert;
+        }
+        status = (decNumberIsNegative(&comparison) != invert) ? DEC_Underflow : DEC_Overflow;
+        context->status |= status;
+        decNumberZero(result->decimal_value);
+        check_signal(plugin);
+        return;
+    }
+    work.digits = context->digits + length + 1;
+    work.status = 0;
+    capacity = (size_t)length * 4 + 1;
+    bits = malloc(capacity);
+    if (!bits) RX_PANIC_OOM("Classic power bits", capacity, "whole exponent");
+    /* A typed caller may retain a whole exponent's fractional zero digits.
+     * Copy its complete coefficient before reducing it under work precision. */
+    EnsureCapacity(plugin, &exponent,
+                   power->digits > work.digits ? power->digits : work.digits);
+    EnsureCapacity(plugin, &accumulator, work.digits);
+    EnsureCapacity(plugin, &quotient, work.digits);
+    EnsureCapacity(plugin, &residue, work.digits);
+    decNumberCopy(exponent.decimal_value, power);
+    ((decNumber *)exponent.decimal_value)->bits &= ~DECNEG;
+    decNumberFromInt32(&two, 2);
+    while (!decNumberIsZero((decNumber *)exponent.decimal_value)) {
+        decNumberRemainder(residue.decimal_value, exponent.decimal_value, &two, &work);
+        bits[count++] = !decNumberIsZero((decNumber *)residue.decimal_value);
+        decNumberDivideInteger(quotient.decimal_value, exponent.decimal_value, &two, &work);
+        decNumberCopy(exponent.decimal_value, quotient.decimal_value);
+    }
+    decNumberFromInt32(accumulator.decimal_value, 1);
+    while (count) {
+        if (bits[--count]) decNumberMultiply(accumulator.decimal_value,
+                                            accumulator.decimal_value, base, &work);
+        if (work.status & DEC_Errors) break;
+        if (count) decNumberMultiply(accumulator.decimal_value,
+                                     accumulator.decimal_value, accumulator.decimal_value, &work);
+        if (work.status & DEC_Errors) break;
+    }
+    if (!(work.status & DEC_Errors) && invert) {
+        decNumberFromInt32(&one, 1);
+        decNumberDivide(accumulator.decimal_value, &one, accumulator.decimal_value, &work);
+    }
+    context->status |= work.status & DEC_Errors;
+    decNumberPlus(result->decimal_value, accumulator.decimal_value, context);
+    plugin->release_value_storage(&exponent);
+    plugin->release_value_storage(&accumulator);
+    plugin->release_value_storage(&quotient);
+    plugin->release_value_storage(&residue);
+    free(bits);
+    check_signal(plugin);
+}
+
 /* Power two rxvmplugin numbers */
 static void decimalPow(decplugin *plugin, value *result, const value *op1, const value *op2) {
     EnsureCapacity(plugin, result, ((decContext*)(plugin->base.private_context))->digits);
-    decNumberPower(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
+    /* Classic whole powers include 0**0 and unbounded whole powers of +/-1. */
+    if (plugin->num_context && plugin->num_context->standard == NUMERIC_STANDARD_CLASSIC) {
+        const decNumber *exponent = op2->decimal_value;
+        decNumber one, comparison;
+        if (!classic_power_whole(exponent)) {
+            ((decContext *)plugin->base.private_context)->status |= DEC_Invalid_operation;
+            decNumberZero(result->decimal_value);
+            ((decNumber *)result->decimal_value)->bits |= DECNAN;
+            check_signal(plugin);
+            return;
+        }
+        decNumberFromInt32(&one, 1);
+        decNumberCompare(&comparison, op1->decimal_value, &one,
+                         (decContext *)plugin->base.private_context);
+        if (decNumberIsZero(exponent) || decNumberIsZero(&comparison)) {
+            decNumberFromInt32(result->decimal_value, 1);
+            check_signal(plugin);
+            return;
+        }
+        if (decNumberIsZero((const decNumber *)op1->decimal_value)) {
+            decNumberZero(result->decimal_value);
+            if (decNumberIsNegative(exponent))
+                ((decContext *)plugin->base.private_context)->status |= DEC_Division_by_zero;
+            check_signal(plugin);
+            return;
+        }
+        decNumberFromInt32(&one, -1);
+        decNumberCompare(&comparison, op1->decimal_value, &one,
+                         (decContext *)plugin->base.private_context);
+        if (decNumberIsZero(&comparison)) {
+            decNumberFromInt32(result->decimal_value, classic_power_odd(exponent) ? -1 : 1);
+            check_signal(plugin);
+            return;
+        }
+        if (exponent->digits + exponent->exponent > 9) {
+            classic_large_power(plugin, result, op1->decimal_value, exponent);
+            return;
+        }
+    }
+    decNumberPower(result->decimal_value, op1->decimal_value, op2->decimal_value,
+                   (decContext *)plugin->base.private_context);
     check_signal(plugin);
 }
 

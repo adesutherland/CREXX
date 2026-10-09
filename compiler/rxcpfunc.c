@@ -173,6 +173,41 @@ static int src_class(Context *context, char* fqname, struct imported_class **cls
     else return 0;
 }
 
+/* Grafted contract ASTs retain pointers into registry-owned parsed buffers. */
+int rxcp_import_source_range(Context *context, const char *ptr,
+                              const char **start, const char **end, const char **file) {
+    struct class_tree_wrapper *cit;
+    struct tree_wrapper *fit;
+    Context *master;
+    if (!context || !ptr) return 0;
+    master = context->master_context ? context->master_context : context;
+    {
+        avl_tree_for_each_in_order(cit, master->importable_class_tree, struct class_tree_wrapper, index_node) {
+            struct imported_class *cls = cit->cls;
+            struct retained_imported_class_context *retained;
+            if (rxcp_local_source_range(cls->context, ptr, start, end)) {
+                if (file) *file = cls->context->file_name;
+                return 1;
+            }
+            for (retained = cls->retained_contexts; retained; retained = retained->next)
+                if (rxcp_local_source_range(retained->context, ptr, start, end)) {
+                    if (file) *file = retained->context->file_name;
+                    return 1;
+                }
+        }
+    }
+    {
+        avl_tree_for_each_in_order(fit, master->importable_function_tree, struct tree_wrapper, index_node) {
+            imported_func *func = fit->func;
+            if (rxcp_local_source_range(func->context, ptr, start, end)) {
+                if (file) *file = func->context->file_name;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 static int imported_class_metadata_implements(Context *context, const char *class_fqname, const char *interface_fqname) {
     struct imported_class *cls = 0;
     size_t i;

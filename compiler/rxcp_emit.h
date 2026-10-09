@@ -60,6 +60,7 @@ void output_insert_before(OutputFragment* existing, OutputFragment* before);
 void output_insert_after(OutputFragment* existing, OutputFragment* after);
 void output_concat(OutputFragment* before, OutputFragment* after);
 void output_append_text(OutputFragment* before, char* after);
+void append_classic_value_trace_event(OutputFragment *, ASTNode *, ASTNode *);
 void output_prepend_text(char* before, OutputFragment* after);
 int output_replace_text_once(OutputFragment* output, const char* old_text, const char* new_text);
 char *rxcp_combine_superinstructions(const char *text);

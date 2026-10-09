@@ -32,6 +32,8 @@ int main(void) {
     char source[] = "signal on syntax\nnext:\nsignal off syntax\n";
     memset(&context, 0, sizeof(context));
     context.file_name = "frame_control.crexx";
+    context.buff_start = source;
+    context.buff_end = source + sizeof(source) - 1;
     root = ast_ft(&context, REXX_UNIVERSE);
     namespace_node = ast_ft(&context, NAMESPACE);
     procedure = ast_ft(&context, PROCEDURE);
@@ -65,8 +67,8 @@ int main(void) {
     ast_copy_str(on, "SYNTAX");
     ast_copy_str(on_bound, "SYNTAX");
     ast_copy_str(off, "SYNTAX");
-    label->line = 2;
-    label->column = 1;
+    label->line = 1;
+    label->column = 0;
     label->source_start = source + 17;
     label->source_end = source + 21;
     label->source_provenance = AST_SOURCE_EXACT;
@@ -74,7 +76,7 @@ int main(void) {
     assert(rxcp_flow_analyze(&context, 0));
     assert(rxcp_flow_analyze(&context, 1));
     check_output(branch, "br l", NULL);
-    check_output(label, "frame:", "frame_control.crexx");
+    check_output(label, "frame:", "\"frame_control.crexx\" 2 1 6 \"next:\"");
     check_output(on, "sigbr l", "\"CLASSIC_SYNTAX\"");
     check_output(on_bound, "sigbrv l", "r7,\"CLASSIC_SYNTAX\"");
     check_output(off, "sighalt \"CLASSIC_SYNTAX\"", NULL);

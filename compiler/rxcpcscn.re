@@ -65,8 +65,7 @@ regular:
 
   eol2 = "\r\n";
   eol1 = [\r] | [\n];
-  eof = [\000];
-  any = [^] \ eof;
+  any = [^]; /* NUL is source data; only YYLIMIT ends input. */
   digit = [0-9];
   not = "\\";
   lcfsymchr = letter | [_!?];
@@ -163,7 +162,6 @@ regular:
        s->linestart = s->cursor + 1;
        RET(TK_EOL);
     }
-    eof { RET(TK_EOS); }
     $ { RET(TK_EOS); }
     lcspace {
       s->top = s->cursor;
@@ -198,14 +196,6 @@ comment:
     ++depth;
     goto comment;
   }
-  eof {
-      s->line = comment_line;
-      s->prev_linestart = s->linestart;
-      s->linestart = comment_linestart;
-      s->top = comment_top;
-      s->cursor = s->top + 2;
-      RET(TK_BADCOMMENT);
-  }
   $ {
       s->line = comment_line;
       s->prev_linestart = s->linestart;
@@ -231,7 +221,6 @@ skip_line_comment:
     s->linestart = s->cursor + 1;
     RET(TK_EOL);
   }
-  eof { RET(TK_EOS); }
   $ { RET(TK_EOS); }
   * { goto skip_line_comment; }
 */

@@ -2620,6 +2620,64 @@ done:
     return ok;
 }
 
+/* Reuse the direct-BIF error transport: evaluate into a call-local context,
+ * then raise CLASSIC_SYNTAX at the authored operator rather than a helper. */
+static ASTNode *levelc_checked_expression(Context *context, ASTNode *expr,
+                                          ASTNode *prelude, const char *method,
+                                          ASTNode *left, ASTNode *right) {
+    char *context_name = rxcp_remap_create_generated_node_name(
+        "__rxcp_levelc_operator_context_", expr);
+    char *result_name = rxcp_remap_create_generated_node_name(
+        "__rxcp_levelc_operator_result_", expr);
+    ASTNode *args[3];
+    ASTNode *receiver, *call, *statement, *condition, *detail, *result = NULL;
+    if (!context_name || !result_name || !left) goto done;
+    args[0] = rxcp_remap_create_string_constant(context, expr, method);
+    call = args[0] ? rxcp_remap_create_factory_call(context, expr,
+        LEVELC_BIF_CONTEXT_CLASS, args, 1) : NULL;
+    if (call) {
+        /* Named factories use the same association as rxcpbgmr.y. */
+        call->association = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, "expression");
+        if (!call->association) goto done;
+    }
+    statement = call ? rxcp_remap_create_named_assignment(
+        context, expr, context_name, call) : NULL;
+    if (!statement) goto done;
+    add_ast(prelude, statement);
+    receiver = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name);
+    args[0] = levelc_config_ref(context, expr, VAR_SYMBOL);
+    statement = receiver && args[0] ? rxcp_remap_create_member_call_statement(
+        context, expr, receiver, "setConfig", args, 1) : NULL;
+    if (!statement) goto done;
+    add_ast(prelude, statement);
+    args[0] = rxcp_remap_create_reference_expr(context, expr,
+        rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name));
+    args[1] = left;
+    args[2] = right;
+    call = args[0] ? rxcp_remap_create_function_call(context, expr,
+        right ? "rexxclassicbifs.rexxclassic_expression_binary"
+              : "rexxclassicbifs.rexxclassic_expression_unary",
+        args, right ? 3 : 2) : NULL;
+    if (call) ast_attach_semantic_context(call, ast_make_semantic_context(context,
+        right ? AST_SEMANTIC_CONTEXT_CLASSIC_BINARY : AST_SEMANTIC_CONTEXT_CLASSIC_UNARY,
+        expr, NULL));
+    statement = call ? rxcp_remap_create_named_assignment(
+        context, expr, result_name, call) : NULL;
+    if (!statement) goto done;
+    add_ast(prelude, statement);
+    receiver = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name);
+    condition = rxcp_remap_create_member_call(context, expr, receiver, "hasError", NULL, 0);
+    receiver = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name);
+    detail = rxcp_remap_create_member_call(context, expr, receiver, "errorDetail", NULL, 0);
+    if (!condition || !detail || !levelc_append_classic_error_if_expr(
+            context, prelude, expr, condition, detail)) goto done;
+    result = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, result_name);
+done:
+    free(context_name);
+    free(result_name);
+    return result;
+}
+
 static ASTNode *levelc_lower_binary_method(Context *context,
                                            ASTNode *expr,
                                            LevelCLowerPlan *plan,
@@ -2681,6 +2739,13 @@ static ASTNode *levelc_lower_binary_method(Context *context,
                 "__rxcp_levelc_numeric_right_loss_",
                 "__rxcp_levelc_numeric_right_event_")) goto fail;
     }
+    if (numeric || strcmp(method_name, "logicalXor") == 0) {
+        ASTNode *checked = levelc_checked_expression(context, expr, prelude,
+                                                     method_name, receiver, args[0]);
+        free(left_name);
+        free(right_name);
+        return checked;
+    }
     args[1] = numeric ? rxcp_remap_create_integer_constant(
         context, expr, 1, TP_INTEGER) : NULL;
     if (numeric && !args[1]) goto fail;
@@ -2730,6 +2795,12 @@ static ASTNode *levelc_lower_unary_method(Context *context,
                 "__rxcp_levelc_numeric_unary_loss_",
                 "__rxcp_levelc_numeric_unary_event_")) goto unary_fail;
     }
+    if (arithmetic || strcmp(method_name, "logicalNot") == 0) {
+        ASTNode *checked = levelc_checked_expression(context, expr, prelude,
+                                                     method_name, receiver, NULL);
+        free(value_name);
+        return checked;
+    }
     args[0] = arithmetic ? rxcp_remap_create_integer_constant(
         context, expr, 1, TP_INTEGER) : NULL;
     if (arithmetic && !args[0]) goto unary_fail;
@@ -2748,31 +2819,43 @@ unary_fail:
 
 static ASTNode *levelc_if_logical_value(Context *context,
                                         ASTNode *source_node,
+                                        ASTNode *prelude,
                                         ASTNode *value) {
     if (!value) return NULL;
+    value = levelc_checked_expression(context, source_node, prelude,
+                                      "logicalIfValue", value, NULL);
     return rxcp_remap_create_member_call(context,
                                          source_node,
                                          value,
-                                         "logicalIfValue",
+                                         "logicalValue",
                                          NULL,
                                          0);
 }
 
 static ASTNode *levelc_do_condition_logical_value(Context *context,
                                                   ASTNode *source_node,
+                                                  ASTNode *prelude,
                                                   ASTNode *value) {
     if (!value) return NULL;
+    value = levelc_checked_expression(context, source_node, prelude,
+                                      source_node->node_type == WHILE
+                                          ? "logicalWhileValue" : "logicalUntilValue",
+                                      value, NULL);
     return rxcp_remap_create_member_call(context,
                                          source_node,
                                          value,
-                                         source_node->node_type == WHILE
-                                             ? "logicalWhileValue"
-                                             : "logicalUntilValue",
+                                         "logicalValue",
                                          NULL,
                                          0);
 }
 
 /* Finish an evaluated source clause before entering its controlled body. */
+static int levelc_uses_clause_clock(LevelCLowerPlan *plan) {
+    size_t index;
+    return plan && ((levelc_find_direct_bif("DATE", &index) && plan->used_direct_bifs[index]) ||
+                    (levelc_find_direct_bif("TIME", &index) && plan->used_direct_bifs[index]));
+}
+
 static ASTNode *levelc_clause_checkpoint_value(Context *context,
                                                 ASTNode *source,
                                                 LevelCLowerPlan *plan,
@@ -2783,7 +2866,7 @@ static ASTNode *levelc_clause_checkpoint_value(Context *context,
     ASTNode *result;
 
     if (!value || !prelude) return NULL;
-    if (!plan || !plan->call_handler_count) return value;
+    if (!plan || (!plan->call_handler_count && !levelc_uses_clause_clock(plan))) return value;
     name = rxcp_remap_create_generated_node_name(
         LEVELC_CALL_CLAUSE_RESULT_PREFIX, source);
     capture = name ? rxcp_remap_create_named_assignment(
@@ -2793,6 +2876,8 @@ static ASTNode *levelc_clause_checkpoint_value(Context *context,
     free(name);
     if (!capture || !result) return NULL;
     add_ast(prelude, capture);
+    if (levelc_uses_clause_clock(plan) && !levelc_append_activation_method(
+            context, prelude, source, "beginClauseTime")) return NULL;
     if (!levelc_append_call_trap_checkpoint(context, prelude, source, plan))
         return NULL;
     return result;
@@ -2815,7 +2900,7 @@ static ASTNode *levelc_controlled_while_entry(Context *context,
     ASTNode *branch;
     ASTNode *block;
 
-    condition_value = levelc_do_condition_logical_value(context, condition_node,
+    condition_value = levelc_do_condition_logical_value(context, condition_node, prelude,
                                                         condition_value);
     condition_value = levelc_clause_checkpoint_value(
         context, condition_node, plan, prelude, condition_value);
@@ -2874,7 +2959,7 @@ static ASTNode *levelc_controlled_until_end(Context *context,
     ASTNode *branch;
     ASTNode *block;
 
-    condition_value = levelc_do_condition_logical_value(context, condition_node,
+    condition_value = levelc_do_condition_logical_value(context, condition_node, condition_prelude,
                                                         condition_value);
     condition_value = levelc_clause_checkpoint_value(
         context, condition_node, plan, condition_prelude, condition_value);
@@ -2940,13 +3025,9 @@ static ASTNode *levelc_lower_classic_logical_binary(Context *context,
     if (!right || !left_ref) goto fail;
 
     args[0] = right;
-    result = rxcp_remap_create_member_call(context,
-                                          expr,
-                                          left_ref,
-                                          expr->node_type == OP_AND
-                                              ? "logicalAnd" : "logicalOr",
-                                          args,
-                                          1);
+    result = levelc_checked_expression(context, expr, prelude,
+                                       expr->node_type == OP_AND ? "logicalAnd" : "logicalOr",
+                                       left_ref, args[0]);
     free(left_name);
     return result;
 
@@ -3136,6 +3217,17 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
                                                         1);
     if (!statement) goto fail;
     add_ast(prelude, statement);
+
+    if (strcmp(bif_name, "DATE") == 0 || strcmp(bif_name, "TIME") == 0) {
+        receiver = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name);
+        member_args[0] = rxcp_remap_create_reference_expr(context, expr,
+            rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL,
+                activation_name ? activation_name : LEVELC_ACTIVATION_SYMBOL));
+        statement = receiver && member_args[0] ? rxcp_remap_create_member_call_statement(
+            context, expr, receiver, "setCallerActivation", member_args, 1) : NULL;
+        if (!statement) goto fail;
+        add_ast(prelude, statement);
+    }
 
     function_args[0] = rxcp_remap_create_reference_expr(
             context,
@@ -5820,31 +5912,14 @@ fail:
 }
 
 static int levelc_append_signal_sigl(Context *context,
-                                     ASTNode *instructions,
-                                     ASTNode *stmt) {
-    ASTNode *line_value;
-    ASTNode *line_text;
-    ASTNode *receiver;
-    ASTNode *args[2];
-    ASTNode *set_sigl;
-    char line[32];
-
-    snprintf(line, sizeof(line), "%d", stmt->token ? stmt->token->line + 1 : 0);
-    line_text = rxcp_remap_create_string_constant(context, stmt, line);
-    args[0] = rxcp_remap_create_string_constant(context, stmt, "SIGL");
-    {
-        ASTNode *value_args[1] = {line_text};
-        line_value = line_text ? rxcp_remap_create_factory_call(
-            context, stmt, LEVELC_REXX_VALUE_CLASS, value_args, 1) : NULL;
-    }
-    args[1] = line_value;
-    receiver = levelc_pool_ref(context, stmt, VAR_SYMBOL);
-    set_sigl = receiver && args[0] && args[1]
-        ? rxcp_remap_create_member_call_statement(context, stmt, receiver,
-                                                  "setSymbolValue", args, 2)
-        : NULL;
-    if (!set_sigl) return 0;
-    add_ast(instructions, set_sigl);
+                                      ASTNode *instructions, ASTNode *stmt) {
+    ASTNode *receiver = levelc_pool_ref(context, stmt, VAR_SYMBOL);
+    ASTNode *args[1] = {rxcp_remap_create_integer_constant(context, stmt,
+        stmt->token ? stmt->token->line + 1 : 0, TP_INTEGER)};
+    ASTNode *call = receiver && args[0] ? rxcp_remap_create_member_call_statement(
+        context, stmt, receiver, "setSignalLine", args, 1) : NULL;
+    if (!call) return 0;
+    add_ast(instructions, call);
     return 1;
 }
 
@@ -6240,6 +6315,8 @@ static int levelc_lower_statement(Context *context,
     }
     ast_copy_source_anchor(trace_clause, stmt, AST_SOURCE_COMPOSITE);
     add_ast(instructions, trace_clause);
+    if (levelc_uses_clause_clock(plan) && !levelc_append_activation_method(
+            context, instructions, stmt, "beginClauseTime")) return 0;
     if (stmt->node_type == NOP) return levelc_lower_nop(context, instructions, stmt, reason_out);
     if (stmt->node_type == LEAVE || stmt->node_type == ITERATE)
         return levelc_lower_transfer(context, instructions, stmt, plan, reason_out);
@@ -6442,7 +6519,7 @@ static int levelc_lower_if_statement(Context *context,
 
     if (!prelude || !then_instructions || (else_node && !else_instructions)) goto fail;
     condition = levelc_lower_expr(context, condition_node, plan, prelude);
-    condition = levelc_if_logical_value(context, condition_node, condition);
+    condition = levelc_if_logical_value(context, condition_node, prelude, condition);
     condition = levelc_clause_checkpoint_value(context, stmt, plan,
                                                 prelude, condition);
     if (!condition) goto fail;
@@ -6655,7 +6732,7 @@ static int levelc_lower_do(Context *context,
             condition_value = levelc_lower_expr(context, condition->child,
                                                 plan, prelude);
             condition_value = levelc_do_condition_logical_value(
-                    context, condition, condition_value);
+                    context, condition, prelude, condition_value);
             condition_value = levelc_clause_checkpoint_value(
                     context, condition, plan, prelude, condition_value);
             if (!condition_value) goto fail;
@@ -6787,8 +6864,10 @@ static int levelc_lower_select_statement(Context *context,
 
         if (!prelude || !then_instructions || !next) goto fail_free;
         condition = levelc_lower_expr(context, condition_node, plan, prelude);
+        condition = condition ? levelc_checked_expression(context, when,
+            prelude, "logicalWhenValue", condition, NULL) : NULL;
         condition = condition ? rxcp_remap_create_member_call(context, condition_node,
-                                                               condition, "logicalWhenValue", NULL, 0) : NULL;
+            condition, "logicalValue", NULL, 0) : NULL;
         condition = levelc_clause_checkpoint_value(context, when, plan,
                                                     prelude, condition);
         if (!condition) goto fail_free;
@@ -7365,7 +7444,7 @@ static int levelc_append_source_lines(Context *context, ASTNode *instructions,
         !plan->used_direct_bifs[bif_index] || context->source_has_srcmap) return 1;
     cursor = context->buff_start;
     end = context->buff_end;
-    while (cursor && cursor < end && *cursor) {
+    while (cursor && cursor < end) {
         const char *line = cursor;
         size_t bytes;
         size_t offset;
@@ -7374,7 +7453,7 @@ static int levelc_append_source_lines(Context *context, ASTNode *instructions,
         ASTNode *receiver;
         ASTNode *args[1];
         ASTNode *append;
-        while (cursor < end && *cursor && *cursor != '\r' && *cursor != '\n') cursor++;
+        while (cursor < end && *cursor != '\r' && *cursor != '\n') cursor++;
         bytes = (size_t)(cursor - line);
         if (bytes > (SIZE_MAX - 1) / 4) return 0;
         escaped = malloc(bytes * 4 + 1);

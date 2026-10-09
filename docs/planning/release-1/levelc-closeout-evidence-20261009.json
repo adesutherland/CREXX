@@ -1,0 +1,53 @@
+{
+  "phase": "LC-CLOSE",
+  "scope": "Agreed expression, DATE/TIME and source closeout",
+  "baseline_commit": "0aafdb155b07d2a345193a870cc47922e1e837c0",
+  "input_sha256": "7ea4ec07707f0a3dddd5087ccf688356c4d9d0046efbbf5f3b4ee7a1de941518",
+  "manifest_files": 9163,
+  "status": "qualified",
+  "gates": {
+    "debug": {
+      "status": "qualified",
+      "unique_cases": 3320,
+      "broad_passes": 3319,
+      "broad_seconds": 2100.19,
+      "broad_log": "/Users/adrian/CLionProjects/CREXX/output/levelc-closeout-20261009.nh8yxx15/debug-product.log",
+      "fixture_repair": "Only compiler/tests/test_frame_control_ast.c changed; declare backing bounds and correct authored line/column.",
+      "fixture_passes": 1,
+      "fixture_log": "/Users/adrian/CLionProjects/CREXX/output/levelc-closeout-20261009.nh8yxx15/debug-frame-fixture.log"
+    },
+    "release_expression": {
+      "status": "passed",
+      "cases": 6,
+      "log": "/Users/adrian/CLionProjects/CREXX/output/levelc-closeout-20261009.nh8yxx15/release-expression.log"
+    },
+    "asan": {
+      "status": "passed",
+      "cases": 65,
+      "log": "/Users/adrian/CLionProjects/CREXX/output/levelc-closeout-20261009.nh8yxx15/asan-focused.log",
+      "platform": "macOS arm64",
+      "leak_detection": "unsupported on Apple; disabled per maintained guidance",
+      "seconds": 1308.78
+    },
+    "release_unchanged_paths": {
+      "status": "passed",
+      "cases": 50,
+      "log": "/Users/adrian/CLionProjects/CREXX/output/levelc-closeout-20261009.nh8yxx15/release-clock-source-context.log",
+      "scope": "Clock/source/context/BIF units retained from before the large-power scratch-capacity repair; final expression gate covers the changed backend."
+    },
+    "asan_fixture": {
+      "status": "passed",
+      "cases": 1,
+      "log": "/Users/adrian/CLionProjects/CREXX/output/levelc-closeout-20261009.nh8yxx15/asan-frame-fixture.log"
+    }
+  },
+  "deferred": [
+    "INTERPRET",
+    "Unicode semantic and source-conversion decisions",
+    "host APIs and stream infrastructure",
+    "full Level C and Release 1 platform qualification"
+  ],
+  "product_qualification_input_sha256": "95b0968b01a7332c9a4b063e6fc194210320d9557e8896236dba72e3ba9e28ba",
+  "evidence_directory": "/Users/adrian/CLionProjects/CREXX/output/levelc-closeout-20261009.nh8yxx15",
+  "total_unique_focused_asan_cases": 66
+}

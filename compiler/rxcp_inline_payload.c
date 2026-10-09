@@ -888,11 +888,7 @@ static int inline_meta_pointer_in_range(const char *ptr, const char *range_start
 }
 
 static int inline_meta_context_range(Context *context, const char *ptr, const char **range_start, const char **range_end) {
-    if (!context || !context->buff_start || !context->buff_end || !ptr) return 0;
-    if (ptr < context->buff_start || ptr > context->buff_end) return 0;
-    if (range_start) *range_start = context->buff_start;
-    if (range_end) *range_end = context->buff_end;
-    return 1;
+    return rxcp_context_source_range(context, ptr, range_start, range_end);
 }
 
 static int inline_meta_owned_source_range(SourceNode *source_node,
@@ -902,7 +898,7 @@ static int inline_meta_owned_source_range(SourceNode *source_node,
     size_t length;
 
     if (!source_node || !source_node->owned_source_text || !ptr) return 0;
-    length = strlen(source_node->owned_source_text);
+    length = source_node->owned_source_text_length;
     if (!inline_meta_pointer_in_range(ptr, source_node->owned_source_text, source_node->owned_source_text + length)) return 0;
     if (range_start) *range_start = source_node->owned_source_text;
     if (range_end) *range_end = source_node->owned_source_text + length;
@@ -941,8 +937,7 @@ static int inline_meta_line_bounds(const char *ptr,
     line_end = ptr;
     while (line_end < range_end &&
            *line_end != '\n' &&
-           *line_end != '\r' &&
-           *line_end != 0) {
+           *line_end != '\r') {
         line_end++;
     }
 
@@ -1018,7 +1013,6 @@ static int inline_meta_node_source_data(ASTNode *node,
 
     if (line_end < line_start) return 0;
     if ((size_t)(line_end - line_start) > INLINE_META_MAX_SOURCE_SPAN) return 0;
-    if (memchr(line_start, 0, (size_t)(line_end - line_start))) return 0;
 
     if (file_name_out) *file_name_out = file_name;
     if (line_out) *line_out = line;
@@ -2150,6 +2144,7 @@ static int inline_meta_import_source(Context *context, InlineMetaImport *meta, c
     source_node->owned_file_name = file_name ? strdup(file_name) : NULL;
     source_node->file_name = source_node->owned_file_name;
     source_node->owned_source_text = source_text;
+    source_node->owned_source_text_length = source_length;
     source_node->line = atoi(line_field);
     if (meta->version >= 5) {
         start_column = atoi(start_column_field);

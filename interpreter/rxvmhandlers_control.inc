@@ -1851,9 +1851,7 @@ RXVM_HANDLER(DDIV_REG_REG_DECIMAL,
 RXVM_HANDLER(DIDIV_REG_REG_REG,
     VM_ADVANCE(3);
     DEBUG("TRACE - DIDIV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
-    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op3R);
-    // Note: This is integer division, so the result is truncated
-    current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+    decimal_integer_arithmetic(current_frame->decimal, op1R, op2R, op3R, 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1867,10 +1865,9 @@ RXVM_HANDLER(DIDIV_REG_DECIMAL_REG,
     VM_ADVANCE(3);
     DEBUG("TRACE - DIDIV R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     {
-        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
-        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op, op3R);
-        // Note: This is integer division, so the result is truncated
-        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        value *op = decimal_integer_literal_value(current_frame->decimal, op2S->string);
+        if (!current_frame->decimal->base.signal_number)
+            decimal_integer_arithmetic(current_frame->decimal, op1R, op, op3R, 0);
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
@@ -1886,10 +1883,9 @@ RXVM_HANDLER(DIDIV_REG_REG_DECIMAL,
     VM_ADVANCE(3);
     DEBUG("TRACE - DIDIV R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     {
-        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
-        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op);
-        // Note: This is integer division, so the result is truncated
-        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        value *op = decimal_integer_literal_value(current_frame->decimal, op3S->string);
+        if (!current_frame->decimal->base.signal_number)
+            decimal_integer_arithmetic(current_frame->decimal, op1R, op2R, op, 0);
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)

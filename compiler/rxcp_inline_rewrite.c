@@ -1472,6 +1472,26 @@ static int ast_inline_statement(Context *context,
         goto fail;
     }
 
+    if (ast_semantic_context_kind(call_node) == AST_SEMANTIC_CONTEXT_CLASSIC_ASSIGNMENT) {
+        ASTNode *params = ast_chld(proc_def, ARGS, 0);
+        ASTNode *value_param = params && params->child ? params->child->sibling : NULL;
+        ASTNode *formal = value_param ? inline_formal_target(value_param) : NULL;
+        ASTNode *reference;
+        ASTNode *value;
+        ASTNode *trace;
+        if (!formal || !formal->symbolNode) goto fail;
+        reference = rxcp_remap_create_symbol_node(context, formal->scope, formal,
+                         formal->symbolNode->symbol, VAR_SYMBOL, 1, 0);
+        value = reference ? inline_clone_subtree(context, reference, &clone_state) : NULL;
+        trace = ast_f(context, TRACE_CLAUSE, call_node->token);
+        if (!value || !trace) goto fail;
+        trace->scope = inline_scope;
+        rxcp_remap_anchor_synthetic(trace, call_node);
+        ast_attach_semantic_context(trace, call_node->semantic_context);
+        add_ast(trace, value);
+        add_ast(instr_list, trace);
+    }
+
     proc_instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
     if (!proc_instrs) {
         inline_debug_fail_closed(context, call_node, proc_sym, "callee has no instruction list");

@@ -2015,9 +2015,8 @@ static void rxcp_merge_fragment_context(Context *ctx, Context *frag) {
     }
 
     if (frag->buff_start) {
-        ctx->extra_buffers_count++;
-        ctx->extra_buffers = realloc(ctx->extra_buffers, sizeof(char*) * ctx->extra_buffers_count);
-        ctx->extra_buffers[ctx->extra_buffers_count - 1] = frag->buff_start;
+        if (!rxcp_retain_buffer(ctx, frag->buff_start, (size_t)(frag->buff_end - frag->buff_start)))
+            RX_PANIC_OOM("retain compiler source buffer", (size_t)(frag->buff_end - frag->buff_start), ctx->file_name);
         frag->buff_start = NULL;
     }
 }

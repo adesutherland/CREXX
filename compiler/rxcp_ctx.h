@@ -153,6 +153,7 @@ struct Context {
     /* Extra buffers to be freed with the context */
     char** extra_buffers;
     size_t extra_buffers_count;
+    size_t *extra_buffer_lengths;
 
     /* CLI-injected imports for the primary source file */
     char** cli_import_names;

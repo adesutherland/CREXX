@@ -25,7 +25,7 @@ changes to Unicode/I/O infrastructure pending assessment and leaves
 Unicode-caused signals and logic errors undefined in B/C/G; existing explicit typed/Unicode mechanisms
 and RexxScript's separate binary-capable values remain distinct.
 
-**Status reconciliation, 2026-10-08.** `LC-I-01–24` have closed whole-
+**Status reconciliation, 2026-10-08.** LC-CLOSE implements and locally qualifies the agreed expression, clock and source repairs; its worklist retains the exact input/results. `LC-I-01–24` have closed whole-
 instruction reviews; `LC-I-25` INTERPRET is parked and not implemented.
 The [remaining-gap decision register](levelc-compatibility-worklist.md#remaining-gap-decision-register-2026-10-07)
 owns current cross-cutting status. A row's older bounded proof below is not a
@@ -35,12 +35,12 @@ close an unfinished host/source/BIF obligation.
 | ID | Reference obligation | Scope | Current state / remaining proof |
 | --- | --- | --- | --- |
 | LC-REF-001 | Invocation modes COMMAND, FUNCTION, SUBROUTINE | host | Open: `API_Start`-equivalent entry and lifecycle |
-| LC-REF-002 | Initial source identity and line inventory | source | Ordinary SOURCELINE retains original physical lines, shared locally and isolated per separately compiled unit; full initial identity/PARSE SOURCE, mapped-source count-zero behavior and physical source NUL truncation remain LC-GAP-06 |
+| LC-REF-002 | Initial source identity and line inventory | source | Ordinary SOURCELINE retains physical lines, including NUL, with local sharing and separate provider inventories. LC-CLOSE source-data matrix adds imported-source and newline proof; full initial identity/PARSE SOURCE and mapped-source inventory remain LC-GAP-06 |
 | LC-REF-003 | Initial environment and stream selection | host | Admitted ADDRESS/default input/selected queue state exists; full configuration/stream initialization remains LC-GAP-03; new stream infrastructure is deferred by Adrian |
 | LC-REF-004 | Invocation arguments and omitted positions | host | ARG, CALL, PROCEDURE and RETURN instruction reviews closed on the shared frame; wider host invocation modes and the C-string `rxvml_run()` NUL limit remain under LC-GAP-04 |
 | LC-REF-005 | Caller-provided trap overrides | host | Open: trap/configuration lifecycle |
 | LC-REF-006 | Completion classes: no value, result, condition, resource failure, unable to continue | host | Open: observable result/error contract |
-| LC-REF-007 | Source characters, EOL/EOS and invalid-encoding `22.1` | source | Front end source/literal and selected error fixtures exist; physical embedded NUL silently compiles only the prefix; configured source/encoding and full location proof remain LC-GAP-06 |
+| LC-REF-007 | Source characters, EOL/EOS and invalid-encoding `22.1` | source | LC-CLOSE scanners use bounded EOF across B/C/G/L; NUL literals/comments and later clauses survive, invalid NUL positions receive explicit diagnostics, and UTF-8 input is retained. Source-conversion semantics, non-Latin C behavior and invalid-encoding design remain deferred under LC-GAP-06/08 |
 | LC-REF-008 | Configured extra blank characters and uppercase mapping | text | Runtime foundations and selected instruction proof; scanner-to-runtime parity open |
 | LC-REF-009 | Configured compare, substring, length and range ordering | text | Unicode character BIF sweep and implicit TRANSLATE ordinals pass focused checks; complete reference/context integration open |
 | LC-REF-010 | Binary-digit/character conversion hooks | text | Fixed Latin-1 ordinal bridge for Level C byte-valued BIFs; complete reference/context proof open |
@@ -62,13 +62,13 @@ close an unfinished host/source/BIF obligation.
 | LC-REF-026 | Contextual instruction words, no general reserved words | source | Front end fixtures; full reference edge cases open |
 | LC-REF-027 | Quoted/doubled strings and radix suffix boundaries | source | Front end fixtures and bounded empty quoted-string runtime proof; configured conversion/limit proof open |
 | LC-REF-028 | Hex/binary literal grouping and left padding | source | Fixed Latin-1 ordinal source-literal route has opt/no-opt, tree and linked proof; remaining lexical/reference cases open |
-| LC-REF-029 | Numeric constants, exponent signs and period-start tokens | source | Front end partial; full Classic lexer pass open |
+| LC-REF-029 | Numeric constants, exponent signs and period-start tokens | source | LC-CLOSE audits numeric/exponent/constant-symbol forms and adds 50.1 for unsupported period-start constants. Configured characters and full source/resource limits remain open |
 | LC-REF-030 | Comma continuation and inferred clause endings | source | Front end partial; whitespace edge cases open |
 | LC-REF-031 | Nested comments and unterminated `6.*` messages | source | Front end diagnostics; reference edge cases open |
 | LC-REF-032 | Alternative negators and inferred blank/nonblank concatenation | source | Front end plus expression slice, including adjacent function calls after blank concatenation; full lexical equivalence open |
 | LC-REF-033 | Top-syntax VALUE insertion, assignment, label and keyword promotion | source | Front end fixtures; complete context matrix open |
-| LC-REF-034 | Reserved .MN/.RESULT/.RC/.RS/.SIGL and `50.1` | text | Front end partial; runtime state and diagnostic proof open |
-| LC-REF-035 | Function-name ending-period `51.1` | source | Front end diagnostic proof open |
+| LC-REF-034 | Reserved .MN/.RESULT/.RC/.RS/.SIGL and `50.1` | text | LC-CLOSE retains .MN/.SIGL with RC/SIGL and .RESULT/.RC/.RS inheritance; expression/condition and 50.1 fixtures cover the agreed scope. Wider externally visible state/lifecycle remains open |
+| LC-REF-035 | Function-name ending-period `51.1` | source | LC-CLOSE adds authored 51.1 diagnostic for unquoted function names ending in a period; maintained expression/source contract covers it |
 | LC-REF-036 | Clause/label/null-clause program structure | source | Front end fixtures; runtime lifecycle open |
 | LC-REF-037 | IF/THEN/ELSE branch selection and nearest ELSE | text | Whole IF instruction closed under LC-AC-67; shared condition/TRACE lifecycle open elsewhere |
 | LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | text | Whole SELECT instruction closed under LC-AC-68; shared condition/TRACE lifecycle open elsewhere |
@@ -76,21 +76,21 @@ close an unfinished host/source/BIF obligation.
 | LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | text | Whole DO instruction closed under LC-AC-65, including compound controls and arbitrary numeric counts; NUMERIC and TRACE instructions also closed, while cross-expression/condition work remains under LC-GAP-07 |
 | LC-REF-041 | LEAVE/ITERATE nesting and named loop targets | text | Both whole instructions closed under LC-AC-69/70, with default/STRICTC timing; shared lifecycle work open elsewhere |
 | LC-REF-042 | END-name matching and group-label branch restrictions | source | Front end diagnostics; complete reference matrix open |
-| LC-REF-043 | Expression terms, prefix, power and arithmetic precedence | text | Bounded expression slice; full numeric/error equivalence open |
-| LC-REF-044 | Left-associative Classic power | text | Open: reference and optimization parity proof |
-| LC-REF-045 | Normal/strict comparisons and configured character ordering | text | Bounded expression slice; numeric/configuration edges open |
-| LC-REF-046 | Logical AND/OR/XOR and prefix negation with exact values | text | Bounded expression slice; contextual `34.5/34.6` open |
+| LC-REF-043 | Expression terms, prefix, power and arithmetic precedence | text | LC-CLOSE whole-family expression contract covers prefix/power/arithmetic/concatenation, evaluation order, errors and numeric context in four execution modes; B/G NUMERIC_CLASSIC is included. Full resource/configuration/platform limits remain LC-GAP-07 |
+| LC-REF-044 | Left-associative Classic power | text | Classic left association and prefix/power precedence are covered by LC-CLOSE values and B/G Classic/common-mode comparisons in direct/linked opt/no-opt |
+| LC-REF-045 | Normal/strict comparisons and configured character ordering | text | LC-CLOSE adds padded numeric normalization and normal/strict comparison proof. Configured/non-Latin character ordering awaits the Unicode assessment |
+| LC-REF-046 | Logical AND/OR/XOR and prefix negation with exact values | text | LC-CLOSE checks eager AND/OR/XOR, NOT, exact values and contextual 34.5/34.6 through the existing SYNTAX bridge in four modes |
 | LC-REF-047 | PARSE ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR and UPPER | host | Whole PARSE instruction closed on seven agreed sources through shared `parseplan`; EXTERNAL/NUMERIC sources excluded from initial Level C by Adrian; configured host input remains under LC-GAP-03 |
 | LC-REF-048 | PARSE targets, placeholders, literal/variable patterns and positions | text | Whole PARSE instruction closed on the shared template executor, including errors, source positions, opt/no-opt and linked execution; cross-source/host lifecycle remains in its owning rows |
 | LC-REF-049 | Pool dropped, implicit, exposed and scalar/stem binding states | text | DROP/assignment and whole PROCEDURE reviews close admitted private/shared pool, direct/indirect scalar/stem/exact compound exposure and nested alias lifetime; externally visible/API lifecycle remains LC-GAP-03/04 |
 | LC-REF-050 | Set/value/drop, stem-tail propagation and recursive exposure | text | Shared pool owns set/drop/stem propagation and source-ordered direct/indirect EXPOSE with fixed resolved compound aliases; external/API alias/access proof remains LC-GAP-03/04 |
 | LC-REF-051 | Compound-tail evaluation without NOVALUE, final lookup with NOVALUE | text | Compound assignment/DROP paths closed; remaining read/condition/alias proof open |
 | LC-REF-052 | Constant symbols, reserved pool 0 and SIGL/.SIGL updates | text | SIGNAL and local-label instruction review closed; full reserved-state and source/host proof remain under LC-GAP-06/09 |
-| LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | text | NUMERIC instruction closes activation-local settings and LOSTDIGITS. ABS/MAX/MIN/SIGN/TRUNC/FORMAT use approved ANSI caller-DIGITS/FORM rounding in C and existing B/G typed decimal APIs, with four-mode context tests; full arithmetic/BIF equivalence remains LC-GAP-02/07 |
-| LC-REF-054 | Exact logical values and contextual `34.*` identities | text | IF/SELECT/DO checks pass; other contexts open |
+| LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | text | NUMERIC instruction remains closed. LC-CLOSE adds arithmetic/error/condition, integer quotient/remainder guard digits/width and whole-power proof; shared B/G Classic mode retains typed interfaces. Existing ANSI BIF rounding/context tests remain; exhaustive numeric/resource limits stay open |
+| LC-REF-054 | Exact logical values and contextual `34.*` identities | text | LC-CLOSE covers exact logical operands and IF/WHEN/WHILE/UNTIL identities 34.1–34.6 through the authored condition path |
 | LC-REF-055 | Function/CALL omitted arguments and resolution order | host | Whole CALL review closed for local/BIF and approved static signed external providers, omitted values, RESULT and delayed handlers; broader host modes remain under LC-GAP-04 |
 | LC-REF-056 | Function RETURN value, `45.1` and RESULT/.RESULT lifecycle | text | Whole RETURN review closed across main/local/function paths; broader host completion classes remain under LC-GAP-04 |
-| LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | host | Open: real host HALT and broader processor lifecycle. Known DATE/TIME integration defect: no production clause-sample refresh. Linked opt/no-opt TIME retains its first timestamp and elapsed zero across a one-second sleep, while Regina advances. DATE shares the inspected sample; calendar crossing was not probed. Owner LC-GAP-02/04 |
+| LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | host | LC-CLOSE repairs compiled DATE/TIME clause refresh, nested sample ownership and program elapsed/reset state; existing deterministic units retain calendar/conversion evidence. Real host HALT, broader processor lifecycle, live timezone/DST/calendar crossings and clock failures remain open |
 | LC-REF-058 | ADDRESS selection/swap, transient command and WITH redirection | host | Whole ADDRESS review closed, including configured callback path; `LC-HOST-ADDRESS-NUL` and full host adapter remain under LC-GAP-03/05 |
 | LC-REF-059 | CALL ON/OFF delayed condition handlers | host | Whole CALL review closed for policy replacement, four delayed conditions, nested isolation, buffered HALT and static signed targets; real host HALT and cross-service producers remain under LC-GAP-04 |
 | LC-REF-060 | DROP direct and parenthesized variable lists | text | Whole DROP instruction closed under LC-AC-62, including arbitrary compounds, indirect lists and Regina invalid-word skip; external pool API open elsewhere |
@@ -105,7 +105,7 @@ close an unfinished host/source/BIF obligation.
 | LC-REF-069 | SIGNAL branch/trap modes and loop-state clearing | host | Whole SIGNAL review closed on the shared frame, including direct/VALUE branches and seven handler identities; real host HALT production remains under LC-GAP-04 |
 | LC-REF-070 | TRACE options, interactive mode, skip/inhibit and source/result tracing | host | Whole TRACE review closed under approved practical divergences; correct displayed scalar values remain required; shared source/host proof remains under LC-GAP-05/06 |
 | LC-REF-071 | SYNTAX, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS | host | SIGNAL/CALL delivery and live SYNTAX, NOVALUE, ADDRESS ERROR/FAILURE/NOTREADY and NUMERIC LOSTDIGITS producers have instruction evidence; real host HALT and complete cross-service producer/state proof remain under LC-GAP-02/04 |
-| LC-REF-072 | Message catalog, .MN, source/line traceback and trap handling | host | Shared generated English catalog and ERRORTEXT direct/linked opt/no-opt proof exist; admitted CONDITION descriptions and authored BIF/source anchors have focused proof. Full .MN, all message producers, encoded source/traceback and trapped-event locale selection remain LC-GAP-02/06 |
+| LC-REF-072 | Message catalog, .MN, source/line traceback and trap handling | host | Shared catalogs and ERRORTEXT/CONDITION integration remain; LC-CLOSE adds expression .MN/.SIGL, lexical 50.1/51.1, authored operator/WHEN anchors, bounded NUL source display and retained inline source ranges. Full producer/locale/resource/host traceback proof stays open |
 | LC-REF-073 | Immediate SIGNAL ON, delayed CALL ON and HALT buffering | host | Whole SIGNAL/CALL reviews closed on frame-local policy and delivery; real host HALT production and broader host lifecycle remain under LC-GAP-04 |
 | LC-REF-074 | CONDITION BIF state fields | host | Admitted C/D/E/I/S fields, seven record IDs, ON/OFF/DELAY, CALL extra clearing and child isolation have unit/compiler proof; live SYNTAX/NOVALUE/ADDRESS ERROR/FAILURE/NOTREADY/LOSTDIGITS producers have evidence. Real host HALT and complete cross-service lifecycle remain LC-GAP-02/04 |
 | LC-REF-075 | NOP as a statement with no visible effect | text | Whole NOP instruction closed under LC-AC-64; shared label/TRACE lifecycle remains elsewhere |

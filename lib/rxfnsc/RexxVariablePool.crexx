@@ -172,11 +172,21 @@ RexxVariablePool: class
     values[2] = .RexxValue("0")
     return
 
-  /** Command status stays visible through PROCEDURE's private variable pool. */
+  /** Reserved program state stays visible through PROCEDURE's private pool. */
   inheritCommandStatus: method = .void
     arg parent = reference .RexxVariablePool
     call exposeValue(".RC", parent, ".RC")
     call exposeValue(".RS", parent, ".RS")
+    call exposeValue(".MN", parent, ".MN")
+    call exposeValue(".SIGL", parent, ".SIGL")
+    call exposeValue(".RESULT", parent, ".RESULT")
+    return
+
+  /** Record the causing clause in ordinary and reserved SIGNAL state. */
+  setSignalLine: method = .void
+    arg clause_line = .int
+    call setSymbolValue("SIGL", .RexxValue.fromInt(clause_line))
+    call setSymbolValue(".SIGL", .RexxValue.fromInt(clause_line))
     return
 
   setAddressEnvironment: method = .void

@@ -51,8 +51,8 @@ rexxclassicbif_date: procedure = .RexxValue
 
   pool_ref = context.callerPool()
   pool = dereference pool_ref
-  call pool.ensureClauseTime()
-  current_jdn = pool.clauseBaseDay() + 1721426
+  call context.ensureClauseTime()
+  current_jdn = context.clauseBaseDay() + 1721426
   call _datefromjdn current_jdn,current_year,current_month,current_day,current_days,current_weekday,current_base
 
   option = "N"

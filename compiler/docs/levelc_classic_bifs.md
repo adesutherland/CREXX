@@ -265,18 +265,14 @@ as in `POS("", haystack)` versus `POS(" ", haystack)`.
 - `Time2Date(timestamp)` validates timestamp bounds and returns year, month,
   day, hour, minute, second, microsecond, base-day count, and day-of-year.
 - `Leap(year)` returns whether the Gregorian year is a leap year.
-- The Classic target freezes one clock sample per clause through
-  `#ClauseTime.#Level` and `#ClauseLocal.#Level`. Current shared runtime state
-  is not refreshed by production clause lowering: DATE/TIME call
-  `ensureClauseTime()`, and no production caller invokes `beginClauseTime()`.
-  A linked opt/no-opt probe confirms unchanged TIME(L) and TIME(E)=0 across
-  a one-second host sleep. DATE shares that cached sample, with calendar
-  crossing itself unprobed. Injected-clock unit results do not qualify this
-  known integration defect.
+- Compiled DATE/TIME freeze a lazy activation-owned sample per clause.
+  Internal calls keep independent samples and share the program root's
+  elapsed/reset origin. Direct contexts retain injectable pool clocks.
+  Clause and repeated-condition lowering invalidate samples without sampling
+  the platform on ordinary clauses.
 
-DATE and TIME share `RexxDateTimeState` and Gregorian helpers.
-Their conversion tests remain valid while clause refresh and platform clock
-lifecycle remain open under LC-GAP-02/04 and LC-REF-057.
+DATE and TIME share `RexxDateTimeState` and Gregorian helpers. The prior
+frozen-clock integration defect is repaired by LC-CLOSE; its compiled qualification and remaining timezone/DST/platform limits are in the worklist.
 
 ### Radix Helper
 

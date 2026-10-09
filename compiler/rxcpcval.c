@@ -23,6 +23,7 @@
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_util.h"
 
 walker_result source_location_walker(walker_direction direction,
                                      ASTNode* node,
@@ -133,11 +134,31 @@ static void levelc_rewrite_legacy_string_errors(ASTNode *node) {
     }
 }
 
+static void levelc_validate_symbols(ASTNode *node) {
+    while (node) {
+        if (node->node_type == CONST_SYMBOL && node->node_string_length &&
+            node->node_string[0] == '.') {
+            char *text = rx_strndup(node->node_string, node->node_string_length);
+            mknd_err1(node, "RXC-LC-50.1", "token", text);
+            free(text);
+        } else if (node->node_type == FUNCTION && node->node_string_length &&
+                   node->node_string[node->node_string_length - 1] == '.' &&
+                   (!node->token || node->token->token_type != TK_STRING)) {
+            char *text = rx_strndup(node->node_string, node->node_string_length);
+            mknd_err1(node, "RXC-LC-51.1", "token", text);
+            free(text);
+        }
+        if (node->child) levelc_validate_symbols(node->child);
+        node = node->sibling;
+    }
+}
+
 void rxcp_levelc_prepare_source_ast(Context *context) {
     if (!context || !context->ast || context->source_tree) return;
 
     ast_wlkr(context->ast, source_location_walker, (void *)context);
     levelc_rewrite_legacy_string_errors(context->ast);
+    levelc_validate_symbols(context->ast);
     source_tree_build(context, context->ast);
     rxcp_levelc_validate_control_diagnostics(context);
 }

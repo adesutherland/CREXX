@@ -505,12 +505,12 @@ condition enablement, trace state, and variable pools.
 Clause termination is not just a sequence point. The target checks HALT,
 delayed CALL ON conditions, trace/pause activity and a refreshed DATE/TIME
 clause sample. Admitted trap/TRACE paths have instruction evidence; real host
-HALT and wider processor lifecycle remain open. The current DATE/TIME code
-uses `ensureClauseTime()` without a production `beginClauseTime()` caller.
-A linked opt/no-opt probe reproduces unchanged TIME(L) and elapsed zero after
-one second; DATE's shared sample is consequently also cached, with calendar
-crossing itself unprobed. This known integration defect remains documented,
-not repaired, by the review.
+HALT and wider processor lifecycle remain open. Compiled DATE/TIME now use a lazy sample owned by the current activation;
+executed clause and repeated-condition boundaries invalidate that sample.
+Internal invocations retain separate frozen samples and share the program
+root's elapsed/reset origin. Direct BIF contexts retain injectable pool state.
+The LC-CLOSE plan owns final qualification; real host HALT and broader
+processor/platform lifecycle remain open.
 
 ### Core Instructions
 

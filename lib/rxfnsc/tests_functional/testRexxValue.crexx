@@ -116,6 +116,8 @@ errors = errors + check(.RexxValue("0").logicalNot().asString() = "1", "logical 
 errors = errors + check(.RexxValue("1").logicalXor(.RexxValue("0")).asString() = "1", "logical xor true")
 errors = errors + check(.RexxValue("1").logicalXor(.RexxValue("1")).asString() = "0", "logical xor false")
 errors = errors + check(.RexxValue("09").compareEqual(.RexxValue("9")).asString() = "1", "numeric loose equal")
+errors = errors + check(.RexxValue("+ 6").compareEqual(.RexxValue("6")).asString() = "0", "non-Classic sign blank stays text")
+errors = errors + check(.RexxValue(" + 6 ").compareEqual(.RexxValue("6"),1).asString() = "1", "Classic sign blank is numeric")
 errors = errors + check(.RexxValue("a").compareEqual(.RexxValue("a ")).asString() = "1", "padded loose equal")
 errors = errors + check(.RexxValue("a").strictCompareEqual(.RexxValue("a ")).asString() = "0", "strict equal keeps blanks")
 errors = errors + check(.RexxValue("b").compareGreaterThan(.RexxValue("a")).asString() = "1", "loose greater")

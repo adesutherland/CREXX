@@ -54,6 +54,8 @@ RexxActivationArguments: class
   function_call = .boolean
   address_state = .RexxAddressState
   trace_state = .RexxTraceState
+  date_time_state = .RexxDateTimeState
+  date_time_ready = .boolean
   numeric_digits = .int
   numeric_fuzz = .int
   numeric_form = .int
@@ -87,6 +89,8 @@ RexxActivationArguments: class
     function_call = 0
     address_state = .RexxAddressState()
     trace_state = .RexxTraceState()
+    date_time_state = .RexxDateTimeState()
+    date_time_ready = 0
     numeric_digits = 9
     numeric_fuzz = 0
     numeric_form = 1
@@ -140,6 +144,46 @@ RexxActivationArguments: class
     numeric_fuzz = parent.numericFuzz()
     numeric_form = parent.numericForm()
     return
+
+  /** Begin a clause lazily; ordinary clauses need no platform clock calls. */
+  beginClauseTime: method = .void
+    date_time_ready = 0
+    return
+
+  /** Freeze this invocation's sample independently of nested internal calls. */
+  ensureClauseTime: method = .void
+    if \date_time_ready then do
+      state = .RexxDateTimeState
+      assembler link state,date_time_state
+      call state.beginClause()
+      date_time_ready = 1
+    end
+    return
+
+  clauseBaseDay: method = .int
+    return date_time_state.baseDay()
+
+  clauseLocalMicroseconds: method = .int
+    return date_time_state.localMicroseconds()
+
+  clauseUtcMicroseconds: method = .int
+    return date_time_state.utcMicroseconds()
+
+  clauseOffsetMicroseconds: method = .int
+    return date_time_state.offsetMicroseconds()
+
+  /** Internal invocations share the program's elapsed/reset origin. */
+  clauseElapsedMicroseconds: method = .int
+    arg reset = .boolean
+    root = dereference programRoot()
+    return root.elapsedAt(clauseUtcMicroseconds(),reset)
+
+  /** Apply one frozen invocation sample to the program elapsed clock. */
+  elapsedAt: method = .int
+    arg now = .int, reset = .boolean
+    state = .RexxDateTimeState
+    assembler link state,date_time_state
+    return state.elapsedAt(now,reset)
 
   /** The TRACE state owned by this invocation. */
   traceState: method = .RexxTraceState

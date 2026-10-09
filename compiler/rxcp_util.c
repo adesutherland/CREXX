@@ -250,6 +250,51 @@ char* mprintf(const char* format, ...) {
     return buffer;
 }
 
+int rxcp_local_source_range(Context *context, const char *ptr,
+                               const char **start, const char **end) {
+    size_t i;
+    uintptr_t point = (uintptr_t)ptr;
+    if (!context || !ptr) return 0;
+    if (context->buff_start && point >= (uintptr_t)context->buff_start &&
+        point <= (uintptr_t)context->buff_end) {
+        *start = context->buff_start;
+        *end = context->buff_end;
+        return 1;
+    }
+    for (i = 0; i < context->extra_buffers_count; i++) {
+        char *buffer = context->extra_buffers[i];
+        char *limit = buffer + context->extra_buffer_lengths[i];
+        if (point >= (uintptr_t)buffer && point <= (uintptr_t)limit) {
+            *start = buffer;
+            *end = limit;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int rxcp_context_source_range(Context *context, const char *ptr,
+                               const char **start, const char **end) {
+    return rxcp_local_source_range(context, ptr, start, end) ||
+           rxcp_import_source_range(context, ptr, start, end, NULL);
+}
+
+/* Retain exact source ranges as well as ownership; embedded NUL is data. */
+int rxcp_retain_buffer(Context *context, char *buffer, size_t length) {
+    size_t count = context->extra_buffers_count + 1;
+    char **buffers = realloc(context->extra_buffers, count * sizeof(*buffers));
+    size_t *lengths;
+    if (!buffers) return 0;
+    context->extra_buffers = buffers;
+    lengths = realloc(context->extra_buffer_lengths, count * sizeof(*lengths));
+    if (!lengths) return 0;
+    context->extra_buffer_lengths = lengths;
+    buffers[count - 1] = buffer;
+    lengths[count - 1] = length;
+    context->extra_buffers_count = count;
+    return 1;
+}
+
 char* rx_strndup(const char* s, size_t n) {
     char* result;
     size_t len = strlen(s);
@@ -1267,9 +1312,8 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
     }
 
     if (frag->buff_start) {
-        ctx->extra_buffers_count++;
-        ctx->extra_buffers = realloc(ctx->extra_buffers, sizeof(char*) * ctx->extra_buffers_count);
-        ctx->extra_buffers[ctx->extra_buffers_count - 1] = frag->buff_start;
+        if (!rxcp_retain_buffer(ctx, frag->buff_start, (size_t)(frag->buff_end - frag->buff_start)))
+            RX_PANIC_OOM("retain compiler source buffer", (size_t)(frag->buff_end - frag->buff_start), ctx->file_name);
         frag->buff_start = NULL;
     }
 

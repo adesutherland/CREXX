@@ -326,6 +326,7 @@ void fre_cntx(Context *context)  {
     if (context->extra_buffers) {
         for (i = 0; i < context->extra_buffers_count; i++) free(context->extra_buffers[i]);
         free(context->extra_buffers);
+        free(context->extra_buffer_lengths);
     }
 
     if (context->traceFile) fclose(context->traceFile);

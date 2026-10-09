@@ -439,12 +439,17 @@ RexxDateTimeState: class
   /** Return elapsed microseconds and optionally reset the elapsed origin. */
   elapsedMicroseconds: method = .int
     arg reset = .boolean
+    return elapsedAt(clause_utc_microseconds,reset)
+
+  /** Use a nested invocation's frozen sample with the shared elapsed origin. */
+  elapsedAt: method = .int
+    arg now = .int, reset = .boolean
     elapsed = .int
     if \elapsed_started then do
-      elapsed_start_microseconds = clause_utc_microseconds
+      elapsed_start_microseconds = now
       elapsed_started = 1
       return 0
     end
-    elapsed = clause_utc_microseconds - elapsed_start_microseconds
-    if reset then elapsed_start_microseconds = clause_utc_microseconds
+    elapsed = now - elapsed_start_microseconds
+    if reset then elapsed_start_microseconds = now
     return elapsed

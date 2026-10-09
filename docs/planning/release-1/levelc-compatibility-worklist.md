@@ -1290,6 +1290,346 @@ maintain a regression for same-clause consistency versus next-clause freshness.
 The earlier broad QA remains valid for its actual test cases; it did not detect
 or close this missing producer. Full BIF conformance remains open.
 
+### Agreed expression, clock and source closeout (2026-10-08)
+
+**Vision and intended outcomes.** Adrian approved repairing expression
+conformance, DATE/TIME clause lifecycle and source diagnostics after the gap
+review. Ordinary Classic expressions must produce the reference values and
+errors, use the existing Classic condition bridge, preserve evaluation order
+and authored source, and agree between optimized/no-opt and linked execution.
+Audit the existing B/G `NUMERIC_CLASSIC` option as part of the same work and
+repair any shared divergence rather than hiding it in Level C lowering.
+NUL must be supported as source data across B/C/G/L; literals/comments must
+preserve it, invalid lexical positions must receive an explicit diagnostic,
+and processing must never silently discard the suffix. Source input remains
+Unicode across levels. Level C may assume Unicode input, while behavior of
+code containing non-Latin characters remains undefined until the separate
+Unicode design. Source encoding conversion semantics, broader Unicode/I/O
+infrastructure, stream BIFs, host APIs and INTERPRET are deferred pending
+agreement of design and principles. Existing conversion tools are retained.
+These are phase boundaries, not full Level C/Release 1 exclusions or closure.
+Preserve unrelated compiler-split/architecture drafts in this checkout.
+
+**Acceptance criteria (qualified 2026-10-09; agreed phase scope only).**
+
+- [x] **LC-CLOSE-AC-01 — expression families:** a reference-to-regression
+  crosswalk covers prefix/power/arithmetic/integer divide/remainder,
+  normal/strict comparisons, AND/OR/XOR/NOT, all three concatenations,
+  parentheses, source-order side effects and DIGITS/FORM/FUZZ. Positive and
+  negative cases pass optimized/no-opt direct and linked execution, including
+  `' 07 ' = 7`, `1/0`, `'x'+1`, `2**1.5`, `2&&1`, `1&&2` and `\2`.
+- [x] **LC-CLOSE-AC-02 — shared Classic mode:** B/G `NUMERIC_CLASSIC` and
+  the corresponding Level C rules have explicit grammar/runtime parity
+  evidence. Shared defects are repaired in their owning layer; existing
+  typed B/G signals/types and non-Classic mode behavior are preserved.
+- [x] **LC-CLOSE-AC-03 — errors and source:** expression errors use the
+  appropriate Classic identities and enter enabled SIGNAL ON SYNTAX with
+  correct RC, SIGL and CONDITION state. Untrapped errors retain authored
+  source; nested handlers and child numeric contexts remain isolated.
+- [x] **LC-CLOSE-AC-04 — clause clocks:** DATE/TIME observe one sample
+  within a clause and fresh samples in later clauses, with correct elapsed
+  start/reset, internal-call/pool lifetime and deterministic date-boundary
+  checks. Maintain compiled opt/no-opt/linked regressions and retain existing
+  explicit conversion/injected-clock unit evidence.
+- [x] **LC-CLOSE-AC-05 — source data across levels:** maintained B/C/G/L
+  compiler tests preserve embedded NUL in quoted literals/comments, process
+  subsequent clauses, preserve UTF-8 source, and report invalid NUL positions
+  without truncation. Check imported source, retained source lines and source
+  locations, including CRLF/CR/LF and multibyte input. Non-Latin Level C
+  semantics and encoding-conversion decisions remain deferred.
+- [x] **LC-CLOSE-AC-06 — source/diagnostic and existing BIF audit:** reconcile
+  contextual words, numeric/quoted/radix literals, continuations/comments,
+  reserved state, diagnostic catalog and source identity against the existing
+  reference inventory; repair reproduced defects within the agreed Latin
+  scope. Verify related SOURCELINE/ERRORTEXT/CONDITION and independent BIF
+  integration. Record exact unproved resource/platform/Unicode/host limits;
+  do not turn deferred work into an exception.
+- [x] **LC-CLOSE-AC-07 — qualification and documentation:** core builds,
+  focused normal Debug/Release regressions, relevant final-input whole-product
+  normal QA across B/C/G/L/RexxScript/RXAS/linker/VM/native and focused
+  maintained sanitizer checks pass with retained input fingerprints and logs.
+  Measure new nested aggregates in isolation in Debug/ASan before registering
+  scheduling/timeouts. Update the existing guides and gap register, preserving
+  RexxDoc tags and all wider open criteria. Reuse unchanged valid evidence;
+  no extra overnight or release-candidate matrix is required for this phase.
+
+**Implementation steps.**
+
+1. **LC-CLOSE-STEP-01 (AC-01–07; complete):** synchronize develop without
+   discarding local drafts, inventory the existing option/runtime/scanner
+   paths, freeze minimal reproducers and the reference-to-test crosswalk.
+   Initial Release opt/no-opt/reference evidence is retained in
+   `/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-levelc-status-sjfblsyg/receipt.json`.
+2. **LC-CLOSE-STEP-02 (AC-01/02/03/06; complete):** repair expression
+   values, normalization, Classic condition transport and source anchors;
+   validate coherent family increments and B/G Classic mode together.
+3. **LC-CLOSE-STEP-03 (AC-04/06; complete):** integrate existing clause
+   clock services, preserve nested activation/pool lifetime, and maintain
+   compiled freshness/consistency/reset and deterministic date regressions.
+4. **LC-CLOSE-STEP-04 (AC-05/06; complete):** repair length-aware source
+   scanning/materialization and agreed source/diagnostic discrepancies across
+   levels, without adding source-conversion or non-Latin Classic semantics.
+5. **LC-CLOSE-STEP-05 (AC-07 and all preceding criteria; complete):**
+   freeze final inputs, run the appropriate grouped normal and focused
+   sanitizer gates once, reconcile guides/evidence and report every open
+   criterion. Existing language-design/architecture approval gates apply
+   only if investigation requires a new decision beyond the scope above.
+
+**LC-CLOSE reference-to-regression crosswalk.** These cases run in direct
+opt/no-opt and linked opt/no-opt through the maintained expression driver;
+values/identities follow the existing compliance reference and retained
+IBM/Regina decisions, including the approved ANSI caller-rounding distinction.
+They qualify the agreed ordinary Latin scope, not deferred configuration,
+Unicode/source conversion, host or extreme-resource behavior.
+
+| Reference family | Maintained cases / observable checks |
+| --- | --- |
+| LC-REF-043/044 terms, prefix, power, arithmetic, integer divide/remainder | `values`, `rounding`, `numeric`, `error*`: prefix/power precedence, left association, negative exponents, 0**0, large whole powers, guard digits, DIGITS-width errors and arithmetic identities |
+| LC-REF-045 normal/strict comparison | `values`, `numeric`: padded numeric/sign-blank values, exact strings, strict ordering and FUZZ/FORM; existing comparison fixtures cover individual aliases/operators |
+| LC-REF-032/043 concatenation and evaluation order | `values`, `eager`, `lexical`: explicit/blank/abuttal concatenation, parentheses and source-ordered eager AND/OR/XOR calls |
+| LC-REF-046/054 exact logical values | `error*`: AND/OR/XOR left/right and NOT failures; authored IF/WHEN/WHILE/UNTIL identities 34.1–34.6 |
+| LC-REF-053/071/072 numeric contexts and conditions | `numeric`, `sign_blank_lostdigits`, `sign_blank_genuine_lostdigits`, `error*`, `untrapped`, `nul_diagnostic`: settings/restoration, true/false LOSTDIGITS, original description, SYNTAX RC/SIGL/.MN/.SIGL/CONDITION and authored escaped-NUL source |
+| Existing B/G NUMERIC_CLASSIC and common mode | `mode_[bg]`, `common_[bg]`, `decimal_mode_[bg]`, `retained_power_[bg]`, `common_value_guard`: distinct grammar modes, shared decimal math/alias safety, higher-precision typed caller and common-mode preservation |
+| LC-REF-026–036/052 Latin source and diagnostics | `lexical`, `signal_alias`, `bad_sources`: contextual words, numeric/constant/quoted/radix literals, nesting/continuation/null clauses, reserved state and catalog 50.1/51.1/15.1/15.3/15.4/6.1/6.2/35.1 |
+| LC-REF-002/007 source bytes and inventory | `source_data_contract_[bcgl]_*`: NUL literals/comments/header/options/imported providers, subsequent clauses, UTF-8 transport/typed identifiers, CRLF/CR/LF and explicit invalid-NUL locations; C SOURCELINE retains NUL |
+| LC-REF-057 DATE/TIME lifecycle | `classic_clock_contract_*`: per-clause samples/freshness, shared elapsed/private pools, nested samples, DATE consistency, reset and empty-loop conditions; existing DATE/TIME units retain injected calendar/conversion coverage |
+| LC-REF-070/072 source provenance and TRACE | Existing `source_provenance`, inline cross-file/argument fixtures, constructor/method golden assembly and `levelc_trace_values_*`: bounded owned/grafted ranges, accurate file identity, authored assignment values before inlined mutation |
+
+**LC-CLOSE implementation checkpoint (2026-10-08; criteria still open).**
+Develop was fetched and matched origin at `0aafdb155`; the unrelated four
+architecture/roadmap edits, compiler-split proposal and output directory remain
+preserved. The approved plan above owns all continuing work.
+
+- Source scanners B/C/options now use the re2c bounded EOF rule rather than
+  treating every NUL as EOF. Literal/comment/import/newline/UTF-8/NUL checks
+  passed in normal Debug opt/direct for B/C/G/L; evidence:
+  `/tmp/crexx-close-source-panel.HmKDhc`. Retained source lines and source-map
+  text use explicit lengths. Removing the old NUL metadata guard exposed an
+  unsafe fallback span; source metadata now requires a backing buffer range.
+  Intermediate build failures and correction are in
+  `/tmp/crexx-close-expression-build.qDaxOe` and
+  `/tmp/crexx-close-expression-build2.USqrS6`; no sanitizer run/find occurred.
+- Expressions reuse the direct-BIF call-local error transport with a lean
+  named factory, shared argument normalization and existing primitives;
+  CLASSIC_SYNTAX is raised at the authored operator. Logical operator and
+  IF/WHEN/WHILE/UNTIL errors are included. Positive padded comparisons and
+  B/G Classic/common parsing checks passed. A test's FUZZ expectation was
+  corrected to the reference result (DIGITS 4/FUZZ 1, 1.234=1.235 is false).
+- Integer divide/remainder shared an actual VM defect: rounded DDIV followed
+  by truncate, absent DIGITS-width checks, and later plugin operations could
+  erase earlier errors. Existing DIDIV/DMOD now share an opaque-plugin-API
+  helper with guard digits, working precision, width checks, alias-safe
+  temporaries, context restoration and first-error preservation. No opcode,
+  plugin ABI or linker architecture changes. RexxValue preserves source
+  operands until that operation; whole powers use a bounded predicate rather
+  than huge exponent expansion or an unnecessary signed64 cast. Classic
+  decimal 0**0 is one. Native/ASan/Release proof remains pending.
+- Compiled DATE/TIME now bind their context to the current activation. Each
+  activation lazily freezes its own clause sample; internal calls use the
+  program root's elapsed/reset state. The existing injectable direct-pool
+  harness remains supported. Empty-loop condition checkpoints invalidate
+  samples too. Opt/direct compiled freshness, same-clause/nested-call/private-
+  pool/DATE consistency/reset/empty-loop proof passed in
+  `/tmp/crexx-close-clock-panel.vKWMo7` and
+  `/tmp/crexx-close-clock-native-panel.HzJkIm`. Regina reference lifetime
+  probes are under `/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-clock-lifetime-mc42uc7r`
+  and `crexx-clock-clause-p0h3iftn` in that same temp root.
+- The source review adds the already referenced 50.1/51.1 diagnostics and
+  records .MN/.SIGL through reserved program state. This and later extended
+  expression/lexical cases still await complete four-mode qualification.
+
+Permanent new drivers (not yet registered; first isolate/measure Debug and
+maintained ASan): `compiler/tests/classic_expression_contract.py`,
+`classic_clock_contract.py`, `source_data_contract.py`. All scratch tool argv
+and logs are retained under their printed evidence directories. Latest build
+passed in `/tmp/crexx-close-extended-build.QlXuZp`. Broader existing regressions,
+new driver completion, isolated sanitizer measurement, registry/timeouts,
+final-input grouped Debug/Release QA and documentation reconciliation remain.
+Do not claim any LC-CLOSE acceptance criterion complete at this checkpoint.
+
+**LC-CLOSE qualification preparation receipt.** Normal Debug pilot passed
+6/6 in 73.67 s: expression aggregate approximately 46 s, clock 6.29 s and
+per-level source aggregates 5.29–5.79 s. Maintained ASan pilot passed 6/6 in
+149.85 s: expression 92.25 s, clock 12.73 s and source 10.42–11.51 s, with no
+reported sanitizer diagnostic. Logs:
+`/tmp/crexx-close-debug-pilot.AOvTIz`,
+`cmake-build-debugasan/asan-logs/20261008-191951-ctest/ctest.log`.
+Generated-only pilot registry includes were removed. The repository now
+registers four execution modes for both expression/clock aggregates and B/C/G/L
+source aggregates (24 tests), with RUN_SERIAL and 1200/600 s hang backstops.
+The subsequent large-whole-power native repair must gain final sanitizer proof;
+the pilot does not qualify later inputs. Current complete opt/direct expression
+panel passes in `/tmp/crexx-close-final-expression.yUfMYa`; existing selected
+expression/NUMERIC/eager-logical/tree regressions pass 13/13 in
+`/tmp/crexx-close-existing-focused.jqDfSf`. The NUL source panic probe found a
+remaining display truncation, repaired with bounded source-line output and a
+permanent escaped-NUL/suffix assertion. Source syntax/clock/matrix/full product
+and final guide/reference reconciliation remain open until final-input gates.
+
+**LC-CLOSE regression disposition (2026-10-08; qualification remains open).**
+The first full Debug run found 23 failures. Optimized argument/inline/source
+failures were metadata regressions, not accepted new behavior: the imported
+inline-payload SourceNode omitted the new owned-source length. Correcting that
+reader restores the five isolated argument/cross-file cases (5/5 in
+`/tmp/crexx-close-inline-owner-fix.JQh9l0`). Grafted source buffers also retain
+exact lengths through one context range/ownership helper, preserving generated
+declarations without unbounded fallback reads. Source payload serialization
+retains NUL and bounded owned text. WHEN logical errors now use the authored
+WHEN anchor; the direct SIGNAL tree fixture follows the shared setSignalLine
+service that updates SIGL and .SIGL. These focused repairs passed their earlier
+replays; all failures are being replayed before the renewed full input gate.
+
+The first focused ASan matrix had 6 FUNCTION_NOT_FOUND failures in the new
+no-opt imported-source fixture: it compiled only the consumer and depended on
+inlining the provider. The fixture now explicitly compiles/assembles and loads
+or links the provider. Normal linked/no-opt B replay passes in
+`/tmp/crexx-close-provider-noopt.1IcEt4`. The ASan 39-case log contains no memory
+diagnostic: `cmake-build-debugasan/asan-logs/20261008-195039-ctest/ctest.log`.
+This is a fixture repair, not a suppression/exclusion or a sanitizer finding.
+The earlier whole-product input fingerprint is superseded by these source/test
+repairs; retain it as history and freeze new final inputs after focused closure.
+
+**LC-CLOSE final-input preparation checkpoint.** The remaining metadata
+regressions came from grafted contract source buffers outside the consumer's
+local range. Registry-owned ranges are now checked with their file identity;
+lexical neighbour spans cannot fabricate caller locations. Existing imported
+constructor/method golden locations now use the complete physical contract
+line and correct columns (execution instructions and source-step identities
+are unchanged). Statement inlining transfers the authored Classic assignment
+TRACE event after binding and before mutation, preserving the supported inline
+shape; the existing optimized TRACE fixture also gains the previously omitted
+BIF-result assignment event. No global inlining guard or suppression was added.
+
+A further B/G Classic retained-precision probe exposed an overbroad large-power
+overflow shortcut. Its proof now accounts for a typed operand's retained
+coefficient digits, and both dialects have a permanent lower-DIGITS-callee
+regression. The source matrix additionally compiles and loads/links a NUL-bearing
+separately compiled Level C provider. The new exact non-document input manifest
+is `/tmp/crexx-close-qualified-inputs.json`, aggregate SHA-256
+`c33b91a56bc3d1004accfd2b31d0cbd264950266e58227c2480f16de9232d421`
+(9163 files, HEAD `0aafdb155`). All final-input criteria remain open until their
+recorded gate completes. The macOS sanitizer build's initial abort was
+`detect_leaks is not supported on this platform`, not a first-party finding;
+the rerun uses the maintained Apple capability setting. Linux LSan and wider
+platform/release proof remain separate, open obligations.
+
+**LC-CLOSE common-mode preservation checkpoint.** Code review reproduced a
+non-Classic RexxValue comparison panic for `"+ 6"` versus `"6"`: the new Classic
+normalizer was also used by common comparison classification. The predicate
+now receives the caller's Classic flag, leaving ordinary sign-blank text as
+text while preserving Classic normalization. `testRexxValue` and every new
+expression execution mode retain both results. The old `c33b91…` manifest is
+superseded by `/tmp/crexx-close-qualified-inputs-final.json`, SHA-256
+`9565fd69e3d8329714b4dc6c3f3c93707e649920974824a6268e962fc23f5931`
+(9163 non-document files). The first Release panel passed 58/58 plus the
+opt/direct expression panel on the preceding inputs; final runtime/fixture
+refresh and focused Debug/Release/ASan proof use this new manifest. No full
+Debug run had begun on the superseded inputs.
+
+**LC-CLOSE LOSTDIGITS normalization checkpoint.** A final enabled-trap probe
+reproduced false LOSTDIGITS for `'+ 6'+0` at DIGITS 1: classification accepted
+the newly supported sign blank, but significant-digit counting retained that
+blank. The counter now uses the same canonical spelling while retaining the
+original operand for a real event description. The permanent expression panel
+checks positive/negative/sign-leading-zero forms with an enabled trap, plus
+a genuine loss event retaining the original description, in all four modes. Reproducer: `/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-classic-sign-blank-trap-b6q85xd9`.
+The preceding Debug/ASan runs were stopped before final-input completion,
+with no reported product/sanitizer failure; they remain historical evidence.
+The new final manifest is `/tmp/crexx-close-qualified-inputs-complete.json`,
+SHA-256 `826f6355cef3a8dc0b5dde520459818b0e964b20e24dab06eed4596996efa176` (9163 files).
+Rebuild the affected runtime/inline consumers, pass the new trap probe first,
+and complete the grouped final-input gates before marking criteria complete.
+
+**LC-CLOSE final gates launched.** The decisive sign-blank trap probe passed
+opt/no-opt direct and linked execution in
+`/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-sign-blank-final-6wz1a47r`.
+Final affected preparation passed:
+`/tmp/crexx-close-debug-trap-prepare.ZEZKIA`,
+`/tmp/crexx-close-release-trap-prepare.ar0iSI`, and maintained ASan
+`cmake-build-debugasan/asan-logs/20261008-233755-build/build.log`.
+The final normal Debug product run, four-mode Release expression/RexxValue
+panel and 65-case maintained ASan panel now use the `826f6355…` manifest.
+Earlier Release clock/source/context/BIF-unit checks passed 50/50 on the
+preceding manifest; the final change affects only LOSTDIGITS canonical counting
+and its new regression. Retain those exact unaffected-path results alongside
+the final focused Release gate; do not rerun broad Release or overnight lanes.
+All acceptance criteria remain open until final gates are reconciled.
+
+**LC-CLOSE retained-exponent capacity checkpoint.** A normal Debug
+reproducer retained a 512-digit coefficient (whole exponent plus fractional
+zeros) in a typed B caller, then evaluated power under a DIGITS 3 callee. The
+numeric result was one, but teardown aborted with one live allocation:
+`/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-retained-exponent-zzl2xvif/wide-probe.log`.
+Source inspection identifies the cause: `decNumberCopy` copied the full
+retained exponent into scratch sized only for work precision. Scratch now
+reserves max(work precision, retained coefficient digits); arithmetic precision
+and typed/public contracts are unchanged. `retained_exponent_[bg]` permanently
+checks both dialects in every expression execution mode. No ASan/LSan diagnostic
+has been reported; this finding was the ordinary VM teardown check.
+
+The preceding normal product run reached 2931 passing cases before it was
+stopped for this repair; the Release expression/RexxValue panel passed 6/6 in
+`/tmp/crexx-close-release-trap-panel.xjge8g`. They qualify their preceding inputs,
+not this new shape. Final inputs are `/tmp/crexx-close-qualification-inputs.json`,
+SHA-256 `95b0968b01a7332c9a4b063e6fc194210320d9557e8896236dba72e3ba9e28ba` (9163 files). Verify the repaired producer first in normal Debug,
+then the maintained ASan panel, and complete final grouped normal product proof.
+Retain unchanged valid component evidence and avoid extra overnight matrices.
+
+**LC-CLOSE capacity repair proof and final restart.** The original 512-digit
+retained-exponent reproducer now returns one and exits normally, including
+successful VM memory teardown:
+`/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-retained-exponent-zzl2xvif/fixed-probe.log`.
+The current Release expression/RexxValue panel passes 6/6 in
+`/tmp/crexx-close-release-capacity-panel.u60aWp`, covering both B/G retained
+coefficients and all four execution modes. Normal Debug qa-prep is current and
+passes in `/tmp/crexx-close-debug-ready.50V8DT`; the maintained ASan build log
+is `cmake-build-debugasan/asan-logs/20261009-000151-build/build.log`.
+No qualification input drift is present against `95b0968b…`.
+The final 3320-case normal Debug and 65-case focused maintained ASan gates are
+now running on those inputs. Keep AC-01–07 open until their final results and
+documentation/evidence reconciliation are complete.
+
+**LC-CLOSE maintained ASan gate passed (2026-10-09).** The final 65-case
+focused panel passes 65/65 in 1308.78 s with no reported ASan diagnostic:
+`cmake-build-debugasan/asan-logs/20261009-070708-ctest/ctest.log`.
+It covers all four expression/clock modes, all B/C/G/L source modes, the
+512-digit B/G retained-exponent regression, source/TRACE/inline fixtures,
+caller numeric-context matrices, DATE/TIME/CONDITION/ERRORTEXT/SOURCELINE
+units and static/dynamic decimal/plugin checks. Apple LSan is unsupported;
+this is focused macOS ASan proof, not full Linux/platform or release proof.
+The final normal Debug product gate remains running; do not mark AC-07 or
+the phase complete until its result and final evidence reconciliation pass.
+
+**LC-CLOSE final qualification receipt (2026-10-09; phase complete).**
+All seven LC-CLOSE criteria are verified within the agreed phase. Product
+sources remain exactly the `95b0968b…` input set. The full normal Debug run
+passed 3319/3320 in 2100.19 s; the sole failure was a hand-built frame-control
+unit supplying a source pointer without backing-buffer bounds. That fixture
+now declares the bounds and checks the correct authored line/columns, passing
+normal Debug and maintained ASan. Only that test file changed, so the 3319
+unchanged passes are retained; no broad repeat is required. All 3320 unique
+normal checks are therefore qualified. This is composite retained evidence,
+not a claim that the first full invocation was green.
+
+The final four-mode Release expression/RexxValue panel passes 6/6. The prior
+50-case Release clock/source/context/BIF-unit panel remains valid for those
+unchanged paths. The maintained macOS ASan matrix passes 65/65 and the repaired
+frame fixture passes separately (66 unique focused checks), with no reported
+sanitizer diagnostic. Apple LSan is unsupported; Linux/Windows/full-platform
+and Release 1 qualification remain open. No overnight/deep/hosted release
+matrix was dispatched for this phase.
+
+The final manifest includes only the repaired fixture difference and has
+SHA-256 `7ea4ec07707f0a3dddd5087ccf688356c4d9d0046efbbf5f3b4ee7a1de941518`
+(9163 files). Product/test fingerprints, literal driver argv and complete logs
+are retained in `/Users/adrian/CLionProjects/CREXX/output/levelc-closeout-20261009.nh8yxx15`; the concise repository receipt is
+`docs/planning/release-1/levelc-closeout-evidence-20261009.json`.
+Unrelated architecture/roadmap/compiler-split drafts and prior output remain
+preserved. Changes are local on develop. Unicode semantics/source conversion,
+non-Latin Level C behavior, host APIs/streams and INTERPRET retain the agreed
+later design boundaries. This closes the requested phase, not full Level C,
+Release 1, resource-limit or cross-platform qualification.
+
 ### Remaining-gap decision register (2026-10-07)
 
 This is the current closeout queue, not a list of approved exclusions. A
@@ -1306,8 +1646,8 @@ with the later whole-instruction receipts before the fresh review.
 | LC-GAP-03 | Configured command, stream, default input, queue selection and external routine services need an end-to-end host contract, including resource lifecycle and condition/result reporting. ADDRESS, implicit command, PULL/PUSH/QUEUE and CALL are instruction-closed on their admitted paths. CALL's approved static signed Level B/G boundary and unchanged linker/VM remain in force. | `LC-AC-06/04`, `LC-REF-003/015–020`: distinguish missing host APIs from closed instruction behavior; implement or explicitly disposition each required adapter. General Classic/non-Classic interoperation remains outside this programme. |
 | LC-GAP-04 | Invocation modes, caller trap overrides, completion classes and an externally visible variable-pool API/access window are not fully qualified. The C-string `rxvml_run()` cannot carry an embedded-NUL argument; its length-aware entry exists, but the C-string obligation is not an approved exclusion. Real host HALT production remains open. | `LC-AC-06/04`, `LC-REF-001/004–006/021–024/057/071/073`: specify and qualify required host behavior or request precise scope decisions; preserve the existing VM/linker approval boundary. |
 | LC-GAP-05 | `LC-HOST-ADDRESS-NUL` remains an approved instruction-level FAILURE diagnostic when the command host path cannot represent NUL; length-aware delivery is still a separate host-interface obligation. TRACE's practical divergences are agreed, and displayed scalar values must remain correct. PARSE EXTERNAL/NUMERIC are outside Adrian's initial Level C scope as mainframe-specific sources; their final Release 1 disposition is not yet recorded. | `LC-AC-06/04`, `LC-REF-015/018/070`: decide the remaining host-transport and final PARSE-source dispositions without reopening the closed ADDRESS/TRACE/PARSE reviews merely to gather more evidence. |
-| LC-GAP-06 | Source and diagnostic equivalence need a complete scanner, encoded-source and line-identity review: a physical Level C file with embedded NUL currently compiles only the prefix silently (reproducer in `LC-STEP-87A`). Contextual symbols, numeric/quoted/radix literals, limits, reserved state, `.MN`, error catalog and source traceback remain cross-cutting. | `LC-AC-01/04/08/72`, `LC-REF-002/007/025–036/042/052/072`: repair silent source truncation independently of parked INTERPRET, then qualify the remaining source/diagnostic matrix or seek exact exceptions. |
-| LC-GAP-07 | Expression semantics still need whole-family audit: power association, arithmetic precedence and numeric errors, normal/strict comparison, logical operand errors, concatenation and configuration effects across optimized/no-opt execution. `NUMERIC` as an instruction is closed; that does not close all expression consumers. | `LC-AC-04/72/73`, `LC-REF-043–046/053/054`: reconcile specific failing forms against the reference and qualify one shared expression path. |
+| LC-GAP-06 | LC-CLOSE repairs physical source NUL truncation across B/C/G/L, retained/imported source lengths, .MN/.SIGL and the agreed Latin lexical/diagnostic cases. Its source/expression matrix and final-input qualification own that phase. Full mapped-source identity, source-conversion semantics, configured/non-Latin scanner rules and resource limits remain open. | `LC-AC-01/04/08/72`, `LC-REF-002/007/025–036/042/052/072`: retain the proven phase separately from deferred Unicode/conversion design and broader source/host/resource obligations. |
+| LC-GAP-07 | LC-CLOSE audits ordinary expression families, evaluation order, numeric contexts and Classic conditions in four modes, repairing shared B/G Classic integer arithmetic and whole powers. `NUMERIC` remains instruction-closed. Configured/non-Latin comparisons, exhaustive numeric/resource limits and wider shared-consumer qualification remain open. | `LC-AC-04/72/73`, `LC-REF-043–046/053/054`: finish LC-CLOSE final-input gates; retain wider resource/platform/design obligations without calling the full Level C reference qualified. |
 | LC-GAP-08 | The Unicode-first scalar route and fixed Latin-1 ordinal bridge have substantial passing slices, but complete source, BIF, host and cross-consumer proof is open. `RexxValue` binary capability remains for RexxScript. Explicit Unicode BIF names/codecs and the later raw-binary boundary still require their own design decision. | `LC-AC-06/72/73/75`, `LC-REF-008–014`: complete whole-program proof; decide whether the new Unicode BIF design belongs to this Level C closure or a separately approved later scope. No implicit raw-byte behavior. |
 | LC-GAP-09 | AST ownership/provenance, duplicate lowering paths and the earlier-instruction baseline have many retained receipts but no final complete crosswalk. Some coverage and reference rows still describe pre-closure slices; this register corrects the active status, not every historical receipt. | `LC-AC-08/58/61`: inspect current parser-to-emitter paths and remove real duplication or stale claims. Reserve a fresh independent consistency review for the new session after closeout. |
 | LC-GAP-10 | Exact-head full compatibility and Release 1 qualification are unproved. The 2026-10-08 local product checkpoint (full Debug 3296/3296; 3113 unique Release correctness checks; installed/focused ASan receipts) qualifies its recorded cases, not the complete reference surface or Beta 4 platform matrix; LC-DOC-ISSUE-01 demonstrates a clock behavior absent from those fixtures. | `LC-AC-01/04/59`, `R1-AC-01/02`: after dispositions and product changes, run the smallest relevant grouped checks and the required candidate qualification once on final inputs; do not repeat unchanged gates per item. |

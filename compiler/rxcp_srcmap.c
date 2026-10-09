@@ -293,7 +293,7 @@ static const char *srcmap_line_end(const char *line_start, const char *buffer_en
     const char *cursor;
 
     cursor = line_start;
-    while (cursor < buffer_end && *cursor != '\n' && *cursor != '\r' && *cursor != 0) cursor++;
+    while (cursor < buffer_end && *cursor != '\n' && *cursor != '\r') cursor++;
     return cursor;
 }
 

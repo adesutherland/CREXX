@@ -6,6 +6,7 @@
      5 *-* trace value 'intermediates'
      6 *-* nul = x2c('00')
        >L>   "00"
+       >=>   "\x00"
      7 *-* say c2x(nul)
        >V>   "\x00"
 00

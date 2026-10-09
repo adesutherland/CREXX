@@ -2051,16 +2051,9 @@ RXVM_HANDLER(FMOD_REG_REG_REG, VM_ADVANCE(3);
 RXVM_HANDLER(DMOD_REG_REG_DECIMAL, VM_ADVANCE(3);
     DEBUG("TRACE - DMOD R%d,R%d,%s\n", (int)REG_IDX(1), (int)REG_IDX(2), op3S->string);
     {
-        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
-        value *work = value_f();
-        // First, Calculate the decimal division (truncated)
-        current_frame->decimal->decimalDiv(current_frame->decimal, work, op2R, op);
-        current_frame->decimal->decimalTruncate(current_frame->decimal, work, work);
-        // Now calculate the remainder
-        current_frame->decimal->decimalMul(current_frame->decimal, work, work, op);
-        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, work);
-        // Clear the temporary value
-        value_free(work);
+        value *op = decimal_integer_literal_value(current_frame->decimal, op3S->string);
+        if (!current_frame->decimal->base.signal_number)
+            decimal_integer_arithmetic(current_frame->decimal, op1R, op2R, op, 1);
         free_decimal_literal_value(op);
     }
     // Check for errors
@@ -2076,16 +2069,9 @@ RXVM_HANDLER(DMOD_REG_REG_DECIMAL, VM_ADVANCE(3);
 RXVM_HANDLER(DMOD_REG_DECIMAL_REG, VM_ADVANCE(3);
     DEBUG("TRACE - FMOD R%d,%s,R%d\n", (int)REG_IDX(1), op2S->string, (int)REG_IDX(3));
     {
-        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
-        value *work = value_f();
-        // First, Calculate the decimal division (truncated)
-        current_frame->decimal->decimalDiv(current_frame->decimal, work, op, op3R);
-        current_frame->decimal->decimalTruncate(current_frame->decimal, work, work);
-        // Now calculate the remainder
-        current_frame->decimal->decimalMul(current_frame->decimal, work, work, op3R);
-        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op, work);
-        // Clear the temporary value
-        value_free(work);
+        value *op = decimal_integer_literal_value(current_frame->decimal, op2S->string);
+        if (!current_frame->decimal->base.signal_number)
+            decimal_integer_arithmetic(current_frame->decimal, op1R, op, op3R, 1);
         free_decimal_literal_value(op);
     }
     // Check for errors
@@ -2101,15 +2087,7 @@ RXVM_HANDLER(DMOD_REG_DECIMAL_REG, VM_ADVANCE(3);
 RXVM_HANDLER(DMOD_REG_REG_REG, VM_ADVANCE(3);
     DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
-        value *work = value_f();
-        // First, Calculate the decimal division (truncated)
-        current_frame->decimal->decimalDiv(current_frame->decimal, work, op2R, op3R);
-        current_frame->decimal->decimalTruncate(current_frame->decimal, work, work);
-        // Now calculate the remainder
-        current_frame->decimal->decimalMul(current_frame->decimal, work, work, op3R);
-        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, work);
-        // Clear the temporary value
-        value_free(work);
+        decimal_integer_arithmetic(current_frame->decimal, op1R, op2R, op3R, 1);
     }
     // Check for errors
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)

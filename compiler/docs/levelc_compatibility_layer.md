@@ -5,6 +5,14 @@ Review source snapshot: `c1d971502f5f0ee4804192918e77efb5f7e5d0be` (2026-10-08).
 
 The [existing worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md#level-c-documentation-review-programme-2026-10-08) owns this review plan.
 
+**2026-10-08 implementation update.** The agreed LC-CLOSE phase repairs the
+Latin/ordinary Classic expression, DATE/TIME and source-diagnostic paths.
+Its authoritative plan and final qualification are in the Level C worklist.
+Unicode principles/infrastructure, source conversion semantics, host APIs,
+streams and INTERPRET remain deferred. Source is Unicode across B/C/G/L;
+non-Latin Level C code has undefined behavior pending the Unicode design.
+Dated documentation-investigation and older QA receipts below remain history.
+
 ## 1 Scope and reading guide
 
 ### 1.1 Review snapshot and authority
@@ -58,13 +66,13 @@ Implemented infrastructure includes shared value, stem and pool objects; activat
 
 The retained macOS product checkpoint passed core Debug/Release builds, full normal Debug 3296/3296, 3113 unique Release correctness checks, 19 installed BIF cases and one native callback fixture, with focused maintained ASan overlays. The exact inputs, six repaired Release build-input failures, evidence reuse and unrun gates are in chapter 9 and the worklist. These are recorded test passes, not an assertion of full Classic, platform or Release 1 qualification.
 
-The documentation investigation reproduced a clock defect absent from those fixtures: in linked opt/no-opt, TIME('L') stays unchanged and TIME('E') stays zero across a one-second sleep. The pool's clock can refresh but has no production clause-boundary caller. DATE shares that state; calendar consequences are inferred rather than probed. The passing injected-clock units do not establish this integration. Chapter 10 and the DATE/TIME sections retain the reproducer and ownership.
+The documentation investigation reproduced the earlier DATE/TIME clause-clock defect. LC-CLOSE now gives each invocation a lazy frozen sample, with a program-wide elapsed/reset origin shared by internal calls; direct injectable pool harnesses remain supported. The compiled clock contract covers freshness, same-clause/nested-call consistency, private PROCEDURE pools, reset and empty-loop conditions. The worklist retains the qualified phase matrix and remaining platform-clock limits.
 
 ### 2.3 Outstanding assessment and delivery
 
 Eight recognized BIFs remain without compiled Classic entries: CHARIN, CHAROUT, CHARS, LINEIN, LINEOUT, LINES, QUALIFY and STREAM. Their complete behavioral matrices—including positions, encoding, EOF, state, errors and cleanup—are deferred pending Adrian's architecture and compatibility assessment. No stream provider is approved by this review.
 
-Other outstanding obligations include physical source NUL truncation and mapped-source inventory, full lexical/expression/configuration parity, real HALT and wider host invocation/pool APIs, resource/error limits, complete AST/shared-consumer closure and platform qualification. The approved practical TRACE divergences and external CALL departure are documented explicitly, including the static fixed signature. Existing PARSE representation and ADDRESS snapshot bounds are stated; the review does not invent unlimited allocation or arbitrary-size behavior.
+LC-CLOSE repairs physical source NUL truncation and the agreed expression/source diagnostics. Other outstanding obligations include full mapped-source inventory and deferred configuration/Unicode parity, real HALT and wider host invocation/pool APIs, resource/error limits, complete AST/shared-consumer closure and platform qualification. The approved practical TRACE divergences and external CALL departure are documented explicitly, including the static fixed signature. Existing PARSE representation and ADDRESS snapshot bounds are stated; the review does not invent unlimited allocation or arbitrary-size behavior.
 
 Configured BIN/HEX validator/consumer parity is a source-inspection concern, not a reproduced default-ASCII failure. SUBWORD's named unit exercises a different path from its compiled standalone entry; TRACE's pool-state unit is also distinct from its compiled activation-frame path. The evidence is attributed accordingly. Stale source comments mentioning compiler name dispatch are recorded for later cleanup; source is unchanged.
 
@@ -156,7 +164,7 @@ Classic literals become RexxValue factories with the original text; variable rea
 
 The grammar uses left-recursive power productions. Arithmetic, integer division/remainder, strict/normal comparisons, explicit concatenation and inferred blank/abuttal concatenation have their own operator nodes. Classic AND/OR are lowered through the eager logical path, evaluating both operands in source order instead of inheriting ordinary typed short-circuit behavior. Exact logical-value checks use contextual Classic errors.
 
-`AST_SEMANTIC_CONTEXT_CLASSIC_*` records retain the Classic operation's identity around generated calls for source/TRACE reporting. The grammar and selected operator regressions cover part of the reference matrix. Special numeric values, complete error timing and optimization equivalence still need proof. Those remain LC-GAP-07/LC-REF-043–046. External function-expression support is also narrower than the CALL statement boundary.
+`AST_SEMANTIC_CONTEXT_CLASSIC_*` records retain the Classic operation's identity around generated calls for source/TRACE reporting. The grammar and selected operator regressions cover part of the reference matrix. The LC-CLOSE expression contract covers values, source-order effects, numeric contexts, Classic errors and four execution modes. Numeric/normal-comparison/logical operators now use a lean RexxBifCallContext.expression factory and shared rexxclassic_expression_binary/unary adapters; they record errors through the existing BIF transport and raise CLASSIC_SYNTAX at the authored operator. Integer divide/remainder use shared VM guard digits, working precision and DIGITS-width checks; whole powers have bounded validation and large-exponent binary reduction. Deferred configuration/Unicode/resource/platform obligations retain LC-GAP-07/LC-REF-043–046 ownership. External function-expression support is also narrower than the CALL statement boundary.
 
 ### 4.4 Source AST to canonical Level B AST
 
@@ -183,7 +191,7 @@ The immutable source snapshot retains authored layout, spans, diagnostics and se
 
 The BIF checkpoint repaired the indexed/stem setter rewrite to retain authored assignment source on its outer call. Focused TRACE, source/provider and assembly-golden checks qualified that repair. It did not establish universal optimized traceback equivalence: selected negative no-opt fixtures assert authored source, while their optimized goldens still reflect the existing panic-only output.
 
-RXPP source-map input can retain original locations for diagnostics without supplying SOURCELINE with an original physical-line inventory. Those are separate source services. Full mapped-source identity, physical source NUL, generated/helper stack traceback and broad optimized source equivalence remain LC-GAP-06.
+RXPP source-map input can retain original locations for diagnostics without supplying SOURCELINE with an original physical-line inventory. Those are separate source services. Physical NUL now survives scanning, literals/comments, imported source and retained source lines; invalid lexical positions receive explicit diagnostics. Source-map owned text has an explicit length, metadata spans require a backing buffer, and panic output renders NUL as \0 while retaining the suffix. Full mapped-source identity and broader generated/helper traceback remain LC-GAP-06.
 
 ### 4.6 Validation, optimization and emission
 
@@ -225,7 +233,7 @@ The common BIF validator normalizes NUM once. The ABS, MAX, MIN and SIGN wrapper
 
 This establishes the selected numeric BIF change; arithmetic edge cases and resource limits still have open obligations. RexxScript's public adapter and configuration remain separate from the B/G typed API.
 
-The DATE/TIME frozen-sample service lacks a production clause-refresh caller. A focused existing-toolchain probe observed TIME('L') unchanged and TIME('E') remaining zero across a one-second sleep in linked opt/no-opt. DATE shares the same cached clock, though calendar crossing was not probed. This known integration defect is detailed in 8.24 DATE / 8.56 TIME and 10.2; direct injected-clock unit passes do not qualify it.
+DATE/TIME contexts bind to the current activation. beginClauseTime invalidates its sample lazily at executed clauses and repeated condition checkpoints; ensureClauseTime samples only when a clock BIF needs it. Nested invocations retain separate samples and use the program root's elapsed origin. Direct contexts without a compiled activation retain the existing injectable pool clock. Historical diagnosis and remaining timezone/platform limits are in 8.24/8.56 and 10.2.
 
 ### 5.4 Conditions, SIGNAL, delayed CALL and TRACE
 
@@ -255,7 +263,7 @@ The installed callback fixture passed twelve callbacks and file cleanup, includi
 
 SOURCELINE retains ordinary physical source in the unit's configuration only when that BIF is used. `levelc_append_source_lines` walks the existing compiler buffer, handles CRLF/CR/LF and final lines, and calls `appendSourceLine`. Local routines share those lines; separately compiled providers retain their own unit. It does not reopen the source file at runtime.
 
-A source-mapped generated buffer has no retained original inventory and reports count zero. The existing compiler buffer is NUL-terminated, so physical source NUL truncation remains a documented source limitation. PARSE SOURCE derives system/mode/name from source metadata and program-root mode; it is not a substitute for a complete line inventory.
+A source-mapped generated buffer has no retained original inventory and reports count zero. LC-CLOSE makes scanning and retained source lengths explicit: physical NUL in literals/comments and later clauses is preserved across B/C/G/L, including imported source; invalid lexical positions receive a diagnostic. PARSE SOURCE derives system/mode/name from source metadata and program-root mode; it is not a substitute for a complete line inventory.
 
 ERRORTEXT uses the generated English diagnostic template service and converts its braces to Classic place-markers. Compiler localization/raw rendering and runtime CONDITION expansion are distinct consumers of the catalog. N currently falls back to English. Full mapped source, locale selection, all message insertion producers and full error traceback remain LC-GAP-06/LC-REF-072.
 
@@ -1169,8 +1177,7 @@ is no registered `levelc_interpret_*` execution-conformance panel and no
 successful opt/no-opt, linked or native INTERPRET qualification. LC-I-25,
 LC-87-01–05, LC-AC-59/04, LC-REF-062 and LC-GAP-01 remain open. Any future
 implementation or permanent exception requires Adrian's separate decision.
-This documentation review leaves that route pending, together with the known
-source-NUL truncation under LC-GAP-06.
+INTERPRET remains pending alongside the wider mapped-source/conversion/identity obligations under LC-GAP-06; LC-CLOSE repairs physical NUL truncation.
 
 ## 8 BIF mapping and conformance
 
@@ -1424,11 +1431,11 @@ Compiler fixtures `levelc_bif_shadow[_noopt]`, `levelc_bif_syntax_signal[_noopt]
 
 **Contract.** `DATE([option [,date [,inoption]]])` uses `oBDEMNOSUW oANY oBDENOSU`. Omission defaults output/input format to N. Without a supplied date it formats the current frozen local clause date; with a date it converts the exact declared input syntax. B is base-day count, D day of year, E European, M month name, N normal date, O ordered, S sortable, U US and W weekday. Input forms exclude M/W. A supplied input option without a date, an invalid calendar value, range or format, or a noncanonical spelling reports `40.19`; ordinary option errors remain `40.21/40.28`. The two-digit year window is based on the captured current year.
 
-**AST and implementation.** `FUNCTION(DATE, ...)` lowers to `rexxclassicbifdate.rexxclassicbif_date` in [RexxClassicBifDate.crexx](../../lib/rxfnsc/RexxClassicBifDate.crexx). It reads `context.callerPool()`, calls `ensureClauseTime`, and accesses `clauseBaseDay`; `RexxDateTimeState` in [RexxClassicState.crexx](../../lib/rxfnsc/RexxClassicState.crexx) samples existing VM TIME/MTIME/XTIME services. Gregorian helpers `_datefromjdn`, `_jdn`, `_datevalid` and `_leapyear` are imported from the existing runtime. The BIF validates by parsing and exact round-trip formatting, including years 1–9999/base days 0–3652058. Reading may initialize the pool's clause clock; it does not reset TIME elapsed state.
+**AST and implementation.** `FUNCTION(DATE, ...)` lowers to `rexxclassicbifdate.rexxclassicbif_date` in [RexxClassicBifDate.crexx](../../lib/rxfnsc/RexxClassicBifDate.crexx). It uses the call context's `ensureClauseTime` and `clauseBaseDay`, selecting the compiled activation or direct harness pool; `RexxDateTimeState` in [RexxClassicState.crexx](../../lib/rxfnsc/RexxClassicState.crexx) samples existing VM TIME/MTIME/XTIME services. Gregorian helpers `_datefromjdn`, `_jdn`, `_datevalid` and `_leapyear` are imported from the existing runtime. The BIF validates by parsing and exact round-trip formatting, including years 1–9999/base days 0–3652058. Reading may initialize the pool's clause clock; it does not reset TIME elapsed state.
 
 **Evidence.** [testRexxClassicBifDate.crexx](../../lib/rxfnsc/tests_functional/testRexxClassicBifDate.crexx) injects a deterministic clause date and checks every output, leap day, current-year window edges, exact case/width, invalid day and missing input, opt/no-opt. The four reference-audit modes add compiled/linked explicit-date conversion proof. `levelc_bif_config_lifecycle` tests RANDOM configuration, not clock refresh. Deterministic DATE injection does not qualify real clause-boundary sampling, every OS timezone, DST transition or host clock failure.
 
-**Status.** Explicit-date conversion and injected-sample formatting are implemented and audited. Source inspection finds no production call to `RexxVariablePool.beginClauseTime()` in the compiler/shared runtime/RexxScript path. `ensureClauseTime()` sets `date_time_ready` once and does not refresh a ready pool. An ordinary Release linked probe on the reviewed snapshot confirms the shared-clock integration defect: after an ADDRESS SYSTEM one-second sleep, TIME(L) is unchanged and TIME(E) remains zero in optimized and no-opt cREXX, while Regina advances. DATE shares that ready flag and sample. The effect on date freshness and the current-year window is inferred from this shared path; no calendar-boundary crossing was probed. `LC-GAP-02/03/04`, `LC-REF-003/020/057` own clock/host lifecycle assessment; OS timezone/DST proof remains open. The worklist retains the exact probe receipt; no code repair is part of this review.
+**Status.** Explicit conversion and injected calendar samples remain implemented. LC-CLOSE repairs the shared compiled clock defect with lazy activation-local clause samples, bound DATE/TIME contexts and a program-wide elapsed/reset origin. The compiled clock contract checks date consistency alongside time freshness and nested lifetimes. The earlier TIME failing probe is historical; live midnight/year/DST transitions, timezone/platform extremes and clock failures remain unqualified under LC-GAP-02/03/04 and LC-REF-003/020/057. The worklist retains the old diagnosis and new qualification evidence.
 
 ### 8.25 DELSTR
 
@@ -1538,7 +1545,7 @@ Compiler fixtures `levelc_bif_shadow[_noopt]`, `levelc_bif_syntax_signal[_noopt]
 
 **Evidence.** [testRexxClassicBifLength.crexx](../../lib/rxfnsc/tests_functional/testRexxClassicBifLength.crexx), opt/no-opt, covers empty/ASCII/non-ASCII/supplementary characters, a decomposed combining sequence, BYTE contrast, argument preservation and all call-shape failures. `levelc_slice3_bif_length`, the character-BIF panel and four reference-audit modes provide compiled proof, including a three-character value with embedded NUL. The inventory fixture's dead calls are recognition proof only.
 
-**Status.** Implemented and baseline-audited with codepoint/NUL examples. Whole-program source/host/configuration proof remains `LC-GAP-02/06/08`, `LC-REF-007/009/012/013/025`. Physical source NUL truncation is a separate known source defect and cannot be inferred fixed from runtime LENGTH preserving NUL.
+**Status.** Implemented and baseline-audited with codepoint/NUL examples. Whole-program source/host/configuration proof remains `LC-GAP-02/06/08`, `LC-REF-007/009/012/013/025`. Physical source NUL is separately covered by the LC-CLOSE source contract; runtime LENGTH tests alone do not establish that compiler behavior.
 
 ### 8.36 LINEIN
 
@@ -1668,9 +1675,9 @@ Compiler fixtures `levelc_bif_shadow[_noopt]`, `levelc_bif_syntax_signal[_noopt]
 
 **AST and implementation.** The direct entry `rexxclassicbifsourceline.rexxclassicbif_sourceline` is in [RexxClassicBifSourceline.crexx](../../lib/rxfnsc/RexxClassicBifSourceline.crexx). During program construction, `levelc_append_source_lines()` in [the lowerer](../rxcp_levelc_lower.c) walks `Context.buff_start`/`buff_end`, recognizes CRLF/CR/LF, and emits `RexxClassicConfig.appendSourceLine()` calls only when this BIF is used. The configuration owns the retained strings. Local routines share their unit's configuration; separately compiled Classic routine providers initialize their own inventory. Generated source-map input is deliberately not treated as an original inventory, so its count is zero.
 
-**Evidence.** [`testRexxClassicBifSourceline`](../../lib/rxfnsc/tests_functional/testRexxClassicBifSourceline.crexx) checks unavailable source, appended comments/blanks, normalized/omitted index, extra omitted slots and `40.12`/`40.14`/`40.34`. `levelc_bif_sourceline_{opt,noopt}`, CRLF companions and linked pairs preserve original physical lines and authored error source. The external CALL provider fixture adds separately compiled source isolation (LC-STEP-90D receipt). The source scan stops at physical NUL; mapped source is unavailable. These are known current limits, owned by LC-GAP-06 and LC-REF-002/007/072. The ordinary-source BIF increment is audited; full source-service conformance is open.
+**Evidence.** [`testRexxClassicBifSourceline`](../../lib/rxfnsc/tests_functional/testRexxClassicBifSourceline.crexx) checks unavailable source, appended comments/blanks, normalized/omitted index, extra omitted slots and `40.12`/`40.14`/`40.34`. `levelc_bif_sourceline_{opt,noopt}`, CRLF companions and linked pairs preserve original physical lines and authored error source. The external CALL provider fixture adds separately compiled source isolation (LC-STEP-90D receipt). LC-CLOSE adds length-aware physical source scanning and the four-mode source-data contract, including NUL in retained lines and separately compiled providers. Mapped source remains unavailable, owned by LC-GAP-06 and LC-REF-002/007/072. The ordinary-source BIF increment is audited; full source-service conformance is open.
 
-**Status.** Implemented for retained ordinary physical source; mapped inputs are unavailable and physical NUL truncates the current scan.
+**Status.** Implemented for retained ordinary physical source, including embedded NUL; mapped inputs remain unavailable. Final-input qualification is retained in the LC-CLOSE worklist.
 
 ### 8.50 SPACE
 
@@ -1734,11 +1741,11 @@ Compiler fixtures `levelc_bif_shadow[_noopt]`, `levelc_bif_syntax_signal[_noopt]
 
 **Contract.** `TIME([option [,time [,inoption]]])` uses `oCEHLMNORS oANY oCHLMNS`. N is the default output/input option. C gives a 12-hour clock, H/M/S numeric components/totals, L six fractional digits, N normal time, E elapsed, R elapsed with origin reset, and O local-to-UTC offset in microseconds. Explicit conversion to E/R/O fails `40.29`. A supplied input option without time, invalid input, or noncanonical round-trip spelling fails `40.19`; option/count errors use the common validator.
 
-**AST and implementation.** `rexxclassicbiftime.rexxclassicbif_time` in [RexxClassicBifTime.crexx](../../lib/rxfnsc/RexxClassicBifTime.crexx) obtains its caller pool and calls `ensureClauseTime()`. [RexxDateTimeState](../../lib/rxfnsc/RexxClassicState.crexx) obtains local/standard/time-zone samples using the existing VM `mtime`, `time` and `xtime` operations and retains elapsed origin in the pool's date/time state. Parsing/formatting is Level B code. It does not add a clock provider or change platform APIs.
+**AST and implementation.** `rexxclassicbiftime.rexxclassicbif_time` in [RexxClassicBifTime.crexx](../../lib/rxfnsc/RexxClassicBifTime.crexx) uses context `ensureClauseTime()` and clock queries bound to its caller activation (or the direct harness pool). [RexxDateTimeState](../../lib/rxfnsc/RexxClassicState.crexx) obtains local/standard/time-zone samples using the existing VM `mtime`, `time` and `xtime` operations and retains a program-wide elapsed origin for compiled internal calls; direct pool harnesses retain their existing state. Parsing/formatting is Level B code. It does not add a clock provider or change platform APIs.
 
-**Evidence.** [`testRexxClassicBifTime`](../../lib/rxfnsc/tests_functional/testRexxClassicBifTime.crexx) injects deterministic date/local/UTC/offset samples; it checks every output family, conversions, elapsed/reset after explicit reinjection, bad inputs/options and missing time. It also checks that a direct BIF lazily freezes a live sample. The compiled reference panel checks a fixed conversion through all four execution modes. A targeted temporary probe on the existing Release product at the reviewed revision calls TIME(E)/TIME(L), executes an ordinary `ADDRESS SYSTEM` sleep, then calls TIME(L)/TIME(E) again. Both linked opt and no-opt cREXX runs retain identical timestamps and elapsed zero; the Regina probe advances both. The production call-path search finds no caller of `RexxVariablePool.beginClauseTime()` in tracked compiler, exit, library or evaluator sources: `ensureClauseTime()` samples only while `date_time_ready` is false.
+**Evidence.** [`testRexxClassicBifTime`](../../lib/rxfnsc/tests_functional/testRexxClassicBifTime.crexx) injects deterministic date/local/UTC/offset samples; it checks every output family, conversions, elapsed/reset after explicit reinjection, bad inputs/options and missing time. It also checks that a direct BIF lazily freezes a live sample. The compiled reference panel checks a fixed conversion through all four execution modes. The earlier documentation review ran a targeted temporary probe on the Release product at that revision calls TIME(E)/TIME(L), executes an ordinary `ADDRESS SYSTEM` sleep, then calls TIME(L)/TIME(E) again. Both linked opt and no-opt cREXX runs retained identical timestamps and elapsed zero; the Regina probe advanced both. That revision's production call-path search found no caller of `RexxVariablePool.beginClauseTime()` in tracked compiler, exit, library or evaluator sources: `ensureClauseTime()` samples only while `date_time_ready` is false.
 
-**Status.** TIME is implemented but has this reproduced clause-clock defect. The injected unit's advancing elapsed values do not qualify compiler clause-boundary refresh. The documentation-review receipt in the worklist retains `/tmp/crexx-levelc-doc-clock.x18y6bki/probe.log` and `receipt.json`; no permanent test or repair is added here. LC-GAP-02/04 and LC-REF-057 own refresh/lifecycle work; time-zone/DST/midnight/platform extremes remain unqualified.
+**Status.** LC-CLOSE repairs the compiled clause-clock defect with activation-local samples and program-wide elapsed/reset ownership. `classic_clock_contract_*` checks later-clause freshness, same-clause/nested-call consistency, private pools, reset and empty-loop conditions. Existing injected conversion/calendar units remain separate evidence. The earlier failing documentation probe is retained as history; final-input qualification is in the worklist. Time-zone/DST/live calendar crossings and platform clock failures remain unqualified under LC-GAP-02/04 and LC-REF-057.
 
 ### 8.57 TRACE
 
@@ -1937,7 +1944,7 @@ The [remaining-gap register](../../docs/planning/release-1/levelc-compatibility-
 | LC-GAP-03 | Complete command/stream/default-input/queue/external-routine host adapters |
 | LC-GAP-04 | Host invocation modes, trap overrides, completion/pool access and real HALT |
 | LC-GAP-05 | Remaining ADDRESS-NUL transport and practical TRACE/PARSE-source disposition |
-| LC-GAP-06 | Full source/lexer/mapping/NUL/traceback and diagnostic identity |
+| LC-GAP-06 | Wider mapped-source/conversion/configuration/resource/traceback and diagnostic identity |
 | LC-GAP-07 | Full expression/numeric/logical/condition interaction equivalence |
 | LC-GAP-08 | Complete Unicode/Latin-1 source, BIF, host and cross-consumer proof; later explicit Unicode/binary design |
 | LC-GAP-09 | Complete AST/source/semantic crosswalk and lowered-shape closure |
@@ -1945,19 +1952,19 @@ The [remaining-gap register](../../docs/planning/release-1/levelc-compatibility-
 
 Approved boundaries, such as external CALL with its static fixed signature or practical TRACE, have their exact effects documented in the relevant detailed sections. A gap is not automatically closed because its supporting instruction review was accepted.
 
-### 10.2 Documentation discrepancies and new observations
+### 10.2 Historical documentation investigation and observations
 
 The review found stale current-status statements alongside valid historical design notes. The guide reconciliation updates current counts, signatures and producer evidence while retaining dated receipts. It does not silently turn an old planned helper into an implemented host service.
 
 | ID | Finding and evidence class | Current effect / owner |
 | --- | --- | --- |
-| LC-DOC-ISSUE-01 | Reproduced TIME clause-clock defect; DATE shares the inspected clock path | No clause refresh in a persistent visible pool; TIME long/elapsed results remain cached. LC-GAP-02/04, LC-REF-057. |
+| LC-DOC-ISSUE-01 | Earlier TIME clause-clock defect; DATE shared the cache | Repaired in LC-CLOSE by activation samples/program elapsed state; final qualification and platform limits are owned by the worklist. |
 | LC-DOC-OBS-02 | External function-expression boundary, source and maintained negative fixture | External CALL works through the approved static fixed signature; arbitrary external FUNCTION expressions are rejected. LC-GAP-03/04/07. |
 | LC-DOC-OBS-03 | Configured BIN/HEX validation/consumption mismatch, source inspection only | Validators accept custom digits/blanks that consuming loops do not normalize. Default ASCII calls are unaffected by this observation; custom adapter behavior needs a reproducer/assessment. LC-GAP-02/08, LC-REF-008/010/014. |
 | LC-DOC-OBS-04 | SUBWORD/TRACE direct-unit path differs from compiler path, inspected coverage | SUBWORD's unit exercises the legacy common body, while compiled tests cover the standalone entry. TRACE's unit exercises pool state, while compiled matrices exercise activation state. Broader error/configuration equivalence is not independently covered by the unit alone. LC-GAP-02. |
 | LC-DOC-OBS-05 | Current guides retain pre-BIF/pre-instruction status, document inspection | QUEUED/SOURCELINE/ERRORTEXT/CONDITION status, ARG/TRACE checklists and empty-needle descriptions were reconciled in this review; historical slices remain labelled history. Wider AST/reference crosswalk proof stays LC-GAP-09. |
 
-**Reproducer for LC-DOC-ISSUE-01.** On the recorded macOS Release product, the following ordinary ASCII Level C program crosses real execution time between clauses:
+**Historical reproducer for LC-DOC-ISSUE-01 (before LC-CLOSE).** On the recorded macOS Release product, the following ordinary ASCII Level C program crosses real execution time between clauses:
 
 ```rexx
 say 'START='time('E')
@@ -1969,7 +1976,7 @@ say 'END='time('E')
 
 Both linked modes printed identical FIRST and SECOND values and END=0. Regina 3.9.7 printed different timestamps and END=1.137237 in the retained run. The tools were rxc (with and without -n), rxas, rxlink with library/classlib/rxfnsc, and rxvm from the existing ordinary Release build. Literal argv, source and output are in `/tmp/crexx-levelc-doc-clock.x18y6bki/receipt.json` and `probe.log`; the worklist retains the essential diagnosis and next action. SYSTEM sleep is a host-specific probe, not a portable language feature.
 
-Both DATE and TIME call `ensureClauseTime`, which freezes the first sample while `date_time_ready` stays set. `beginClauseTime` can refresh the existing state but has no identified production caller in compiler/rxfnsc/RexxScript. Thus the clock defect is distinct from working explicit-date/time conversion and injected-clock formatting tests. DATE shares the cache; its consequences for calendar days and year windows are inferences from the source, and a midnight/year crossing was not probed. No repair or new host service is included in this review.
+At the documentation-review revision, DATE and TIME called `ensureClauseTime`, freezing the first sample while `date_time_ready` stayed set. `beginClauseTime` had no identified production caller in compiler/rxfnsc/RexxScript. Thus that clock defect was distinct from working explicit-date/time conversion and injected-clock formatting tests. DATE shares the cache; its consequences for calendar days and year windows are inferences from the source, and a midnight/year crossing was not probed. That documentation review made no repair; the later LC-CLOSE implementation replaces the compiled clock ownership without adding a host service.
 
 SUBWORD/TRACE coverage differences and configured BIN/HEX observations are described in their per-name sections. These distinctions are reasons for focused future investigation, not additional failed gates invented from an unexecuted case.
 

@@ -411,7 +411,7 @@ static int classic_trace_event_kind(ASTSemanticContextKind kind,
     }
 }
 
-static void append_classic_value_trace_event(OutputFragment *output,
+void append_classic_value_trace_event(OutputFragment *output,
                                              ASTNode *semantic_node,
                                              ASTNode *value_node) {
     char kind;

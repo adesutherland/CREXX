@@ -76,6 +76,12 @@ mode is used:
 - power is left-associative, so `2**2**3` is parsed as `(2**2)**3`
 - `//` is the Classic remainder spelling
 
+Under Classic numeric semantics, decimal integer division/remainder truncate
+an unrounded quotient and enforce the current DIGITS whole-result limit.
+Whole power uses Classic guard precision, including `0**0 = 1`. Existing
+B/G types and typed signal delivery remain distinct from Level C's SYNTAX
+condition bridge; `numeric_classic` does not make a typed program Level C.
+
 `NUMERIC STANDARD` inside a procedure controls numeric semantics, but it does
 not reparse expressions. Parser-level choices belong to file-level `OPTIONS`.
 

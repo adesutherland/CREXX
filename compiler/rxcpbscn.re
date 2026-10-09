@@ -76,8 +76,7 @@ int rexbscan(Context* s) {
 
   eol2 = "\r\n";
   eol1 = [\r] | [\n];
-  eof = [\000] ;
-  any = [^] \ eof ;
+  any = [^]; /* NUL is source data; only YYLIMIT ends input. */
   digit = [0-9];
   hex = [a-fA-F0-9];
   int_des = [uUlL]*;
@@ -299,7 +298,6 @@ int rexbscan(Context* s) {
     "*" ob ":" { RET(TK_MULT_LABEL); }
     str { RET(TK_STRING); }
     str [bBxX] / (any\(symchr | [.])) { RET(TK_STRING); }
-    eof { RET(TK_EOS); }
     $ { RET(TK_EOS); }
     whitespace {
       s->top = s->cursor;
@@ -345,10 +343,6 @@ int rexbscan(Context* s) {
        s->lexer_intrinsic_mode = 0;
        RET(TK_UNKNOWN);
     }
-    eof {
-       s->lexer_intrinsic_mode = 0;
-       RET(TK_EOS);
-    }
     $ {
        s->lexer_intrinsic_mode = 0;
        RET(TK_EOS);
@@ -385,10 +379,6 @@ int rexbscan(Context* s) {
        s->lexer_intrinsic_mode = 3;
        RET(TK_CLOSE_SBRACKET);
     }
-    eof {
-       s->lexer_intrinsic_mode = 0;
-       RET(TK_EOS);
-    }
     $ {
        s->lexer_intrinsic_mode = 0;
        RET(TK_EOS);
@@ -404,10 +394,6 @@ int rexbscan(Context* s) {
     ">" {
        s->lexer_intrinsic_mode = 0;
        RET(TK_GT);
-    }
-    eof {
-       s->lexer_intrinsic_mode = 0;
-       RET(TK_EOS);
     }
     $ {
        s->lexer_intrinsic_mode = 0;
@@ -492,14 +478,6 @@ int rexbscan(Context* s) {
     ++depth;
     goto comment;
   }
-  eof {
-      s->line = comment_line;
-      s->prev_linestart = s->linestart;
-      s->linestart = comment_linestart;
-      s->top = comment_top;
-      s->cursor = s->top + 2; /* To get the '/ *' */
-      RET(TK_BADCOMMENT);
-  }
   $ {
       s->line = comment_line;
       s->prev_linestart = s->linestart;
@@ -527,7 +505,6 @@ skip_line_comment:
     s->top = s->cursor - 1;
     RET(TK_EOL);
   }
-  eof { RET(TK_EOS); }
   $ { RET(TK_EOS); }
   * {
     goto skip_line_comment;

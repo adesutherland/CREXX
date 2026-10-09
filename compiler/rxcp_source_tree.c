@@ -457,8 +457,11 @@ static void source_node_apply_srcmap(SourceNode *source_node,
 
     if (!location->line_text || location->line_text_length == 0) return;
 
-    source_node->owned_source_text = rx_strndup(location->line_text, location->line_text_length);
+    source_node->owned_source_text = malloc(location->line_text_length + 1);
     if (!source_node->owned_source_text) return;
+    memcpy(source_node->owned_source_text, location->line_text, location->line_text_length);
+    source_node->owned_source_text[location->line_text_length] = 0;
+    source_node->owned_source_text_length = location->line_text_length;
 
     start_offset = location->column < 0 ? 0 : (size_t)location->column;
     if (start_offset >= location->line_text_length) return;

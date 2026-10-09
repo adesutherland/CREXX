@@ -388,6 +388,10 @@ RexxValue: class
     arg ?classic = 0
     temp = 0
     flags = cache_flags
+    if classic & (flags <has> RV_FLAG_STRING) then do
+      number = _rv_classic_number_text(string_value) as .decimal
+      return number as .int
+    end
     if (flags <has> RV_FLAG_INT) then return int_value
     if (flags <has> RV_FLAG_DECIMAL) then do
       if \classic then do
@@ -461,7 +465,8 @@ RexxValue: class
     temp = "0" as .decimal
     flags = cache_flags
     -- Classic strings are reparsed under the active precision at each use.
-    if classic & (flags <has> RV_FLAG_STRING) then return string_value as .decimal
+    if classic & (flags <has> RV_FLAG_STRING) then
+      return _rv_classic_number_text(string_value) as .decimal
     if (flags <has> RV_FLAG_DECIMAL) then return decimal_value
     if \classic then do
       numeric_digits = rexxvalue_numeric_digits()
@@ -607,7 +612,7 @@ RexxValue: class
     numeric form inherited
     original = asString(1)
     if \_rv_is_number_text(original) then return ""
-    text = strip(original)
+    text = _rv_classic_number_text(original)
     if left(text, 1) = "+" | left(text, 1) = "-" then text = substr(text, 2)
     exponent_at = pos("E", upper(text))
     if exponent_at > 0 then text = left(text, exponent_at - 1)
@@ -770,7 +775,12 @@ RexxValue: class
       assembler setnumdgts numeric_digits
       assembler setnumfuz numeric_fuzz
     end
-    result = asDecimal(classic) % other.asDecimal(classic)
+    if classic then do
+      left_decimal = _rv_integer_decimal(self)
+      right_decimal = _rv_integer_decimal(other)
+      result = left_decimal % right_decimal
+    end
+    else result = asDecimal(classic) % other.asDecimal(classic)
     return _decimalResult(result, classic)
 
   remainder: method = .RexxValue
@@ -800,7 +810,12 @@ RexxValue: class
       assembler setnumdgts numeric_digits
       assembler setnumfuz numeric_fuzz
     end
-    result = asDecimal(classic) // other.asDecimal(classic)
+    if classic then do
+      left_decimal = _rv_integer_decimal(self)
+      right_decimal = _rv_integer_decimal(other)
+      result = left_decimal // right_decimal
+    end
+    else result = asDecimal(classic) // other.asDecimal(classic)
     return _decimalResult(result, classic)
 
   power: method = .RexxValue
@@ -820,7 +835,8 @@ RexxValue: class
       assembler setnumdgts numeric_digits
       assembler setnumfuz numeric_fuzz
     end
-    result = asDecimal(classic) ** other.asInt(classic)
+    if classic then result = asDecimal(1) ** other.asDecimal(1)
+    else result = asDecimal(classic) ** other.asInt(classic)
     return _decimalResult(result, classic)
 
   negate: method = .RexxValue
@@ -1142,9 +1158,30 @@ _rv_logical_right_text: procedure = .boolean
   assembler signal "ERROR", message
   return 0
 
-_rv_is_number_text: procedure = .boolean
+/** Preserve an integer-operation operand until the VM applies its guard digits. */
+_rv_integer_decimal: procedure = .decimal
+  numeric digits inherited
+  numeric form inherited
+  arg value = .RexxValue
+  text = _rv_classic_number_text(value.asString(1))
+  precision = .int
+  assembler getnumdgts precision
+  if length(text) > precision then precision = length(text)
+  assembler setnumdgts precision
+  return text as .decimal
+
+/** Canonical ASCII numeric spelling without changing the original string view. */
+_rv_classic_number_text: procedure = .string
   arg value = .string
   text = strip(value)
+  if left(text,1) == "+" | left(text,1) == "-" then
+    text = left(text,1) || strip(substr(text,2))
+  return text
+
+_rv_is_number_text: procedure = .boolean
+  arg value = .string, ?classic = 1
+  text = strip(value)
+  if classic then text = _rv_classic_number_text(value)
   if length(text) = 0 then return 0
   posn = 1
   saw_digit = 0
@@ -1247,7 +1284,7 @@ _rv_compare_standard: procedure = .int
   arg left = .RexxValue, right = .RexxValue, classic = .int
   left_text = left.asString(classic)
   right_text = right.asString(classic)
-  if _rv_is_number_text(left_text) & _rv_is_number_text(right_text) then do
+  if _rv_is_number_text(left_text, classic) & _rv_is_number_text(right_text, classic) then do
     if \classic then do
       numeric_digits = rexxvalue_numeric_digits()
       numeric_fuzz = rexxvalue_numeric_fuzz()

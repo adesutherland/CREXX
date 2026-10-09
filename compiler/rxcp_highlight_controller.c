@@ -176,18 +176,8 @@ static size_t highlight_count_registered_exits(Context *root) {
 }
 
 static int retain_context_buffer(Context *context, char *buffer) {
-    char **new_buffers;
-
     if (!context || !buffer) return 0;
-
-    new_buffers = realloc(context->extra_buffers, sizeof(char *) * (context->extra_buffers_count + 1));
-    if (!new_buffers) {
-        return 0;
-    }
-
-    context->extra_buffers = new_buffers;
-    context->extra_buffers[context->extra_buffers_count++] = buffer;
-    return 1;
+    return rxcp_retain_buffer(context, buffer, strlen(buffer));
 }
 
 static char *retain_context_string(Context *context, const char *value) {
