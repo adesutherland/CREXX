@@ -380,6 +380,10 @@ if(BUILD_TESTING)
             qa-prep-comprehensive
             qa-prep-qualification
             qa-prep-stress)
+    # IDE "All CTest" needs every tier's fixtures, without making product
+    # builds pay for qualification, stress and measurement preparation.
+    add_custom_target(qa-prep-all)
+    add_dependencies(qa-prep-all qa-prep qa-prep-measurement)
 endif()
 
 add_subdirectory(platform)

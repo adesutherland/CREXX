@@ -2,8 +2,11 @@
 
 The approved C-first implementation and bounded local qualification are complete
 on `develop`, based on synchronized
-`91313bcc5a447e9403f95b1f0bfc4dd9503d0618`. Delivery is local and unpublished;
-no push, hosted pass or release is claimed. The authoritative scope is
+`91313bcc5a447e9403f95b1f0bfc4dd9503d0618`. Adrian authorized publication on
+10 October; this split and the subsequent repairs are published together to
+`origin/develop`. Local qualification is retained; no hosted pass or release is
+claimed. The [combined delivery receipt](../clion-qa-preparation-2026-10-10/README.md)
+records the final 3,326-test Release result and publication boundary. The authoritative scope is
 [COMP-PIPE-01's C-first phase](../../ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10).
 The broader B/G migration and Level C compatibility programme remain open.
 
@@ -165,5 +168,6 @@ SAN-011, SAN-012 and SAN-QA-018 stay release-blocking until their conditions pas
 Windows/MSVC, Intel, native CMS/TSO, 24-bit resident memory and hosted publication
 workflows were not run here. Full B/G migration, fast/lite products, direct
 assembler handoff, runtime module reclamation and INTERPRET remain separately
-owned open work. The delivered status is a locally qualified, unpublished
-compiler extraction with the explicit remaining release-QA obligations above.
+owned open work. The delivered status is a locally qualified compiler extraction
+published to `origin/develop`, with the explicit remaining release-QA obligations
+above.

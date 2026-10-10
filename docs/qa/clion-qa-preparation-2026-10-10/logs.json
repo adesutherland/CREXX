@@ -1,0 +1,92 @@
+{
+  "original-clion-failure": {
+    "path": "output/clion-qa-preparation-2026-10-10/original-clion-failure.log",
+    "sha256": "fc12209f2272ce9012a26825e3be7aafda09fc5d800ca255c16dac1027880c4c",
+    "bytes": 3282665
+  },
+  "debug-final-preparation": {
+    "path": "output/clion-qa-preparation-2026-10-10/debug-final-preparation.log",
+    "sha256": "a7cba91d95e2baf586ee93e7fee0662e501ddbcb1abd2f448e9408e797becb82",
+    "bytes": 469
+  },
+  "release-final-preparation": {
+    "path": "output/clion-qa-preparation-2026-10-10/release-final-preparation.log",
+    "sha256": "e88e0abad7016ad5bff7acf494dc6305227317bcc8e37f9acecedb74949a63e8",
+    "bytes": 574
+  },
+  "debug-affected-controls": {
+    "path": "output/clion-qa-preparation-2026-10-10/debug-affected-controls.log",
+    "sha256": "30e0d8d1a14cadab4d6b5d00ec7f68f75f9cd67192631fd6b8b9bf2d07b1fa7d",
+    "bytes": 15603
+  },
+  "release-152-replay": {
+    "path": "output/clion-qa-preparation-2026-10-10/release-152-replay.log",
+    "sha256": "1bf62e799590eb11555c60177382ca8b82ead526b3b19babb422ab4d733b8636",
+    "bytes": 28111
+  },
+  "debug-rxpp-diagnostics": {
+    "path": "output/clion-qa-preparation-2026-10-10/debug-rxpp-diagnostics.log",
+    "sha256": "9be20ea12cfa5f6164bb863b0b16761a8138d42411b5d6b72f82177e4e11bf0a",
+    "bytes": 401
+  },
+  "builder-visible-success": {
+    "path": "output/clion-qa-preparation-2026-10-10/builder-visible-success.log",
+    "sha256": "a352b1c1a12cd24b391f69cda814589b8c4f2d6ff6997e1bcc7b4c9ef82a0f46",
+    "bytes": 560
+  },
+  "builder-visible-failure": {
+    "path": "output/clion-qa-preparation-2026-10-10/builder-visible-failure.log",
+    "sha256": "e06fb19b4abdd3a2f4e0f0e00e21eeda399e105127375159a3a1e74740d420a9",
+    "bytes": 459
+  },
+  "debug-noop": {
+    "path": "output/clion-qa-preparation-2026-10-10/debug-noop.log",
+    "sha256": "c2ed93ffd93c840755c0e91392ae593b1b52de9b7aaf6c208123feaceb1dde2e",
+    "bytes": 63
+  },
+  "release-noop": {
+    "path": "output/clion-qa-preparation-2026-10-10/release-noop.log",
+    "sha256": "c2ed93ffd93c840755c0e91392ae593b1b52de9b7aaf6c208123feaceb1dde2e",
+    "bytes": 63
+  },
+  "provider-incremental": {
+    "path": "output/clion-qa-preparation-2026-10-10/provider-incremental.log",
+    "sha256": "17ec8f4e1065e2e55180d868ab8e1d27435eb74484be3050d23a12f3ef622656",
+    "bytes": 127
+  },
+  "debug-qa-only": {
+    "path": "output/clion-qa-preparation-2026-10-10/debug-qa-only.log",
+    "sha256": "3e422790f2e5b4eec66729946fa5c8bd6e32474005eb16dd6c286cb4d8781113",
+    "bytes": 2544
+  },
+  "debug-absent-unit-prep": {
+    "path": "output/clion-qa-preparation-2026-10-10/debug-absent-unit-prep.log",
+    "sha256": "1f395ab51c05edb77765e6eb8832e60effda9193b3a2179235cf252fb98e4232",
+    "bytes": 144
+  },
+  "debug-unit-prep-tests": {
+    "path": "output/clion-qa-preparation-2026-10-10/debug-unit-prep-tests.log",
+    "sha256": "5d8880d83d350b1d9b49197cc428b609a934cb63b1d953174fe0581dc09660b1",
+    "bytes": 544
+  },
+  "release-full": {
+    "path": "output/clion-qa-preparation-2026-10-10/release-full.log",
+    "sha256": "379cb642474cd34717f667f1c6a3449681f3172f75c0aedd3ac3a0af5718657b",
+    "bytes": 549054
+  },
+  "release-qa-only": {
+    "path": "output/clion-qa-preparation-2026-10-10/release-qa-only.YyCJbI",
+    "sha256": "6ab91e8cf04211a237d8b5e0f1da662337545b869b5be702efa0599f728f256b",
+    "bytes": 2576
+  },
+  "release-unit-prep-tests": {
+    "path": "output/clion-qa-preparation-2026-10-10/release-unit-prep-tests.dGHVui",
+    "sha256": "6fc98bbd98250d46608ddc05c5a1610fb10545b91d3f4358bf272e13da60bc3e",
+    "bytes": 546
+  },
+  "original-invalid-linked-image": {
+    "path": "output/clion-qa-preparation-2026-10-10/original-invalid-linked-image.rxbin",
+    "sha256": "9d936bdad369c669766b34469e467d860d35d9b0681879f4b5854bb268cacdc6",
+    "bytes": 15934
+  }
+}

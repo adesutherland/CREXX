@@ -413,7 +413,9 @@ Treat those as separate Level C acceptance and approval gates.
 `develop`, based on synchronized `91313bcc5a447e9403f95b1f0bfc4dd9503d0618`.
 Adrian approved implementation on 2026-10-10: "work in develop and split level c
 out as agreed". The standalone tool is `rxc-c`; existing `rxc`/`crexx` retain
-compatibility. Delivery is local and unpublished; no push or release was requested.
+compatibility. Adrian authorized development publication on 2026-10-10; the
+qualified split and follow-up repairs are published together to `origin/develop`.
+This is development integration; no release is claimed.
 This phase serves CP-STEP-02/06 and CP-AC-02/06. The complete CP-AC-01–08
 outcome and wider Level C compatibility remain open.
 
@@ -661,6 +663,92 @@ also lacked optional QA fixtures after its product-only rebuild, so it is not
 counted as a full pass. Its prerequisite issue remains separate from this
 requested bounded repair. Delivery is local/unpublished; assigned SAN closure
 is unchanged.
+
+**Complete CLion CTest and visible diagnostics — CP-C-FIND-07 (2026-10-10, closed locally).**
+Adrian explicitly reopened full CTest repair and rejected output capture as a
+quiet-build solution: remove unnecessary notices at their source and do not
+hide log output. The previous F06 launcher approach is superseded; its focused
+warning repairs and F05 deterministic-stdin proof remain valid.
+
+**Vision and intended outcomes:** preserve the agreed product/QA build tiers,
+correct CLion's stale `all` prerequisite for its "All CTest" configuration,
+prepare every registered test's required artifacts explicitly, and the complete
+Release CTest suite must pass. Diagnose every observed failure rather than treating
+missing artifacts as an acceptable closeout. Eliminate unnecessary normal
+parser/builder/package work and notices at their sources, with actual command
+stdout/stderr, warnings and failures visible. Preserve metadata formats,
+call semantics, test assertions and accepted language boundaries. Keep the
+existing user's Release test run intact while inspecting it; build elsewhere
+until it ends. Delivery remains local unless publication is explicitly requested.
+
+1. **CP-C-F07-AC-01 (verified):** retain the live/full failure inventory and classify
+   missing producers, test-harness errors and any product regressions using raw
+   logs and minimal reproducers. Give each distinct repair reviewable evidence.
+2. **CP-C-F07-AC-02 (verified):** CLion "All CTest" builds the explicit `qa-prep-all`
+   correctness/qualification/stress/measurement preparation closure before CTest.
+   Ordinary `all` retains the agreed product-only preparation cost and dedicated
+   `rxc-c` closure retains its behavior. Verify IDE settings, generated
+   dependencies and failing families after the appropriate QA preparation.
+3. **CP-C-F07-AC-03 (verified):** remove the output-hiding launcher, delete routine
+   builder notices at their emitting source, retain all command diagnostics,
+   and make unchanged package generation a genuine no-op. Parser generation
+   emits no unnecessary reports/notices. Verify successful/no-op builds and
+   a controlled failure without output suppression.
+4. **CP-C-F07-AC-04 (verified):** the full existing Release CTest suite passes with
+   no exclusions, weakened assertions or added warning suppression. Validate
+   actual repairs with focused Debug checks, then reuse unchanged passing
+   evidence. Keep all outstanding criteria open until decisive proof passes.
+5. **CP-C-F07-AC-05 (verified):** current guides/receipts reflect visible diagnostics
+   and full normal-test closure accurately. Supersede the rejected capture
+   policy, retain original failures and final code/test/build hashes, commit
+   locally, and preserve SAN-011/012/SAN-QA-018's assigned Release 1 QA closure.
+
+1. **CP-C-F07-STEP-01 (AC-01; complete):** inspect the current CLion run and
+   producer graph without stopping or overlapping its Release build tree.
+2. **CP-C-F07-STEP-02 (AC-02/03; complete):** repair CLion's QA
+   prerequisite configuration, source-level notices and incremental package producers;
+   remove the rejected capture wrapper. Keep source/runtime diagnostics visible.
+3. **CP-C-F07-STEP-03 (AC-01/04; complete):** prepare/replay failed families in
+   Debug, then in Release once the user's run ends. Repair actual remaining
+   causes, without promoting artifact/setup failures to unsupported product
+   defects or dropping failed tests.
+4. **CP-C-F07-STEP-04 (AC-04/05; complete):** freeze final inputs,
+   complete the whole Release CTest gate, retain evidence and update status.
+   No sanitizer-clean or release-ready claim is authorized by normal CTest.
+
+Checkpoint: the retained CLion run had 152 missing-artifact failures: 136
+missing source/bytecode inputs and 16 missing executables (nine were never
+launched). Explicit `qa-prep-all` preparation restores every failed test;
+Release replay passes 152/152 in 44.74 seconds. Debug affected controls pass
+83/83 in 138.01 seconds; the final strengthened RXPP diagnostic case passes
+separately. Both final profile builds have no warnings. Unchanged product/QA
+builds report no work; provider manifest hashes and unchanged bytes/mtime are
+verified. Successful and failing child-command probes preserve stdout/stderr.
+Private SHA256/stats/vector fixture import roots exclude unrelated old linked
+images without changing import formats or compiler semantics. The ignored local
+CLion `All CTest` configuration now names `qa-prep-all`, retaining its Build
+before-launch task, test selection and visible-output arguments. The full
+3,326-test Release replay passes with zero failures in 917.77 seconds;
+AC-04/05 are verified by that proof, the final preparation controls and receipt. The [current receipt](qa/clion-qa-preparation-2026-10-10/README.md)
+owns final evidence. No hosted or new broad sanitizer run is claimed.
+
+The final preparation audit found two C-first unit executables outside their
+directory's QA finalization. Their declared `CREXX_PREP_TARGETS` were correct,
+but the compiler directory had not scheduled its own finalizer. Scheduling it
+connects both unit targets and the owned parity test to their existing tiers.
+Debug `qa-prep-all` restores both absent unit executables and both tests pass;
+the generated QA graph then covers every direct first-party executable.
+Final Release QA-only preparation and both focused controls pass. All 3,326
+runtime commands/properties remain identical after final preparation wiring,
+so the full passed runtime evidence remains valid. The generated graphs cover
+every direct first-party executable in both profiles. Adrian authorized the
+combined development publication and a clean local `develop` checkout on
+2026-10-10. Delivery is published to `origin/develop`; earlier local/unpublished
+checkpoints above describe their original qualification state. Normal automatic
+product/smoke, optimizer-parity and CodeQL checks accompany this publication;
+their successful completion is expected, not claimed as observed. No manual
+overnight assurance dispatch or redundant local full run is required. Assigned
+Release 1 SAN closure is unchanged.
 
 ## Constrained C89 And CMS Portability — PORT-C89
 

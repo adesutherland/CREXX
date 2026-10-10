@@ -2,7 +2,8 @@
 
 Status: full B/C/G architecture remains a proposal. Adrian approved C-first
 extraction on 2026-10-10; that bounded implementation and local qualification
-are complete on `develop`, unpublished. SAN-011/012 remain release-blocking,
+are complete and published to `origin/develop` in the authorized 10 October
+development batch. SAN-011/012 remain release-blocking,
 with full closure explicitly assigned to Codex at the next Release 1 release-QA
 gate. The [local receipt](../../docs/qa/classic-frontend-split-2026-10-10/README.md)
 records the physical split, reusable metadata reader and qualification limits. Original architecture review, 2026-10-08:
@@ -998,5 +999,6 @@ The broad CP-AC-01–08 criteria remain open; the C-first phase has its own
 completed bounded criteria and retained local evidence. Continue from its final
 checkpoint rather than repeating extraction. The full B/G migration retains
 P0/P1 and CP-STEP-01. Preserve the Level C worklist's open compatibility criteria
-and SAN-QA-018/SAN-011/SAN-012 release-QA ownership. No publication or release is
-implied by this local closeout.
+and SAN-QA-018/SAN-011/SAN-012 release-QA ownership. The bounded implementation
+and follow-up repairs are published to `origin/develop` with retained local
+qualification; this does not imply release or broader programme completion.

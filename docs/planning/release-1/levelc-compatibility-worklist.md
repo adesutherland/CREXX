@@ -28,7 +28,8 @@ also retains core stream packaging and exact integer-operand proof. Older dated
 absence/deferral/clock-defect text must not be read as the current queue.
 
 Adrian approved C-first extraction on 2026-10-10. Its bounded local phase is
-complete on `develop`, unpublished. The
+complete and published to `origin/develop` in the authorized 10 October
+development batch. The
 [COMP-PIPE-01 plan](../../ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10)
 owns acceptance and the [receipt](../../qa/classic-frontend-split-2026-10-10/README.md)
 retains qualification. `rxc-c` links the C frontend and common backend without

@@ -1,6 +1,7 @@
 # CLion clean rebuild repair — 10 October 2026
 
-Local repair of CP-C-FIND-04 is complete on `develop`, unpublished. The
+Repair of CP-C-FIND-04 is complete and included in the authorized 10 October
+`origin/develop` publication. Its local qualification is retained. The
 [authoritative plan](../../ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10)
 records its three verified criteria. This follows the local C split commit
 `cabab2553`; the compiler/metadata implementation and benchmark sources are

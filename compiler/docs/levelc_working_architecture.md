@@ -50,7 +50,8 @@ separate level front ends, their common canonical AST/backend, fast/lite builds
 and a reusable C-first compilation service for INTERPRET. The
 [10 October C-first phase](../../docs/ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10)
 was approved by Adrian; its bounded implementation and local qualification are
-complete, unpublished. The [receipt](../../docs/qa/classic-frontend-split-2026-10-10/README.md)
+complete and published to `origin/develop` in the authorized 10 October batch.
+The [receipt](../../docs/qa/classic-frontend-split-2026-10-10/README.md)
 retains final-input evidence and the SAN-011/012 later release-QA assignment.
 `rxc-c` and the exact-length `rxcc_parse` frontend service use the C component
 over the common backend. The independent binutils `rxcontract` reader and

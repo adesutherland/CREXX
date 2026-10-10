@@ -1,6 +1,7 @@
 # Deterministic stdin for negative PULL tests
 
-CP-C-FIND-05 is repaired and qualified locally on `develop`, unpublished.
+CP-C-FIND-05 is repaired and qualified locally, and included in the authorized
+10 October `origin/develop` development publication.
 CLion kept its parent stdin pipe open. Both negative PULL cases inherited that
 pipe and waited indefinitely; the helper had no whole-test timeout. The
 [original process sample](stdin-original-sample.log) shows the VM in

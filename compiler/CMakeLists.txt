@@ -226,5 +226,7 @@ add_test(NAME classic_frontend_parity
 set_tests_properties(classic_frontend_parity PROPERTIES
     LABELS "compiler;levelc;imports;comprehensive" RUN_SERIAL TRUE TIMEOUT 1800
     CREXX_PREP_TARGETS "rxc;rxc-c;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+# These tests belong to the compiler directory, outside tests/'s finalizer.
+crexx_schedule_directory_qa_tier_finalization()
 endif()
 add_subdirectory(exits)
