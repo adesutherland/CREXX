@@ -119,3 +119,79 @@ unchanged panel reuse. All required local implementation/publication gates pass.
 Expected final state is both compatible repair commits and their complete
 receipt published in one push to `origin/develop`. AC-09 remains open for
 Codex's explicitly assigned next Release 1 release-QA gate.
+
+## Renewed pipeline regression and explicit full QA — 10 October 2026
+
+Adrian requested diagnosis, full sanitizer/deep QA and light monitoring with
+repairs until green after Build CREXX 38083859225 failed on synchronized
+`64e4a30a16a1207d2d0834e6053ff69df30bfe39`. This extends this authoritative
+pipeline plan; the original AC/STEP IDs and prior receipts remain unchanged.
+The earlier bounded-publication/later-gate decision does not substitute for the
+full gates now explicitly requested. Current checkout is clean and matches
+origin/develop. Evidence: `output/ci-regression-20261010.79vob9/`.
+
+**Vision and intended outcome:** restore green current develop delivery and
+complete full supported sanitizer and deep assurance while preserving the
+approved Unicode/ordinal/stream and Classic compiler split/metadata contracts.
+Fix actual failures at their owning sources, retain diagnostics, and distinguish
+transport/service failures from product failures. Do not suppress tests,
+change supported inline payload identities, or rebuild healthy jobs merely to
+obtain more green results. Publish compatible fixes together and inspect jobs
+at roughly ten-minute intervals while independent useful work continues.
+
+**Additional numbered acceptance criteria:**
+
+10. **CI-CS-AC-10 — open:** Windows MSVC and MinGW build the Classic source
+    broker with no Windows/AST enum collisions. Preserve numeric AST/inline
+    payload identities and typed source-import/editor behavior. Retain failed
+    compile logs, a minimal namespace reproducer, focused local frontend/contract
+    controls and actual repaired Windows product/deep jobs.
+11. **CI-CS-AC-11 — open:** the normal Build and CodeQL workflows pass for the
+    repaired develop delivery, including Intel Mac signing/notarization. The
+    observed Apple offline/no-route error is treated as a transport failure;
+    retry that operation/job if needed without waiving signing or notarization.
+12. **CI-CS-AC-12 — open:** full Sanitizer QA passes Linux x64 ASan/LSan with
+    build/test leaks on and macOS arm64 ASan with the documented Apple LSan
+    capability limit. Full Deep Build QA passes all five core platforms,
+    comprehensive/qualification checks, Linux books and parallel product graph
+    checks. Only the established performance-measurement sanitizer exclusion is
+    allowed. Retain exact code/test/build identity; unchanged valid results may
+    be reused across history/documentation-only changes.
+13. **CI-CS-AC-13 — open:** monitor lightly until every required workflow is
+    green; diagnose/reproduce and fix any new failure, record any first-party
+    sanitizer finding immediately with its stable SAN entry and closure gates,
+    and preserve unresolved SAN-011/012/SAN-QA-018 status until their recorded
+    proof is satisfied. Finish with synchronized published develop and a clean
+    workspace, reporting actual results and remaining scope accurately.
+
+**Additional numbered implementation steps:**
+
+9. **CI-CS-STEP-09 — complete; AC-10/11:** inspect current and original failed
+   runs plus current owning docs; retain all failed logs and reconcile earlier
+   fixes. Windows fails in rxcp_c_source_import.c through FLOAT/PATTERN/DECIMAL
+   enum collisions with windows.h. Intel Mac failed notarytool --wait when its
+   network route disappeared. The older missing stream archive is repaired.
+10. **CI-CS-STEP-10 — local controls complete; hosted Windows proof open; AC-10:** retain the minimal collision control, reuse
+    the existing compiler header-isolation pattern, then run focused normal
+    Debug and maintained ASan frontend/import/contract checks. This is an
+    implementation repair, not a new syntax or architectural design decision.
+11. **CI-CS-STEP-11 — publication ready; AC-11/12:** prepare the fix receipt and expected
+    publication status before the first push; publish the combined repair and
+    dispatch full Deep Build QA (platform=all) and Sanitizer QA on the repaired
+    revision. Normal Build/CodeQL run automatically. Depends on STEP-10.
+12. **CI-CS-STEP-12 — open; AC-11/12/13:** use infrequent status reads, retain
+    failed job logs/artifacts, and fix distinct reproduced causes in reviewable
+    commits. Retry transient service failures narrowly. Do not cancel healthy
+    work, busy-poll or repeat unchanged valid broad evidence. Close only after
+    all explicitly requested gates pass; update sanitizer disposition only from
+    actual focused/original/full-platform evidence.
+
+**Current checkpoint:** collision control and numeric enum identity control pass;
+normal Debug and maintained Apple ASan frontend/contract panels pass 4/4
+(48.17 s / 119.26 s). The repair receipt is
+[ci-windows-classic-broker-2026-10-10](../../qa/ci-windows-classic-broker-2026-10-10/README.md).
+The substantive fix is ready for the first push with expected green normal
+publication and explicitly requested full sanitizer/deep workflows. Actual
+hosted proof and AC-10–13 remain open until verified. Thread heartbeat
+`repair-crexx-ci-until-green` checks/resumes every ten minutes, with current
+phase/revision/run IDs retained in the ignored evidence active-runs.json.

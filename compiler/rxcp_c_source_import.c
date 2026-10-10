@@ -4,8 +4,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include "platform.h"
+/* Match the editor broker's header isolation: Windows SDK typedefs share
+ * names with AST enumerators. Only local spelling changes; values stay fixed. */
+#ifdef _WIN32
+#define ERROR RXCP_ERROR
+#define WARNING RXCP_WARNING
+#define FLOAT RXCP_FLOAT
+#define INTEGER RXCP_INTEGER
+#define DECIMAL RXCP_DECIMAL
+#define PATTERN RXCP_PATTERN
+#define VOID RXCP_VOID
+#endif
 #include "rxcpmain.h"
 #include "rxcp_frontend.h"
+#ifdef _WIN32
+#undef ERROR
+#undef WARNING
+#undef FLOAT
+#undef INTEGER
+#undef DECIMAL
+#undef PATTERN
+#undef VOID
+#endif
 #if defined(CREXX_VM_SINGLE_THREADED)
 int rxcp_classic_parser_mode(int stdio_mode, int port, const char *file, int debug) {
     (void)stdio_mode; (void)port; (void)file; (void)debug;
