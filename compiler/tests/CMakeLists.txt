@@ -5661,6 +5661,9 @@ endfunction()
 
 function(add_levelc_runtime_syntax_signal_test NAME SOURCE_FILE EXPECTED_CODE EXPECTED_OUTPUT EXPECTED_SOURCE_LOCATION)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    # IDE runners can keep parent stdin open. Negative cases must get EOF.
+    set(STDIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.stdin")
+    file(WRITE "${STDIN_FILE}" "")
     set(SCRIPT_CONTENT "")
     string(APPEND SCRIPT_CONTENT
            "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${ARGN} -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
@@ -5670,13 +5673,13 @@ function(add_levelc_runtime_syntax_signal_test NAME SOURCE_FILE EXPECTED_CODE EX
            "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" RESULT_VARIABLE status ERROR_VARIABLE diagnostic)\n"
            "if(NOT status EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: ${RXAS_DIAG_DOLLAR}{diagnostic}\")\nendif()\n"
            "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${NAME}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library\" \"${CMAKE_BINARY_DIR}/bin/classlib\" \"${CMAKE_BINARY_DIR}/bin/rxfnsc\"\n"
-           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" OUTPUT_VARIABLE output ERROR_VARIABLE diagnostic RESULT_VARIABLE status)\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" INPUT_FILE \"${STDIN_FILE}\" OUTPUT_VARIABLE output ERROR_VARIABLE diagnostic RESULT_VARIABLE status)\n"
            "string(FIND \"${RXAS_DIAG_DOLLAR}{diagnostic}\" \"source: ${EXPECTED_SOURCE_LOCATION}\" source_location)\n"
            "if(status EQUAL 0 OR NOT diagnostic MATCHES \"CLASSIC_SYNTAX\" OR NOT diagnostic MATCHES \"RXC-LC-${EXPECTED_CODE}\" OR NOT output STREQUAL \"${EXPECTED_OUTPUT}\" OR source_location EQUAL -1)\n"
            "  message(FATAL_ERROR \"Expected Classic SYNTAX ${EXPECTED_CODE}, authored source ${EXPECTED_SOURCE_LOCATION}, and exact prior output; status=${RXAS_DIAG_DOLLAR}{status}, output=${RXAS_DIAG_DOLLAR}{output}, diagnostic=${RXAS_DIAG_DOLLAR}{diagnostic}\")\nendif()\n")
     file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
     add_test(NAME ${NAME} COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}")
-    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc" TIMEOUT 600)
 endfunction()
 
 add_levelc_runtime_slice_test(levelc_bare_stem_read
