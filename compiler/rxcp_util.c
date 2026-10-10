@@ -34,7 +34,8 @@
 #include "rxcp_util.h"
 #include "rxcp_token.h"
 #include "rxcpcsym.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
+#include "rxcp_frontend.h"
 #include "rxcp_ast.h"
 #include "rxcp_sym.h"
 #include "rxcp_ctx.h"
@@ -1237,7 +1238,7 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
 
     if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing replacement code: %s\n", interpolated);
     cntx_buf(frag, interpolated, int_pos);
-    if (rexbpars(frag)) {
+    if (rxcp_frontend_parse(frag)) {
         if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing FAILED\n");
         mknd_err(target_node, "EXIT_BRIDGE_PARSE_FAILED");
         fre_cntx(frag);

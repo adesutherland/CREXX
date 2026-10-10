@@ -63,6 +63,14 @@ add_library(rxc_single_compiler STATIC
     "${CREXX_SOURCE}/compiler/rxcp_import_publish.c"
     "${CREXX_SOURCE}/compiler/rxcp_exit.c"
     "${CREXX_SOURCE}/compiler/rxcp_instr.c"
+    "${CREXX_SOURCE}/compiler/rxcp_contract.c"
+    "${CREXX_SOURCE}/compiler/rxcp_parse_buffer.c"
+    "${CREXX_SOURCE}/compiler/rxcp_frontend.c"
+    "${CREXX_SOURCE}/compiler/rxcp_frontend_full.c"
+    "${CREXX_SOURCE}/compiler/rxcp_frontend_c.c"
+    "${CREXX_SOURCE}/compiler/rxcp_c_source_import.c"
+    "${CREXX_SOURCE}/compiler/rxcp_typed_orch.c"
+    "${CREXX_SOURCE}/compiler/rxcc.c"
 )
 target_include_directories(rxc_single_compiler PRIVATE "${CREXX_SOURCE}/compiler"
     "${CREXX_HOST_BUILD}/compiler" "${CREXX_HOST_BUILD}/assembler")

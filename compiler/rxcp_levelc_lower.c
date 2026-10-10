@@ -27,7 +27,7 @@
 #endif
 
 #include "rxcp_levelc_lower.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcp_remap_build.h"
 #include "rxcp_util.h"
 #include "rxcpcsym.h"

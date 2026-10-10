@@ -1413,6 +1413,8 @@ walker_result source_location_walker(walker_direction direction,
                                      ASTNode* node, RXCP_UNUSED void *payload) {
     ASTNode *child, *n;
     Token *left, *right;
+
+    if (node->is_metadata_declaration) return result_normal;
     
     if (direction == out) {
         /* Bottom up - source code positions, concat, etc */

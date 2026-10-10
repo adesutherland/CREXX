@@ -29,7 +29,7 @@
 #include <time.h>
 #include <ctype.h>
 #include "rxcpmain.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcp_emit.h"
 #include "rxsignature.h"
 

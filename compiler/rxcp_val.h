@@ -30,7 +30,7 @@
 #define CREXX_RXCP_VAL_H
 
 #include "rxcpmain.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcp_ast_rewrite.h"
 

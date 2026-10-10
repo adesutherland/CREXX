@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcpcgmr.h"
 #include "rxcpmain.h"
 #include "rxcpcsym.h"

@@ -28,7 +28,38 @@ The platform layer wraps raw native text files with the shared codec and convert
 first-party stdout/stderr diagnostics. Binary opens remain raw; sequential text
 update modes are rejected before opening. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md).
 
-## Proposed language-compiler separation
+## Language compiler components
+
+The approved C-first extraction adds `rxc-c`, which links `rxcc_lib` from
+`rxc_backend_objects` and `rxc_classic_objects`. The backend's validation,
+optimizer, flow analysis, register allocation and emitter are compiled once
+per build configuration. The standalone closure excludes the B/G parser,
+task mapper and typed exit host. `rxc` and the existing `rxclib` compatibility
+API also link `rxc_typed_objects`; desktop editor services remain there.
+
+Shared code and C use checked stable identities in `compiler/rxcp_tokens.h`.
+The typed grammar build verifies its generated table against that header;
+building C alone needs only the options and C parser generators. Metadata
+imports use the independent binutils `rxcontract` reader and a separate
+`rxcp_contract` AST adapter without generating B source. The
+[metadata conformance boundary](../../compiler/docs/metadata_conformance.md)
+documents admitted B/G/provider contract fields, failure, ownership and versions.
+Both generated optional type fields and older authored
+RXAS literal defaults are retained. A C-only source import uses its owning
+typed compiler outside the C process to materialize RXAS contracts, with
+argument-vector execution and private temporary files. Install/stage the
+ordinary `rxc` alongside `rxc-c` for typed source imports and editor service.
+
+`compiler/rxcc.h` exposes an internal exact-length frontend request API.
+`rxcc_parse()` returns an owned parsed/mapped unit, status and diagnostics;
+`rxcc_destroy()` releases source, trees, import records and request state.
+`rxcc_status()==0` describes frontend success, before ordinary backend semantic
+validation/emission. It is not an in-process source-to-RXBIN service or Classic
+INTERPRET. Malformed source, concurrent live units and teardown after backend
+import failure have focused tests. Concurrent embedded compilation remains
+outside this phase.
+
+## Remaining compiler separation proposal
 
 The [B/C/G compiler split proposal](../../compiler/docs/compiler_frontend_split_proposal.md)
 is a source-grounded architecture review dated 2026-10-08, with the
@@ -45,8 +76,9 @@ Fast compilation and physically lite builds are separate choices. Mandatory
 constant evaluation, semantic lowering, ownership and metadata remain in all
 profiles. The 24-bit target runs compiler, assembler and VM as separate stages.
 The proposal records current hidden parser/exit/optimizer dependencies and
-unverified runtime/footprint proof obligations. It is not an implementation or
-an approved change to the current behaviour described below.
+unverified runtime/footprint proof obligations. C-first extraction is approved;
+the remaining B/G restrictions, fast/lite products, runtime compiler and
+INTERPRET control/lifetime work retain their separate decision gates.
 
 ## The Compilation Pipeline
 
@@ -707,7 +739,7 @@ Dynamic RXPA discovery stages initializer callbacks before reconstructing any
 declaration. The initializer runs under the platform loader mutex, so `ADDPROC`
 and class/interface callbacks only collect their metadata at that point. After
 the initializer returns and releases the mutex, `rxc` imports class/interface
-metadata first and then parses the procedure declarations while the provider
+metadata first and then reads the procedure contracts while the provider
 remains open. This ordering permits a native procedure to return a namespaced
 Rexx class such as `.rxfnsg..packedfloat` (returned by `rxvector`) without recursively reopening the
 provider or deadlocking the loader.

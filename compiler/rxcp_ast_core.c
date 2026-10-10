@@ -31,8 +31,9 @@
 #include <string.h>
 #include <ctype.h>
 #include "rxcpmain.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_contract.h"
 #ifndef NUTF8
 #include "utf.h"
 #endif
@@ -127,6 +128,7 @@ void ast_copy_source_anchor(ASTNode *node, ASTNode *source_node, ASTSourceProven
     else ast_set_primary_source_node(node, 0, AST_SOURCE_NONE);
 
     ast_copy_reporting_anchors(node, source_node);
+    rxcp_contract_copy_anchor(node, source_node);
 }
 
 /* Token Factory */
@@ -335,6 +337,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->free_list = context->free_list;
     node->source_node = 0;
     node->source_provenance = AST_SOURCE_NONE;
+    node->is_metadata_declaration = 0;
     node->reporting_source_nodes = 0;
     node->reporting_source_count = 0;
     node->reporting_source_capacity = 0;
@@ -472,6 +475,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->flow_substitute_symbol = 0;
     new_node->source_node = node->source_node;
     new_node->source_provenance = node->source_provenance;
+    new_node->is_metadata_declaration = node->is_metadata_declaration;
     ast_copy_reporting_anchors(new_node, node);
 
     new_node->token = node->token;
@@ -507,6 +511,8 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     if (node->semantic_context) {
         new_node->semantic_context = ast_dup_subtree(new_context, node->semantic_context);
     }
+
+    rxcp_contract_copy_anchor(new_node, node);
 
     return new_node;
 }
@@ -1785,6 +1791,8 @@ static void fix_ast_line_number(ASTNode *node) {
     ASTNode *older = 0;
     ASTNode *n;
 
+    if (node->is_metadata_declaration) return;
+
     /* If the node has already got a line number there is nothing needed */
     if (node->line != -1) return;
 
@@ -2262,12 +2270,18 @@ int nodeis(ASTNode *node, const char* value) {
     char text_buffer[15];
     int val;
     int i;
+    const char *text;
 
-    if (!node || !node->token || !node->token->token_string || !value) return 0;
+    if (!node || !value) return 0;
+    /* Neutral metadata declarations have owned spelling rather than a parser
+     * token. Preserve source-token matching for authored nodes. */
+    text = node->token && node->token->token_string ?
+            node->token->token_string : node->node_string;
+    if (!text) return 0;
 
     val = (int)strlen(value);
     if (val > 14) val = 14;
-    strncpy(text_buffer, node->token->token_string, val);
+    strncpy(text_buffer, text, val);
     // lowercase the buffer
     for (i = 0; i < val; i++) {
         text_buffer[i] = (char)tolower(text_buffer[i]);

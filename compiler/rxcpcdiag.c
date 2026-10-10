@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcpmain.h"
 #include "rxcpcsym.h"
 #include "rxcp_source_tree.h"

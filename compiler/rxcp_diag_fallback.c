@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rxcpmain.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 
 typedef enum {
     FB_FRAME_DO,

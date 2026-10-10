@@ -79,6 +79,83 @@ artifact.
 
 ## Current overnight regression — 10 October 2026
 
+### SAN-012 — detached source anchors retain semantic annotation allocations
+
+Status: repaired; full platform proof remains open. Owner: **Codex / next
+Release 1 release-QA gate**. Affected inputs: C-first split/metadata-reader
+candidate based on `91313bcc5a447e9403f95b1f0bfc4dd9503d0618`.
+On 2026-10-10 Adrian explicitly assigned SAN-011 and SAN-012 closure to that
+gate. This permits bounded local phase completion; it does not close or
+downgrade either release-blocking item.
+
+- Original trigger: Linux `tools/asan-run.sh --build-dir build-asan-clang
+  --phase full --build-jobs 4 --test-jobs 8 --exclude-label
+  '^performance-measurement$' --no-live-tail`, leaks enabled in build and tests.
+  Run `20261010-155050-full` stops during class-library generation with
+  2,628 leaked bytes in 32 allocations rooted in `source_semantic_f`, copied
+  type/dimension strings and `source_tree_sync_semantics`.
+- Permanent diagnostic: [san-012-original.log](qa/classic-frontend-split-2026-10-10/san-012-original.log).
+  Full retained Linux log: `/tmp/crexx-san012-linux-original-build.log`.
+- Cause: semantic cleanup walks the visible SourceNode tree. Owned detached
+  metadata anchors are on the Context's allocation list and can receive
+  annotations without becoming children of that visible tree.
+- Repair: `source_tree_clear_semantics` releases annotations for every
+  Context-owned SourceNode. Permanent `compiler_contract_builder` assertions
+  create an anchor detached from the visible tree, annotate it, clear/resync
+  semantics and destroy the receiving Context. This allocation cleanup repair
+  is distinct from SAN-011's borrowed-anchor use-after-free.
+- Focused proof: final normal Debug passes at
+  `/tmp/crexx-san012-debug-regression.DpMWbE`; maintained Apple ASan
+  `20261010-171147-ctest` and Linux ASan/LSan `20261010-161146-ctest` each pass
+  `compiler_contract_builder` 1/1. Linux keeps leaks enabled. Apple LSan is
+  unsupported. The [local receipt](qa/classic-frontend-split-2026-10-10/README.md)
+  retains hashes, final code/test/build identity and the final 84-test controls.
+- Full Apple `20261010-171343-full` passed build/preparation and was stopped at
+  CTest; Linux `20261010-161345-full` was stopped during preparation after
+  Adrian's later-gate assignment. Neither is completed full-gate evidence.
+- Next action, **Codex / next Release 1 release-QA gate**: pass the permanent
+  focused command and original class-library build trigger, then complete
+  supported Linux ASan/LSan and Apple full sanitizer closure on the release
+  candidate inputs. No suppression or exclusion is introduced. This item stays
+  release-blocking until the recorded closure conditions pass.
+
+### SAN-011 — imported metadata declaration source anchors outlive their Context
+
+Status: repaired; full platform proof remains open. Owner: **Codex / next
+Release 1 release-QA gate**. Affected inputs: C-first split/metadata-reader
+candidate based on `91313bcc5a447e9403f95b1f0bfc4dd9503d0618`.
+Adrian's explicit 2026-10-10 assignment above permits bounded local phase
+completion; this item remains open and release-blocking.
+
+- Original trigger: `tools/asan-run.sh --phase build --build-target
+  qa-measure-classic-frontend --build-jobs 4 --build-leaks off --leaks off
+  --no-live-tail`, maintained Apple ASan run `20261010-160024-build`.
+  Runtime `_rxsystem` compilation reports heap-use-after-free at
+  `source_tree_clear_context_links`, `rxcp_source_tree.c:39`, during teardown.
+  Apple LSan is unsupported; leaks-off is that capability limit.
+- Retained full log: `cmake-build-debugasan/asan-logs/20261010-160024-build/build.log`.
+  Permanent diagnostic: [san-011-original.log](qa/classic-frontend-split-2026-10-10/san-011-original.log).
+- Cause: source contract anchors are allocated in the declaration Context;
+  AST duplication borrows that SourceNode into other contexts. Class-registry
+  teardown can free its owner before another Context clears those links.
+- Repair: AST duplication and generated-node anchor transfer copy metadata
+  anchors into each receiving Context, preserving real source identity and
+  leaving unsupported coordinates unknown. Permanent `compiler_contract_builder`
+  assertions free the declaration owner first, then consumer/generated contexts.
+- Focused proof: normal Debug and maintained Apple ASan
+  `20261010-161340-ctest` pass the permanent regression. Original runtime-library
+  build and the 98-command parity/ownership target pass at
+  `20261010-161341-build`; the expanded 109-command target passes at
+  `20261010-164844-build`. The final regression, extended for SAN-012, passes
+  Apple ASan `20261010-171147-ctest` and Linux ASan/LSan
+  `20261010-161146-ctest`. The [receipt](qa/classic-frontend-split-2026-10-10/README.md)
+  records final-input coverage and the intentionally stopped full runs.
+- Next action, **Codex / next Release 1 release-QA gate**: pass the permanent
+  focused command and original runtime-library build trigger, then complete
+  supported Linux ASan/LSan and Apple full sanitizer closure on the release
+  candidate inputs. No suppression or exclusion is introduced. Do not claim
+  sanitizer-clean or release-ready status before closure.
+
 ### SAN-QA-018 — Classic whole-number BIF operands round through binary float
 
 Status: repaired; full platform proof remains open. Owner: Codex, GitHub pipeline

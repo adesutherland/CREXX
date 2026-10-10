@@ -40,6 +40,8 @@
 #include "rxcp_srcmap.h"
 #include "rxcp_source_tree.h"
 #include "rxcp_levelc_lower.h"
+#include "rxcp_contract.h"
+#include "rxcp_frontend.h"
 #include "rxbin.h"
 #include "rxas.h"
 #include "rxpa.h"
@@ -730,112 +732,6 @@ static int metadata_type_strings_equivalent(Context *context,
     return equivalent;
 }
 
-static int append_arg_text(char **buffer, size_t *capacity, size_t *length, const char *text, size_t text_len) {
-    char *tmp;
-
-    if (*length + text_len + 1 >= *capacity) {
-        while (*length + text_len + 1 >= *capacity) *capacity = *capacity * 2 + text_len + 16;
-        tmp = realloc(*buffer, *capacity);
-        if (!tmp) {
-            free(*buffer);
-            *buffer = 0;
-            return 0;
-        }
-        *buffer = tmp;
-    }
-
-    memcpy(*buffer + *length, text, text_len);
-    *length += text_len;
-    (*buffer)[*length] = 0;
-    return 1;
-}
-
-static const char *default_source_for_metadata_type(const char *type_start, const char *type_end) {
-    size_t len;
-
-    while (type_start < type_end && isspace((unsigned char)*type_start)) type_start++;
-    while (type_end > type_start && isspace((unsigned char)*(type_end - 1))) type_end--;
-    len = (size_t)(type_end - type_start);
-
-    if (len == 7 && memcmp(type_start, ".string", 7) == 0) return "\"\"";
-    if (len == 7 && memcmp(type_start, ".binary", 7) == 0) return "\"\"x as .binary";
-    if (len == 4 && memcmp(type_start, ".int", 4) == 0) return "0";
-    if (len == 6 && memcmp(type_start, ".float", 6) == 0) return "0";
-    if (len == 5 && memcmp(type_start, ".bool", 5) == 0) return "0";
-    return 0;
-}
-
-static char *metadata_args_to_source_args(const char *args) {
-    const char *p;
-    char *buffer;
-    size_t capacity;
-    size_t length;
-
-    if (!args || !*args) return strdup("");
-
-    capacity = strlen(args) + 32;
-    buffer = malloc(capacity);
-    if (!buffer) return 0;
-    buffer[0] = 0;
-    length = 0;
-    p = args;
-
-    while (*p) {
-        const char *segment_start;
-        const char *segment_end;
-        const char *equals;
-        int optional = 0;
-
-        while (*p && isspace((unsigned char)*p)) p++;
-        segment_start = p;
-        while (*p && *p != ',') p++;
-        segment_end = p;
-        while (segment_end > segment_start && isspace((unsigned char)*(segment_end - 1))) segment_end--;
-
-        if (length > 0 && !append_arg_text(&buffer, &capacity, &length, ", ", 2)) return 0;
-
-        if ((size_t)(segment_end - segment_start) >= 7 &&
-            strncasecmp(segment_start, "expose ", 7) == 0) {
-            if (!append_arg_text(&buffer, &capacity, &length, "expose ", 7)) return 0;
-            segment_start += 7;
-            while (segment_start < segment_end && isspace((unsigned char)*segment_start)) segment_start++;
-        }
-
-        /*
-         * RXAS metadata marks optional args with a leading '?'. Convert it to
-         * valid Rexx source while preserving reference (`expose`) arguments.
-         * Optional/default and `expose` are independent: this synthetic default
-         * is only for the temporary import stub because RXAS metadata does not
-         * currently carry the original source default expression.
-         */
-        if (segment_start < segment_end && *segment_start == '?') {
-            optional = 1;
-            segment_start++;
-            while (segment_start < segment_end && isspace((unsigned char)*segment_start)) segment_start++;
-        }
-
-        equals = memchr(segment_start, '=', (size_t)(segment_end - segment_start));
-        if (optional && equals) {
-            const char *default_value = default_source_for_metadata_type(equals + 1, segment_end);
-            if (default_value) {
-                if (!append_arg_text(&buffer, &capacity, &length,
-                                     segment_start, (size_t)(equals - segment_start + 1))) return 0;
-                if (!append_arg_text(&buffer, &capacity, &length, default_value, strlen(default_value))) return 0;
-            } else {
-                if (!append_arg_text(&buffer, &capacity, &length,
-                                     segment_start, (size_t)(segment_end - segment_start))) return 0;
-            }
-        } else {
-            if (!append_arg_text(&buffer, &capacity, &length,
-                                 segment_start, (size_t)(segment_end - segment_start))) return 0;
-        }
-
-        if (*p == ',') p++;
-    }
-
-    return buffer;
-}
-
 static int metadata_args_has_empty_component(const char *args) {
     const char *p;
 
@@ -1423,11 +1319,6 @@ static char error_in_node(ASTNode* node) {  // NOLINT
     return 0;
 }
 
-/* Forward declaration for local parser used by import stubs */
-static Context *parseRexx(Context* parent_context, char *location, char* file_name,
-                          RexxLevel level, int debug_mode, char* rexx_source,
-                          size_t bytes, int defer_imported_inline_attachments);
-
 /* Returns Argument source from the ARGS Node as a malloced string */
 static char *generate_arg_source(ASTNode *node) {
     size_t args;
@@ -1637,192 +1528,73 @@ static char *register_view_from_node(ASTNode *node, const char *type) {
     return strdup(register_view_for_type(type));
 }
 
-static void append_class_attribute_stub_lines(ASTNode *contract_node, char **buffer) {
-    ASTNode *m;
-
-    if (!contract_node || contract_node->node_type != CLASS_DEF || !buffer || !*buffer) return;
-
-    for (m = contract_node->child; m; m = m->sibling) {
-        ASTNode *target;
-        ASTNode *type_node;
-        ASTNode *reg_node;
-        char *type;
-        char *view;
-        char *tmp;
-        int reg_index;
-
-        if (m->node_type != DEFINE) continue;
-        target = ast_chld(m, VAR_TARGET, 0);
-        type_node = ast_type_child(m);
-        if (!target || !target->node_string || !target->node_string_length || !type_node) continue;
-
-        type = ast_n2tp(type_node);
-        if (!type) continue;
-        reg_node = ast_chld(m, NODE_REGISTER, 0);
-        reg_index = register_index_from_node(reg_node);
-        view = register_view_from_node(reg_node, type);
-
-        if (reg_index >= 0) {
-            tmp = mprintf("%s  %.*s = %s with register.%d.%s\n",
-                          *buffer,
-                          (int)target->node_string_length,
-                          target->node_string,
-                          type,
-                          reg_index,
-                          view ? view : register_view_for_type(type));
-        } else {
-            tmp = mprintf("%s  %.*s = %s\n",
-                          *buffer,
-                          (int)target->node_string_length,
-                          target->node_string,
-                          type);
+/* Source declarations have already been validated by their owning frontend.
+ * Transfer their public fields through the same neutral metadata builders. */
+static Context *build_source_contract(Context *parent, Context *source,
+                                      ASTNode *contract, char **interfaces,
+                                      size_t interface_count) {
+    char *fq, *ns;
+    const char *dot;
+    Context *stub;
+    ASTNode *decl, *member;
+    size_t i;
+    if (!contract->symbolNode || !contract->symbolNode->symbol) return NULL;
+    fq = sym_frnm(contract->symbolNode->symbol);
+    dot = fq ? strrchr(fq, '.') : NULL;
+    if (!dot) { free(fq); return NULL; }
+    ns = malloc((size_t)(dot - fq) + 1);
+    memcpy(ns, fq, (size_t)(dot - fq)); ns[dot - fq] = 0;
+    stub = rxcp_contract_context(parent, source->file_name, ns);
+    stub->location = source->location;
+    decl = rxcp_contract_class(stub, contract->node_type, ns, dot + 1);
+    if (!decl) { free(fq); free(ns); fre_cntx(stub); return NULL; }
+    rxcp_contract_source_anchor(decl, contract);
+    add_ast(ast_chld(stub->ast->child, INSTRUCTIONS, 0), decl);
+    if (interface_count) {
+        ASTNode *impl = ast_ft(stub, IMPLEMENTS);
+        for (i = 0; i < interface_count; ++i) {
+            char *type = rxcp_internal_name_to_source_qualified(interfaces[i], 1);
+            ASTNode *shape = rxcp_contract_type(stub, type);
+            free(type);
+            if (shape) add_ast(impl, shape);
         }
-        free(*buffer);
-        *buffer = tmp;
-        free(type);
-        if (view) free(view);
+        add_ast(decl, impl);
     }
-}
-
-static int contract_has_task_method(ASTNode *contract_node) {
-    ASTNode *member;
-
-    if (!contract_node) return 0;
-    for (member = contract_node->child; member; member = member->sibling) {
-        if (member->node_type == METHOD && member->is_task_callable) return 1;
-    }
-    return 0;
-}
-
-/* Build a minimal contract stub source for an exposed class or interface */
-static char* generate_contract_stub_source(ASTNode *contract_node,
-                                           char **implements_fqnames,
-                                           size_t implements_count) {
-    Symbol *cls_sym;
-    char *fq = 0;
-    char *ns = 0;
-    char *buffer = 0;
-
-    if (!contract_node || (contract_node->node_type != CLASS_DEF && contract_node->node_type != INTERFACE_DEF)) return 0;
-    if (!contract_node->symbolNode || !contract_node->symbolNode->symbol) return 0;
-
-    cls_sym = contract_node->symbolNode->symbol;
-
-    /* Get namespace and short class name from FQ name */
-    fq = sym_frnm(cls_sym);
-    if (!fq) return 0;
-
-    size_t len = strlen(fq);
-    size_t dot = len;
-    while (dot) {
-        dot--;
-        if (fq[dot] == '.') break;
-    }
-    if (dot == 0 || fq[dot] != '.') { /* No namespace - skip (not importable) */
-        free(fq);
-        return 0;
-    }
-
-    ns = (char*)malloc(dot + 1);
-    memcpy(ns, fq, dot);
-    ns[dot] = 0;
-
-    const char *cls_name = fq + dot + 1;
-
-    /* Start stub source */
-    buffer = mprintf("options %s\nnamespace %s\n",
-                     contract_has_task_method(contract_node)
-                            ? "levelg" : "levelb",
-                     ns);
-    if (contract_node->node_type == CLASS_DEF) {
-        if (implements_count) {
-            size_t i;
-            char *tmp = mprintf("%s%s: class", buffer, cls_name);
-            free(buffer);
-            buffer = tmp;
-            for (i = 0; i < implements_count; i++) {
-                char *iface_source;
-                if (!implements_fqnames[i]) continue;
-                iface_source = rxcp_internal_name_to_source_qualified(implements_fqnames[i], 1);
-                tmp = mprintf("%s%s %s",
-                              buffer,
-                              i == 0 ? " implements" : "",
-                              iface_source ? iface_source : implements_fqnames[i]);
-                free(buffer);
-                buffer = tmp;
-                if (iface_source) free(iface_source);
+    for (member = contract->child; member; member = member->sibling) {
+        ASTNode *built = NULL;
+        if (member->node_type == DEFINE) {
+            ASTNode *target = ast_chld(member, VAR_TARGET, 0);
+            ASTNode *shape = ast_type_child(member);
+            ASTNode *mapping = ast_chld(member, NODE_REGISTER, 0);
+            if (target && shape) {
+                char *name = copy_member_label_from_node(target);
+                char *type = ast_n2tp(shape);
+                char *view = register_view_from_node(mapping, type);
+                built = rxcp_contract_attribute(stub, name, type,
+                                                register_index_from_node(mapping), view);
+                free(name); free(type); free(view);
             }
-            tmp = mprintf("%s\n", buffer);
-            free(buffer);
-            buffer = tmp;
-        } else {
-            char *tmp = mprintf("%s%s: class\n", buffer, cls_name);
-            free(buffer);
-            buffer = tmp;
+        } else if (member->node_type == FACTORY || member->node_type == METHOD) {
+            char *name = copy_member_label_from_node(member);
+            /* Factory bodies return void; the ordinary callable registry
+             * separately exposes their constructed object result. */
+            char *type = member->node_type == FACTORY ? strdup(".void") :
+                         callable_effective_return_type(member);
+            char *args = generate_arg_source(ast_chld(member, ARGS, 0));
+            built = rxcp_contract_callable(stub, member->node_type, name,
+                                          type, args, member->is_task_callable);
+            free(name); free(type); free(args);
         }
-    } else {
-        char *tmp = mprintf("%s%s: interface\n", buffer, cls_name);
-        free(buffer);
-        buffer = tmp;
+        if (built) {
+            rxcp_contract_source_anchor(built, member);
+            add_ast(decl, built);
+        }
+        else if (member->node_type == DEFINE || member->node_type == FACTORY ||
+                 member->node_type == METHOD) mknd_err(decl, "SYNTAX_ERROR_IN_IMPORT_DECL");
     }
-
-    append_class_attribute_stub_lines(contract_node, &buffer);
-
-    /* Iterate contract members for FACTORY/METHOD signatures */
-    ASTNode *m;
-    for (m = contract_node->child; m; m = m->sibling) {
-        if (m->node_type == FACTORY) {
-            char *factory_name = copy_member_label_from_node(m);
-            char *tmp;
-            tmp = mprintf("%s  %s: factory\n", buffer, factory_name ? factory_name : "*");
-            free(buffer);
-            buffer = tmp;
-            if (factory_name) free(factory_name);
-
-            ASTNode *args_node = ast_chld(m, ARGS, 0);
-            if (args_node) {
-                char *args = generate_arg_source(args_node);
-                if (args && args[0]) {
-                    tmp = mprintf("%s  arg %s\n", buffer, args);
-                    free(buffer);
-                    buffer = tmp;
-                }
-                if (args) free(args);
-            }
-        }
-        else if (m->node_type == METHOD) {
-            /* Method name */
-            char *mname = (char*)malloc(m->node_string_length + 1);
-            memcpy(mname, m->node_string, m->node_string_length);
-            mname[m->node_string_length] = 0;
-
-            /* Return type (default .void added by grammar) */
-            char *rtype = callable_effective_return_type(m);
-
-            char *tmp = mprintf("%s  %s: %s = %s\n", buffer, mname,
-                                m->is_task_callable ? "task" : "method",
-                                rtype);
-            free(buffer);
-            buffer = tmp;
-
-            ASTNode *args_node = ast_chld(m, ARGS, 0);
-            if (args_node) {
-                char *args = generate_arg_source(args_node);
-                if (args && args[0]) {
-                    tmp = mprintf("%s  arg %s\n", buffer, args);
-                    free(buffer);
-                    buffer = tmp;
-                }
-                if (args) free(args);
-            }
-            free(mname);
-            free(rtype);
-        }
-    }
-
-    free(ns);
-    free(fq);
-    return buffer;
+    free(fq); free(ns);
+    rxcp_contract_finish(stub);
+    return stub;
 }
 
 static void register_source_import_member_inline_payloads(Context *context, ASTNode *contract_node) {
@@ -1878,11 +1650,10 @@ static walker_result class_signature_walker(walker_direction direction,
             if (fqname) {
                 size_t implements_count = 0;
                 char **implements_fqnames = collect_implemented_interface_fqnames(p->import_context, node, &implements_count);
-                char *stub_source = generate_contract_stub_source(node, implements_fqnames, implements_count);
+                Context *stub_ctx = build_source_contract(p->parent_context, p->import_context,
+                                                         node, implements_fqnames, implements_count);
                 register_source_import_member_inline_payloads(p->import_context, node);
-                if (stub_source) {
-                    Context *stub_ctx = parseRexx(p->parent_context, p->import_context->location, p->import_context->file_name,
-                                                  LEVELB, p->parent_context->debug_mode, stub_source, strlen(stub_source), 1);
+                if (stub_ctx) {
                     if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
                         if (node->node_type == INTERFACE_DEF) {
                             mark_source_import_interface_default_methods(stub_ctx, node);
@@ -1897,7 +1668,7 @@ static walker_result class_signature_walker(walker_direction direction,
                             free(implements_fqnames);
                         }
                         if (stub_ctx) fre_cntx(stub_ctx);
-                        else free(stub_source);
+
                     }
                 } else if (implements_fqnames) {
                     size_t i;
@@ -1998,12 +1769,19 @@ static char* get_const_string(void* constpool, size_t ix) {
 }
 
 /* Simple aggregator for class stubs extracted from metadata */
+typedef struct contract_member {
+    NodeType kind;
+    char *name, *type, *args, *view;
+    int reg, task;
+    struct contract_member *next;
+} contract_member;
+
 typedef struct class_meta_agg {
     char *fq;        /* fully-qualified class name: namespace.class */
     char *ns;        /* namespace */
     char *name;      /* short class name */
-    char *attributes;/* accumulated class attribute signature lines */
-    char *methods;   /* accumulated method/factory signature lines */
+    contract_member *members;
+    contract_member *members_tail;
     NodeType contract_type;
     char **implements_fqnames;
     size_t implements_count;
@@ -2057,8 +1835,7 @@ static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq, No
         n->ns = strdup("");
         n->name = strdup(fq);
     }
-    n->attributes = 0;
-    n->methods = 0;
+    n->members = n->members_tail = 0;
     n->contract_type = contract_type;
     n->implements_fqnames = 0;
     n->implements_count = 0;
@@ -2070,26 +1847,18 @@ static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq, No
     return n;
 }
 
-static void agg_append_line(class_meta_agg *agg, const char *line) {
-    if (!line || !*line) return;
-    if (!agg->methods) {
-        agg->methods = strdup(line);
-    } else {
-        char *tmp = mprintf("%s%s", agg->methods, line);
-        free(agg->methods);
-        agg->methods = tmp;
-    }
-}
-
-static void agg_append_attribute_line(class_meta_agg *agg, const char *line) {
-    if (!line || !*line) return;
-    if (!agg->attributes) {
-        agg->attributes = strdup(line);
-    } else {
-        char *tmp = mprintf("%s%s", agg->attributes, line);
-        free(agg->attributes);
-        agg->attributes = tmp;
-    }
+static void agg_add_member(class_meta_agg *agg, NodeType kind, const char *name,
+                           const char *type, const char *args, int task,
+                           int reg, const char *view) {
+    contract_member *m = calloc(1, sizeof(*m));
+    m->kind = kind; m->name = strdup(name);
+    m->type = strdup(type && *type ? type : (kind == DEFINE ? ".object" : ".void"));
+    m->args = strdup(args ? args : ""); m->task = task; m->reg = reg;
+    m->view = view ? strdup(view) : NULL;
+    if (agg->members_tail) agg->members_tail->next = m;
+    else agg->members = m;
+    agg->members_tail = m;
+    if (task) agg->has_task_methods = 1;
 }
 
 static void agg_free_all(class_meta_agg *head) {
@@ -2099,8 +1868,11 @@ static void agg_free_all(class_meta_agg *head) {
         if (n->fq) free(n->fq);
         if (n->ns) free(n->ns);
         if (n->name) free(n->name);
-        if (n->attributes) free(n->attributes);
-        if (n->methods) free(n->methods);
+        while (n->members) {
+            contract_member *m = n->members;
+            n->members = m->next;
+            free(m->name); free(m->type); free(m->args); free(m->view); free(m);
+        }
         if (n->implements_fqnames) {
             size_t i;
             for (i = 0; i < n->implements_count; i++) free(n->implements_fqnames[i]);
@@ -2253,28 +2025,24 @@ static void import_class_meta_aggs(Context *context, char *full_file_name, class
 
     a = class_aggs;
     while (a) {
-        if (a->contract_type == CLASS_DEF || (a->methods && *a->methods)) {
-            char *stub_source;
-            if (a->contract_type == INTERFACE_DEF) {
-                stub_source = mprintf("options %s\nnamespace %s\n%s: interface\n%s",
-                                      a->has_task_methods ? "levelg" : "levelb",
-                                      a->ns,
-                                      a->name,
-                                      a->methods ? a->methods : "");
-            } else {
-                /* Implements metadata is kept as FQNs on imported_class; source stubs only provide members. */
-                stub_source = mprintf("options %s\nnamespace %s\n%s: class\n%s%s",
-                                      a->has_task_methods ? "levelg" : "levelb",
-                                      a->ns,
-                                      a->name,
-                                      a->attributes ? a->attributes : "",
-                                      a->methods ? a->methods : "");
+        if (a->contract_type == CLASS_DEF || a->members) {
+            Context *stub_ctx = rxcp_contract_context(context, full_file_name, a->ns);
+            ASTNode *decl = rxcp_contract_class(stub_ctx, a->contract_type, a->ns, a->name);
+            contract_member *m;
+            if (!decl) { fre_cntx(stub_ctx); a = a->next; continue; }
+            add_ast(ast_chld(stub_ctx->ast->child, INSTRUCTIONS, 0), decl);
+            if (a->has_task_methods) {
+                stub_ctx->level = LEVELG;
+                ast_copy_str(stub_ctx->ast->child->child->child, "levelg");
             }
-            Context *stub_ctx = parseRexx(context, context->location,
-                                          full_file_name,
-                                          a->has_task_methods ? LEVELG : LEVELB,
-                                          context->debug_mode, stub_source,
-                                          strlen(stub_source), 1);
+            for (m = a->members; m; m = m->next) {
+                ASTNode *member = m->kind == DEFINE ?
+                    rxcp_contract_attribute(stub_ctx, m->name, m->type, m->reg, m->view) :
+                    rxcp_contract_callable(stub_ctx, m->kind, m->name, m->type, m->args, m->task);
+                if (member) add_ast(decl, member);
+                else mknd_err(decl, "SYNTAX_ERROR_IN_IMPORT_DECL");
+            }
+            rxcp_contract_finish(stub_ctx);
             if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
                 remove_import_stub_implicit_main(stub_ctx);
                 if (a->contract_type == INTERFACE_DEF) {
@@ -2284,8 +2052,10 @@ static void import_class_meta_aggs(Context *context, char *full_file_name, class
                 rximpcl_f(context, full_file_name, a->fq, stub_ctx, a->contract_type,
                           clone_fqname_array(a->implements_fqnames, a->implements_count), a->implements_count);
             } else {
-                if (stub_ctx) fre_cntx(stub_ctx);
-                else free(stub_source);
+                if (stub_ctx) {
+                    if (context->debug_mode >= 2) prnterrs(stub_ctx);
+                    fre_cntx(stub_ctx);
+                }
             }
         }
         a = a->next;
@@ -2392,6 +2162,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
 
     struct pending_import_contracts pending;
     Context *master = context->master_context;
+    char previous_inline_deferral = context->defer_imported_inline_attachments;
 
     (void)constant_size;
 
@@ -2414,6 +2185,10 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
         i = ((meta_entry *)entry)->next;
     }
     master->pending_import_contracts = &pending;
+    /* Read independent fields before optional templates can recursively
+     * resolve another declaration from the same metadata chain. Templates
+     * attach when the checked declaration is imported into the consumer. */
+    context->defer_imported_inline_attachments = 1;
 
     /* Walk only the module metadata chain so shared constant pools stay module-local in effect. */
     i = meta_head;
@@ -2456,15 +2231,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                             char *factory_member = 0;
                             if (parse_class_factory_fqname(fqname, &class_fq, &factory_member)) {
                                 class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
-                                if (args && *args) {
-                                    char *ln = mprintf("  %s: factory\n  arg %s\n", factory_member, args);
-                                    agg_append_line(agg, ln);
-                                    free(ln);
-                                } else {
-                                    char *ln = mprintf("  %s: factory\n", factory_member);
-                                    agg_append_line(agg, ln);
-                                    free(ln);
-                                }
+                                agg_add_member(agg, FACTORY, factory_member, ".void", args, 0, -1, NULL);
                                 free(factory_member);
                                 free(class_fq);
                             } else {
@@ -2480,29 +2247,8 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
 
                                         if (!agg || agg->contract_type != INTERFACE_DEF) {
                                             if (!agg) agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
-                                            if (is_task_callable) agg->has_task_methods = 1;
-
-                                            /* method name is after last dot */
-                                            const char *mname = last_dot + 1;
-                                            if (type && *type) {
-                                                char *ln = mprintf("  %s: %s = %s\n",
-                                                                   mname,
-                                                                   is_task_callable ? "task" : "method",
-                                                                   type);
-                                                agg_append_line(agg, ln);
-                                                free(ln);
-                                            } else {
-                                                char *ln = mprintf("  %s: %s\n",
-                                                                   mname,
-                                                                   is_task_callable ? "task" : "method");
-                                                agg_append_line(agg, ln);
-                                                free(ln);
-                                            }
-                                            if (args && *args) {
-                                                char *ln2 = mprintf("  arg %s\n", args);
-                                                agg_append_line(agg, ln2);
-                                                free(ln2);
-                                            }
+                                            agg_add_member(agg, METHOD, last_dot + 1, type, args,
+                                                           is_task_callable, -1, NULL);
                                         }
                                         free(class_fq);
                                     }
@@ -2559,13 +2305,8 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                     {
                         class_meta_agg *agg = agg_find_or_add(&class_aggs, owner, CLASS_DEF);
                         const char *attr_name = last_dot + 1;
-                        char *ln = mprintf("  %s = %s with register.%d.%s\n",
-                                           attr_name,
-                                           type_str ? type_str : ".object",
-                                           (int)mentry->reg,
-                                           register_view_for_type(type_str));
-                        agg_append_attribute_line(agg, ln);
-                        free(ln);
+                        agg_add_member(agg, DEFINE, attr_name, type_str, NULL, 0,
+                                       (int)mentry->reg, register_view_for_type(type_str));
                     }
                     free(owner);
                 }
@@ -2603,33 +2344,13 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
 
             if (owner && kind && member) {
                 class_meta_agg *agg = agg_find(class_aggs, owner);
-                char *ln;
-
+                char *member_symbol = mprintf("%s.%s", owner, member);
+                int task = has_task_target_for_symbol(constant, meta_head, member_symbol);
                 if (!agg) agg = agg_find_or_add(&class_aggs, owner, INTERFACE_DEF);
-
-                if (strcmp(kind, "factory") == 0) {
-                    ln = mprintf("  %s: factory\n", member);
-                } else {
-                    char *member_symbol = mprintf("%s.%s", owner, member);
-                    int is_task_callable = member_symbol &&
-                            has_task_target_for_symbol(constant, meta_head,
-                                                       member_symbol);
-                    if (is_task_callable) agg->has_task_methods = 1;
-                    ln = mprintf("  %s: %s = %s\n", member,
-                                 is_task_callable ? "task" : "method",
-                                 type_str ? type_str : ".void");
-                    free(member_symbol);
-                    if (strstr(kind, "final")) {
-                        agg_add_default_method(agg, member);
-                    }
-                }
-                agg_append_line(agg, ln);
-                free(ln);
-                if (args_str && *args_str) {
-                    ln = mprintf("  arg %s\n", args_str);
-                    agg_append_line(agg, ln);
-                    free(ln);
-                }
+                agg_add_member(agg, strcmp(kind, "factory") == 0 ? FACTORY : METHOD,
+                               member, type_str, args_str, task, -1, NULL);
+                if (strstr(kind, "final")) agg_add_default_method(agg, member);
+                free(member_symbol);
             }
 
             if (owner) free(owner);
@@ -2668,6 +2389,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
         agg_free_all(class_aggs);
     }
     master->pending_import_contracts = pending.previous;
+    context->defer_imported_inline_attachments = previous_inline_deferral;
     agg_free_all(pending.declarations);
 }
 
@@ -2723,25 +2445,10 @@ static void import_rxpa_metadata_list(Context *context, char *file_name, struct 
         else if (entry->kind && strcmp(entry->kind, "member") == 0 &&
                  entry->owner && entry->member_kind && entry->member) {
             class_meta_agg *agg = agg_find(class_aggs, entry->owner);
-            char *ln;
-
             if (!agg) agg = agg_find_or_add(&class_aggs, entry->owner, INTERFACE_DEF);
-
-            if (strcmp(entry->member_kind, "factory") == 0) {
-                ln = mprintf("  %s: factory\n", entry->member);
-            } else {
-                ln = mprintf("  %s: method = %s\n", entry->member, entry->type ? entry->type : ".void");
-                if (strstr(entry->member_kind, "final")) {
-                    agg_add_default_method(agg, entry->member);
-                }
-            }
-            agg_append_line(agg, ln);
-            free(ln);
-            if (entry->args && *entry->args) {
-                ln = mprintf("  arg %s\n", entry->args);
-                agg_append_line(agg, ln);
-                free(ln);
-            }
+            agg_add_member(agg, strcmp(entry->member_kind, "factory") == 0 ? FACTORY : METHOD,
+                           entry->member, entry->type, entry->args, 0, -1, NULL);
+            if (strstr(entry->member_kind, "final")) agg_add_default_method(agg, entry->member);
         }
 
         entry = entry->next;
@@ -2997,7 +2704,7 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     if (loaded_plugin.handle) rxpa_close_plugin(&loaded_plugin);
 }
 
-static void parseRxasFileForFunctions(Context *context, char* file_name, char* location) {
+void rxcp_import_rxas_contracts(Context *context, const char *path, const char *identity) {
     FILE *outFile;
     int token_type;
     Assembler_Token *token;
@@ -3015,11 +2722,11 @@ static void parseRxasFileForFunctions(Context *context, char* file_name, char* l
     scanner.quiet = 1;
     scanner.traceFile = 0;
     scanner.optimise = 0;
-    scanner.file_name = file_name;
+    scanner.file_name = (char *)path;
     scanner.output_file_name = 0;
-    scanner.location = location;
+    scanner.location = NULL;
 
-    if (context->debug_mode >= 2) printf("Importing Procedures - Reading RXAS file %s for possible procedure imports\n", file_name);
+    if (context->debug_mode >= 2) printf("Importing Procedures - Reading RXAS file %s for possible procedure imports\n", path);
 
     /* Opening an Assembler file */
     if (rxasinfl(&scanner, 1)) {
@@ -3029,10 +2736,16 @@ static void parseRxasFileForFunctions(Context *context, char* file_name, char* l
 
     /* Parse & Process */
     rxaspars(&scanner);
-    read_constant_pool_for_functions(context, file_name, scanner.binary.const_pool,
+    read_constant_pool_for_functions(context, (char *)identity, scanner.binary.const_pool,
                                      scanner.binary.const_size, scanner.meta_head, scanner.expose_head);
 
     rxasclrc(&scanner);
+}
+
+static void parseRxasFileForFunctions(Context *context, char *file, char *location) {
+    char *path = location ? mprintf("%s/%s", location, file) : strdup(file);
+    rxcp_import_rxas_contracts(context, path, file);
+    free(path);
 }
 
 static void parseRxbinFileForFunctions(Context *context, char* file_name, char* location) {
@@ -3101,6 +2814,10 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     RexxLevel cli_level_override;
 
     if (parent_context->debug_mode >= 2) printf("Importing Procedures - Reading REXX file %s for possible procedure imports\n", file_name);
+
+    if (rxcp_frontend(parent_context) && rxcp_frontend(parent_context)->source_import &&
+        rxcp_frontend(parent_context)->source_import(parent_context, file_name, location,
+                                                     source_default_level)) return;
 
     /* Context for parsing */
     context = cntx_f();
@@ -3173,40 +2890,10 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     }
     cntx_buf(context, buff_start, bytes);
 
-    /* Parse program for real */
-    switch (context->level){
-        case LEVELC: {
-            const char *reason = 0;
-            rexcpars(context);
-            if (!context->ast) goto finish;
-            rxcp_levelc_prepare_source_ast(context);
-            source_tree_sync_diagnostics(context);
-            if (rxcp_levelc_validate_recovered_syntax(context))
-                source_tree_sync_diagnostics(context);
-            if (prnterrs(context)) goto finish;
-            context->levelc_routine_mode = 1;
-            if (!rxcp_levelc_lower_to_canonical(context, &reason)) {
-                fprintf(stderr, "%s: %s\n",
-                        rxcp_levelc_compile_unsupported_message(),
-                        reason ? reason : "invalid imported Classic routine");
-                goto finish;
-            }
-            break;
-        }
-        case LEVELA:
-        case LEVELD:
-            if (parent_context->debug_mode >= 2) fprintf(stderr,"Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
-            break;
-
-        case LEVELB:
-        case LEVELG:
-        case LEVELL:
-            rexbpars(context);
-            break;
-
-        default:
-            if (parent_context->debug_mode >= 2) fprintf(stderr, "Importing Procedures - Failed to determine REXX Level of imported rexx file\n");
-    }
+    /* The owning frontend handles syntax and mapping. C imports are routine
+     * providers, while typed source may be materialized outside this process. */
+    if (context->level == LEVELC) context->levelc_routine_mode = 1;
+    if (rxcp_frontend_parse(context)) goto finish;
 
     if (!context->ast) {
         if (parent_context->debug_mode >= 2) fprintf(stderr,"Importing Procedures - Failure to create AST of imported rexx file\n");
@@ -3397,117 +3084,6 @@ static int source_namespace_claimed_by_earlier_root(Context *context,
             return 1;
     }
     return 0;
-}
-
-/* Parse and rxcp_val a rexx program in a string and return the context */
-/* Parse and rxcp_val a rexx program in a string and return the context */
-Context *rxcp_parse_buffer(char* rexx_source, int debug_mode) {
-    Context *context;
-    size_t bytes = strlen(rexx_source);
-    char *buff = malloc(bytes + 1);
-    memcpy(buff, rexx_source, bytes);
-    buff[bytes] = 0;
-
-    context = cntx_f();
-    cntx_buf(context, buff, bytes);
-
-    /* Initialize context */
-    context->level = LEVELB;
-    context->debug_mode = debug_mode;
-    context->master_context = context;
-    context->file_name = "fragment";
-
-    rexbpars(context);
-
-    return context;
-}
-
-static Context *parseRexx(Context* parent_context, char *location, char* file_name,
-                          RexxLevel level, int debug_mode, char* rexx_source,
-                          size_t bytes, int defer_imported_inline_attachments) {
-    Context *context;
-
-    switch (level){
-        case LEVELA:
-        case LEVELC:
-        case LEVELD:
-            fprintf(stderr,"INTERNAL ERROR: Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
-            return 0;
-
-        case LEVELB:
-        case LEVELG:
-        case LEVELL:
-            context = cntx_f();
-            cntx_buf(context, rexx_source, bytes);
-
-            /* Initialize context */
-            context->location = location;
-            context->file_name = file_name;
-            context->level = level;
-            context->debug_mode = debug_mode;
-            context->master_context = parent_context->master_context;
-            context->disable_exits = parent_context->disable_exits;
-            context->decimal_plugin = parent_context->decimal_plugin;
-            context->defer_imported_inline_attachments =
-                    (char)(defer_imported_inline_attachments != 0);
-
-            rexbpars(context);
-            break;
-
-        default:
-            fprintf(stderr, "INTERNAL ERROR: Importing Procedures - Failed to determine REXX Level\n");
-            return 0;
-    }
-
-    if (!context->ast) {
-        if (debug_mode >= 2) fprintf(stderr,"INTERNAL ERROR: Importing Procedures - Compiler Exiting - Failure to create AST\n");
-        goto finish;
-    }
-
-    rxcp_bvl(context);
-
-#ifndef __CMS__
-//    if (debug_mode >= 2) {
-//        pdot_tree(context->ast, "parserexx.dot");
-//        /* Get dot from https://graphviz.org/download/ */
-//        system("dot parserexx.dot -Tpng -o parserexx.png");
-//    }
-#endif
-
-    finish:
-
-    return context;
-}
-
-static int imported_return_declaration_parses(Context *context,
-                                               const char *file_name,
-                                               const char *namespace_name,
-                                               const char *routine_name,
-                                               const char *type) {
-    char *probe_source;
-    Context *probe_context;
-    int valid;
-
-    probe_source = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\n",
-                           namespace_name ? namespace_name : "",
-                           routine_name ? routine_name : "",
-                           type ? type : "");
-    if (!probe_source) return 0;
-    probe_context = parseRexx(context,
-                              context->location,
-                              (char *)file_name,
-                              LEVELB,
-                              context->debug_mode,
-                              probe_source,
-                              strlen(probe_source),
-                              0);
-    valid = probe_context && probe_context->ast &&
-            !error_in_node(probe_context->ast) &&
-            probe_context->ast->child &&
-            probe_context->ast->child->node_type == PROGRAM_FILE;
-    if (probe_context) fre_cntx(probe_context);
-    else free(probe_source);
-    return valid;
 }
 
 /* Load the next importable file */
@@ -4015,6 +3591,8 @@ Symbol *ensure_function_imported_exact(Context *context,
 
     if (!context || !fqname || !fqname_length) return 0;
     memset(&lookup_node, 0, sizeof(lookup_node));
+    lookup_node.context = context;
+    lookup_node.file_name = context->file_name;
     lookup_node.node_string = (char *)fqname;
     lookup_node.node_string_length = fqname_length;
     lookup_node.scope = context->ast ? context->ast->scope : 0;
@@ -4029,17 +3607,13 @@ static ASTNode *imported_variable_type_node(Context *context, imported_func *var
 
     if (!var->type || !*var->type) return 0;
     if (!var->context) {
-        char *source = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\n",
-                               var->namespace, var->name,
-                               var->type ? var->type : ".unknown");
-        if (!source) return 0;
-        var->context = parseRexx(context, context->location, var->file_name,
-                                 LEVELB, context->debug_mode, source,
-                                 strlen(source), 1);
-        if (!var->context) {
-            free(source);
-            return 0;
-        }
+        ASTNode *decl;
+        var->context = rxcp_contract_context(context, var->file_name, var->namespace);
+        decl = rxcp_contract_callable(var->context, PROCEDURE, var->name,
+                                     var->type, "", 0);
+        if (!decl) return NULL;
+        add_ast(ast_chld(var->context->ast->child, INSTRUCTIONS, 0), decl);
+        rxcp_contract_finish(var->context);
     }
     if (!var->context->ast || error_in_node(var->context->ast) ||
         !var->context->ast->child) return 0;
@@ -4182,7 +3756,6 @@ static imported_func *rximpf_provider_f(
         char *type, char *args, char *implementation, char is_variable,
         char is_task_callable, const char *provider_id)  {
     imported_func *func;
-    char *buffer;
     char *name;
 
     if (!fqname) return 0;
@@ -4254,14 +3827,13 @@ static imported_func *rximpf_provider_f(
     else func->implementation = 0;
 
     if (func->is_variable == 0) {
-        /* Generate Function Declaration AST - only if we are a function not a variable */
-        // TODO This only does Level B
+        /* Adapt the language-neutral callable contract into the common AST. */
         char *source_args = 0;
         int empty_component = metadata_args_has_empty_component(func->args);
         int statement_separator = metadata_args_has_statement_separator(func->args);
 
         if (!empty_component && !statement_separator) {
-            source_args = metadata_args_to_source_args(func->args);
+            source_args = strdup(func->args ? func->args : "");
         }
         if (empty_component || statement_separator) {
             func->error_state = import_is_rxpa_metadata(func->file_name) ?
@@ -4274,37 +3846,25 @@ static imported_func *rximpf_provider_f(
         } else if (!source_args) {
             func->error_state = "OUT_OF_MEMORY";
         } else {
-            buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name,
-                             func->type, source_args);
+            ASTNode *decl;
+            func->context = rxcp_contract_context(context, func->file_name, func->namespace);
+            func->context->defer_imported_inline_attachments = context->defer_imported_inline_attachments;
+            decl = rxcp_contract_callable(func->context, PROCEDURE, func->name,
+                                         func->type, source_args, func->is_task_callable);
             free(source_args);
-            if (!buffer) {
-                func->error_state = "OUT_OF_MEMORY";
+            if (!decl) {
+                func->error_state = import_is_rxpa_metadata(func->file_name) ?
+                                    "RXPA_IMPORT_SIGNATURE_INVALID" :
+                                    "SYNTAX_ERROR_IN_IMPORT_DECL";
+                func->error_field = rxcp_contract_type(func->context, func->type) ?
+                                    "arguments" : "return";
+                func->error_detail = "invalid metadata declaration";
             } else {
-                if (context->debug_mode >= 2) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
-                func->context = parseRexx(context, context->location, func->file_name, LEVELB, context->debug_mode, buffer,
-                                          strlen(buffer),
-                                          context->defer_imported_inline_attachments);
-
-                if (!func->context || !func->context->ast ||
-                    error_in_node(func->context->ast) ||
-                    !func->context->ast->child ||
-                    func->context->ast->child->node_type != PROGRAM_FILE) {
-                    func->error_state = import_is_rxpa_metadata(func->file_name) ?
-                                        "RXPA_IMPORT_SIGNATURE_INVALID" :
-                                        "SYNTAX_ERROR_IN_IMPORT_DECL";
-                    if (!imported_return_declaration_parses(context,
-                                                            func->file_name,
-                                                            func->namespace,
-                                                            func->name,
-                                                            func->type)) {
-                        func->error_field = "return";
-                    } else {
-                        func->error_field = "arguments";
-                    }
-                    func->error_detail = "invalid Level B declaration";
-                }
-                if (!func->error_state && func->is_task_callable) {
-                    mark_imported_task_callable(func->context->ast);
+                add_ast(ast_chld(func->context->ast->child, INSTRUCTIONS, 0), decl);
+                rxcp_contract_finish(func->context);
+                if (error_in_node(func->context->ast)) {
+                    if (context->debug_mode >= 2) prnterrs(func->context);
+                    func->error_state = "SYNTAX_ERROR_IN_IMPORT_DECL";
                 }
             }
         }

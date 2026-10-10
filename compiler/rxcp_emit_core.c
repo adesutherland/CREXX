@@ -32,7 +32,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include "rxcpmain.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcp_source_tree.h"
 #include "rxcp_util.h"
 #include "rxbin.h"

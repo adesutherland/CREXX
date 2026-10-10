@@ -33,7 +33,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcpmain.h"
 
 static char *levelc_diag_token_text(Token *token) {

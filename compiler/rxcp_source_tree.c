@@ -85,17 +85,6 @@ static void source_semantic_free(SourceSemanticInfo *semantics) {
     free(semantics);
 }
 
-static void source_tree_clear_semantic_links(SourceNode *node) {
-    while (node) {
-        if (node->semantics) {
-            source_semantic_free(node->semantics);
-            node->semantics = 0;
-        }
-        if (node->child) source_tree_clear_semantic_links(node->child);
-        node = node->sibling;
-    }
-}
-
 static SourceSemanticInfo *source_semantic_f(SourceNode *owner) {
     SourceSemanticInfo *semantics;
 
@@ -762,8 +751,16 @@ void source_tree_clear_diagnostics(Context *context) {
 }
 
 void source_tree_clear_semantics(Context *context) {
-    if (!context || !context->source_tree) return;
-    source_tree_clear_semantic_links(context->source_tree);
+    SourceNode *node;
+    if (!context) return;
+    /* The allocation list also owns detached imported/template anchors.
+     * They can receive annotations without belonging to the visible tree. */
+    for (node = context->source_free_list; node; node = node->free_list) {
+        if (node->semantics) {
+            source_semantic_free(node->semantics);
+            node->semantics = NULL;
+        }
+    }
 }
 
 void source_tree_record_diagnostic(Context *context, ASTNode *diag) {

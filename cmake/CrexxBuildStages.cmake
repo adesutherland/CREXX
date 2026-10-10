@@ -43,7 +43,7 @@ crexx_add_build_stage(stage-c0-native
 
 crexx_add_build_stage(stage-c1-toolchain
         DESCRIPTION "C1 core C toolchain"
-        REQUIRED_TARGETS rxc rxas rxlink rxdas rxbvm rxvm rxseq rxcpack crexx-contract
+        REQUIRED_TARGETS rxc rxc-c rxas rxlink rxdas rxbvm rxvm rxseq rxcpack crexx-contract
         OPTIONAL_TARGETS rxtvm)
 
 crexx_add_build_stage(stage-b0-bootstrap
@@ -77,6 +77,7 @@ crexx_add_build_stage(stage-l-libraries
 crexx_add_build_stage(stage-product
         DESCRIPTION "Assembled cREXX product"
         REQUIRED_TARGETS
+            rxc-c
             stage-c-rexx-tools
             stage-g-library
             stage-l-libraries

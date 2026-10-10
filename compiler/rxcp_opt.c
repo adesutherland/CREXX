@@ -64,7 +64,7 @@
 #include <math.h>
 #include "platform.h"
 #include "rxcpmain.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxvmplugin_framework.h"
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxcp_val.h"

@@ -106,6 +106,7 @@ struct SourceNode {
     char *owned_file_name;
     char *owned_source_text;
     size_t owned_source_text_length;
+    char is_metadata_anchor; /* Owned declaration anchor; copy across Contexts. */
     int line;
     int column;
     SourceNode *parent;
