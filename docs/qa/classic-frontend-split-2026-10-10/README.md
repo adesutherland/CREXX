@@ -14,6 +14,11 @@ alongside the previously assigned SAN-QA-018. This assignment permits bounded
 local closeout; it supplies no sanitizer-clean or release-ready claim. The
 [sanitizer register](../../SANITIZER-WORKLIST.md) owns the remaining actions.
 
+The subsequent [CLion clean-rebuild repair](clion-clean-rebuild.md) records a
+missing TRACE runtime dependency in two benchmark consumers, both successful
+Debug/Release product builds and five focused checks. Its one build-input delta
+is recorded separately; the original qualification below retains its own inputs.
+
 ## Delivered boundary
 
 `rxc-c`/`rxcc_lib` combine the Classic frontend and shared backend. Full

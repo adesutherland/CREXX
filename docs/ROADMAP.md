@@ -551,6 +551,52 @@ assignment. Neither is a completed full-gate pass. The SAN register and receipt
 retain the owner, next action and evidence. Broader CP/Level C acceptance remains
 open; delivery is local, with no push or release.
 
+**Clean CLion rebuild follow-up — CP-C-FIND-04 (2026-10-10, closed locally).**
+A clean Debug `all` build at 32 jobs failed four RexxCPS fixture compilations
+at `TRACE VALUE`, reporting `CLASS_NOT_FOUND`. A minimal Level B reproducer
+has the same failure while `library`, `classlib` and `rxcexits` exist but
+`bin/rxfnsc.rxbin` is absent. TRACE's generated helper imports RexxValue from
+that consolidated runtime; these consumers lack the producer dependency.
+This exposed a gap in CP-C-AC-05's clean-build qualification. The repair and
+passing Debug/Release product builds below restore that proof; passed functional
+checks and the agreed metadata format/semantic boundary are retained.
+
+**Vision and intended outcomes:** make a clean CLion rebuild reliably produce
+TRACE-dependent fixtures after their owning runtime, and restore both existing
+Debug and Release build profiles. Preserve benchmark sources, generated runtime
+semantics and metadata. Keep the repair in this C-first issue; no compiler or
+production performance change is planned.
+
+1. **CP-C-F04-AC-01 (verified):** reproduce the failure with minimal authored
+   `TRACE VALUE`, then prove the same unchanged source compiles once `rxfnsc`
+   is available. Retain before/after logs.
+2. **CP-C-F04-AC-02 (verified):** both RexxCPS fixture families depend on the TRACE
+   runtime producer and output; verify the generated graph orders producer
+   publication before all four optimized/no-opt fixture commands even when
+   that published artifact is absent.
+3. **CP-C-F04-AC-03 (verified):** finish the actual CLion Debug/Release `all`
+   builds and pass focused RexxCPS runtime/register controls. Retain commands,
+   inputs and logs; reuse unchanged compiler/sanitizer evidence.
+
+1. **CP-C-F04-STEP-01 (AC-01; complete):** reproduce and inspect TRACE's declared
+   imports and the missing producer/output; build only the identified producer
+   and replay the unchanged minimal source.
+2. **CP-C-F04-STEP-02 (AC-02; complete; depends on 01):** add the existing TRACE runtime
+   dependency to the two owning benchmark registrations. Reconfigure and test
+   absent-output scheduling, without broadening the compiler-exit bootstrap
+   bundle dependency (which would create a runtime/bootstrap cycle).
+3. **CP-C-F04-STEP-03 (AC-03; complete; depends on 02):** complete both user build
+   profiles, run focused controls, update the receipt/plan and commit the local
+   repair. SAN-011/012/SAN-QA-018 keep their assigned next Release 1 QA closure.
+
+Final follow-up evidence: the unchanged minimal source succeeds after runtime
+publication; absent-output scheduling at 32 jobs publishes `rxfnsc` before all
+four fixtures. Full existing Debug and Release `all` builds pass, and five
+RexxCPS runtime/register controls pass in 14.41 seconds. Only the two consumer
+build prerequisites changed. The [follow-up receipt](qa/classic-frontend-split-2026-10-10/clion-clean-rebuild.md)
+retains final inputs/log hashes; source/metadata semantics and the assigned SAN
+closure gates are unchanged. Delivery remains local, unpublished.
+
 ## Constrained C89 And CMS Portability — PORT-C89
 
 **Status:** roadmap work selected by Adrian on 2026-09-18; implementation and

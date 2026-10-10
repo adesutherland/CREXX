@@ -1,5 +1,9 @@
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 
+# TRACE VALUE emits a helper that imports RexxValue from this runtime.
+# Consumers need it before compilation; the exit bundle remains a bootstrap input.
+set(_rexxcps_trace_runtime_depends rxfnsc "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
+
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/awfy_json_rap_minified.json
         ${CMAKE_CURRENT_BINARY_DIR}/awfy_json_rap_minified.json
@@ -12,7 +16,9 @@ function(crexx_add_language_benchmark NAME SOURCE SMOKE_ARG PASS_REGEX)
     set(_runtime_args ${LIBRPATH} -a ${SMOKE_ARG})
     set(_test_labels "benchmark;language")
     set(_required_output_regex "${PASS_REGEX}")
+    set(_benchmark_depends library compiler_exit_bin)
     if(NAME STREQUAL "benchmark_rexxcps_levelb")
+        list(APPEND _benchmark_depends ${_rexxcps_trace_runtime_depends})
         set(_runtime_args ${LIBRPATH} -a --smoke-count ${SMOKE_ARG})
         list(APPEND _test_labels "rexxcps-smoke" "noncanonical")
         list(APPEND _required_output_regex
@@ -24,7 +30,7 @@ function(crexx_add_language_benchmark NAME SOURCE SMOKE_ARG PASS_REGEX)
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}
             TARGET_GROUP language_benchmarks
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-            DEPENDS library compiler_exit_bin
+            DEPENDS ${_benchmark_depends}
             RUNTIME_ARGS ${_runtime_args}
             TEST_LABELS ${_test_labels}
             REQUIRED_OUTPUT_REGEX ${_required_output_regex}
@@ -141,7 +147,7 @@ crexx_add_rexx_opt_matrix(
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rexxcps_levelb_opaque.crexx
         TARGET_GROUP language_benchmarks
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library compiler_exit_bin
+        DEPENDS library compiler_exit_bin ${_rexxcps_trace_runtime_depends}
         RUNTIME_ARGS ${LIBRPATH} -a A Off 1 1
         TEST_LABELS "benchmark;language;optimizer-resistance"
         REQUIRED_OUTPUT_REGEX "PASS: RexxCPS 2.2d cREXX opaque/result-observation diagnostic"
