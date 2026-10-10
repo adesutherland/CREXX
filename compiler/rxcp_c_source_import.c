@@ -45,6 +45,7 @@ int rxcp_classic_source_import(Context *c, const char *file, const char *locatio
 #include <windows.h>
 #include <process.h>
 #include <direct.h>
+#include "rxcp_windows_argv.h"
 #else
 #include <unistd.h>
 #include <sys/wait.h>
@@ -71,7 +72,13 @@ static int run_typed_compiler(const char *tool, char **argv) {
     while (argv[count]) ++count;
     args = calloc(count + 1, sizeof(*args));
     if (args && program) {
-        for (i = 0; i < count; ++i) if (!(args[i] = wide_path(argv[i]))) break;
+        for (i = 0; i < count; ++i) {
+            wchar_t *argument = wide_path(argv[i]);
+            if (!argument) break;
+            args[i] = rxcp_windows_quote_argument(argument);
+            free(argument);
+            if (!args[i]) break;
+        }
         if (i == count) result = (int)_wspawnv(_P_WAIT, program, (const wchar_t *const *)args);
     }
     if (args) { for (i = 0; i < count; ++i) free(args[i]); free(args); }

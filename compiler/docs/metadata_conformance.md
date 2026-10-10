@@ -150,6 +150,13 @@ The C-only desktop product uses the sibling `rxc` tool for typed source and
 editor services, with explicit argv and private temporary RXAS files.
 The broker preserves the parent's import-root order, RXAS opt-in and disabled
 exit policy; source contract adapters retain the provider's own location.
+Windows standalone core tools embed the UTF-8 process-codepage manifest
+(Windows 10 version 1903 and later), so narrow CRT argv and host paths retain
+Unicode. The broker converts those UTF-8 arguments to UTF-16 and quotes each
+argument for the Windows CRT before `_wspawnv`; spaces and trailing backslashes
+remain part of their original argument. This process property does not select
+an external stream codec. An embedding host retains responsibility for its
+own process encoding; earlier Windows Unicode-path behavior is not qualified.
 
 ## Executable conformance evidence
 

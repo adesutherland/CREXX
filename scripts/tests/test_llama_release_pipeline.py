@@ -167,6 +167,15 @@ class MatrixTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 core_qa.select('unknown', 'workflow_dispatch', ref)
 
+    def test_deep_windows_retry_keeps_both_toolchains_and_full_default(self):
+        rows, full = core_qa.select('windows', 'workflow_dispatch', 'refs/heads/develop')
+        self.assertFalse(full)
+        self.assertEqual([r['selection'] for r in rows['include']],
+                         ['windows-mingw', 'windows-msvc'])
+        rows, full = core_qa.select('windows', 'schedule', 'refs/heads/develop')
+        self.assertTrue(full)
+        self.assertEqual(len(rows['include']), 5)
+
     def test_cuda_only_for_release_or_explicit_manual_selection(self):
         for ref in ('refs/heads/develop', 'refs/heads/temp/llama-release-combined'):
             for event in ('push', 'pull_request', 'schedule'):

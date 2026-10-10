@@ -406,6 +406,8 @@ add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxWindowsUtf8.cmake)
+
 # These non-owning aggregate targets expose the product stages without
 # replacing or duplicating the direct dependencies declared by their members.
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxBuildStages.cmake)

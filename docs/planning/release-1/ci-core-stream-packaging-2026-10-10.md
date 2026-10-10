@@ -150,6 +150,9 @@ at roughly ten-minute intervals while independent useful work continues.
     repaired develop delivery, including Intel Mac signing/notarization. The
     observed Apple offline/no-route error is treated as a transport failure;
     retry that operation/job if needed without waiving signing or notarization.
+    Both workflows pass on `a69745746`, including Intel Mac notarization and
+    all optional-plugin consumer packages. The next substantive repair will
+    receive its own normal automatic publication checks.
 12. **CI-CS-AC-12 — open:** full Sanitizer QA passes Linux x64 ASan/LSan with
     build/test leaks on and macOS arm64 ASan with the documented Apple LSan
     capability limit. Full Deep Build QA passes all five core platforms,
@@ -195,3 +198,60 @@ publication and explicitly requested full sanitizer/deep workflows. Actual
 hosted proof and AC-10–13 remain open until verified. Thread heartbeat
 `repair-crexx-ci-until-green` checks/resumes every ten minutes, with current
 phase/revision/run IDs retained in the ignored evidence active-runs.json.
+
+## Windows host-text boundary exposed by full Deep QA
+
+Full Deep run `38086282692` on `a69745746` passed Linux, both Macs,
+books, stress and all product-graph comparisons. Both Windows lanes built
+successfully but failed exactly `classic_frontend_parity` and
+`classic_unicode_contract_opt`. Their retained LastTestsFailed/LastTest logs
+are under the evidence directory. The first failure occurs when the Classic
+broker treats ACP-encoded path arguments as UTF-8; the second loses the
+Unicode provider filename to `??.rexx` during narrow CRT startup. The broker
+also passes unquoted spaced paths to `_wspawnv`, whose documented argument
+serialization splits them. These are host encoding/argument boundary repairs,
+not changes to language syntax, stream codecs or metadata.
+
+**Intended outcome:** core Windows tools exchange UTF-8 command-line and
+filesystem names on the supported modern Windows runners; the typed broker
+retains every argument, including spaces, backslashes and Unicode, without a
+shell. Existing Latin byte ordinals and explicit external stream encodings
+remain unchanged. Keep the existing Unicode filename regression enabled.
+
+14. **CI-CS-AC-14 — open:** both actual Windows Deep lanes pass the unchanged
+    Classic frontend parity and Unicode contract, then install/package checks.
+    Embed the standard UTF-8 process manifest in the core CLI executables for
+    MSVC and MinGW. Record its Windows 10 version 1903+ capability boundary;
+    do not claim older Windows Unicode path qualification.
+15. **CI-CS-AC-15 — open:** broker argv serialization preserves empty arguments,
+    whitespace, quotes and backslash runs, including trailing backslashes.
+    Retain permanent focused controls of the production quoting helper in
+    Debug and maintained ASan, plus the existing end-to-end typed import proof.
+    Reuse unchanged Unix full-gate evidence; dispatch only the repaired Windows
+    Deep scope after the new publication. Normal Build/CodeQL remain required.
+
+13. **CI-CS-STEP-13 — complete; AC-14/15:** retain failed logs/artifacts and
+    reconcile exact failed test inventories. The permanent workloads already
+    reproduce both observed causes; namespace compilation repair is verified
+    by normal Windows product builds. No memory diagnostic is reported here.
+14. **CI-CS-STEP-14 — local controls complete; hosted proof open; AC-14/15:** embed the standard Windows process
+    manifest, quote each broker argument using CRT rules, retain focused
+    boundary controls and Debug-then-ASan evidence. Preserve process ownership,
+    authored diagnostics and frontend/metadata separation.
+    Debug and maintained Apple ASan pass the nine-vector production quoting
+    helper (1/1, 0.38 s / 0.40 s); Debug compiler entry points build cleanly.
+    All 15 matrix/package workflow controls pass. Unix preprocessing is
+    byte-identical to `a69745746`; the added manifest acts only on Windows.
+15. **CI-CS-STEP-15 — open; AC-11–15:** publish the bounded Windows repair with
+    complete receipt and expected publication state. Add a paired Windows-only
+    Deep selection so both failed lanes run concurrently without repeating
+    healthy Unix/books/stress/graph work. Verify ordinary matrix selection is
+    unchanged. Leave the running Linux/macOS sanitizer jobs alone; their
+    original platform inputs are unaffected by Windows-only execution changes.
+
+The Windows host-text repair receipt is
+`docs/qa/ci-windows-hosttext-2026-10-10/README.md`. Expected first-push status is
+green normal Build/CodeQL with the paired Windows-only Deep replay launched.
+Actual hosted acceptance remains open, with exact run IDs in active-runs.json.
+Existing full Unix sanitizer proof plus the newly added focused helper covers
+the final Unix delta; no unchanged full lane is restarted merely for a new SHA.
