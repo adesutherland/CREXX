@@ -132,6 +132,21 @@ def smoke(prefix, source, preferred_vm, logs):
                 shutil.copy2(path, relocated / path.name)
         shutil.rmtree(native.parent)
         run('relocated-native', [relocated / executable.name], 'hello CREXX world!')
+
+        classic_source = work / 'classic-stream.rexx'
+        shutil.copy2(source / 'tests/rxpa/classic_stream_package.rexx', classic_source)
+        classic_native = work / 'classic-native' / 'stream'
+        classic_native.parent.mkdir()
+        run('classic-native-build', [prefix / ('bin/crexx' + extension), '--program',
+            classic_native, classic_source, '--jobs', '1', '--native'],
+            'PUBLISHED: native program', True)
+        classic_executable = classic_native.with_suffix(extension) if extension else classic_native
+        shutil.copy2(classic_executable, relocated / classic_executable.name)
+        shutil.rmtree(classic_native.parent)
+        run('relocated-classic-native', [relocated / classic_executable.name],
+            'PASS: packaged Classic encoded stream')
+        if (work / 'classic-stream.bin').read_bytes() != b'\x80\xe9':
+            raise RuntimeError('Packaged Classic stream wrote incorrect Windows-1252 bytes')
         outcome = 'passed'
     finally:
         (logs / 'summary.json').write_text(json.dumps(dict(outcome=outcome,
@@ -192,7 +207,7 @@ def main():
     smoke(installed, source, args.preferred_vm, logs)
     (logs / 'archive.json').write_text(json.dumps(dict(name=asset.name,
         bytes=asset.stat().st_size, sha256=digest(asset), **{k:v for k,v in manifest.items() if k != 'files'}), indent=2) + '\n')
-    print('PASS: extracted llama-free core, both optimization modes, applicable VMs and relocated native consumer')
+    print('PASS: extracted llama-free core, both optimization modes, applicable VMs and relocated native consumers including Classic encoded streams')
 
 
 if __name__ == '__main__':

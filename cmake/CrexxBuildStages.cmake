@@ -60,7 +60,9 @@ crexx_add_build_stage(stage-b1-substrate
 
 crexx_add_build_stage(stage-c-rexx-tools
         DESCRIPTION "C core REXX-based tools and Level C library"
-        REQUIRED_TARGETS rxfnsc rexxscript rxpp rxdb
+        # rxfnsc's imports select the dynamic stream provider. Native consumers
+        # also need its static archive in a freshly built product payload.
+        REQUIRED_TARGETS rxfnsc cstream_static rexxscript rxpp rxdb
         OPTIONAL_TARGETS rxpp_sh)
 
 crexx_add_build_stage(stage-g-library

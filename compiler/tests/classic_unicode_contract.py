@@ -59,7 +59,7 @@ def literal(value):
 try:
     source_root = Path(__file__).parent / 'rexx_src'
     for name in ('levelc_unicode_symbols', 'levelc_unicode_services'):
-        assert execute(name, (source_root / (name + '.rexx')).read_text()) == (source_root / (name + '.expected')).read_text()
+        assert execute(name, (source_root / (name + '.rexx')).read_text(encoding='utf-8')) == (source_root / (name + '.expected')).read_text(encoding='utf-8')
     source = '''options levelc
 all=xrange()
 copy=reverse(reverse(all))

@@ -152,6 +152,7 @@ uses the existing host filesystem qualification service.
 | Unicode routine source/import/linked lookup | unicode_import |
 | Invalid imported constant diagnostics instead of the exposed compiler crash | invalid_import |
 | Independent live VM sessions, native receiver ownership and final handle counts | classic_stream_lifecycle |
+| Extracted core ZIP and relocated native encoded streams | `scripts/package-core-release.py`: `classic_stream_package.rexx`, decoded text and exact Windows-1252 bytes |
 
 The same contract runs optimized/no-opt and direct/linked. The plan owns native
 ownership/isolation, static/installed packaging, focused Debug/Release/ASan

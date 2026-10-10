@@ -9319,10 +9319,6 @@ function(crexx_force_raw_diagnostics_for_directory_tests)
     endforeach()
 endfunction()
 
-crexx_force_raw_diagnostics_for_directory_tests()
-
-crexx_finalize_directory_qa_tiers()
-
 # QUEUED shares the selected repository with the whole queue instructions.
 foreach(_bif_mode IN ITEMS opt noopt)
     if(_bif_mode STREQUAL "noopt")
@@ -9670,3 +9666,7 @@ add_test(NAME classic_stream_lifecycle COMMAND test_classic_stream_lifecycle
 set_tests_properties(classic_stream_lifecycle PROPERTIES
     LABELS "compiler;levelc;unicode;streams;comprehensive"
     RUN_SERIAL TRUE TIMEOUT 300 CREXX_PREP_TARGETS "test_classic_stream_lifecycle")
+
+# Include the late Classic fixtures and their producers in directory QA prep.
+crexx_force_raw_diagnostics_for_directory_tests()
+crexx_finalize_directory_qa_tiers()
