@@ -28,18 +28,24 @@ start = time("us")
 
 select
   when mode == "get-hit" then do
+    i = .int
+    index = .int
     do i = 1 to iterations
       index = ((i - 1) % size) + 1
       checksum = checksum + length(target.get(keys[index]))
     end
   end
   when mode == "get-miss" then do
+    i = .int
     miss = "missing-" || family
     do i = 1 to iterations
       if target.get(miss) == "" then checksum = checksum + 1
     end
   end
   when mode == "property-hit" then do
+    i = .int
+    index = .int
+    key = .string
     do i = 1 to iterations
       index = ((i - 1) % size) + 1
       key = keys[index]
@@ -47,12 +53,16 @@ select
     end
   end
   when mode == "bracket-hit" then do
+    i = .int
+    index = .int
     do i = 1 to iterations
       index = ((i - 1) % size) + 1
       checksum = checksum + length(target[keys[index]])
     end
   end
   when mode == "set-existing" then do
+    i = .int
+    index = .int
     do i = 1 to iterations
       index = ((i - 1) % size) + 1
       call target.set(keys[index], "u" || i)
@@ -60,6 +70,8 @@ select
     end
   end
   when mode == "set-new" then do
+    i = .int
+    key = .string
     do i = 1 to iterations
       key = "new-" || family || "-" || i
       call target.set(key, "n" || i)
@@ -67,12 +79,15 @@ select
     checksum = target.size()
   end
   when mode == "reset-default" then do
+    i = .int
     do i = 1 to iterations
       target. = "d" || i
     end
     checksum = length(target.get(keys[1])) + target.size()
   end
   when mode == "reset-selective" then do
+    i = .int
+    index = .int
     do i = 1 to iterations
       index = ((i - 1) % size) + 1
       target. = "d" || i
@@ -81,6 +96,10 @@ select
     end
   end
   when mode == "multi-tail" then do
+    i = .int
+    index = .int
+    left = .string
+    right = .string
     compound = .stem()
     do i = 1 to size
       left = "L" || i
@@ -95,6 +114,7 @@ select
     end
   end
   when mode == "histogram" then do
+    i = .int
     histogram = .stem()
     text = "alpha beta gamma alpha delta beta alpha epsilon gamma alpha"
     do i = 1 to iterations

@@ -19,23 +19,27 @@ start = time("us")
 
 select
   when mode == "control" then do
+    i = .int
     do i = 1 to iterations
       checksum = checksum + i
     end
   end
   when mode == "trace-off" then do
+    i = .int
     do i = 1 to iterations
       trace off
       checksum = checksum + i
     end
   end
   when mode == "trace-current" then do
+    i = .int
     do i = 1 to iterations
       trace value _trace_current_mode()
       checksum = checksum + i
     end
   end
   when mode == "trace-transition" then do
+    i = .int
     do i = 1 to iterations
       trace normal
       trace off
@@ -43,30 +47,35 @@ select
     end
   end
   when mode == "address-same-static" then do
+    i = .int
     do i = 1 to iterations
       address crexx
       checksum = checksum + i
     end
   end
   when mode == "address-same-query" then do
+    i = .int
     do i = 1 to iterations
       address value addressenv().environment_name()
       checksum = checksum + i
     end
   end
   when mode == "address-same-query-intended" then do
+    i = .int
     do i = 1 to iterations
       set_rc = _set_address_environment(addressenv().environment_name())
       checksum = checksum + i + set_rc
     end
   end
   when mode == "address-same-current-name" then do
+    i = .int
     do i = 1 to iterations
       set_rc = _set_address_environment(_current_address_environment())
       checksum = checksum + i + set_rc
     end
   end
   when mode == "address-alternating" then do
+    i = .int
     do i = 1 to iterations
       address system
       address crexx
@@ -74,6 +83,7 @@ select
     end
   end
   when mode == "address-command" then do
+    i = .int
     do i = 1 to iterations
       call arraydrop(command_output)
       address crexx "echo nr16" output command_output

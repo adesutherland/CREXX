@@ -90,8 +90,8 @@ do i = 1 to 16
   errors = errors + check(collision.hash(collision_keys[i]) = collision_bucket, "collision bucket")
   call collision.set(collision_keys[i], "value-" || i)
 end
-do i = 1 to 16
-  errors = errors + check(collision.get(collision_keys[i]) == "value-" || i, "collision traversal")
+do traversal_index = 1 to 16
+  errors = errors + check(collision.get(collision_keys[traversal_index]) == "value-" || traversal_index, "collision traversal")
 end
 
 /* Extraction, indexed access, and live/snapshot behavior across reset/write. */

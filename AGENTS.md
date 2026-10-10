@@ -179,7 +179,7 @@ Keep this standing publication policy in `AGENTS.md`, not component worklists.
   gates. Sanitizer worklist requirements below still apply to actual
   first-party sanitizer findings.
 - Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
-- Keep normal successful builds free of compiler warnings and custom build-controller chatter. Fix warning causes rather than applying blanket suppressions. Save detailed generator/controller transcripts in the build tree, provide explicit verbose output when useful, and keep failure diagnostics and nonzero status visible.
+- Keep normal successful builds free of compiler warnings and unnecessary generated notices. Remove notices at their emitting source and fix warning/error causes. Do not hide command stdout/stderr, filter diagnostics, or use blanket warning suppression to make a build look clean. Avoid unnecessary generator work on unchanged inputs.
 - For native object providers, use the C RXPA factories/method bindings and
   checked `SETOBJECTTYPE` service documented in `docs/ai-context/CREXX_LIBS.md`.
   Do not add duplicate Rexx construction or forwarding classes when those C

@@ -32,6 +32,15 @@ run_argv: procedure = .int
   address crexx "run :argv[]" output captured error errors
   command_rc = rc
   if command_rc <> 0 then call show_command_failure action, command_rc, captured, errors
+  else do
+    output_index = .int
+    do output_index = 1 to captured[0]
+      say captured[output_index]
+    end
+    do output_index = 1 to errors[0]
+      say errors[output_index]
+    end
+  end
   return command_rc
 
 remove_tree: procedure = .int
@@ -171,7 +180,6 @@ queue_compile: procedure = .int
   output = work_dir || "/" || name || ".rxbin"
   stamp = work_dir || "/action.sha256"
   if action_current(output, stamp, key) then do
-    say "SKIP: G member" name
     return 0
   end
   requests[requests[0] + 1] = compile_request(name, source, work_dir, import_roots, rxc, rxas, cmake, key, compiler_exits)
@@ -180,7 +188,6 @@ queue_compile: procedure = .int
 queue_command: procedure = .int
   arg expose requests = .channelvalue[], label = .string, work_dir = .string, output = .string, stamp = .string, cmake = .string, key = .string, argv = .string[]
   if action_current(output, stamp, key) then do
-    say "SKIP:" label
     return 0
   end
   requests[requests[0] + 1] = command_request(label, work_dir, output, stamp, cmake, key, argv)
@@ -191,7 +198,6 @@ run_task_wave: procedure = .int
   i = .int
   if requests[0] = 0 then return 0
 
-  say "WAVE:" label "jobs=" || requests[0]
   scope = .taskscope.collectall(pool, -1)
   children = .task[]
   do i = 1 to requests[0]
@@ -284,15 +290,12 @@ link_library: procedure = .int
     call arrayappend rename_stamp, stamp || ".tmp"
     call arrayappend rename_stamp, stamp
     if run_argv("publish Level G link stamp", rename_stamp) <> 0 then return 1
-    say "BUILT: Level G library"
   end
-  else say "SKIP: Level G link"
 
   published = bin_dir || "/rxfnsg.rxbin"
   published_hash = file_hash(published)
   linked_hash = file_hash(linked_image)
   if published_hash <> "" & published_hash = linked_hash then do
-    say "SKIP: Level G publish"
     return 0
   end
 
@@ -305,7 +308,6 @@ link_library: procedure = .int
   call arrayappend rename_command, temporary
   call arrayappend rename_command, published
   if run_argv("publish Level G library", rename_command) <> 0 then return 1
-  say "PUBLISHED: " || published
   return 0
 
 main: procedure = .int

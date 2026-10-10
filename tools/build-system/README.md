@@ -25,12 +25,11 @@ Configure `CREXX_LEVEL_G_BUILD_JOBS` to control the builder's internal worker
 pool. The default is 30 on Apple ARM64 and 5 elsewhere. Independent jobs run
 within each readable wave; dependency boundaries remain serial.
 
-Normal CMake builds keep successful builder chatter in
-`lib/rxfnsg/rexx/stage-g/work/builder.stdout.log` and `builder.stderr.log` under
-the build directory. Failures retain their nonzero result and print diagnostic
-tails plus the complete log paths. Unexpected stderr is still shown on success.
-Set `CREXX_LEVEL_G_BUILD_VERBOSE=ON` to print successful builder decisions;
-direct invocation of the Level B builder retains its diagnostic output.
+The controller and worker do not emit routine dependency-wave notices.
+Child-command stdout/stderr is retained in the visible build output, including
+diagnostics from successful commands. Failed actions also print their action
+identity and nonzero status. CMake invokes the builder directly; no output-
+capture launcher sits between the builder and the build console.
 
 ## Build-graph observation
 

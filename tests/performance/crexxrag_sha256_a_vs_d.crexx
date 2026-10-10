@@ -39,6 +39,8 @@ sha256Pure: procedure = .binary
   state[7] = 528734635
   state[8] = 1541459225
   words = .int[]
+  word_index = .int
+  value = .int
 
   do block = 1 to block_count
     block_offset = (block - 1) * 64
@@ -239,6 +241,7 @@ main: procedure = .int
   data = makeGenerated(bytes)
   digest = .binary
   started = time("us")
+  iteration = .int
   if mode = "pure" then do iteration = 1 to iterations
     digest = sha256Pure(data, constants)
   end

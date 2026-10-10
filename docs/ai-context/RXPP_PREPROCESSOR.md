@@ -52,6 +52,9 @@ Source-tree builds should pass `-m ${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx`
 when calling `rxpp` directly. Installed/wrapper paths use `bin/maclib.rexx`
 beside the installed `rxpp` executable.
 
+Routine preprocessing notices default to off. `-VERBOSE 1` enables them and
+`-VERBOSE 0` disables them; warnings and errors remain visible in either mode.
+
 `rxpp-sh` is intentionally a native C wrapper rather than a Level B driver. It
 owns the editor `CodeBuffer`, writes the active `.rxpp` buffer to a temp file,
 runs RXPP, parses the generated CREXX through the compiler parser, and maps

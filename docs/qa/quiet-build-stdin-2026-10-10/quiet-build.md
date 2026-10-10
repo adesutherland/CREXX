@@ -1,5 +1,13 @@
 # Warning-free builds and quiet Level G output
 
+**Historical receipt:** CP-C-FIND-07 supersedes the output-capture launcher
+described below at Adrian's explicit direction. Its source warning repairs and
+functional controls remain valid. The earlier "zero warnings" observation
+describes launcher-visible output; it did not prove that successful child
+commands emitted no diagnostics. Current builds invoke the builder directly,
+remove notices at their emitting source and show all child stdout/stderr.
+See the [current receipt](../clion-qa-preparation-2026-10-10/README.md).
+
 CP-C-FIND-06 is implemented and qualified locally on `develop`, unpublished.
 The [authoritative plan](../../ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10)
 records the scope. [quiet-qualification.json](quiet-qualification.json) retains

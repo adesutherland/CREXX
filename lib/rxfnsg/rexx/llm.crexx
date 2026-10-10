@@ -755,8 +755,8 @@ llmconfig: class
     return
   _remember: method = .void
     arg key = .string
-    do i = 1 to _supplied.0
-      if _supplied[i] = key then return
+    do supplied_index = 1 to _supplied.0
+      if _supplied[supplied_index] = key then return
     end
     i = _supplied.0 + 1
     _supplied[i] = key
@@ -1078,14 +1078,14 @@ llm_client: class implements .llm
       _status = _gemini.status()
       _error = _gemini.error()
     end
-    category = ""
+    http_category = ""
     http_finish = "complete"
     if _status <> 0 then do
       http_finish = "error"
-      if _status > 0 then category = "http"
-      else category = "provider"
+      if _status > 0 then http_category = "http"
+      else http_category = "provider"
     end
-    _last = .llmresult(text, _status, _error, _driver, category, http_finish, -1)
+    _last = .llmresult(text, _status, _error, _driver, http_category, http_finish, -1)
     return text
   generateJson: method = .string
     arg prompt = .string

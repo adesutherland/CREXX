@@ -52,6 +52,7 @@ wrapperFloatRead: procedure = .int
 
 directFloatRead: procedure = .int
   arg cells = .int, iterations = .int, variant = .string
+  index = .int
   values = .binary
   call binresize values, cells * <sizeof..float>
   do index = 0 to cells - 1
@@ -114,6 +115,7 @@ wrapperIntRead: procedure = .int
 
 directIntRead: procedure = .int
   arg cells = .int, iterations = .int, variant = .string
+  index = .int
   values = .binary
   call binresize values, cells * <sizeof..int>
   do index = 0 to cells - 1
@@ -132,6 +134,7 @@ directIntRead: procedure = .int
 
 encodedIntRead: procedure = .int
   arg cells = .int, iterations = .int, variant = .string
+  index = .int
   values = .binary
   call binresize values, cells * 8
   do index = 0 to cells - 1

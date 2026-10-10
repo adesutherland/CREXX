@@ -5,7 +5,7 @@ project(Compiler C)
 set(CMAKE_C_STANDARD 90)
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:lemon> -p -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.y
+        COMMAND $<TARGET_FILE:lemon> -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.y
         DEPENDS rxcpopgr.y lemon
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h
         COMMENT "Create Options Parser..."
@@ -19,7 +19,7 @@ add_custom_command(
 )
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:lemon> -p -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbgmr.y
+        COMMAND $<TARGET_FILE:lemon> -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbgmr.y
         COMMAND ${CMAKE_COMMAND} -DSHARED=${CMAKE_CURRENT_SOURCE_DIR}/rxcp_tokens.h
             -DGENERATED=${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h
             -P ${CMAKE_CURRENT_SOURCE_DIR}/CheckSharedTokens.cmake
@@ -36,7 +36,7 @@ add_custom_command(
 )
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:lemon> -p -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpcgmr.y
+        COMMAND $<TARGET_FILE:lemon> -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpcgmr.y
         DEPENDS rxcpcgmr.y lemon
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.h
         COMMENT "Create REXX C Parser..."
