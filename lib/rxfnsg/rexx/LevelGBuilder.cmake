@@ -22,6 +22,7 @@ else()
 endif()
 set(CREXX_LEVEL_G_BUILD_JOBS "${_stage_g_default_jobs}" CACHE STRING
   "Parallel jobs used inside the Level B Level G builder")
+option(CREXX_LEVEL_G_BUILD_VERBOSE "Print successful Level G dependency-wave logs" OFF)
 if(NOT CREXX_LEVEL_G_BUILD_JOBS MATCHES "^[1-9][0-9]*$")
   message(FATAL_ERROR "CREXX_LEVEL_G_BUILD_JOBS must be a positive integer")
 endif()
@@ -220,21 +221,21 @@ add_custom_command(
   OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
   BYPRODUCTS ${_stage_g_byproducts}
   COMMAND ${CMAKE_COMMAND} -E make_directory "${_stage_g_work_root}"
-  COMMAND $<TARGET_FILE:rxbvm>
-          "${_stage_g_linked_builder}"
-          -a
-          "${CMAKE_CURRENT_SOURCE_DIR}"
-          "${_stage_g_work_root}"
-          "${CMAKE_BINARY_DIR}/bin"
-          "$<TARGET_FILE:rxc>"
-          "$<TARGET_FILE:rxas>"
-          "$<TARGET_FILE:rxlink>"
-          "$<TARGET_FILE:rxbvm>"
-          "${CMAKE_COMMAND}"
-          "$<CONFIG>"
-          "${CREXX_LEVEL_G_BUILD_JOBS}"
-          all
+  COMMAND ${CMAKE_COMMAND}
+          "-DVM=$<TARGET_FILE:rxbvm>"
+          "-DBUILDER=${_stage_g_linked_builder}"
+          "-DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}"
+          "-DWORK_ROOT=${_stage_g_work_root}"
+          "-DBIN=${CMAKE_BINARY_DIR}/bin"
+          "-DRXC=$<TARGET_FILE:rxc>"
+          "-DRXAS=$<TARGET_FILE:rxas>"
+          "-DRXLINK=$<TARGET_FILE:rxlink>"
+          "-DCONFIG=$<CONFIG>"
+          "-DJOBS=${CREXX_LEVEL_G_BUILD_JOBS}"
+          "-DVERBOSE=${CREXX_LEVEL_G_BUILD_VERBOSE}"
+          -P "${CMAKE_CURRENT_SOURCE_DIR}/RunLevelGBuilder.cmake"
   DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/RunLevelGBuilder.cmake"
     "${_stage_g_linked_builder}"
     ${_stage_g_product_sources}
     ${_stage_g_unicode_tool_sources}

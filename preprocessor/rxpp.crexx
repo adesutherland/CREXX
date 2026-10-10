@@ -974,8 +974,8 @@ normalizeCommandKeywords: procedure=.string
    deftext=changestr(',',parmdef,' ')
    positional_count=0
    saw_keyword=0
-   do i=1 to qwords(deftext)
-      declaration=qword(deftext,i)
+   do definition_index=1 to qwords(deftext)
+      declaration=qword(deftext,definition_index)
       if pos('=',declaration)>0 then saw_keyword=1
       else if saw_keyword=0 then positional_count=positional_count+1
    end
@@ -2081,8 +2081,8 @@ newMacros:  procedure=.string
      end
      if left(testline, 7) = '@.main@' then do
         main_insert = main_insert + 1
-        p = pos('@.main@', line)
-        out[kk] = substr(line, p + 7)
+        main_pos = pos('@.main@', line)
+        out[kk] = substr(line, main_pos + 7)
         iterate
      end
      if left(testline, 7) = '@.tail@' then do
@@ -2231,8 +2231,8 @@ injectVariable: procedure=.string
 
    if force then line2change = strip(substr(testline, length(marker) + 1))
    else do
-     cmt = left(testline, 2)
-     if cmt = '/*' | cmt = '##' then return original
+     initial_comment = left(testline, 2)
+     if initial_comment = '/*' | initial_comment = '##' then return original
    end
 
   /* Do not process comments or RXPP directives. */

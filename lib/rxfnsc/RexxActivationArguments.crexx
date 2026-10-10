@@ -316,8 +316,8 @@ RexxActivationArguments: class
     end
     result = 0
     digit_index = 0
-    do index = .int(mantissa_start) to mantissa_end - 1
-      assembler strchar codepoint,normalized,index
+    do mantissa_index = .int(mantissa_start) to mantissa_end - 1
+      assembler strchar codepoint,normalized,mantissa_index
       if codepoint = 46 then iterate
       digit_index = digit_index + 1
       if digit_index >= first_nonzero & digit_index <= decimal_position then

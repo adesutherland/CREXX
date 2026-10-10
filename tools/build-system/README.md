@@ -25,6 +25,13 @@ Configure `CREXX_LEVEL_G_BUILD_JOBS` to control the builder's internal worker
 pool. The default is 30 on Apple ARM64 and 5 elsewhere. Independent jobs run
 within each readable wave; dependency boundaries remain serial.
 
+Normal CMake builds keep successful builder chatter in
+`lib/rxfnsg/rexx/stage-g/work/builder.stdout.log` and `builder.stderr.log` under
+the build directory. Failures retain their nonzero result and print diagnostic
+tails plus the complete log paths. Unexpected stderr is still shown on success.
+Set `CREXX_LEVEL_G_BUILD_VERBOSE=ON` to print successful builder decisions;
+direct invocation of the Level B builder retains its diagnostic output.
+
 ## Build-graph observation
 
 `cmake_catalogue.py` combines three authoritative configured-build views:

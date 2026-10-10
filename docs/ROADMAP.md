@@ -597,6 +597,71 @@ build prerequisites changed. The [follow-up receipt](qa/classic-frontend-split-2
 retains final inputs/log hashes; source/metadata semantics and the assigned SAN
 closure gates are unchanged. Delivery remains local, unpublished.
 
+**CLion stdin and quiet-build follow-up — CP-C-FIND-05/06 (2026-10-10, closed locally).**
+Adrian requested repair of the two stdin-blocked PULL tests and removal of
+rebuild warnings/routine chatter. Starting local develop is `c2cc9cb59`;
+`origin/develop` remains contained and unrelated active-test artifacts are kept.
+The blocked VMs have been sampled in `FREADLINE`/`read` with an inherited open
+CLion stdin pipe. Only those two confirmed blocked children were terminated;
+the remainder of the user's CTest run continues. Its separate missing-fixture
+failures are retained, not treated as passes or hidden by this repair.
+
+**Vision and intended outcomes:** negative runtime fixtures have deterministic
+stdin under the IDE, terminals and CI, while preserving their expected Classic
+error/source/output contracts. Normal Debug/Release builds produce no avoidable
+compiler warnings or custom successful builder chatter. Keep useful failure
+output and saved builder logs, preserve existing C++17/C++20 UTF-8 path handling,
+local Rexx scopes, documented APIs and the verbose direct Level G builder.
+Compiler/metadata formats and language semantics are outside this repair.
+
+1. **CP-C-F05-AC-01 (verified):** both PULL variants finish and retain 26.4,
+   authored source location and exact `before` output when parent stdin stays
+   open. Verify in normal Debug and Release without another full test run.
+2. **CP-C-F05-AC-02 (verified):** the negative-runtime helper declares deterministic
+   EOF and a generous whole-test hang backstop; neighboring negative cases
+   retain their existing assertions. Existing scheduling/workload is unchanged.
+3. **CP-C-F06-AC-01 (verified):** eliminate observed C++20 filesystem deprecations
+   and Rexx scope/import/shadowing warnings at their sources, with no blanket
+   diagnostic suppression. Verify both standard path tests and affected
+   preprocessor, RexxScript, activation-argument and vector controls.
+4. **CP-C-F06-AC-02 (verified):** normal CMake Level G success emits no custom
+   WAVE/START/BUILT/PUBLISHED output, while preserving logs and visible failure
+   diagnostics/nonzero status. Explicit verbose output and direct builder
+   diagnostics remain available. Verify real success and controlled failure.
+5. **CP-C-F06-AC-03 (verified):** relevant Debug/Release rebuild logs are warning-
+   free and focused correctness passes on retained final inputs. Include docs
+   and receipts in local reviewable commits; publication remains unauthorized.
+   SAN-011/012/SAN-QA-018 retain Codex / next Release 1 release-QA closure.
+
+1. **CP-C-F05-STEP-01 (AC-01/02; complete):** preserve the blocked-read diagnostic,
+   supply an empty input file in the generated negative-runtime helper, add a
+   600-second hang backstop, and replay the two cases with an open parent pipe.
+2. **CP-C-F06-STEP-01 (AC-01; complete):** use the C++20 UTF-8
+   path constructor with the existing C++17 route, disambiguate intentional
+   local bindings and remove the unused test import. Preserve source doc tags.
+3. **CP-C-F06-STEP-02 (AC-02; complete):** capture routine Level G
+   builder output through a CMake launcher, retain full stdout/stderr logs,
+   preserve stderr/failure reporting, and provide explicit verbose replay.
+4. **CP-C-F06-STEP-03 (AC-01–03/F05-AC-01/02; complete):** rebuild affected
+   products in the existing profiles after active testing permits safe reuse,
+   run the smallest decisive controls, retain input/log hashes, update this
+   checkpoint and commit locally. Reuse unchanged broader evidence.
+
+Final follow-up proof: both negative PULL cases pass with a deliberately open
+parent stdin pipe in Debug and Release (2/2 each), retaining their complete
+error/source/output assertions. Debug and Release `all` rebuilds pass with zero
+warnings or custom successful builder chatter; 37 affected controls pass in
+each profile. Real quiet success, explicit verbose replay and controlled
+failure diagnostic/status preservation pass. The
+[stdin receipt](qa/quiet-build-stdin-2026-10-10/stdin-repair.md) and
+[quiet-build receipt](qa/quiet-build-stdin-2026-10-10/quiet-build.md) retain final
+input/log hashes. Ordinary build-tool progress remains; all RexxDoc blocks,
+metadata formats and call semantics are preserved. The earlier full CLion run
+also lacked optional QA fixtures after its product-only rebuild, so it is not
+counted as a full pass. Its prerequisite issue remains separate from this
+requested bounded repair. Delivery is local/unpublished; assigned SAN closure
+is unchanged.
+
 ## Constrained C89 And CMS Portability — PORT-C89
 
 **Status:** roadmap work selected by Adrian on 2026-09-18; implementation and

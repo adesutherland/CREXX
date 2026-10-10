@@ -263,8 +263,8 @@ rexxscriptcoreevaluator: class
       if output_count > 0 then base = base + output_count + 1
       result[base] = "__REXXSCRIPT_COLLECT__"
       result[base + 1] = collect_count
-      do i = 1 to collect_count
-        result[base + 1 + i] = collect_values[i]
+      do collect_index = 1 to collect_count
+        result[base + 1 + collect_index] = collect_values[collect_index]
       end
     end
     return result
@@ -605,9 +605,9 @@ rexxscriptcoreevaluator: class
       return 1
     end
     if _starts_keyword(text, "COLLECT") = 1 then do
-      expr = strip(substr(text, 8))
-      if expr == "" then return _set_error("missing_expression", "missing COLLECT expression", stmtno, 1)
-      if _eval_expression(expr, stmtno) = 0 then return 0
+      collect_expr = strip(substr(text, 8))
+      if collect_expr == "" then return _set_error("missing_expression", "missing COLLECT expression", stmtno, 1)
+      if _eval_expression(collect_expr, stmtno) = 0 then return 0
       collect_count = collect_count + 1
       collect_values[collect_count] = eval_value
       return 1

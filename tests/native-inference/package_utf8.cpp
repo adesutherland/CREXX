@@ -8,7 +8,7 @@ int main() {
         "models/Gr\xc3\xbc\xc3\x9f" "e-\xf0\x9f\x98\x80.gguf"
     };
     for (const auto &expected : paths) {
-        const auto path = std::filesystem::u8path(expected);
+        const auto path = rxllama_package::from_utf8(expected);
         if (rxllama_package::utf8_path(path) != expected) {
             std::cerr << "FAIL: UTF-8 package path bytes changed\n";
             return 1;
