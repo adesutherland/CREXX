@@ -53,7 +53,7 @@ rexxclassicbif_abbrev: procedure = .RexxValue
   string_length = rexxclassic_value_length(string_value,config)
   candidate_length = rexxclassic_value_length(candidate_value,config)
   minimum = candidate_length
-  if context.argumentExists(3) then minimum = context.argumentText(3) + 0
+  if context.argumentExists(3) then minimum = (context.argumentText(3) as .int)
   if candidate_length < minimum | string_length < candidate_length then return .RexxValue("0")
   if \rexxclassic_value_prefix_equal(string_value,candidate_value,candidate_length,config) then return .RexxValue("0")
   return .RexxValue("1")

@@ -1,0 +1,355 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+        Start 1753: levelc_bif_reference_audit_linked_opt
+  1/169 Test #1753: levelc_bif_reference_audit_linked_opt .....   Passed  110.49 sec
+        Start 1752: levelc_bif_reference_audit_opt
+  2/169 Test #1752: levelc_bif_reference_audit_opt ............   Passed   99.50 sec
+        Start 1130: levelc_bif_inventory
+        Start 1729: levelc_bif_whole_linked_opt
+        Start 1731: levelc_bif_whole_linked_noopt
+        Start 1733: levelc_bif_errortext_linked_opt
+        Start 1743: levelc_bif_numeric_context_linked_noopt
+        Start 1735: levelc_bif_errortext_linked_noopt
+        Start 1741: levelc_bif_numeric_context_linked_opt
+        Start 1737: levelc_bif_integer_limits_linked_opt
+        Start 1719: levelc_bif_queued_linked_opt
+        Start 1721: levelc_bif_queued_linked_noopt
+  3/169 Test #1735: levelc_bif_errortext_linked_noopt .........   Passed    6.47 sec
+        Start 1739: levelc_bif_integer_limits_linked_noopt
+  4/169 Test #1733: levelc_bif_errortext_linked_opt ...........   Passed    6.53 sec
+        Start 1728: levelc_bif_whole_opt
+  5/169 Test #1731: levelc_bif_whole_linked_noopt .............   Passed    6.84 sec
+        Start 1143: levelc_bif_config_lifecycle
+  6/169 Test #1721: levelc_bif_queued_linked_noopt ............   Passed    7.19 sec
+        Start 1740: levelc_bif_numeric_context_opt
+  7/169 Test #1719: levelc_bif_queued_linked_opt ..............   Passed    7.32 sec
+        Start 1144: levelc_bif_config_lifecycle_noopt
+  8/169 Test #1729: levelc_bif_whole_linked_opt ...............   Passed    7.52 sec
+        Start 1742: levelc_bif_numeric_context_noopt
+  9/169 Test #1737: levelc_bif_integer_limits_linked_opt ......   Passed    8.14 sec
+        Start 1732: levelc_bif_errortext_opt
+ 10/169 Test #1741: levelc_bif_numeric_context_linked_opt .....   Passed    8.87 sec
+        Start 1734: levelc_bif_errortext_noopt
+ 11/169 Test #1743: levelc_bif_numeric_context_linked_noopt ...   Passed    9.44 sec
+        Start 1730: levelc_bif_whole_noopt
+ 12/169 Test #1728: levelc_bif_whole_opt ......................   Passed    6.08 sec
+        Start 1718: levelc_bif_queued_opt
+ 13/169 Test #1732: levelc_bif_errortext_opt ..................   Passed    5.18 sec
+        Start 1736: levelc_bif_integer_limits_opt
+ 14/169 Test #1144: levelc_bif_config_lifecycle_noopt .........   Passed    6.37 sec
+        Start 1720: levelc_bif_queued_noopt
+ 15/169 Test #1734: levelc_bif_errortext_noopt ................   Passed    5.09 sec
+        Start 1727: levelc_bif_sourceline_linked_noopt
+ 16/169 Test #1143: levelc_bif_config_lifecycle ...............   Passed    7.29 sec
+        Start 1724: levelc_bif_sourceline_linked_opt
+ 17/169 Test #1739: levelc_bif_integer_limits_linked_noopt ....   Passed    8.01 sec
+        Start 1738: levelc_bif_integer_limits_noopt
+ 18/169 Test #1740: levelc_bif_numeric_context_opt ............   Passed    7.43 sec
+        Start 1141: levelc_bif_shadow
+ 19/169 Test #1730: levelc_bif_whole_noopt ....................   Passed    5.41 sec
+        Start 1142: levelc_bif_shadow_noopt
+ 20/169 Test #1742: levelc_bif_numeric_context_noopt ..........   Passed    7.61 sec
+        Start 1120: levelc_bif_syntax_local
+ 21/169 Test #1718: levelc_bif_queued_opt .....................   Passed    5.85 sec
+        Start 1115: levelc_bif_missing_required
+ 22/169 Test #1141: levelc_bif_shadow .........................   Passed    4.52 sec
+        Start 1121: levelc_bif_syntax_local_noopt
+ 23/169 Test #1142: levelc_bif_shadow_noopt ...................   Passed    4.60 sec
+        Start 1118: levelc_bif_syntax_signal
+ 24/169 Test #1720: levelc_bif_queued_noopt ...................   Passed    5.76 sec
+        Start 1119: levelc_bif_syntax_signal_noopt
+ 25/169 Test #1120: levelc_bif_syntax_local ...................   Passed    4.67 sec
+        Start 3314: crexx_native_address_crexx_smoke
+ 26/169 Test #1736: levelc_bif_integer_limits_opt .............   Passed    6.59 sec
+        Start 1744: levelb_bif_numeric_context_opt
+ 27/169 Test #1130: levelc_bif_inventory ......................   Passed   20.25 sec
+        Start 1748: levelg_bif_numeric_context_opt
+ 28/169 Test #1738: levelc_bif_integer_limits_noopt ...........   Passed    6.21 sec
+        Start 1746: levelb_bif_numeric_context_noopt
+ 29/169 Test #1727: levelc_bif_sourceline_linked_noopt ........   Passed    7.08 sec
+        Start 1750: levelg_bif_numeric_context_noopt
+ 30/169 Test #1724: levelc_bif_sourceline_linked_opt ..........   Passed    7.09 sec
+        Start 1726: levelc_bif_sourceline_crlf_noopt
+ 31/169 Test #1115: levelc_bif_missing_required ...............   Passed    4.53 sec
+        Start 1723: levelc_bif_sourceline_crlf_opt
+ 32/169 Test #1121: levelc_bif_syntax_local_noopt .............   Passed    4.54 sec
+        Start 1722: levelc_bif_sourceline_opt
+ 33/169 Test #1119: levelc_bif_syntax_signal_noopt ............   Passed    4.56 sec
+        Start 1725: levelc_bif_sourceline_noopt
+ 34/169 Test #1118: levelc_bif_syntax_signal ..................   Passed    4.58 sec
+        Start 1665: levelc_bif_syntax_signal_tree_shape
+ 35/169 Test #1744: levelb_bif_numeric_context_opt ............   Passed    4.57 sec
+        Start 2735: testRexxClassicBifBitwise_noopt
+ 36/169 Test #1748: levelg_bif_numeric_context_opt ............   Passed    4.59 sec
+        Start 2775: testRexxClassicBifLeft_noopt
+ 37/169 Test #1746: levelb_bif_numeric_context_noopt ..........   Passed    4.51 sec
+        Start 2827: testRexxClassicBifWordlength_noopt
+ 38/169 Test #1750: levelg_bif_numeric_context_noopt ..........   Passed    4.47 sec
+        Start 2803: testRexxClassicBifStrip_noopt
+ 39/169 Test #1726: levelc_bif_sourceline_crlf_noopt ..........   Passed    5.39 sec
+        Start 2795: testRexxClassicBifRight_noopt
+ 40/169 Test #1665: levelc_bif_syntax_signal_tree_shape .......   Passed    2.59 sec
+        Start 2753: testRexxClassicBifCountstr_noopt
+ 41/169 Test #2735: testRexxClassicBifBitwise_noopt ...........   Passed    2.22 sec
+        Start 2823: testRexxClassicBifWord_noopt
+ 42/169 Test #2775: testRexxClassicBifLeft_noopt ..............   Passed    2.14 sec
+        Start 2743: testRexxClassicBifCentre_noopt
+ 43/169 Test #2827: testRexxClassicBifWordlength_noopt ........   Passed    2.15 sec
+        Start 2793: testRexxClassicBifReverse_noopt
+ 44/169 Test #2803: testRexxClassicBifStrip_noopt .............   Passed    2.19 sec
+        Start 2763: testRexxClassicBifDelstr_noopt
+ 45/169 Test #1723: levelc_bif_sourceline_crlf_opt ............   Passed    5.43 sec
+        Start 2833: testRexxClassicBifX2b_noopt
+ 46/169 Test #2795: testRexxClassicBifRight_noopt .............   Passed    2.29 sec
+        Start 2829: testRexxClassicBifWordpos_noopt
+ 47/169 Test #2753: testRexxClassicBifCountstr_noopt ..........   Passed    2.28 sec
+        Start 2791: testRexxClassicBifRandom_noopt
+ 48/169 Test #2823: testRexxClassicBifWord_noopt ..............   Passed    2.29 sec
+        Start 2807: testRexxClassicBifSubword_noopt
+ 49/169 Test #1722: levelc_bif_sourceline_opt .................   Passed    5.55 sec
+        Start 2811: testRexxClassicBifTime_noopt
+ 50/169 Test #2743: testRexxClassicBifCentre_noopt ............   Passed    2.27 sec
+        Start 2785: testRexxClassicBifOverlay_noopt
+ 51/169 Test #1725: levelc_bif_sourceline_noopt ...............   Passed    5.60 sec
+        Start 2751: testRexxClassicBifCopies_noopt
+ 52/169 Test #2793: testRexxClassicBifReverse_noopt ...........   Passed    2.33 sec
+        Start 2745: testRexxClassicBifChangestr_noopt
+ 53/169 Test #2763: testRexxClassicBifDelstr_noopt ............   Passed    2.34 sec
+        Start 2759: testRexxClassicBifDate_noopt
+ 54/169 Test #2833: testRexxClassicBifX2b_noopt ...............   Passed    2.29 sec
+        Start 2771: testRexxClassicBifInsert_noopt
+ 55/169 Test #2829: testRexxClassicBifWordpos_noopt ...........   Passed    2.31 sec
+        Start 2741: testRexxClassicBifCenter_noopt
+ 56/169 Test #2791: testRexxClassicBifRandom_noopt ............   Passed    2.32 sec
+        Start 2773: testRexxClassicBifLastpos_noopt
+ 57/169 Test #2807: testRexxClassicBifSubword_noopt ...........   Passed    2.29 sec
+        Start 2733: testRexxClassicBifB2x_noopt
+ 58/169 Test #2811: testRexxClassicBifTime_noopt ..............   Passed    2.35 sec
+        Start 2801: testRexxClassicBifSpace_noopt
+ 59/169 Test #2785: testRexxClassicBifOverlay_noopt ...........   Passed    2.34 sec
+        Start 2747: testRexxClassicBifCompare_noopt
+ 60/169 Test #2751: testRexxClassicBifCopies_noopt ............   Passed    2.45 sec
+        Start 2825: testRexxClassicBifWordindex_noopt
+ 61/169 Test #2745: testRexxClassicBifChangestr_noopt .........   Passed    2.46 sec
+        Start 2821: testRexxClassicBifVerify_noopt
+ 62/169 Test #2759: testRexxClassicBifDate_noopt ..............   Passed    2.43 sec
+        Start 2787: testRexxClassicBifPos_noopt
+ 63/169 Test #2771: testRexxClassicBifInsert_noopt ............   Passed    2.47 sec
+        Start 2783: testRexxClassicBifNumeric_noopt
+ 64/169 Test #2741: testRexxClassicBifCenter_noopt ............   Passed    2.52 sec
+        Start 2725: testRexxClassicBifAbbrev_noopt
+ 65/169 Test #2733: testRexxClassicBifB2x_noopt ...............   Passed    2.52 sec
+        Start 2757: testRexxClassicBifD2c_noopt
+ 66/169 Test #2773: testRexxClassicBifLastpos_noopt ...........   Passed    2.61 sec
+        Start 2755: testRexxClassicBifD2x_noopt
+ 67/169 Test #2747: testRexxClassicBifCompare_noopt ...........   Passed    2.53 sec
+        Start 2805: testRexxClassicBifSubstr_noopt
+ 68/169 Test #2801: testRexxClassicBifSpace_noopt .............   Passed    2.60 sec
+        Start 2777: testRexxClassicBifLength_noopt
+ 69/169 Test #2825: testRexxClassicBifWordindex_noopt .........   Passed    2.54 sec
+        Start 2835: testRexxClassicBifX2c_noopt
+ 70/169 Test #2821: testRexxClassicBifVerify_noopt ............   Passed    2.50 sec
+        Start 2765: testRexxClassicBifDelword_noopt
+ 71/169 Test #2787: testRexxClassicBifPos_noopt ...............   Passed    2.45 sec
+        Start 2839: testRexxClassicBifXrange_noopt
+ 72/169 Test #2783: testRexxClassicBifNumeric_noopt ...........   Passed    2.40 sec
+        Start 2739: testRexxClassicBifC2x_noopt
+ 73/169 Test #2725: testRexxClassicBifAbbrev_noopt ............   Passed    2.51 sec
+        Start 2815: testRexxClassicBifTranslate_noopt
+ 74/169 Test #2755: testRexxClassicBifD2x_noopt ...............   Passed    2.50 sec
+        Start 2809: testRexxClassicBifSymbol_noopt
+ 75/169 Test #2757: testRexxClassicBifD2c_noopt ...............   Passed    2.56 sec
+        Start 2831: testRexxClassicBifWords_noopt
+ 76/169 Test #2805: testRexxClassicBifSubstr_noopt ............   Passed    2.54 sec
+        Start 2761: testRexxClassicBifDatatype_noopt
+ 77/169 Test #2777: testRexxClassicBifLength_noopt ............   Passed    2.51 sec
+        Start 2781: testRexxClassicBifMin_noopt
+ 78/169 Test #2765: testRexxClassicBifDelword_noopt ...........   Passed    2.48 sec
+        Start 2817: testRexxClassicBifTrunc_noopt
+ 79/169 Test #2835: testRexxClassicBifX2c_noopt ...............   Passed    2.57 sec
+        Start 2779: testRexxClassicBifMax_noopt
+ 80/169 Test #2839: testRexxClassicBifXrange_noopt ............   Passed    2.47 sec
+        Start 2797: testRexxClassicBifSign_noopt
+ 81/169 Test #3314: crexx_native_address_crexx_smoke ..........   Passed   17.64 sec
+        Start 2769: testRexxClassicBifFormat_noopt
+ 82/169 Test #2739: testRexxClassicBifC2x_noopt ...............   Passed    2.60 sec
+        Start 2727: testRexxClassicBifAbs_noopt
+ 83/169 Test #2815: testRexxClassicBifTranslate_noopt .........   Passed    2.46 sec
+        Start 2723: testRexxClassicBifs_noopt
+ 84/169 Test #2809: testRexxClassicBifSymbol_noopt ............   Passed    2.37 sec
+        Start 1749: levelg_bif_numeric_context_linked_opt
+ 85/169 Test #2831: testRexxClassicBifWords_noopt .............   Passed    2.37 sec
+        Start 1751: levelg_bif_numeric_context_linked_noopt
+ 86/169 Test #2761: testRexxClassicBifDatatype_noopt ..........   Passed    2.38 sec
+        Start 1745: levelb_bif_numeric_context_linked_opt
+ 87/169 Test #2781: testRexxClassicBifMin_noopt ...............   Passed    2.37 sec
+        Start 1747: levelb_bif_numeric_context_linked_noopt
+ 88/169 Test #2817: testRexxClassicBifTrunc_noopt .............   Passed    2.35 sec
+        Start 2737: testRexxClassicBifC2d_noopt
+ 89/169 Test #2779: testRexxClassicBifMax_noopt ...............   Passed    2.31 sec
+        Start 2837: testRexxClassicBifX2d_noopt
+ 90/169 Test #2797: testRexxClassicBifSign_noopt ..............   Passed    2.33 sec
+        Start 2768: testRexxClassicBifErrortext_opt
+ 91/169 Test #2769: testRexxClassicBifFormat_noopt ............   Passed    2.31 sec
+        Start 2790: testRexxClassicBifQueued_opt
+ 92/169 Test #2727: testRexxClassicBifAbs_noopt ...............   Passed    2.44 sec
+        Start 2736: testRexxClassicBifBitwise_opt
+ 93/169 Test #2723: testRexxClassicBifs_noopt .................   Passed    2.51 sec
+        Start 2750: testRexxClassicBifCondition_opt
+ 94/169 Test #1749: levelg_bif_numeric_context_linked_opt .....   Passed    2.53 sec
+        Start 2760: testRexxClassicBifDate_opt
+ 95/169 Test #1751: levelg_bif_numeric_context_linked_noopt ...   Passed    2.55 sec
+        Start 2774: testRexxClassicBifLastpos_opt
+ 96/169 Test #1745: levelb_bif_numeric_context_linked_opt .....   Passed    2.48 sec
+        Start 2772: testRexxClassicBifInsert_opt
+ 97/169 Test #1747: levelb_bif_numeric_context_linked_noopt ...   Passed    2.57 sec
+        Start 2812: testRexxClassicBifTime_opt
+ 98/169 Test #2768: testRexxClassicBifErrortext_opt ...........   Passed    2.07 sec
+        Start 2746: testRexxClassicBifChangestr_opt
+ 99/169 Test #2790: testRexxClassicBifQueued_opt ..............   Passed    2.03 sec
+        Start 2830: testRexxClassicBifWordpos_opt
+100/169 Test #2737: testRexxClassicBifC2d_noopt ...............   Passed    2.46 sec
+        Start 2802: testRexxClassicBifSpace_opt
+101/169 Test #2837: testRexxClassicBifX2d_noopt ...............   Passed    2.47 sec
+        Start 2786: testRexxClassicBifOverlay_opt
+102/169 Test #2736: testRexxClassicBifBitwise_opt .............   Passed    2.03 sec
+        Start 2742: testRexxClassicBifCenter_opt
+103/169 Test #2750: testRexxClassicBifCondition_opt ...........   Passed    1.97 sec
+        Start 2744: testRexxClassicBifCentre_opt
+104/169 Test #2760: testRexxClassicBifDate_opt ................   Passed    1.96 sec
+        Start 2796: testRexxClassicBifRight_opt
+105/169 Test #2774: testRexxClassicBifLastpos_opt .............   Passed    1.96 sec
+        Start 2754: testRexxClassicBifCountstr_opt
+106/169 Test #2772: testRexxClassicBifInsert_opt ..............   Passed    1.92 sec
+        Start 2776: testRexxClassicBifLeft_opt
+107/169 Test #2812: testRexxClassicBifTime_opt ................   Passed    1.95 sec
+        Start 2806: testRexxClassicBifSubstr_opt
+108/169 Test #2830: testRexxClassicBifWordpos_opt .............   Passed    1.89 sec
+        Start 2804: testRexxClassicBifStrip_opt
+109/169 Test #2746: testRexxClassicBifChangestr_opt ...........   Passed    1.95 sec
+        Start 2834: testRexxClassicBifX2b_opt
+110/169 Test #2802: testRexxClassicBifSpace_opt ...............   Passed    1.99 sec
+        Start 2822: testRexxClassicBifVerify_opt
+111/169 Test #2786: testRexxClassicBifOverlay_opt .............   Passed    1.98 sec
+        Start 2764: testRexxClassicBifDelstr_opt
+112/169 Test #2742: testRexxClassicBifCenter_opt ..............   Passed    2.02 sec
+        Start 2788: testRexxClassicBifPos_opt
+113/169 Test #2744: testRexxClassicBifCentre_opt ..............   Passed    2.01 sec
+        Start 2752: testRexxClassicBifCopies_opt
+114/169 Test #2796: testRexxClassicBifRight_opt ...............   Passed    2.01 sec
+        Start 2726: testRexxClassicBifAbbrev_opt
+115/169 Test #2754: testRexxClassicBifCountstr_opt ............   Passed    1.97 sec
+        Start 2824: testRexxClassicBifWord_opt
+116/169 Test #2776: testRexxClassicBifLeft_opt ................   Passed    1.92 sec
+        Start 2828: testRexxClassicBifWordlength_opt
+117/169 Test #2806: testRexxClassicBifSubstr_opt ..............   Passed    1.96 sec
+        Start 2762: testRexxClassicBifDatatype_opt
+118/169 Test #2804: testRexxClassicBifStrip_opt ...............   Passed    1.96 sec
+        Start 2766: testRexxClassicBifDelword_opt
+119/169 Test #2834: testRexxClassicBifX2b_opt .................   Passed    1.94 sec
+        Start 2748: testRexxClassicBifCompare_opt
+120/169 Test #2822: testRexxClassicBifVerify_opt ..............   Passed    1.94 sec
+        Start 2734: testRexxClassicBifB2x_opt
+121/169 Test #2764: testRexxClassicBifDelstr_opt ..............   Passed    1.96 sec
+        Start 2778: testRexxClassicBifLength_opt
+122/169 Test #2788: testRexxClassicBifPos_opt .................   Passed    1.95 sec
+        Start 2792: testRexxClassicBifRandom_opt
+123/169 Test #2752: testRexxClassicBifCopies_opt ..............   Passed    1.92 sec
+        Start 2826: testRexxClassicBifWordindex_opt
+124/169 Test #2824: testRexxClassicBifWord_opt ................   Passed    1.90 sec
+        Start 2808: testRexxClassicBifSubword_opt
+125/169 Test #2726: testRexxClassicBifAbbrev_opt ..............   Passed    1.91 sec
+        Start 2832: testRexxClassicBifWords_opt
+126/169 Test #2828: testRexxClassicBifWordlength_opt ..........   Passed    1.91 sec
+        Start 2784: testRexxClassicBifNumeric_opt
+127/169 Test #2762: testRexxClassicBifDatatype_opt ............   Passed    1.88 sec
+        Start 2758: testRexxClassicBifD2c_opt
+128/169 Test #2766: testRexxClassicBifDelword_opt .............   Passed    1.93 sec
+        Start 2756: testRexxClassicBifD2x_opt
+129/169 Test #2748: testRexxClassicBifCompare_opt .............   Passed    1.90 sec
+        Start 2840: testRexxClassicBifXrange_opt
+130/169 Test #2778: testRexxClassicBifLength_opt ..............   Passed    1.87 sec
+        Start 2794: testRexxClassicBifReverse_opt
+131/169 Test #2734: testRexxClassicBifB2x_opt .................   Passed    1.93 sec
+        Start 2836: testRexxClassicBifX2c_opt
+132/169 Test #2792: testRexxClassicBifRandom_opt ..............   Passed    1.93 sec
+        Start 2816: testRexxClassicBifTranslate_opt
+133/169 Test #2832: testRexxClassicBifWords_opt ...............   Passed    2.01 sec
+        Start 2810: testRexxClassicBifSymbol_opt
+134/169 Test #2808: testRexxClassicBifSubword_opt .............   Passed    2.02 sec
+        Start 2740: testRexxClassicBifC2x_opt
+135/169 Test #2826: testRexxClassicBifWordindex_opt ...........   Passed    2.06 sec
+        Start 2780: testRexxClassicBifMax_opt
+136/169 Test #2784: testRexxClassicBifNumeric_opt .............   Passed    2.03 sec
+        Start 2798: testRexxClassicBifSign_opt
+137/169 Test #2758: testRexxClassicBifD2c_opt .................   Passed    2.11 sec
+        Start 2818: testRexxClassicBifTrunc_opt
+138/169 Test #2840: testRexxClassicBifXrange_opt ..............   Passed    2.06 sec
+        Start 2770: testRexxClassicBifFormat_opt
+139/169 Test #2756: testRexxClassicBifD2x_opt .................   Passed    2.06 sec
+        Start 2728: testRexxClassicBifAbs_opt
+140/169 Test #2794: testRexxClassicBifReverse_opt .............   Passed    2.04 sec
+        Start 2782: testRexxClassicBifMin_opt
+141/169 Test #2836: testRexxClassicBifX2c_opt .................   Passed    2.03 sec
+        Start 2724: testRexxClassicBifs_opt
+142/169 Test #2816: testRexxClassicBifTranslate_opt ...........   Passed    2.06 sec
+        Start 2738: testRexxClassicBifC2d_opt
+143/169 Test #2780: testRexxClassicBifMax_opt .................   Passed    1.92 sec
+        Start 2838: testRexxClassicBifX2d_opt
+144/169 Test #2810: testRexxClassicBifSymbol_opt ..............   Passed    1.97 sec
+        Start 2789: testRexxClassicBifQueued_noopt
+145/169 Test #2740: testRexxClassicBifC2x_opt .................   Passed    1.98 sec
+        Start 2767: testRexxClassicBifErrortext_noopt
+146/169 Test #2798: testRexxClassicBifSign_opt ................   Passed    1.94 sec
+        Start 2749: testRexxClassicBifCondition_noopt
+147/169 Test #2818: testRexxClassicBifTrunc_opt ...............   Passed    1.96 sec
+        Start 2800: testRexxClassicBifSourceline_opt
+148/169 Test #2728: testRexxClassicBifAbs_opt .................   Passed    1.95 sec
+        Start 2732: testRexxClassicBifArg_opt
+149/169 Test #2770: testRexxClassicBifFormat_opt ..............   Passed    1.96 sec
+        Start 2799: testRexxClassicBifSourceline_noopt
+150/169 Test #2724: testRexxClassicBifs_opt ...................   Passed    1.94 sec
+        Start 2731: testRexxClassicBifArg_noopt
+151/169 Test #2782: testRexxClassicBifMin_opt .................   Passed    1.96 sec
+        Start 2819: testRexxClassicBifValue_noopt
+152/169 Test #2738: testRexxClassicBifC2d_opt .................   Passed    1.96 sec
+        Start 2820: testRexxClassicBifValue_opt
+153/169 Test #2838: testRexxClassicBifX2d_opt .................   Passed    1.94 sec
+        Start 2814: testRexxClassicBifTrace_opt
+154/169 Test #2767: testRexxClassicBifErrortext_noopt .........   Passed    2.24 sec
+        Start 2730: testRexxClassicBifAddress_opt
+155/169 Test #2800: testRexxClassicBifSourceline_opt ..........   Passed    1.87 sec
+        Start 2813: testRexxClassicBifTrace_noopt
+156/169 Test #2789: testRexxClassicBifQueued_noopt ............   Passed    2.30 sec
+        Start 2729: testRexxClassicBifAddress_noopt
+157/169 Test #2732: testRexxClassicBifArg_opt .................   Passed    1.93 sec
+158/169 Test #2749: testRexxClassicBifCondition_noopt .........   Passed    2.32 sec
+159/169 Test #2799: testRexxClassicBifSourceline_noopt ........   Passed    2.22 sec
+160/169 Test #2819: testRexxClassicBifValue_noopt .............   Passed    2.19 sec
+161/169 Test #2731: testRexxClassicBifArg_noopt ...............   Passed    2.23 sec
+162/169 Test #2820: testRexxClassicBifValue_opt ...............   Passed    1.70 sec
+163/169 Test #2814: testRexxClassicBifTrace_opt ...............   Passed    1.54 sec
+164/169 Test #2730: testRexxClassicBifAddress_opt .............   Passed    1.40 sec
+165/169 Test #2729: testRexxClassicBifAddress_noopt ...........   Passed    1.41 sec
+166/169 Test #2813: testRexxClassicBifTrace_noopt .............   Passed    1.47 sec
+        Start 1755: levelc_bif_reference_audit_linked_noopt
+167/169 Test #1755: levelc_bif_reference_audit_linked_noopt ...   Passed   15.24 sec
+        Start 1754: levelc_bif_reference_audit_noopt
+168/169 Test #1754: levelc_bif_reference_audit_noopt ..........   Passed   12.43 sec
+        Start 1781: classic_stream_lifecycle
+169/169 Test #1781: classic_stream_lifecycle ..................   Passed    2.32 sec
+
+100% tests passed, 0 tests failed out of 169
+
+Label Time Summary:
+compiler            = 510.40 sec*proc (50 tests)
+comprehensive       = 779.46 sec*proc (168 tests)
+levelb              =  14.13 sec*proc (4 tests)
+levelc              = 482.13 sec*proc (42 tests)
+levelg              =  14.15 sec*proc (4 tests)
+linked_opt          = 114.79 sec*proc (59 tests)
+optimizer-parity    = 253.93 sec*proc (118 tests)
+smoke               =   2.51 sec*proc (1 test)
+streams             =   2.32 sec*proc (1 test)
+unicode             =   2.32 sec*proc (1 test)
+
+Total Test time (real) = 294.94 sec

@@ -59,15 +59,15 @@ rexxclassicbif_random: procedure = .RexxValue
                    \context.argumentExists(2) &,
                    \context.argumentExists(3)
   if single_maximum then do
-    maximum = context.argumentText(1) + 0
+    maximum = (context.argumentText(1) as .int)
     if maximum > 100000 then do
       call rexxclassicbif_set_error(context_ref,"40.31",1,context.argumentText(1),"")
       return .RexxValue("")
     end
   end
   else do
-    if context.argumentExists(1) then minimum = context.argumentText(1) + 0
-    if context.argumentExists(2) then maximum = context.argumentText(2) + 0
+    if context.argumentExists(1) then minimum = (context.argumentText(1) as .int)
+    if context.argumentExists(2) then maximum = (context.argumentText(2) as .int)
   end
 
   if minimum > maximum then do
@@ -82,7 +82,7 @@ rexxclassicbif_random: procedure = .RexxValue
   config_ref = context.configReference()
   config = dereference config_ref
   if context.argumentExists(3) then do
-    seed = context.argumentText(3) + 0
+    seed = (context.argumentText(3) as .int)
     call config.seedRandom(seed)
   end
   return .RexxValue.fromInt(minimum + config.nextRandom(maximum - minimum + 1))

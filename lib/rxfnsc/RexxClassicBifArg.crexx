@@ -55,7 +55,7 @@ rexxclassicbif_arg: procedure = .RexxValue
   end
 
   index = .int
-  index = context.argumentText(1) + 0
+  index = (context.argumentText(1) as .int)
   if \context.argumentExists(2) then return activation.argument(index)
   option = context.argumentText(2)
   if option = "E" then do

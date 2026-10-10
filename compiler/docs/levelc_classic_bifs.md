@@ -206,8 +206,11 @@ ANY NUM WHOLE WHOLE>=0 WHOLE>0 WHOLENUM WHOLENUM>=0 0_90 PAD BIN HEX SYM
 
 Option-set rules are supplied by each BIF (for example `ABLMNSUWX`, `LTB`,
 `CDEIS`, `SN` and `EO`). Stream names use exact-length NUL rejection (40.27); broader host APIs remain separate.
-Positional/count WHOLE operands use the approved inclusive signed 64-bit range;
-outside it they report source-anchored `40.12` before VM conversion. WHOLENUM
+Positional/count WHOLE operands use the approved inclusive signed 64-bit range.
+Their validated canonical text is converted directly to `.int`, preserving
+INT64_MAX without a binary floating intermediate. Direct adapters and the
+shared BIF dispatch follow the same conversion rule.
+Outside it they report source-anchored `40.12` before VM conversion. WHOLENUM
 radix numeric operands retain arbitrary precision. This integer argument limit
 is not a promise that every in-range allocation can be fulfilled.
 

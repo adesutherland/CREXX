@@ -44,7 +44,7 @@ rexxclassicbif_right: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return .RexxValue("")
 
   width = .int
-  width = context.argumentText(2) + 0
+  width = (context.argumentText(2) as .int)
   config = context.characterConfig()
 
   if config.isByteProfile() then do

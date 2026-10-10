@@ -44,7 +44,7 @@ rexxclassicbif_wordindex: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0") = 0 then return .RexxValue("")
 
   wordnum = .int
-  wordnum = context.argumentText(2) + 0
+  wordnum = (context.argumentText(2) as .int)
   config = context.characterConfig()
 
   if config.isByteProfile() then do

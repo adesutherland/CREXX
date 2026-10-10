@@ -44,10 +44,10 @@ rexxclassicbif_substr: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0 oPAD") = 0 then return .RexxValue("")
 
   start = .int
-  start = context.argumentText(2) + 0
+  start = (context.argumentText(2) as .int)
   length_supplied = context.argumentExists(3)
   length = 0
-  if length_supplied then length = context.argumentText(3) + 0
+  if length_supplied then length = (context.argumentText(3) as .int)
   config = context.characterConfig()
 
   if config.isByteProfile() then do

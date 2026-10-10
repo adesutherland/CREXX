@@ -1466,11 +1466,23 @@ native payload ownership. Copies share a handle; explicit close closes aliases
 and finalization closes remaining resources. No forwarding construction class
 or VM opcode is added. Dynamic metadata and static archives are packaged through
 the ordinary provider catalogue; rxfnsc stages rxfnsg, rxcstream and rxfs imports.
+`stage-c-rexx-tools` explicitly builds `cstream_static` as well as the dynamic
+provider selected by those imports. Fresh product payloads need both
+`bin/providers/rxcstream.rxplugin` and `rxcstream.a` (`.lib` on MSVC); a dynamic
+Classic import alone does not build the native archive. The core ZIP smoke
+compiles and relocates `tests/rxpa/classic_stream_package.rexx`, verifying decoded
+text and exact Windows-1252 bytes before accepting the archive for plugin jobs.
 
 Read [the Classic contract](../../compiler/docs/levelc_unicode_and_streams.md)
 for raw ordinals versus decoded text, ENCODING, strict/replacement failures,
 default streams and whole-file conversion cost. Typed B/G APIs and RexxScript
 keep their existing value and sandbox boundaries.
+
+Classic BIF `WHOLE` validation normalizes operands to canonical signed-64-bit
+integer text. Consume that text with the checked `as .int` conversion. Adding
+zero first selects binary floating arithmetic and can round INT64_MAX to 2^63
+before narrowing, causing a host-dependent conversion error. Ordinary numeric
+arithmetic and Classic numeric-context normalization keep their own contracts.
 
 RXVML descriptor entry calls require a bytecode procedure. A direct native
 provider descriptor returns an entry-validation error; compiled bytecode calls

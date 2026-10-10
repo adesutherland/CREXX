@@ -19,8 +19,8 @@ rexxclassicbif_charin: procedure = .RexxValue
   stream = _open(context_ref,name,1)
   start = -1
   count = 1
-  if context.argumentExists(2) then start = context.argumentText(2) - 1
-  if context.argumentExists(3) then count = context.argumentText(3) + 0
+  if context.argumentExists(2) then start = (context.argumentText(2) as .int) - 1
+  if context.argumentExists(3) then count = (context.argumentText(3) as .int)
   if context.argumentExists(2) & \stream.positionable() then return _position_error(context_ref,name)
   value = stream.readCharacters(start,count)
   call _save(context_ref,name,1,stream)
@@ -33,7 +33,7 @@ rexxclassicbif_linein: procedure = .RexxValue
   context = dereference context_ref
   call context.clearError()
   if rexxclassicbif_check_args(context_ref,"oANY oWHOLE>0 oWHOLE>=0") = 0 then return .RexxValue("")
-  if context.argumentExists(3) & context.argumentText(3) + 0 > 1 then do
+  if context.argumentExists(3) & (context.argumentText(3) as .int) > 1 then do
     call rexxclassicbif_set_error(context_ref,"40.39",3,context.argumentText(3),"")
     return .RexxValue("")
   end
@@ -42,8 +42,8 @@ rexxclassicbif_linein: procedure = .RexxValue
   stream = _open(context_ref,name,1)
   start = -1
   count = 1
-  if context.argumentExists(2) then start = context.argumentText(2) - 1
-  if context.argumentExists(3) then count = context.argumentText(3) + 0
+  if context.argumentExists(2) then start = (context.argumentText(2) as .int) - 1
+  if context.argumentExists(3) then count = (context.argumentText(3) as .int)
   if context.argumentExists(2) & \stream.positionable() then return _position_error(context_ref,name)
   value = stream.readLine(start,count)
   call _save(context_ref,name,1,stream)
@@ -62,12 +62,12 @@ rexxclassicbif_charout: procedure = .RexxValue
   if context.argumentExists(3) & \stream.positionable() then return _position_error(context_ref,name)
   result = .int
   if \context.argumentExists(2) then do
-    if context.argumentExists(3) then result = stream.positionOutput(context.argumentText(3) - 1,0)
+    if context.argumentExists(3) then result = stream.positionOutput((context.argumentText(3) as .int) - 1,0)
     else result = stream.close()
   end
   else do
     start = -1
-    if context.argumentExists(3) then start = context.argumentText(3) - 1
+    if context.argumentExists(3) then start = (context.argumentText(3) as .int) - 1
     result = stream.writeCharacters(context.argumentText(2),start)
   end
   call _save(context_ref,name,2,stream)
@@ -86,12 +86,12 @@ rexxclassicbif_lineout: procedure = .RexxValue
   if context.argumentExists(3) & \stream.positionable() then return _position_error(context_ref,name)
   result = .int
   if \context.argumentExists(2) then do
-    if context.argumentExists(3) then result = stream.positionOutput(context.argumentText(3) - 1,1)
+    if context.argumentExists(3) then result = stream.positionOutput((context.argumentText(3) as .int) - 1,1)
     else result = stream.close()
   end
   else do
     start = -1
-    if context.argumentExists(3) then start = context.argumentText(3) - 1
+    if context.argumentExists(3) then start = (context.argumentText(3) as .int) - 1
     result = stream.writeLine(context.argumentText(2),start)
   end
   call _save(context_ref,name,2,stream)

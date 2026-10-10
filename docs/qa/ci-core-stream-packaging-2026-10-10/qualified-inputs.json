@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "date": "2026-10-10",
+  "source_commit": "10e8184e39ad28e62178055473249925f9db82a7",
+  "failed_workflow": "https://github.com/adesutherland/CREXX/actions/runs/37987446535",
+  "qualified_inputs": {
+    "cmake/CrexxBuildStages.cmake": "397913f926f775b0fec1b41fa89cf63e58bf66576d5dfe71987425ff6dc51e5c",
+    "scripts/package-core-release.py": "2c1b717174c57a97814125ae820e1ee410927fe9bd67ae167768af6da2e47506",
+    "tests/rxpa/classic_stream_package.rexx": "04d2fc3d054810bfe3a3f8847b43d892ed4ab021ed2b23abb6052d0f2a2f8b4c"
+  },
+  "original_archive": {
+    "path": "/tmp/crexx-ci-artifacts.LftFtu/CREXX-user-test-10e8184e39ad28e62178055473249925f9db82a7-macos-arm64.zip",
+    "sha256": "90796356dde2bc1f372bdaf7449eb25846103ef4c2e1d5f6143e5d706a49b95b",
+    "manifest_file_count": 210,
+    "stream_files": [
+      "bin/providers/rxcstream.rxplugin",
+      "bin/rxcstream.rxplugin"
+    ]
+  },
+  "repaired_archive": {
+    "path": "/tmp/crexx-ci-artifacts.LftFtu/repaired-core.zip",
+    "sha256": "802dcb5260b4a1cc6fb60dbd25049a3f07cf8690e274f892ba2639c1b383b0bb",
+    "all_original_manifest_files_unchanged": true,
+    "added_files": {
+      "bin/providers/rxcstream.a": "719526a3b1320db3f8c80536d24ea2b058bbbfcefec68128ab47ca5c2a1a5a24",
+      "bin/providers/rxcstream_static.a": "719526a3b1320db3f8c80536d24ea2b058bbbfcefec68128ab47ca5c2a1a5a24"
+    }
+  },
+  "build": {
+    "configure": "cmake -S . -B cmake-build-release",
+    "command": "cmake --build cmake-build-release --target stage-product --parallel 4",
+    "outcome": "passed",
+    "removed_generated_outputs": [
+      "bin/rxcstream_static.a",
+      "bin/providers/rxcstream.a",
+      "bin/providers/rxcstream_static.a"
+    ],
+    "stage_dependency": "build stage-c-rexx-tools: phony bin/rxcstream_static.a bin/rxdb bin/rxpp bin/rxpp-sh lib/rxfnsc/rxfnsc rexxscript/rexxscript"
+  },
+  "smoke": {
+    "before_outcome": "failed",
+    "before_seconds": 7.987,
+    "after_outcome": "passed",
+    "after_seconds": 8.48,
+    "expected_encoded_hex": "80E9"
+  },
+  "python_regressions": {
+    "command_patterns": [
+      "test_split_release.py",
+      "test_llama_release_pipeline.py",
+      "test_windows*.py"
+    ],
+    "checks": 47,
+    "passed": 46,
+    "skipped": 1,
+    "skip_reason": "Requires native Windows Authenticode"
+  },
+  "retained_local_logs": {
+    "/tmp/crexx-ci-failure.a8oRah": "93fede40fe4eff58eaa72b92f54d1b86774990d4d2048c8404aff6ab2f26ff09",
+    "/tmp/crexx-core-smoke-before.PgBNHh": "d920fc1746a12f9ba5c5f25df9e3ccd7e2b3b57f8c0ed3568650cc9273061c5e",
+    "/tmp/crexx-core-smoke-after.ps4mWE": "2a4414f012cb0f42ca62a97678557bdb7d8ce8dc8189e12afe1433a4aaa00e6a",
+    "/tmp/crexx-stream-stage-build.nRpEEu": "c1db9c2496f272b0495bca357100869c071b2092fa7a227eeffcc073678f53cc",
+    "/tmp/crexx-ci-package-regressions.CpX6MF": "2a78f9613f9b673e795cdc6d30baa428ab275c4d99eb1067ce1854ec431d9c9d"
+  },
+  "expected_publication": {
+    "branch": "origin/develop",
+    "delivery": "published development repair",
+    "automatic_workflows": "expected to pass; actual state belongs to GitHub run records",
+    "release_or_manual_overnight_dispatch": false
+  }
+}

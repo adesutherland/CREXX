@@ -45,7 +45,7 @@ rexxclassicbif_space: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref, "rANY oWHOLE>=0 oPAD") = 0 then return .RexxValue("")
 
   count = 1
-  if context.argumentExists(2) then count = context.argumentText(2) + 0
+  if context.argumentExists(2) then count = (context.argumentText(2) as .int)
   config = context.characterConfig()
 
   if config.isByteProfile() then do

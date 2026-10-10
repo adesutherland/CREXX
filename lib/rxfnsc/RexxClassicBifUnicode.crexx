@@ -433,9 +433,9 @@ rexxclassicbif_graphemesubstr: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0 oANY") = 0 then return .RexxValue("")
   do
-    start = context.argumentText(2) + 0
+    start = (context.argumentText(2) as .int)
     if context.argumentExists(3) then do
-      count = context.argumentText(3) + 0
+      count = (context.argumentText(3) as .int)
       if context.argumentExists(4) then return .RexxValue(rxunicode..graphemeSubstr(context.argumentText(1),start,count,context.argumentText(4)))
       return .RexxValue(rxunicode..graphemeSubstr(context.argumentText(1),start,count))
     end
@@ -464,7 +464,7 @@ rexxclassicbif_graphemepos: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>0") = 0 then return .RexxValue("")
   do
     start = 1
-    if context.argumentExists(3) then start = context.argumentText(3) + 0
+    if context.argumentExists(3) then start = (context.argumentText(3) as .int)
     return .RexxValue(rxunicode..graphemePos(context.argumentText(1),context.argumentText(2),start) || "")
   on signal unicode_error as problem
     call rexxclassicbif_set_error(context_ref,"23.1",1,problem.message(),"")

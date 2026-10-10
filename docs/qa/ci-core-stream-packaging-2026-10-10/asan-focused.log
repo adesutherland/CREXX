@@ -1,0 +1,27 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(levelc_bif_integer_limits\(_linked\)\?_\(opt\|noopt\)\|classic_stream_lifecycle\|crexx_native_address_crexx_smoke\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1736: levelc_bif_integer_limits_opt
+1/6 Test #1736: levelc_bif_integer_limits_opt ............   Passed    4.62 sec
+    Start 1737: levelc_bif_integer_limits_linked_opt
+2/6 Test #1737: levelc_bif_integer_limits_linked_opt .....   Passed    5.22 sec
+    Start 1738: levelc_bif_integer_limits_noopt
+3/6 Test #1738: levelc_bif_integer_limits_noopt ..........   Passed    3.47 sec
+    Start 1739: levelc_bif_integer_limits_linked_noopt
+4/6 Test #1739: levelc_bif_integer_limits_linked_noopt ...   Passed    4.99 sec
+    Start 1781: classic_stream_lifecycle
+5/6 Test #1781: classic_stream_lifecycle .................   Passed    2.28 sec
+    Start 3316: crexx_native_address_crexx_smoke
+6/6 Test #3316: crexx_native_address_crexx_smoke .........   Passed   10.00 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+compiler         =  20.58 sec*proc (5 tests)
+comprehensive    =  30.58 sec*proc (6 tests)
+levelc           =  20.58 sec*proc (5 tests)
+streams          =   2.28 sec*proc (1 test)
+unicode          =   2.28 sec*proc (1 test)
+
+Total Test time (real) =  30.65 sec

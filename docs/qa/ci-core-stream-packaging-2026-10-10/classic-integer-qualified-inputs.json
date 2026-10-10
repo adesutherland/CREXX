@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "source_commit": "10e8184e39ad28e62178055473249925f9db82a7",
+  "code_test_build_inputs": {
+    "cmake/CrexxBuildStages.cmake": "397913f926f775b0fec1b41fa89cf63e58bf66576d5dfe71987425ff6dc51e5c",
+    "compiler/tests/CMakeLists.txt": "85516eabde5a0ef9a157969d4e21e566f31cda0aaa5826f28624dfac1efedd4a",
+    "compiler/tests/classic_unicode_contract.py": "b8b91b3b0c318392756c8a91344982bda85ef2070909f95490fba3872086bf90",
+    "lib/rxfnsc/RexxClassicBifAbbrev.crexx": "b875d8529b831c4986c3944ca7b1e05dd92e91df4851e931d39527b906acbac9",
+    "lib/rxfnsc/RexxClassicBifArg.crexx": "a5b4b0d83f906c2921ea5b7e94e4fa2de18081ea42891f3dc0781c58c11f6356",
+    "lib/rxfnsc/RexxClassicBifCenter.crexx": "dcde44e22760964290b2190ec6865ca587baee197d3b8abe81b4a0d7633a7985",
+    "lib/rxfnsc/RexxClassicBifCopies.crexx": "dc455773e5309e141b564c155c0cce201fb91be341a27cd0781f8e8229f363bf",
+    "lib/rxfnsc/RexxClassicBifDelstr.crexx": "043631ac95fe6c36de9dd819bfc7ac40d89357460785001eddbcf9d5385d9613",
+    "lib/rxfnsc/RexxClassicBifDelword.crexx": "3689993c59c68da353b24d1ab9716ef73b37bbce7f8baf8cdacb619f003d3f42",
+    "lib/rxfnsc/RexxClassicBifInsert.crexx": "5f6e100b7d3e6933dafa14113813dfedd46d3bef68f745dd36fce5570d2adb8c",
+    "lib/rxfnsc/RexxClassicBifLastpos.crexx": "b48c412c4146cde9d89b171b3fba04727952b5a35ef8ec3ffb826d1519dffc3d",
+    "lib/rxfnsc/RexxClassicBifLeft.crexx": "53acb9304f40045f5395e74c7c353961d35aab98737af5cf3137947f5d048a2a",
+    "lib/rxfnsc/RexxClassicBifOverlay.crexx": "2a7075011efc1073cc1e678cb47cb41d73ca209b8522d2a1616a198030c19ef6",
+    "lib/rxfnsc/RexxClassicBifPos.crexx": "ffa753db05f55dfe3a57f3df4cc76561f2cc0896e3fc424263ea2dd3c02cbb3e",
+    "lib/rxfnsc/RexxClassicBifRandom.crexx": "ab07004d382ada6da3df9ca669149755689630f525792d6fffdd36512c7b8b46",
+    "lib/rxfnsc/RexxClassicBifRight.crexx": "31633f703d3232ca51ec1b3f8f4a5fe37fb74a4879a6984cf4024a2b7f770805",
+    "lib/rxfnsc/RexxClassicBifSpace.crexx": "a01a2dcb56cad39f7a0e611a041047c739672dccdf98e428add075404b1e2b6a",
+    "lib/rxfnsc/RexxClassicBifStream.crexx": "a3b9b299a9976bb0b7d7b8959668069832f77077115c74d9b5e1974b29594e15",
+    "lib/rxfnsc/RexxClassicBifSubstr.crexx": "4358ec6a085455a408097b26bdeeacf3c82c559c2408957a85c9d26bda937c4a",
+    "lib/rxfnsc/RexxClassicBifSubword.crexx": "c123c1b63cd4db8571f846ce2b2e03c8bbecfbebe64f8472c43af8ce8183035a",
+    "lib/rxfnsc/RexxClassicBifUnicode.crexx": "afc63525d7c2d6d7ebd72e922349fa14257cf2b920cf0f5a68b2a8ff9f4c411b",
+    "lib/rxfnsc/RexxClassicBifVerify.crexx": "59f11454880fa73d753db6335edc9b93997ae7df66f1854ac07aee7c3257c759",
+    "lib/rxfnsc/RexxClassicBifWord.crexx": "711da435566f6b7ce2251ec95bf527064e70e3cf8d45203fa157b09fade959c1",
+    "lib/rxfnsc/RexxClassicBifWordindex.crexx": "3f07540bfbdfc89e673344b3122338267b8f1c13bc32a84f5b75f65d02545944",
+    "lib/rxfnsc/RexxClassicBifWordlength.crexx": "97e8eca5291fa0c634ded19d467cfcb2c47338ea194f827975891eb12206e2f1",
+    "lib/rxfnsc/RexxClassicBifWordpos.crexx": "a24242fff80588522b2cda99d5763125fc193d83569f23b06f125c474d1b129c",
+    "lib/rxfnsc/RexxClassicBifs.crexx": "2374b9c9a83d93f4fc7b5e5755a3b16abaddfc2191b57a1c6db0cb55d5b59047",
+    "scripts/package-core-release.py": "2c1b717174c57a97814125ae820e1ee410927fe9bd67ae167768af6da2e47506"
+  },
+  "checked_integer_conversions": 54,
+  "source_files_with_preserved_complete_RexxDoc": 24,
+  "diagnostics": {
+    "linux_sanitizer_functional_failures": 4,
+    "asan_lsan_reports": false
+  },
+  "cp1252_before_control": {
+    "outcome": "expected UnicodeDecodeError",
+    "log": "/tmp/crexx-unicode-cp1252-control.y7z2HT"
+  },
+  "full_sanitizer_platform_closure": {
+    "status": "open",
+    "finding": "SAN-QA-018",
+    "owner": "Codex",
+    "gate": "next Release 1 release-QA gate",
+    "explicit_Adrian_assignment_date": "2026-10-10"
+  },
+  "product_builds": {
+    "debug": {
+      "result": "passed",
+      "log": "/tmp/crexx-ci-debug-build-final.T0d7wL"
+    },
+    "release": {
+      "result": "passed",
+      "log": "/tmp/crexx-ci-release-build-final.173R4p"
+    }
+  },
+  "cp1252_final_contract": {
+    "result": "passed",
+    "commands": 156,
+    "seconds": 31.68,
+    "log": "/tmp/crexx-unicode-cp1252-boundary-final.JqOaHy",
+    "includes_int64_max_stream_positions": true
+  },
+  "final_core_zip": {
+    "result": "passed",
+    "path": "/tmp/crexx-ci-artifacts.LftFtu/delivery-core.zip",
+    "sha256": "7bd1e9249487e6235363ab56277cd48dc132196ecf39080e9694d3df44a0158a",
+    "final_rxfnsc_sha256": "22f4be445f9ee9d35693ae48133a6a1bc56883ab950186d0b51125a4697bd557"
+  },
+  "graph_checks": {
+    "product_static_stream": true,
+    "comprehensive_lifecycle_producer": true
+  },
+  "generated_arg_conversion": {
+    "debug": "stoi r8,r16",
+    "release": "stoi r8,r16"
+  },
+  "normal_bif_panel": {
+    "result": "passed",
+    "tests": 169,
+    "log": "/tmp/crexx-ci-debug-bifs.QmUFN2",
+    "sha256": "6547dd71d3fd490af104fef1aa6931b867249ae501bb4ee89e0488d82098c499",
+    "seconds": 294.94
+  },
+  "final_stream_build": {
+    "result": "passed",
+    "log": "/tmp/crexx-ci-final-stream-build.Y2yz2Y"
+  },
+  "normal_matching_focused": {
+    "result": "passed",
+    "tests": 6,
+    "seconds": 19.05,
+    "run": "cmake-build-debug/asan-logs/20261010-101632-ctest"
+  },
+  "normal_bif_panel_reuse": {
+    "qualified_stream_predecessor_sha256": "1df0eb6a66035c5b4d7dbf658e1c1e05320922c441a02572b1b6ac5491b54ae9",
+    "final_stream_sha256": "a3b9b299a9976bb0b7d7b8959668069832f77077115c74d9b5e1974b29594e15",
+    "delta": "Six exact integer casts before stream position subtraction; all other 169-panel code/build/test inputs unchanged. Final focused normal/ASan six-check replay plus complete final 156-command Unicode/stream contract covers this delta."
+  },
+  "maintained_apple_asan": {
+    "builds": [
+      "cmake-build-debugasan/asan-logs/20261010-100331-build",
+      "cmake-build-debugasan/asan-logs/20261010-101405-build"
+    ],
+    "focused": {
+      "result": "passed",
+      "tests": 6,
+      "seconds": 30.65,
+      "run": "cmake-build-debugasan/asan-logs/20261010-101924-ctest"
+    },
+    "leaks": "off: Apple LeakSanitizer unsupported",
+    "full_platform_proof": "assigned to Codex / next Release 1 release-QA gate under SAN-QA-018"
+  }
+}

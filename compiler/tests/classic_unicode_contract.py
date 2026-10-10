@@ -139,6 +139,9 @@ say chars(raw)
 say stream(raw,'C','QUERY READ POSITION')
 say charout(raw,'AB',2)
 say c2x(charin(raw,1,4))
+say length(charin(raw,9223372036854775807,0))
+say charout(raw,,9223372036854775807)
+say stream(raw,'C','QUERY WRITE POSITION')
 say charout(raw)
 say stream(encoded,'C','OPEN WRITE REPLACE ENCODING CP1252 CODEPOINTS')
 say stream(encoded,'C','QUERY ENCODING NAME')
@@ -152,7 +155,7 @@ say stream(encoded,'C','CLOSE')
 say qualify(raw) == raw
 exit
 '''
-    expected = 'READY:\n0\n257\nREADY:\nREADY:\n256\n' + bytes(range(256)).hex().upper() + '\n0\n257\n0\n00414203\n0\nREADY:\nWindows-1252\n0\n0\nREADY:\n3 1\n€é\n0 0\nREADY:\n1\n'
+    expected = 'READY:\n0\n257\nREADY:\nREADY:\n256\n' + bytes(range(256)).hex().upper() + '\n0\n257\n0\n00414203\n0\n0\n9223372036854775807\n0\nREADY:\nWindows-1252\n0\n0\nREADY:\n3 1\n€é\n0 0\nREADY:\n1\n'
     assert execute('streams', source) == expected
     assert raw.read_bytes() == bytes([0,65,66,3]) + bytes(range(4,256))
     assert encoded.read_bytes() == b'\x80\xe9\n'

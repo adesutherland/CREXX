@@ -1,0 +1,56 @@
+1580/3118 Test #1732: levelc_bif_integer_limits_opt .................................***Failed   27.94 sec
+CMake Error at /home/runner/work/CREXX/CREXX/compiler/tests/levelc_queue_linked.cmake:58 (message):
+  rxvm failed (6): PANIC: (SIGNAL CONVERSION_ERROR)
+
+    at module 222 (RexxClassicBifArg) address 236 (0xec)
+    source: RexxClassicBifArg.crexx:58:3:   index = context.argumentText(1) + 0
+    called from:
+    at module 1 (levelc_bif_integer_limits_direct) address 500 (0x1f4)
+    source: levelc_bif_integer_limits.rexx:2:12: say length(arg(9223372036854775807))
+
+
+
+
+1581/3118 Test #1729: levelc_bif_errortext_linked_opt ...............................   Passed   39.20 sec
+1582/3118 Test #1731: levelc_bif_errortext_linked_noopt .............................   Passed   34.81 sec
+1583/3118 Test #1734: levelc_bif_integer_limits_noopt ...............................***Failed   24.22 sec
+CMake Error at /home/runner/work/CREXX/CREXX/compiler/tests/levelc_queue_linked.cmake:58 (message):
+  rxvm failed (6): PANIC: (SIGNAL CONVERSION_ERROR)
+
+    at module 222 (RexxClassicBifArg) address 236 (0xec)
+    source: RexxClassicBifArg.crexx:58:3:   index = context.argumentText(1) + 0
+    called from:
+    at module 1 (levelc_bif_integer_limits_direct_noopt) address 509 (0x1fd)
+    source: levelc_bif_integer_limits.rexx:2:12: say length(arg(9223372036854775807))
+
+
+
+
+1584/3118 Test #1733: levelc_bif_integer_limits_linked_opt ..........................***Failed   37.31 sec
+CMake Error at /home/runner/work/CREXX/CREXX/compiler/tests/levelc_queue_linked.cmake:58 (message):
+  rxvm failed (6): PANIC: (SIGNAL CONVERSION_ERROR)
+
+    at module 145 (RexxClassicBifArg) address 236 (0xec)
+    source: RexxClassicBifArg.crexx:58:3:   index = context.argumentText(1) + 0
+    called from:
+    at module 1 (levelc_bif_integer_limits_linked) address 500 (0x1f4)
+    source: levelc_bif_integer_limits.rexx:2:12: say length(arg(9223372036854775807))
+
+
+
+
+1585/3118 Test #1736: levelc_bif_numeric_context_opt ................................   Passed   23.10 sec
+1586/3118 Test #1735: levelc_bif_integer_limits_linked_noopt ........................***Failed   27.10 sec
+CMake Error at /home/runner/work/CREXX/CREXX/compiler/tests/levelc_queue_linked.cmake:58 (message):
+  rxvm failed (6): PANIC: (SIGNAL CONVERSION_ERROR)
+
+    at module 145 (RexxClassicBifArg) address 236 (0xec)
+    source: RexxClassicBifArg.crexx:58:3:   index = context.argumentText(1) + 0
+    called from:
+    at module 1 (levelc_bif_integer_limits_noopt_linked) address 509 (0x1fd)
+    source: levelc_bif_integer_limits.rexx:2:12: say length(arg(9223372036854775807))
+
+
+
+
+1587/3118 Test #1710: highlight_editor_diagnostics ..................................   Passed  312.59 sec

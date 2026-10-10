@@ -1015,7 +1015,7 @@ rexxclassicbif_abbrev: procedure = .RexxValue
   source = context.argumentText(1)
   abbrev = context.argumentText(2)
   minlen = 0
-  if context.argumentExists(3) then minlen = context.argumentText(3) + 0
+  if context.argumentExists(3) then minlen = (context.argumentText(3) as .int)
   result = 0
   if length(abbrev) >= minlen then do
     if substr(source, 1, length(abbrev)) = abbrev then result = 1
@@ -1221,7 +1221,7 @@ rexxclassicbif_copies: procedure = .RexxValue
   context = dereference context_ref
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0") = 0 then return _context_error(context_ref)
-  return _ok(copies(context.argumentText(1), context.argumentText(2) + 0))
+  return _ok(copies(context.argumentText(1), (context.argumentText(2) as .int)))
 
 /**
  * Classifies a value or tests it against a Classic DATATYPE option.
@@ -1265,7 +1265,7 @@ rexxclassicbif_left: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
-  width = context.argumentText(2) + 0
+  width = (context.argumentText(2) as .int)
   pad = _arg_or(context_ref, 3, " ")
   if width = 0 then return _ok("")
   if width <= length(source) then return _ok(substr(source, 1, width))
@@ -1402,7 +1402,7 @@ rexxclassicbif_pos: procedure = .RexxValue
   needle = context.argumentText(1)
   haystack = context.argumentText(2)
   start = 1
-  if context.argumentExists(3) then start = context.argumentText(3) + 0
+  if context.argumentExists(3) then start = (context.argumentText(3) as .int)
   if length(needle) = 0 then return _ok("0")
   found = .rxfnsb..pos(needle, haystack, start)
   return _ok(found || "")
@@ -1424,7 +1424,7 @@ rexxclassicbif_right: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
-  width = context.argumentText(2) + 0
+  width = (context.argumentText(2) as .int)
   pad = _arg_or(context_ref, 3, " ")
   if width = 0 then return _ok("")
   if width <= length(source) then return _ok(substr(source, length(source) - width + 1, width))
@@ -1470,7 +1470,7 @@ rexxclassicbif_space: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref, "rANY oWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
   count = 1
-  if context.argumentExists(2) then count = context.argumentText(2) + 0
+  if context.argumentExists(2) then count = (context.argumentText(2) as .int)
   pad = _arg_or(context_ref, 3, " ")
   word_count = words(source)
   if word_count = 0 then return _ok("")
@@ -1517,11 +1517,11 @@ rexxclassicbif_substr: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
-  start = context.argumentText(2) + 0
+  start = (context.argumentText(2) as .int)
   source_len = length(source)
 
   if context.argumentExists(3) then do
-    wanted = context.argumentText(3) + 0
+    wanted = (context.argumentText(3) as .int)
     pad = _arg_or(context_ref, 4, " ")
     if wanted = 0 then return _ok("")
     if start > source_len then return _ok(copies(pad, wanted))
@@ -1549,10 +1549,10 @@ rexxclassicbif_subword: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0") = 0 then return _context_error(context_ref)
 
-  start = context.argumentText(2) + 0
+  start = (context.argumentText(2) as .int)
   count_supplied = context.argumentExists(3)
   wordcount = 0
-  if count_supplied then wordcount = context.argumentText(3) + 0
+  if count_supplied then wordcount = (context.argumentText(3) as .int)
   if count_supplied & wordcount = 0 then return _ok("")
 
   config = context.characterConfig()
@@ -1684,7 +1684,7 @@ rexxclassicbif_verify: procedure = .RexxValue
   refchars = context.argumentText(2)
   mode = _arg_or(context_ref, 3, "N")
   start = 1
-  if context.argumentExists(4) then start = context.argumentText(4) + 0
+  if context.argumentExists(4) then start = (context.argumentText(4) as .int)
   if start > length(source) then return _ok("0")
   if length(refchars) = 0 then do
     if mode = "N" then return _ok(start || "")
@@ -1714,7 +1714,7 @@ rexxclassicbif_word: procedure = .RexxValue
   context = dereference context_ref
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0") = 0 then return _context_error(context_ref)
-  return _ok(word(context.argumentText(1), context.argumentText(2) + 0))
+  return _ok(word(context.argumentText(1), (context.argumentText(2) as .int)))
 
 /**
  * Counts blank-delimited words.

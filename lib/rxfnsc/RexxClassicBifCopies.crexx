@@ -43,7 +43,7 @@ rexxclassicbif_copies: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0") = 0 then return .RexxValue("")
 
   count = .int
-  count = context.argumentText(2) + 0
+  count = (context.argumentText(2) as .int)
   config = context.characterConfig()
   if config.isByteProfile() then do
     bytes = context.argument(1).asBinary()
