@@ -1,0 +1,430 @@
+/* cREXX License (MIT). Pika operational core port.
+ * Algorithm: Luke A. D. Hutchison, pikaparser, commit
+ * 8050ceaf70c79a04416fdbdc374e92f9478de7b0. See licenses/Pika-MIT.txt.
+ * This is the reference's ordered, interned clause graph evaluator. Its
+ * specialised zero flags, duplicate priority events, empty placeholders,
+ * strict length improvements and absence of an EOF wave are intentional.
+ */
+options levell
+namespace llpika expose graph parser
+import rxfnsb
+import llcore
+import llhistory
+
+/** Backend normal form: one-based IDs are explicit scheduling ranks.
+ * Kinds: 1 byte set, 2 n-ary sequence, 3 ordered choice, 6 Nothing,
+ * 8 negative / 9 positive predicate, 13 literal, 14 plus, 17 Start.
+ * References, precedence and optional/star must be lowered before execution.
+ */
+graph: class
+  _size = .int
+  _edges = .int
+  _ready = .int
+  _error = .string
+  _op = .int[]
+  _flags = .int[]
+  _text = .binary[]
+  _first = .int[]
+  _count = .int[]
+  _child = .int[]
+  _zero = .int[]
+  _seed = .int[]
+  *: factory
+    _size = 0; _edges = 0; _ready = 0; _error = ''
+    return
+  add: method = .int
+    arg op = .int, value = .binary, children = .int[], flags = 0
+    _size = _size + 1; _ready = 0
+    _op[_size] = op; _text[_size] = value; _flags[_size] = flags
+    _first[_size] = _edges + 1; _count[_size] = children[0]
+    do i = 1 to children[0]
+      _edges = _edges + 1; _child[_edges] = children[i]
+    end
+    return _size
+  build: method = .int
+    if _ready then return _error = ''
+    _ready = 1; _error = ''
+    if _size < 1 | _size > 512 then do
+      _error = 'Pika clause construction limit (1..512)'; return 0
+    end
+    do c = 1 to _size
+      _zero[c] = 0
+      op = _op[c]; count = _count[c]
+      if op <> 1 & op <> 2 & op <> 3 & op <> 6 & op <> 8 & op <> 9 & op <> 13 & op <> 14 & op <> 17 then do
+        _error = 'unsupported Pika normal-form kind at clause ' || c; return 0
+      end
+      if ((op = 2 | op = 3) & count < 2) | ((op = 8 | op = 9 | op = 14) & count <> 1) | ((op = 1 | op = 6 | op = 13 | op = 17) & count <> 0) then do
+        _error = 'Pika clause arity invalid at clause ' || c; return 0
+      end
+      if _flags[c] < 0 | _flags[c] > 1 | (op <> 13 & _flags[c] <> 0) then do
+        _error = 'unsupported Pika terminal flags'; return 0
+      end
+      literalbytes = _text[c]; extent = <blen>(literalbytes)
+      if _flags[c] then do i = 0 to extent - 1
+        if <at..u8>(i) literalbytes > 127 then do
+          _error = 'case-insensitive Pika byte profile requires ASCII literal'; return 0
+        end
+      end
+      do j = 1 to count
+        sub = child(c,j)
+        if sub < 1 | sub > _size then do
+          _error = 'Pika child handle out of range'; return 0
+        end
+      end
+    end
+    changed = 1
+    do while changed
+      changed = 0
+      do c = 1 to _size
+        old = _zero[c]; op = _op[c]
+        select
+          when op = 6 | op = 17 then _zero[c] = 1
+          when op = 13 then do
+            if <blen>(_text[c]) = 0 then _zero[c] = 1
+          end
+          when op = 2 then do
+            _zero[c] = 1
+            do j = 1 to _count[c]
+              if _zero[child(c,j)] = 0 then _zero[c] = 0
+            end
+          end
+          when op = 3 then do j = 1 to _count[c]
+            if _zero[child(c,j)] then do
+              _zero[c] = 1
+              if j < _count[c] then do
+                _error = 'Pika choice has zero-capable nonfinal alternative at clause ' || c; return 0
+              end
+            end
+          end
+          when op = 14 then _zero[c] = _zero[child(c,1)]
+          when op = 8 | op = 9 then do
+            if op = 8 then _zero[c] = 1
+            if _zero[child(c,1)] then do
+              _error = 'Pika predicate has zero-capable operand at clause ' || c; return 0
+            end
+          end
+          otherwise nop
+        end
+        /* Only these reference methods return true when their flag changes. */
+        if (op = 2 | op = 3 | op = 14) & old = 0 & _zero[c] then changed = 1
+      end
+    end
+    do i = 1 to _size * _size
+      _seed[i] = 0
+    end
+    do parent = 1 to _size
+      do j = 1 to _count[parent]
+        sub = child(parent,j)
+        _seed[(sub - 1) * _size + parent] = 1
+        if _op[parent] = 2 & _zero[sub] = 0 then leave
+      end
+    end
+    return 1
+  size: method = .int
+    return _size
+  op: method = .int
+    arg clause = .int
+    return _op[clause]
+  flags: method = .int
+    arg clause = .int
+    return _flags[clause]
+  text: method = .binary
+    arg clause = .int
+    return _text[clause]
+  count: method = .int
+    arg clause = .int
+    return _count[clause]
+  child: method = .int
+    arg clause = .int, slot = .int
+    return _child[_first[clause] + slot - 1]
+  zero: method = .int
+    arg clause = .int
+    return _zero[clause]
+  seed: method = .int
+    arg clause = .int, parent = .int
+    return _seed[(clause - 1) * _size + parent]
+  error: method = .string
+    return _error
+
+  /** Number of paths in unconditional scheduling edges, including length zero.
+   * Acyclicity is a sufficient quiescence condition, not a necessity. Negative
+   * lookup recursion must also be acyclic. -1 means not proved, -2 analysis cap.
+   */
+  eventpaths: method = .int
+    if build() = 0 then return -1
+    incoming = .int[]; visited = .int[]; weight = .int[]
+    do c = 1 to _size
+      weight[c] = 1
+      do parent = 1 to _size
+        if seed(c,parent) & _zero[parent] then incoming[parent] = incoming[parent] + 1
+      end
+      /* lookup recurses only when both current and looked-up clause are Not. */
+      current = c
+      do depth = 1 to _size + 1
+        if _op[current] <> 8 then leave
+        if depth > _size then return -1
+        current = child(current,1)
+      end
+    end
+    total = 0
+    do step = 1 to _size
+      selected = 0
+      do c = 1 to _size
+        if visited[c] = 0 & incoming[c] = 0 then do
+          selected = c; leave
+        end
+      end
+      if selected = 0 then return -1
+      visited[selected] = 1; total = total + weight[selected]
+      if total > 1000000000 then return -2
+      do parent = 1 to _size
+        if seed(selected,parent) & _zero[parent] then do
+          incoming[parent] = incoming[parent] - 1
+          weight[parent] = weight[parent] + weight[selected]
+          if weight[parent] > 1000000000 then return -2
+        end
+      end
+    end
+    return total
+  identity: method = .string
+    out = ''
+    do c = 1 to _size
+      out = out || c || ':' || _op[c] || ':' || _flags[c] || ':' || bin2x(_text[c]) || ':'
+      do j = 1 to _count[c]
+        out = out || child(c,j) || ','
+      end
+      out = out || ';'
+    end
+    return out
+  certificate: method = .string
+    arg root = .int
+    if build() = 0 | root < 1 | root > _size then return 'REJECT|' || _error
+    paths = eventpaths()
+    if paths < 0 then return 'NOT-PROVED|unconditional scheduling cycle or analysis cap'
+    return 'LL-PIKA-CERT-1|8050ceaf-core-byte|root=' || root || '|grammar=' || identity() || '|bound=quadratic-input|eventpaths=' || paths || '|pure finite literals; ranked graph; all allocated histories; no tree enumeration'
+
+/** Owned Pika request; a dense memo index replaces the Java hashmap, while
+ * the event multiset preserves the reference's priority ordering and duplicates.
+ * Fuel covers evaluations including top-down negative lookahead.
+ */
+parser: class
+  _g = .llpika..graph
+  _input = .llcore..stream
+  _arena = .llhistory..arena
+  _root = .int
+  _policy = .string
+  _width = .int
+  _fuel = .int
+  _cells = .int
+  _work = .int
+  _depth = .int
+  _created = .int
+  _updates = .int
+  _entries = .int
+  _ran = .int
+  _status = .int
+  _selected = .int
+  _error = .string
+  _memo = .int[]
+  _queue = .int[]
+  _choice = .int[]
+  _live = .int[]
+  _slot = .int[]
+  _active = .int
+  *: factory
+    arg clauses = .llpika..graph, root = .int, input = .llcore..stream, fuel = 1000000, cells = 8000000, policy = 'reference'
+    _g = clauses; _root = root; _policy = policy; _input = input; _width = input.size() + 1
+    _fuel = fuel; _cells = cells; _arena = .llhistory..arena()
+    _work = 0; _depth = 0; _created = 0; _updates = 0; _entries = 0
+    _ran = 0; _status = 0; _selected = 0; _error = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _policy <> 'reference' & _policy <> 'reachable-reference' & _policy <> 'longest-choice-experiment' then do
+      _status = 3; _error = 'unknown Pika experiment policy'; return 3
+    end
+    if _g.build() = 0 | _root < 1 | _root > _g.size() | _input.error() <> '' then do
+      _status = 3; _error = 'invalid Pika request: ' || _g.error() || _input.error(); return _status
+    end
+    _active = 0
+    if _policy = 'reachable-reference' then call activate(_root)
+    else do clause = 1 to _g.size()
+      _live[clause] = 1
+    end
+    do clause = 1 to _g.size()
+      if _live[clause] then do
+        _active = _active + 1; _slot[clause] = _active
+      end
+    end
+    if _cells < 1 | _width > (_cells <idiv> _active) then do
+      _status = 2; _error = 'Pika resource exhausted: memo index budget'; return _status
+    end
+    do at = _input.size() - 1 to 0 by -1
+      do c = 1 to _g.size()
+        op = _g.op(c)
+        if _live[c] & (op = 1 | op = 13 | op = 17) then _queue[c] = _queue[c] + 1
+      end
+      do forever
+        c = 1
+        do while c <= _g.size()
+          if _queue[c] > 0 then leave
+          c = c + 1
+        end
+        if c > _g.size() then leave
+        _queue[c] = _queue[c] - 1
+        node = evaluate(c,at)
+        if _status = 2 then return _status
+        changed = 0
+        if node > 0 then do
+          _created = _created + 1
+          key = (_slot[c] - 1) * _width + at + 1; old = _memo[key]
+          if old = 0 | _arena.length(node) > _arena.length(old) then do
+            if old = 0 then _entries = _entries + 1
+            _memo[key] = node; changed = 1; _updates = _updates + 1
+          end
+        end
+        do parent = 1 to _g.size()
+          if _live[parent] & _g.seed(c,parent) & (changed | _g.zero(parent)) then _queue[parent] = _queue[parent] + 1
+        end
+      end
+    end
+    _selected = stored(_root,0)
+    if _selected = 0 | _arena.length(_selected) <> _input.size() then do
+      _status = 1; _error = 'Pika root has no full-input stored match'
+    end
+    return _status
+  /** Static dependency closure. Dropping other clauses preserves the relative
+   * order and multiplicity of every event that can affect the root. */
+  activate: method = .void
+    arg clause = .int
+    if _live[clause] then return
+    _live[clause] = 1
+    do slot = 1 to _g.count(clause)
+      call activate(_g.child(clause,slot))
+    end
+    return
+  active: method = .int
+    return _active
+  input: method = .llcore..stream
+    return _input
+  grammaridentity: method = .string
+    return _g.identity()
+  stored: method = .int
+    arg clause = .int, at = .int
+    if _slot[clause] = 0 then return 0
+    return _memo[(_slot[clause] - 1) * _width + at + 1]
+  lookup: method = .int
+    arg clause = .int, at = .int
+    node = stored(clause,at)
+    if node > 0 then return node
+    if _g.op(clause) = 8 then return evaluate(clause,at)
+    if _g.zero(clause) then do
+      children = .int[]
+      return emit(clause,at,0,0,children)
+    end
+    return 0
+  evaluate: method = .int
+    arg clause = .int, at = .int
+    _work = _work + 1
+    if _work > _fuel | _depth >= 512 | _status = 2 then do
+      _status = 2; _error = 'Pika resource exhausted: work or predicate depth'; return 0
+    end
+    _depth = _depth + 1
+    op = _g.op(clause); length = 0; choice = 0; ok = 0
+    children = .int[]
+    select
+      when op = 1 then do
+        value = _g.text(clause); symbol = _input.symbol(at)
+        extent = <blen>(value)
+        do i = 0 to extent - 1
+          if <at..u8>(i) value = symbol then ok = 1
+        end
+        length = 1
+      end
+      when op = 13 then do
+        value = _g.text(clause); length = <blen>(value)
+        ok = at + length <= _input.size()
+        if ok then do i = 1 to length
+          expected = <at..u8>(i - 1) value; actual = _input.symbol(at + i - 1)
+          if _g.flags(clause) then do
+            if expected >= 65 & expected <= 90 then expected = expected + 32
+            if actual >= 65 & actual <= 90 then actual = actual + 32
+          end
+          if expected <> actual then ok = 0
+        end
+      end
+      when op = 6 then ok = 1
+      when op = 17 then ok = at = 0
+      when op = 2 then do
+        ok = 1
+        do i = 1 to _g.count(clause)
+          node = lookup(_g.child(clause,i),at + length)
+          if node = 0 then do
+            ok = 0; leave
+          end
+          children[i] = node; length = length + _arena.length(node)
+        end
+      end
+      when op = 3 then do i = 1 to _g.count(clause)
+        node = lookup(_g.child(clause,i),at)
+        if node > 0 then do
+          if ok = 0 | _arena.length(node) > length then do
+            ok = 1; length = _arena.length(node); choice = i - 1; children[1] = node
+          end
+          if _policy <> 'longest-choice-experiment' then leave
+        end
+      end
+      when op = 8 | op = 9 then do
+        node = lookup(_g.child(clause,1),at)
+        if op = 8 then ok = node = 0
+        else ok = node > 0
+      end
+      when op = 14 then do
+        node = lookup(_g.child(clause,1),at)
+        if node > 0 then do
+          ok = 1; children[1] = node; length = _arena.length(node)
+          tail = lookup(clause,at + length)
+          if tail > 0 then do
+            children[2] = tail; length = length + _arena.length(tail)
+          end
+        end
+      end
+      otherwise nop
+    end
+    _depth = _depth - 1
+    if ok = 0 | _status = 2 then return 0
+    return emit(clause,at,length,choice,children)
+  emit: method = .int
+    arg clause = .int, at = .int, length = .int, choice = .int, children = .int[]
+    node = _arena.add(clause,1,at,length,children); _choice[node] = choice
+    return node
+  canonical: method = .string
+    arg node = .int
+    if node = 0 then return '-'
+    out = '(' || _arena.clause(node) || ',' || _arena.start(node) || ',' || _arena.length(node) || ',' || _choice[node]
+    do i = 1 to _arena.count(node)
+      out = out || canonical(_arena.child(node,i))
+    end
+    return out || ')'
+  policy: method = .string
+    return _policy
+  root: method = .int
+    return _selected
+  result: method = .int
+    if _selected = 0 then return -1
+    return _arena.length(_selected)
+  arena: method = .llhistory..arena
+    return _arena
+  created: method = .int
+    return _created
+  updates: method = .int
+    return _updates
+  entries: method = .int
+    return _entries
+  work: method = .int
+    return _work
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error

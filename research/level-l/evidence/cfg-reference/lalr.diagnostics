@@ -1,0 +1,17 @@
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/cases/lr-reference.y: warning: 2 reduce/reduce conflicts [-Wconflicts-rr]
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/cases/lr-reference.y: warning: reduce/reduce conflict on tokens 'd', 'e' [-Wcounterexamples]
+  First example: 'a' 'c' • 'd' $end
+  First reduce derivation
+    $accept
+    ↳ 0: S                       $end
+         ↳ 1: 'a' A          'd'
+                  ↳ 5: 'c' •
+  Second example: 'b' 'c' • 'd' $end
+  Second reduce derivation
+    $accept
+    ↳ 0: S                       $end
+         ↳ 2: 'b' B          'd'
+                  ↳ 6: 'c' •
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/cases/lr-reference.y:17.4-6: warning: rule useless in parser due to conflicts [-Wother]
+   17 | B: 'c';
+      |    ^~~

@@ -1,0 +1,379 @@
+/* cREXX License (MIT). Owned DFA scanning and reverse dynamic-programming control. */
+options levelb
+namespace llmunch expose automaton scanner
+import llcore
+import lllimits
+import rxfnsb
+
+automaton: class
+  _states = .int
+  _classes = .int
+  _map = .int[]
+  _edges = .int[]
+  _accept = .int[]
+  _error = .string
+  _image = .binary
+  *: factory
+    arg states = .int, classes = .int
+    _states = states; _classes = classes; _error = ''
+    do byte = 0 to 255
+      _map[byte + 1] = -1
+    end
+    return
+  /** Import unchanged pilot subset-construction tables; absent high bytes stay invalid. */
+  legacy: factory
+    arg table = .binary
+    byte = .int
+    _states = 0; _classes = 0; _error = ''
+    do byte = 0 to 255
+      _map[byte + 1] = -1
+    end
+    if <blen>(table) < 136 then do
+      _error = 'truncated DFA header'; return
+    end
+    _states = <at..i32>(0) table; _classes = <at..i32>(4) table
+    if _states < 1 | _states > 4096 | _classes < 1 | _classes > 256 then do
+      _error = 'unsupported DFA dimensions'; return
+    end
+    extent = 136 + _states * 4 + _states * _classes * 4
+    if <blen>(table) <> extent then do
+      _error = 'DFA table extent mismatch'; return
+    end
+    do byte = 0 to 127
+      _map[byte + 1] = <at..u8>(8 + byte) table
+    end
+    do state = 1 to _states
+      _accept[state] = <at..i32>(136 + (state - 1) * 4) table
+    end
+    do edge = 1 to _states * _classes
+      _edges[edge] = <at..i32>(136 + _states * 4 + (edge - 1) * 4) table
+    end
+    return
+  loaded: factory
+    arg data = .binary
+    i = .int; value = .int
+    _states = 0; _classes = 0; _error = 'invalid generated DFA image'
+    if <blen>(data) < 1040 then return
+    if <at..i32>(0) data <> 1279542833 then return
+    states = <at..i32>(4) data; classes = <at..i32>(8) data
+    if states < 1 | states > 4096 | classes < 1 | classes > 256 then return
+    if <blen>(data) <> 1040 + 4 * states * (classes + 1) then return
+    _states = states; _classes = classes
+    /* The image is owned/shared as a binary value; runtime reads never expand
+     * its packed constants into boxed arrays. Validate before exposing it. */
+    do i = 0 to 255
+      value = <at..i32>(16 + i * 4) data
+      if value < -1 | value >= classes then return
+    end
+    if <at..i32>(1040) data <> 0 then return
+    do i = 0 to states - 1
+      if <at..i32>(1040 + i * 4) data > 255 then return
+    end
+    do i = 0 to states * classes - 1
+      value = <at..i32>(1040 + states * 4 + i * 4) data
+      if value < 0 | value > states then return
+    end
+    _image = data
+    _error = ''
+    return
+  image: method = .binary
+    i = .int
+    out = .binary
+    if verify() = 0 then return out
+    if <blen>(_image) <> 0 then return _image
+    call binresize out,1040 + 4 * _states * (_classes + 1)
+    <at..i32>(0) out = 1279542833; <at..i32>(4) out = _states; <at..i32>(8) out = _classes
+    do i = 1 to 256
+      <at..i32>(16 + (i - 1) * 4) out = _map[i]
+    end
+    offset = 1040
+    do i = 1 to _states
+      <at..i32>(offset) out = _accept[i]; offset = offset + 4
+    end
+    do i = 1 to _states * _classes
+      <at..i32>(offset) out = _edges[i]; offset = offset + 4
+    end
+    return out
+  mapping: method = .int
+    arg byte = .int, cls = .int
+    if <blen>(_image) <> 0 then do
+      _error = 'generated DFA image is immutable'; return 0
+    end
+    if byte < 0 | byte > 255 | cls < -1 | cls >= _classes then do
+      _error = 'invalid DFA byte mapping'; return 0
+    end
+    _map[byte + 1] = cls; return 1
+  transition: method = .int
+    arg state = .int, cls = .int, target = .int
+    if <blen>(_image) <> 0 then do
+      _error = 'generated DFA image is immutable'; return 0
+    end
+    if state < 1 | state > _states | cls < 0 | cls >= _classes | target < 0 | target > _states then do
+      _error = 'invalid DFA transition'; return 0
+    end
+    _edges[(state - 1) * _classes + cls + 1] = target; return 1
+  accepting: method = .int
+    arg state = .int, kind = .int
+    if <blen>(_image) <> 0 then do
+      _error = 'generated DFA image is immutable'; return 0
+    end
+    if state < 1 | state > _states | kind > 255 then do
+      _error = 'invalid DFA acceptance'; return 0
+    end
+    _accept[state] = kind; return 1
+  verify: method = .int
+    if _error <> '' then return 0
+    if <blen>(_image) <> 0 then return 1
+    if _states < 1 | _states > 4096 | _classes < 1 | _classes > 256 then do
+      _error = 'unsupported DFA dimensions'; return 0
+    end
+    if _accept[1] <> 0 then do
+      _error = 'nullable lexical rule would prevent progress'; return 0
+    end
+    do byte = 1 to 256
+      if _map[byte] < -1 | _map[byte] >= _classes then do
+        _error = 'invalid DFA cls map'; return 0
+      end
+    end
+    do state = 1 to _states
+      if _accept[state] > 255 then do
+        _error = 'token kind exceeds admitted token alphabet'; return 0
+      end
+    end
+    do edge = 1 to _states * _classes
+      if _edges[edge] < 0 | _edges[edge] > _states then do
+        _error = 'DFA target outside state set'; return 0
+      end
+    end
+    return 1
+  states: method = .int
+    return _states
+  classof: method = .int
+    arg byte = .int
+    if byte < 0 | byte > 255 then return -1
+    if <blen>(_image) <> 0 then return <at..i32>(16 + byte * 4) _image
+    return _map[byte + 1]
+  target: method = .int
+    arg state = .int, cls = .int
+    if cls < 0 | cls >= _classes | state < 1 | state > _states then return 0
+    if <blen>(_image) <> 0 then return <at..i32>(1040 + _states * 4 + ((state - 1) * _classes + cls) * 4) _image
+    return _edges[(state - 1) * _classes + cls + 1]
+  kind: method = .int
+    arg state = .int
+    if state < 1 | state > _states then return 0
+    if <blen>(_image) <> 0 then return <at..i32>(1040 + (state - 1) * 4) _image
+    return _accept[state]
+  error: method = .string
+    return _error
+
+  /** Conservative bound on nonaccepting backup after an accepting prefix.
+   * -1 means a cycle prevents this proof; -2 is the analysis size limit.
+   */
+  backupbound: method = .int
+    if _states > 128 then return -2
+    risk = .int[]; edges = .int[]; state = .int; cls = .int; destination = .int
+    do state = 1 to _states
+      if kind(state) <> 0 then do cls = 0 to _classes - 1
+        destination = target(state,cls)
+        if destination > 0 then do
+          if kind(destination) = 0 then risk[destination] = 1
+        end
+      end
+    end
+    changed = 1
+    do while changed
+      changed = 0
+      do state = 1 to _states
+        if risk[state] then do cls = 0 to _classes - 1
+          destination = target(state,cls)
+          if destination > 0 then do
+            if kind(destination) = 0 & risk[destination] = 0 then do
+              risk[destination] = 1; changed = 1
+            end
+          end
+        end
+      end
+    end
+    bound = 0
+    do state = 1 to _states
+      if risk[state] then do
+        bound = bound + 1
+        do cls = 0 to _classes - 1
+          destination = target(state,cls)
+          if destination > 0 then do
+            if risk[destination] then edges[(state - 1) * _states + destination] = 1
+          end
+        end
+      end
+    end
+    do k = 1 to _states
+      do i = 1 to _states
+        if edges[(i - 1) * _states + k] then do j = 1 to _states
+          if edges[(k - 1) * _states + j] then edges[(i - 1) * _states + j] = 1
+        end
+      end
+    end
+    do state = 1 to _states
+      if edges[(state - 1) * _states + state] then return -1
+    end
+    return bound
+  signature: method = .string
+    out = _states || ':' || _classes || '|'
+    do byte = 1 to 256
+      out = out || classof(byte - 1) || ','
+    end
+    out = out || '|'
+    do state = 1 to _states
+      out = out || kind(state) || ','
+    end
+    out = out || '|'
+    do edge = 1 to _states * _classes
+      out = out || target((edge - 1) / _classes + 1,(edge - 1) % _classes) || ','
+    end
+    return out
+  certificate: method = .string
+    arg mode = .string
+    if verify() = 0 then return 'REJECT|' || _error
+    bound = 'unknown'; assumptions = ''
+    if mode = 'reverse' then do
+      bound = 'linear-input'; assumptions = 'at most q*n transition queries; O(q+n) DP entries; complete buffer; fixed byte DFA; RAM indexing'
+    end
+    else if mode = 'munch' then do
+      backup = backupbound()
+      if backup >= 0 then do
+        bound = 'linear-input'; assumptions = 'backup <= ' || backup || '; fixed DFA; RAM indexing'
+      end
+      else if backup = -1 then assumptions = 'nonaccepting backup cycle; this sufficient condition cannot prove linear scanning'
+      else assumptions = 'backup analysis construction limit: 128 states'
+    end
+    else return 'REJECT|unsupported scanner mode'
+    return 'LL-LEX-CERT-1|backend=' || mode || '@research-1|bound=' || bound || '|' || assumptions || '|grammar=' || signature()
+
+/** Reverse mode memoizes suffix answers using two DFA-state columns, saving
+ * only root-state answers for later tokenization. It requires a complete buffer.
+ */
+scanner: class
+  _dfa = .automaton
+  _source = .binary
+  _mode = .string
+  _result = .llcore..stream
+  _ran = .int
+  _status = .int
+  _offset = .int
+  _steps = .int
+  _fuel = .int
+  _error = .string
+  _ends = .int[]
+  _kinds = .int[]
+  _badstarts = .int[]
+  _badends = .int[]
+  *: factory
+    arg dfa = .automaton, source = .binary, mode = .string, fuel = 10000000
+    _dfa = dfa; _source = source; _mode = mode; _fuel = fuel
+    _result = .llcore..stream.tokens(source)
+    _ran = 0; _status = 0; _offset = 0; _steps = 0; _error = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _dfa.verify() = 0 then do
+      _status = 3; _error = _dfa.error(); return _status
+    end
+    if _mode <> 'reverse' & _mode <> 'munch' & _mode <> 'recover' then do
+      _status = 3; _error = 'unsupported scanner mode'; return _status
+    end
+    if _mode = 'reverse' then call prepare
+    if _status <> 0 then return _status
+    size = <blen>(_source); at = 0
+    do while at < size
+      finish = at; kind = 0
+      if _mode = 'reverse' then do
+        finish = _ends[at + 1]; kind = _kinds[at + 1]
+      end
+      else do
+        cursor = at; state = 1
+        do while cursor < size
+          byte = <at..u8>(cursor) _source
+          cls = _dfa.classof(byte)
+          if cls < 0 then leave
+          _steps = _steps + 1
+          if _steps > _fuel then do
+            _status = 2; _error = lllimits..describe('scan.work',_fuel,_steps); return _status
+          end
+          state = _dfa.target(state,cls)
+          if state = 0 then leave
+          cursor = cursor + 1
+          if _dfa.kind(state) <> 0 then do
+            finish = cursor; kind = _dfa.kind(state)
+          end
+        end
+      end
+      if finish <= at then do
+        _status = 1; _offset = at; _error = 'unmatched byte at offset ' || at
+        if _mode <> 'recover' then return _status
+        bad = _badstarts[0]
+        if bad > 0 then do
+          if _badends[bad] = at then _badends[bad] = at + 1
+          else do
+            bad = bad + 1; _badstarts[bad] = at; _badends[bad] = at + 1
+          end
+        end
+        else do
+          _badstarts[1] = at; _badends[1] = at + 1
+        end
+        at = at + 1; iterate
+      end
+      if kind > 0 then do
+        ok = _result.append(kind,at,finish)
+        if ok = 0 then do
+          _status = 3; _error = _result.error(); return _status
+        end
+      end
+      at = finish
+    end
+    return _status
+  prepare: method = .void
+    size = <blen>(_source); states = _dfa.states()
+    ends = .int[]; kinds = .int[]
+    do at = size to 0 by -1
+      column = (at <mod> 2) * states; following = ((at + 1) <mod> 2) * states
+      cls = -1
+      if at < size then do
+        byte = <at..u8>(at) _source; cls = _dfa.classof(byte)
+      end
+      do state = 1 to states
+        kind = _dfa.kind(state); finish = -1
+        if kind <> 0 then finish = at
+        if cls >= 0 then do
+          _steps = _steps + 1
+          if _steps > _fuel then do
+            _status = 2; _error = lllimits..describe('scan.work',_fuel,_steps); return
+          end
+          target = _dfa.target(state,cls)
+          if target > 0 then do
+            if ends[following + target] > finish then do
+              finish = ends[following + target]; kind = kinds[following + target]
+            end
+          end
+        end
+        ends[column + state] = finish; kinds[column + state] = kind
+      end
+      _ends[at + 1] = ends[column + 1]; _kinds[at + 1] = kinds[column + 1]
+    end
+    return
+  tokens: method = .llcore..stream
+    return _result
+  steps: method = .int
+    return _steps
+  offset: method = .int
+    return _offset
+  error: method = .string
+    return _error
+  errors: method = .int
+    return _badstarts[0]
+  badstart: method = .int
+    arg i = .int
+    return _badstarts[i]
+  badend: method = .int
+    arg i = .int
+    return _badends[i]

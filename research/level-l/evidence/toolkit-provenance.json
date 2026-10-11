@@ -1,0 +1,72 @@
+{
+  "scope": "Focused research correctness and reference conformance, not performance or production qualification",
+  "branch": "levell",
+  "base": "91313bcc5a447e9403f95b1f0bfc4dd9503d0618",
+  "dirty_scope": "uncommitted research/ and performance/ROADMAP.md",
+  "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "sources": {
+    "research/level-l/src/llcore.crexx": "a97949363474bac0c0de1c1c6c3f304e9299bdeeae4a7b90205d01b0b9231f1a",
+    "research/level-l/src/llcheck.crexx": "00309563afc6b4acb6056a76beeeffde6dee0c70abef2b619ccabd7dc12bd305",
+    "research/level-l/src/llcap.crexx": "5c43a2a50b60e1b267a286c251f5d4f51d6b4e6b4519fd0d28e9224eb6ee9599",
+    "research/level-l/src/llhistory.crexx": "046d59447a8dd3cbb1bd20f11dd7f2794d62ee431c18dbf331ae2a65e2d39d0a",
+    "research/level-l/src/llpeg.crexx": "0b29d8299ff0cbe288128cdd52eebe8710a7af21cab2aa0c8752191500efae54",
+    "research/level-l/src/llsquirrel.crexx": "9c62f428ace4a9bf4137a47a80e71c440aa2d75d1358d8b13edd594d357cf7fd",
+    "research/level-l/src/llcfg.crexx": "033dc3bca365004d7216b28a3a44c34a249041cd967b709d0f6c13f4b89509e0",
+    "research/level-l/src/lllr.crexx": "c457e12a9689a172470ce395384901b49806eb8ba694a2b8dd9896b968373a91",
+    "research/level-l/cases/toolkit.crexx": "b67ef8bc64b62d6627e1899e0c375e89a3773d7a54fb501f223aca93720d2c3d",
+    "research/level-l/cases/squirrel.crexx": "504d22fe0592d59646446b4fcc369a06598cca60500257e814d452c68ab351d7",
+    "research/level-l/cases/compare-squirrel.crexx": "c51566136448d17db1521e97783b1d5878e3762dd3deba35eb436b99966a5b5b",
+    "research/level-l/cases/lr.crexx": "be05b5844b5dc6f9fc5f1f96f4a188ae7e88127a218375354fceffb149359f5b",
+    "research/level-l/cases/SquirrelProbe.dart": "0cd7fc07860a659780332fbdce1f077351803e2046f304414f57156384ce0da6",
+    "research/level-l/run-toolkit.sh": "2efecbfe17f52236e4e6db080bf6147096bf7d75b2abd2403cfa3afca1bd0182",
+    "research/level-l/run-squirrel-reference.sh": "470b2bac53982fdf2031a6f8ddf350451918eaf3469d72d425f4ab5c2b8d97a9"
+  },
+  "tools": {
+    "rxc": "dd3c02dbb9df06ee0b4aba6a3f12e8d58f84ec6ffd584e3d82a729ca88fd7ef2",
+    "rxas": "fa7039950b5e00ba7b39ab0abcd6ec0a5a3bbbc3a8d15d5c50e973ca206fc68f",
+    "rxlink": "35b4086467a1a2bbfd17784c8857367a3c24558d6eea0244a747cd086b69207a",
+    "rxtvm": "4a5f9d96af98d97dbc78d5438190331cd232b540cfbadab4b766750d15b41309",
+    "rxbvm": "7a3a9cc8406d63203445d251f61b3012e9a499ded6075bf171b606770cbf8931",
+    "library.rxbin": "692389b6a692811ed3035ac5c212aed0b3341f8b1d49ff2ac967c1f6deecb003"
+  },
+  "cells": {
+    "opt": {
+      "command": "research/level-l/run-toolkit.sh opt",
+      "images": {
+        "toolkit-linked.rxbin": "615886b695039e7f6c2b3932871998824a4f91da2be6674b4e58cbbaf41cab9e",
+        "squirrel-linked.rxbin": "7db1c24f3004ee252ab95ba4d155096c7b22a3ac4dd73d52b37612b1d7bafaf1",
+        "compare-squirrel-linked.rxbin": "12820343a696ad74f660f787be6ee3513251a716b59fc8cfe705fe0f7617d1a2",
+        "lr-linked.rxbin": "9b7204996827dca0515d71bf074854655a5e169196380d034bd0440454511539"
+      },
+      "results": {
+        "research/level-l/evidence/toolkit-opt/compare-squirrel-rxbvm.out": "41cfd66862091a36bdb05581a81613738350154e2b94f7a4425350228fa6fa97",
+        "research/level-l/evidence/toolkit-opt/compare-squirrel-rxtvm.out": "41cfd66862091a36bdb05581a81613738350154e2b94f7a4425350228fa6fa97",
+        "research/level-l/evidence/toolkit-opt/lr-rxbvm.out": "9b22fdbd05419b215720215a9e73ce880b688be8f5cd4af8d047239f4863894d",
+        "research/level-l/evidence/toolkit-opt/lr-rxtvm.out": "9b22fdbd05419b215720215a9e73ce880b688be8f5cd4af8d047239f4863894d",
+        "research/level-l/evidence/toolkit-opt/rxbvm.out": "f5f6e3b4f829610096425988d976a6b48565cc3c9169acfa0d29e1cad013234e",
+        "research/level-l/evidence/toolkit-opt/rxtvm.out": "f5f6e3b4f829610096425988d976a6b48565cc3c9169acfa0d29e1cad013234e",
+        "research/level-l/evidence/toolkit-opt/squirrel-rxbvm.out": "9818738e888db538fcff9be0d60ec05d781e9945b2362b91bbb923b20bd6fdef",
+        "research/level-l/evidence/toolkit-opt/squirrel-rxtvm.out": "9818738e888db538fcff9be0d60ec05d781e9945b2362b91bbb923b20bd6fdef"
+      }
+    },
+    "noopt": {
+      "command": "research/level-l/run-toolkit.sh noopt",
+      "images": {
+        "toolkit-linked.rxbin": "05d069a73de8cda75f71f04db2f1c0881b490b04ffb8b6b0ec90712134ec502b",
+        "squirrel-linked.rxbin": "8d8d1533deac7eb65eb27e1cd51f8602f158cfe8a6d1359896823918e884189f",
+        "compare-squirrel-linked.rxbin": "1daf67fc4217f1c437547d5bfbc910795b4aed14ec23cffaf8ec0d5299993e1f",
+        "lr-linked.rxbin": "ab04fd871cc2cc4c4eb2e7ec7efb8f8b3e14503a756343e159bc76ab08b604c7"
+      },
+      "results": {
+        "research/level-l/evidence/toolkit-noopt/compare-squirrel-rxbvm.out": "41cfd66862091a36bdb05581a81613738350154e2b94f7a4425350228fa6fa97",
+        "research/level-l/evidence/toolkit-noopt/compare-squirrel-rxtvm.out": "41cfd66862091a36bdb05581a81613738350154e2b94f7a4425350228fa6fa97",
+        "research/level-l/evidence/toolkit-noopt/lr-rxbvm.out": "9b22fdbd05419b215720215a9e73ce880b688be8f5cd4af8d047239f4863894d",
+        "research/level-l/evidence/toolkit-noopt/lr-rxtvm.out": "9b22fdbd05419b215720215a9e73ce880b688be8f5cd4af8d047239f4863894d",
+        "research/level-l/evidence/toolkit-noopt/rxbvm.out": "f5f6e3b4f829610096425988d976a6b48565cc3c9169acfa0d29e1cad013234e",
+        "research/level-l/evidence/toolkit-noopt/rxtvm.out": "f5f6e3b4f829610096425988d976a6b48565cc3c9169acfa0d29e1cad013234e",
+        "research/level-l/evidence/toolkit-noopt/squirrel-rxbvm.out": "9818738e888db538fcff9be0d60ec05d781e9945b2362b91bbb923b20bd6fdef",
+        "research/level-l/evidence/toolkit-noopt/squirrel-rxtvm.out": "9818738e888db538fcff9be0d60ec05d781e9945b2362b91bbb923b20bd6fdef"
+      }
+    }
+  }
+}

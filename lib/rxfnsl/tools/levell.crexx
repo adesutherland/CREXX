@@ -1,0 +1,500 @@
+/* cREXX License (MIT). Native Level L generation command. */
+/* The host CLI uses Level B's I/O signal handling; authored files remain Level L. */
+options levelb
+import rxfnsb
+import llcore
+import llfront
+import lllr
+import llregular
+import llmunch
+import llstage
+import llsource
+import llcheck
+import llcap
+import llpeg
+import llearley
+import llpratt
+import llregional
+import lllimits
+
+main: procedure = .int
+  arg argv = .string[]
+  rule = .int; d = .int; i = .int; name = .string
+  if argv[0] < 1 then do
+    say 'usage: levell specification.levell [--rxas|--graph] [--limit name=count] (generated artifact on stdout)'; return 2
+  end
+  limits = .lllimits..policy(); format = 'crexx'; i = 2
+  do while i <= argv[0]
+    if argv[i] = '--rxas' | argv[i] = '--graph' then do
+      if format <> 'crexx' then do
+        say 'LL_USAGE: choose one output format'; return 2
+      end
+      format = argv[i]
+    end
+    else if argv[i] = '--limit' then do
+      i = i + 1
+      if i > argv[0] then do
+        say 'LL_USAGE: --limit requires name=count'; return 2
+      end
+      setting = argv[i]; split = pos('=',setting)
+      if split < 2 then do
+        say 'LL_USAGE: --limit requires name=count'; return 2
+      end
+      name = left(setting,split - 1); value = substr(setting,split + 1)
+      if value = '' | verify(value,'0123456789') <> 0 then do
+        say 'LL_USAGE: resource count must be a positive decimal integer'; return 2
+      end
+      count = .int
+      do
+        count = value as .int
+      on signal
+        say 'LL_USAGE: resource count exceeds the host integer representation'; return 2
+      end
+      if limits.set(name,count) = 0 then do
+        say 'LL_USAGE: ' || limits.error(); return 2
+      end
+    end
+    else do
+      say 'LL_USAGE: unknown option ' || argv[i]; return 2
+    end
+    i = i + 1
+  end
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'LL_SOURCE_IO: cannot read specification ' || argv[1]; return 2
+  end
+  checked = .llsource..prepared(source,'utf8','','',limits.limit('source.bytes'))
+  if checked.status() <> 0 then do
+    say argv[1] || ': ' || llsource..diagnostic(source,checked.offset(),'LL_SPECIFICATION',checked.error()); return 1
+  end
+  doc = .llfront..document(source as .string,512,limits)
+  if doc.run() <> 0 then do
+    if doc.run() = 4 then say argv[1] || ': ' || doc.error()
+    else say argv[1] || ': LL_GRAMMAR: ' || doc.error()
+    return 1
+  end
+  if format = '--graph' then do
+      inspected = doc.grammar()
+      say 'ROOT|' || doc.root()
+      do n = 1 to inspected.size()
+        say 'NODE|' || n || '|' || inspected.op(n) || '|' || inspected.left(n) || '|' || inspected.right(n) || '|' || inspected.label(n) || '|' || inspected.line(n)
+      end
+      return 0
+  end
+  if doc.units() <> 'tokens' then do
+    say 'LL_BACKEND: generated DFA/LR requires parser input tokens'; return 1
+  end
+  if doc.root() > 0 & wordpos(doc.backend(),'lr1 ll1 packrat earley pratt') = 0 then do
+    say 'LL_BACKEND: unknown or unavailable backend ' || doc.backend() || '; available: lr1, ll1, packrat, earley, pratt'; return 1
+  end
+  if doc.regiontoken() >= 0 & doc.backend() <> 'lr1' then do
+    say 'LL_REGION_CAPABILITY: the initial regional provider requires an LR(1) outer parser'; return 1
+  end
+  if doc.sync() >= 0 then do d = 1 to doc.declarations()
+    if doc.declarationtype(d) = 'tokenstage' then do
+      say 'LL_RECOVERY_CAPABILITY: flat-record recovery with token stages requires a checked state-reset boundary'; return 1
+    end
+  end
+  say '/* Level L: checking regular lexer rules */'
+  lex = .llregular..builder(doc.lexgrammar(),doc.lexroots(),doc.lexkinds())
+  if lex.error() <> '' then do
+    say lex.error(); return 1
+  end
+  graph = doc.grammar(); table = .lllr..tables; states = 0
+  if doc.root() > 0 & doc.backend() = 'lr1' then do
+    table = .lllr..tables(graph,doc.root(),'lr1',limits)
+    if table.status() <> 0 then do
+      if table.status() = 4 then say argv[1] || ': ' || table.error()
+      else say 'LL_LR_ADMISSION:' table.error()
+      return 1
+    end
+    states = table.states()
+  end
+  else if doc.root() > 0 & doc.backend() = 'pratt' then do
+    if doc.operatorhandle() = 0 | doc.root() <> doc.operatorhandle() then do
+      say 'LL_PRATT_ADMISSION: start must name an operators declaration; arbitrary rules cannot select Pratt'; return 1
+    end
+    do d = 1 to doc.declarations()
+      if doc.diagnosticrule(d) > 0 then do
+        say 'LL_PRATT_ADMISSION: this operator profile does not use parser-rule diagnostic attachments'; return 1
+      end
+    end
+  end
+  else if doc.root() > 0 then do
+    facts = .llcheck..analysis(graph,doc.root()); provider = .llcap..backend
+    if doc.backend() = 'earley' then provider = .llearley..engine()
+    else provider = .llpeg..engine(doc.backend())
+    decision = llcap..admit(facts,provider)
+    if decision.status() <> 0 then do
+      say 'LL_BACKEND_ADMISSION: ' || doc.backend() || ': ' || decision.message(); return 1
+    end
+  end
+  if doc.regiontoken() >= 0 then do
+    regional = .llregional..plan.loaded(table,doc.operators(),doc.regiontoken(),doc.regionopen(),doc.regionclose())
+    if regional.build() <> 0 then do
+      say 'LL_REGION_ADMISSION: ' || regional.error(); return 1
+    end
+    kinds = doc.lexkinds()
+    do i = 1 to kinds[0]
+      if kinds[i] = doc.regiontoken() then do
+        say 'LL_REGION_ADMISSION: the virtual region token must not be emitted by the lexer'; return 1
+      end
+    end
+  end
+  dfa = lex.automaton()
+  say '/* Generated by Level L 1. DFA states:' dfa.states() 'LR states:' states '*/'
+  if format = '--rxas' then do
+    call assembly(doc,table,dfa)
+    return 0
+  end
+  say 'options levelb'
+  say 'namespace' doc.module() 'expose language'
+  say 'import rxfnsb'
+  say 'import llcore'
+  if doc.root() > 0 & doc.backend() = 'lr1' then say 'import lllr'
+  say 'import llmunch'
+  if doc.backend() = 'pratt' | doc.regiontoken() >= 0 then say 'import llpratt'
+  do importdecl = 1 to doc.declarations()
+    if doc.declarationtype(importdecl) = 'tokenstage' then do
+      say 'import llstage'; leave
+    end
+  end
+  say 'import lllanguage'
+  say 'language: procedure = .lllanguage..definition'
+  say '  graph = .llcore..grammar(' || quoted(graph.profile()) || ')'
+  do i = 1 to graph.size()
+    op = graph.op(i)
+    if op = 13 then say '  id = graph.literal(x2bin(' || quoted(bin2x(graph.text(i))) || '),' || quoted(graph.label(i)) || ',' || graph.line(i) || ')'
+    else if op = 16 then say '  id = graph.characters(x2bin(' || quoted(bin2x(graph.text(i))) || '),' || graph.left(i) || ',' || quoted(graph.label(i)) || ',' || graph.line(i) || ')'
+    else say '  id = graph.add(' || op || ',' || graph.left(i) || ',' || graph.right(i) || ',' || quoted(graph.label(i)) || ',' || graph.line(i) || ')'
+  end
+  if doc.backend() = 'pratt' | doc.regiontoken() >= 0 then call sourceoperators(doc)
+  say '  dfa = .llmunch..automaton.loaded(lexerdata())'
+  if doc.root() > 0 & doc.backend() = 'lr1' then do
+    say '  tables = .lllr..tables.loaded(graph,' || doc.root() || ',parserdata(),' || quoted(graph.signature() || '|root=' || doc.root()) || ')'
+    if doc.regiontoken() >= 0 then say '  result = .lllanguage..definition.regional(dfa,tables,operators,' || doc.regiontoken() || ',' || doc.regionopen() || ',' || doc.regionclose() || ',' || quoted(doc.encoding()) || ',' || quoted(doc.commentopen()) || ',' || quoted(doc.commentclose()) || ')'
+    else say '  result = .lllanguage..definition(dfa,tables,' || quoted(doc.encoding()) || ',' || quoted(doc.commentopen()) || ',' || quoted(doc.commentclose()) || ')'
+  end
+  else if doc.root() > 0 & doc.backend() = 'pratt' then say '  result = .lllanguage..definition.operatorform(dfa,operators,' || quoted(doc.operatorname()) || ',' || quoted(doc.encoding()) || ',' || quoted(doc.commentopen()) || ',' || quoted(doc.commentclose()) || ')'
+  else if doc.root() > 0 then say '  result = .lllanguage..definition.interpreted(dfa,graph,' || doc.root() || ',' || quoted(doc.backend()) || ',' || quoted(doc.encoding()) || ',' || quoted(doc.commentopen()) || ',' || quoted(doc.commentclose()) || ')'
+  else say '  result = .lllanguage..definition.scanner(dfa,' || quoted(doc.encoding()) || ',' || quoted(doc.commentopen()) || ',' || quoted(doc.commentclose()) || ')'
+  say '  call result.lexical(' || quoted(doc.malformed()) || ',' || quoted(doc.unmatched()) || ',' || doc.eof() || ')'
+  if doc.sync() >= 0 then say '  call result.recovery(' || doc.sync() || ')'
+  schema = doc.schema()
+  do i = 1 to schema.size()
+    say '  ok = result.keep(' || quoted(schema.name(i)) || ',' || schema.kind(i) || ',' || schema.arity(i) || ')'
+  end
+  do d = 1 to doc.declarations()
+    name = doc.declarationname(d); type = doc.declarationtype(d)
+    if type = 'token' then do
+      handle = doc.declarationhandle(d)
+      say '  call result.token(' || graph.left(handle) || ',' || quoted(name) || ')'
+    end
+    else if type = 'tokenstage' then do
+      stage = doc.stage(name)
+      say '  stage = .llstage..rules(' || stage.initial() || ')'
+      do rule = 1 to stage.count()
+        say '  ok = stage.add(' || quoted(stage.label(rule)) || ',' || stage.field(rule,'state') || ',' || stage.field(rule,'first') || ',' || stage.field(rule,'second') || ',' || stage.take(rule) || ',' || stage.field(rule,'unless') || ',' || quoted(stage.word(rule)) || ',' || stage.emit(rule) || ',' || stage.next(rule) || ')'
+      end
+      say '  call result.addstage(stage)'
+    end
+    else if type = 'diagnostic' & doc.diagnosticrule(d) > 0 then do
+      rule = doc.diagnosticrule(d)
+      say '  call result.diagnostic(' || quoted(name) || ',' || quoted(graph.label(rule)) || ',' || quoted(doc.diagnostictext(d)) || ',x2bin(' || quoted(bin2x(contextmask(doc,table,rule))) || '))'
+    end
+  end
+  say '  return result'
+  call data('lexerdata',dfa.image())
+  if doc.root() > 0 & doc.backend() = 'lr1' then call data('parserdata',table.image())
+  return 0
+quoted: procedure = .string
+  arg text = .string
+  return "'" || changestr("'",text,"''") || "'"
+sourceoperators: procedure = .void
+  arg doc = .llfront..document
+  ops = .llpratt..operators
+  ops = doc.operators()
+  say '  operators = .llpratt..operators(' || ops.atom() || ',' || ops.open() || ',' || ops.close() || ',' || quoted(ops.atomname()) || ')'
+  do symbol = 0 to 255
+    if ops.power(symbol) > 0 then say '  ok = operators.infix(' || symbol || ',' || ops.power(symbol) || ',' || ops.right(symbol) || ',' || quoted(ops.name(symbol)) || ')'
+    if ops.prefixpower(symbol) > 0 then say '  ok = operators.prefix(' || symbol || ',' || quoted(ops.prefixname(symbol)) || ')'
+  end
+  return
+contextmask: procedure = .binary
+  arg doc = .llfront..document, table = .lllr..tables, rule = .int
+  if doc.backend() = 'lr1' then return table.rulecontexts(rule)
+  graph = doc.grammar(); mask = .binary
+  call binresize mask,graph.size()
+  <at..u8>(rule - 1) mask = 1
+  return mask
+data: procedure = .void
+  arg name = .string, bytes = .binary
+  say name || ': procedure = .binary'
+  say '  result = .binary'
+  hex = bin2x(bytes)
+  do i = 1 to length(hex) by 4096
+    say "  chunk = '" || substr(hex,i,4096) || "'x as .binary"
+    say '  call binappend result,chunk'
+  end
+  say '  return result'
+  return
+
+/** Emit the same checked images through the public library ABI. RXAS owns the
+ * binary format and constant pool. No object attributes are laid out here.
+ * r1..r5 retain graph/tables/DFA/definition/stage; r6 is the argument count;
+ * r7..r16 are the reusable argument window and r0 discards method results. */
+assembly: procedure = .void
+  arg doc = .llfront..document, table = .lllr..tables, dfa = .llmunch..automaton
+  rule = .int
+  graph = doc.grammar()
+  say '.globals=0'
+  say 'language() .locals=17 .expose=' || doc.module() || '.language'
+  say '  .meta ' || asmquote(doc.module() || '.language') || '="b" ".lllanguage..definition" language() ""'
+  call asmload(7,asmquote(graph.profile()),768)
+  call asmcall(1,'llcore.grammar.§factory',1)
+  do i = 1 to graph.size()
+    say '  settp r1,256'
+    say '  swap r7,r1'
+    op = graph.op(i)
+    if op = 13 then do
+      call asmload(8,'0x' || bin2x(graph.text(i)),256)
+      call asmload(9,asmquote(graph.label(i)),768)
+      call asmload(10,graph.line(i) as .string)
+      call asmcall(0,'llcore.grammar.literal',4)
+    end
+    else if op = 16 then do
+      call asmload(8,'0x' || bin2x(graph.text(i)),256)
+      call asmload(9,graph.left(i) as .string)
+      call asmload(10,asmquote(graph.label(i)),768)
+      call asmload(11,graph.line(i) as .string)
+      call asmcall(0,'llcore.grammar.characters',5)
+    end
+    else do
+      call asmload(8,op as .string)
+      call asmload(9,graph.left(i) as .string)
+      call asmload(10,graph.right(i) as .string)
+      call asmload(11,asmquote(graph.label(i)),768)
+      call asmload(12,graph.line(i) as .string)
+      call asmcall(0,'llcore.grammar.add',6)
+    end
+    say '  swap r1,r7'
+  end
+  if doc.root() > 0 & doc.backend() = 'lr1' then do
+    say '  settp r1,256'
+    say '  swap r7,r1'
+    call asmload(8,doc.root() as .string)
+    call asmload(9,'0x' || bin2x(table.image()),256)
+    call asmload(10,asmquote(graph.signature() || '|root=' || doc.root()),768)
+    call asmcall(2,'lllr.tables.§factory.loaded',4)
+    say '  swap r1,r7'
+  end
+  if doc.backend() = 'pratt' | doc.regiontoken() >= 0 then call asmoperators(doc)
+  call asmload(7,'0x' || bin2x(dfa.image()),256)
+  call asmcall(3,'llmunch.automaton.§factory.loaded',1)
+  say '  settp r3,256'
+  say '  swap r7,r3'
+  if doc.root() > 0 & doc.backend() = 'lr1' then do
+    say '  settp r2,256'
+    say '  swap r8,r2'
+    if doc.regiontoken() >= 0 then do
+      say '  settp r5,256'
+      say '  swap r9,r5'
+      call asmload(10,doc.regiontoken() as .string)
+      call asmload(11,doc.regionopen() as .string)
+      call asmload(12,doc.regionclose() as .string)
+      call asmload(13,asmquote(doc.encoding()),768)
+      call asmload(14,asmquote(doc.commentopen()),768)
+      call asmload(15,asmquote(doc.commentclose()),768)
+      call asmcall(4,'lllanguage.definition.§factory.regional',9)
+      say '  swap r5,r9'
+    end
+    else do
+      call asmload(9,asmquote(doc.encoding()),768)
+      call asmload(10,asmquote(doc.commentopen()),768)
+      call asmload(11,asmquote(doc.commentclose()),768)
+      call asmcall(4,'lllanguage.definition.§factory',5)
+    end
+    say '  swap r2,r8'
+  end
+  else if doc.root() > 0 & doc.backend() = 'pratt' then do
+    say '  settp r5,256'
+    say '  swap r8,r5'
+    call asmload(9,asmquote(doc.operatorname()),768)
+    call asmload(10,asmquote(doc.encoding()),768)
+    call asmload(11,asmquote(doc.commentopen()),768)
+    call asmload(12,asmquote(doc.commentclose()),768)
+    call asmcall(4,'lllanguage.definition.§factory.operatorform',6)
+    say '  swap r5,r8'
+  end
+  else if doc.root() > 0 then do
+    say '  settp r1,256'
+    say '  swap r8,r1'
+    call asmload(9,doc.root() as .string)
+    call asmload(10,asmquote(doc.backend()),768)
+    call asmload(11,asmquote(doc.encoding()),768)
+    call asmload(12,asmquote(doc.commentopen()),768)
+    call asmload(13,asmquote(doc.commentclose()),768)
+    call asmcall(4,'lllanguage.definition.§factory.interpreted',7)
+    say '  swap r1,r8'
+  end
+  else do
+    call asmload(8,asmquote(doc.encoding()),768)
+    call asmload(9,asmquote(doc.commentopen()),768)
+    call asmload(10,asmquote(doc.commentclose()),768)
+    call asmcall(4,'lllanguage.definition.§factory.scanner',4)
+  end
+  say '  swap r3,r7'
+  say '  settp r4,256'
+  say '  swap r7,r4'
+  call asmload(8,asmquote(doc.malformed()),768)
+  call asmload(9,asmquote(doc.unmatched()),768)
+  call asmload(10,doc.eof() as .string)
+  call asmcall(0,'lllanguage.definition.lexical',4)
+  say '  swap r4,r7'
+  if doc.sync() >= 0 then do
+    say '  settp r4,256'
+    say '  swap r7,r4'
+    call asmload(8,doc.sync() as .string)
+    call asmcall(0,'lllanguage.definition.recovery',2)
+    say '  swap r4,r7'
+  end
+  schema = doc.schema()
+  do item = 1 to schema.size()
+    say '  settp r4,256'
+    say '  swap r7,r4'
+    call asmload(8,asmquote(schema.name(item)),768)
+    call asmload(9,schema.kind(item) as .string)
+    call asmload(10,schema.arity(item) as .string)
+    call asmcall(0,'lllanguage.definition.keep',4)
+    say '  swap r4,r7'
+  end
+  do d = 1 to doc.declarations()
+    name = doc.declarationname(d); type = doc.declarationtype(d)
+    if type = 'token' then do
+      say '  settp r4,256'
+      say '  swap r7,r4'
+      call asmload(8,graph.left(doc.declarationhandle(d)) as .string)
+      call asmload(9,asmquote(name),768)
+      call asmcall(0,'lllanguage.definition.token',3)
+      say '  swap r4,r7'
+    end
+    else if type = 'tokenstage' then do
+      stage = doc.stage(name)
+      call asmload(7,stage.initial() as .string)
+      call asmcall(5,'llstage.rules.§factory',1)
+      do rule = 1 to stage.count()
+        say '  settp r5,256'
+        say '  swap r7,r5'
+        call asmload(8,asmquote(stage.label(rule)),768)
+        call asmload(9,stage.field(rule,'state') as .string)
+        call asmload(10,stage.field(rule,'first') as .string)
+        call asmload(11,stage.field(rule,'second') as .string)
+        call asmload(12,stage.take(rule) as .string)
+        call asmload(13,stage.field(rule,'unless') as .string)
+        call asmload(14,asmquote(stage.word(rule)),768)
+        call asmload(15,stage.emit(rule) as .string)
+        call asmload(16,stage.next(rule) as .string)
+        call asmcall(0,'llstage.rules.add',10)
+        say '  swap r5,r7'
+      end
+      say '  settp r4,256'
+      say '  swap r7,r4'
+      say '  settp r5,256'
+      say '  swap r8,r5'
+      call asmcall(0,'lllanguage.definition.addstage',2)
+      say '  swap r4,r7'
+      say '  swap r5,r8'
+    end
+    else if type = 'diagnostic' & doc.diagnosticrule(d) > 0 then do
+      rule = doc.diagnosticrule(d)
+      say '  settp r4,256'
+      say '  swap r7,r4'
+      call asmload(8,asmquote(name),768)
+      call asmload(9,asmquote(graph.label(rule)),768)
+      call asmload(10,asmquote(doc.diagnostictext(d)),768)
+      call asmload(11,'0x' || bin2x(contextmask(doc,table,rule)),256)
+      call asmcall(0,'lllanguage.definition.diagnostic',5)
+      say '  swap r4,r7'
+    end
+  end
+  say '  ret r4'
+  /* Imported procedure declarations let RXAS/rxlink resolve public symbols.
+   * Only language() is the generated module's compiler-facing API. */
+  call asmimport('llcore.grammar.§factory')
+  call asmimport('llcore.grammar.add')
+  call asmimport('llcore.grammar.literal')
+  call asmimport('llcore.grammar.characters')
+  call asmimport('lllr.tables.§factory.loaded')
+  call asmimport('llmunch.automaton.§factory.loaded')
+  call asmimport('lllanguage.definition.§factory')
+  call asmimport('lllanguage.definition.§factory.scanner')
+  call asmimport('lllanguage.definition.§factory.interpreted')
+  call asmimport('lllanguage.definition.§factory.operatorform')
+  call asmimport('lllanguage.definition.§factory.regional')
+  call asmimport('llpratt.operators.§factory')
+  call asmimport('llpratt.operators.infix')
+  call asmimport('llpratt.operators.prefix')
+  call asmimport('lllanguage.definition.lexical')
+  call asmimport('lllanguage.definition.token')
+  call asmimport('lllanguage.definition.addstage')
+  call asmimport('lllanguage.definition.diagnostic')
+  call asmimport('lllanguage.definition.recovery')
+  call asmimport('lllanguage.definition.keep')
+  call asmimport('llstage.rules.§factory')
+  call asmimport('llstage.rules.add')
+  return
+asmoperators: procedure = .void
+  arg doc = .llfront..document
+  ops = .llpratt..operators
+  ops = doc.operators()
+  call asmload(7,ops.atom() as .string)
+  call asmload(8,ops.open() as .string)
+  call asmload(9,ops.close() as .string)
+  call asmload(10,asmquote(ops.atomname()),768)
+  call asmcall(5,'llpratt.operators.§factory',4)
+  do symbol = 0 to 255
+    if ops.power(symbol) > 0 then do
+      say '  settp r5,256'
+      say '  swap r7,r5'
+      call asmload(8,symbol as .string)
+      call asmload(9,ops.power(symbol) as .string)
+      call asmload(10,ops.right(symbol) as .string)
+      call asmload(11,asmquote(ops.name(symbol)),768)
+      call asmcall(0,'llpratt.operators.infix',5)
+      say '  swap r5,r7'
+    end
+    if ops.prefixpower(symbol) > 0 then do
+      say '  settp r5,256'
+      say '  swap r7,r5'
+      call asmload(8,symbol as .string)
+      call asmload(9,asmquote(ops.prefixname(symbol)),768)
+      call asmcall(0,'llpratt.operators.prefix',3)
+      say '  swap r5,r7'
+    end
+  end
+  return
+asmimport: procedure = .void
+  arg symbol = .string
+  say '§' || symbol || '() .expose=' || symbol
+  return
+asmload: procedure = .void
+  arg slot = .int, literal = .string, typebits = 0
+  say '  load r' || slot || ',' || literal
+  if typebits <> 0 then say '  settp r' || slot || ',' || typebits
+  return
+asmcall: procedure = .void
+  arg result = .int, symbol = .string, count = .int
+  say '  load r6,' || count
+  say '  call r' || result || ',§' || symbol || '(),r6'
+  return
+asmquote: procedure = .string
+  arg text = .string
+  /* RXAS uses C-style escapes. Escape backslashes before quotes. */
+  escaped = changestr('\',text,'\\')
+  escaped = changestr('"',escaped,'\"')
+  escaped = changestr('0a'x,escaped,'\n')
+  escaped = changestr('0d'x,escaped,'\r')
+  escaped = changestr('09'x,escaped,'\t')
+  return '"' || escaped || '"'

@@ -1,0 +1,118 @@
+/* Semantic and tree control for the settled-dependency experiment. */
+options levell
+import rxfnsb
+import llcore
+import llpeg
+import lltabpeg
+import llcheck
+import llcap
+main: procedure = .int expose failures cases
+  failures = 0; cases = 0
+  g = .llcore..grammar('ordered')
+  a = g.add(1,97,0,'a',1); b = g.add(1,98,0,'b',2); x = g.add(1,120,0,'x',3)
+  choice = g.add(3,a,b,'letter',4)
+  look = g.add(9,choice,0,'letter.ahead',5)
+  many = g.add(7,choice,0,'letters',6)
+  notx = g.add(8,x,0,'no.x',7)
+  prefix = g.add(2,look,many,'prefix',8)
+  root = g.add(2,prefix,notx,'document',9)
+  do n = 0 to 4
+    call enumerate g,root,'abx','',n
+  end
+  g = .llcore..grammar('ordered')
+  a = g.add(1,97,0,'a',1); b = g.add(1,98,0,'b',2); c = g.add(1,99,0,'c',3)
+  ab = g.add(2,a,b,'ab',4); choice = g.add(3,a,ab,'prefix.choice',5)
+  root = g.add(2,choice,c,'document',6)
+  call probe g,root,'abc'
+  call probe g,root,'ac'
+  g = .llcore..grammar('ordered')
+  root = g.add(5,0,0,'A',1)
+  a = g.add(1,97,0,'a',2); empty = g.add(6,0,0,'empty',3)
+  seq = g.add(2,a,root,'a.A',4); choice = g.add(3,seq,empty,'choice',5)
+  ok = g.body(root,choice)
+  do n = 0 to 4
+    call enumerate g,root,'ab','',n
+  end
+  /* Extended clauses are checked against direct expected outcomes; the
+     ordinary packrat control currently requires these clauses lowered. */
+  g = .llcore..grammar('ordered')
+  literal = g.literal('ab' as .binary,'ab',1)
+  opt = g.add(15,literal,0,'optional.ab',2)
+  set = g.characters('00ff'x as .binary,0,'binary.set',3)
+  plus = g.add(14,set,0,'bytes',4)
+  root = g.add(2,opt,plus,'binary.document',5)
+  source = '616200ff'x as .binary
+  input = .llcore..stream(source)
+  p = .lltabpeg..parser(g,root,input)
+  if p.run() <> 0 then failures = failures + 1
+  arena = p.tree()
+  if arena.validate() = 0 then failures = failures + 1
+  /* A complemented set uses membership once, including NUL/high bytes. */
+  g = .llcore..grammar('ordered')
+  excluded = g.characters('00ff'x as .binary,1,'except.endpoints',1)
+  do byte = 0 to 255
+    input = .llcore..stream(x2bin(right(d2x(byte),2,'0')))
+    p = .lltabpeg..parser(g,excluded,input)
+    expected = byte = 0 | byte = 255
+    actual = p.run()
+    if actual <> expected then do
+      failures = failures + 1; say 'FAIL inverted set:' byte actual expected
+    end
+  end
+  input = .llcore..stream('' as .binary)
+  p = .lltabpeg..parser(g,excluded,input)
+  if p.run() <> 1 then failures = failures + 1
+  /* No EOF omission and no successful empty placeholder for a false predicate. */
+  g = .llcore..grammar('ordered')
+  a = g.add(1,97,0,'a',1); eof = g.add(10,0,0,'eof',2)
+  seq = g.add(2,a,eof,'document',3)
+  tokens = .llcore..stream.tokens(' a  ' as .binary)
+  ok = tokens.append(97,1,2)
+  p = .lltabpeg..parser(g,seq,tokens)
+  if p.run() <> 0 then failures = failures + 1
+  arena = p.tree()
+  if arena.validate() = 0 | arena.finish(p.root()) <> 4 then failures = failures + 1
+  input = .llcore..stream('' as .binary)
+  p = .lltabpeg..parser(g,eof,input)
+  if p.run() <> 0 then failures = failures + 1
+  small = .lltabpeg..parser(g,eof,input,1)
+  if small.run() <> 2 then failures = failures + 1
+  recursive = .llcore..grammar('ordered')
+  r = recursive.add(5,0,0,'left.recursion',1)
+  ok = recursive.body(r,r)
+  p = .lltabpeg..parser(recursive,r,input)
+  if p.run() <> 3 | pos('stratification',p.error()) = 0 then failures = failures + 1
+  facts = .llcheck..analysis(g,seq)
+  backend = .llcap..backend
+  backend = .lltabpeg..engine()
+  decision = llcap..admit(facts,backend,'linear-input')
+  if decision.status() <> 0 then failures = failures + 1
+  say 'tabpeg_semantic_and_tree_cases='cases
+  say 'tabpeg_failures='failures
+  if failures > 0 then return 1
+  return 0
+enumerate: procedure = .void
+  arg graph = .llcore..grammar, root = .int, alphabet = .string, prefix = .string, remaining = .int
+  if remaining = 0 then do
+    call probe graph,root,prefix; return
+  end
+  do i = 1 to length(alphabet)
+    call enumerate graph,root,alphabet,prefix || substr(alphabet,i,1),remaining - 1
+  end
+  return
+probe: procedure = .void expose failures cases
+  arg graph = .llcore..grammar, root = .int, text = .string
+  input = .llcore..stream(text as .binary)
+  peg = .llpeg..parser(graph,root,input,'packrat')
+  tab = .lltabpeg..parser(graph,root,input)
+  ps = peg.run(); ts = tab.run()
+  pt = peg.arena(); tt = tab.tree()
+  cases = cases + 1
+  if ps <> ts | peg.result() <> tab.result() | canonical(pt,peg.root()) \== canonical(tt,tab.root()) | tt.validate() = 0 | tab.work() <> graph.size() * (input.size() + 1) then do
+    say 'DIFFERENCE:' text ps ts peg.error() tab.error(); failures = failures + 1
+  end
+  return
+canonical: procedure = .string
+  arg tree = .llcore..tree, node = .int
+  if node = 0 then return '-'
+  return '(' || tree.label(node) || ',' || tree.start(node) || ',' || tree.finish(node) || canonical(tree,tree.left(node)) || canonical(tree,tree.right(node)) || ')'

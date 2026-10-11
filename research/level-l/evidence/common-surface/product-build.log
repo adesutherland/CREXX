@@ -1,0 +1,143 @@
+[  0%] Built target lemon
+[  0%] Built target rxbin
+[  0%] Built target rxpa
+[  0%] Built target platform
+[  0%] Built target avl_tree
+[  0%] Built target dslsyntax_parser
+[  0%] Built target re2c_objects_autogen_ver_to_vernum
+[  5%] Built target re2c_objects_autogen
+[  5%] Built target rxvmmemory
+[  5%] Built target decnumber
+[  5%] Built target rxpashim
+[  5%] Built target rxvm_platform_objects
+[  5%] Built target rxcpack
+[ 11%] Built target rxbvm_core_objects
+[ 11%] Built target rxtvm_core_objects
+[ 11%] Built target rxlink
+[ 11%] Built target rxvmref
+[ 11%] Built target rxvmplugin
+[ 16%] Built target mc_decimal_manual
+[ 16%] Built target rxbvml
+[ 16%] Built target rxvml
+[ 16%] Built target rxtvm
+[ 27%] Built target re2c
+[ 33%] Built target rxaslib
+[ 38%] Built target rxas
+[ 38%] Built target rxc_typed_objects
+[ 38%] Built target rxc_classic_objects
+[ 55%] Built target rxc_backend_objects
+[ 55%] Built target library-rxas
+[ 55%] Built target rxclib
+[ 55%] Built target rxc
+[ 88%] Built target library-rexx
+[ 88%] Built target library
+[ 88%] Built target rxfnsl_imports
+[ 88%] cREXX compile and assemble llearley ...
+[ 88%] cREXX compile and assemble lllr ...
+[ 88%] cREXX compile and assemble llregional ...
+[ 88%] cREXX compile and assemble lllanguage ...
+[ 88%] cREXX compile and assemble llrecover ...
+[ 88%] cREXX Linked Level L Library Image ...
+[ 94%] Built target rxfnsl_base
+[ 94%] Staging deterministic compiler imports for levell_base_imports ...
+[ 94%] Built target levell_base_imports
+[ 94%] Generating bootstrap/L0/llfront.rxbin
+[ 94%] Staging deterministic compiler imports for levell_driver_imports_0 ...
+[ 94%] Built target levell_driver_imports_0
+[ 94%] Generating bootstrap/L0/levell-linked.rxbin
+[ 94%] Generating bootstrap/L1/llsyntax.rxas
+[ 94%] Generating bootstrap/L1/llsyntax.rxbin
+[ 94%] Staging deterministic compiler imports for levell_syntax_imports_1 ...
+[ 94%] Built target levell_syntax_imports_1
+[ 94%] Generating bootstrap/L1/llfront.rxbin
+[ 94%] Staging deterministic compiler imports for levell_driver_imports_1 ...
+[ 94%] Built target levell_driver_imports_1
+[ 94%] Generating bootstrap/L1/levell-linked.rxbin
+[ 94%] Generating bootstrap/L2/llsyntax.rxas
+[ 94%] Generating bootstrap/L2/llsyntax.rxbin
+[ 94%] Staging deterministic compiler imports for levell_syntax_imports_2 ...
+[ 94%] Built target levell_syntax_imports_2
+[ 94%] Generating bootstrap/L2/llfront.rxbin
+[ 94%] Staging deterministic compiler imports for levell_driver_imports_2 ...
+[ 94%] Built target levell_driver_imports_2
+[ 94%] Generating bootstrap/L2/levell-linked.rxbin
+[ 94%] Generating bootstrap/verified.stamp
+[ 94%] Generating ../../../bin/rxfnsl.rxbin
+[ 94%] Built target rxfnsl
+[ 94%] Generating levell.c
+[100%] Building C object lib/rxfnsl/tools/CMakeFiles/levell_cli.dir/levell.c.o
+[100%] Linking C executable ../../../bin/levell
+[100%] Built target levell_cli
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.g54f736804de0.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20261010T202932Z
+-- CREXX Build Commit: 54f736804de0
+-- CMake Generator: Unix Makefiles
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=generator default
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/../DSL-Syntax-Highlighter
+-- C compiler flags: 
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always 
+-- Linker flags for executables: 
+-- Linker flags for shared libs: 
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (5.4s)
+-- Generating done (5.9s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product
+[  0%] Built target lemon
+[  0%] Built target avl_tree
+[  0%] Built target platform
+[  0%] Built target rxpa
+[  0%] Built target rxbin
+[  0%] Built target re2c_objects_autogen_ver_to_vernum
+[  0%] Built target dslsyntax_parser
+[  0%] Built target rxvmmemory
+[  5%] Built target re2c_objects_autogen
+[  5%] Built target decnumber
+[  5%] Built target rxpashim
+[  5%] Built target rxvm_platform_objects
+[  5%] Built target rxlink
+[  5%] Built target rxvmref
+[ 11%] Built target rxbvm_core_objects
+[ 11%] Built target rxtvm_core_objects
+[ 11%] Built target rxvmplugin
+[ 17%] Built target mc_decimal_manual
+[ 17%] Built target rxtvm
+[ 17%] Built target rxbvml
+[ 29%] Built target re2c
+[ 35%] Built target rxaslib
+[ 41%] Built target rxas
+[ 41%] Built target rxc_typed_objects
+[ 41%] Built target rxc_classic_objects
+[ 41%] Built target library-rxas
+[ 58%] Built target rxc_backend_objects
+[ 58%] Built target rxclib
+[ 58%] Built target rxc
+[ 94%] Built target library-rexx
+[ 94%] Built target library
+[ 94%] Built target rxfnsl_imports
+[100%] Built target rxfnsl_base
+[100%] Staging deterministic compiler imports for levell_base_imports ...
+[100%] Built target levell_base_imports
+[100%] Staging deterministic compiler imports for levell_driver_imports_0 ...
+[100%] Built target levell_driver_imports_0
+[100%] Staging deterministic compiler imports for levell_syntax_imports_1 ...
+[100%] Built target levell_syntax_imports_1
+[100%] Staging deterministic compiler imports for levell_driver_imports_1 ...
+[100%] Built target levell_driver_imports_1
+[100%] Staging deterministic compiler imports for levell_syntax_imports_2 ...
+[100%] Built target levell_syntax_imports_2
+[100%] Staging deterministic compiler imports for levell_driver_imports_2 ...
+[100%] Built target levell_driver_imports_2
+[100%] Generating gennorm2_language.rxas
+[100%] Generating ../../../bin/gennorm2_language.rxbin
+[100%] Built target levell_unicode_lexer

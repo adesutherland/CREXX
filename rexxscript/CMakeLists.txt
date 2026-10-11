@@ -228,3 +228,5 @@ foreach(_rexxscript_exit_consumer IN ITEMS
 endforeach()
 
 add_subdirectory(tests_functional)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/modern.cmake)

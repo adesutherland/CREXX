@@ -1,0 +1,352 @@
+/*
+ * SOURCE                 : budget-probe.crexx
+ */
+
+.globals=0
+
+main() .locals=21
+   .meta "budget-probe.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 56 56 17 "budget-probe.crexx" 10 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "budget-probe.crexx" 11 7 21 "  arg argv = .string[]"
+   .meta "budget-probe.main.argv"="b" ".string[*]" a1
+   .srcstep 2 2 17 "budget-probe.crexx" 12 3 29 "  limits = .lllimits..policy()"
+   .meta "budget-probe.main.limits"="b" ".lllimits..policy" r1
+   load r4,0
+   call r1,§lllimits.policy.§factory(),r4
+   .traceevent "F" 4 "R" "O" "r" 1 2 2 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 2 2 0 "limits" ""
+   .srcstep 12 12 17 "budget-probe.crexx" 13 3 18 "  if argv[0] >= 3 then do"
+   .traceevent "C" 4 "R" "V" "r" 4 12 12 0 "argv" ""
+   getattrs r3,a1,0
+   .traceevent "V" 6 "R" "I" "r" 3 12 12 0 "argv" ""
+   igte r3,r3,3
+   .traceevent "O" 4 "R" "B" "r" 3 12 12 0 "" ""
+   brf l57iffalse,r3
+   .srcstep 13 13 17 "budget-probe.crexx" 13 19 23 "  if argv[0] >= 3 then do"
+   .srcstep 3 3 17 "budget-probe.crexx" 14 5 44 "    ok = limits.set(argv[2],argv[3] as .int)"
+   .meta "budget-probe.main.ok"="b" ".int" r2
+   .traceevent "V" 6 "R" "O" "r" 1 3 3 0 "limits" ""
+   minlinkattr1 r0,a1,2
+   .traceevent "V" 6 "R" "S" "r" 0 3 3 0 "argv" ""
+   minlinkattr1 r12,a1,3
+   .traceevent "V" 6 "R" "S" "r" 12 3 3 0 "argv" ""
+   stoi r11,r12
+   unlink r12
+   load r8,3
+   settp r1,256
+   swap r9,r1
+   settp r0,256
+   swap r10,r0
+   call r2,§lllimits.policy.set(),r8
+   swap r1,r9
+   swap r0,r10
+   unlink r0
+   .traceevent "F" 4 "R" "I" "r" 2 3 3 0 "set" ""
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "ok" ""
+   .srcstep 10 10 17 "budget-probe.crexx" 15 5 14 "    if ok = 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 2 10 10 0 "ok" ""
+   ieq r12,r2,0
+   .traceevent "O" 4 "R" "B" "r" 12 10 10 0 "" ""
+   brf l56iffalse,r12
+   .srcstep 11 11 17 "budget-probe.crexx" 15 15 19 "    if ok = 0 then do"
+   .srcstep 8 8 17 "budget-probe.crexx" 16 7 23 "      say limits.error(); return 3"
+   .srcstep 7 7 17 "budget-probe.crexx" 16 11 17 "      say limits.error(); return 3"
+   .srcstep 4 4 33 "budget-probe.crexx" 16 11 17 "      say limits.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 1 4 4 0 "limits" ""
+   .traceevent "A" 6 "R" "O" "r" 1 4 4 0 "§this" ""
+   .srcstep 5 5 6 "lllimits@lllimits.rxbin" 16 17 17 "      say limits.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 1 8 8 0 "§this" ""
+   assertinitialized r1
+   .srcstep 6 6 25 "lllimits.crexx" 59 5 18 "    return _error"
+   linkattr1 r11,r1,1
+   .traceevent "V" 6 "R" "S" "r" 11 8 8 0 "_error" ""
+   scopy r10,r11
+   unlink r11
+l8834bexprend:
+   say r10
+   .srcstep 9 9 17 "budget-probe.crexx" 16 27 35 "      say limits.error(); return 3"
+   ret 3
+l56iffalse:
+   .meta "budget-probe.main.ok"
+l57iffalse:
+   .srcstep 27 27 17 "budget-probe.crexx" 19 3 17 "  if argv[0] = 4 then do"
+   .traceevent "C" 4 "R" "V" "r" 12 27 27 0 "argv" ""
+   getattrs r11,a1,0
+   .traceevent "V" 6 "R" "I" "r" 11 27 27 0 "argv" ""
+   ieq r11,r11,4
+   .traceevent "O" 4 "R" "B" "r" 11 27 27 0 "" ""
+   brf l98iffalse,r11
+   .srcstep 28 28 17 "budget-probe.crexx" 19 18 22 "  if argv[0] = 4 then do"
+   .srcstep 25 25 17 "budget-probe.crexx" 20 5 27 "    if argv[4] = 'recover' then do"
+   minlinkattr1 r10,a1,4
+   .traceevent "V" 6 "R" "S" "r" 10 25 25 0 "argv" ""
+   req r9,r10,"recover"
+   unlink r10
+   .traceevent "O" 4 "R" "B" "r" 9 25 25 0 "" ""
+   brf l96iffalse,r9
+   .srcstep 26 26 17 "budget-probe.crexx" 20 28 32 "    if argv[4] = 'recover' then do"
+   .srcstep 14 14 17 "budget-probe.crexx" 21 7 96 "      recovered = .llrecover..request(levell_settings..language(),readbinary(argv[1]),16,limits)"
+   .meta "budget-probe.main.recovered"="b" ".llrecover..request" r8
+   load r3,0
+   call r14,levell_settings.language(),r3
+   .traceevent "F" 4 "R" "O" "r" 14 14 14 0 "language" ""
+   minlinkattr1 r0,a1,1
+   .traceevent "V" 6 "R" "S" "r" 0 14 14 0 "argv" ""
+   load r2,1
+   settpswapcall r15,rxfnsb.readbinary(),r2,r0,256,r3
+   swap r0,r3
+   unlink r0
+   .traceevent "F" 4 "R" "X" "r" 15 14 14 0 "readbinary" ""
+   load r16,16
+   .traceevent "L" 4 "R" "I" "r" 16 14 14 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 14 14 0 "limits" ""
+   load r13,4
+   settp r14,256
+   settp r15,256
+   settp r16,256
+   settpswapcall r8,§llrecover.request.§factory(),r13,r1,256,r17
+   swap r1,r17
+   .traceevent "F" 4 "R" "O" "r" 8 14 14 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 8 14 14 0 "recovered" ""
+   .srcstep 15 15 17 "budget-probe.crexx" 22 7 38 "      recoveredstatus = recovered.run()"
+   .meta "budget-probe.main.recoveredstatus"="b" ".int" r4
+   .traceevent "V" 6 "R" "O" "r" 8 15 15 0 "recovered" ""
+   load r16,1
+   settpswapcall r4,§llrecover.request.run(),r16,r8,256,r17
+   swap r8,r17
+   .traceevent "F" 4 "R" "I" "r" 4 15 15 0 "run" ""
+   .traceevent "A" 6 "R" "I" "r" 4 15 15 0 "recoveredstatus" ""
+   .srcstep 23 23 17 "budget-probe.crexx" 23 7 66 "      say 'RECOVER|' || recoveredstatus || '|' || recovered.error()"
+   .srcstep 22 22 17 "budget-probe.crexx" 23 11 21 "      say 'RECOVER|' || recoveredstatus || '|' || recovered.error()"
+   .srcstep 16 16 33 "budget-probe.crexx" 23 41 43 "      say 'RECOVER|' || recoveredstatus || '|' || recovered.error()"
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 16 16 0 "recoveredstatus" ""
+   concat r17,"RECOVER|",r4
+   .traceevent "O" 4 "R" "S" "r" 17 16 16 0 "" ""
+   concat r18,r17,"|"
+   .traceevent "O" 4 "R" "S" "r" 18 16 16 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 18 16 16 0 "__inline_lhs_87_92" ""
+   .srcstep 21 21 33 "budget-probe.crexx" 23 48 50 "      say 'RECOVER|' || recoveredstatus || '|' || recovered.error()"
+   .traceevent "V" 6 "R" "S" "r" 18 23 23 0 "__inline_lhs_87_92" ""
+   .srcstep 20 20 17 "budget-probe.crexx" 23 51 60 "      say 'RECOVER|' || recoveredstatus || '|' || recovered.error()"
+   .srcstep 17 17 33 "budget-probe.crexx" 23 51 60 "      say 'RECOVER|' || recoveredstatus || '|' || recovered.error()"
+   .traceevent "V" 6 "R" "O" "r" 8 17 17 0 "recovered" ""
+   .traceevent "A" 6 "R" "O" "r" 8 17 17 0 "§this" ""
+   .srcstep 18 18 6 "llrecover@llrecover.rxbin" 23 60 60 "      say 'RECOVER|' || recoveredstatus || '|' || recovered.error()"
+   .traceevent "V" 6 "R" "O" "r" 8 23 23 0 "§this" ""
+   assertinitialized r8
+   .srcstep 19 19 25 "llrecover.crexx" 164 5 18 "    return _error"
+   linkattr1 r17,r8,2
+   .traceevent "V" 6 "R" "S" "r" 17 23 23 0 "_error" ""
+   scopy r16,r17
+   unlink r17
+l9284bexprend:
+   concat r16,r18,r16
+   .traceevent "O" 4 "R" "S" "r" 16 23 23 0 "" ""
+   scopy r15,r16
+l8976bexprend:
+   say r15
+   .srcstep 24 24 17 "budget-probe.crexx" 24 7 29 "      return recoveredstatus"
+   .traceevent "V" 6 "R" "I" "r" 4 24 24 0 "recoveredstatus" ""
+   ret r4
+   endlife r8
+   .meta "budget-probe.main.recovered"
+   .meta "budget-probe.main.recoveredstatus"
+l96iffalse:
+l98iffalse:
+   .srcstep 29 29 17 "budget-probe.crexx" 27 3 88 "  request = .lllanguage..request(levell_settings..language(),readbinary(argv[1]),limits)"
+   .meta "budget-probe.main.request"="b" ".lllanguage..request" r5
+   load r13,0
+   call r15,levell_settings.language(),r13
+   .traceevent "F" 4 "R" "O" "r" 15 29 29 0 "language" ""
+   minlinkattr1 r11,a1,1
+   .traceevent "V" 6 "R" "S" "r" 11 29 29 0 "argv" ""
+   load r12,1
+   settpswapcall r16,rxfnsb.readbinary(),r12,r11,256,r13
+   swap r11,r13
+   unlink r11
+   .traceevent "F" 4 "R" "X" "r" 16 29 29 0 "readbinary" ""
+   .traceevent "V" 6 "R" "O" "r" 1 29 29 0 "limits" ""
+   load r14,3
+   settp r15,256
+   settp r16,256
+   settpswapcall r5,§lllanguage.request.§factory(),r14,r1,256,r17
+   swap r1,r17
+   .traceevent "F" 4 "R" "O" "r" 5 29 29 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 29 29 0 "request" ""
+   .srcstep 30 30 17 "budget-probe.crexx" 28 3 25 "  status = request.parse()"
+   .meta "budget-probe.main.status"="b" ".int" r7
+   .traceevent "V" 6 "R" "O" "r" 5 30 30 0 "request" ""
+   load r4,1
+   settpcall r7,§lllanguage.request.parse(),r4,r5,256
+   .traceevent "F" 4 "R" "I" "r" 7 30 30 0 "parse" ""
+   .traceevent "A" 6 "R" "I" "r" 7 30 30 0 "status" ""
+   .srcstep 38 38 17 "budget-probe.crexx" 29 3 49 "  say 'PARSE|' || status || '|' || request.error()"
+   .srcstep 37 37 17 "budget-probe.crexx" 29 7 15 "  say 'PARSE|' || status || '|' || request.error()"
+   .srcstep 31 31 33 "budget-probe.crexx" 29 26 28 "  say 'PARSE|' || status || '|' || request.error()"
+   itos r7
+   .traceevent "V" 6 "R" "S" "r" 7 31 31 0 "status" ""
+   concat r17,"PARSE|",r7
+   .traceevent "O" 4 "R" "S" "r" 17 31 31 0 "" ""
+   concat r19,r17,"|"
+   .traceevent "O" 4 "R" "S" "r" 19 31 31 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 19 31 31 0 "__inline_lhs_118_123" ""
+   .srcstep 36 36 33 "budget-probe.crexx" 29 33 35 "  say 'PARSE|' || status || '|' || request.error()"
+   .traceevent "V" 6 "R" "S" "r" 19 38 38 0 "__inline_lhs_118_123" ""
+   .srcstep 35 35 17 "budget-probe.crexx" 29 36 43 "  say 'PARSE|' || status || '|' || request.error()"
+   .srcstep 32 32 33 "budget-probe.crexx" 29 36 43 "  say 'PARSE|' || status || '|' || request.error()"
+   .traceevent "V" 6 "R" "O" "r" 5 32 32 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 5 32 32 0 "§this" ""
+   .srcstep 33 33 6 "lllanguage@lllanguage.rxbin" 29 43 43 "  say 'PARSE|' || status || '|' || request.error()"
+   .traceevent "V" 6 "R" "O" "r" 5 38 38 0 "§this" ""
+   assertinitialized r5
+   .srcstep 34 34 25 "lllanguage.crexx" 349 5 18 "    return _error"
+   linkattr1 r17,r5,1
+   .traceevent "V" 6 "R" "S" "r" 17 38 38 0 "_error" ""
+   scopy r16,r17
+   unlink r17
+l9426bexprend:
+   concat r16,r19,r16
+   .traceevent "O" 4 "R" "S" "r" 16 38 38 0 "" ""
+   scopy r15,r16
+l9123bexprend:
+   say r15
+   .srcstep 40 40 17 "budget-probe.crexx" 30 3 17 "  if status <> 0 then return status"
+   .traceevent "V" 6 "R" "I" "r" 7 40 40 0 "status" ""
+   ine r17,r7,0
+   .traceevent "O" 4 "R" "B" "r" 17 40 40 0 "" ""
+   brf l130iffalse,r17
+   .srcstep 41 41 17 "budget-probe.crexx" 30 18 22 "  if status <> 0 then return status"
+   .srcstep 39 39 17 "budget-probe.crexx" 30 23 36 "  if status <> 0 then return status"
+   .traceevent "V" 6 "R" "I" "r" 7 39 39 0 "status" ""
+   ret r7
+l130iffalse:
+   .srcstep 53 53 17 "budget-probe.crexx" 31 3 17 "  if argv[0] = 4 then do"
+   .traceevent "C" 4 "R" "V" "r" 17 53 53 0 "argv" ""
+   getattrs r16,a1,0
+   .traceevent "V" 6 "R" "I" "r" 16 53 53 0 "argv" ""
+   ieq r16,r16,4
+   .traceevent "O" 4 "R" "B" "r" 16 53 53 0 "" ""
+   brf l162iffalse,r16
+   .srcstep 54 54 17 "budget-probe.crexx" 31 18 22 "  if argv[0] = 4 then do"
+   .meta "budget-probe.main.projection"="b" ".llproject..projection" r15
+   .srcstep 42 42 17 "budget-probe.crexx" 32 5 40 "    projection = .llproject..projection"
+   null r15
+   setobjuninit r15,"llproject.projection"
+   .srcstep 43 43 17 "budget-probe.crexx" 33 5 36 "    projection = request.projection()"
+   .traceevent "V" 6 "R" "O" "r" 5 43 43 0 "request" ""
+   load r4,1
+   settpcall r15,§lllanguage.request.projection(),r4,r5,256
+   .traceevent "F" 4 "R" "O" "r" 15 43 43 0 "projection" ""
+   .traceevent "A" 6 "R" "O" "r" 15 43 43 0 "projection" ""
+   .srcstep 44 44 17 "budget-probe.crexx" 34 5 28 "    status = projection.run()"
+   .traceevent "V" 6 "R" "O" "r" 15 44 44 0 "projection" ""
+   load r14,1
+   settpcall r7,§llproject.projection.run(),r14,r15,256
+   .traceevent "F" 4 "R" "I" "r" 7 44 44 0 "run" ""
+   .traceevent "A" 6 "R" "I" "r" 7 44 44 0 "status" ""
+   .srcstep 52 52 17 "budget-probe.crexx" 35 5 56 "    say 'PROJECT|' || status || '|' || projection.error()"
+   .srcstep 51 51 17 "budget-probe.crexx" 35 9 19 "    say 'PROJECT|' || status || '|' || projection.error()"
+   .srcstep 45 45 33 "budget-probe.crexx" 35 30 32 "    say 'PROJECT|' || status || '|' || projection.error()"
+   itos r7
+   .traceevent "V" 6 "R" "S" "r" 7 45 45 0 "status" ""
+   concat r14,"PROJECT|",r7
+   .traceevent "O" 4 "R" "S" "r" 14 45 45 0 "" ""
+   concat r20,r14,"|"
+   .traceevent "O" 4 "R" "S" "r" 20 45 45 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 20 45 45 0 "__inline_lhs_155_160" ""
+   .srcstep 50 50 33 "budget-probe.crexx" 35 37 39 "    say 'PROJECT|' || status || '|' || projection.error()"
+   .traceevent "V" 6 "R" "S" "r" 20 52 52 0 "__inline_lhs_155_160" ""
+   .srcstep 49 49 17 "budget-probe.crexx" 35 40 50 "    say 'PROJECT|' || status || '|' || projection.error()"
+   .srcstep 46 46 33 "budget-probe.crexx" 35 40 50 "    say 'PROJECT|' || status || '|' || projection.error()"
+   .traceevent "V" 6 "R" "O" "r" 15 46 46 0 "projection" ""
+   .traceevent "A" 6 "R" "O" "r" 15 46 46 0 "§this" ""
+   .srcstep 47 47 6 "llproject@llproject.rxbin" 35 50 50 "    say 'PROJECT|' || status || '|' || projection.error()"
+   .traceevent "V" 6 "R" "O" "r" 15 52 52 0 "§this" ""
+   assertinitialized r15
+   .srcstep 48 48 25 "llproject.crexx" 136 5 18 "    return _error"
+   linkattr1 r14,r15,3
+   .traceevent "V" 6 "R" "S" "r" 14 52 52 0 "_error" ""
+   scopy r13,r14
+   unlink r14
+l9435bexprend:
+   concat r13,r20,r13
+   .traceevent "O" 4 "R" "S" "r" 13 52 52 0 "" ""
+   scopy r12,r13
+l9137bexprend:
+   say r12
+   endlife r15
+   .meta "budget-probe.main.projection"
+l162iffalse:
+   .srcstep 55 55 17 "budget-probe.crexx" 37 3 16 "  return status"
+   .traceevent "V" 6 "R" "I" "r" 7 55 55 0 "status" ""
+   ret r7
+   .meta "budget-probe.main.argv"
+   .meta "budget-probe.main.limits"
+   .meta "budget-probe.main.request"
+   .meta "budget-probe.main.status"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/budget-noopt/pratt/levell_settings@levell_settings.rxbin */
+
+levell_settings.language() .expose=levell_settings.language
+   .meta "levell_settings.language"="b" ".lllanguage..definition" levell_settings.language() ""
+   .meta "levell_settings.language"=".autoload" "levell_settings"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: llproject@llproject.rxbin */
+
+§llproject.projection.run() .expose=llproject.projection.run
+   .meta "llproject.projection.run"="b" ".int" §llproject.projection.run() ""
+   .meta "llproject.projection.run"=".autoload" "llproject"
+
+/* Imported Declaration from file: lllimits@lllimits.rxbin */
+
+§lllimits.policy.§factory() .expose=lllimits.policy.§factory
+   .meta "lllimits.policy.§factory"="b" ".lllimits..policy" §lllimits.policy.§factory() ""
+   .meta "lllimits.policy.§factory"=".autoload" "lllimits"
+
+§lllimits.policy.set() .expose=lllimits.policy.set
+   .meta "lllimits.policy.set"="b" ".int" §lllimits.policy.set() "name=.string,value=.int"
+   .meta "lllimits.policy.set"=".autoload" "lllimits"
+
+/* Imported Declaration from file: wordpos@library.rxbin */
+
+rxfnsb.wordpos() .expose=rxfnsb.wordpos
+   .meta "rxfnsb.wordpos"="b" ".int" rxfnsb.wordpos() "search=.string,string=.string,?start=.int"
+   .meta "rxfnsb.wordpos"=".autoload" "library"
+
+/* Imported Declaration from file: llrecover@llrecover.rxbin */
+
+§llrecover.request.§factory() .expose=llrecover.request.§factory
+   .meta "llrecover.request.§factory"="b" ".llrecover..request" §llrecover.request.§factory() "language=.lllanguage..definition,source=.binary,?errors=.int,?limits=.lllimits..policy"
+   .meta "llrecover.request.§factory"=".autoload" "llrecover"
+
+§llrecover.request.run() .expose=llrecover.request.run
+   .meta "llrecover.request.run"="b" ".int" §llrecover.request.run() ""
+   .meta "llrecover.request.run"=".autoload" "llrecover"
+
+/* Imported Declaration from file: lllanguage@lllanguage.rxbin */
+
+§lllanguage.request.§factory() .expose=lllanguage.request.§factory
+   .meta "lllanguage.request.§factory"="b" ".lllanguage..request" §lllanguage.request.§factory() "language=.definition,source=.binary,?limits=.lllimits..policy"
+   .meta "lllanguage.request.§factory"=".autoload" "lllanguage"
+
+§lllanguage.request.parse() .expose=lllanguage.request.parse
+   .meta "lllanguage.request.parse"="b" ".int" §lllanguage.request.parse() ""
+   .meta "lllanguage.request.parse"=".autoload" "lllanguage"
+
+§lllanguage.request.projection() .expose=lllanguage.request.projection
+   .meta "lllanguage.request.projection"="b" ".llproject..projection" §lllanguage.request.projection() ""
+   .meta "lllanguage.request.projection"=".autoload" "lllanguage"

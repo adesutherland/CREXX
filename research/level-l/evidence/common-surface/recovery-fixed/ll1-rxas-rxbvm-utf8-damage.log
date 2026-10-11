@@ -1,0 +1,4 @@
+Parse status: 4; errors: 1
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/recovery-fixed/ll1/utf8-damage.settings: SETTINGS_PARSE at line 1, column 9 (byte 8): LL_UTF8: malformed UTF-8
+  source bytes: 6669727374203D20FF0A7468697264203D2033
+LL_UTF8: malformed UTF-8

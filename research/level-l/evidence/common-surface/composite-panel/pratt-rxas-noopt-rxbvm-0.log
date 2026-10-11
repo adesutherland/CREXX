@@ -1,0 +1,7 @@
+STATUS|0
+NODE|0|arithmetic|0|5|1
+NODE|1|sum|0|5|2
+NODE|2|number|0|1|0
+NODE|2|product|2|5|2
+NODE|3|number|2|3|0
+NODE|3|number|4|5|0

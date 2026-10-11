@@ -1,0 +1,12 @@
+options levell
+namespace probe_language
+eof: token = 0
+value: token
+bad_encoding: diagnostic = 'malformed bytes'
+bad_character: diagnostic = 'unmatched scalar'
+scan: lexer input utf8
+  pair: pattern = U+03B1{2,3}
+  value.rule: rule = pair U+1F600? then emit value
+  end.input: rule = eof then emit eof
+  malformed.input: rule = malformed then error bad_encoding
+  unmatched.input: rule = otherwise then error bad_character

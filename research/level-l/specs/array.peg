@@ -1,0 +1,3 @@
+Array <- @11 Elements? @12
+Elements <- Value (@10 Value)*
+Value <- @2 / @3 / Array

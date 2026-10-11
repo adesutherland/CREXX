@@ -1,0 +1,162 @@
+/* Authored declarations -> shared grammar -> independent native backends. */
+options levell
+import rxfnsb
+import llfront
+import llcore
+import llpeg
+import lltabpeg
+import lllr
+import llearley
+import llproject
+main: procedure = .int expose failures cases
+  failures = 0; cases = 0
+  source = readfile('research/level-l/specs/config.levell')
+  doc = .llfront..document(source)
+  if doc.run() <> 0 then do
+    say doc.error(); return 1
+  end
+  graph = doc.grammar(); root = doc.root()
+  call pegcase graph,root,'',0
+  call pegcase graph,root,'port = 8080; name="demo"; flags=[true, false, [1,-2], "a\"b"];',0
+  call pegcase graph,root,'x=[]; y=[[]]; x=1;',0
+  call pegcase graph,root,'x=[1,];',1
+  call pegcase graph,root,'x="unterminated;',1
+  call pegcase graph,root,'x=1',1
+  call pegcase graph,root,'x=truefalse;',1
+  call pegcase graph,root,'x=1; garbage',1
+  /* Independently handwritten format oracle; deterministic mutation corpus. */
+  path = 'research/level-l/evidence/config-reference.txt'
+  do while lines(path)
+    row = linein(path); first = pos('|',row); second = pos('|',row,first + 1)
+    hex = substr(row,1,first - 1); expected = substr(row,first + 1,second - first - 1) as .int
+    wanted = substr(row,second + 1); bytes = x2bin(hex); input = .llcore..stream(bytes)
+    a = .llpeg..parser(graph,root,input,'packrat'); b = .lltabpeg..parser(graph,root,input)
+    ast = a.run(); bst = b.run(); cases = cases + 1
+    if ast <> expected | bst <> expected then do
+      failures = failures + 1; say 'FAIL independent format acceptance:' hex ast bst expected
+    end
+    if ast = 0 then do
+      ta = a.arena(); tb = b.tree()
+      observed = named(ta,a.root())
+      if observed \== wanted | named(tb,b.root()) \== wanted then do
+        failures = failures + 1; say 'FAIL independent format tree:' hex observed wanted
+      end
+      if pos('706F7274',hex) = 1 then say 'CONFIG_TREE='observed
+    end
+  end
+  /* Two algorithms on one authored CFG, independently supplied tokens. */
+  source = readfile('research/level-l/specs/token-list.levell')
+  doc = .llfront..document(source)
+  if doc.run() <> 0 then do
+    say doc.error(); return 1
+  end
+  graph = doc.grammar(); root = doc.root(); table = .lllr..tables(graph,root,'lr1')
+  call check table.status() = 0,'authored CFG builds canonical LR tables'
+  do n = 0 to 4
+    call tokenwords graph,root,table,doc.schema(),'',n
+  end
+  /* Deterministic named lowering and module metadata. */
+  repeatdoc = .llfront..document(source); status = repeatdoc.run()
+  again = repeatdoc.grammar()
+  call check status = 0 & again.signature() == graph.signature() & repeatdoc.module() = 'tokenlist','deterministic lowering'
+  bad = .llfront..document(changestr('comma item',source,'missing item'))
+  call check bad.run() = 3 & pos('line 6',bad.error()) > 0 & pos('missing',bad.error()) > 0,'undefined rule with source location'
+  say bad.error()
+  bad = .llfront..document(changestr('input tokens',source,'input unicode'))
+  call check bad.run() = 3 & pos('Unicode',bad.error()) > 0,'Unicode ingress rejected explicitly'
+  bad = .llfront..document(source,2)
+  call check bad.run() = 4,'construction exhaustion is not invalid grammar'
+  source = "options levell namespace traps read: parser semantics ordered input bytes start start start: rule = ('a' | 'ab') 'b'"
+  doc = .llfront..document(source); status = doc.run()
+  call check status = 0,'ordered-choice declaration parses'
+  graph = doc.grammar()
+  call pegcase graph,doc.root(),'ab',0
+  call pegcase graph,doc.root(),'abb',1
+  wrong = .lllr..tables(graph,doc.root(),'lr1')
+  call check wrong.status() <> 0,'LR rejects ordered meaning instead of changing choice'
+  say wrong.error()
+  source = "options levell namespace bad read: parser semantics ordered input bytes start start start: rule = missing"
+  bad = .llfront..document(source)
+  call check bad.run() = 3,'missing forward reference rejected'
+  bad = .llfront..document(source || ' /* open')
+  call check bad.run() = 3 & pos('comment',bad.error()) > 0,'lexical source failure distinguished'
+  say 'front_cases='cases
+  say 'front_failures='failures
+  if failures then return 1
+  return 0
+readfile: procedure = .string
+  arg path = .string
+  out = ''
+  do while lines(path)
+    out = out || linein(path) || '0a'x
+  end
+  return out
+pegcase: procedure = .void expose failures cases
+  arg graph = .llcore..grammar, root = .int, text = .string, expected = .int
+  cases = cases + 1; input = .llcore..stream(text as .binary)
+  a = .llpeg..parser(graph,root,input,'packrat'); b = .lltabpeg..parser(graph,root,input)
+  x = a.run(); y = b.run()
+  if x <> expected | y <> expected then do
+    failures = failures + 1; say 'FAIL parse:' text x y a.error() b.error(); return
+  end
+  if x = 0 then do
+    ta = a.arena(); tb = b.tree()
+    if ta.validate() = 0 | tb.validate() = 0 | canonical(ta,a.root()) \== canonical(tb,b.root()) then do
+      failures = failures + 1; say 'FAIL tree:' text
+    end
+  end
+  return
+tokenwords: procedure = .void expose cases failures
+  arg graph = .llcore..grammar, root = .int, table = .lllr..tables, schema = .llproject..schema, text = .string, remaining = .int
+  if remaining > 0 then do
+    call tokenwords graph,root,table,schema,text || 'x',remaining - 1
+    call tokenwords graph,root,table,schema,text || ',',remaining - 1
+    return
+  end
+  cases = cases + 1; input = .llcore..stream.tokens(text as .binary)
+  expected = 0
+  if length(text) = 0 | (length(text) <mod> 2) = 0 then expected = 1
+  do i = 1 to length(text)
+    kind = 1
+    if substr(text,i,1) = ',' then kind = 2
+    if ((i <mod> 2) = 1 & kind <> 1) | ((i <mod> 2) = 0 & kind <> 2) then expected = 1
+    ok = input.append(kind,i - 1,i)
+  end
+  lr = .lllr..parser(table,input); earley = .llearley..parser(graph,root,input)
+  a = lr.run(); b = earley.run()
+  if a <> expected | b <> expected then do
+    failures = failures + 1; say 'FAIL token acceptance:' text a b expected
+  end
+  if a = 0 then do
+    tree = lr.tree(); projection = .llproject..projection(tree,lr.root(),schema)
+    if projection.run() <> 0 then do
+      failures = failures + 1; say 'FAIL authored projection:' projection.error()
+    end
+    else do
+      tree = projection.tree()
+      if tree.label(projection.root()) <> 'document' | tree.validate() = 0 then failures = failures + 1
+    end
+  end
+  return
+canonical: procedure = .string
+  arg tree = .llcore..tree, node = .int
+  if node = 0 then return ''
+  return '(' || tree.label(node) || ',' || tree.start(node) || ',' || tree.finish(node) || canonical(tree,tree.left(node)) || canonical(tree,tree.right(node)) || ')'
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return
+
+/** Consumer view retains named semantic regions and original source extents. */
+named: procedure = .string
+  arg tree = .llcore..tree, node = .int
+  if node = 0 then return ''
+  label = tree.label(node)
+  if label = 'space' then return ''
+  if label = 'name' | label = 'number' | label = 'string' | label = 'boolean' then return label || '@' || tree.start(node) || ':' || tree.finish(node) || '[]'
+  children = named(tree,tree.left(node)) || named(tree,tree.right(node))
+  if label = 'document' | label = 'entry' | label = 'array' then return label || '@' || tree.start(node) || ':' || tree.finish(node) || '[' || children || ']'
+  return children

@@ -1,0 +1,118 @@
+/* cREXX License (MIT). RexxScript 1 owned parsed program. */
+options levelb
+namespace rexxscript1 expose program compile
+import rxfnsb
+import llcore
+import lltree
+import lllanguage
+import llsource
+import rexxscriptgrammar
+
+/** Modern RexxScript is explicitly selected by this namespace. */
+program: class
+  _source = .binary
+  _view = .lltree..view
+  _compiled = .int
+  _status = .int
+  _error = .string
+  _offset = .int
+  *: factory
+    arg source = .binary
+    _source = source; _compiled = 0; _status = 0; _error = ''; _offset = 0
+    return
+  compile: method = .int
+    if _compiled then return _status
+    _compiled = 1; language = default_language()
+    request = .lllanguage..request(language,_source)
+    _status = request.lex(0)
+    if _status <> 0 then do
+      _offset = request.offset(); _error = request.error(); return _status
+    end
+    original = request.tokens(); layout = .llcore..stream.tokens(_source)
+    separator = language.tokenid('separator'); comma = language.tokenid('comma')
+    opening = language.tokenid('open'); closing = language.tokenid('close')
+    identifier = language.tokenid('identifier'); number = language.tokenid('number'); string = language.tokenid('string')
+    /* Layout runs before keyword classification: a continued physical line
+     * must not reset the statement-keyword state. Commas inside calls retain
+     * their argument-separator meaning. Semicolons are always terminators. */
+    depth = 0; previousword = ''; continuation = 0
+    i = .int; kind = .int; start = .int; finish = .int; ok = .int
+    do i = 0 to original.size() - 1
+      kind = original.symbol(i); next = original.symbol(i + 1)
+      start = original.start(i); finish = original.finish(i + 1)
+      raw = binsubstr(_source,start + 1,finish - start) as .string
+      nextraw = ''
+      if i + 1 < original.size() then nextraw = upper(strip(binsubstr(_source,original.start(i + 1) + 1,original.finish(i + 2) - original.start(i + 1)) as .string))
+      if kind = comma & next = separator & nextraw <> ';' & depth = 0 then do
+        continuation = 1; iterate
+      end
+      if kind = separator & raw <> ';' then do
+        if depth > 0 | continuation | previousword = 'THEN' | previousword = 'ELSE' | nextraw = 'THEN' | nextraw = 'ELSE' then iterate
+      end
+      continuation = 0
+      ok = layout.append(kind,start,finish)
+      if kind = opening then depth = depth + 1
+      if kind = closing then depth = depth - 1
+      previousword = ''
+      if kind = identifier then previousword = upper(raw)
+    end
+    _status = request.classify_tokens(layout)
+    if _status <> 0 then do
+      _offset = request.offset(); _error = request.error(); return _status
+    end
+    original = request.tokens(); joined = .llcore..stream.tokens(_source)
+    previous = -1; previousend = 0
+    do i = 0 to original.size() - 1
+      kind = original.symbol(i)
+      start = original.start(i); finish = original.finish(i + 1)
+      leftterm = previous = identifier | previous = number | previous = string | previous = closing
+      rightterm = kind = identifier | kind = number | kind = string | kind = opening
+      function = previous = identifier & kind = opening & previousend = start
+      if leftterm & rightterm & function = 0 then do
+        token = language.tokenid('abut')
+        if start > previousend then token = language.tokenid('blank')
+        ok = joined.synthetic(token,previousend)
+      end
+      ok = joined.append(kind,start,finish)
+      previous = kind; previousend = finish
+    end
+    _status = request.parse_tokens(joined)
+    if _status <> 0 then do
+      _offset = request.offset(); _error = request.error(); return _status
+    end
+    _view = .lltree..view(request.tree(),request.root())
+    if _view.error() <> '' then do
+      _status = 2; _error = _view.error()
+    end
+    return _status
+  view: method = .lltree..view
+    return _view
+  source: method = .binary
+    return _source
+  offset: method = .int
+    return _offset
+  code: method = .string
+    if _status = 0 then return ''
+    if _status = 2 then return 'RS_PARSE_LIMIT'
+    if _status = 3 then return 'RS_LANGUAGE'
+    return 'RS_PARSE'
+  error: method = .string
+    if _status = 0 then return ''
+    return llsource..diagnostic(_source,_offset,code(),_error)
+
+/** Public parse-once convenience. The returned value owns its validated tree;
+ * independent executions retain their own immutable program value. */
+compile: procedure = .program
+  arg source = .binary
+  result = .program(source)
+  status = result.compile()
+  return result
+
+/** One immutable generated definition per module instance. Programs and runs
+ * receive owned values; constructing a new program never regenerates LR tables. */
+boot: initialiser expose language_tables
+  language_tables = rexxscriptgrammar..language()
+  return
+
+default_language: procedure = .lllanguage..definition expose language_tables
+  return language_tables

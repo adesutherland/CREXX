@@ -1,0 +1,139 @@
+/* cREXX License (MIT). Scalar NUMERIC_COMMON operations over RexxValue. */
+options levelb numeric_common
+namespace rexxscriptoperators expose binary unary truth
+import rxfnsb
+import rexxvalue
+
+/** These operations follow Level G types; Classic rules remain inside BIFs. */
+truth: procedure = .boolean
+  arg value = .RexxValue
+  if value.hasInt() then return value.asInt() <> 0
+  if value.hasFloat() then return value.asFloat() <> 0
+  if value.hasDecimal() then return value.asDecimal() <> 0
+  text = value.asString()
+  if text then return 1
+  return 0
+unary: procedure = .RexxValue
+  arg op = .string, value = .RexxValue
+  select op
+    when 'not' then return .RexxValue.fromInt(\truth(value))
+    when 'bitnot' then return .RexxValue.fromInt(<not> value.asInt())
+    when 'plus' then do
+      if value.hasInt() then return value
+      if value.hasDecimal() then return value
+      return .RexxValue.fromFloat(value.asFloat())
+    end
+    when 'minus' then do
+      if value.hasInt() then return .RexxValue.fromInt(-value.asInt())
+      if value.hasFloat() then return .RexxValue.fromFloat(-value.asFloat())
+      if value.hasDecimal() then return .RexxValue.fromDecimal(-value.asDecimal())
+      return .RexxValue.fromFloat(-value.asFloat())
+    end
+    otherwise return value
+  end
+  return value
+binary: procedure = .RexxValue
+  arg op = .string, left = .RexxValue, right = .RexxValue
+  if wordpos(op,'assign ne lt gt le ge strict strictne strictlt strictgt strictle strictge') > 0 then return comparison(op,left,right)
+  select op
+    when 'concat' then return left.concat(right)
+    when 'abut' then return left.concat(right)
+    when 'blank' then return left.spaceConcat(right)
+    when 'and' then return .RexxValue.fromInt(truth(left) & truth(right))
+    when 'or' then return .RexxValue.fromInt(truth(left) | truth(right))
+    when 'xor' then return .RexxValue.fromInt(truth(left) <> truth(right))
+    otherwise nop
+  end
+  if wordpos(op,'bitand bitor bitxor idiv imod shl shr has set clear') > 0 then do
+    a = left.asInt(); b = right.asInt(); result = 0
+    select op
+      when 'bitand' then result = a <and> b
+      when 'bitor' then result = a <or> b
+      when 'bitxor' then result = a <xor> b
+      when 'idiv' then result = a <idiv> b
+      when 'imod' then result = a <mod> b
+      when 'shl' then result = a <shl> b
+      when 'shr' then result = a <shr> b
+      when 'has' then result = a <has> b
+      when 'set' then result = a <set> b
+      when 'clear' then result = a <clear> b
+    end
+    return .RexxValue.fromInt(result)
+  end
+  if left.hasInt() & right.hasInt() then do
+    ia = left.asInt(); ib = right.asInt(); integer_result = 0
+    select op
+      when 'plus' then integer_result = ia + ib
+      when 'minus' then integer_result = ia - ib
+      when 'times' then integer_result = ia * ib
+      when 'divide' then integer_result = ia / ib
+      when 'remainder' then integer_result = ia % ib
+      when 'power' then do
+        integer_result = ia ** ib
+      end
+    end
+    return .RexxValue.fromInt(integer_result)
+  end
+  if left.hasDecimal() = 0 & right.hasDecimal() = 0 then do
+    fa = left.asFloat(); fb = right.asFloat(); float_result = 0 as .float
+    select op
+      when 'plus' then float_result = fa + fb
+      when 'minus' then float_result = fa - fb
+      when 'times' then float_result = fa * fb
+      when 'divide' then float_result = fa / fb
+      when 'remainder' then float_result = fa % fb
+      when 'power' then float_result = fa ** fb
+    end
+    return .RexxValue.fromFloat(float_result)
+  end
+  da = left.asDecimal(); db = right.asDecimal(); decimal_result = 0 as .decimal
+  select op
+    when 'plus' then decimal_result = da + db
+    when 'minus' then decimal_result = da - db
+    when 'times' then decimal_result = da * db
+    when 'divide' then decimal_result = da / db
+    when 'remainder' then decimal_result = da % db
+    when 'power' then decimal_result = da ** db
+  end
+  return .RexxValue.fromDecimal(decimal_result)
+
+/** Preserve Level G's operand promotion before comparing. Classic RexxValue
+ * comparison converts numeric operands through decimal text and is therefore
+ * not a substitute for native integer/float comparison. Cached numeric views
+ * take precedence over an additional printable string view. */
+comparison: procedure = .RexxValue
+  arg op = .string, left = .RexxValue, right = .RexxValue
+  equal = .boolean; below = .boolean; above = .boolean
+  numeric_left = left.hasInt() | left.hasFloat() | left.hasDecimal()
+  numeric_right = right.hasInt() | right.hasFloat() | right.hasDecimal()
+  select
+    when left(op,6) = 'strict' then do
+      sa = left.asString(); sb = right.asString()
+      equal = sa == sb; below = sa << sb; above = sa >> sb
+    end
+    when numeric_left = 0 | numeric_right = 0 then do
+      ta = left.asString(); tb = right.asString()
+      equal = ta = tb; below = ta < tb; above = ta > tb
+    end
+    when left.hasDecimal() | right.hasDecimal() then do
+      da = left.asDecimal(); db = right.asDecimal()
+      equal = da = db; below = da < db; above = da > db
+    end
+    when left.hasFloat() | right.hasFloat() then do
+      fa = left.asFloat(); fb = right.asFloat()
+      equal = fa = fb; below = fa < fb; above = fa > fb
+    end
+    otherwise do
+      ia = left.asInt(); ib = right.asInt()
+      equal = ia = ib; below = ia < ib; above = ia > ib
+    end
+  end
+  select
+    when op = 'assign' | op = 'strict' then return .RexxValue.fromInt(equal)
+    when op = 'ne' | op = 'strictne' then return .RexxValue.fromInt(\equal)
+    when op = 'lt' | op = 'strictlt' then return .RexxValue.fromInt(below)
+    when op = 'gt' | op = 'strictgt' then return .RexxValue.fromInt(above)
+    when op = 'le' | op = 'strictle' then return .RexxValue.fromInt(below | equal)
+    when op = 'ge' | op = 'strictge' then return .RexxValue.fromInt(above | equal)
+  end
+  return .RexxValue.fromInt(0)

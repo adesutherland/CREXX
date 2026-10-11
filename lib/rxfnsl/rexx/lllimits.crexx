@@ -1,0 +1,60 @@
+/* cREXX License (MIT). Host resource policy, separate from grammar meaning. */
+options levelb
+namespace lllimits expose policy describe
+import rxfnsb
+
+/** A resource outcome is separate from syntax rejection. A zero required
+ * count means only that the budget is insufficient; do not invent a count
+ * when calculating the full requirement could itself overflow.
+ */
+describe: procedure = .string
+  arg name = .string, limit = .int, required = .int
+  detail = ', more required'
+  if required > 0 then detail = ', required at least ' || required
+  return 'LL_RESOURCE_LIMIT: ' || name || ' budget ' || limit || detail || '. Increase the host budget or reduce the workload.'
+
+/** Optional build/request budgets. Defaults are engineering policy, not
+ * mathematical language limits or promises about resident memory or time.
+ * Only connected budgets are accepted: unknown keys are never ignored.
+ */
+policy: class
+  _values = .int[]
+  _error = .string
+  *: factory
+    _error = ''
+    return
+  slot: method = .int
+    arg name = .string
+    return wordpos(lower(name),'lr.states source.bytes scan.work parse.work earley.cells tree.entries')
+  limit: method = .int
+    arg name = .string
+    which = slot(name)
+    if which = 0 then return 0
+    if _values[which] > 0 then return _values[which]
+    select which
+      when 1 then return 8192
+      when 2 then return 1048576
+      when 3 then return 10000000
+      when 4 then return 1000000
+      when 5 then return 8000000
+      when 6 then return 1000000
+    end
+    return 0
+  set: method = .int
+    arg name = .string, value = .int
+    which = slot(name)
+    if which = 0 then do
+      _error = 'unknown resource budget ' || name || '; supported: lr.states, source.bytes, scan.work, parse.work, earley.cells, tree.entries'
+      return 0
+    end
+    if value < 1 then do
+      _error = 'resource budget ' || name || ' must be a positive count'; return 0
+    end
+    _values[which] = value
+    return 1
+  exhausted: method = .string
+    arg name = .string, used = .int
+    return describe(name,limit(name),used)
+  error: method = .string
+    return _error
+

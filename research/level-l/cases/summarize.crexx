@@ -1,0 +1,44 @@
+/* Level B raw-sample summary; ordinary research medians, no product verdict. */
+options levelb
+import rxfnsb
+arg argv = .string[]
+if argv[0] <> 1 then return 1
+ignored = linein(argv[1])
+label = ''; count = 0
+charvalues = .int[]; tokenvalues = .int[]
+vm = ''; bytes = 0; tokens = 0; charops = 0; tokenops = 0; charcells = 0; tokencells = 0
+say '| VM | Case | Bytes / tokens | Char median us | Token total median us | Ratio | Operation counts char / token | Cells char / token |'
+say '|---|---|---:|---:|---:|---:|---:|---:|'
+do while lines(argv[1])
+  row = translate(linein(argv[1]),' ',',')
+  if word(row,3) = '0' then iterate
+  if label <> '' & label <> word(row,2) then do
+    call emit vm,label,bytes,tokens,charvalues,tokenvalues,charops,tokenops,charcells,tokencells
+    count = 0
+  end
+  vm = word(row,1); label = word(row,2)
+  bytes = word(row,5); tokens = word(row,6)
+  count = count + 1
+  charvalues[count] = word(row,7); tokenvalues[count] = word(row,10)
+  charops = word(row,11); tokenops = word(row,12)
+  charcells = word(row,13); tokencells = word(row,14)
+end
+if count > 0 then call emit vm,label,bytes,tokens,charvalues,tokenvalues,charops,tokenops,charcells,tokencells
+return 0
+
+emit: procedure = .void
+  arg vm = .string, label = .string, bytes = .int, tokens = .int, charvalues = .int[], tokenvalues = .int[], charops = .int, tokenops = .int, charcells = .int, tokencells = .int
+  left = median(charvalues); right = median(tokenvalues)
+  ratio = left / right
+  say '| ' || vm || ' | ' || label || ' | ' || bytes || ' / ' || tokens || ' | ' || left || ' | ' || right || ' | ' || strip(format(ratio,8,2)) || ' | ' || charops || ' / ' || tokenops || ' | ' || charcells || ' / ' || tokencells || ' |'
+  return
+median: procedure = .float
+  arg values = .int[]
+  do index = 2 to values[0]
+    item = values[index]; at = index - 1
+    do while at > 0 & values[at] > item
+      values[at + 1] = values[at]; at = at - 1
+    end
+    values[at + 1] = item
+  end
+  return (values[3] + values[4]) / 2.0

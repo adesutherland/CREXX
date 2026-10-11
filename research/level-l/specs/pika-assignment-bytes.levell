@@ -1,0 +1,15 @@
+options levell
+namespace pikaassignbytes
+read: parser semantics pika input bytes start document
+any: charset = U+0000 to U+00FF
+letter: charset = U+0041 to U+005A | U+0061 to U+007A | U+005F
+digit: charset = U+0030 to U+0039
+white: charset = U+0020 | U+0009 | U+000D | U+000A
+newline: charset = U+000D | U+000A
+block: rule = '/*' (!'*/' any)* '*/'
+line: rule = '//' (!newline any)*
+space: rule = (white | block | line)*
+name: rule = letter (letter | digit)*
+integer: rule = digit+
+assignment: rule = name space '=' space integer space ';'
+document: rule = space assignment (space assignment)* space

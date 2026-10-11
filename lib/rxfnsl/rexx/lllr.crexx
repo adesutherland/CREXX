@@ -1,0 +1,686 @@
+/* cREXX License (MIT). Canonical LR(1) construction with explicit LALR merging. */
+options levelb
+namespace lllr expose items tables parser engine
+import llcfg
+import llcore
+import llcheck
+import llcap
+import lllimits
+import rxfnsb
+
+items: class
+  _size = .int
+  _p = .int[]
+  _dot = .int[]
+  _look = .int[]
+  _membership = .binary
+  *: factory
+    _size = 0
+    return
+  add: method = .int
+    arg p = .int, dot = .int, look = .int
+    if <blen>(_membership) = 0 then call binresize _membership,32771 * 8
+    key = p * 4294967296 + dot * 1024 + look + 1
+    slot = key <mod> 32771
+    do while <at..i64>(slot * 8) _membership <> 0
+      if <at..i64>(slot * 8) _membership = key then return 0
+      slot = (slot + 1) <mod> 32771
+    end
+    <at..i64>(slot * 8) _membership = key
+    if _size >= 16384 then return -1
+    _size = _size + 1; _p[_size] = p; _dot[_size] = dot; _look[_size] = look
+    return 1
+  seal: method = .void
+    call binresize _membership,0
+    return
+  size: method = .int
+    return _size
+  production: method = .int
+    arg item = .int
+    return _p[item]
+  dot: method = .int
+    arg item = .int
+    return _dot[item]
+  look: method = .int
+    arg item = .int
+    return _look[item]
+  signature: method = .binary
+    arg core = .int
+    i = .int
+    keys = .int[]
+    do i = 1 to _size
+      keys[i] = _p[i] * 4294967296 + _dot[i] * 1024
+      if core = 0 then keys[i] = keys[i] + _look[i]
+    end
+    /* Stable bottom-up merge sort avoids quadratic grammar-construction work. */
+    width = 1; scratch = .int[]
+    do while width < _size
+      do first = 1 to _size by width * 2
+        middle = min(first + width,_size + 1); last = min(first + width * 2,_size + 1)
+        a = first; b = middle
+        do out = first to last - 1
+          if a < middle then do
+            if b >= last then do
+              scratch[out] = keys[a]; a = a + 1
+            end
+            else if keys[a] <= keys[b] then do
+              scratch[out] = keys[a]; a = a + 1
+            end
+            else do
+              scratch[out] = keys[b]; b = b + 1
+            end
+          end
+          else do
+            scratch[out] = keys[b]; b = b + 1
+          end
+        end
+      end
+      keys = scratch; width = width * 2
+    end
+    result = .binary; previous = -1; count = 0
+    call binresize result,_size * 8
+    do i = 1 to _size
+      if keys[i] <> previous then do
+        <at..i64>(count * 8) result = keys[i]; count = count + 1
+      end
+      previous = keys[i]
+    end
+    call binresize result,count * 8
+    return result
+
+tables: class
+  _cfg = .llcfg..productions
+  _states = .items[]
+  _mergedstates = .items[]
+  _signatures = .binary[]
+  _cores = .binary[]
+  _map = .int[]
+  _trans = .int[]
+  _mergedtrans = .int[]
+  _actions = .int[]
+  _mergedactions = .int[]
+  _canonical = .int
+  _built = .int
+  _requested = .string
+  _count = .int
+  _symbols = .int
+  _merged = .int
+  _status = .int
+  _error = .string
+  _conflictstate = .int
+  _conflictsymbol = .int
+  _leftaction = .int
+  _rightaction = .int
+  _productionhead = .int[]
+  _productionnext = .int[]
+  _suffixwidth = .int
+  _suffixnullable = .int[]
+  _suffixhead = .int[]
+  _suffixcount = .int[]
+  _suffixterms = .int[]
+  _image = .binary
+  _imageindex = .binary
+  _limits = .lllimits..policy
+  *: factory
+    arg graph = .llcore..grammar, root = .int, mode = .string, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
+    if initialized(_limits) = 0 then _limits = .lllimits..policy()
+    _cfg = .llcfg..productions(graph,root); _status = 0; _error = ''; _built = 0; _requested = mode
+    _canonical = 0; _count = 0; _merged = 0; _conflictstate = 0; _conflictsymbol = -1
+    _leftaction = 0; _rightaction = 0
+    return
+  /** Load a generated image, validating dimensions, targets and grammar identity.
+   * @param identity Common-grammar signature plus the selected root. */
+  loaded: factory
+    arg graph = .llcore..grammar, root = .int, image = .binary, identity = .string
+    _cfg = .llcfg..productions(graph,root); _built = 1; _requested = 'lr1'
+    _status = 3; _error = 'invalid generated LR image'; _merged = 0; _count = 0
+    if identity <> graph.signature() || '|root=' || root then return
+    if <blen>(image) < 12 then return
+    if <at..i32>(0) image <> 1279414833 then return
+    count = <at..i32>(4) image; symbols = <at..i32>(8) image
+    /* A generated image is checked against its representation, not the
+     * generating host's default state budget. 999999 is the accept opcode. */
+    if count < 1 | count >= 999999 | symbols <> 256 + _cfg.nonterminals() then return
+    if symbols < 1 | count > 2147483647 <idiv> max(257,symbols) then return
+    if (<blen>(image) - 12) % 8 <> 0 then return
+    if _cfg.status() <> 0 then do
+      _error = _cfg.error(); return
+    end
+    _count = count; _canonical = count; _symbols = symbols; offset = 12
+    /* Keep the immutable packed image. Only a compact per-state directory is
+     * constructed; parsing does not expand it into boxed integer arrays. */
+    call binresize _imageindex,count * 16
+    previous = -1; row = .int; column = .int; order = .int; slot = .int
+    extent = <blen>(image)
+    do while offset < extent
+      key = <at..i32>(offset) image; value = <at..i32>(offset + 4) image; offset = offset + 8
+      if key > 0 then do
+        if key > count * 257 then return
+        if value <> 999999 & (value > count | value < -_cfg.count()) then return
+        row = (key - 1) / 257; column = (key - 1) % 257
+        order = row * (257 + symbols) + column; slot = row * 16
+      end
+      else do
+        if key = 0 | -key > count * symbols | value < 0 | value > count then return
+        row = (-key - 1) / symbols; column = (-key - 1) % symbols
+        order = row * (257 + symbols) + 257 + column; slot = row * 16 + 8
+      end
+      /* The writer orders states, then actions, then gotos. Reject duplicates
+       * and reordered records before using binary search in a loaded table. */
+      if order <= previous | value = 0 then return
+      previous = order
+      records = <at..i32>(slot + 4) _imageindex
+      if records = 0 then <at..i32>(slot) _imageindex = offset - 8
+      <at..i32>(slot + 4) _imageindex = records + 1
+    end
+    _image = image; _status = 0; _error = ''
+    return
+  image: method = .binary
+    symbol = .int; value = .int
+    out = .binary
+    if status() <> 0 then return out
+    if <blen>(_image) <> 0 then return _image
+    call binresize out,12
+    <at..i32>(0) out = 1279414833; <at..i32>(4) out = _count; <at..i32>(8) out = _symbols
+    offset = 12
+    do state = 1 to _count
+      do symbol = 0 to 256
+        key = (state - 1) * 257 + symbol + 1
+        if _merged then value = _mergedactions[key]
+        else value = _actions[key]
+        if value <> 0 then do
+          call binresize out,offset + 8
+          <at..i32>(offset) out = key
+          <at..i32>(offset + 4) out = value; offset = offset + 8
+        end
+      end
+      do symbol = 1 to _symbols
+        value = _trans[(state - 1) * _symbols + symbol]
+        if _merged then value = _mergedtrans[(state - 1) * _symbols + symbol]
+        if value <> 0 then do
+          call binresize out,offset + 8
+          <at..i32>(offset) out = -((state - 1) * _symbols + symbol)
+          <at..i32>(offset + 4) out = value; offset = offset + 8
+        end
+      end
+    end
+    return out
+  build: method = .void
+    i = .int
+    if _built then return
+    _built = 1; mode = _requested
+    if _limits.error() <> '' then do
+      _status = 3; _error = _limits.error(); return
+    end
+    _status = _cfg.status(); _error = _cfg.error()
+    if _status <> 0 then return
+    if mode <> 'lr1' & mode <> 'lalr' then do
+      _status = 1; _error = 'unsupported LR table family'; return
+    end
+    if _cfg.maxrhs() > 2048 then do
+      _status = 4; _error = 'LR construction limit: RHS longer than 2048 symbols'; return
+    end
+    do production = _cfg.count() to 1 by -1
+      lhs = _cfg.lhs(production)
+      _productionnext[production] = _productionhead[lhs]
+      _productionhead[lhs] = production
+    end
+    call prepareclosure()
+    _symbols = 256 + _cfg.nonterminals()
+    initial = .items(); ok = initial.add(1,0,256)
+    initial = closure(initial)
+    if _status <> 0 then return
+    ok = intern(initial)
+    state = 1; emptyints = .int[]
+    do while state <= _canonical & _status = 0
+      current = _states[state]
+      active = emptyints
+      do i = 1 to current.size()
+        nextsymbol = _cfg.rhs(current.production(i),current.dot(i))
+        if nextsymbol <> 0 then active[encoded(nextsymbol)] = 1
+      end
+      do symbol = 1 to _symbols
+        if active[symbol] = 0 then iterate
+        selected = .items()
+        do i = 1 to current.size()
+          p = current.production(i); dot = current.dot(i)
+          next = _cfg.rhs(p,dot)
+          if next <> 0 then do
+            if encoded(next) = symbol then ok = selected.add(p,dot + 1,current.look(i))
+          end
+        end
+        if selected.size() > 0 then do
+          selected = closure(selected)
+          if _status <> 0 then return
+          destination = intern(selected)
+          if _status <> 0 then return
+          _trans[(state - 1) * _symbols + symbol] = destination
+        end
+      end
+      state = state + 1
+    end
+    _count = _canonical
+    call buildactions
+    if _status <> 0 then return
+    if mode = 'lalr' then do
+      call mergecores
+      if _status <> 0 then return
+      call buildactions
+    end
+    return
+  encoded: method = .int
+    arg symbol = .int
+    if symbol < 0 then return -symbol
+    return 256 + symbol
+  /** FIRST(beta a) = FIRST(beta)-epsilon, plus a when beta is nullable.
+   * Cache the grammar-only part once, and expand it once per item core in a
+   * closure. Only the propagated lookahead depends on each LR(1) item. */
+  prepareclosure: method = .void
+    terminal = .int
+    _suffixwidth = _cfg.maxrhs() + 1; entries = 0; emptyints = .int[]
+    do p = 1 to _cfg.count()
+      do dot = 0 to _cfg.length(p) - 1
+        if _cfg.rhs(p,dot) <= 0 then iterate
+        slot = (p - 1) * _suffixwidth + dot + 1
+        look = emptyints; nullable = 1
+        do tail = dot + 1 to _cfg.length(p) - 1
+          symbol = _cfg.rhs(p,tail)
+          if symbol < 0 then do
+            look[-symbol] = 1; nullable = 0; leave
+          end
+          do terminal = 0 to 255
+            if _cfg.first(symbol,terminal) then look[terminal + 1] = 1
+          end
+          if _cfg.nullable(symbol) = 0 then do
+            nullable = 0; leave
+          end
+        end
+        _suffixnullable[slot] = nullable; _suffixhead[slot] = entries + 1; count = 0
+        do terminal = 0 to 255
+          if look[terminal + 1] then do
+            entries = entries + 1; _suffixterms[entries] = terminal; count = count + 1
+          end
+        end
+        _suffixcount[slot] = count
+      end
+    end
+    return
+  closure: method = .items
+    arg set = .items
+    ok = .int
+    index = 1; expanded = .int[]
+    do while index <= set.size()
+      p = set.production(index); dot = set.dot(index); la = set.look(index)
+      next = _cfg.rhs(p,dot)
+      if next > 0 then do
+        slot = (p - 1) * _suffixwidth + dot + 1
+        candidate = _productionhead[next]
+        do while candidate <> 0
+          if expanded[slot] = 0 then do j = 0 to _suffixcount[slot] - 1
+            terminal = _suffixterms[_suffixhead[slot] + j]
+            ok = set.add(candidate,0,terminal)
+            if ok < 0 then do
+              _status = 4; _error = 'LR construction limit: too many items in a state'; return set
+            end
+          end
+          if _suffixnullable[slot] then do
+            ok = set.add(candidate,0,la)
+            if ok < 0 then do
+              _status = 4; _error = 'LR construction limit: too many items in a state'; return set
+            end
+          end
+          candidate = _productionnext[candidate]
+        end
+        expanded[slot] = 1
+      end
+      index = index + 1
+    end
+    return set
+  intern: method = .int
+    arg set = .items
+    signature = set.signature(0)
+    do i = 1 to _canonical
+      if _signatures[i] = signature then return i
+    end
+    if _canonical >= _limits.limit('lr.states') then do
+      _status = 4; _error = _limits.exhausted('lr.states',_canonical + 1); return 0
+    end
+    if _canonical + 1 >= 999999 | _canonical + 1 > 2147483647 <idiv> max(257,_symbols) then do
+      _status = 4; _error = 'LL_REPRESENTATION_LIMIT: LR state/action keys exceed the current packed-image representation'; return 0
+    end
+    _canonical = _canonical + 1
+    call set.seal()
+    _states[_canonical] = set; _signatures[_canonical] = signature
+    return _canonical
+  buildactions: method = .void
+    do state = 1 to _count
+      /* Read the retained state directly: an inlined receiver snapshot must
+       * not keep the entire mutable table shared across action writes. */
+      if _merged then current = _mergedstates[state]
+      else current = _states[state]
+      do item = 1 to current.size()
+        p = current.production(item); dot = current.dot(item); look = current.look(item)
+        if dot = _cfg.length(p) then do
+          action = -p
+          if p = 1 then action = 999999
+          call putaction state,look,action
+        end
+        else do
+          symbol = _cfg.rhs(p,dot)
+          if symbol < 0 then do
+            transition = (state - 1) * _symbols - symbol
+            if _merged then destination = _mergedtrans[transition]
+            else destination = _trans[transition]
+            call putaction state,-symbol - 1,destination
+          end
+        end
+        if _status <> 0 then return
+      end
+    end
+    return
+  putaction: method = .void
+    arg state = .int, look = .int, value = .int
+    key = (state - 1) * 257 + look + 1
+    if _merged then old = _mergedactions[key]
+    else old = _actions[key]
+    if old <> 0 & old <> value then do
+      _status = 2; _conflictstate = state; _conflictsymbol = look
+      _leftaction = old; _rightaction = value
+      prefix = 'LR(1) conflict'
+      if _merged then prefix = 'LALR merge introduced conflict; canonical LR(1) succeeds'
+      graph = _cfg.source(); token = 'end of input'
+      if look <> 256 then do
+        token = 'token ' || look
+        do i = 1 to graph.size()
+          if graph.op(i) = 1 & graph.left(i) = look then do
+            token = graph.label(i); leave
+          end
+        end
+      end
+      _error = 'LL_LR_CONFLICT: ' || prefix || ' before ' || token || '. Cannot choose between ' || describe(old) || ' and ' || describe(value) || '. State the intended choice in the rules (for example factor the shared prefix or separate expression precedence). A conflict alone does not prove ambiguity.'
+      return
+    end
+    if _merged then _mergedactions[key] = value
+    else _actions[key] = value
+    return
+  describe: method = .string
+    arg value = .int
+    if value = 999999 then return 'accept'
+    if value > 0 then return 'consuming the next token'
+    return 'completing ' || _cfg.location(-value)
+  mergecores: method = .void
+    count = 0; state = .int; group = .int; current = .items
+    do state = 1 to _canonical
+      current = _states[state]; core = current.signature(1); group = 0
+      do existing = 1 to count
+        if _cores[existing] = core then group = existing
+      end
+      if group = 0 then do
+        count = count + 1; group = count; _cores[group] = core; _mergedstates[group] = .items()
+      end
+      merged = _mergedstates[group]
+      do item = 1 to current.size()
+        ok = merged.add(current.production(item),current.dot(item),current.look(item))
+        if ok < 0 then do
+          _status = 4; _error = 'LALR construction limit: too many merged items'; return
+        end
+      end
+      _mergedstates[group] = merged; _map[state] = group
+    end
+    do state = 1 to _canonical
+      do symbol = 1 to _symbols
+        destination = _trans[(state - 1) * _symbols + symbol]
+        if destination > 0 then _mergedtrans[(_map[state] - 1) * _symbols + symbol] = _map[destination]
+      end
+    end
+    _count = count; _merged = 1
+    return
+  stateitems: method = .items
+    arg state = .int
+    if _merged then return _mergedstates[state]
+    return _states[state]
+  /** Generation-only rule contexts. Shared tokens and other named rules do
+   * not inherit the enclosing rule's message. Loaded tables keep no itemsets. */
+  rulecontexts: method = .binary
+    arg rule = .int
+    graph = _cfg.source(); owned = rulebody(rule); shared = .int[]
+    do other = 1 to graph.size()
+      if graph.op(other) <> 5 | other = rule | left(graph.label(other),7) = '@field.' then iterate
+      body = rulebody(other)
+      do node = 1 to graph.size()
+        if owned[node] & body[node] then shared[node] = 1
+      end
+    end
+    mask = .binary
+    call binresize mask,_count
+    do state = 1 to _count
+      set = stateitems(state); candidate = 0; competing = 0
+      do item = 1 to set.size()
+        p = set.production(item); lhs = _cfg.lhs(p)
+        if set.dot(item) >= _cfg.length(p) then iterate
+        if owned[lhs] & shared[lhs] = 0 then candidate = 1
+        if lhs <= graph.size() then do
+          if graph.op(lhs) = 5 & lhs <> rule & left(graph.label(lhs),7) <> '@field.' then competing = 1
+        end
+      end
+      if candidate & competing = 0 then <at..u8>(state - 1) mask = 1
+    end
+    return mask
+  rulebody: method = .int[]
+    arg rule = .int
+    graph = _cfg.source(); owned = .int[]; pending = .int[]
+    pending[1] = rule; count = 1; at = 1
+    do while at <= count
+      node = pending[at]; at = at + 1
+      if owned[node] then iterate
+      op = graph.op(node)
+      if op = 1 | (op = 5 & node <> rule & left(graph.label(node),7) <> '@field.') then iterate
+      owned[node] = 1
+      if op = 2 | op = 4 then do
+        count = count + 1; pending[count] = graph.right(node)
+      end
+      if op = 2 | op = 4 | op = 5 | op = 7 | op = 14 | op = 15 then do
+        count = count + 1; pending[count] = graph.left(node)
+      end
+    end
+    return owned
+  target: method = .int
+    arg state = .int, symbol = .int
+    key = (state - 1) * _symbols + encoded(symbol)
+    if <blen>(_image) <> 0 then return packedlookup(_image,_imageindex,state,key,1,_count)
+    if _merged then return _mergedtrans[key]
+    return _trans[key]
+  action: method = .int
+    arg state = .int, symbol = .int
+    key = (state - 1) * 257 + symbol + 1
+    if <blen>(_image) <> 0 then return packedlookup(_image,_imageindex,state,key,0,_count)
+    if _merged then return _mergedactions[key]
+    return _actions[key]
+  grammar: method = .llcfg..productions
+    return _cfg
+  states: method = .int
+    return _count
+  canonicalstates: method = .int
+    return _canonical
+  status: method = .int
+    call build
+    return _status
+  error: method = .string
+    call build
+    return _error
+  conflictstate: method = .int
+    return _conflictstate
+  conflictsymbol: method = .int
+    return _conflictsymbol
+
+/** Run a previously constructed table, retaining a source-owned derivation tree. */
+parser: class
+  _tables = .tables
+  _input = .llcore..stream
+  _tree = .llcore..tree
+  _status = .int
+  _root = .int
+  _work = .int
+  _ran = .int
+  _fuel = .int
+  _offset = .int
+  _error = .string
+  _state = .int
+  _position = .int
+  _expected = .string
+  _contexts = .binary
+  *: factory
+    arg compiled = .tables, input = .llcore..stream, fuel = 1000000
+    _tables = compiled; _input = input; _tree = .llcore..tree.from_source(input.source())
+    _status = 0; _root = 0; _work = 0; _ran = 0; _fuel = fuel; _error = ''; _offset = 0
+    _state = 0; _position = 0; _expected = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _tables.status() <> 0 | _input.error() <> '' then do
+      _status = 3; _error = _tables.error() || _input.error(); return _status
+    end
+    cfg = _tables.grammar(); graph = cfg.source()
+    states = .int[]; nodes = .int[]; states[1] = 1; top = 1; at = 0
+    do forever
+      _work = _work + 1
+      if _work > _fuel then do
+        _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return _status
+      end
+      symbol = _input.symbol(at)
+      if symbol < 0 then symbol = 256
+      action = _tables.action(states[top],symbol)
+      if action = 999999 then do
+        _root = nodes[top]; return 0
+      end
+      if action > 0 then do
+        top = top + 1; states[top] = action
+        nodes[top] = _tree.add(1,'symbol.' || symbol,_input.start(at),_input.finish(at + 1),0,0)
+        at = at + 1
+      end
+      else if action < 0 then do
+        p = -action; count = cfg.length(p); lhs = cfg.lhs(p); node = 0
+        start = _input.start(at); finish = start
+        if count > 0 then do
+          node = nodes[top - count + 1]; start = _tree.start(node); finish = _tree.finish(node)
+          do i = top - count + 2 to top
+            right = nodes[i]; finish = _tree.finish(right)
+            node = _tree.add(2,'<production children>',start,finish,node,right)
+          end
+        end
+        node = _tree.add(graph.op(lhs),cfg.label(lhs),start,finish,node,0)
+        top = top - count
+        destination = _tables.target(states[top],lhs)
+        if destination = 0 then do
+          _status = 3; _error = 'invalid LR reduction destination'; return _status
+        end
+        top = top + 1; states[top] = destination; nodes[top] = node
+      end
+      else do
+        _status = 1; _offset = _input.start(at); expected = ''
+        _state = states[top]; _position = at
+        call binresize _contexts,_tables.states()
+        do terminal = 0 to 256
+          admitted = accepts(states,top,terminal)
+          if admitted < 0 then do
+            _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return _status
+          end
+          if admitted then do
+            if expected <> '' then expected = expected || ', '
+            if terminal = 256 then expected = expected || 'end of input'
+            else do
+              name = 'token ' || terminal
+              do named = 1 to graph.size()
+                if graph.op(named) = 1 & graph.left(named) = terminal then do
+                  name = graph.label(named); leave
+                end
+              end
+              expected = expected || name
+            end
+          end
+        end
+        _expected = expected
+        _error = 'unexpected input at byte ' || _input.start(at) || '; expected ' || expected
+        return _status
+      end
+    end
+    return _status
+  /** Trial reductions on a private stack verify that a candidate can actually
+   * shift (or accept EOF), rather than merely having a table entry. */
+  accepts: method = .int
+    arg states = .int[], top = .int, symbol = .int
+    cfg = _tables.grammar()
+    do forever
+      _work = _work + 1
+      if _work > _fuel then return -1
+      action = _tables.action(states[top],symbol)
+      if action > 0 then do
+        <at..u8>(states[top] - 1) _contexts = 1
+        return 1
+      end
+      if action = 0 then return 0
+      p = -action; top = top - cfg.length(p)
+      if top < 1 then return 0
+      target = _tables.target(states[top],cfg.lhs(p))
+      if target = 0 then return 0
+      top = top + 1; states[top] = target
+    end
+    return 0
+  state: method = .int
+    return _state
+  position: method = .int
+    return _position
+  expected: method = .string
+    return _expected
+  contexts: method = .binary
+    return _contexts
+  tree: method = .llcore..tree
+    return _tree
+  root: method = .int
+    return _root
+  offset: method = .int
+    return _offset
+  work: method = .int
+    return _work
+  error: method = .string
+    return _error
+
+/** LR admission is table construction performed by this plugin. */
+engine: class implements .llcap..backend
+  _mode = .string
+  *: factory
+    arg mode = .string
+    _mode = mode
+    return
+  name: method = .string
+    return _mode
+  version: method = .string
+    return 'research-lr-1'
+  inspect: method = .llcap..decision
+    arg facts = .llcheck..analysis
+    compiled = .tables(facts.grammar(),facts.root(),_mode)
+    bound = 'unknown'
+    if compiled.status() = 0 then bound = 'linear-input'
+    return .llcap..decision(compiled.status(),compiled.error(),0,bound,'O(g*(t+1)+a); conflict-free tables; pure reductions; construction cost separate',facts,name(),version())
+
+/** EXPOSE borrows caller-owned storage for this synchronous read-only call.
+ * It avoids both payload copies and constructing a weak reference per lookup.
+ * No alias escapes. Search is logarithmic in the entries of one state row. */
+packedlookup: procedure = .int
+  arg expose image = .binary, expose directory = .binary, state = .int, key = .int, transition = .int, states = .int
+  if state < 1 | state > states then return 0
+  slot = (state - 1) * 16 + transition * 8
+  start = <at..i32>(slot) directory
+  low = 0; high = <at..i32>(slot + 4) directory - 1
+  do while low <= high
+    middle = (low + high) / 2; offset = start + middle * 8
+    found = <at..i32>(offset) image
+    if transition then found = -found
+    if found = key then return <at..i32>(offset + 4) image
+    if found < key then low = middle + 1
+    else high = middle - 1
+  end
+  return 0

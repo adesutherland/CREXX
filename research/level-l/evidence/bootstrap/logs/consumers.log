@@ -1,0 +1,310 @@
+[  0%] Built target avl_tree
+[  0%] Built target rxpa
+[  0%] Built target lemon
+[  3%] Built target platform
+[  3%] Built target rxbin
+[  6%] Built target re2c_objects_autogen_ver_to_vernum
+[  6%] Built target dslsyntax_parser
+[  6%] Built target re2c_objects_autogen
+[  6%] Built target rxvmmemory
+[  6%] Built target rxvm_platform_objects
+[  6%] Built target decnumber
+[  6%] Built target rxbvm_core_objects
+[  6%] Built target rxpashim
+[  6%] Built target fs
+[ 10%] Built target rxtvm_core_objects
+[ 10%] Built target cstream
+[ 10%] Built target rxcpack
+[ 10%] Built target rxlink
+[ 10%] Built target rxvmref
+[ 10%] Built target _hash
+[ 10%] Built target rxvmplugin
+[ 10%] Built target mc_decimal_manual
+[ 10%] Built target rxvml
+[ 10%] Built target rxtvm
+[ 13%] Built target rxbvml
+[ 17%] Built target rxbvm
+[ 27%] Built target re2c
+[ 31%] Built target rxaslib
+[ 31%] Built target rxas
+[ 41%] Built target library-rxas
+[ 41%] Built target rxclib
+[ 41%] Built target rxc
+[ 41%] Built target token_bin
+[ 62%] Built target library-rexx
+[ 62%] Built target library
+[ 62%] Built target rxfnsl_imports
+[ 62%] Built target compiler_exit_imports
+[ 62%] Built target exit_query_bin
+[ 62%] Built target exit_dump_bin
+[ 62%] Built target exit_sort_bin
+[ 62%] Built target exit_sortx_bin
+[ 62%] Built target exit_rxqueue_bin
+[ 62%] Built target rxfnsl_base
+[ 62%] Built target exit_execio_bin
+[ 62%] Built target exit_address_bin
+[ 62%] Built target exit_fsay_bin
+[ 62%] Built target exit_add_bin
+[ 62%] Built target exit_parse_bin
+[ 62%] Built target exit_trace_bin
+[ 62%] Built target exit_msay_bin
+[ 62%] Built target exit_signal_bin
+[ 62%] Built target exit_substr_bin
+[ 65%] Built target exit_rexxscript_bin
+[ 65%] Built target exit_dummy_bin
+[ 65%] Staging deterministic compiler imports for levell_base_imports ...
+[ 65%] Built target compiler_exit_bin
+[ 65%] Built target levell_base_imports
+[ 65%] Built target classlib_imports
+[ 72%] Built target levell_unicode_lexer
+[ 72%] Built target rxfnsl
+[ 82%] Built target classlib
+[ 82%] Built target levell_cli
+[ 82%] Built target stage_g_builder_imports
+[ 82%] Building Level G and Unicode with the Level B builder ...
+SKIP: G member integer
+SKIP: G member decimal
+SKIP: G member packednumeric
+SKIP: G member httpcodec
+SKIP: G member httpcore
+SKIP: G member http
+SKIP: G member httpserver
+SKIP: G member llm
+SKIP: G member unicode_normprops
+SKIP: G member encoding_table
+SKIP: G member casefold_table
+SKIP: G member case_mapping_table
+SKIP: G member grapheme_table
+WAVE: U1 independent table tools jobs=1
+START: G member level_l_gennorm2
+BUILT: G member level_l_gennorm2
+SKIP: G member generate_encoding
+SKIP: G member generate_casefold
+SKIP: G member generate_case_mapping
+SKIP: G member generate_grapheme
+WAVE: U2 dependent generators jobs=1
+START: G member unicode_gennorm2
+BUILT: G member unicode_gennorm2
+WAVE: U3 normalization data tool jobs=1
+START: G member unicode_data
+BUILT: G member unicode_data
+WAVE: U4 prepared normalization table jobs=1
+START: G member unicode_d
+BUILT: G member unicode_d
+SKIP: G member generate_normalization
+SKIP: link encoding generator
+SKIP: link case-fold generator
+SKIP: link case-mapping generator
+SKIP: link grapheme generator
+WAVE: U6 link source generators jobs=1
+START: link normalization generator
+BUILT: link normalization generator
+SKIP: generate case-fold source
+SKIP: generate case-mapping source
+SKIP: generate encoding source
+SKIP: generate grapheme source
+WAVE: U7 generate runtime sources jobs=1
+START: generate normalization source
+BUILT: generate normalization source
+SKIP: G member unicode_casefold
+SKIP: G member unicode_case_mapping
+SKIP: G member unicode_codec
+SKIP: G member unicode_grapheme
+SKIP: G member unicode_normalization
+SKIP: G member unicode
+SKIP: Level G link
+SKIP: Level G publish
+[ 82%] Built target rxfnsg
+[ 82%] Built target rxfnsc_imports
+[ 93%] Built target rxfnsc
+[ 93%] Staging deterministic compiler imports for rexxscript1_imports ...
+[ 93%] Built target rexxscript1_imports
+[ 93%] Generating modern/RexxScriptBifs.rxbin
+[ 93%] Level L: admit RexxScript grammar and generate native DFA/LR tables
+[ 93%] Generating modern/RexxScriptOperators.rxbin
+[ 93%] Generating modern/rexxscriptgrammar.rxbin
+[ 93%] Generating modern/RexxScriptProgram.rxbin
+[ 96%] Generating modern/RexxScriptExecution.rxbin
+[ 96%] Generating ../bin/rexxscript1.rxbin
+[ 96%] Built target rexxscript1
+[100%] Generating modern/testRexxScript1-linked.rxbin
+[100%] Built target testrexxscript1
+[  0%] Built target avl_tree
+[  0%] Built target lemon
+[  0%] Built target rxbin
+[  0%] Built target rxpa
+[  0%] Built target dslsyntax_parser
+[  5%] Built target platform
+[ 11%] Built target re2c_objects_autogen_ver_to_vernum
+[ 11%] Built target re2c_objects_autogen
+[ 11%] Built target decnumber
+[ 11%] Built target rxvmmemory
+[ 11%] Built target rxpashim
+[ 11%] Built target rxbvm_core_objects
+[ 11%] Built target rxvm_platform_objects
+[ 11%] Built target rxcpack
+[ 11%] Built target rxlink
+[ 16%] Built target rxtvm_core_objects
+[ 16%] Built target rxvmref
+[ 16%] Built target rxvmplugin
+[ 16%] Built target mc_decimal_manual
+[ 16%] Built target rxtvm
+[ 22%] Built target rxbvml
+[ 22%] Built target rxvml
+[ 38%] Built target re2c
+[ 44%] Built target rxaslib
+[ 44%] Built target rxas
+[ 50%] Built target library-rxas
+[ 61%] Built target rxclib
+[ 61%] Built target rxc
+[ 94%] Built target library-rexx
+[ 94%] Built target library
+[ 94%] Built target rxfnsl_imports
+[ 94%] Built target rxfnsl_base
+[ 94%] Staging deterministic compiler imports for levell_base_imports ...
+[ 94%] Built target levell_base_imports
+[100%] Built target rxfnsl
+[100%] Built target levell_cli
+[100%] Generating levell_example.rxas
+[100%] Generating testGenerated-linked.rxbin
+[100%] Built target testlevell_generated
+[  0%] Built target rxbin
+[  0%] Built target rxpa
+[  0%] Built target avl_tree
+[  4%] Built target platform
+[  4%] Built target dslsyntax_parser
+[  4%] Built target lemon
+[  8%] Built target re2c_objects_autogen_ver_to_vernum
+[  8%] Built target re2c_objects_autogen
+[  8%] Built target _hash
+[  8%] Built target rxvmmemory
+[  8%] Built target decnumber
+[  8%] Built target rxvm_platform_objects
+[  8%] Built target rxbvm_core_objects
+[  8%] Built target rxpashim
+[ 13%] Built target fs
+[ 13%] Built target rxtvm_core_objects
+[ 13%] Built target rxlink
+[ 13%] Built target rxvmref
+[ 13%] Built target rxvmplugin
+[ 13%] Built target mc_decimal_manual
+[ 17%] Built target rxbvml
+[ 21%] Built target rxbvm
+[ 21%] Built target rxtvm
+[ 34%] Built target re2c
+[ 39%] Built target rxaslib
+[ 39%] Built target rxas
+[ 39%] Built target library-rxas
+[ 52%] Built target rxclib
+[ 52%] Built target rxc
+[ 52%] Built target token_bin
+[ 78%] Built target library-rexx
+[ 78%] Built target library
+[ 78%] Built target compiler_exit_imports
+[ 78%] Built target rxfnsl_imports
+[ 78%] Built target exit_query_bin
+[ 78%] Built target exit_rxqueue_bin
+[ 78%] Built target exit_dump_bin
+[ 78%] Built target exit_sort_bin
+[ 78%] Built target exit_sortx_bin
+[ 78%] Built target exit_address_bin
+[ 78%] Built target exit_add_bin
+[ 78%] Built target exit_execio_bin
+[ 78%] Built target exit_fsay_bin
+[ 78%] Built target exit_parse_bin
+[ 78%] Built target exit_signal_bin
+[ 78%] Built target exit_trace_bin
+[ 78%] Built target exit_msay_bin
+[ 78%] Built target exit_substr_bin
+[ 78%] Built target exit_dummy_bin
+[ 82%] Built target exit_rexxscript_bin
+[ 82%] Built target rxfnsl_base
+[ 82%] Built target compiler_exit_bin
+[ 82%] Staging deterministic compiler imports for levell_base_imports ...
+[ 82%] Built target classlib_imports
+[ 82%] Built target levell_base_imports
+[ 95%] Built target classlib
+[100%] Built target levell_unicode_lexer
+[100%] Built target stage_g_builder_imports
+[100%] Building Level G and Unicode with the Level B builder ...
+SKIP: G member integer
+SKIP: G member decimal
+SKIP: G member packednumeric
+SKIP: G member httpcodec
+SKIP: G member httpcore
+SKIP: G member http
+SKIP: G member httpserver
+SKIP: G member llm
+SKIP: G member level_l_gennorm2
+SKIP: G member unicode_normprops
+SKIP: G member encoding_table
+SKIP: G member casefold_table
+SKIP: G member case_mapping_table
+SKIP: G member grapheme_table
+SKIP: G member unicode_gennorm2
+SKIP: G member generate_encoding
+SKIP: G member generate_casefold
+SKIP: G member generate_case_mapping
+SKIP: G member generate_grapheme
+SKIP: G member unicode_data
+SKIP: G member unicode_d
+SKIP: G member generate_normalization
+SKIP: link encoding generator
+SKIP: link case-fold generator
+SKIP: link case-mapping generator
+SKIP: link grapheme generator
+SKIP: link normalization generator
+SKIP: generate case-fold source
+SKIP: generate case-mapping source
+SKIP: generate encoding source
+SKIP: generate grapheme source
+SKIP: generate normalization source
+SKIP: G member unicode_casefold
+SKIP: G member unicode_case_mapping
+SKIP: G member unicode_codec
+SKIP: G member unicode_grapheme
+SKIP: G member unicode_normalization
+SKIP: G member unicode
+SKIP: Level G link
+SKIP: Level G publish
+[100%] Built target rxfnsg
+[100%] Built target ts_unicode_normalization_rxtvm_opt_artifact
+[100%] Built target ts_unicode_normalization_rxbvm_noopt_artifact
+[100%] Built target ts_unicode_normalization_rxtvm_noopt_artifact
+[100%] Built target ts_unicode_normalization_rxbvm_opt_artifact
+[100%] Built target ts_unicode_normalization
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product
+    Start 2658: ts_unicode_normalization_rxtvm_noopt
+    Start 2659: ts_unicode_normalization_rxtvm_opt
+    Start 2657: ts_unicode_normalization_rxbvm_opt
+    Start 2656: ts_unicode_normalization_rxbvm_noopt
+1/8 Test #2657: ts_unicode_normalization_rxbvm_opt .....   Passed   23.92 sec
+    Start 2839: rexxscript1_rxbvm
+2/8 Test #2656: ts_unicode_normalization_rxbvm_noopt ...   Passed   24.02 sec
+    Start 2440: levell_generated_rxtvm
+3/8 Test #2659: ts_unicode_normalization_rxtvm_opt .....   Passed   24.69 sec
+    Start 2441: levell_generated_rxbvm
+4/8 Test #2658: ts_unicode_normalization_rxtvm_noopt ...   Passed   24.91 sec
+5/8 Test #2440: levell_generated_rxtvm .................   Passed    1.00 sec
+6/8 Test #2441: levell_generated_rxbvm .................   Passed    0.88 sec
+7/8 Test #2839: rexxscript1_rxbvm ......................   Passed    5.74 sec
+    Start 2838: rexxscript1_rxtvm
+8/8 Test #2838: rexxscript1_rxtvm ......................   Passed    5.96 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+comprehensive       =  99.43 sec*proc (6 tests)
+level-l             =  13.58 sec*proc (4 tests)
+levelg              =  97.55 sec*proc (4 tests)
+library             =  99.43 sec*proc (6 tests)
+linked              =  48.94 sec*proc (2 tests)
+linked_opt          =  48.61 sec*proc (2 tests)
+normalization       =  97.55 sec*proc (4 tests)
+optimizer-parity    =  97.55 sec*proc (4 tests)
+rexxscript          =  11.70 sec*proc (2 tests)
+rxbvm               =  47.94 sec*proc (2 tests)
+rxtvm               =  49.61 sec*proc (2 tests)
+unicode             =  97.55 sec*proc (4 tests)
+
+Total Test time (real) =  35.69 sec

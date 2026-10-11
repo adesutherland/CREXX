@@ -1,0 +1,192 @@
+/* cREXX License (MIT). Sufficient lexical-boundary certificate for CFG substitution. */
+options levell
+namespace llboundary expose analysis
+import rxfnsb
+import llcore
+import llcheck
+import llmunch
+
+/** A CFG token grammar and the winning languages of a byte DFA define the
+ * scannerless comparison by regular substitution. No ignored trivia, predicates
+ * or arbitrary separately authored character grammar are inferred equivalent.
+ * Status: 0 proved; 1 not proved; 2 construction budget; 3 invalid request.
+ */
+analysis: class
+  _g = .llcore..grammar
+  _dfa = .llmunch..automaton
+  _facts = .llcheck..analysis
+  _root = .int
+  _budget = .int
+  _work = .int
+  _ran = .int
+  _status = .int
+  _message = .string
+  _live = .int[]
+  _last = .int[]
+  _used = .int[]
+  _adjacent = .int[]
+  _reach = .int[]
+  _can = .int[]
+  _initial = .int[]
+  _signature = .string
+  _lexSignature = .string
+  *: factory
+    arg graph = .llcore..grammar, root = .int, dfa = .llmunch..automaton, budget = 20000000
+    _g = graph; _root = root; _dfa = dfa; _budget = budget
+    _facts = .llcheck..analysis(graph,root)
+    _signature = graph.signature(); _lexSignature = dfa.signature()
+    _work = 0; _ran = 0; _status = 0; _message = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    if _g.profile() <> 'contextfree' | _facts.run() = 0 | _dfa.verify() = 0 then do
+      _status = 3; _message = 'requires a valid pure CFG token grammar and byte DFA'; return _status
+    end
+    if _dfa.states() > 128 then do
+      _status = 2; _message = 'boundary analysis construction limit: 128 DFA states'; return _status
+    end
+    call visit(_root)
+    if _status <> 0 then return _status
+    /* Finite monotone LAST fixed point; FIRST/nullable come from common facts. */
+    changed = 1
+    do while changed
+      changed = 0
+      do node = 1 to _g.size()
+        if _live[node] then do
+          op = _g.op(node); a = _g.left(node); b = _g.right(node)
+          do kind = 1 to 255
+            if tick() = 0 then return _status
+            value = 0
+            select op
+              when 1 then value = kind = a
+              when 2 then value = lastof(b,kind) | (_facts.nullable(b) & lastof(a,kind))
+              when 4 then value = lastof(a,kind) | lastof(b,kind)
+              when 5 then value = lastof(a,kind)
+              when 7 then value = lastof(a,kind)
+              when 14 then value = lastof(a,kind)
+              when 15 then value = lastof(a,kind)
+              otherwise nop
+            end
+            key = (node - 1) * 256 + kind + 1
+            if value & _last[key] = 0 then do
+              _last[key] = 1; changed = 1
+            end
+          end
+        end
+      end
+    end
+    do node = 1 to _g.size()
+      if _live[node] then do
+        op = _g.op(node); a = _g.left(node); b = _g.right(node)
+        if op = 7 | op = 14 then b = a
+        if op = 2 | op = 7 | op = 14 then do i = 1 to 255
+          if lastof(a,i) then do j = 1 to 255
+            if tick() = 0 then return _status
+            if _facts.first(b,j) then _adjacent[(i - 1) * 256 + j] = node
+          end
+        end
+      end
+    end
+    /* State reachability and reverse reachability to each used winning kind. */
+    _reach[1] = 1
+    do state = 1 to _dfa.states()
+      kind = _dfa.kind(state)
+      if kind > 0 then _can[(state - 1) * 256 + kind] = 1
+    end
+    changed = 1
+    do while changed
+      changed = 0
+      do state = 1 to _dfa.states()
+        do byte = 0 to 255
+          if tick() = 0 then return _status
+          target = _dfa.target(state,_dfa.classof(byte))
+          if target > 0 then do
+            if _reach[state] & _reach[target] = 0 then do
+              _reach[target] = 1; changed = 1
+            end
+            do kind = 1 to 255
+              if _used[kind] then do
+                key = (state - 1) * 256 + kind
+                if _can[(target - 1) * 256 + kind] & _can[key] = 0 then do
+                  _can[key] = 1; changed = 1
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    do state = 1 to _dfa.states()
+      if _reach[state] & _dfa.kind(state) < 0 then do
+        _status = 1; _message = 'implicit skipped trivia needs an explicit source-language contract; boundary proof not issued'; return _status
+      end
+    end
+    do kind = 1 to 255
+      if _used[kind] then do
+        if _can[kind] = 0 then do
+          _status = 1; _message = 'token kind ' || kind || ' has no reachable winning lexeme'; return _status
+        end
+        do byte = 0 to 255
+          target = _dfa.target(1,_dfa.classof(byte))
+          if target > 0 then _initial[(kind - 1) * 256 + byte + 1] = _can[(target - 1) * 256 + kind]
+        end
+      end
+    end
+    do state = 1 to _dfa.states()
+      i = _dfa.kind(state)
+      if _reach[state] & i > 0 then do j = 1 to 255
+        node = _adjacent[(i - 1) * 256 + j]
+        if node > 0 then do byte = 0 to 255
+          if tick() = 0 then return _status
+          if _initial[(j - 1) * 256 + byte + 1] then do
+            if _dfa.target(state,_dfa.classof(byte)) > 0 then do
+              _status = 1
+              _message = _g.label(node) || ' (line ' || _g.line(node) || '): boundary not proved between kinds ' || i || ' and ' || j || '; byte ' || byte || ' can continue DFA state ' || state
+              return _status
+            end
+          end
+        end
+      end
+    end
+    _message = 'proved: every possible token adjacency forces immediate scanner termination; CFG regular substitution, no implicit trivia'
+    return _status
+  visit: method = .void
+    arg node = .int
+    if _live[node] | _status <> 0 then return
+    _live[node] = 1
+    op = _g.op(node)
+    if op = 1 then do
+      kind = _g.left(node)
+      if kind < 1 then do
+        _status = 3; _message = 'token kind zero is reserved for nonaccepting DFA states'
+      end
+      else _used[kind] = 1
+    end
+    else if op = 2 | op = 4 then do
+      call visit(_g.left(node)); call visit(_g.right(node))
+    end
+    else if op = 5 | op = 7 | op = 14 | op = 15 then call visit(_g.left(node))
+    else if op <> 6 then do
+      _status = 1; _message = _g.label(node) || ' (line ' || _g.line(node) || '): boundary proof supports pure token CFG clauses only'
+    end
+    return
+  lastof: method = .int
+    arg node = .int, kind = .int
+    return _last[(node - 1) * 256 + kind + 1]
+  tick: method = .int
+    _work = _work + 1
+    if _work > _budget then do
+      _status = 2; _message = 'boundary proof construction work budget exhausted'; return 0
+    end
+    return 1
+  message: method = .string
+    return _message
+  work: method = .int
+    return _work
+  matches: method = .int
+    arg graph = .llcore..grammar, dfa = .llmunch..automaton
+    return run() = 0 & graph.signature() == _signature & dfa.signature() == _lexSignature
+  certificate: method = .string
+    if run() <> 0 then return ''
+    return 'LL-BOUNDARY-1|root=' || _root || '|CFG winning-language substitution; no implicit trivia|grammar=' || _signature || '|lexer=' || _lexSignature

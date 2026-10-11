@@ -1,0 +1,95 @@
+/* Complete section/comment format: source trees and a useful path visitor. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llpeg
+import lltabpeg
+import lllr
+import llmunch
+import glconfigsections
+main: procedure = .int
+  failures = 0; cases = 0
+  source = readfile('research/level-l/specs/config-sections.levell')
+  authored = .llfront..document(source); status = authored.run()
+  tokenDoc = .llfront..document(readfile('research/level-l/specs/config-sections-tokens.levell')); tokenStatus = tokenDoc.run()
+  if status <> 0 | tokenStatus <> 0 then do
+    say authored.error() tokenDoc.error(); return 1
+  end
+  graph = authored.grammar(); root = authored.root()
+  table = .lllr..tables(tokenDoc.grammar(),tokenDoc.root(),'lr1')
+  if table.status() <> 0 then do
+    say table.error(); return 1
+  end
+  lexer = .llmunch..automaton.legacy(glconfigsections..tabledata())
+  path = 'research/level-l/evidence/config-sections-reference.txt'
+  do while lines(path)
+    row = linein(path); first = pos('|',row); second = pos('|',row,first + 1)
+    hex = substr(row,1,first - 1); expected = substr(row,first + 1,second - first - 1) as .int
+    wanted = substr(row,second + 1); bytes = x2bin(hex); input = .llcore..stream(bytes)
+    a = .llpeg..parser(graph,root,input,'packrat'); b = .lltabpeg..parser(graph,root,input)
+    sa = a.run(); sb = b.run()
+    scan = .llmunch..scanner(lexer,bytes,'reverse'); lexical = scan.run(); sc = 1
+    c = .lllr..parser(table,scan.tokens())
+    if lexical = 0 then sc = c.run()
+    cases = cases + 1
+    if sa <> expected | sb <> expected | sc <> expected then do
+      failures = failures + 1; say 'FAIL acceptance:' hex expected sa sb sc lexical
+    end
+    if sa = 0 & sb = 0 & sc = 0 then do
+      ta = a.arena(); tb = b.tree(); tc = c.tree()
+      if ta.validate() = 0 | tb.validate() = 0 | tc.validate() = 0 then do
+        failures = failures + 1; say 'FAIL owned tree:' hex ta.error() tb.error() tc.error()
+      end
+      va = bin2x(flatten(ta,a.root(),'') as .binary)
+      vb = bin2x(flatten(tb,b.root(),'') as .binary)
+      vc = bin2x(flatten(tc,c.root(),'') as .binary)
+      if va \== wanted | vb \== wanted | vc \== wanted then do
+        failures = failures + 1; say 'FAIL source transform:' hex 'expected='wanted 'packrat='va 'tab='vb 'lr='vc
+      end
+      if bincompare(ta.source(),bytes) <> 0 | bincompare(tb.source(),bytes) <> 0 | bincompare(tc.source(),bytes) <> 0 then do
+        failures = failures + 1; say 'FAIL original trivia ownership'
+      end
+      if pos('2F2A20686561646572202A2F',hex) = 1 then do
+        say 'FORMAT_SOURCE='hex
+        say 'FORMAT_FLAT='va
+        say flatten(tc,c.root(),'')
+      end
+    end
+  end
+  say 'format_cases='cases
+  say 'format_failures='failures
+  if failures then return 1
+  return 0
+flatten: procedure = .string
+  arg tree = .llcore..tree, node = .int, prefix = .string
+  if node = 0 then return ''
+  label = tree.label(node)
+  if label = 'space' then return ''
+  if label = 'binding' then do
+    name = locate(tree,node,'name'); value = locate(tree,node,'value')
+    return prefix || spelling(tree,name) || '=' || spelling(tree,value) || '0a'x
+  end
+  if label = 'section' then do
+    name = locate(tree,node,'name')
+    prefix = prefix || spelling(tree,name) || '.'
+  end
+  return flatten(tree,tree.left(node),prefix) || flatten(tree,tree.right(node),prefix)
+locate: procedure = .int
+  arg tree = .llcore..tree, node = .int, label = .string
+  if node = 0 then return 0
+  if tree.label(node) = label then return node
+  first = locate(tree,tree.left(node),label)
+  if first > 0 then return first
+  return locate(tree,tree.right(node),label)
+spelling: procedure = .string
+  arg tree = .llcore..tree, node = .int
+  source = tree.source(); start = tree.start(node); extent = tree.finish(node) - start
+  return binsubstr(source,start + 1,extent) as .string
+readfile: procedure = .string
+  arg path = .string
+  out = ''
+  do while lines(path)
+    out = out || linein(path) || '0a'x
+  end
+  return out

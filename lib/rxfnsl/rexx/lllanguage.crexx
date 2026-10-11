@@ -1,0 +1,349 @@
+/* cREXX License (MIT). Reusable generated-language definition and parse request. */
+options levelb
+namespace lllanguage expose definition request
+import rxfnsb
+import llcore
+import lllr
+import llmunch
+import llstage
+import llsource
+import llpeg
+import llearley
+import llforest
+import llpratt
+import llregional
+import llproject
+import lllimits
+
+definition: class
+  _dfa = .llmunch..automaton
+  _parser = .lllr..tables
+  _graph = .llcore..grammar
+  _root = .int
+  _backend = .string
+  _operators = .llpratt..operators
+  _regional = .llregional..plan
+  _expressionname = .string
+  _schema = .llproject..schema
+  _encoding = .string
+  _open = .string
+  _close = .string
+  _stages = .llstage..rules[]
+  _tokens = .string[]
+  _malformed = .string
+  _unmatched = .string
+  _eof = .int
+  _hasparser = .int
+  _sync = .int
+  _diagnosticname = .string[]
+  _diagnosticrule = .string[]
+  _diagnostictext = .string[]
+  _diagnosticmask = .binary[]
+  *: factory
+    arg dfa = .llmunch..automaton, parser = .lllr..tables, encoding = .string, opening = '', closing = ''
+    _dfa = dfa; _parser = parser; _encoding = encoding; _open = opening; _close = closing
+    _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1
+    _backend = 'lr1'; _root = 0; _sync = -1
+    _schema = .llproject..schema()
+    return
+  interpreted: factory
+    arg dfa = .llmunch..automaton, graph = .llcore..grammar, root = .int, backend = .string, encoding = .string, opening = '', closing = ''
+    _dfa = dfa; _graph = graph; _root = root; _backend = backend
+    _encoding = encoding; _open = opening; _close = closing
+    _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1
+    _sync = -1
+    _schema = .llproject..schema()
+    return
+  scanner: factory
+    arg dfa = .llmunch..automaton, encoding = .string, opening = '', closing = ''
+    _dfa = dfa; _encoding = encoding; _open = opening; _close = closing
+    _hasparser = 0; _malformed = ''; _unmatched = ''; _eof = -1
+    _backend = 'none'; _root = 0; _sync = -1
+    _schema = .llproject..schema()
+    return
+  operatorform: factory
+    arg dfa = .llmunch..automaton, operators = .llpratt..operators, name = .string, encoding = .string, opening = '', closing = ''
+    _dfa = dfa; _operators = operators; _expressionname = name; _backend = 'pratt'
+    _encoding = encoding; _open = opening; _close = closing; _sync = -1
+    _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1; _root = 0
+    _schema = .llproject..schema()
+    return
+  regional: factory
+    arg dfa = .llmunch..automaton, parser = .lllr..tables, operators = .llpratt..operators, virtual = .int, open = .int, close = .int, encoding = .string, opening = '', closing = ''
+    _dfa = dfa; _parser = parser; _operators = operators; _backend = 'regional'
+    _regional = .llregional..plan.loaded(parser,operators,virtual,open,close)
+    _encoding = encoding; _open = opening; _close = closing; _sync = -1
+    _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1; _root = 0
+    _schema = .llproject..schema()
+    return
+  keep: method = .int
+    arg name = .string, kind = .int, arity = .int
+    return _schema.keep(name,kind,arity)
+  schema: method = .llproject..schema
+    return _schema
+  recovery: method = .void
+    arg sync = .int
+    _sync = sync
+    return
+  sync: method = .int
+    return _sync
+  lexical: method = .void
+    arg malformed = .string, unmatched = .string, eof = .int
+    _malformed = malformed; _unmatched = unmatched; _eof = eof
+    return
+  malformed: method = .string
+    return _malformed
+  unmatched: method = .string
+    return _unmatched
+  eof: method = .int
+    return _eof
+  hasparser: method = .int
+    return _hasparser
+  addstage: method = .void
+    arg stage = .llstage..rules
+    _stages[_stages[0] + 1] = stage
+    return
+  token: method = .void
+    arg id = .int, name = .string
+    _tokens[id + 1] = name
+    return
+  diagnostic: method = .void
+    arg name = .string, rule = .string, template = .string, mask = .binary
+    i = _diagnosticname[0] + 1
+    _diagnosticname[i] = name; _diagnosticrule[i] = rule
+    _diagnostictext[i] = template; _diagnosticmask[i] = mask
+    return
+  /** A shared/ambiguous state keeps the generic explanation. No arbitrary
+   * winner is chosen between authored messages. */
+  explain: method = .string
+    arg contexts = .binary, found = .string, expected = .string, fallback = .string
+    selected = 0
+    do i = 1 to _diagnosticname[0]
+      mask = _diagnosticmask[i]; matches = 0
+      if <blen>(contexts) = <blen>(mask) then do state = 0 to <blen>(mask) - 1
+        if <at..u8>(state) contexts then do
+          if <at..u8>(state) mask = 0 then do
+            matches = 0; leave
+          end
+          matches = 1
+        end
+      end
+      if matches then do
+        if selected > 0 then return fallback
+        selected = i
+      end
+    end
+    if selected = 0 then return fallback
+    return _diagnosticname[selected] || ': ' || llsource..message(_diagnostictext[selected],found,expected,_diagnosticrule[selected])
+  tokenname: method = .string
+    arg id = .int
+    return _tokens[id + 1]
+  tokenid: method = .int
+    arg name = .string
+    do i = 1 to _tokens[0]
+      if _tokens[i] = name then return i - 1
+    end
+    return -1
+  automaton: method = .llmunch..automaton
+    return _dfa
+  tables: method = .lllr..tables
+    return _parser
+  backend: method = .string
+    return _backend
+  grammar: method = .llcore..grammar
+    return _graph
+  root: method = .int
+    return _root
+  operators: method = .llpratt..operators
+    return _operators
+  expressionname: method = .string
+    return _expressionname
+  region: method = .llregional..plan
+    return _regional
+  encoding: method = .string
+    return _encoding
+  opening: method = .string
+    return _open
+  closing: method = .string
+    return _close
+  stages: method = .llstage..rules[]
+    return _stages
+
+/** Lexing may be used independently; parsing also accepts a consumer-supplied
+ * token stream. Original bytes remain owned by every resulting tree. */
+request: class
+  _language = .definition
+  _source = .binary
+  _tokens = .llcore..stream
+  _tree = .llcore..tree
+  _root = .int
+  _status = .int
+  _offset = .int
+  _error = .string
+  _lexed = .int
+  _forest = .llforest..arena
+  _forestroot = .int
+  _limits = .lllimits..policy
+  *: factory
+    arg language = .definition, source = .binary, ?limits = .lllimits..policy
+    _language = language; _source = source; _root = 0; _status = 0; _offset = 0; _error = ''; _lexed = 0
+    _tokens = .llcore..stream.tokens(source); _tree = .llcore..tree.from_source(source)
+    _forestroot = 0
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
+    if initialized(_limits) = 0 then _limits = .lllimits..policy()
+    if _limits.error() <> '' then do
+      _status = 3; _error = _limits.error(); _lexed = 1
+    end
+    return
+  lex: method = .int
+    arg classify = 1
+    if _lexed then return _status
+    _lexed = 1
+    prepared = .llsource..prepared(_source,_language.encoding(),_language.opening(),_language.closing(),_limits.limit('source.bytes'))
+    _status = prepared.status()
+    if _status <> 0 then do
+      _error = prepared.error(); _offset = prepared.offset()
+      if left(_error,8) = 'LL_UTF8:' & _language.malformed() <> '' then _error = _language.malformed()
+      return _status
+    end
+    scan = .llmunch..scanner(_language.automaton(),prepared.bytes(),'munch',_limits.limit('scan.work'))
+    _status = scan.run()
+    /* Preserve already accepted lexical tokens for inspection/ABI adapters.
+     * A nonzero status still prevents parsing or execution of this request. */
+    masked = scan.tokens()
+    do i = 0 to masked.size() - 1
+      ok = _tokens.append(masked.symbol(i),masked.start(i),masked.finish(i + 1))
+    end
+    if _status <> 0 then do
+      _error = scan.error(); _offset = scan.offset()
+      if _status = 1 then _error = 'LL_LEXICAL: ' || _error
+      if _status = 1 & _language.unmatched() <> '' then _error = _language.unmatched()
+      return _status
+    end
+    if classify then return classify_tokens(_tokens)
+    return 0
+  /** Run declared token stages after a consumer has normalized layout. */
+  classify_tokens: method = .int
+    arg tokens = .llcore..stream
+    if tokens.source() <> _source | tokens.error() <> '' then do
+      _status = 3; _error = 'LL_SOURCE_OWNER: invalid staged token source'; return _status
+    end
+    _tokens = tokens
+    stages = _language.stages()
+    do i = 1 to stages[0]
+      stage = .llstage..transducer(stages[i],_tokens,_limits.limit('parse.work'))
+      _status = stage.run()
+      if _status <> 0 then do
+        _error = stage.error(); return _status
+      end
+      _tokens = stage.output()
+    end
+    return 0
+  parse: method = .int
+    if lex() <> 0 then return _status
+    return parse_tokens(_tokens)
+  parse_tokens: method = .int
+    arg tokens = .llcore..stream
+    at = .int; bytes = .binary; found = .string; fallback = .string
+    if _limits.error() <> '' then do
+      _status = 3; _error = _limits.error(); return _status
+    end
+    if tokens.source() <> _source then do
+      _status = 3; _error = 'LL_SOURCE_OWNER: token source differs'; return _status
+    end
+    if _language.hasparser() = 0 then do
+      _status = 3; _error = 'LL_NO_PARSER: this specification defines a lexer only'; return _status
+    end
+    _tokens = tokens
+    backend = _language.backend()
+    if backend = 'pratt' then do
+      expression = .llpratt..parser(_language.operators(),tokens,_limits.limit('parse.work'))
+      _status = expression.run(); _tree = expression.namedtree(); _root = expression.root()
+      _offset = expression.offset(); _error = expression.error()
+      if _status = 0 then _root = _tree.add(5,_language.expressionname(),_tree.start(_root),_tree.finish(_root),_root,0)
+      return _status
+    end
+    if backend = 'regional' then do
+      composite = .llregional..parser(_language.region(),tokens,_limits.limit('parse.work'),1)
+      _status = composite.run(); _tree = composite.tree(); _root = composite.root()
+      _offset = composite.offset(); _error = composite.error()
+      if _status = 1 then do
+        contexts = composite.contexts()
+        if <blen>(contexts) > 0 then do
+          at = 0
+          do while at < tokens.size() & tokens.start(at) < _offset
+            at = at + 1
+          end
+          bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
+          found = llsource..lexeme(bytes,at >= tokens.size())
+          _error = _language.explain(contexts,found,composite.expected(),_error)
+        end
+      end
+      return _status
+    end
+    if backend = 'll1' | backend = 'packrat' then do
+      predictive = .llpeg..parser(_language.grammar(),_language.root(),tokens,backend,_limits.limit('parse.work'))
+      _status = predictive.run(); _tree = predictive.arena(); _root = predictive.root()
+      _offset = predictive.offset(); _error = predictive.error()
+      if _status = 1 then do
+        at = predictive.position()
+        bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
+        found = llsource..lexeme(bytes,at >= tokens.size())
+        fallback = 'unexpected ' || found || '; expected ' || predictive.expectations()
+        _error = _language.explain(predictive.contexts(),found,predictive.expectations(),fallback)
+      end
+      return _status
+    end
+    if backend = 'earley' then do
+      chart = .llearley..parser(_language.grammar(),_language.root(),tokens,_limits.limit('parse.work'),_limits.limit('earley.cells'))
+      _status = chart.run(); _offset = chart.offset(); _error = chart.error()
+      _forest = chart.forest(); _forestroot = chart.root()
+      if _status = 1 then do
+        at = chart.position()
+        bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
+        found = llsource..lexeme(bytes,at >= tokens.size())
+        fallback = 'unexpected ' || found || '; expected ' || chart.expected()
+        _error = _language.explain(chart.contexts(),found,chart.expected(),fallback)
+      end
+      if _status = 0 then do
+        _root = chart.treeroot(); _tree = chart.tree()
+        if chart.status() <> 0 then do
+          _status = chart.status(); _error = chart.error(); return _status
+        end
+        if _root = 0 then do
+          _status = 5; _error = 'LL_FOREST: accepted input has no unique finite tree; inspect the forest and choose an explicit policy'
+        end
+      end
+      return _status
+    end
+    parser = .lllr..parser(_language.tables(),tokens,_limits.limit('parse.work'))
+    _status = parser.run(); _tree = parser.tree(); _root = parser.root()
+    _offset = parser.offset(); _error = parser.error()
+    if _status = 1 then do
+      at = parser.position(); bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
+      found = llsource..lexeme(bytes,at >= tokens.size())
+      fallback = 'unexpected ' || found || '; expected ' || parser.expected()
+      _error = _language.explain(parser.contexts(),found,parser.expected(),fallback)
+    end
+    return _status
+  tokens: method = .llcore..stream
+    return _tokens
+  tree: method = .llcore..tree
+    return _tree
+  root: method = .int
+    return _root
+  forest: method = .llforest..arena
+    return _forest
+  forestroot: method = .int
+    return _forestroot
+  /** Projection is explicit and refuses failed/forest requests. The original
+   * derivation remains available even if an application arity check fails. */
+  projection: method = .llproject..projection
+    root = _root
+    if _status <> 0 then root = 0
+    return .llproject..projection(_tree,root,_language.schema(),_limits.limit('tree.entries'))
+  offset: method = .int
+    return _offset
+  error: method = .string
+    return _error

@@ -1,0 +1,138 @@
+/* cREXX License (MIT). Packed derivation forest; cyclic derivations are explicit. */
+options levelb
+namespace llforest expose arena
+
+arena: class
+  _width = .int
+  _stride = .int
+  _nodes = .int
+  _families = .int
+  _limit = .int
+  _exhausted = .int
+  _lookup = .int[]
+  _start = .int[]
+  _end = .int[]
+  _label = .int[]
+  _leaf = .int[]
+  _head = .int[]
+  _packed = .int[]
+  _left = .int[]
+  _right = .int[]
+  _next = .int[]
+  _epoch = .int
+  _seen = .int[]
+  _active = .int[]
+  _totals = .int[]
+  *: factory
+    arg extent = .int, familystride = .int, cells = 8000000
+    _width = extent + 1; _stride = familystride; _limit = cells
+    _nodes = 0; _families = 0; _exhausted = 0; _epoch = 0
+    return
+  find: method = .int
+    arg key = .int
+    if key > _limit | key < 1 then return 0
+    return _lookup[key]
+  node: method = .int
+    arg key = .int, label = .int, start = .int, finish = .int, leaf = .int
+    if key > _limit | key < 1 then do
+      _exhausted = 1; return 0
+    end
+    if _lookup[key] then return _lookup[key]
+    _nodes = _nodes + 1; _lookup[key] = _nodes
+    _label[_nodes] = label; _start[_nodes] = start; _end[_nodes] = finish; _leaf[_nodes] = leaf
+    return _nodes
+  pack: method = .int
+    arg node = .int, family = .int, a = .int, b = .int
+    key = (node - 1) * _stride + family
+    if node < 1 | key > _limit | family < 1 | family > _stride then do
+      _exhausted = 1; return 0
+    end
+    if _packed[key] then return 0
+    _families = _families + 1; _packed[key] = _families
+    _left[_families] = a; _right[_families] = b; _next[_families] = _head[node]; _head[node] = _families
+    return 1
+  nodes: method = .int
+    return _nodes
+  families: method = .int
+    return _families
+  exhausted: method = .int
+    return _exhausted
+  label: method = .int
+    arg node = .int
+    return _label[node]
+  start: method = .int
+    arg node = .int
+    return _start[node]
+  finish: method = .int
+    arg node = .int
+    return _end[node]
+  leaf: method = .int
+    arg node = .int
+    return _leaf[node]
+  first: method = .int
+    arg node = .int
+    return _head[node]
+  next: method = .int
+    arg family = .int
+    return _next[family]
+  left: method = .int
+    arg family = .int
+    return _left[family]
+  right: method = .int
+    arg family = .int
+    return _right[family]
+  /** Count finite derivations, saturating at cap. -1 means a reachable cycle;
+   * -2 is traversal-resource exhaustion, never a claim of infinite ambiguity.
+   */
+  derivations: method = .int
+    arg root = .int, cap = 1000000
+    _epoch = _epoch + 1
+    if root < 1 | root > _nodes then return 0
+    return tally(root,cap,0)
+  tally: method = .int
+    arg node = .int, cap = .int, depth = .int
+    if depth >= 512 then return -2
+    if _active[node] = _epoch then return -1
+    if _seen[node] = _epoch then return _totals[node]
+    if _leaf[node] then return 1
+    _active[node] = _epoch; total = 0; family = _head[node]
+    do while family > 0
+      a = 1; b = 1
+      if _left[family] then a = tally(_left[family],cap,depth + 1)
+      if _right[family] then b = tally(_right[family],cap,depth + 1)
+      if a < 0 | b < 0 then do
+        _active[node] = 0
+        if a = -2 | b = -2 then return -2
+        return -1
+      end
+      product = 0
+      if b > 0 then do
+        if a > (cap <idiv> b) then product = cap
+        else product = a * b
+      end
+      if product > cap - total then total = cap
+      else total = total + product
+      family = _next[family]
+    end
+    _active[node] = 0; _seen[node] = _epoch; _totals[node] = total
+    return total
+  validate: method = .int
+    do node = 1 to _nodes
+      if _start[node] < 0 | _end[node] < _start[node] | _end[node] >= _width then return 0
+      family = _head[node]
+      do while family > 0
+        a = _left[family]; b = _right[family]
+        if a < 0 | b < 0 | a > _nodes | b > _nodes then return 0
+        if a > 0 then do
+          if _start[a] <> _start[node] | _end[a] > _end[node] then return 0
+        end
+        if b > 0 then do
+          if _end[b] <> _end[node] | _start[b] < _start[node] then return 0
+        end
+        if a > 0 & b > 0 then do
+          if _end[a] <> _start[b] then return 0
+        end
+        family = _next[family]
+      end
+    end
+    return 1

@@ -1,0 +1,24 @@
+CASE|1|0|0|
+TOKEN|0|0|0
+CASE|2|1|0|bad_character: unmatched scalar
+CASE|3|0|0|
+TOKEN|1|0|4
+TOKEN|0|4|0
+CASE|4|0|0|
+TOKEN|1|0|6
+TOKEN|0|6|0
+CASE|5|1|6|bad_character: unmatched scalar
+TOKEN|1|0|6
+CASE|6|0|0|
+TOKEN|1|0|8
+TOKEN|0|8|0
+CASE|7|0|0|
+TOKEN|1|0|10
+TOKEN|0|10|0
+CASE|8|0|0|
+TOKEN|1|0|8
+TOKEN|1|8|4
+TOKEN|0|12|0
+CASE|9|1|0|bad_character: unmatched scalar
+CASE|10|1|4|bad_character: unmatched scalar
+TOKEN|1|0|4

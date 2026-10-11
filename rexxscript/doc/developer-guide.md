@@ -210,3 +210,80 @@ Keep these boundaries explicit during beta 3:
 - Host integration must remain explicit through `EXPOSE` and captured output.
 - Level B defects found while extending RexxScript should be called out rather
   than hidden behind broad workarounds.
+
+## Modern Level L implementation (local review)
+
+The [Level L user guide](../../lib/rxfnsl/doc/user-guide.md) explains grammar
+authoring, generated modules, token stages and source trees independently of
+RexxScript. Its [diagnostic assessment](../../lib/rxfnsl/doc/diagnostics.md)
+records current first-error behavior and the remaining recovery work.
+
+The modern command is `rexxscript1`; it does not replace the legacy modules
+above. The [modern user contract](user-guide.md#rexxscript-1-modern-level-l-review-implementation)
+records the selected subset and remaining boundaries. Its ownership is:
+
+1. Level L admits `grammar/rexxscript.levell`, emits portable packed images in
+   RXAS, and `rxas` produces compiler-importable bytecode. CMake publishes the
+   generated artifact only after successful admission.
+2. `RexxScriptProgram.crexx` owns source and a named Level L tree. Layout and
+   implicit-concatenation normalization are explicit consumer passes; the
+   grammar declares the DFA, LR rules and finite keyword stages. A module
+   initializer creates the generated language definition once. Calling
+   `rexxscript1..compile(source)` returns an already parsed reusable program.
+3. `RexxScriptExecution.crexx` owns fresh mutable variables, configuration,
+   output, result and budgets. A run is idempotent after completion; construct
+   another execution to run again. `RexxScriptOperators` maps the selected Level
+   G scalar rules onto typed RexxValue operations. `RexxScriptBifs` dispatches
+   directly to the existing rxfnsc functions using a live call context.
+
+For example, compile a caller with imports `rxfnsb`, `rexxscript1` and
+`rexxscript1run`, then use:
+
+```rexx
+program = rexxscript1..compile('x=1+2*3; return x' as .binary)
+run = .rexxscript1run..execution(program)
+status = run.run()
+value = run.result()
+```
+
+Link `rexxscript1`, `rxfnsl`, `rxfnsc`, `rxfnsg`, `classlib` and `library`.
+The shared Unicode BIF module requires the `rxfnsg` Unicode runtime even when
+a particular script does not call Unicode normalization. The native runner also
+links the shared `cstream` and `fs` providers required by those imported modules;
+script access remains governed by the BIF capability checks. The CMake runner
+and tests depend on the actual library files so an incremental library change
+relinks their embedded bytecode. This API owns
+returned values; ordinary VM object/binary assignment copies storage. It is not
+a copy-on-write design or a claim that all request initialization is zero-copy.
+The parser's packed table lookups use a private synchronous `EXPOSE` borrow,
+with no escaping alias. Creating a weak reference per lookup was rejected after
+sampling showed repeated lifetime-owner discovery. The [Level L guide](../../lib/rxfnsl/tools/README.md)
+records image representation, bounds and loader validation.
+
+Build `testrexxscript1` and `testlevell_generated`, then run the corresponding
+CTest names. They launch prebuilt bytecode directly on each available concrete
+VM. `tests_functional/build-review.sh opt|noopt [rxas|crexx]` supplies isolated
+full-module parity builds. `check-scalar-conformance.py BIN WORK` compares the
+same 28 scalar expressions with the current Level G compiler in both compiler
+modes and VMs. After adopting develop `54f736804`, all observations agree.
+The permanent `float-comparison-reproducer.rexx` now requires false in both
+compiler modes; the scalar harness rejects every optimization disagreement.
+The [integration receipt](../../research/level-l/evidence/develop-integration/README.md)
+records RS-F01 closure and preserves the earlier discrepancy as historical evidence. The interpreter
+uses typed integer/float/decimal comparisons and string-targeted Rexx comparisons,
+not the Classic RexxValue decimal-comparison helper. This is overlap evidence,
+not complete Level G compatibility. The compiler can also diagnose a literal
+division by zero inside a short-circuited expression before execution; the
+interpreter checks the executed operand only.
+
+`check-cli.py BIN WORK` exercises the native executable, shared provider linkage,
+source I/O, UTF-8, syntax, undefined-variable and capability failures. Generator
+determinism/atomic failure and dual-format packed-byte checks are in
+`lib/rxfnsl/tests_functional/check-generator.py` and `check-image-parity.py`.
+
+Current local qualification is macOS ARM64 Debug. Linux, Windows, sanitizer,
+install/package and hosted CI qualification of the new product are not claimed.
+Host registration/exposure/write-back and the broader research programme remain
+open. The authoritative criteria and retained evidence live in
+`research/level-l/PLAN.md`; distinguish this product phase from the seven still
+open research criteria.

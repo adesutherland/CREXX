@@ -1,0 +1,28 @@
+/* cREXX License (MIT). Authored tree schema and original-source ownership. */
+options levelb
+import rxfnsb
+import llcore
+import lllanguage
+import llproject
+import levell_settings
+
+main: procedure = .int
+  arg argv = .string[]
+  source = readbinary(argv[1])
+  request = .lllanguage..request(levell_settings..language(),source)
+  status = request.parse()
+  projection = .llproject..projection
+  projection = request.projection()
+  projected = projection.run()
+  say 'PARSE|' || status || '|PROJECT|' || projected
+  if projected <> 0 then do
+    say projection.error(); return projected
+  end
+  tree = .llcore..tree
+  tree = projection.tree()
+  if tree.validate() = 0 | tree.source() <> source then return 4
+  do node = 1 to tree.size()
+    if projection.origin(node) = 0 then return 4
+    say 'NODE|' || tree.label(node) || '|' || tree.kind(node) || '|' || tree.start(node) || '|' || tree.finish(node)
+  end
+  return 0

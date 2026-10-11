@@ -1,0 +1,10 @@
+Program <- S Statement*
+Statement <- Ident S '=' S Expr ';' S
+Expr <- Expr '+' S Term / Term
+Term <- Term '*' S Atom / Atom
+Atom <- Number S / Ident S / String S / '(' S Expr ')' S
+Number <- [0-9]+
+Ident <- [A-Za-z_] [A-Za-z_0-9]*
+String <- @39 ([^'\r\n] / @39 @39)* @39
+Comment <- '/*' ([^*] / '*'+ [^*/])* '*'+ '/'
+S <- ([ \t\r\n] / Comment)*

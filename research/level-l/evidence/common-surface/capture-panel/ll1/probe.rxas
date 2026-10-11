@@ -1,0 +1,412 @@
+/*
+ * SOURCE                 : capture-probe.crexx
+ */
+
+.globals=0
+
+main() .locals=15
+   .meta "capture-probe.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 51 51 17 "capture-probe.crexx" 8 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "capture-probe.crexx" 9 7 21 "  arg argv = .string[]"
+   .meta "capture-probe.main.argv"="b" ".string[*]" a1
+   .meta "capture-probe.main.node"="b" ".int" r8
+   .srcstep 2 2 17 "capture-probe.crexx" 20 3 14 "  node = .int"
+   null r8
+   .srcstep 3 3 17 "capture-probe.crexx" 10 3 79 "  request = .lllanguage..request(levell_settings..language(),readbinary(argv[1]))"
+   .meta "capture-probe.main.request"="b" ".lllanguage..request" r1
+   load r2,0
+   call r6,levell_settings.language(),r2
+   .traceevent "F" 4 "R" "O" "r" 6 3 3 0 "language" ""
+   minlinkattr1 r2,a1,1
+   .traceevent "V" 6 "R" "S" "r" 2 3 3 0 "argv" ""
+   load r11,1
+   settpswapcall r7,rxfnsb.readbinary(),r11,r2,256,r12
+   swap r2,r12
+   unlink r2
+   .traceevent "F" 4 "R" "X" "r" 7 3 3 0 "readbinary" ""
+   load r5,2
+   settp r6,256
+   settpcall r1,§lllanguage.request.§factory(),r5,r7,256
+   .traceevent "F" 4 "R" "O" "r" 1 3 3 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 3 3 0 "request" ""
+   .srcstep 4 4 17 "capture-probe.crexx" 11 3 25 "  status = request.parse()"
+   .meta "capture-probe.main.status"="b" ".int" r10
+   .traceevent "V" 6 "R" "O" "r" 1 4 4 0 "request" ""
+   load r0,1
+   settpcall r10,§lllanguage.request.parse(),r0,r1,256
+   .traceevent "F" 4 "R" "I" "r" 10 4 4 0 "parse" ""
+   .traceevent "A" 6 "R" "I" "r" 10 4 4 0 "status" ""
+   .srcstep 11 11 17 "capture-probe.crexx" 12 3 17 "  if status <> 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 10 11 11 0 "status" ""
+   ine r12,r10,0
+   .traceevent "O" 4 "R" "B" "r" 12 11 11 0 "" ""
+   brf l46iffalse,r12
+   .srcstep 12 12 17 "capture-probe.crexx" 12 18 22 "  if status <> 0 then do"
+   .srcstep 9 9 17 "capture-probe.crexx" 13 5 22 "    say request.error(); return status"
+   .srcstep 8 8 17 "capture-probe.crexx" 13 9 16 "    say request.error(); return status"
+   .srcstep 5 5 33 "capture-probe.crexx" 13 9 16 "    say request.error(); return status"
+   .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 1 5 5 0 "§this" ""
+   .srcstep 6 6 6 "lllanguage@rxfnsl-base.rxbin" 13 16 16 "    say request.error(); return status"
+   .traceevent "V" 6 "R" "O" "r" 1 9 9 0 "§this" ""
+   assertinitialized r1
+   .srcstep 7 7 25 "lllanguage.crexx" 337 5 18 "    return _error"
+   linkattr1 r11,r1,1
+   .traceevent "V" 6 "R" "S" "r" 11 9 9 0 "_error" ""
+   scopy r7,r11
+   unlink r11
+l7698bexprend:
+   say r7
+   .srcstep 10 10 17 "capture-probe.crexx" 13 26 39 "    say request.error(); return status"
+   .traceevent "V" 6 "R" "I" "r" 10 10 10 0 "status" ""
+   ret r10
+l46iffalse:
+   .srcstep 16 16 17 "capture-probe.crexx" 15 3 51 "  tree = .lltree..view(request.tree(),request.root())"
+   .meta "capture-probe.main.tree"="b" ".lltree..view" r3
+   .traceevent "V" 6 "R" "O" "r" 1 16 16 0 "request" ""
+   load r0,1
+   settpcall r12,§lllanguage.request.tree(),r0,r1,256
+   .traceevent "F" 4 "R" "O" "r" 12 16 16 0 "tree" ""
+   .srcstep 15 15 17 "capture-probe.crexx" 15 39 46 "  tree = .lltree..view(request.tree(),request.root())"
+   .srcstep 13 13 33 "capture-probe.crexx" 15 39 46 "  tree = .lltree..view(request.tree(),request.root())"
+   .traceevent "V" 6 "R" "O" "r" 1 13 13 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 1 13 13 0 "§this" ""
+   .srcstep 14 14 25 "lllanguage.crexx" 323 5 17 "    return _root"
+   linkattr1 r7,r1,7
+   .traceevent "V" 6 "R" "I" "r" 7 16 16 0 "_root" ""
+   igetunlink r6,r7
+l7551bexprend:
+   load r11,3
+   settp r12,256
+   swap r13,r6
+   settpcall r3,§lltree.view.§factory(),r11,r14,0
+   swap r6,r13
+   .traceevent "F" 4 "R" "O" "r" 3 16 16 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 3 16 16 0 "tree" ""
+   .srcstep 27 27 17 "capture-probe.crexx" 16 3 24 "  if tree.error() <> '' then do"
+   .srcstep 20 20 17 "capture-probe.crexx" 16 6 10 "  if tree.error() <> '' then do"
+   .srcstep 17 17 33 "capture-probe.crexx" 16 6 10 "  if tree.error() <> '' then do"
+   .traceevent "V" 6 "R" "O" "r" 3 17 17 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 3 17 17 0 "§this" ""
+   .srcstep 18 18 6 "lltree@rxfnsl-base.rxbin" 16 10 10 "  if tree.error() <> '' then do"
+   .traceevent "V" 6 "R" "O" "r" 3 27 27 0 "§this" ""
+   assertinitialized r3
+   .srcstep 19 19 25 "lltree.crexx" 103 5 18 "    return _error"
+   linkattr1 r14,r3,3
+   .traceevent "V" 6 "R" "S" "r" 14 27 27 0 "_error" ""
+   scopy r13,r14
+   unlink r14
+l7707bexprend:
+   rne r13,r13,""
+   .traceevent "O" 4 "R" "B" "r" 13 27 27 0 "" ""
+   brf l72iffalse,r13
+   .srcstep 28 28 17 "capture-probe.crexx" 16 25 29 "  if tree.error() <> '' then do"
+   .srcstep 25 25 17 "capture-probe.crexx" 17 5 19 "    say tree.error(); return 3"
+   .srcstep 24 24 17 "capture-probe.crexx" 17 9 13 "    say tree.error(); return 3"
+   .srcstep 21 21 33 "capture-probe.crexx" 17 9 13 "    say tree.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 3 21 21 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 3 21 21 0 "§this" ""
+   .srcstep 22 22 6 "lltree@rxfnsl-base.rxbin" 17 13 13 "    say tree.error(); return 3"
+   .traceevent "V" 6 "R" "O" "r" 3 25 25 0 "§this" ""
+   assertinitialized r3
+   .srcstep 23 23 25 "lltree.crexx" 103 5 18 "    return _error"
+   linkattr1 r12,r3,3
+   .traceevent "V" 6 "R" "S" "r" 12 25 25 0 "_error" ""
+   scopy r11,r12
+   unlink r12
+l7716bexprend:
+   say r11
+   .srcstep 26 26 17 "capture-probe.crexx" 17 23 31 "    say tree.error(); return 3"
+   ret 3
+l72iffalse:
+   .srcstep 31 31 17 "capture-probe.crexx" 19 3 19 "  root = tree.root()"
+   .srcstep 29 29 33 "capture-probe.crexx" 19 10 14 "  root = tree.root()"
+   .traceevent "V" 6 "R" "O" "r" 3 29 29 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 3 29 29 0 "§this" ""
+   .srcstep 30 30 33 "capture-probe.crexx" 19 14 14 "  root = tree.root()"
+   linkattr1 r14,r3,5
+   .traceevent "V" 6 "R" "I" "r" 14 30 30 0 "_root" ""
+   copy r4,r14
+   .traceevent "A" 6 "R" "I" "r" 4 30 30 0 "root" ""
+   unlink r14
+   .srcstep 32 32 17 "capture-probe.crexx" 21 3 90 "  say 'FIELDS|' || tree.fieldcount(root,'item') || '|' || tree.fieldcount(root,'contents')"
+   .meta "capture-probe.main.root"="b" ".int" r4
+   .traceevent "V" 6 "R" "O" "r" 3 32 32 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 4 32 32 0 "root" ""
+   load r5,"item"
+   .traceevent "L" 4 "R" "S" "r" 5 32 32 0 "" ""
+   load r2,3
+   settp r3,256
+   settpcall r14,§lltree.view.fieldcount(),r2,r5,768
+   itos r14
+   .traceevent "F" 4 "R" "S" "r" 14 32 32 0 "fieldcount" ""
+   concat r14,"FIELDS|",r14
+   .traceevent "O" 4 "R" "S" "r" 14 32 32 0 "" ""
+   concat r14,r14,"|"
+   .traceevent "O" 4 "R" "S" "r" 14 32 32 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 3 32 32 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 4 32 32 0 "root" ""
+   load r5,"contents"
+   .traceevent "L" 4 "R" "S" "r" 5 32 32 0 "" ""
+   load r2,3
+   settp r3,256
+   settpcall r13,§lltree.view.fieldcount(),r2,r5,768
+   itos r13
+   .traceevent "F" 4 "R" "S" "r" 13 32 32 0 "fieldcount" ""
+   concat r14,r14,r13
+   .traceevent "O" 4 "R" "S" "r" 14 32 32 0 "" ""
+   say r14
+   .srcstep 38 38 17 "capture-probe.crexx" 22 3 5 "  do i = 1 to tree.fieldcount(root,'item')"
+   .srcstep 33 33 17 "capture-probe.crexx" 22 6 11 "  do i = 1 to tree.fieldcount(root,'item')"
+   .meta "capture-probe.main.i"="b" ".int" r14
+   load r14,1
+   .traceevent "L" 4 "R" "I" "r" 14 33 33 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 33 33 0 "i" ""
+   .srcstep 34 34 17 "capture-probe.crexx" 22 12 42 "  do i = 1 to tree.fieldcount(root,'item')"
+   .traceevent "V" 6 "R" "O" "r" 3 0 0 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "root" ""
+   load r5,"item"
+   .traceevent "L" 4 "R" "S" "r" 5 0 0 0 "" ""
+   load r2,3
+   settp r3,256
+   settpcall r13,§lltree.view.fieldcount(),r2,r5,768
+   .traceevent "F" 4 "R" "I" "r" 13 0 0 0 "fieldcount" ""
+l98dostart:
+   .srcstep 34 34 17 "capture-probe.crexx" 22 12 42 "  do i = 1 to tree.fieldcount(root,'item')"
+   igt r12,r14,r13
+   brt l98doend,r12
+   .srcstep 36 36 17 "capture-probe.crexx" 23 5 36 "    node = tree.field(root,'ITEM',i)"
+   .traceevent "V" 6 "R" "O" "r" 3 36 36 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 4 36 36 0 "root" ""
+   load r5,"ITEM"
+   .traceevent "L" 4 "R" "S" "r" 5 36 36 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 14 36 36 0 "i" ""
+   load r2,4
+   settp r3,256
+   settp r5,768
+   settpswapcall r8,§lltree.view.field(),r2,r14,256,r6
+   swap r14,r6
+   .traceevent "F" 4 "R" "I" "r" 8 36 36 0 "field" ""
+   .traceevent "A" 6 "R" "I" "r" 8 36 36 0 "node" ""
+   .srcstep 37 37 17 "capture-probe.crexx" 24 5 90 "    say 'ITEM|' || tree.text(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "O" "r" 3 37 37 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 8 37 37 0 "node" ""
+   load r6,2
+   settp r3,256
+   swap r7,r3
+   call r11,§lltree.view.text(),r6
+   swap r3,r7
+   .traceevent "F" 4 "R" "S" "r" 11 37 37 0 "text" ""
+   concat r11,"ITEM|",r11
+   .traceevent "O" 4 "R" "S" "r" 11 37 37 0 "" ""
+   concat r11,r11,"|"
+   .traceevent "O" 4 "R" "S" "r" 11 37 37 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 3 37 37 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 8 37 37 0 "node" ""
+   load r6,2
+   settp r3,256
+   swap r7,r3
+   call r5,§lltree.view.start(),r6
+   swap r3,r7
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 37 37 0 "start" ""
+   concat r11,r11,r5
+   .traceevent "O" 4 "R" "S" "r" 11 37 37 0 "" ""
+   concat r11,r11,"|"
+   .traceevent "O" 4 "R" "S" "r" 11 37 37 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 3 37 37 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 8 37 37 0 "node" ""
+   load r6,2
+   settp r3,256
+   swap r7,r3
+   call r5,§lltree.view.finish(),r6
+   swap r3,r7
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 37 37 0 "finish" ""
+   concat r11,r11,r5
+   .traceevent "O" 4 "R" "S" "r" 11 37 37 0 "" ""
+   say r11
+l98doinc:
+   .srcstep 35 35 17 "capture-probe.crexx" 22 6 7 "  do i = 1 to tree.fieldcount(root,'item')"
+   inc r14
+   .srcstep 39 39 17 "capture-probe.crexx" 25 3 6 "  end"
+   br l98dostart
+l98doend:
+   .meta "capture-probe.main.i"
+   .srcstep 40 40 17 "capture-probe.crexx" 26 3 36 "  node = tree.field(root,'contents')"
+   .traceevent "V" 6 "R" "O" "r" 3 40 40 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 4 40 40 0 "root" ""
+   load r5,"contents"
+   .traceevent "L" 4 "R" "S" "r" 5 40 40 0 "" ""
+   load r2,4
+   settp r3,256
+   settp r5,768
+   settpcall r8,§lltree.view.field(),r2,r6,0
+   .traceevent "F" 4 "R" "I" "r" 8 40 40 0 "field" ""
+   .traceevent "A" 6 "R" "I" "r" 8 40 40 0 "node" ""
+   .srcstep 42 42 17 "capture-probe.crexx" 27 3 14 "  if node > 0 then say 'CONTENTS|' || tree.text(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "I" "r" 8 42 42 0 "node" ""
+   igt r14,r8,0
+   .traceevent "O" 4 "R" "B" "r" 14 42 42 0 "" ""
+   brf l170iffalse,r14
+   .srcstep 43 43 17 "capture-probe.crexx" 27 15 19 "  if node > 0 then say 'CONTENTS|' || tree.text(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .srcstep 41 41 17 "capture-probe.crexx" 27 20 109 "  if node > 0 then say 'CONTENTS|' || tree.text(node) || '|' || tree.start(node) || '|' || tree.finish(node)"
+   .traceevent "V" 6 "R" "O" "r" 3 41 41 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 8 41 41 0 "node" ""
+   load r6,2
+   settp r3,256
+   swap r7,r3
+   call r13,§lltree.view.text(),r6
+   swap r3,r7
+   .traceevent "F" 4 "R" "S" "r" 13 41 41 0 "text" ""
+   concat r13,"CONTENTS|",r13
+   .traceevent "O" 4 "R" "S" "r" 13 41 41 0 "" ""
+   concat r13,r13,"|"
+   .traceevent "O" 4 "R" "S" "r" 13 41 41 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 3 41 41 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 8 41 41 0 "node" ""
+   load r6,2
+   settp r3,256
+   swap r7,r3
+   call r12,§lltree.view.start(),r6
+   swap r3,r7
+   itos r12
+   .traceevent "F" 4 "R" "S" "r" 12 41 41 0 "start" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 41 41 0 "" ""
+   concat r13,r13,"|"
+   .traceevent "O" 4 "R" "S" "r" 13 41 41 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 3 41 41 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 8 41 41 0 "node" ""
+   load r6,2
+   settp r3,256
+   swap r7,r3
+   call r12,§lltree.view.finish(),r6
+   swap r3,r7
+   itos r12
+   .traceevent "F" 4 "R" "S" "r" 12 41 41 0 "finish" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 41 41 0 "" ""
+   say r13
+l170iffalse:
+   .srcstep 45 45 17 "capture-probe.crexx" 28 3 37 "  if tree.field(root,'missing') <> 0 then return 4"
+   .traceevent "V" 6 "R" "O" "r" 3 45 45 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 4 45 45 0 "root" ""
+   load r5,"missing"
+   .traceevent "L" 4 "R" "S" "r" 5 45 45 0 "" ""
+   load r2,4
+   settp r3,256
+   settp r5,768
+   settpcall r14,§lltree.view.field(),r2,r6,0
+   .traceevent "F" 4 "R" "I" "r" 14 45 45 0 "field" ""
+   ine r14,r14,0
+   .traceevent "O" 4 "R" "B" "r" 14 45 45 0 "" ""
+   brf l180iffalse,r14
+   .srcstep 46 46 17 "capture-probe.crexx" 28 38 42 "  if tree.field(root,'missing') <> 0 then return 4"
+   .srcstep 44 44 17 "capture-probe.crexx" 28 43 51 "  if tree.field(root,'missing') <> 0 then return 4"
+   ret 4
+l180iffalse:
+   .srcstep 48 48 17 "capture-probe.crexx" 29 3 67 "  if tree.field(root,'item',tree.fieldcount(root,'item') + 1) <> 0 then return 4"
+   .traceevent "V" 6 "R" "O" "r" 3 48 48 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 4 48 48 0 "root" ""
+   load r5,"item"
+   .traceevent "L" 4 "R" "S" "r" 5 48 48 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 3 48 48 0 "tree" ""
+   .traceevent "V" 6 "R" "I" "r" 4 48 48 0 "root" ""
+   load r14,"item"
+   .traceevent "L" 4 "R" "S" "r" 14 48 48 0 "" ""
+   load r11,3
+   settp r3,256
+   swap r12,r3
+   swap r13,r4
+   settpcall r7,§lltree.view.fieldcount(),r11,r14,768
+   swap r3,r12
+   swap r4,r13
+   .traceevent "F" 4 "R" "I" "r" 7 48 48 0 "fieldcount" ""
+   iadd r6,r7,1
+   .traceevent "O" 4 "R" "I" "r" 6 48 48 0 "" ""
+   load r2,4
+   settp r3,256
+   settp r5,768
+   settpcall r14,§lltree.view.field(),r2,r6,256
+   .traceevent "F" 4 "R" "I" "r" 14 48 48 0 "field" ""
+   ine r14,r14,0
+   .traceevent "O" 4 "R" "B" "r" 14 48 48 0 "" ""
+   brf l197iffalse,r14
+   .srcstep 49 49 17 "capture-probe.crexx" 29 68 72 "  if tree.field(root,'item',tree.fieldcount(root,'item') + 1) <> 0 then return 4"
+   .srcstep 47 47 17 "capture-probe.crexx" 29 73 81 "  if tree.field(root,'item',tree.fieldcount(root,'item') + 1) <> 0 then return 4"
+   ret 4
+l197iffalse:
+   .srcstep 50 50 17 "capture-probe.crexx" 30 3 11 "  return 0"
+   ret 0
+   .meta "capture-probe.main.argv"
+   .meta "capture-probe.main.node"
+   .meta "capture-probe.main.request"
+   .meta "capture-probe.main.root"
+   .meta "capture-probe.main.status"
+   .meta "capture-probe.main.tree"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/capture-panel/ll1/levell_settings@linked.rxbin */
+
+levell_settings.language() .expose=levell_settings.language
+   .meta "levell_settings.language"="b" ".lllanguage..definition" levell_settings.language() ""
+   .meta "levell_settings.language"=".autoload" "linked"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: lllanguage@rxfnsl-base.rxbin */
+
+§lllanguage.request.§factory() .expose=lllanguage.request.§factory
+   .meta "lllanguage.request.§factory"="b" ".lllanguage..request" §lllanguage.request.§factory() "language=.definition,source=.binary"
+   .meta "lllanguage.request.§factory"=".autoload" "rxfnsl-base"
+
+§lllanguage.request.parse() .expose=lllanguage.request.parse
+   .meta "lllanguage.request.parse"="b" ".int" §lllanguage.request.parse() ""
+   .meta "lllanguage.request.parse"=".autoload" "rxfnsl-base"
+
+§lllanguage.request.tree() .expose=lllanguage.request.tree
+   .meta "lllanguage.request.tree"="b" ".llcore..tree" §lllanguage.request.tree() ""
+   .meta "lllanguage.request.tree"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: lltree@rxfnsl-base.rxbin */
+
+§lltree.view.§factory() .expose=lltree.view.§factory
+   .meta "lltree.view.§factory"="b" ".lltree..view" §lltree.view.§factory() "source=.llcore..tree,root=.int,?limit=.int"
+   .meta "lltree.view.§factory"=".autoload" "rxfnsl-base"
+
+§lltree.view.fieldcount() .expose=lltree.view.fieldcount
+   .meta "lltree.view.fieldcount"="b" ".int" §lltree.view.fieldcount() "node=.int,name=.string"
+   .meta "lltree.view.fieldcount"=".autoload" "rxfnsl-base"
+
+§lltree.view.field() .expose=lltree.view.field
+   .meta "lltree.view.field"="b" ".int" §lltree.view.field() "node=.int,name=.string,?occurrence=.int"
+   .meta "lltree.view.field"=".autoload" "rxfnsl-base"
+
+§lltree.view.start() .expose=lltree.view.start
+   .meta "lltree.view.start"="b" ".int" §lltree.view.start() "node=.int"
+   .meta "lltree.view.start"=".autoload" "rxfnsl-base"
+
+§lltree.view.finish() .expose=lltree.view.finish
+   .meta "lltree.view.finish"="b" ".int" §lltree.view.finish() "node=.int"
+   .meta "lltree.view.finish"=".autoload" "rxfnsl-base"
+
+§lltree.view.text() .expose=lltree.view.text
+   .meta "lltree.view.text"="b" ".string" §lltree.view.text() "node=.int"
+   .meta "lltree.view.text"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: wordpos@library.rxbin */
+
+rxfnsb.wordpos() .expose=rxfnsb.wordpos
+   .meta "rxfnsb.wordpos"="b" ".int" rxfnsb.wordpos() "search=.string,string=.string,?start=.int"
+   .meta "rxfnsb.wordpos"=".autoload" "library"

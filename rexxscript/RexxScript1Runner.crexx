@@ -1,0 +1,24 @@
+/* cREXX License (MIT). Explicit modern RexxScript 1 standalone entry point. */
+options levelb
+import rxfnsb
+import rexxscript1
+import rexxscript1run
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do
+    say 'usage: rexxscript1 script.rexx'; return 2
+  end
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'RS_SOURCE_IO: cannot read script ' || argv[1]; return 1
+  end
+  program = rexxscript1..compile(source)
+  run = .rexxscript1run..execution(program)
+  result = run.run(); lines = run.output()
+  do i = 1 to lines[0]
+    say lines[i]
+  end
+  if result <> 0 then say run.error()
+  return result

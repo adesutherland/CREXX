@@ -1,0 +1,176 @@
+/* Native authored Pika lowering, with an independent cardinality oracle. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import llpeg
+import lltabpeg
+import llpika
+import llpikalower
+import llpikatree
+main: procedure = .int expose failures cases graph root pg proot
+  graph = .llcore..grammar; root = .int; pg = .llpika..graph; proot = .int
+  p = .llpika..parser
+  failures = 0; cases = 0
+  source = readfile('research/level-l/specs/equal-three.levell')
+  doc = .llfront..document(source); status = doc.run()
+  if status <> 0 then do
+    say doc.error(); return 1
+  end
+  graph = doc.grammar(); root = doc.root()
+  pd = .llfront..document(changestr('semantics ordered',source,'semantics pika'))
+  status = pd.run(); sourcegraph = pd.grammar()
+  lower = .llpikalower..lowering(sourcegraph,pd.root())
+  if status <> 0 | lower.run() <> 0 then do
+    say pd.error() lower.error(); return 1
+  end
+  pg = lower.graph(); proot = lower.root()
+  call exportgraph pg,proot,'equal-three'
+  do a = 0 to 6
+    do b = 0 to 6
+      do c = 0 to 6
+        text = copies('a',a) || copies('b',b) || copies('c',c)
+        expected = a = 0 | a <> b | b <> c
+        call powercase text,expected
+      end
+    end
+  end
+  do n = 0 to 5
+    call enumerate '',n
+  end
+  repeatlower = .llpikalower..lowering(sourcegraph,pd.root())
+  status = repeatlower.run(); again = repeatlower.graph()
+  call check status = 0 & again.identity() == pg.identity(),'deterministic native clause ranks'
+  call check lower.rank(pd.root()) = proot & pos('document',lower.names(proot)) > 0,'named rule rank survives reference removal'
+  ordinary = .llpikalower..lowering(graph,root)
+  call check ordinary.run() = 3 & pos('ordinary PEG',ordinary.error()) > 0,'operational Pika not silently admitted as ordinary PEG'
+  limited = .llpikalower..lowering(sourcegraph,pd.root(),2)
+  call check limited.run() = 4,'normalization construction limit distinct'
+  stale = .llpikalower..lowering(sourcegraph,pd.root()); status = stale.run()
+  extra = sourcegraph.add(6,0,0,'extra',100)
+  call check stale.run() = 0 & stale.matches(sourcegraph) = 0,'owned lowering survives; changed caller cannot reuse its certificate'
+  source = "options levell namespace cycle read: parser semantics pika input bytes start a a: rule = b b: rule = a"
+  bad = .llfront..document(source); status = bad.run()
+  lower = .llpikalower..lowering(bad.grammar(),bad.root())
+  call check status = 0 & lower.run() = 3 & pos('reference-only cycle',lower.error()) > 0,'located alias-cycle rejection'
+  say lower.error()
+  source = "options levell namespace direct read: parser semantics pika input bytes start a a: rule = a 'a' | 'a'"
+  pd = .llfront..document(source); status = pd.run()
+  lower = .llpikalower..lowering(pd.grammar(),pd.root()); status = lower.run()
+  call check status = 0,'recursive named source lowers natively'
+  pg = lower.graph(); proot = lower.root(); call exportgraph pg,proot,'direct-lowered'
+  do n = 0 to 8
+    input = .llcore..stream(copies('a',n) as .binary)
+    p = .llpika..parser(pg,proot,input); status = p.run()
+    call record p,input
+    expected = n = 0
+    call check status = expected,'direct recursive length ' || n
+  end
+  treeview = .llpikatree..projection(lower,p)
+  treeok = treeview.run(); selectedtree = treeview.tree()
+  call check treeok = 0 & selectedtree.validate() & selectedtree.owns_source(),'selected Pika source tree is owned and certified'
+  call check selectedtree.label(treeview.root()) = 'a' & selectedtree.finish(treeview.root()) = 8,'rule label and full span survive native lowering'
+  limitedtree = .llpikatree..projection(lower,p,1)
+  call check limitedtree.run() = 2,'tree budget distinct from syntax rejection'
+  /* Explicit precedence tiers are authored rules; no hidden reassociation. */
+  source = "options levell namespace precedence read: parser semantics pika input bytes start e e: rule = e '+' t | t t: rule = t '*' atom | atom atom: rule = '1' | '2' | '3'"
+  pd = .llfront..document(source); status = pd.run()
+  lower = .llpikalower..lowering(pd.grammar(),pd.root()); status = lower.run()
+  call check status = 0,'explicit precedence tiers lower natively'
+  pg = lower.graph(); proot = lower.root(); call exportgraph pg,proot,'precedence-lowered'
+  do n = 1 to 5
+    text = word('1+2*3 1*2+3 1+2+3 1**2 2*3',n)
+    input = .llcore..stream(text as .binary); p = .llpika..parser(pg,proot,input)
+    status = p.run(); call record p,input
+    expected = n = 4
+    call check status = expected,'precedence acceptance ' || text
+    if status = 0 then do
+      treeview = .llpikatree..projection(lower,p); treeok = treeview.run(); selectedtree = treeview.tree()
+      call check treeok = 0 & selectedtree.validate(),'precedence source tree validates'
+      say 'PRECEDENCE_TREE 'text canonical(selectedtree,treeview.root())
+    end
+  end
+  /* EBNF and inverted sets lower to explicit normal forms, including NUL. */
+  sourcegraph = .llcore..grammar('pika')
+  atom = sourcegraph.characters('00ff'x as .binary,1,'not.endpoints',1)
+  many = sourcegraph.add(14,atom,0,'plus',2)
+  eof = sourcegraph.add(10,0,0,'eof',3)
+  start = sourcegraph.add(2,many,eof,'document',4)
+  lower = .llpikalower..lowering(sourcegraph,start); status = lower.run()
+  call check status = 0,'extended normal forms lower'
+  pg = lower.graph(); proot = lower.root(); call exportgraph pg,proot,'inverted-bytes'
+  do byte = 0 to 255
+    input = .llcore..stream(x2bin(right(d2x(byte),2,'0')))
+    p = .llpika..parser(pg,proot,input); status = p.run(); call record p,input
+    expected = byte = 0 | byte = 255
+    if status <> expected then do
+      failures = failures + 1; say 'FAIL inverted Pika set:' byte status expected
+    end
+  end
+  say 'pikalower_cases='cases
+  say 'pikalower_failures='failures
+  if failures then return 1
+  return 0
+powercase: procedure = .void expose failures cases graph root pg proot
+  arg text = .string, expected = .int
+  input = .llcore..stream(text as .binary)
+  a = .llpeg..parser(graph,root,input,'packrat'); b = .lltabpeg..parser(graph,root,input)
+  p = .llpika..parser(pg,proot,input)
+  sa = a.run(); sb = b.run(); sp = p.run(); cases = cases + 1
+  call record p,input
+  if sa <> expected | sb <> expected | sp <> expected then do
+    failures = failures + 1
+    say 'FAIL equal-three:' bin2x(text as .binary) 'want' expected 'packrat/tab/pika' sa sb sp
+  end
+  return
+enumerate: procedure = .void
+  arg text = .string, remaining = .int
+  if remaining = 0 then do
+    a = countstr('a',text); b = countstr('b',text); c = countstr('c',text)
+    ordered = copies('a',a) || copies('b',b) || copies('c',c)
+    expected = a = 0 | a <> b | b <> c | text \== ordered
+    call powercase text,expected
+    return
+  end
+  call enumerate text || 'a',remaining - 1
+  call enumerate text || 'b',remaining - 1
+  call enumerate text || 'c',remaining - 1
+  return
+exportgraph: procedure = .void
+  arg g = .llpika..graph, root = .int, name = .string
+  say 'GRAMMAR' name g.size() root
+  do i = 1 to g.size()
+    text = g.text(i); hex = bin2x(text)
+    if hex = '' then hex = '-'
+    row = 'CLAUSE ' || i || ' ' || g.op(i) || ' ' || g.flags(i) || ' ' || hex || ' ' || g.zero(i)
+    do j = 1 to g.count(i)
+      row = row || ' ' || g.child(i,j)
+    end
+    say row
+  end
+  return
+record: procedure = .void
+  arg p = .llpika..parser, input = .llcore..stream
+  text = input.source(); hex = bin2x(text)
+  if hex = '' then hex = '-'
+  say 'CASE' hex
+  say 'OBSERVED|' || p.result() || '|' || p.created() || '|' || p.updates() || '|' || p.entries() || '|' || p.canonical(p.root())
+  return
+readfile: procedure = .string
+  arg path = .string
+  out = ''
+  do while lines(path)
+    out = out || linein(path) || '0a'x
+  end
+  return out
+check: procedure = .void expose failures
+  arg condition = .int, message = .string
+  if condition then say 'PASS:' message
+  else do
+    say 'FAIL:' message; failures = failures + 1
+  end
+  return
+canonical: procedure = .string
+  arg tree = .llcore..tree, node = .int
+  if node = 0 then return '-'
+  return '(' || tree.label(node) || ',' || tree.start(node) || ',' || tree.finish(node) || canonical(tree,tree.left(node)) || canonical(tree,tree.right(node)) || ')'

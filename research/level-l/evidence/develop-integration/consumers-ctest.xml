@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Darwin-c++"
+	tests="8"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="Adrians-MacBook-Air.local"
+	time="29"
+	timestamp="2026-10-11T14:13:50"
+	>
+	<testcase name="levell_generated_rxtvm" classname="levell_generated_rxtvm" time="0.826537" status="run">
+		<properties>
+			<property name="cmake_labels" value="comprehensive;level-l;library"/>
+		</properties>
+		<system-out>generated_checks=5753
+generated_failures=0
+</system-out>
+	</testcase>
+	<testcase name="levell_generated_rxbvm" classname="levell_generated_rxbvm" time="0.737943" status="run">
+		<properties>
+			<property name="cmake_labels" value="comprehensive;level-l;library"/>
+		</properties>
+		<system-out>generated_checks=5753
+generated_failures=0
+</system-out>
+	</testcase>
+	<testcase name="ts_unicode_normalization_rxbvm_noopt" classname="ts_unicode_normalization_rxbvm_noopt" time="19.9054" status="run">
+		<properties>
+			<property name="cmake_labels" value="comprehensive;levelg;library;linked;normalization;optimizer-parity;rxbvm;unicode"/>
+		</properties>
+		<system-out>NormalizationTest rows by Part 0..5: 45/17086/1936/194/735/38
+Normalization relations: 400680
+Normalization predicates: 400680
+Unlisted scalar identity checks per form: 1094978
+PASS: rxunicode Unicode 17 four-form normalization
+</system-out>
+	</testcase>
+	<testcase name="ts_unicode_normalization_rxbvm_opt" classname="ts_unicode_normalization_rxbvm_opt" time="19.814" status="run">
+		<properties>
+			<property name="cmake_labels" value="comprehensive;levelg;library;linked_opt;normalization;optimizer-parity;rxbvm;unicode"/>
+		</properties>
+		<system-out>NormalizationTest rows by Part 0..5: 45/17086/1936/194/735/38
+Normalization relations: 400680
+Normalization predicates: 400680
+Unlisted scalar identity checks per form: 1094978
+PASS: rxunicode Unicode 17 four-form normalization
+</system-out>
+	</testcase>
+	<testcase name="ts_unicode_normalization_rxtvm_noopt" classname="ts_unicode_normalization_rxtvm_noopt" time="20.7292" status="run">
+		<properties>
+			<property name="cmake_labels" value="comprehensive;levelg;library;linked;normalization;optimizer-parity;rxtvm;unicode"/>
+		</properties>
+		<system-out>NormalizationTest rows by Part 0..5: 45/17086/1936/194/735/38
+Normalization relations: 400680
+Normalization predicates: 400680
+Unlisted scalar identity checks per form: 1094978
+PASS: rxunicode Unicode 17 four-form normalization
+</system-out>
+	</testcase>
+	<testcase name="ts_unicode_normalization_rxtvm_opt" classname="ts_unicode_normalization_rxtvm_opt" time="20.724" status="run">
+		<properties>
+			<property name="cmake_labels" value="comprehensive;levelg;library;linked_opt;normalization;optimizer-parity;rxtvm;unicode"/>
+		</properties>
+		<system-out>NormalizationTest rows by Part 0..5: 45/17086/1936/194/735/38
+Normalization relations: 400680
+Normalization predicates: 400680
+Unlisted scalar identity checks per form: 1094978
+PASS: rxunicode Unicode 17 four-form normalization
+</system-out>
+	</testcase>
+	<testcase name="rexxscript1_rxtvm" classname="rexxscript1_rxtvm" time="4.7923" status="run">
+		<properties>
+			<property name="cmake_labels" value="level-l;rexxscript"/>
+		</properties>
+		<system-out>rexxscript1_cases=60
+rexxscript1_failures=0
+</system-out>
+	</testcase>
+	<testcase name="rexxscript1_rxbvm" classname="rexxscript1_rxbvm" time="5.23119" status="run">
+		<properties>
+			<property name="cmake_labels" value="level-l;rexxscript"/>
+		</properties>
+		<system-out>rexxscript1_cases=60
+rexxscript1_failures=0
+</system-out>
+	</testcase>
+</testsuite>

@@ -1,0 +1,16 @@
+STATUS|0
+NODE|0|settings|0|20|2
+NODE|1|assignment|0|20|3
+NODE|2|name.value|0|7|1
+NODE|3|identifier|0|7|0
+NODE|2|equals|8|9|0
+NODE|2|value|10|20|1
+NODE|3|expression|10|20|1
+NODE|4|product|11|19|2
+NODE|5|negative|11|17|1
+NODE|6|group|12|17|1
+NODE|7|sum|13|16|2
+NODE|8|number|13|14|0
+NODE|8|number|15|16|0
+NODE|5|number|18|19|0
+NODE|1|tail|20|20|0

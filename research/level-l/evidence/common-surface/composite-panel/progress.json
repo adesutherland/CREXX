@@ -1,0 +1,2874 @@
+{
+  "records": [
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 4,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 4,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 4,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 4,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 4,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 4,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 4,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "regional",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 4,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 1,
+      "status": 0
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 2,
+      "status": 1
+    },
+    {
+      "variant": "pratt",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 3,
+      "status": 1
+    },
+    {
+      "variant": "forest",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 5
+    },
+    {
+      "variant": "forest",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 5
+    },
+    {
+      "variant": "forest",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 5
+    },
+    {
+      "variant": "forest",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 5
+    },
+    {
+      "variant": "forest",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 5
+    },
+    {
+      "variant": "forest",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 5
+    },
+    {
+      "variant": "forest",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 5
+    },
+    {
+      "variant": "forest",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 5
+    },
+    {
+      "variant": "shared-context",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "shared-context",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "shared-context",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "shared-context",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "shared-context",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "shared-context",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "shared-context",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "shared-context",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "predicate",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "predicate",
+      "route": "rxas",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "predicate",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "predicate",
+      "route": "rxas",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "predicate",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "predicate",
+      "route": "source",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "predicate",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": 0,
+      "status": 1
+    },
+    {
+      "variant": "predicate",
+      "route": "source",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": 0,
+      "status": 1
+    }
+  ],
+  "commands": [
+    {
+      "name": "regional-rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/input.levell",
+        "--rxas"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-opt-rxtvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-opt-rxtvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-opt-rxtvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-opt-rxtvm-4",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/4.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-opt-rxbvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-opt-rxbvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-opt-rxbvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-opt-rxbvm-4",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/4.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-noopt-rxtvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-noopt-rxtvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-noopt-rxtvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-noopt-rxtvm-4",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/4.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-noopt-rxbvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-rxas-noopt-rxbvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-noopt-rxbvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-rxas-noopt-rxbvm-4",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/4.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/input.levell"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-rxtvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-rxtvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-opt-rxtvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-opt-rxtvm-4",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/4.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-rxbvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-opt-rxbvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-opt-rxbvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-opt-rxbvm-4",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/4.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-noopt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-noopt-rxtvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-noopt-rxtvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-noopt-rxtvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-noopt-rxtvm-4",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/4.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-noopt-rxbvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "regional-source-noopt-rxbvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-noopt-rxbvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "regional-source-noopt-rxbvm-4",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/regional/4.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/input.levell",
+        "--rxas"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-opt-rxtvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-opt-rxtvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-rxas-opt-rxtvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-rxas-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-opt-rxbvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-opt-rxbvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-rxas-opt-rxbvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-rxas-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-noopt-rxtvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-noopt-rxtvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-rxas-noopt-rxtvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-rxas-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-noopt-rxbvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-rxas-noopt-rxbvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-rxas-noopt-rxbvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/input.levell"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-rxtvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-rxtvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-source-opt-rxtvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-source-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-rxbvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-opt-rxbvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-source-opt-rxbvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-source-noopt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-noopt-rxtvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-noopt-rxtvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-source-noopt-rxtvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-source-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/0.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-noopt-rxbvm-1",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/1.txt"
+      ],
+      "status": 0
+    },
+    {
+      "name": "pratt-source-noopt-rxbvm-2",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/2.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "pratt-source-noopt-rxbvm-3",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/pratt/3.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "forest-rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/input.levell",
+        "--rxas"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-rxas-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-rxas-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-rxas-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-rxas-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-rxas-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/0.txt"
+      ],
+      "status": 5
+    },
+    {
+      "name": "forest-rxas-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/0.txt"
+      ],
+      "status": 5
+    },
+    {
+      "name": "forest-rxas-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-rxas-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-rxas-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-rxas-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-rxas-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/0.txt"
+      ],
+      "status": 5
+    },
+    {
+      "name": "forest-rxas-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/0.txt"
+      ],
+      "status": 5
+    },
+    {
+      "name": "forest-source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/input.levell"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-opt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/0.txt"
+      ],
+      "status": 5
+    },
+    {
+      "name": "forest-source-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/0.txt"
+      ],
+      "status": 5
+    },
+    {
+      "name": "forest-source-noopt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "forest-source-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/0.txt"
+      ],
+      "status": 5
+    },
+    {
+      "name": "forest-source-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/forest/0.txt"
+      ],
+      "status": 5
+    },
+    {
+      "name": "shared-context-rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/input.levell",
+        "--rxas"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-rxas-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-rxas-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-rxas-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-rxas-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-rxas-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "shared-context-rxas-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "shared-context-rxas-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-rxas-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-rxas-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-rxas-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-rxas-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "shared-context-rxas-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "shared-context-source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/input.levell"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-opt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "shared-context-source-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "shared-context-source-noopt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "shared-context-source-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "shared-context-source-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/shared-context/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "predicate-rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/input.levell",
+        "--rxas"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-rxas-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-rxas-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-rxas-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-rxas-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-rxas-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "predicate-rxas-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "predicate-rxas-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-rxas-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-rxas-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-rxas-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-rxas-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "predicate-rxas-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "predicate-source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/input.levell"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-opt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-opt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-opt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-opt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-opt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "predicate-source-opt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "predicate-source-noopt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-noopt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-n",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/surface-probe.crexx"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-noopt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "-n",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-noopt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0
+    },
+    {
+      "name": "predicate-source-noopt-rxtvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/0.txt"
+      ],
+      "status": 1
+    },
+    {
+      "name": "predicate-source-noopt-rxbvm-0",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/composite-panel/predicate/0.txt"
+      ],
+      "status": 1
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+/* Local LR repair cost, alternatives, provenance and resource contracts. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import lllr
+import lllrrepair
+main: procedure = .int expose failures cases
+  failures = 0; cases = 0
+  source = "options levell namespace arrays read: parser semantics contextfree input bytes start document document: rule = array (';' array)* array: rule = '[' (item (',' item)*)? ']' item: rule = 'a' | array"
+  doc = .llfront..document(source); status = doc.run()
+  table = .lllr..tables(doc.grammar(),doc.root(),'lr1')
+  call check status = 0 & table.status() = 0,'array document LR table'
+  texts = .string[]
+  texts[1] = '[a];[a]'; texts[2] = '[aa];[a]'; texts[3] = '[a,];[a]'; texts[4] = '[x];[a]'
+  texts[5] = '['; texts[6] = '[a];[a'; texts[7] = '[];[a]'; texts[8] = '[[a],a];[a]'
+  do i = 1 to texts[0]
+    text = texts[i]; input = .llcore..stream(text as .binary)
+    repair = .lllrrepair..request(table,input)
+    result = repair.run(); cases = cases + 1
+    expected = i > 1 & i < 7
+    call check result = expected & repair.complete(),'array repair status ' || text
+    output = repair.edited(); finalinput = .llcore..stream(output); parsed = .lllr..parser(table,finalinput)
+    call check parsed.run() = 0,'repaired token sequence parses fully'
+    call check bincompare(repair.source(),text as .binary) = 0,'original source retained'
+    if result = 1 then do
+      call check repair.cost() = 1,'unit repair cost'
+      say 'LR_REPAIR|'text '|'bin2x(output) '|'repair.error()
+      do alternative = 1 to repair.count()
+        say '  ALTERNATIVE' alternative repair.script(alternative)
+      end
+      if i < 5 then do
+        extent = <blen>(output); tail = binsubstr(output,extent - 3,4)
+        call check bin2x(tail) = '3B5B615D','later complete array survives unchanged'
+      end
+    end
+  end
+  input = .llcore..stream('[aa];[xx]' as .binary)
+  repair = .lllrrepair..request(table,input); status = repair.run()
+  call check status = 1 & repair.complete() = 0,'local recovery is not clean full-file acceptance'
+  /* Published CR Shift 3 example, with a standing for an integer token. */
+  source = "options levell namespace cpct read: parser semantics contextfree input bytes start e e: rule = e '+' t | t t: rule = t '*' factor | factor factor: rule = '(' e ')' | 'a'"
+  doc = .llfront..document(source); status = doc.run()
+  table = .lllr..tables(doc.grammar(),doc.root(),'lr1')
+  input = .llcore..stream('aa+' as .binary)
+  repair = .lllrrepair..request(table,input); status = repair.run()
+  call check status = 1 & repair.cost() = 2 & repair.count() = 6,'six minimum repairs from the published CR Shift 3 example'
+  say 'CRSHIFT3|'repair.count() '|'repair.cost() '|'repair.error()
+  do i = 1 to repair.count()
+    say '  CRSHIFT3_ALTERNATIVE' repair.script(i)
+  end
+  /* A frozen independent Wagner-Fischer oracle over a finite language. */
+  source = "options levell namespace finite read: parser semantics contextfree input bytes start document document: rule = 'a' | 'ab' | 'ba'"
+  doc = .llfront..document(source); status = doc.run()
+  table = .lllr..tables(doc.grammar(),doc.root(),'lr1')
+  call check status = 0 & table.status() = 0,'finite oracle grammar'
+  path = 'research/level-l/evidence/lrrepair-finite-oracle.txt'
+  do while lines(path)
+    row = linein(path); hex = word(row,1); text = '' as .binary
+    if hex <> '-' then text = x2bin(hex)
+    expected = word(row,2) as .int
+    input = .llcore..stream(text); repair = .lllrrepair..request(table,input,6,3,250,3000000)
+    result = repair.run(); cases = cases + 1; output = repair.edited()
+    if result > 1 | repair.complete() = 0 | repair.cost() <> expected then do
+      failures = failures + 1; say 'FAIL finite cost:' hex expected result repair.cost() repair.error()
+    end
+    if bin2x(output) <> '61' & bin2x(output) <> '6162' & bin2x(output) <> '6261' then do
+      failures = failures + 1; say 'FAIL repaired language:' hex bin2x(output)
+    end
+  end
+  input = .llcore..stream('c' as .binary)
+  small = .lllrrepair..request(table,input,0)
+  call check small.run() = 4,'no repair within explicit cost bound'
+  small = .lllrrepair..request(table,input,3,3,250,1)
+  call check small.run() = 2,'work exhaustion distinct from invalid input'
+  small = .lllrrepair..request(table,input,3,3,250,1000000,1)
+  call check small.run() = 2,'storage exhaustion distinct'
+  small = .lllrrepair..request(table,input,-1)
+  call check small.run() = 3,'invalid bound rejected'
+  /* Token ingress retains byte provenance, and insertions have no real token. */
+  input = .llcore..stream.tokens('  b ' as .binary); ok = input.append(98,2,3)
+  repair = .lllrrepair..request(table,input); status = repair.run()
+  call check status = 1 & repair.complete() & bin2x(repair.edited()) = '6261','existing-token recovery'
+  call check repair.origin(1) = 1 & repair.origin(2) = -2 & bincompare(repair.source(),'  b ' as .binary) = 0,'insertion site and original-token mapping'
+  say 'lrrepair_cases='cases
+  say 'lrrepair_failures='failures
+  if failures then return 1
+  return 0
+check: procedure = .void expose failures
+  arg condition = .int, message = .string
+  if condition then say 'PASS:' message
+  else do
+    say 'FAIL:' message; failures = failures + 1
+  end
+  return

@@ -1,0 +1,30 @@
+/* Minimal candidate for frozen compiler combined-getter argument miscompile. */
+options levell
+import rxfnsb
+import llcore
+main: procedure = .int
+  value = .state(12,1)
+  call show value.offset(),'L' || value.thrown(),value.message()
+  at = value.offset(); code = value.thrown(); text = value.message()
+  call show at,'L' || code,text
+  return 0
+show: procedure = .void
+  arg at = .int, code = .string, text = .string
+  say at code text
+  return
+state: class
+  _code = .int
+  _at = .int
+  _input = .llcore..stream
+  *: factory
+    arg code = .int, at = .int
+    _code = code; _at = at
+    _input = .llcore..stream('abc' as .binary)
+    return
+  offset: method = .int
+    if _code then return _input.start(_at)
+    return _input.start(0)
+  thrown: method = .int
+    return _code
+  message: method = .string
+    return 'expect close'

@@ -1,0 +1,214 @@
+/* cREXX License (MIT). Stratified right-to-left PEG tabulation experiment.
+ * This is NOT the Pika reference port. It requires an acyclic conservative
+ * same-position dependency graph, then evaluates only settled operands.
+ */
+options levell
+namespace lltabpeg expose parser engine
+import rxfnsb
+import llcore
+import llcheck
+import llcap
+
+/** Complete tabulation of normalized ordinary PEG, including the EOF column.
+ * A cell has one definitive PEG result; no provisional length-based pruning.
+ */
+parser: class
+  _g = .llcore..grammar
+  _facts = .llcheck..analysis
+  _input = .llcore..stream
+  _tree = .llcore..tree
+  _root = .int
+  _width = .int
+  _fuel = .int
+  _cells = .int
+  _work = .int
+  _status = .int
+  _ran = .int
+  _result = .int
+  _selected = .int
+  _error = .string
+  _order = .int[]
+  _visited = .int[]
+  _end = .int[]
+  _node = .int[]
+  _ready = .int[]
+  *: factory
+    arg graph = .llcore..grammar, root = .int, input = .llcore..stream, fuel = 1000000, cells = 8000000
+    _g = graph; _root = root; _input = input; _facts = .llcheck..analysis(graph,root)
+    _width = input.size() + 1; _fuel = fuel; _cells = cells
+    _tree = .llcore..tree.from_source(input.source())
+    _status = 0; _ran = 0; _result = -1; _selected = 0; _work = 0; _error = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    provider = .llcap..backend
+    provider = .engine()
+    admitted = llcap..admit(_facts,provider)
+    if admitted.status() <> 0 | _input.error() <> '' then do
+      _status = 3; _error = admitted.message() || _input.error(); return _status
+    end
+    if _cells < 1 | _width > (_cells <idiv> _g.size()) then do
+      _status = 2; _error = 'tabulation memo index budget exhausted'; return _status
+    end
+    do clause = 1 to _g.size()
+      call order(clause)
+    end
+    if _status > 0 then return _status
+    do at = _input.size() to 0 by -1
+      do i = 1 to _order[0]
+        call evaluate(_order[i],at)
+        if _status > 0 then return _status
+      end
+    end
+    key = (_root - 1) * _width + 1
+    _result = _end[key]; _selected = _node[key]
+    if _result <> _input.size() then do
+      _status = 1; _error = 'stratified PEG has no full-input match'
+    end
+    return _status
+  /** Postorder of the conservative SAME-position graph, not all dependencies. */
+  order: method = .void
+    arg clause = .int
+    if _visited[clause] = 2 then return
+    if _visited[clause] = 1 then do
+      _status = 3; _error = 'same-position cycle violated admission'; return
+    end
+    _visited[clause] = 1
+    op = _g.op(clause); a = _g.left(clause); b = _g.right(clause)
+    if (op >= 2 & op <= 9 & op <> 6) | op = 14 | op = 15 then call order(a)
+    if op = 3 | (op = 2 & _facts.nullable(a)) then call order(b)
+    _order[_order[0] + 1] = clause; _visited[clause] = 2
+    return
+  settled: method = .int
+    arg clause = .int, at = .int
+    key = (clause - 1) * _width + at + 1
+    if _ready[key] = 0 then do
+      _status = 3; _error = 'unsettled dependency at clause ' || clause || ' position ' || at
+      return -1
+    end
+    return _end[key]
+  selected: method = .int
+    arg clause = .int, at = .int
+    return _node[(clause - 1) * _width + at + 1]
+  evaluate: method = .void
+    arg clause = .int, at = .int
+    _work = _work + 1
+    if _work > _fuel then do
+      _status = 2; _error = 'tabulation work budget exhausted'; return
+    end
+    op = _g.op(clause); a = _g.left(clause); b = _g.right(clause)
+    finish = -1; leftnode = 0; rightnode = 0; symbol = _input.symbol(at)
+    select op
+      when 1 then do
+        if symbol = a then finish = at + 1
+      end
+      when 11 then do
+        if symbol >= a & symbol <= b then finish = at + 1
+      end
+      when 12 then do
+        if symbol >= 0 then finish = at + 1
+      end
+      when 13 then do
+        text = _g.text(clause); length = <blen>(text); valid = at + length <= _input.size()
+        if valid then do offset = 0 to length - 1
+          byte = <at..u8>(offset) text
+          if byte <> _input.symbol(at + offset) then valid = 0
+        end
+        if valid then finish = at + length
+      end
+      when 16 then do
+        member = _g.contains(clause,symbol)
+        if symbol >= 0 & member then finish = at + 1
+      end
+      when 6 then finish = at
+      when 10 then do
+        if at = _input.size() then finish = at
+      end
+      when 2 then do
+        middle = settled(a,at)
+        if middle >= 0 then do
+          finish = settled(b,middle); leftnode = selected(a,at); rightnode = selected(b,middle)
+        end
+      end
+      when 3 then do
+        finish = settled(a,at); leftnode = selected(a,at)
+        if finish < 0 then do
+          finish = settled(b,at); leftnode = selected(b,at)
+        end
+      end
+      when 5 then do
+        finish = settled(a,at); leftnode = selected(a,at)
+      end
+      when 7 then do
+        middle = settled(a,at); finish = at
+        if middle >= 0 then do
+          finish = settled(clause,middle); leftnode = selected(a,at); rightnode = selected(clause,middle)
+        end
+      end
+      when 14 then do
+        middle = settled(a,at)
+        if middle >= 0 then do
+          finish = middle; leftnode = selected(a,at)
+          tailend = settled(clause,middle)
+          if tailend >= 0 then do
+            finish = tailend; rightnode = selected(clause,middle)
+          end
+        end
+      end
+      when 15 then do
+        finish = settled(a,at); leftnode = selected(a,at)
+        if finish < 0 then finish = at
+      end
+      when 8 then do
+        if settled(a,at) < 0 then finish = at
+      end
+      when 9 then do
+        if settled(a,at) >= 0 then finish = at
+      end
+      otherwise do
+        _status = 3; _error = 'unsupported tabulation operation'; return
+      end
+    end
+    key = (clause - 1) * _width + at + 1
+    _end[key] = finish; _ready[key] = 1; _node[key] = 0
+    if finish >= 0 then do
+      firstbyte = _input.start(at); lastbyte = firstbyte
+      if finish > at then lastbyte = _input.finish(finish)
+      if leftnode > 0 then do
+        firstbyte = min(firstbyte,_tree.start(leftnode)); lastbyte = max(lastbyte,_tree.finish(leftnode))
+      end
+      if rightnode > 0 then do
+        firstbyte = min(firstbyte,_tree.start(rightnode)); lastbyte = max(lastbyte,_tree.finish(rightnode))
+      end
+      _node[key] = _tree.add(op,_g.label(clause),firstbyte,lastbyte,leftnode,rightnode)
+    end
+    return
+  result: method = .int
+    return _result
+  root: method = .int
+    return _selected
+  tree: method = .llcore..tree
+    return _tree
+  work: method = .int
+    return _work
+  error: method = .string
+    return _error
+
+engine: class implements .llcap..backend
+  *: factory
+    return
+  name: method = .string
+    return 'stratified-peg'
+  version: method = .string
+    return 'research-1'
+  inspect: method = .llcap..decision
+    arg facts = .llcheck..analysis
+    if facts.profile() <> 'ordered' | facts.unions() then return reject(facts,1,0,'stratified PEG requires ordered semantics')
+    if facts.cycle() then return reject(facts,2,facts.cycle(),'same-position dependency cycle; stratification not proved')
+    if facts.emptyloop() then return reject(facts,2,facts.emptyloop(),'repetition progress not proved')
+    return .llcap..decision(0,'',0,'linear-input','O(G*(t+1)+a), G includes literal/set lengths; settled operands; complete input; RAM indexed arrays',facts,name(),version())
+  reject: method = .llcap..decision
+    arg facts = .llcheck..analysis, status = .int, clause = .int, message = .string
+    if clause > 0 then message = facts.location(clause) || ': ' || message
+    return .llcap..decision(status,message,clause,'unknown','',facts,name(),version())

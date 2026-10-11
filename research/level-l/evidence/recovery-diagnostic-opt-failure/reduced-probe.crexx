@@ -1,0 +1,19 @@
+/* Frozen compiler probe: imported parser accessor and nested stream lookup. */
+options levell
+import rxfnsb
+import llcore
+import lllabel
+main: procedure = .int
+  g = .llcore..grammar('ordered'); a = g.add(1,97,0,'a',1)
+  input = .llcore..stream('b' as .binary)
+  value = .lllabel..parser(g,a,input); ok = value.annotate(a,12,'need a'); status = value.run()
+  code = value.thrown(); say 'before' status code
+  at = value.offset(); code = value.thrown(); say 'after' at code
+  call diagnostic 'b' as .binary,value.offset(),'L' || value.thrown(),value.error(),'hint'
+  return 0
+diagnostic: procedure = .void
+  arg bytes = .binary, at = .int, code = .string, expectation = .string, suggestion = .string
+  line = 1
+  say 'DIAGNOSTIC|'code '|line='line '|byte='at '|'expectation
+  say suggestion
+  return

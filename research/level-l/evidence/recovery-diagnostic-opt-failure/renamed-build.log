@@ -1,0 +1,6 @@
+Warning in renamed-probe.crexx @ 29:6 - #NOT_IN_SAME_SCOPE line="17" column="6", "i"
+Warning in renamed-probe.crexx @ 30:5 - #NOT_IN_SAME_SCOPE line="18" column="5", "byte"
+2 warning(s) in source file
+Warning in renamed-probe.crexx @ 29:6 - #NOT_IN_SAME_SCOPE line="17" column="6", "i"
+Warning in renamed-probe.crexx @ 30:5 - #NOT_IN_SAME_SCOPE line="18" column="5", "byte"
+2 warning(s) in source file

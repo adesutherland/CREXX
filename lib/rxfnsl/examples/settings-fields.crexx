@@ -1,0 +1,43 @@
+/* cREXX License (MIT). Level L tutorial: inspect a complete settings tree. */
+options levelb
+import rxfnsb
+import llcore
+import lllanguage
+import llsource
+import lltree
+import levell_settings
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do
+    say 'usage: settings-fields settings.txt'; return 2
+  end
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'SETTINGS_IO: cannot read ' || argv[1]; return 2
+  end
+  definition = levell_settings..language()
+  request = .lllanguage..request(definition,source)
+  status = request.parse()
+  if status <> 0 then do
+    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'SETTINGS_PARSE',request.error())
+    return status
+  end
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'SETTINGS_TREE: ' || tree.error(); return 3
+  end
+  /* Walk in source order. Node identifiers avoid recursive copies of the view. */
+  pending = .int[]; size = 1; pending[size] = tree.root()
+  do while size > 0
+    node = pending[size]; size = size - 1
+    if tree.name(node) = 'assignment' then do
+      say tree.text(tree.field(node,'name')) || ' -> ' || tree.text(tree.field(node,'contents'))
+    end
+    do child = tree.count(node) to 1 by -1
+      size = size + 1; pending[size] = tree.child(node,child)
+    end
+  end
+  return 0

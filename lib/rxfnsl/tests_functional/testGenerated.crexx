@@ -1,0 +1,92 @@
+/* cREXX License (MIT). Generated second-language and packed-image contracts. */
+options levell
+import rxfnsb
+import llcore
+import llfront
+import lllr
+import llregular
+import llmunch
+import lllanguage
+import llsource
+import levell_example
+main: procedure = .int expose failures checks
+  arg argv = .string[]
+  failures = 0; checks = 0
+  doc = .llfront..document(readbinary(argv[1]) as .string)
+  call check(doc.run() = 0,'specification')
+  graph = doc.grammar(); constructed = .lllr..tables(graph,doc.root(),'lr1')
+  call check(constructed.status() = 0,'LR admission')
+  definition = levell_example..language(); loaded = definition.tables()
+  call check(loaded.status() = 0,'generated LR load')
+  call check(loaded.image() = constructed.image(),'identical LR image')
+  do state = 1 to constructed.states()
+    do symbol = 0 to 256
+      call check(loaded.action(state,symbol) = constructed.action(state,symbol),'action cell')
+    end
+    do nt = 1 to graph.size() + 1
+      call check(loaded.target(state,nt) = constructed.target(state,nt),'goto cell')
+    end
+  end
+  builder = .llregular..builder(doc.lexgrammar(),doc.lexroots(),doc.lexkinds())
+  call check(builder.error() = '', 'DFA admission')
+  original = builder.automaton(); scanner = definition.automaton()
+  call check(scanner.verify() = 1,'DFA validated')
+  call check(scanner.image() = original.image(),'identical DFA image')
+  byte = .int
+  do byte = 0 to 255
+    call check(scanner.classof(byte) = original.classof(byte),'DFA byte class')
+  end
+  do s = 1 to scanner.states()
+    call check(scanner.kind(s) = original.kind(s),'DFA acceptance')
+    do byte = 0 to 255
+      cls = scanner.classof(byte)
+      call check(scanner.target(s,cls) = original.target(s,cls),'DFA transition')
+    end
+  end
+  source = '12, 34,56' as .binary
+  request = .lllanguage..request(definition,source)
+  call check(request.parse() = 0,'valid list')
+  tree = request.tree()
+  call check(tree.source() = source,'owned original source')
+  source = 'bad' as .binary
+  call check(tree.source() = '12, 34,56' as .binary,'source survives caller replacement')
+  invalid = .lllanguage..request(definition,'12,' as .binary)
+  call check(invalid.parse() = 1,'damaged list rejected')
+  call check(pos('number',invalid.error()) > 0,'named expectation')
+  image = constructed.image(); identity = graph.signature() || '|root=' || doc.root()
+  independent = .lllr..tables.loaded(graph,doc.root(),image,identity)
+  image = '00'x as .binary
+  call check(independent.action(1,1) = loaded.action(1,1),'image survives caller replacement')
+  wrong = .lllr..tables.loaded(graph,doc.root(),image,identity)
+  call check(wrong.status() = 3,'truncated LR image')
+  image = constructed.image(); <at..i32>(0) image = 0
+  wrong = .lllr..tables.loaded(graph,doc.root(),image,identity)
+  call check(wrong.status() = 3,'bad LR magic')
+  image = constructed.image(); <at..i32>(20) image = <at..i32>(12) image
+  wrong = .lllr..tables.loaded(graph,doc.root(),image,identity)
+  call check(wrong.status() = 3,'duplicate/reordered LR records')
+  wrong = .lllr..tables.loaded(graph,doc.root(),constructed.image(),'changed grammar')
+  call check(wrong.status() = 3,'grammar identity mismatch')
+  wrong = .lllr..tables.loaded(graph,doc.root() - 1,constructed.image(),identity)
+  call check(wrong.status() = 3,'selected root identity mismatch')
+  bytes = scanner.image(); <at..i32>(16) bytes = 999
+  badscanner = .llmunch..automaton.loaded(bytes)
+  call check(badscanner.verify() = 0,'bad DFA class')
+  bytes = scanner.image(); <at..i32>(1040) bytes = 1
+  badscanner = .llmunch..automaton.loaded(bytes)
+  call check(badscanner.verify() = 0,'nullable DFA rejected')
+  message = llsource..diagnostic('610d0a62630d6465'x as .binary,7,'TEST','expected item')
+  call check(pos('line 3, column 2',message) > 0,'CRLF and CR locations')
+  call check(pos('^',message) > 0,'source caret')
+  message = llsource..diagnostic('61ff'x as .binary,1,'TEST','invalid UTF8')
+  call check(pos('source bytes:',message) > 0,'malformed byte explanation')
+  say 'generated_checks=' || checks
+  say 'generated_failures=' || failures
+  return failures
+check: procedure = .void expose failures checks
+  arg condition = .boolean, label = .string
+  checks = checks + 1
+  if condition = 0 then do
+    failures = failures + 1; say 'FAIL ' || label
+  end
+  return

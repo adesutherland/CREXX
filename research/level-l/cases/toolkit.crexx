@@ -1,0 +1,171 @@
+/* Shared-model and engine functional contracts. */
+options levell
+import rxfnsb
+import llcore
+import llcheck
+import llpeg
+import llcap
+main: procedure = .int expose failures
+  failures = 0
+  g = .llcore..grammar('ordered')
+  r = g.add(5,0,0,'document',1)
+  t = g.add(1,97,0,'letter.a',2)
+  before = g.revision()
+  ok = g.body(r,t)
+  call check ok & g.revision() > before & g.left(r) = t, 'grammar revision and forward rule resolution'
+  s = .llcore..stream('610062'x as .binary)
+  call check s.size() = 3 & s.symbol(1) = 0 & s.symbol(3) = -1, 'binary NUL distinct from EOF'
+  tokens = .llcore..stream.tokens('  abc  7' as .binary)
+  ok = tokens.append(1,2,5)
+  ok = ok & tokens.append(2,7,8)
+  call check ok & tokens.start(1) = 7 & tokens.finish(1) = 5, 'independent tokens preserve trivia gaps and byte spans'
+  ok = tokens.append(3,7,9)
+  call check ok = 0 & tokens.size() = 2, 'invalid token span rejected without append'
+  tree = .llcore..tree(8)
+  a = tree.add(1,'identifier',2,5,0,0)
+  b = tree.add(1,'integer',7,8,0,0)
+  root = tree.add(2,'assignment',2,8,a,b)
+  call check tree.validate() & tree.certified(), 'tree construction establishes structural invariant'
+  ok = tree.relocate(a,1,5)
+  call check ok & tree.certified() = 0, 'tree mutation invalidates certificate'
+  ok = tree.validate()
+  call check ok = 0 & pos('escapes',tree.error()) > 0, 'invalid provenance relation diagnosed'
+  ok = tree.relocate(a,2,5)
+  call check tree.validate() & tree.certified(), 'repaired invariant is checked anew'
+  other = .llcore..tree(1)
+  z = other.add(1,'independent',0,1,0,0)
+  call check other.validate() & tree.size() = 3, 'independent tree contexts coexist'
+  call analyses
+  call parsers
+  say 'toolkit_failures='failures
+  if failures > 0 then return 1
+  return 0
+
+check: procedure = .void expose failures
+  arg condition = .boolean, label = .string
+  if condition then say 'PASS:' label
+  else do
+    failures = failures + 1; say 'FAIL:' label
+  end
+  return
+
+parsers: procedure = .void
+  g = .llcore..grammar('ordered')
+  a = g.add(1,97,0,'a',1)
+  b = g.add(1,98,0,'b',2)
+  c = g.add(1,99,0,'c',3)
+  ab = g.add(2,a,b,'ab',4)
+  choice = g.add(3,a,ab,'prefix.choice',5)
+  root = g.add(2,choice,c,'root',6)
+  input = .llcore..stream('abc' as .binary)
+  p = .llpeg..parser(g,root,input,'packrat')
+  call check p.run() = 1, 'ordinary PEG commits to successful short alternative'
+  p = .llpeg..parser(g,root,input,'ll1')
+  call check p.run() = 3 & pos('compete',p.error()) > 0, 'unsupported predictive grammar rejected before input evaluation'
+  simple = .llcore..grammar('ordered')
+  a = simple.add(1,97,0,'a',1)
+  b = simple.add(1,98,0,'b',2)
+  choice = simple.add(3,a,b,'letter',3)
+  root = simple.add(7,choice,0,'letters',4)
+  input = .llcore..stream('abba' as .binary)
+  peg = .llpeg..parser(simple,root,input,'packrat')
+  ll = .llpeg..parser(simple,root,input,'ll1')
+  call check peg.run() = 0 & ll.run() = 0, 'packrat and predictive execution share the deterministic grammar'
+  tree = peg.arena()
+  call check tree.validate(), 'selected and speculative PEG trees have valid source provenance'
+  retainedsource = tree.source()
+  call check tree.owns_source() & <blen>(retainedsource) = 4, 'returned tree retains original source bytes independently'
+  small = .llcore..stream('a' as .binary)
+  second = .llpeg..parser(simple,root,small,'packrat')
+  call check second.run() = 0 & peg.result() = 4 & second.result() = 1, 'interleaved parse contexts retain their own results'
+  owned = .llcore..grammar('ordered')
+  rule = owned.add(5,0,0,'root',1)
+  a = owned.add(1,97,0,'a',2); b = owned.add(1,98,0,'b',3)
+  ok = owned.body(rule,a)
+  retained = .llpeg..parser(owned,rule,small,'packrat')
+  analysis = .llcheck..analysis(owned,rule)
+  ok = owned.body(rule,b)
+  call check retained.run() = 0, 'parse request owns grammar snapshot across later caller mutation'
+  call check analysis.run() & analysis.first(rule,97) & analysis.first(rule,98) = 0, 'deferred shared analysis owns original grammar contents'
+  limited = .llpeg..parser(simple,root,input,'packrat',2)
+  call check limited.run() = 2 & pos('resource exhausted',limited.error()) > 0, 'fuel exhaustion is distinct from syntax rejection'
+  diagnostic = .llcore..grammar('ordered')
+  b = diagnostic.add(1,98,0,'required.b',1)
+  neg = diagnostic.add(8,b,0,'not.b',2)
+  empty = diagnostic.add(6,0,0,'empty',3)
+  choice = diagnostic.add(3,neg,empty,'look.or.empty',4)
+  root = diagnostic.add(2,choice,b,'document',5)
+  p = .llpeg..parser(diagnostic,root,small,'packrat')
+  call check p.run() = 1 & pos('byte 0',p.error()) > 0 & pos('symbol 98',p.error()) > 0, 'memoized failure under negative predicate still explains a later required token'
+  say 'predicate diagnostic:' p.error()
+  recursive = .llcore..grammar('squirrel')
+  rule = recursive.add(5,0,0,'A',1)
+  a = recursive.add(1,97,0,'a',2)
+  b = recursive.add(1,98,0,'b',3)
+  seq = recursive.add(2,rule,b,'A.b',4)
+  choice = recursive.add(3,seq,a,'grow',5)
+  ok = recursive.body(rule,choice)
+  input = .llcore..stream('abbb' as .binary)
+  squirrel = .llpeg..parser(recursive,rule,input,'squirrel')
+  call check squirrel.run() = 0 & squirrel.expansions() = 4, 'Squirrel rule seed growth recognizes direct left recursion'
+  tree = squirrel.arena()
+  call check tree.validate(), 'shared recursive parse histories preserve tree invariants'
+  say 'squirrel direct work='squirrel.work() 'memo='squirrel.memos() 'nodes='tree.size()
+  return
+
+analyses: procedure = .void
+  g = .llcore..grammar('ordered')
+  a = g.add(1,97,0,'a',1)
+  b = g.add(1,98,0,'b',2)
+  root = g.add(3,a,b,'letter',3)
+  facts = .llcheck..analysis(g,root)
+  call check facts.run() & facts.first(root,97) & facts.first(root,98), 'FIRST closure for ordered alternatives'
+  pegengine = .llcap..backend
+  pegengine = .llpeg..engine('packrat')
+  llengine = .llcap..backend
+  llengine = .llpeg..engine('ll1')
+  pegdecision = llcap..admit(facts,pegengine)
+  lldecision = llcap..admit(facts,llengine)
+  call check pegdecision.status() = 0 & lldecision.status() = 0, 'shared deterministic fragment admitted by two engine plugins'
+  call check left(pegdecision.certificate(),9) == 'LL-CERT-2', 'conditional complexity certificate emitted'
+  call check facts.matches(g), 'certificate matches exact grammar revision'
+  duplicate = .llcore..grammar('ordered')
+  x = duplicate.add(1,99,0,'a',1)
+  x = duplicate.add(1,98,0,'b',2)
+  x = duplicate.add(3,1,2,'letter',3)
+  call check facts.matches(duplicate) = 0, 'same-revision different grammar cannot reuse certificate'
+  x = g.add(6,0,0,'empty',4)
+  call check facts.matches(g) = 0, 'grammar mutation invalidates analysis'
+  conflict = g.add(3,a,a,'competing',5)
+  facts = .llcheck..analysis(g,conflict)
+  ok = facts.run()
+  call check ok & facts.conflict() = conflict & facts.witness() = 97, 'LL conflict has named-rule symbol witness'
+  decision = llcap..admit(facts,llengine)
+  say 'grammar diagnostic:' decision.message()
+  star = g.add(7,x,0,'empty.loop',6)
+  facts = .llcheck..analysis(g,star)
+  decision = llcap..admit(facts,pegengine)
+  call check facts.valid() & decision.status() = 2 & pos('without consuming',decision.message()) > 0, 'shared nullable fact yields backend-specific progress rejection'
+  recursive = .llcore..grammar('ordered')
+  r = recursive.add(5,0,0,'cycle',7)
+  ok = recursive.body(r,r)
+  facts = .llcheck..analysis(recursive,r)
+  ok = facts.run()
+  decision = llcap..admit(facts,pegengine)
+  call check ok & facts.cycle() = r & decision.status() = 2, 'left-corner cycle blocks ordinary packrat'
+  squirrelengine = .llcap..backend
+  squirrelengine = .llpeg..engine('squirrel')
+  recursive = .llcore..grammar('squirrel')
+  a = recursive.add(1,97,0,'a',1)
+  facts = .llcheck..analysis(recursive,a)
+  decision = llcap..admit(facts,squirrelengine)
+  strict = llcap..admit(facts,squirrelengine,'linear-input')
+  call check decision.status() = 0 & strict.status() = 2, 'semantic support and requested cost proof are independent'
+  huge = .llcore..grammar('ordered')
+  do i = 1 to 513
+    a = huge.add(6,0,0,'empty',i)
+  end
+  facts = .llcheck..analysis(huge,1)
+  decision = llcap..admit(facts,pegengine)
+  call check decision.status() = 4, 'analysis construction budget has a distinct build outcome'
+  return

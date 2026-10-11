@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-options levell
+options levelb
 
 namespace rxfnsl expose tinyexpr_lex tinyexpr_eval tinyexpr_status tinyexpr_error_offset tinyexpr_error_message tinyexpr_token_count tinyexpr_token_kind tinyexpr_token_start tinyexpr_token_length tinyexpr_token_value tinyexpr_token_is tinyexpr_token_name
 import rxfnsb

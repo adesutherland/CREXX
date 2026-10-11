@@ -1,0 +1,21 @@
+/* Actual owning RexxScript evaluator, with read-only research error getters. */
+options levelb
+import rxfnsb
+import rexxscriptcore
+main: procedure = .int
+  arg args = .string[]
+  if args[0] <> 1 then return 2
+  names = .string[]; values = .string[]
+  names[1] = 'x'; values[1] = '7'; names[2] = 'text'; values[2] = 'abc'
+  evaluator = .rexxscriptcore..rexxscriptcoreevaluator()
+  do while lines(args[1])
+    row = linein(args[1]); split = pos('|',row); id = substr(row,1,split - 1)
+    bytes = x2bin(substr(row,split + 1)); source = bytes as .string
+    result = evaluator.evaluate_exposed(source,names,values,0)
+    output = evaluator.output(); rendered = ''
+    do i = 1 to output[0]
+      rendered = rendered || bin2x(output[i] as .binary) || ';'
+    end
+    say id || '|' || result[1] || '|' || bin2x(evaluator.value('result') as .binary) || '|' || evaluator.research_code() || '|' || evaluator.research_statement() || '|' || evaluator.research_column() || '|' || rendered
+  end
+  return 0

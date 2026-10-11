@@ -1,0 +1,13 @@
+/* Nullable suffixes have distinct FIRST sets at each production position. */
+options levell
+namespace nullablelist
+number: token = 1
+separator: token = 2
+scan: lexer input bytes
+  digit: charset = U+0030 to U+0039
+  numeric: rule = digit+ then emit number
+  semicolon: rule = ";" then emit separator
+parse: parser semantics contextfree input tokens start document
+  document: rule = statements
+  statements: rule = separator statements | number tail | ''
+  tail: rule = separator statements | ''

@@ -1,0 +1,4 @@
+Expr <- Expr '+' Term / Term
+Term <- Term '*' Atom / Atom
+Atom <- Number / '(' Expr ')'
+Number <- [0-9]+

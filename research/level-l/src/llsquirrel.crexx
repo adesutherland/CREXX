@@ -1,0 +1,260 @@
+/* The Squirrel Parser -- Copyright (c) 2026 Luke Hutchison (MIT).
+ * cREXX port: see ../licenses/Squirrel-MIT.txt. Reference bb1ae84701060462636c07c814286ac2875e0568.
+ * This core ports memo_entry.dart, combinators.dart and byte-domain terminals;
+ * c14 recovery is a separate engine. Added resource limits return a distinct status.
+ */
+options levell
+namespace llsquirrel expose parser engine
+import llcore
+import llcheck
+import llcap
+import llhistory
+
+parser: class
+  _g = .llcore..grammar
+  _input = .llcore..stream
+  _history = .llhistory..arena
+  _root = .int
+  _width = .int
+  _fuel = .int
+  _calls = .int
+  _work = .int
+  _hits = .int
+  _expansions = .int
+  _depth = .int
+  _status = .int
+  _result = .int
+  _ran = .int
+  _error = .string
+  _active = .int[]
+  _found = .int[]
+  _version = .int[]
+  _seen = .int[]
+  _memo = .int[]
+  *: factory
+    arg graph = .llcore..grammar, root = .int, input = .llcore..stream, fuel = 1000000
+    _g = graph; _root = root; _input = input; _fuel = fuel; _width = input.size() + 1
+    _history = .llhistory..arena(); _calls = 0; _work = 0; _hits = 0; _expansions = 0
+    _depth = 0; _status = 0; _result = 0; _ran = 0; _error = ''
+    return
+  run: method = .int
+    if _ran then return _status
+    _ran = 1
+    facts = .llcheck..analysis(_g,_root)
+    provider = .llcap..backend
+    provider = .engine()
+    admitted = llcap..admit(facts,provider)
+    if admitted.status() <> 0 then do
+      _status = 3; _error = admitted.message(); return _status
+    end
+    if _input.error() <> '' then do
+      _status = 3; _error = _input.error(); return _status
+    end
+    body = _root
+    if _g.op(body) = 5 then body = _g.left(body)
+    _result = memoized(body,0)
+    if _status = 2 then return _status
+    if _history.ok(_result) = 0 | _history.length(_result) <> _input.size() then _status = 1
+    return _status
+  memoized: method = .int
+    arg clause = .int, at = .int
+    key = (clause - 1) * _width + at + 1
+    stored = _memo[key]
+    if stored > 0 & (_active[key] | _seen[key] = _version[at + 1]) then do
+      _hits = _hits + 1; return stored
+    end
+    if _active[key] then do
+      _found[key] = 1
+      children = .int[]
+      _memo[key] = _history.add(clause,0,at,0,children)
+      return _memo[key]
+    end
+    _active[key] = 1
+    do forever
+      _work = _work + 1
+      candidate = evaluate(clause,at)
+      if _status = 2 then leave
+      stored = _memo[key]
+      if stored > 0 then do
+        if _history.ok(candidate) = 0 | (_history.ok(stored) & _history.length(candidate) <= _history.length(stored)) then do
+          if _history.ok(candidate) = 0 & _history.ok(stored) = 0 & _history.length(candidate) >= _history.length(stored) then _memo[key] = candidate
+          leave
+        end
+      end
+      _memo[key] = candidate
+      if _found[key] = 0 then leave
+      _version[at + 1] = _version[at + 1] + 1
+      _seen[key] = _version[at + 1]; _expansions = _expansions + 1
+    end
+    _active[key] = 0; _seen[key] = _version[at + 1]
+    return _memo[key]
+  evaluate: method = .int
+    arg clause = .int, at = .int
+    _calls = _calls + 1
+    if _status = 2 | _calls > _fuel | _depth >= 512 then do
+      _status = 2; _error = 'resource exhausted: Squirrel clause fuel or depth'; return 0
+    end
+    _depth = _depth + 1
+    node = consume(clause,at)
+    _depth = _depth - 1
+    return node
+  consume: method = .int
+    arg clause = .int, at = .int
+    op = _g.op(clause); a = _g.left(clause); b = _g.right(clause)
+    symbol = _input.symbol(at); children = .int[]
+    ok = 0; length = 0; result = .int; curr = .int
+    select op
+      when 1 then do
+        if symbol = a then do
+          ok = 1; length = 1
+        end
+      end
+      when 11 then do
+        if symbol >= a & symbol <= b then do
+          ok = 1; length = 1
+        end
+      end
+      when 12 then do
+        if symbol >= 0 then do
+          ok = 1; length = 1
+        end
+      end
+      when 16 then do
+        if _g.contains(clause,symbol) then do
+          ok = 1; length = 1
+        end
+      end
+      when 13 then do
+        text = _g.text(clause); extent = <blen>(text)
+        do while length < extent
+          expected = <at..u8>(length) text
+          if _input.symbol(at + length) <> expected then leave
+          length = length + 1
+        end
+        ok = length = extent
+      end
+      when 6 then ok = 1
+      when 10 then ok = at = _input.size()
+      when 2 then do
+        result = evaluate(a,at); children[1] = result
+        if _status = 2 then return 0
+        if _history.ok(result) then do
+          length = _history.length(result)
+          result = evaluate(b,at + length); children[2] = result
+          if _status = 2 then return 0
+          if _history.ok(result) then do
+            ok = 1; length = length + _history.length(result)
+          end
+        end
+      end
+      when 3 then do
+        result = evaluate(a,at)
+        if _status = 2 then return 0
+        if _history.ok(result) then do
+          children[1] = result; ok = 1; length = _history.length(result)
+        end
+        else do
+          failed = result; result = evaluate(b,at)
+          if _status = 2 then return 0
+          if _history.ok(result) then do
+            children[1] = result; ok = 1; length = _history.length(result)
+          end
+          else do
+            children[1] = failed; children[2] = result
+            length = _history.length(failed)
+            if _history.length(result) > length then length = _history.length(result)
+          end
+        end
+      end
+      when 5 then do
+        result = memoized(a,at)
+        if _status = 2 then return 0
+        if _history.ok(result) = 0 then return result
+        children[1] = result; ok = 1; length = _history.length(result)
+      end
+      when 7 then do
+        curr = at; ok = 1
+        do while curr <= _input.size()
+          result = evaluate(a,curr)
+          if _status = 2 then return 0
+          if _history.ok(result) = 0 | _history.length(result) = 0 then leave
+          children[children[0] + 1] = result
+          curr = curr + _history.length(result)
+        end
+        length = curr - at
+      end
+      when 14 then do
+        curr = at; stopped = 0
+        do while curr <= _input.size()
+          result = evaluate(a,curr)
+          if _status = 2 then return 0
+          if _history.ok(result) = 0 then do
+            stopped = result; leave
+          end
+          if _history.length(result) = 0 then leave
+          children[children[0] + 1] = result
+          curr = curr + _history.length(result)
+        end
+        if children[0] > 0 then do
+          ok = 1; length = curr - at
+        end
+        else if stopped > 0 then children[1] = stopped
+      end
+      when 15 then do
+        result = evaluate(a,at)
+        if _status = 2 then return 0
+        ok = 1
+        if _history.ok(result) then do
+          length = _history.length(result); children[1] = result
+        end
+      end
+      when 8 then do
+        result = evaluate(a,at)
+        if _status = 2 then return 0
+        ok = _history.ok(result) = 0
+      end
+      when 9 then do
+        result = evaluate(a,at)
+        if _status = 2 then return 0
+        ok = _history.ok(result)
+      end
+      otherwise do
+        _status = 3; _error = 'unsupported Squirrel clause'; return 0
+      end
+    end
+    return _history.add(clause,ok,at,length,children)
+  history: method = .llhistory..arena
+    return _history
+  root: method = .int
+    return _result
+  error: method = .string
+    return _error
+  work: method = .int
+    return _work
+  calls: method = .int
+    return _calls
+  hits: method = .int
+    return _hits
+  expansions: method = .int
+    return _expansions
+
+engine: class implements .llcap..backend
+  *: factory
+    return
+  name: method = .string
+    return 'squirrel-core'
+  version: method = .string
+    return 'bb1ae847-port-1'
+  inspect: method = .llcap..decision
+    arg facts = .llcheck..analysis
+    status = 0; message = ''; clause = 0
+    if facts.unions() then do
+      status = 1; clause = facts.unions(); message = facts.location(clause) || ': CFG union unsupported'
+    end
+    if facts.profile() <> 'squirrel' & facts.profile() <> 'ordered' then do
+      status = 1; message = 'Squirrel semantic profile required'
+    end
+    if facts.profile() = 'ordered' & (facts.cycle() | facts.emptyloop()) then do
+      status = 2; message = 'ordinary PEG equivalence not proved for recursion or nullable repetition'
+    end
+    return .llcap..decision(status,message,clause,'unknown','pinned seed-growth semantics; byte/token domain; bound analysis open',facts,name(),version())

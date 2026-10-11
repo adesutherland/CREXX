@@ -1,0 +1,213 @@
+/* cREXX License (MIT). Native common-IR to ranked Pika graph experiment.
+ * Pika operators/normalization follow the pinned upstream reference; see
+ * licenses/Pika-MIT.txt. Stable source-order DFS replaces its HashSet order.
+ * This declares an operational Pika profile, not an ordinary-PEG certificate.
+ */
+options levell
+namespace llpikalower expose lowering
+import rxfnsb
+import llcore
+import llcheck
+import llpika
+
+/** Resolve named references, intern finite expressions and lower EBNF.
+ * The output owns its graph, source snapshot and named-rule/rank mapping.
+ * matches() checks reuse against a caller grammar after caller mutation.
+ * Pika's clause DAG cannot retain distinct wrapper trees for synonymous
+ * rules: names(rank) explicitly returns the complete alias set instead.
+ */
+lowering: class
+  _source = .llcore..grammar
+  _graph = .llpika..graph
+  _revision = .int
+  _signature = .string
+  _inputroot = .int
+  _root = .int
+  _limit = .int
+  _size = .int
+  _status = .int
+  _ran = .int
+  _error = .string
+  _mapped = .int[]
+  _active = .int[]
+  _op = .int[]
+  _a = .int[]
+  _b = .int[]
+  _text = .binary[]
+  _origin = .int[]
+  _rank = .int[]
+  _order = .int[]
+  _seen = .int[]
+  _name = .string[]
+  *: factory
+    arg source = .llcore..grammar, root = .int, limit = 512
+    _source = source; _revision = source.revision(); _signature = source.signature(); _inputroot = root
+    _limit = min(limit,512); _size = 0; _root = 0; _status = 0; _ran = 0; _error = ''
+    _graph = .llpika..graph()
+    return
+  fail: method = .void
+    arg status = .int, message = .string, source = .int
+    if _status = 0 then do
+      _status = status
+      _error = _source.label(source) || ' (line ' || _source.line(source) || '): ' || message
+    end
+    return
+  node: method = .int
+    arg op = .int, a = .int, b = .int, value = .binary, origin = .int
+    if _status <> 0 then return 0
+    /* Reference identity is deliberately retained until bodies are interned. */
+    if op <> 5 then do i = 1 to _size
+      if _op[i] = op & _a[i] = a & _b[i] = b then do
+        if bincompare(_text[i],value) = 0 then return i
+      end
+    end
+    if _size >= _limit then do
+      call fail(4,'Pika normalization construction budget exhausted',origin); return 0
+    end
+    _size = _size + 1; _op[_size] = op; _a[_size] = a; _b[_size] = b
+    _text[_size] = value; _origin[_size] = origin
+    return _size
+  encode: method = .int
+    arg source = .int
+    if _status <> 0 then return 0
+    if _mapped[source] > 0 then return _mapped[source]
+    if _active[source] then do
+      call fail(3,'cycle must pass through a named rule reference',source); return 0
+    end
+    _active[source] = 1
+    op = _source.op(source); a = _source.left(source); b = _source.right(source)
+    target = 0; child = 0; other = 0; value = '' as .binary
+    select
+      when op = 5 then do
+        target = node(5,0,0,value,source); _mapped[source] = target
+        child = encode(a)
+        if target > 0 then _a[target] = child
+      end
+      when op = 1 | op = 11 | op = 12 | op = 16 then do
+        do byte = 0 to 255
+          found = 0
+          if op = 1 then found = byte = a
+          if op = 11 then found = byte >= a & byte <= b
+          if op = 12 then found = 1
+          if op = 16 then found = _source.contains(source,byte)
+          if found then value = value || x2bin(right(d2x(byte),2,'0'))
+        end
+        target = node(1,0,0,value,source)
+      end
+      when op = 6 | op = 13 then do
+        if op = 13 then value = _source.text(source)
+        target = node(op,0,0,value,source)
+      end
+      when op = 2 | op = 3 then do
+        child = encode(a); other = encode(b)
+        target = node(op,child,other,value,source)
+      end
+      when op = 8 | op = 9 | op = 14 then do
+        child = encode(a); target = node(op,child,0,value,source)
+      end
+      when op = 7 | op = 15 then do
+        child = encode(a)
+        if op = 7 then child = node(14,child,0,value,source)
+        other = node(6,0,0,value,source)
+        target = node(3,child,other,value,source)
+      end
+      when op = 10 then do
+        do byte = 0 to 255
+          value = value || x2bin(right(d2x(byte),2,'0'))
+        end
+        child = node(1,0,0,value,source)
+        target = node(8,child,0,'' as .binary,source)
+      end
+      otherwise call fail(3,'CFG union has no Pika ordered-choice meaning',source)
+    end
+    _active[source] = 0; _mapped[source] = target
+    return target
+  resolve: method = .int
+    arg node = .int
+    do depth = 1 to _size + 1
+      if node = 0 | _status <> 0 then return 0
+      if _op[node] <> 5 then return node
+      if depth > _size then do
+        call fail(3,'reference-only cycle has no clause body',_origin[node]); return 0
+      end
+      node = _a[node]
+    end
+    return 0
+  visit: method = .void
+    arg node = .int
+    if _seen[node] | _status <> 0 then return
+    _seen[node] = 1
+    if _a[node] > 0 then call visit(_a[node])
+    if _b[node] > 0 then call visit(_b[node])
+    _order[_order[0] + 1] = node; _rank[node] = _order[0]
+    return
+  run: method = .int
+    if _revision <> _source.revision() then do
+      _status = 3; _error = 'source grammar changed; rebuild Pika lowering'; return _status
+    end
+    if _ran then return _status
+    _ran = 1
+    if _source.profile() <> 'pika' then do
+      _status = 3; _error = 'explicit pika semantics required; ordinary PEG equivalence is not proved'; return _status
+    end
+    facts = .llcheck..analysis(_source,_inputroot)
+    if facts.run() = 0 then do
+      _status = 3; _error = facts.error(); return _status
+    end
+    do source = 1 to _source.size()
+      result = encode(source)
+      if _status <> 0 then return _status
+    end
+    do node = 1 to _size
+      if _op[node] = 5 then iterate
+      if _a[node] > 0 then do
+        child = resolve(_a[node]); _a[node] = child
+      end
+      if _b[node] > 0 then do
+        child = resolve(_b[node]); _b[node] = child
+      end
+    end
+    do source = 1 to _source.size()
+      child = resolve(_mapped[source]); _mapped[source] = child
+    end
+    if _status <> 0 then return _status
+    /* Stable terminal-first DFS. Cyclic rank is an explicit policy, since
+       the upstream Java root/cycle HashSets have no specified iteration order. */
+    do node = 1 to _size
+      if _op[node] = 1 | _op[node] = 6 | _op[node] = 13 then call visit(node)
+    end
+    call visit(_mapped[_inputroot])
+    do source = 1 to _source.size()
+      call visit(_mapped[source])
+    end
+    do i = 1 to _order[0]
+      node = _order[i]; kids = .int[]
+      if _a[node] > 0 then kids[1] = _rank[_a[node]]
+      if _b[node] > 0 then kids[2] = _rank[_b[node]]
+      id = _graph.add(_op[node],_text[node],kids)
+    end
+    _root = _rank[_mapped[_inputroot]]
+    do source = 1 to _source.size()
+      id = _rank[_mapped[source]]
+      if _source.op(source) = 5 then _name[id] = strip(_name[id] || ' ' || _source.label(source))
+    end
+    if _graph.build() = 0 then do
+      _status = 3; _error = 'Pika normalized graph: ' || _graph.error()
+    end
+    return _status
+  graph: method = .llpika..graph
+    return _graph
+  root: method = .int
+    return _root
+  rank: method = .int
+    arg source = .int
+    if run() <> 0 | source < 1 | source > _source.size() then return 0
+    return _rank[_mapped[source]]
+  names: method = .string
+    arg rank = .int
+    return _name[rank]
+  matches: method = .int
+    arg source = .llcore..grammar
+    return _revision = source.revision() & _signature == source.signature()
+  error: method = .string
+    return _error

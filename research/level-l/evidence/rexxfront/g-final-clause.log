@@ -1,0 +1,105 @@
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelg" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      ASSIGN : "=" (-1:-1) [Type: .unknown]
+        VAR_TARGET : "x" (-1:-1) [Type: .unknown]
+        OP_ADD : "+" (-1:-1) [Type: .unknown]
+          INTEGER : "1" (-1:-1) [Type: .unknown]
+          OP_MULT : "*" (-1:-1) [Type: .unknown]
+            INTEGER : "2" (-1:-1) [Type: .unknown]
+            INTEGER : "3" (-1:-1) [Type: .unknown]
+
+--- STAGE_FIXUP ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "g-final-clause" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelg" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (1:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .unknown]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "x" (1:0) [Type: .unknown]
+          OP_ADD : "+" (1:2) [Type: .unknown]
+            INTEGER : "1" (1:2) [Type: .unknown]
+            OP_MULT : "*" (1:4) [Type: .unknown]
+              INTEGER : "2" (1:4) [Type: .unknown]
+              INTEGER : "3" (1:6) [Type: .unknown]
+        RETURN : "" (1:7) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 0) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "g-final-clause" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelg" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "x" (1:0) [Type: .unknown]
+          OP_ADD : "+" (1:2) [Type: .unknown]
+            INTEGER : "1" (1:2) [Type: .unknown]
+            OP_MULT : "*" (1:4) [Type: .unknown]
+              INTEGER : "2" (1:4) [Type: .unknown]
+              INTEGER : "3" (1:6) [Type: .unknown]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  g-final-clause (Namespace) -> .unknown
+  Scope [1]: g-final-clause
+    main (Function) -> .unknown
+    Scope [2]: main
+      x (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 1) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "g-final-clause" (0:1) [Type: .void]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelg" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "x" (1:0) [Type: .unknown]
+          OP_ADD : "+" (1:2) [Type: .unknown]
+            INTEGER : "1" (1:2) [Type: .int]
+            OP_MULT : "*" (1:4) [Type: .unknown]
+              INTEGER : "2" (1:4) [Type: .int]
+              INTEGER : "3" (1:6) [Type: .int]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  g-final-clause (Namespace) -> .unknown
+  Scope [1]: g-final-clause
+    main (Function) -> .void
+    Scope [2]: main
+      x (Variable) -> .int
+
+--- STAGE_FINAL ---
+REXX_UNIVERSE : "" (0:1) [Type: .void]
+  PROGRAM_FILE : "g-final-clause" (0:1) [Type: .void]
+    REXX_OPTIONS : "options" (0:1) [Type: .void]
+      LITERAL : "levelg" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .void]
+        ASSIGN : "=" (1:0) [Type: .int]
+          VAR_TARGET : "x" (1:0) [Type: .int]
+          OP_ADD : "+" (1:2) [Type: .int]
+            INTEGER : "1" (1:2) [Type: .int]
+            OP_MULT : "*" (1:4) [Type: .int]
+              INTEGER : "2" (1:4) [Type: .int]
+              INTEGER : "3" (1:6) [Type: .int]
+        RETURN : "" (1:7) [Type: .void]
+Scope [0]: Unnamed
+  g-final-clause (Namespace) -> .unknown
+  Scope [1]: g-final-clause
+    main (Function) -> .void
+    Scope [2]: main
+      x (Variable) -> .int
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

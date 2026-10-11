@@ -1,0 +1,12 @@
+options levell
+namespace levell_example
+number: token = 1
+comma: token = 2
+scan: lexer input utf8bytes
+  digit: charset = U+0030 to U+0039
+  space: charset = U+0009 | U+000A | U+000D | U+0020
+  number.rule: rule = digit+ then emit number
+  comma.rule: rule = ',' then emit comma
+  whitespace: rule = space+ then skip
+parse: parser semantics contextfree input tokens start list
+  list: rule = number (comma number)*

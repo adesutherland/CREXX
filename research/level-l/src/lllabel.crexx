@@ -1,0 +1,226 @@
+/* cREXX License (MIT). Explicit PEG labeled-failure/recovery control. */
+options levell
+namespace lllabel expose parser
+import rxfnsb
+import llcore
+import llcheck
+
+/** Annotation of p is p / throw(label). Ordinary choices catch ordinary
+ * failure only. Predicates suppress labels/recovery. Recovery expressions start
+ * at the throw position. This clarity-first interpreter does not memoize.
+ * Status 0 clean; 1 recovered full parse; 2 resource; 3 invalid; 4 rejected.
+ */
+parser: class
+  _g = .llcore..grammar
+  _input = .llcore..stream
+  _tree = .llcore..tree
+  _root = .int
+  _fuel = .int
+  _work = .int
+  _depth = .int
+  _silent = .int
+  _recovering = .int
+  _ran = .int
+  _status = .int
+  _selected = .int
+  _last = .int
+  _thrown = .int
+  _throwAt = .int
+  _far = .int
+  _errors = .int
+  _error = .string
+  _labels = .int[]
+  _messages = .string[]
+  _recovery = .int[]
+  _codes = .int[]
+  _positions = .int[]
+  _ends = .int[]
+  *: factory
+    arg graph = .llcore..grammar, root = .int, input = .llcore..stream, fuel = 1000000
+    _g = graph; _root = root; _input = input; _fuel = fuel
+    _tree = .llcore..tree.from_source(input.source())
+    _work = 0; _depth = 0; _silent = 0; _recovering = 0; _ran = 0; _status = 0
+    _last = 0; _selected = 0; _thrown = 0; _throwAt = 0; _far = 0; _errors = 0; _error = ''
+    return
+  annotate: method = .int
+    arg clause = .int, code = .int, message = .string, recovery = 0
+    if _ran | clause < 1 | clause > _g.size() | code < 1 | code > 255 | recovery < 0 | recovery > _g.size() then return 0
+    _labels[clause] = code; _messages[code] = message; _recovery[clause] = recovery
+    return 1
+  run: method = .int
+    if _ran then return _status
+    _ran = 1; facts = .llcheck..analysis(_g,_root)
+    if _g.profile() <> 'ordered' | facts.run() = 0 | _input.error() <> '' then do
+      _status = 3; _error = 'requires a valid ordinary PEG and source stream'; return _status
+    end
+    if facts.cycle() | facts.emptyloop() | facts.unions() then do
+      _status = 3; _error = 'labeled control requires proved non-left-recursive PEG progress'; return _status
+    end
+    finish = recognize(_root,0); _selected = _last
+    if _status = 2 then return _status
+    if finish <> _input.size() then do
+      _status = 4
+      if _thrown > 0 then _error = 'L' || _thrown || ': ' || _messages[_thrown] || ' at byte ' || _input.start(_throwAt)
+      else do
+        if finish > _far then _far = finish
+        _error = 'ordinary failure at byte ' || _input.start(_far)
+      end
+    end
+    else if _errors > 0 then do
+      _status = 1; _error = 'recovered with ' || _errors || ' labeled errors'
+    end
+    return _status
+  recognize: method = .int
+    arg clause = .int, at = .int
+    _work = _work + 1; _last = 0
+    if _work > _fuel | _depth >= 512 then do
+      _status = 2; _error = 'labeled PEG work/depth budget exhausted'; return -1
+    end
+    if _status = 2 then return -1
+    _depth = _depth + 1
+    answer = evaluate(clause,at)
+    _depth = _depth - 1
+    if _status = 2 then return -1
+    if answer < 0 & _thrown = 0 & _labels[clause] > 0 then do
+      _thrown = _labels[clause]; _throwAt = at
+      recovery = _recovery[clause]
+      if _silent = 0 & _recovering = 0 & recovery > 0 then do
+        code = _thrown; _thrown = 0; _recovering = 1
+        answer = recognize(recovery,at)
+        _recovering = 0
+        if answer >= 0 then do
+          _errors = _errors + 1; _codes[_errors] = code; _positions[_errors] = at; _ends[_errors] = answer
+          first = _input.start(at); finish = first
+          if answer > at then finish = _input.finish(answer)
+          _last = _tree.add(-code,'error.L' || code,first,finish,0,0)
+        end
+      end
+    end
+    return answer
+  evaluate: method = .int
+    arg clause = .int, at = .int
+    op = _g.op(clause); a = _g.left(clause); b = _g.right(clause)
+    answer = -1; leftnode = 0; rightnode = 0; before = _errors; symbol = _input.symbol(at)
+    select op
+      when 1 then do
+        if symbol = a then answer = at + 1
+      end
+      when 11 then do
+        if symbol >= a & symbol <= b then answer = at + 1
+      end
+      when 12 then do
+        if symbol >= 0 then answer = at + 1
+      end
+      when 13 then do
+        text = _g.text(clause); answer = at
+        do i = 0 to <blen>(text) - 1
+          if _input.symbol(at + i) <> <at..u8>(i) text then do
+            answer = -1; leave
+          end
+          answer = answer + 1
+        end
+      end
+      when 16 then do
+        if _g.contains(clause,symbol) then answer = at + 1
+      end
+      when 6 then answer = at
+      when 10 then do
+        if at = _input.size() then answer = at
+      end
+      when 2 then do
+        middle = recognize(a,at); leftnode = _last
+        if middle >= 0 then do
+          answer = recognize(b,middle); rightnode = _last
+        end
+      end
+      when 3 then do
+        answer = recognize(a,at); leftnode = _last
+        if answer < 0 & _thrown = 0 & _status <> 2 then do
+          _errors = before; answer = recognize(b,at); leftnode = _last
+        end
+      end
+      when 5 then do
+        answer = recognize(a,at); leftnode = _last
+      end
+      when 7 then answer = repeat(clause,a,at,0)
+      when 14 then answer = repeat(clause,a,at,1)
+      when 15 then do
+        answer = recognize(a,at); leftnode = _last
+        if answer < 0 & _thrown = 0 then do
+          answer = at; _errors = before; leftnode = 0
+        end
+      end
+      when 8 then do
+        _silent = _silent + 1; looked = recognize(a,at); _silent = _silent - 1
+        _thrown = 0; _errors = before
+        if looked < 0 then answer = at
+      end
+      when 9 then do
+        _silent = _silent + 1; looked = recognize(a,at); _silent = _silent - 1
+        _thrown = 0; _errors = before
+        if looked >= 0 then answer = at
+      end
+      otherwise do
+        _status = 3; _error = 'unsupported labeled PEG clause'; return -1
+      end
+    end
+    if op = 7 | op = 14 then return answer
+    if answer < 0 then do
+      if _silent = 0 & at > _far then _far = at
+      _last = 0; return -1
+    end
+    _last = emit(clause,at,answer,leftnode,rightnode)
+    return answer
+  repeat: method = .int
+    arg clause = .int, child = .int, at = .int, minimum = .int
+    finish = at; node = 0; count = 0
+    do forever
+      before = _errors; next = recognize(child,finish); childnode = _last
+      if _status = 2 then return -1
+      if next < 0 then do
+        if _thrown > 0 then return -1
+        _errors = before; leave
+      end
+      if next <= finish then do
+        _status = 2; _error = 'recovery violates repetition progress'; return -1
+      end
+      node = emit(clause,at,next,node,childnode); finish = next; count = count + 1
+    end
+    if count < minimum then return -1
+    if node = 0 then node = emit(clause,at,finish,0,0)
+    _last = node; return finish
+  emit: method = .int
+    arg clause = .int, at = .int, finish = .int, a = .int, b = .int
+    first = _input.start(at); lastbyte = first
+    if finish > at then lastbyte = _input.finish(finish)
+    if a > 0 then do
+      first = min(first,_tree.start(a)); lastbyte = max(lastbyte,_tree.finish(a))
+    end
+    if b > 0 then do
+      first = min(first,_tree.start(b)); lastbyte = max(lastbyte,_tree.finish(b))
+    end
+    return _tree.add(clause,_g.label(clause),first,lastbyte,a,b)
+  tree: method = .llcore..tree
+    return _tree
+  root: method = .int
+    return _selected
+  count: method = .int
+    return _errors
+  code: method = .int
+    arg index = .int
+    return _codes[index]
+  position: method = .int
+    arg index = .int
+    return _positions[index]
+  finish: method = .int
+    arg index = .int
+    return _ends[index]
+  thrown: method = .int
+    return _thrown
+  offset: method = .int
+    if _thrown then return _input.start(_throwAt)
+    return _input.start(_far)
+  work: method = .int
+    return _work
+  error: method = .string
+    return _error

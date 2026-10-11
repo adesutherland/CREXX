@@ -1,0 +1,11 @@
+options levell
+namespace pikaassigntokens
+read: parser semantics pika input tokens start document
+identifier: token = 1
+number: token = 2
+assign: token = 8
+semi: token = 9
+name: rule = identifier
+integer: rule = number
+assignment: rule = name assign integer semi
+document: rule = assignment+

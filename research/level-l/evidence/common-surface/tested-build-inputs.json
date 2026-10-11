@@ -1,0 +1,125 @@
+{
+  "scope": "Artifacts and staged runtime/frontend source used by the first/backend panels, before recovery edits are built.",
+  "files": [
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llregional/llregional.crexx",
+      "sha256": "0f69b132c595a8915fce7a778ba42f92f26f19f7cc7337314a480dbe0d366d12"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llsource/llsource.crexx",
+      "sha256": "237ea04e0a7b4a58b5e8398955f77c2180910d4d772a588ef1dc426773348c5c"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llfront/llfront.crexx",
+      "sha256": "aa3f471bb6799f9f11a17fb13f06a1ef41188bb140890d64d378addb823e3703"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llcheck/llcheck.crexx",
+      "sha256": "7cb03239b16be89762afa6d696d74e2fd208f4e432f52f7d0f9cda7cc816b2ca"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/lllr/lllr.crexx",
+      "sha256": "f34180db1a285d4af738a0e5c3d98d7f39462cc7efb52b08ef9484c3e64f8be2"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/tinyexpr/tinyexpr.crexx",
+      "sha256": "05f2a468a25d83d82fa55aa3806070cad59eb9b933b6d84275ffd788270cce01"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llforest/llforest.crexx",
+      "sha256": "885c5adbca84fdd347245f1ccf76bb0f636d9a0d6459bbbe27dab1a903005cac"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llpeg/llpeg.crexx",
+      "sha256": "42494c8555adbde9e8d9661895e03d66ae112685f2a1d607fab0b1ffc8ae3f0e"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llcap/llcap.crexx",
+      "sha256": "1aa1c5bb69e5709feaec127019529b4bf08f36310f0603f820366f5fb812e40f"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llstage/llstage.crexx",
+      "sha256": "8520543ef20c3ed5096b73e29526ea9e4acfdc1afd1c7cf02360bbb96ec95128"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llcharset/llcharset.crexx",
+      "sha256": "a5cd254d64414a27b3f8edd70ad896c5dac8730d6c55aa81ab032c5747f08caa"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llcore/llcore.crexx",
+      "sha256": "a59a3033f06434b0e345d25d02585529132e9136c6007ed218d5e1591674d5fd"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llcfg/llcfg.crexx",
+      "sha256": "cc4502258736e323561be40dac58f557500c56943e5180f4cc12727637e25c55"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/lllanguage/lllanguage.crexx",
+      "sha256": "da1494331e15dbe52d9e226c78252ef18f20eb8a898ea33e349732d1176fd398"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/lltree/lltree.crexx",
+      "sha256": "e95db7febdc917a62232d0a0d15a89725edba266d05b2ce48d64789a13c76344"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llmunch/llmunch.crexx",
+      "sha256": "319a66ca670630fe23a487410f64c0909b9ac4eb68df1ca175dbb5d9874c37d6"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llregular/llregular.crexx",
+      "sha256": "c72aad101fc8cce37e5d174c169d8e567b39ca44b14ada25082d426cdc55f479"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llearley/llearley.crexx",
+      "sha256": "6b91984dab25d3eec69bcd77f616d853b6f749d118486f1014a1520f4aa43616"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llpratt/llpratt.crexx",
+      "sha256": "5ee1d6684ab12e1d24f679accb4c46bf0dbb488a987feaef569cac593e005229"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/rexx/source/llproject/llproject.crexx",
+      "sha256": "27c8363239a2dd761e3302b76ca8e9a131b5d47299d1788050e95ea6b732a643"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/tools/bootstrap/L2/source/llfront.crexx",
+      "sha256": "9e5c6e32afdb5362bbedfc3a327dc306c6095f6815e0fd4cce76bf6e363d444b"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/tools/bootstrap/L0/source/llfront.crexx",
+      "sha256": "512c4d2105d96dfce263f61d22d4ba55b104cdb8475c27a6e16f4b86501b6c29"
+    },
+    {
+      "path": "cmake-build-levell-product/lib/rxfnsl/tools/bootstrap/L1/source/llfront.crexx",
+      "sha256": "9e5c6e32afdb5362bbedfc3a327dc306c6095f6815e0fd4cce76bf6e363d444b"
+    },
+    {
+      "path": "cmake-build-levell-product/bin/rxfnsl.rxbin",
+      "sha256": "d3f4de937bde1c9e81cac73447d36bf4910be379bc0efb819555c666a048379f"
+    },
+    {
+      "path": "cmake-build-levell-product/bin/levell",
+      "sha256": "73f74de0f746d53f0dec72a97cd31c43bf13286f7e62a15134b012415263cd66"
+    },
+    {
+      "path": "cmake-build-levell-product/bin/rxc",
+      "sha256": "6b6ff0fe4a71cbb7accba825d9d3b5f34bf6e1ec92a1ad003657c07c8d2a43ae"
+    },
+    {
+      "path": "cmake-build-levell-product/bin/rxas",
+      "sha256": "e0244f2e6502601d02583b1f0f4932f0278942a04c79da237891edd58ea4eaa5"
+    },
+    {
+      "path": "cmake-build-levell-product/bin/rxlink",
+      "sha256": "c70e73b09b84adf2c30db353834d7faf2059a9de52376ce84fa3a877af6c1b08"
+    },
+    {
+      "path": "cmake-build-levell-product/bin/rxtvm",
+      "sha256": "787d05fe39e87f2bc7ea5f5c1fcacc9047d69c99d01fc6718fc0aa411ea2da58"
+    },
+    {
+      "path": "cmake-build-levell-product/bin/rxbvm",
+      "sha256": "3f69eb5076229b886496a560c97eb0244ac7191cb2ecaf5fe7c473e240428806"
+    }
+  ]
+}

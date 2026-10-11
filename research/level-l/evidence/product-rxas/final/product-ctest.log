@@ -1,0 +1,19 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product
+    Start 2440: levell_generated_rxtvm
+1/4 Test #2440: levell_generated_rxtvm ...........   Passed    0.03 sec
+    Start 2441: levell_generated_rxbvm
+2/4 Test #2441: levell_generated_rxbvm ...........   Passed    0.03 sec
+    Start 2838: rexxscript1_rxtvm
+3/4 Test #2838: rexxscript1_rxtvm ................   Passed    4.90 sec
+    Start 2839: rexxscript1_rxbvm
+4/4 Test #2839: rexxscript1_rxbvm ................   Passed    5.05 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+comprehensive    =   0.07 sec*proc (2 tests)
+level-l          =  10.03 sec*proc (4 tests)
+library          =   0.07 sec*proc (2 tests)
+rexxscript       =   9.96 sec*proc (2 tests)
+
+Total Test time (real) =  10.09 sec

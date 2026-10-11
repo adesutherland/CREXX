@@ -1,0 +1,10 @@
+options levell
+namespace conflict_example
+number: token = 1
+scan: lexer input bytes
+  digit: charset = U+0030 to U+0039
+  num: rule = digit+ then emit number
+parse: parser semantics contextfree input tokens start document
+  document: rule = left.number | right.number
+  left.number: rule = number
+  right.number: rule = number

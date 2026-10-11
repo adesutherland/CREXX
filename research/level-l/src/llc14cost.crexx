@@ -1,0 +1,144 @@
+/* cREXX License (MIT). c14 reading-cost algebra port.
+ * Luke Hutchison's Squirrel c14, bb1ae84701060462636c07c814286ac2875e0568.
+ * See licenses/Squirrel-MIT.txt. The recovery evaluator is separate work.
+ */
+options levell
+namespace llc14cost expose reading frontier compare dominates
+import rxfnsb
+
+/** Immutable totals carried by one c14 repair reading. No tree payload yet. */
+reading: class
+  _end = .int
+  _deleted = .int
+  _missing = .int
+  _evidence = .int
+  _first = .int
+  _eof = .int
+  _penalty = .int
+  _incomplete = .int
+  _last = .int
+  *: factory
+    arg finish = .int, deleted = .int, missing = .int, evidence = .int, first = .int, eof = 0, penalty = 0, incomplete = 0, last = -2
+    _end = finish; _deleted = deleted; _missing = missing; _evidence = evidence
+    _first = first; _eof = eof; _penalty = penalty; _incomplete = incomplete
+    _last = last
+    if last = -2 then do
+      if first >= 1073741824 then _last = -1
+      else _last = first
+    end
+    return
+  joined: method = .reading
+    arg step = .reading
+    incomplete = step.incomplete() | (step.finish() = _end & _incomplete)
+    return .reading(step.finish(),_deleted + step.deleted(),_missing + step.missing(),_evidence + step.evidence(),min(_first,step.first()),_eof + step.eof(),_penalty + step.penalty(),incomplete,max(_last,step.last()))
+  finish: method = .int
+    return _end
+  deleted: method = .int
+    return _deleted
+  missing: method = .int
+    return _missing
+  evidence: method = .int
+    return _evidence
+  first: method = .int
+    return _first
+  last: method = .int
+    return _last
+  eof: method = .int
+    return _eof
+  penalty: method = .int
+    return _penalty
+  incomplete: method = .int
+    return _incomplete
+  preferred: method = .int
+    return _first > 1073741824
+  clean: method = .int
+    return _first >= 1073741824
+  spent: method = .int
+    return _deleted + _missing
+  cost: method = .int
+    return _deleted + _missing + (_eof > 0)
+  charge: method = .int
+    arg from = .int
+    absorption = (_first < 1073741824) & (_end - from - _deleted - _evidence > _evidence)
+    return _deleted + _missing + (_eof > 0) + _penalty + absorption
+  absorbed: method = .int
+    arg from = .int
+    return _end - from - _deleted - _evidence
+
+/** Negative means a preferred, positive b preferred, zero exact rank tie. */
+compare: procedure = .int
+  arg a = .reading, b = .reading, from = .int
+  difference = a.charge(from) - b.charge(from)
+  if difference <> 0 then return difference
+  difference = b.preferred() - a.preferred()
+  if difference <> 0 then return difference
+  difference = b.evidence() - a.evidence()
+  if difference <> 0 then return difference
+  difference = b.first() - a.first()
+  if difference <> 0 then return difference
+  difference = a.last() - b.last()
+  if difference <> 0 then return difference
+  difference = a.eof() - b.eof()
+  if difference <> 0 then return difference
+  return min(a.deleted(),a.missing() + a.eof()) - min(b.deleted(),b.missing() + b.eof())
+
+/** Sufficient ALgebraic dominance under identical future steps, not a proof
+ * of the whole recovery search. Incomparable readings must both be retained.
+ */
+dominates: procedure = .int
+  arg a = .reading, b = .reading, from = .int
+  if a.finish() <> b.finish() then return 0
+  if a.deleted() > b.deleted() | a.missing() > b.missing() | a.eof() > b.eof() | a.penalty() > b.penalty() then return 0
+  if a.evidence() < b.evidence() | a.absorbed(from) > b.absorbed(from) then return 0
+  if a.first() < b.first() | a.last() > b.last() | a.incomplete() > b.incomplete() then return 0
+  return 1
+
+/** Experimental frontier of incomparable cost summaries. This is deliberately
+ * separate from faithful c14's best-per-end policy. Equal summaries retain the
+ * first insertion; tree tie semantics need a separate contract in a full port.
+ */
+frontier: class
+  _from = .int
+  _limit = .int
+  _count = .int
+  _used = .int
+  _status = .int
+  _readings = .reading[]
+  _alive = .int[]
+  *: factory
+    arg from = .int, limit = 10000
+    _from = from; _limit = limit; _count = 0; _used = 0; _status = 0
+    return
+  offer: method = .int
+    arg reading = .reading
+    if _status then return 0
+    do i = 1 to _used
+      if _alive[i] then do
+        if dominates(_readings[i],reading,_from) then return 0
+      end
+    end
+    if _used >= _limit then do
+      _status = 2; return 0
+    end
+    do i = 1 to _used
+      if _alive[i] then do
+        if dominates(reading,_readings[i],_from) then do
+          _alive[i] = 0; _count = _count - 1
+        end
+      end
+    end
+    _used = _used + 1; _readings[_used] = reading; _alive[_used] = 1; _count = _count + 1
+    return 1
+  count: method = .int
+    return _count
+  item: method = .reading
+    arg index = .int
+    do i = 1 to _used
+      if _alive[i] then do
+        index = index - 1
+        if index = 0 then return _readings[i]
+      end
+    end
+    return .reading(0,0,0,0,1073741825)
+  status: method = .int
+    return _status

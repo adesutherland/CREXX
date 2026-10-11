@@ -1,0 +1,44 @@
+/* Generated-table scanner: one DFA transition per byte inspected. */
+options levell
+namespace lldfa expose scan scanstatus scanoffset scansteps
+import rxfnsb
+scan: procedure = .binary expose status erroroffset steps
+  arg source = .string, graph = .binary
+  status = 0; erroroffset = 0; steps = 0
+  states = <at..i32>(0) graph; classes = <at..i32>(4) graph
+  transitions = 136 + states * 4
+  bytes = source as .binary; size = <blen>(bytes)
+  result = .binary; at = 0; base = .int
+  do while at < size
+    state = 1; cursor = at; bestend = at; bestkind = 0
+    do while cursor < size
+      byte = <at..u8>(cursor) bytes
+      if byte >= 128 then leave
+      cls = <at..u8>(8 + byte) graph
+      steps = steps + 1
+      state = <at..i32>(transitions + ((state - 1) * classes + cls) * 4) graph
+      if state = 0 then leave
+      cursor = cursor + 1
+      kind = <at..i32>(136 + (state - 1) * 4) graph
+      if kind <> 0 then do
+        bestend = cursor; bestkind = kind
+      end
+    end
+    if bestend = at then do
+      status = 1; erroroffset = at; return result
+    end
+    if bestkind > 0 then do
+      base = <blen>(result); call binresize result,base + 12
+      <at..i32>(base) result = bestkind
+      <at..i32>(base + 4) result = at
+      <at..i32>(base + 8) result = bestend - at
+    end
+    at = bestend
+  end
+  return result
+scanstatus: procedure = .int expose status
+  return status
+scanoffset: procedure = .int expose erroroffset
+  return erroroffset
+scansteps: procedure = .int expose steps
+  return steps

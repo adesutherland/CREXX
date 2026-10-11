@@ -1,0 +1,899 @@
+/* The Squirrel Parser -- Copyright (c) 2026 Luke Hutchison (MIT).
+ * c14 recovery operational port, reference bb1ae84701060462636c07c814286ac2875e0568.
+ * See ../licenses/Squirrel-MIT.txt. Byte-domain research implementation.
+ * Reference ranking/pruning is preserved, including REC-03's counterexample.
+ */
+options levell
+namespace llc14 expose grammar parser
+import rxfnsb
+import llcore
+import llhistory
+import llc14cost
+
+/** Explicit n-ary reference graph. Each named rule is one Ref node whose child
+ * is its body. N-ary sequences remain n-ary: regrouping changes recovery gates.
+ */
+grammar: class
+  _size = .int
+  _op = .int[]
+  _name = .string[]
+  _arity = .int[]
+  _child = .int[]
+  _a = .int[]
+  _b = .int[]
+  _text = .binary[]
+  _frozen = .int
+  _error = .string
+  *: factory
+    _size = 0; _frozen = 0; _error = ''
+    return
+  node: method = .int
+    arg op = .int, name = '', a = 0, b = 0
+    if _frozen | _size >= 512 then do
+      _error = 'grammar frozen or 512-clause construction limit'; return 0
+    end
+    _size = _size + 1; _op[_size] = op; _name[_size] = name; _a[_size] = a; _b[_size] = b
+    return _size
+  edge: method = .int
+    arg parent = .int, child = .int
+    if _frozen | parent < 1 | parent > _size | child < 1 | child > _size then return 0
+    if _arity[parent] >= 512 then return 0
+    _arity[parent] = _arity[parent] + 1
+    _child[(parent - 1) * 512 + _arity[parent]] = child
+    return 1
+  literal: method = .int
+    arg text = .binary
+    id = node(13); _text[id] = text; return id
+  charset: method = .int
+    arg text = .binary, inverted = 0
+    id = node(16,'',inverted); _text[id] = text; return id
+  prepare: method = .int
+    if _frozen then return _error = ''
+    initial = _size
+    do i = 1 to initial
+      op = _op[i]
+      if op = 4 | op = 10 | op < 1 | op > 16 then do
+        _error = 'unsupported reference clause'; return 0
+      end
+      if op = 5 | op = 7 | op = 8 | op = 9 | op = 14 | op = 15 then do
+        if _arity[i] <> 1 then do
+          _error = 'unary or rule clause needs one child'; return 0
+        end
+      end
+      if op = 13 then do
+        text = _text[i]
+        if <blen>(text) > 1 then do j = 0 to <blen>(text) - 1
+          byte = <at..u8>(j) text
+          c = node(1,'',byte)
+          if c = 0 then return 0
+          ok = edge(i,c)
+        end
+      end
+    end
+    _frozen = 1; return 1
+  size: method = .int
+    return _size
+  op: method = .int
+    arg node = .int
+    return _op[node]
+  count: method = .int
+    arg node = .int
+    return _arity[node]
+  child: method = .int
+    arg node = .int, slot = .int
+    return _child[(node - 1) * 512 + slot]
+  a: method = .int
+    arg node = .int
+    return _a[node]
+  b: method = .int
+    arg node = .int
+    return _b[node]
+  text: method = .binary
+    arg node = .int
+    return _text[node]
+  error: method = .string
+    return _error
+  label: method = .string
+    arg node = .int
+    if node = 0 then return 'Null'
+    if node < 0 then return 'error'
+    select _op[node]
+      when 1 then return 'Char'
+      when 2 then return 'Seq'
+      when 3 then return 'First'
+      when 5 then return 'Ref:' || _name[node]
+      when 6 then return 'Nothing'
+      when 7 then return 'ZeroOrMore'
+      when 8 then return 'NotFollowedBy'
+      when 9 then return 'FollowedBy'
+      when 11 then return 'CharSet'
+      when 12 then return 'AnyChar'
+      when 13 then return 'Str'
+      when 14 then return 'OneOrMore'
+      when 15 then return 'Optional'
+      when 16 then return 'CharSet'
+      otherwise return 'Unknown'
+    end
+    return 'Unknown'
+
+/** One owned request. Status 0 clean, 1 recovered, 2 resource, 3 bad request.
+ * History includes source-span error markers; source bytes remain owned here.
+ * All temporary lists/readings are retained until request disposal, unlike GC.
+ */
+parser: class
+  _g = .llc14..grammar
+  _input = .llcore..stream
+  _history = .llhistory..arena
+  _root = .int
+  _n = .int
+  _width = .int
+  _fuel = .int
+  _work = .int
+  _depth = .int
+  _status = .int
+  _error = .string
+  _ran = .int
+  _result = .int
+  _lastcost = .int
+  _budget = .int
+  _rounds = .int
+  _seedread = .int
+  _expansions = .int
+  /* Plain per-rule memo. Encoded version is actual version + 1. */
+  _pv = .int[]
+  _ps = .int[]
+  _pa = .int[]
+  _pf = .int[]
+  _pm = .int[]
+  _pack = .int[]
+  _wrap = .int[]
+  /* Repair per-clause memo and terminal clean/missing caches. */
+  _rv = .int[]
+  _rs = .int[]
+  _ra = .int[]
+  _rf = .int[]
+  _ru = .int[]
+  _rb = .int[]
+  _best = .int[]
+  _view = .int[]
+  _plain = .int[]
+  _term = .int[]
+  _shape = .int[]
+  _minpath = .int[]
+  _voluntary = .int[]
+  /* Immutable reading arena: cost + last piece + previous prefix. */
+  _rcount = .int
+  _cost = .llc14cost..reading[]
+  _pk = .int[]
+  _payload = .int[]
+  _label = .int[]
+  _from = .int[]
+  _prev = .int[]
+  /* List arena. Fronts replace values in stable insertion order. */
+  _lists = .int
+  _links = .int
+  _head = .int[]
+  _tail = .int[]
+  _length = .int[]
+  _next = .int[]
+  _value = .int[]
+  *: factory
+    arg graph = .llc14..grammar, root = .int, input = .llcore..stream, fuel = 1000000
+    _g = graph; _root = root; _input = input; _n = input.size(); _width = _n + 1
+    _fuel = fuel; _work = 0; _depth = 0; _status = 0; _error = ''; _ran = 0
+    _history = .llhistory..arena(); _result = 0; _lastcost = 0; _budget = 0; _rounds = 0
+    _seedread = 0; _expansions = 0; _rcount = 0; _lists = 0; _links = 0
+    return
+  tick: method = .int
+    _work = _work + 1
+    if _status = 2 | _work > _fuel | _depth > 512 then do
+      _status = 2; _error = 'resource exhausted: c14 work or recursion limit'; return 0
+    end
+    return 1
+  newlist: method = .int
+    if tick() = 0 then return 0
+    _lists = _lists + 1; return _lists
+  head: method = .int
+    arg list = .int
+    if list = 0 then return 0
+    return _head[list]
+  append: method = .int
+    arg list = .int, value = .int
+    if list = 0 | value = 0 then return 0
+    if tick() = 0 then return 0
+    _links = _links + 1; _value[_links] = value
+    if _tail[list] > 0 then _next[_tail[list]] = _links
+    else _head[list] = _links
+    _tail[list] = _links; _length[list] = _length[list] + 1
+    return _links
+  one: method = .int
+    arg value = .int
+    if value = 0 then return 0
+    list = newlist(); ok = append(list,value); return list
+  reading: method = .int
+    arg cost = .llc14cost..reading, kind = 0, payload = 0, label = 0, from = 0, prev = 0
+    if tick() = 0 then return 0
+    _rcount = _rcount + 1; _cost[_rcount] = cost; _pk[_rcount] = kind
+    _payload[_rcount] = payload; _label[_rcount] = label; _from[_rcount] = from; _prev[_rcount] = prev
+    return _rcount
+  empty: method = .int
+    arg at = .int
+    return reading(.llc14cost..reading(at,0,0,0,1073741825))
+  deleted: method = .int
+    arg from = .int, finish = .int
+    kids = .int[]; node = tree(-1,from,finish - from,kids)
+    return reading(.llc14cost..reading(finish,finish - from,0,0,from),1,node)
+  joined: method = .int
+    arg prefix = .int, step = .int
+    if prefix = 0 | step = 0 then return 0
+    cost = _cost[prefix]; cost = cost.joined(_cost[step])
+    return reading(cost,_pk[step],_payload[step],_label[step],_from[step],prefix)
+  changed: method = .int
+    arg r = .int, rank = 1073741825, penalty = 0
+    c = _cost[r]
+    cost = .llc14cost..reading(c.finish(),c.deleted(),c.missing(),c.evidence(),min(c.first(),rank),c.eof(),c.penalty() + penalty,c.incomplete(),c.last())
+    return reading(cost,_pk[r],_payload[r],_label[r],_from[r],_prev[r])
+  labeled: method = .int
+    arg r = .int, label = .int, from = .int
+    return reading(_cost[r],2,r,label,from)
+  tree: method = .int
+    arg label = .int, from = .int, span = .int, kids = .int[]
+    if tick() = 0 then return 0
+    if kids[0] > 0 then do
+      first = kids[1]; last = kids[kids[0]]
+      from = _history.start(first); span = _history.start(last) + _history.length(last) - from
+    end
+    return _history.add(label,1,from,span,kids)
+  compare: method = .int
+    arg a = .int, b = .int, from = .int
+    return llc14cost..compare(_cost[a],_cost[b],from)
+  farthest: method = .int
+    arg list = .int
+    node = head(list); far = -1
+    do while node > 0
+      c = _cost[_value[node]]
+      if c.preferred() & c.finish() > far then far = c.finish()
+      node = _next[node]
+    end
+    return far
+  anyclean: method = .int
+    arg list = .int
+    node = head(list)
+    do while node > 0
+      c = _cost[_value[node]]
+      if c.clean() then return 1
+      node = _next[node]
+    end
+    return 0
+  /* Positive means a new or strictly improved entry; -1 means equal replacement. */
+  keep: method = .int
+    arg list = .int, r = .int, from = .int, replaceTie = 1
+    if r = 0 | list = 0 then return 0
+    node = head(list); c = _cost[r]
+    do while node > 0
+      prior = _cost[_value[node]]
+      if prior.finish() = c.finish() then do
+        cmp = compare(r,_value[node],from)
+        if cmp < 0 | (cmp = 0 & replaceTie) then _value[node] = r
+        if cmp < 0 then return node
+        if cmp = 0 & replaceTie then return -1
+        return 0
+      end
+      node = _next[node]
+    end
+    return append(list,r)
+  serve: method = .int
+    arg list = .int, budget = 1073741824, owner = 0, from = 0
+    far = farthest(list); out = newlist(); node = head(list)
+    do while node > 0 & _status <> 2
+      r = _value[node]; c = _cost[r]
+      if c.spent() <= budget then do
+        if c.preferred() & c.finish() <> far then r = changed(r,1073741824)
+        if owner > 0 then do
+          op = _g.op(owner)
+          if op <> 8 & op <> 9 & op <> 15 then r = labeled(r,owner,from)
+        end
+        ok = append(out,r)
+      end
+      node = _next[node]
+    end
+    return out
+  bestperend: method = .int
+    arg list = .int, from = .int
+    if list = 0 then return 0
+    if _length[list] <= 1 then return list
+    out = newlist(); node = head(list)
+    do while node > 0 & _status <> 2
+      ok = keep(out,_value[node],from); node = _next[node]
+    end
+    return serve(out,1073741824,0,from)
+  terminal: method = .int
+    arg clause = .int
+    op = _g.op(clause)
+    return op = 1 | op = 6 | op = 11 | op = 12 | op = 13 | op = 16
+  picky: method = .int
+    arg clause = .int
+    op = _g.op(clause)
+    return op = 1 | op = 11 | (op = 13 & <blen>(_g.text(clause)) > 0) | (op = 16 & _g.a(clause) = 0)
+  oneshape: method = .int
+    arg clause = .int
+    if _shape[clause] > 0 then return _shape[clause] = 2
+    _shape[clause] = 1; op = _g.op(clause); yes = 0
+    select
+      when op = 2 then do
+        yes = 1
+        do i = 1 to _g.count(clause)
+          if oneshape(_g.child(clause,i)) = 0 then yes = 0
+        end
+      end
+      when op = 5 | op = 14 then yes = oneshape(_g.child(clause,1))
+      when op = 8 | op = 9 | terminal(clause) then yes = 1
+      otherwise nop
+    end
+    _shape[clause] = yes + 1; return yes
+  minchars: method = .int
+    arg clause = .int
+    if tick() = 0 then return 1073741824
+    if _minpath[clause] then return 1073741824
+    _minpath[clause] = 1; op = _g.op(clause); value = 0; i = .int
+    select
+      when op = 2 then do i = 1 to _g.count(clause)
+        value = min(1073741824,value + minchars(_g.child(clause,i)))
+      end
+      when op = 3 then do
+        value = 1073741824
+        do i = 1 to _g.count(clause)
+          value = min(value,minchars(_g.child(clause,i)))
+        end
+      end
+      when op = 5 | op = 14 then value = minchars(_g.child(clause,1))
+      when op = 13 then value = <blen>(_g.text(clause))
+      when op = 1 | op = 11 | op = 12 | op = 16 then value = 1
+      otherwise nop
+    end
+    _minpath[clause] = 0; return value
+  parsememo: method = .int
+    arg rule = .int, at = .int
+    if at > _n then return 0
+    key = (rule - 1) * _width + at + 1
+    if _ps[key] > 0 & (_pa[key] | _ps[key] = _pv[at + 1] + 1) then return _pm[key]
+    if _pa[key] then do
+      _pf[key] = 1; _ps[key] = _pv[at + 1] + 1; _pm[key] = 0; return 0
+    end
+    _pa[key] = 1
+    do while _status <> 2
+      candidate = matchplain(_g.child(rule,1),at)
+      prior = _pm[key]
+      if _ps[key] > 0 then do
+        if candidate = 0 then leave
+        if prior > 0 then do
+          if _history.length(candidate) <= _history.length(prior) then leave
+        end
+      end
+      _pm[key] = candidate; _pack[key] = 0; _wrap[key] = 0
+      if _pf[key] = 0 then leave
+      _pv[at + 1] = _pv[at + 1] + 1; _ps[key] = _pv[at + 1] + 1
+      _expansions = _expansions + 1
+    end
+    _pa[key] = 0; _ps[key] = _pv[at + 1] + 1
+    return _pm[key]
+  matchplain: method = .int
+    arg clause = .int, at = .int
+    if tick() = 0 | at > _n then return 0
+    _depth = _depth + 1; result = plainbody(clause,at); _depth = _depth - 1
+    return result
+  plainbody: method = .int
+    arg clause = .int, at = .int
+    op = _g.op(clause); kids = .int[]; span = 0; child = .int; pos = .int; i = .int
+    if terminal(clause) then do
+      symbol = _input.symbol(at); accepted = 0
+      select op
+        when 1 then accepted = symbol = _g.a(clause)
+        when 6 then return tree(clause,at,0,kids)
+        when 11 then accepted = symbol >= _g.a(clause) & symbol <= _g.b(clause)
+        when 12 then accepted = symbol >= 0
+        when 13 then do
+          text = _g.text(clause); size = <blen>(text)
+          if at + size > _n then return 0
+          do i = 0 to size - 1
+            if _input.symbol(at + i) <> <at..u8>(i) text then return 0
+          end
+          return tree(clause,at,size,kids)
+        end
+        when 16 then do
+          text = _g.text(clause); found = 0
+          do i = 0 to <blen>(text) - 1
+            if symbol = <at..u8>(i) text then found = 1
+          end
+          accepted = symbol >= 0 & (found <> _g.a(clause))
+        end
+        otherwise nop
+      end
+      if accepted then return tree(clause,at,1,kids)
+      return 0
+    end
+    select op
+      when 2 then do
+        pos = at
+        do i = 1 to _g.count(clause)
+          child = matchplain(_g.child(clause,i),pos)
+          if child = 0 then return 0
+          kids[kids[0] + 1] = child; pos = pos + _history.length(child)
+        end
+      end
+      when 3 then do
+        do i = 1 to _g.count(clause)
+          child = matchplain(_g.child(clause,i),at)
+          if child > 0 then do
+            kids[1] = child; leave
+          end
+        end
+        if kids[0] = 0 then return 0
+      end
+      when 5 then do
+        child = parsememo(clause,at)
+        if child = 0 then return 0
+        key = (clause - 1) * _width + at + 1
+        if _wrap[key] = 0 then do
+          kids[1] = child; _wrap[key] = tree(clause,at,0,kids)
+        end
+        return _wrap[key]
+      end
+      when 7 then do
+        pos = at
+        do while pos <= _n & _status <> 2
+          child = matchplain(_g.child(clause,1),pos)
+          if child = 0 then leave
+          if _history.length(child) = 0 then leave
+          kids[kids[0] + 1] = child; pos = pos + _history.length(child)
+        end
+      end
+      when 14 then do
+        pos = at
+        do while pos <= _n & _status <> 2
+          child = matchplain(_g.child(clause,1),pos)
+          if child = 0 then leave
+          if _history.length(child) = 0 then leave
+          kids[kids[0] + 1] = child; pos = pos + _history.length(child)
+        end
+        if kids[0] = 0 then return 0
+      end
+      when 15 then do
+        child = matchplain(_g.child(clause,1),at)
+        if child > 0 then kids[1] = child
+      end
+      when 8 then do
+        child = matchplain(_g.child(clause,1),at)
+        if child > 0 then return 0
+      end
+      when 9 then do
+        child = matchplain(_g.child(clause,1),at)
+        if child = 0 then return 0
+      end
+      otherwise do
+        _status = 3; _error = 'unsupported c14 clause'; return 0
+      end
+    end
+    if _status = 2 then return 0
+    return tree(clause,at,span,kids)
+  evidence: method = .int
+    arg node = .int
+    if tick() = 0 | node = 0 then return 0
+    clause = _history.clause(node)
+    if clause <= 0 then return 0
+    if _g.op(clause) = 7 then do
+      if terminal(_g.child(clause,1)) then return 0
+    end
+    if _history.count(node) = 0 then do
+      if picky(clause) then return _history.length(node)
+      return 0
+    end
+    total = 0
+    do i = 1 to _history.count(node)
+      total = total + evidence(_history.child(node,i))
+    end
+    return total
+  cleanreading: method = .int
+    arg clause = .int, at = .int
+    if at > _n | tick() = 0 then return 0
+    key = (clause - 1) * _width + at + 1
+    op = _g.op(clause); node = .int; result = .int; amount = .int
+    if terminal(clause) then do
+      cached = _term[key]
+      if cached <> 0 then do
+        if cached < 0 then return 0
+        c = _cost[cached]
+        if c.incomplete() then return 0
+        return cached
+      end
+      node = matchplain(clause,at)
+      if node = 0 then do
+        _term[key] = -1; return 0
+      end
+      amount = 0
+      if picky(clause) & _voluntary[clause] = 0 then amount = _history.length(node)
+      result = reading(.llc14cost..reading(at + _history.length(node),0,0,amount,1073741825),1,node)
+      _term[key] = result; return result
+    end
+    if op = 5 then do
+      node = parsememo(clause,at)
+      if node = 0 then return 0
+      if _pack[key] > 0 then return _pack[key]
+      amount = evidence(node); kids = .int[]; kids[1] = node
+      wrapped = tree(clause,at,0,kids)
+      result = reading(.llc14cost..reading(at + _history.length(node),0,0,amount,1073741825),1,wrapped)
+      _pack[key] = result; return result
+    end
+    node = matchplain(clause,at)
+    if node = 0 then return 0
+    amount = evidence(node)
+    return reading(.llc14cost..reading(at + _history.length(node),0,0,amount,1073741825),1,node)
+  readings: method = .int
+    arg clause = .int, at = .int
+    if at > _n | tick() = 0 then return 0
+    _depth = _depth + 1; result = findreadings(clause,at); _depth = _depth - 1
+    return result
+  findreadings: method = .int
+    arg clause = .int, at = .int
+    op = _g.op(clause); key = (clause - 1) * _width + at + 1; r = .int
+    if terminal(clause) then do
+      clean = cleanreading(clause,at)
+      if clean > 0 then return one(clean)
+      if _budget < 1 & at < _n then return 0
+      if _g.count(clause) > 0 then do
+        proposals = readslots(clause,clause,at)
+        return bestperend(proposals,at)
+      end
+      if _term[key] > 0 then return one(_term[key])
+      kids = .int[]; emptykids = .int[]
+      kids[1] = tree(-1,at,0,emptykids); node = tree(clause,at,0,kids)
+      r = reading(.llc14cost..reading(at,0,at < _n,0,at,at = _n,0,1),1,node)
+      _term[key] = r; return one(r)
+    end
+    if op = 5 then do
+      if _budget = 0 & at < _n then return one(cleanreading(clause,at))
+      raw = readings(_g.child(clause,1),at); out = newlist(); link = head(raw)
+      do while link > 0 & _status <> 2
+        r = _value[link]; c = _cost[r]
+        if c.evidence() > 0 | c.clean() | c.finish() = at | oneshape(clause) then do
+          wrappedreading = labeled(r,clause,at); ok = append(out,wrappedreading)
+        end
+        link = _next[link]
+      end
+      return out
+    end
+    return grow(clause,at)
+  grow: method = .int
+    arg clause = .int, at = .int
+    key = (clause - 1) * _width + at + 1
+    if _best[key] = 0 then _best[key] = newlist()
+    if _ra[key] then do
+      _rf[key] = 1; _seedread = 1
+      return serve(_best[key],1073741824,clause,at)
+    end
+    if _budget = 0 & at < _n then do
+      if _plain[key] = 0 then _plain[key] = one(cleanreading(clause,at)) + 1
+      return _plain[key] - 1
+    end
+    if _rb[key] >= _budget + 1 & (_ru[key] = 0 | _rs[key] = _rv[at + 1]) then return serve(_best[key],_budget,clause,at)
+    _ra[key] = 1; outer = _seedread; _seedread = 0
+    do while _status <> 2
+      improved = 0; proposals = propose(clause,at); link = head(proposals)
+      do while link > 0 & _status <> 2
+        delta = keep(_best[key],_value[link],at)
+        if delta > 0 then improved = 1
+        link = _next[link]
+      end
+      if improved = 0 | _rf[key] = 0 then leave
+      _rv[at + 1] = _rv[at + 1] + 1; _rs[key] = _rv[at + 1]
+      _expansions = _expansions + 1
+    end
+    _ru[key] = _seedread; _seedread = outer | _seedread; _ra[key] = 0
+    _rb[key] = _budget + 1; _rs[key] = _rv[at + 1]
+    return serve(_best[key],_budget,clause,at)
+  propose: method = .int
+    arg clause = .int, at = .int
+    op = _g.op(clause)
+    if op = 2 then return readslots(clause,0,at)
+    out = newlist(); r = .int; step = .int; link = .int; rlist = .int
+    ok = .int; steps = .int; c = .llc14cost..reading; kids = .int[]; node = .int
+    select
+      when op = 3 then do
+        settled = 0
+        do i = 1 to _g.count(clause)
+          rlist = readings(_g.child(clause,i),at); link = head(rlist)
+          do while link > 0 & _status <> 2
+            r = _value[link]; c = _cost[r]
+            if settled = 0 | c.clean() | c.absorbed(at) < c.evidence() then do
+              if settled then r = changed(r,1073741824)
+              ok = append(out,r)
+            end
+            link = _next[link]
+          end
+          settled = settled | farthest(rlist) >= 0
+        end
+      end
+      when op = 7 | op = 14 then do
+        zero = empty(at); best = newlist()
+        if op = 7 then ok = append(best,zero)
+        moved = one(zero); sub = _g.child(clause,1)
+        do while head(moved) > 0 & _status <> 2
+          changes = newlist(); link = head(moved)
+          do while link > 0 & _status <> 2
+            r = _value[link]; rcost = _cost[r]
+            whole = _budget; _budget = whole - rcost.spent()
+            steps = readings(sub,rcost.finish()); _budget = whole
+            steplink = head(steps)
+            do while steplink > 0 & _status <> 2
+              step = _value[steplink]; scost = _cost[step]
+              if scost.finish() > rcost.finish() & (scost.evidence() <> 0 | scost.missing() <> 0 | scost.finish() - rcost.finish() <> scost.deleted()) then do
+                longer = joined(r,step); changedslot = keep(best,longer,at,0)
+                if changedslot > 0 then do
+                  check = head(changes); found = 0
+                  do while check > 0
+                    if _value[check] = changedslot then found = 1
+                    check = _next[check]
+                  end
+                  if found = 0 then ok = append(changes,changedslot)
+                end
+              end
+              steplink = _next[steplink]
+            end
+            link = _next[link]
+          end
+          moved = newlist(); link = head(changes)
+          do while link > 0 & _status <> 2
+            ok = append(moved,_value[_value[link]]); link = _next[link]
+          end
+        end
+        if head(best) = 0 & _status <> 2 then do
+          steps = readings(sub,at); link = head(steps)
+          do while link > 0 & _status <> 2
+            r = _value[link]; c = _cost[r]
+            if c.finish() = at then do
+              extendedreading = joined(zero,r)
+              demoted = changed(extendedreading,1073741824); ok = append(best,demoted)
+            end
+            link = _next[link]
+          end
+        end
+        return bestperend(best,at)
+      end
+      when op = 15 then do
+        rlist = readings(_g.child(clause,1),at)
+        node = tree(clause,at,0,kids)
+        rank = 1073741825
+        if farthest(rlist) >= 0 then rank = 1073741824
+        r = reading(.llc14cost..reading(at,0,0,0,rank),1,node); ok = append(out,r)
+        link = head(rlist)
+        do while link > 0 & _status <> 2
+          r = labeled(_value[link],clause,at); ok = append(out,r); link = _next[link]
+        end
+      end
+      when op = 8 | op = 9 then do
+        rlist = readings(_g.child(clause,1),at)
+        if (op = 9) = anyclean(rlist) then do
+          node = tree(clause,at,0,kids)
+          r = reading(.llc14cost..reading(at,0,0,0,1073741825),1,node); ok = append(out,r)
+        end
+      end
+      otherwise nop
+    end
+    return out
+  readslots: method = .int
+    arg owner = .int, label = .int, at = .int
+    cur = one(empty(at)); link = .int; deletion = .int; extended = .int; ok = .int
+    do s = 1 to _g.count(owner)
+      slot = _g.child(owner,s); next = newlist(); far = farthest(cur); link = head(cur)
+      do while link > 0 & _status <> 2
+        r = _value[link]; c = _cost[r]
+        if c.preferred() & c.finish() <> far then do
+          r = changed(r,1073741824); c = _cost[r]
+        end
+        if c.spent() <= _budget then do
+          whole = _budget; _budget = whole - c.spent()
+          choices = readings(slot,c.finish()); _budget = whole
+          cleanhere = anyclean(choices); deletedAhead = -1
+          if cleanhere = 0 then do
+            room = _budget - c.cost()
+            do j = c.finish() + 1 to min(_n,c.finish() + room)
+              parsed = cleanreading(slot,j)
+              if parsed > 0 then do
+                deletion = deleted(c.finish(),j); prefix = joined(r,deletion); extended = joined(prefix,parsed)
+                ok = keep(next,extended,at); deletedAhead = j - c.finish(); leave
+              end
+            end
+            exact = _g.op(slot) = 1 | _g.op(slot) = 6 | _g.op(slot) = 13
+            if c.preferred() & c.spent() < _budget & c.finish() < _n & exact then do
+              if resumes(owner,s,c.finish() + 1) then do
+                deletion = deleted(c.finish(),c.finish() + 1); extended = joined(r,deletion)
+                ok = keep(next,extended,at)
+              end
+            end
+          end
+          seed = 0
+          if _g.op(slot) = 5 then do
+            body = _g.child(slot,1)
+            seed = _ra[(body - 1) * _width + c.finish() + 1]
+          end
+          penalize = deletedAhead > 0 & s <> _g.count(owner) & seed = 0 & oneshape(slot) = 0
+          optionlink = head(choices)
+          do while optionlink > 0 & _status <> 2
+            option = _value[optionlink]; ocost = _cost[option]
+            if penalize & ocost.finish() = c.finish() & ocost.clean() = 0 & deletedAhead <= ocost.missing() then option = changed(option,1073741825,1)
+            extended = joined(r,option); ok = keep(next,extended,at)
+            optionlink = _next[optionlink]
+          end
+        end
+        link = _next[link]
+      end
+      if head(next) = 0 | _status = 2 then return 0
+      cur = next
+    end
+    out = serve(cur); link = head(out)
+    if label > 0 then do while link > 0 & _status <> 2
+      _value[link] = labeled(_value[link],label,at); link = _next[link]
+    end
+    return out
+  resumes: method = .int
+    arg owner = .int, slot = .int, at = .int
+    do i = slot + 1 to _g.count(owner)
+      r = cleanreading(_g.child(owner,i),at)
+      if r = 0 then return 0
+      c = _cost[r]
+      if c.finish() > at then return 1
+      at = c.finish()
+    end
+    return 1
+  piece: method = .int
+    arg r = .int
+    if r = 0 | tick() = 0 then return 0
+    if _pk[r] = 1 then return _payload[r]
+    if _pk[r] = 0 then return 0
+    _depth = _depth + 1
+    reversed = .int[]; cursor = _payload[r]
+    do while cursor > 0 & _status <> 2
+      if _pk[cursor] > 0 then do
+        child = piece(cursor)
+        if child > 0 then reversed[reversed[0] + 1] = child
+      end
+      cursor = _prev[cursor]
+    end
+    _depth = _depth - 1
+    if _status = 2 then return 0
+    kids = .int[]
+    do i = reversed[0] to 1 by -1
+      kids[kids[0] + 1] = reversed[i]
+    end
+    c = _cost[r]; label = _label[r]
+    if c.finish() = _from[r] & _from[r] >= _n then label = 0
+    return tree(label,_from[r],c.finish() - _from[r],kids)
+  buildtree: method = .int
+    arg r = .int
+    if r = 0 then return 0
+    if _prev[r] = 0 & _pk[r] > 0 then return piece(r)
+    reversed = .int[]; cursor = r
+    do while cursor > 0 & _status <> 2
+      if _pk[cursor] > 0 then do
+        child = piece(cursor)
+        if child > 0 then reversed[reversed[0] + 1] = child
+      end
+      cursor = _prev[cursor]
+    end
+    if reversed[0] = 1 then return reversed[1]
+    kids = .int[]
+    do i = reversed[0] to 1 by -1
+      kids[kids[0] + 1] = reversed[i]
+    end
+    return tree(0,0,0,kids)
+  run: method = .int
+    if _ran then return _status
+    _ran = 1; i = .int; r = .int; c = .llc14cost..reading
+    if _g.prepare() = 0 then do
+      _status = 3; _error = _g.error(); return _status
+    end
+    if _root < 1 | _root > _g.size() then do
+      _status = 3; _error = 'invalid root'; return _status
+    end
+    if _g.op(_root) <> 5 | _input.error() <> '' | _input.bytes() <> _n then do
+      _status = 3; _error = 'c14 reference requires a named root and byte stream'; return _status
+    end
+    do i = 0 to _n - 1
+      if _input.start(i) <> i | _input.finish(i + 1) <> i + 1 then do
+        _status = 3; _error = 'c14 byte profile rejects token spans'; return _status
+      end
+    end
+    if _g.size() * _width > 8000000 then do
+      _status = 2; _error = 'resource exhausted: c14 memo index budget'; return _status
+    end
+    do i = 1 to _g.size()
+      if _g.op(i) = 7 then do
+        child = _g.child(i,1)
+        if terminal(child) then _voluntary[child] = 1
+      end
+    end
+    plain = parsememo(_root,0)
+    if _status = 2 then return 2
+    if plain > 0 then do
+      if _history.length(plain) = _n then do
+        _result = plain; return 0
+      end
+    end
+    body = _g.child(_root,1); shortest = minchars(body); ceiling = _n + shortest
+    if shortest >= 1073741824 then ceiling = -1
+    best = 0; fallback = 0; _budget = 1
+    do while _budget <= ceiling & _status <> 2
+      _rounds = _budget; incomplete = newlist(); roots = readings(body,0); link = head(roots)
+      do while link > 0 & _status <> 2
+        r = _value[link]; c = _cost[r]; tail = _n - c.finish(); whole = r
+        if tail > 0 then do
+          deletion = deleted(c.finish(),_n); whole = joined(r,deletion)
+        end
+        wc = _cost[whole]
+        if wc.charge(0) <= _budget & wc.first() <> 1073741824 then do
+          if tail > 0 & c.incomplete() then ok = append(incomplete,whole)
+          else do
+            if best = 0 then best = whole
+            else if compare(whole,best,0) < 0 then best = whole
+          end
+        end
+        link = _next[link]
+      end
+      if _status = 2 then return 2
+      if best > 0 then do
+        bc = _cost[best]; basecharge = bc.charge(0); link = head(incomplete)
+        do while link > 0
+          r = _value[link]; c = _cost[r]; bc = _cost[best]
+          if c.charge(0) <= basecharge & c.evidence() > bc.evidence() then best = r
+          link = _next[link]
+        end
+        leave
+      end
+      if fallback = 0 then do
+        link = head(incomplete)
+        do while link > 0
+          r = _value[link]
+          if fallback = 0 then fallback = r
+          else if compare(r,fallback,0) < 0 then fallback = r
+          link = _next[link]
+        end
+      end
+      _budget = _budget + 1
+    end
+    if _status = 2 then return 2
+    if best = 0 then best = fallback
+    if best = 0 then do
+      kids = .int[]; _lastcost = _n; _result = tree(-1,0,_n,kids)
+    end
+    else do
+      c = _cost[best]; _lastcost = c.deleted() + c.missing() + c.eof(); _result = buildtree(best)
+    end
+    if _status <> 2 then _status = 1
+    return _status
+  canonical: method = .string
+    arg node = 0
+    if node = 0 then node = _result
+    if node = 0 then return 'none'
+    out = '(' || _g.label(_history.clause(node)) || ',' || _history.start(node) || ',' || _history.length(node)
+    do i = 1 to _history.count(node)
+      out = out || canonical(_history.child(node,i))
+    end
+    return out || ')'
+  cost: method = .int
+    return _lastcost
+  rounds: method = .int
+    return _rounds
+  work: method = .int
+    return _work
+  allocations: method = .int
+    return _rcount + _lists + _links + _history.size()
+  expansions: method = .int
+    return _expansions
+  error: method = .string
+    return _error
+  history: method = .llhistory..arena
+    return _history
+  root: method = .int
+    return _result
+  source: method = .binary
+    return _input.source()

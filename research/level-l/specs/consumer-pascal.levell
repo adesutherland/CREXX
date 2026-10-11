@@ -1,0 +1,26 @@
+options levell
+namespace consumerpascal
+read: parser semantics contextfree input tokens start document
+identifier: token = 1
+number: token = 2
+quoted: token = 3
+assign: token = 4
+semi: token = 5
+plus: token = 6
+star: token = 7
+open: token = 8
+close: token = 9
+name: rule = identifier
+literal: rule = number | quoted
+atom: rule = literal | name | open expression close
+product: rule = atom (star atom)*
+expression: rule = product (plus product)*
+assignment: rule = name assign expression
+begin: token = 20
+end: token = 21
+classify: tokenstage start 1
+begin.word: transform stage classify state 0 take identifier text 'BEGIN' emit begin next 1
+end.word: transform stage classify state 0 take identifier text 'END' emit end next 1
+statement: rule = assignment | block
+block: rule = begin (statement semi)* end
+document: rule = block

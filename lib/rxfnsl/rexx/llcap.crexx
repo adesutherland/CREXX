@@ -1,0 +1,58 @@
+/* cREXX License (MIT). Backend-supplied capability checks, common result contract. */
+options levelb
+namespace llcap expose backend decision admit
+import llcheck
+
+/** Each engine owns its admission logic; the coordinator knows only this contract. */
+backend: interface
+  name: method = .string
+  version: method = .string
+  inspect: method = .decision
+    arg facts = .llcheck..analysis
+
+/** Admission status: 0 supported, 1 unsupported, 2 not proved,
+ * 3 invalid grammar, 4 construction limit. Cost claims are a separate field.
+ * @param bound A named proved/conditional class, or unknown.
+ */
+decision: class
+  _status = .int
+  _message = .string
+  _clause = .int
+  _bound = .string
+  _assumptions = .string
+  _identity = .string
+  *: factory
+    arg status = .int, message = .string, clause = .int, bound = .string, assumptions = .string, facts = .llcheck..analysis, name = .string, version = .string
+    _status = status; _message = message; _clause = clause; _bound = bound; _assumptions = assumptions
+    _identity = name || '@' || version || '|revision=' || facts.revision() || '|root=' || facts.root() || '|grammar=' || facts.signature()
+    return
+  status: method = .int
+    return _status
+  message: method = .string
+    return _message
+  clause: method = .int
+    return _clause
+  bound: method = .string
+    return _bound
+  assumptions: method = .string
+    return _assumptions
+  certificate: method = .string
+    if _status <> 0 then return 'REJECT|' || _status || '|' || _message
+    return 'LL-CERT-2|' || _identity || '|bound=' || _bound || '|' || _assumptions
+
+/** Coordinate structural facts, plugin admission and an optional cost requirement.
+ * @param required Empty accepts an unknown cost; a named bound requires evidence.
+ */
+admit: procedure = .decision
+  arg facts = .llcheck..analysis, engine = .backend, required = ''
+  if facts.run() = 0 then do
+    status = 3
+    if facts.limit() then status = 4
+    return .decision(status,facts.error(),0,'unknown','',facts,engine.name(),engine.version())
+  end
+  result = engine.inspect(facts)
+  if result.status() <> 0 then return result
+  if required <> '' & required <> result.bound() then do
+    return .decision(2,'requested bound ' || required || ' not proved; available ' || result.bound(),0,result.bound(),result.assumptions(),facts,engine.name(),engine.version())
+  end
+  return result

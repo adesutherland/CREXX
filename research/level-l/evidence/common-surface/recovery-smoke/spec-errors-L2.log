@@ -1,0 +1,6 @@
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/common-surface/recovery-smoke/broken.levell: LL_GRAMMAR: LL_SYNTAX at line 7, column 1 (byte 102): unexpected end of input; expected identifier, string, codepoint, bar, lparen, rparen, question, star, plus, bang, amp, lbrace, kw.options, kw.levell, kw.namespace, kw.token, kw.diagnostic, kw.lexer, kw.input, kw.comments, kw.nested, kw.parser, kw.semantics, kw.start, kw.charset, kw.pattern, kw.rule, kw.emit, kw.skip, kw.error, kw.tokenstage, kw.transform, kw.stage, kw.state, kw.take, kw.text, kw.unless, kw.next, kw.copy, kw.tree, kw.kind, kw.arity, kw.to, kw.except, kw.scalar
+  second: rule = )
+  ^
+LL_SYNTAX at line 7, column 16 (byte 117): unexpected ')'; expected identifier, string, codepoint, lparen, bang, amp, kw.options, kw.levell, kw.namespace, kw.token, kw.diagnostic, kw.lexer, kw.input, kw.comments, kw.nested, kw.parser, kw.semantics, kw.start, kw.charset, kw.pattern, kw.rule, kw.emit, kw.skip, kw.error, kw.tokenstage, kw.transform, kw.stage, kw.state, kw.take, kw.text, kw.unless, kw.next, kw.copy, kw.tree, kw.kind, kw.arity, kw.to, kw.except, kw.scalar
+  second: rule = )
+                 ^

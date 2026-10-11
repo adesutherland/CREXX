@@ -1,0 +1,37 @@
+/* cREXX License (MIT). Inspect named tree structure without evaluation. */
+options levelb
+import rxfnsb
+import llcore
+import lllanguage
+import lltree
+import llforest
+import levell_settings
+
+main: procedure = .int
+  arg argv = .string[]
+  source = readbinary(argv[1])
+  request = .lllanguage..request(levell_settings..language(),source)
+  status = request.parse()
+  say 'STATUS|' || status
+  if status = 5 then do
+    forest = .llforest..arena
+    forest = request.forest()
+    say 'DERIVATIONS|' || forest.derivations(request.forestroot(),100)
+  end
+  if status <> 0 then do
+    say 'ERROR|' || request.offset() || '|' || request.error()
+    return status
+  end
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say tree.error(); return 3
+  end
+  nodes = .int[]; depths = .int[]; size = 1; nodes[1] = tree.root(); depths[1] = 0
+  do while size > 0
+    node = nodes[size]; depth = depths[size]; size = size - 1
+    say 'NODE|' || depth || '|' || tree.name(node) || '|' || tree.start(node) || '|' || tree.finish(node) || '|' || tree.count(node)
+    do i = tree.count(node) to 1 by -1
+      size = size + 1; nodes[size] = tree.child(node,i); depths[size] = depth + 1
+    end
+  end
+  return 0

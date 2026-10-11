@@ -1,0 +1,252 @@
+/* cREXX License (MIT). Conservative grammar admission and certificates. */
+options levelb
+namespace llcheck expose analysis
+import llcore
+
+/** Immutable analysis snapshot of a grammar revision.
+ * @param graph Grammar to analyze; future mutations require another analysis.
+ * @param root Starting clause.
+ */
+analysis: class
+  _g = .llcore..grammar
+  _n = .int
+  _root = .int
+  _revision = .int
+  _signature = .string
+  _empty = .int[]
+  _first = .int[]
+  _follow = .int[]
+  _reach = .int[]
+  _valid = .int
+  _error = .string
+  _cycle = .int
+  _conflict = .int
+  _witness = .int
+  _predicate = .int
+  _ordered = .int
+  _union = .int
+  _emptyloop = .int
+  _limit = .int
+  _extended = .int
+
+  *: factory
+    arg graph = .llcore..grammar, root = .int
+    _g = graph; _n = graph.size(); _root = root
+    _revision = graph.revision(); _signature = graph.signature()
+    _valid = 0; _error = ''; _cycle = 0; _conflict = 0; _witness = -1
+    _predicate = 0; _ordered = 0; _union = 0; _emptyloop = 0; _limit = 0
+    _extended = 0
+    return
+
+  /** Compute finite monotone approximations and exact graph reachability. */
+  run: method = .int
+    text = .binary
+    if _valid then return 1
+    i = .int; op = .int; a = .int; b = .int; symbol = .int; key = .int
+    if _n = 0 | _root < 1 | _root > _n then do
+      _error = 'invalid or empty root'; return 0
+    end
+    if _n > 512 then do
+      _limit = 1; _error = 'construction limit: analysis admits at most 512 clauses'; return 0
+    end
+    do i = 1 to _n
+      op = _g.op(i); a = _g.left(i); b = _g.right(i)
+      if op < 1 | op > 16 then do
+        _error = location(i) || ': unsupported clause kind'; return 0
+      end
+      if op = 1 | op = 11 then do
+        if a < 0 | a > 255 then do
+          _error = location(i) || ': unsupported terminal alphabet'; return 0
+        end
+        if op = 11 then do
+          if b < a | b > 255 then do
+            _error = location(i) || ': invalid terminal range'; return 0
+          end
+        end
+      end
+      if (op >= 2 & op <= 9 & op <> 6) | op = 14 | op = 15 then do
+        if a < 1 | a > _n then do
+          _error = location(i) || ': unresolved child/rule'; return 0
+        end
+        if op <= 4 then do
+          if b < 1 | b > _n then do
+            _error = location(i) || ': unresolved right alternative'; return 0
+          end
+        end
+      end
+      if op = 8 | op = 9 then _predicate = i
+      if op = 3 then _ordered = i
+      if op = 4 then _union = i
+      if op >= 13 then _extended = i
+    end
+    changed = 1
+    do while changed
+      changed = 0
+      do i = 1 to _n
+        op = _g.op(i); a = _g.left(i); b = _g.right(i); empty = 0
+        select op
+          when 2 then empty = _empty[a] & _empty[b]
+          when 3 then empty = _empty[a] | _empty[b]
+          when 4 then empty = _empty[a] | _empty[b]
+          when 5 then empty = _empty[a]
+          when 6 then empty = 1
+          when 7 then empty = 1
+          when 8 then empty = 1
+          when 9 then empty = 1
+          when 10 then empty = 1
+          when 13 then do
+            text = _g.text(i); empty = <blen>(text) = 0
+          end
+          when 14 then empty = _empty[a]
+          when 15 then empty = 1
+          otherwise nop
+        end
+        if empty & _empty[i] = 0 then do
+          _empty[i] = 1; changed = 1
+        end
+      end
+    end
+    do i = 1 to _n
+      op = _g.op(i); a = _g.left(i); b = _g.right(i)
+      if (op = 7 | op = 14) & _empty[a] then do
+        if _emptyloop = 0 then _emptyloop = i
+      end
+      if (op >= 2 & op <= 9 & op <> 6) | op = 14 | op = 15 then do
+        _reach[(i - 1) * _n + a] = 1
+        if op = 3 | op = 4 | (op = 2 & _empty[a]) then _reach[(i - 1) * _n + b] = 1
+      end
+    end
+    do k = 1 to _n
+      do i = 1 to _n
+        if _reach[(i - 1) * _n + k] then do j = 1 to _n
+          if _reach[(k - 1) * _n + j] then _reach[(i - 1) * _n + j] = 1
+        end
+      end
+    end
+    do i = 1 to _n
+      if _reach[(i - 1) * _n + i] & _cycle = 0 then _cycle = i
+    end
+    changed = 1
+    do while changed
+      changed = 0
+      do i = 1 to _n
+        op = _g.op(i); a = _g.left(i); b = _g.right(i)
+        do symbol = 0 to 256
+          value = 0
+          select op
+            when 1 then value = symbol = a
+            when 11 then value = symbol >= a & symbol <= b
+            when 12 then value = symbol < 256
+            when 10 then value = symbol = 256
+            when 2 then value = _first[(a - 1) * 257 + symbol + 1] | (_empty[a] & _first[(b - 1) * 257 + symbol + 1])
+            when 3 then value = _first[(a - 1) * 257 + symbol + 1] | _first[(b - 1) * 257 + symbol + 1]
+            when 4 then value = _first[(a - 1) * 257 + symbol + 1] | _first[(b - 1) * 257 + symbol + 1]
+            when 5 then value = _first[(a - 1) * 257 + symbol + 1]
+            when 7 then value = _first[(a - 1) * 257 + symbol + 1]
+            when 13 then do
+              text = _g.text(i)
+              if <blen>(text) > 0 then value = symbol = <at..u8>(0) text
+            end
+            when 14 then value = _first[(a - 1) * 257 + symbol + 1]
+            when 15 then value = _first[(a - 1) * 257 + symbol + 1]
+            when 16 then value = _g.contains(i,symbol)
+            otherwise nop
+          end
+          key = (i - 1) * 257 + symbol + 1
+          if value & _first[key] = 0 then do
+            _first[key] = 1; changed = 1
+          end
+        end
+      end
+    end
+    _follow[(_root - 1) * 257 + 257] = 1
+    changed = 1
+    do while changed
+      changed = 0
+      do i = 1 to _n
+        op = _g.op(i); a = _g.left(i); b = _g.right(i)
+        if (op >= 2 & op <= 7 & op <> 6) | op = 14 | op = 15 then do symbol = 0 to 256
+          following = _follow[(i - 1) * 257 + symbol + 1]
+          leftfollow = following
+          if op = 2 then leftfollow = _first[(b - 1) * 257 + symbol + 1] | (_empty[b] & following)
+          if op = 7 | op = 14 then leftfollow = following | _first[(a - 1) * 257 + symbol + 1]
+          key = (a - 1) * 257 + symbol + 1
+          if leftfollow & _follow[key] = 0 then do
+            _follow[key] = 1; changed = 1
+          end
+          if op <= 4 then do
+            key = (b - 1) * 257 + symbol + 1
+            if following & _follow[key] = 0 then do
+              _follow[key] = 1; changed = 1
+            end
+          end
+        end
+      end
+    end
+    do i = 1 to _n
+      op = _g.op(i); a = _g.left(i); b = _g.right(i)
+      if op = 3 | op = 4 | op = 7 | op = 14 | op = 15 then do symbol = 0 to 256
+        leftset = _first[(a - 1) * 257 + symbol + 1]
+        rightset = _follow[(i - 1) * 257 + symbol + 1]
+        if op = 3 | op = 4 then do
+          rightset = _first[(b - 1) * 257 + symbol + 1] | (_empty[b] & rightset)
+          leftset = leftset | (_empty[a] & _follow[(i - 1) * 257 + symbol + 1])
+        end
+        if leftset & rightset & _conflict = 0 then do
+          _conflict = i; _witness = symbol
+        end
+      end
+    end
+    _valid = 1
+    return 1
+
+  location: method = .string
+    arg clause = .int
+    return _g.label(clause) || ' (line ' || _g.line(clause) || ')'
+  valid: method = .int
+    return _valid
+  error: method = .string
+    return _error
+  nullable: method = .int
+    arg clause = .int
+    return _empty[clause]
+  first: method = .int
+    arg clause = .int, symbol = .int
+    return _first[(clause - 1) * 257 + symbol + 1]
+  follow: method = .int
+    arg clause = .int, symbol = .int
+    return _follow[(clause - 1) * 257 + symbol + 1]
+  cycle: method = .int
+    return _cycle
+  conflict: method = .int
+    return _conflict
+  witness: method = .int
+    return _witness
+
+  /** Exact identity comparison also rejects an unrelated same-revision grammar. */
+  matches: method = .int
+    arg graph = .llcore..grammar
+    return _revision = graph.revision() & _signature == graph.signature()
+
+  profile: method = .string
+    return _g.profile()
+  revision: method = .int
+    return _revision
+  signature: method = .string
+    return _signature
+  root: method = .int
+    return _root
+  grammar: method = .llcore..grammar
+    return _g
+  predicate: method = .int
+    return _predicate
+  ordered: method = .int
+    return _ordered
+  unions: method = .int
+    return _union
+  emptyloop: method = .int
+    return _emptyloop
+  limit: method = .int
+    return _limit
+  extended: method = .int
+    return _extended

@@ -16,6 +16,34 @@ ledgers and superseded runs are available in Git history.
 
 ## Current Position
 
+**LEVEL-L-PARSER-01 — experimental language-tooling research (10 October).**
+The [local research plan](../research/level-l/PLAN.md) owns the wide source audit,
+native Thompson-NFA/DFA and grammar-generator PoCs, re2c wrapping, actual Pika
+reference probes, diagnostics and lex-first equivalence/cost analysis. Hypothesis:
+token-boundary seeding and byte-alphabet compression reduce structural parser
+work for long identifiers and opaque strings/comments. Risks: PEG priority,
+contextual keywords, lost trivia/locations, left-recursive semantics, unbounded
+lexer rollback and quadratic fixed-point updates. Required evidence: identical
+recognition/token spans on declared fixtures, adversarial counterexamples,
+operation counts, retained serial raw samples including lexing cost, and source
+and binary provenance. This is a non-representative, single-mechanism research
+screen; RexxCPS cannot measure this parser mechanism and is intentionally absent.
+No production compiler/VM change or performance verdict is selected.
+The research proof is now executed: the established Rexx-like `.levell` AST
+feeds native DFA and retained direct re2c/cREXX backends, with four opt/no-opt/VM
+surface comparisons passing. Native token-first counts and raw paired screens
+are retained, alongside actual Pika mixed-recursion and quadratic live-object
+counterexamples and a quadratic maximal-munch rollback witness. Production
+backend selection, full parser-maker syntax, AST projection, Unicode breadth
+and owned parse-context lifecycle remain separate acceptance work.
+The expanded native portfolio and representative owned source-tree/composite
+consumers now execute. The [lifecycle review](../research/level-l/COST.md)
+retains passing opt/no-opt checks on both VMs, but the first timing block is
+inconclusive: its outer timer charged previous-context release and the host had
+concurrent compiler activity. The corrected boundary is qualified; uncontended
+measurements and final interpretation remain open. No speed ranking, per-engine
+live-memory result or production selection follows from that block.
+
 **RXJSON-ACCESS-01 — published and normal hosted checks green
 (18 September).** Five read-only JSON helpers borrow existing immutable binary
 buffers, preserving public ownership and representation. Combined with RAG
