@@ -1,0 +1,10 @@
+options levelg numeric_common
+main: procedure = .int
+numeric digits 18
+  arg argv = .string[]
+d = .decimal
+d = 1e400d
+b = .boolean
+b = d as .boolean
+say b
+return 0

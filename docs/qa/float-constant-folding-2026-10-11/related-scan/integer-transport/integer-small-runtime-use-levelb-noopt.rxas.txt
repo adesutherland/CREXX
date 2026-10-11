@@ -1,0 +1,38 @@
+/*
+ * SOURCE                 : integer-small-runtime-use-levelb.crexx
+ */
+
+.globals=0
+
+main() .locals=5
+   .meta "integer-small-runtime-use-levelb.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 6 6 17 "integer-small-runtime-use-levelb.crexx" 2 1 23 "main: procedure = .int"
+   numsci 5,1,1
+   .srcstep 1 1 17 "integer-small-runtime-use-levelb.crexx" 4 7 21 "  arg argv = .string[]"
+   .meta "integer-small-runtime-use-levelb.main.argv"="b" ".string[*]" a1
+   .srcstep 2 2 17 "integer-small-runtime-use-levelb.crexx" 5 1 20 "a = argv[1] as .int"
+   .meta "integer-small-runtime-use-levelb.main.a"="b" ".int" r0
+   minlinkattr1 r4,a1,1
+   .traceevent "V" 6 "R" "S" "r" 4 2 2 0 "argv" ""
+   stoi r0,r4
+   unlink r4
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "a" ""
+   .srcstep 3 3 17 "integer-small-runtime-use-levelb.crexx" 6 1 11 "i = 123456"
+   .meta "integer-small-runtime-use-levelb.main.i"="b" ".int" r2
+   load r2,123456
+   .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "i" ""
+   .srcstep 4 4 17 "integer-small-runtime-use-levelb.crexx" 7 1 19 "say i + a = 123457"
+   .traceevent "V" 6 "R" "I" "r" 2 4 4 0 "i" ""
+   .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "a" ""
+   iadd r4,r2,r0
+   .traceevent "O" 4 "R" "I" "r" 4 4 4 0 "" ""
+   ieq r4,r4,123457
+   btos r4
+   .traceevent "O" 4 "R" "S" "r" 4 4 4 0 "" ""
+   say r4
+   .srcstep 5 5 17 "integer-small-runtime-use-levelb.crexx" 8 1 9 "return 0"
+   ret 0
+   .meta "integer-small-runtime-use-levelb.main.a"
+   .meta "integer-small-runtime-use-levelb.main.argv"
+   .meta "integer-small-runtime-use-levelb.main.i"

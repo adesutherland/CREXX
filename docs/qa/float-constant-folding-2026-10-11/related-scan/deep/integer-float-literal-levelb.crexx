@@ -1,0 +1,8 @@
+options levelb numeric_common
+main: procedure = .int
+  arg argv = .string[]
+numeric digits 5
+f = .float
+f = 123456 as .float
+say f = 123456.0
+return 0

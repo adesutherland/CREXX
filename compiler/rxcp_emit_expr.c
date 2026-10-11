@@ -2044,13 +2044,13 @@ void emit_expression(ASTNode *node, void *payload) {
             if (!node->output) node->output = output_f();
             if (child1->output) output_concat(node->output, child1->output);
 
-            if (node->target_type != TP_OBJECT &&
+            if (node->value_type != TP_OBJECT &&
                 (node->register_type != child1->register_type ||
                  node->register_num != child1->register_num) &&
-                ((child1->value_type == TP_INTEGER && node->target_type == TP_FLOAT) ||
-                 (child1->value_type == TP_STRING && node->target_type == TP_INTEGER))) {
+                ((child1->value_type == TP_INTEGER && node->value_type == TP_FLOAT) ||
+                 (child1->value_type == TP_STRING && node->value_type == TP_INTEGER))) {
                 const char *direct_promotion =
-                        emit_promotion[child1->value_type][node->target_type];
+                        emit_promotion[child1->value_type][node->value_type];
                 if (direct_promotion) {
                     temp1 = mprintf("   %s %c%d,%c%d\n",
                                     direct_promotion,
@@ -2060,6 +2060,7 @@ void emit_expression(ASTNode *node, void *payload) {
                                     child1->register_num);
                     output_append_text(node->output, temp1);
                     free(temp1);
+                    type_promotion(node);
                     if (child1->cleanup) output_concat(node->output, child1->cleanup);
                     break;
                 }
@@ -2078,20 +2079,20 @@ void emit_expression(ASTNode *node, void *payload) {
                 free(temp1);
             }
 
-            if (node->target_type == TP_OBJECT &&
-                node->target_class &&
-                !is_builtin_object_contract_name(node->target_class)) {
+            if (node->value_type == TP_OBJECT &&
+                node->value_class &&
+                !is_builtin_object_contract_name(node->value_class)) {
                 temp2 = resolve_object_contract_name(child2);
-                if (!temp2) temp2 = strdup(node->target_class);
+                if (!temp2) temp2 = strdup(node->value_class);
                 temp1 = mprintf("   asserttype %c%d,\"%s\"\n",
                                 node->register_type,
                                 node->register_num,
-                                temp2 ? temp2 : node->target_class);
+                                temp2 ? temp2 : node->value_class);
                 output_append_text(node->output, temp1);
                 free(temp1);
                 if (temp2) free(temp2);
-            } else if (node->target_type != TP_OBJECT) {
-                const char *promotion = emit_promotion[child1->value_type][node->target_type];
+            } else if (node->value_type != TP_OBJECT) {
+                const char *promotion = emit_promotion[child1->value_type][node->value_type];
                 if (promotion) {
                     temp1 = mprintf("   %s %c%d\n",
                                     promotion,
@@ -2102,6 +2103,7 @@ void emit_expression(ASTNode *node, void *payload) {
                 }
             }
 
+            type_promotion(node);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
             break;
 

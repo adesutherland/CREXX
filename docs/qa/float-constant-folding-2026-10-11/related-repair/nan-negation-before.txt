@@ -1,0 +1,3 @@
+rxc -n -> rxas -n -> rxbvm -a 0.0: 1
+rxc optimized -> rxas -n -> rxbvm -a 0.0: 0
+Both compilation/assembly/VM exits zero, no stderr.

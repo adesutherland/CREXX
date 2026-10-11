@@ -1,0 +1,13 @@
+/*
+ * SOURCE                 : float-nan-equal-levelg.crexx
+ */
+
+.globals=0
+
+main() .locals=0
+   .meta "float-nan-equal-levelg.main"="b" ".void" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "float-nan-equal-levelg.crexx" 2 1 30 "say (0.0 / 0.0) = (0.0 / 0.0)"
+   say "1"
+   .srcstep 2 2 1 "float-nan-equal-levelg.crexx" 2 30 30 "say (0.0 / 0.0) = (0.0 / 0.0)"
+   ret

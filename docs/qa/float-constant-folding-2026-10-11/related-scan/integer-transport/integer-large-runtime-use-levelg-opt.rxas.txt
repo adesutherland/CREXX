@@ -1,0 +1,33 @@
+/*
+ * SOURCE                 : integer-large-runtime-use-levelg.crexx
+ */
+
+.globals=0
+
+main() .locals=4
+   .meta "integer-large-runtime-use-levelg.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 5 5 17 "integer-large-runtime-use-levelg.crexx" 2 1 23 "main: procedure = .int"
+   numsci 5,1,1
+   .srcstep 1 1 17 "integer-large-runtime-use-levelg.crexx" 4 7 21 "  arg argv = .string[]"
+   .meta "integer-large-runtime-use-levelg.main.argv"="b" ".string[*]" a1
+   .srcstep 2 2 17 "integer-large-runtime-use-levelg.crexx" 5 1 20 "a = argv[1] as .int"
+   .meta "integer-large-runtime-use-levelg.main.a"="b" ".int" r0
+   minlinkattr1 r3,a1,1
+   .traceevent "V" 6 "R" "S" "r" 3 2 2 0 "argv" ""
+   stoi r0,r3
+   unlink r3
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "a" ""
+   .srcstep 3 3 17 "integer-large-runtime-use-levelg.crexx" 7 1 29 "say i + a = 9007199254740994"
+   .meta "integer-large-runtime-use-levelg.main.i"="b" ".int" "9.007199254740992e+15"
+   .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "a" ""
+   iadd r3,r0,9.007199254740992e+15
+   .traceevent "O" 4 "R" "I" "r" 3 3 3 0 "" ""
+   ieq r3,r3,9.007199254740994e+15
+   btos r3
+   .traceevent "O" 4 "R" "S" "r" 3 3 3 0 "" ""
+   say r3
+   .srcstep 4 4 17 "integer-large-runtime-use-levelg.crexx" 8 1 9 "return 0"
+   ret 0
+   .meta "integer-large-runtime-use-levelg.main.a"
+   .meta "integer-large-runtime-use-levelg.main.argv"
+   .meta "integer-large-runtime-use-levelg.main.i"

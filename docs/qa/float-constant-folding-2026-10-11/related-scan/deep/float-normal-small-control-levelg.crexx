@@ -1,0 +1,7 @@
+options levelg numeric_common
+main: procedure = .int
+  arg argv = .string[]
+a = .float
+a = 1e-307
+say a > 0.0
+return 0

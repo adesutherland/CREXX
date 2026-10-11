@@ -1,0 +1,393 @@
+/*
+ * SOURCE                 : levelb.crexx
+ */
+
+.globals=0
+
+main() .locals=17
+   .meta "levelb.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 31 31 17 "levelb.crexx" 3 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "levelb.crexx" 5 7 21 "  arg argv = .string[]"
+   .meta "levelb.main.argv"="b" ".string[*]" a1
+   .meta "levelb.main.d"="b" ".decimal" r3
+   .srcstep 2 2 17 "levelb.crexx" 10 3 15 "  d = .decimal"
+   .meta "levelb.main.f2"="b" ".float" r4
+   .srcstep 3 3 17 "levelb.crexx" 12 3 14 "  f2 = .float"
+   null r4
+   .meta "levelb.main.nanbytes"="b" ".binary" r7
+   .srcstep 4 4 17 "levelb.crexx" 33 3 21 "  nanBytes = .binary"
+   null r7
+   .srcstep 5 5 17 "levelb.crexx" 6 3 24 "  a = argv[1] as .float"
+   .meta "levelb.main.a"="b" ".float" r0
+   minlinkattr1 r12,a1,1
+   .traceevent "V" 6 "R" "S" "r" 12 5 5 0 "argv" ""
+   scopy r0,r12
+   stof r0
+   unlink r12
+   .traceevent "A" 6 "R" "F" "r" 0 5 5 0 "a" ""
+   .srcstep 6 6 17 "levelb.crexx" 7 3 24 "  z = argv[2] as .float"
+   .meta "levelb.main.z"="b" ".float" r10
+   minlinkattr1 r12,a1,2
+   .traceevent "V" 6 "R" "S" "r" 12 6 6 0 "argv" ""
+   scopy r10,r12
+   stof r10
+   unlink r12
+   .traceevent "A" 6 "R" "F" "r" 10 6 6 0 "z" ""
+   .srcstep 7 7 17 "levelb.crexx" 11 3 20 "  d = f as .decimal"
+   .meta "levelb.main.f"="b" ".float" "1.23456789012346"
+   load r3,1.234567890123456d
+   .traceevent "L" 4 "R" "D" "r" 3 7 7 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 3 7 7 0 "d" ""
+   .srcstep 8 8 17 "levelb.crexx" 13 3 19 "  f2 = d as .float"
+   .traceevent "V" 6 "R" "D" "r" 3 8 8 0 "d" ""
+   dcopy r4,r3
+   dtof r4
+   .traceevent "A" 6 "R" "F" "r" 4 8 8 0 "f2" ""
+   .srcstep 9 9 17 "levelb.crexx" 14 3 70 "  say \"float-decimal \" || (d = 1.234567890123456d) || \" \" || (f = f2)"
+   .traceevent "V" 6 "R" "D" "r" 3 9 9 0 "d" ""
+   deq r12,r3,1.234567890123456d
+   btos r12
+   .traceevent "O" 4 "R" "S" "r" 12 9 9 0 "" ""
+   concat r12,"float-decimal ",r12
+   .traceevent "O" 4 "R" "S" "r" 12 9 9 0 "" ""
+   concat r12,r12," "
+   .traceevent "O" 4 "R" "S" "r" 12 9 9 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 4 9 9 0 "f2" ""
+   feq r13,r4,1.234567890123456
+   btos r13
+   .traceevent "O" 4 "R" "S" "r" 13 9 9 0 "" ""
+   concat r13,r12,r13
+   .traceevent "O" 4 "R" "S" "r" 13 9 9 0 "" ""
+   say r13
+   .srcstep 10 10 17 "levelb.crexx" 15 3 102 "  say \"cast-consumer \" || (2 as .boolean) || \" \" || ((2 as .boolean) as .int) || \" \" || (2.0 as .int)"
+   say "cast-consumer 1 1 2"
+   .srcstep 11 11 17 "levelb.crexx" 18 3 26 "  say \"cast-string \" || s"
+   .meta "levelb.main.s"="b" ".string" "1"
+   say "cast-string 1"
+   .srcstep 12 12 17 "levelb.crexx" 19 3 68 "  say \"string-casts \" || (\"42\" as .int) || \" \" || (\"1\" as .boolean)"
+   say "string-casts 42 1"
+   .srcstep 13 13 17 "levelb.crexx" 20 3 14 "  nan = z / z"
+   .meta "levelb.main.nan"="b" ".float" r6
+   .traceevent "V" 6 "R" "F" "r" 10 13 13 0 "z" ""
+   .traceevent "V" 6 "R" "F" "r" 10 13 13 0 "z" ""
+   fdiv r6,r10,r10
+   .traceevent "O" 4 "R" "F" "r" 6 13 13 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 6 13 13 0 "nan" ""
+   .srcstep 14 14 17 "levelb.crexx" 21 3 141 "  say \"nan-runtime \" || (nan = nan) || \" \" || (nan <> nan) || \" \" || (nan > a) || \" \" || (nan < a) || \" \" || (nan >= a) || \" \" || (nan <= a)"
+   .traceevent "V" 6 "R" "F" "r" 6 14 14 0 "nan" ""
+   .traceevent "V" 6 "R" "F" "r" 6 14 14 0 "nan" ""
+   feq r13,r6,r6
+   btos r13
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   concat r13,"nan-runtime ",r13
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 6 14 14 0 "nan" ""
+   .traceevent "V" 6 "R" "F" "r" 6 14 14 0 "nan" ""
+   fne r12,r6,r6
+   btos r12
+   .traceevent "O" 4 "R" "S" "r" 12 14 14 0 "" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 6 14 14 0 "nan" ""
+   .traceevent "V" 6 "R" "F" "r" 0 14 14 0 "a" ""
+   fgt r12,r6,r0
+   btos r12
+   .traceevent "O" 4 "R" "S" "r" 12 14 14 0 "" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 6 14 14 0 "nan" ""
+   .traceevent "V" 6 "R" "F" "r" 0 14 14 0 "a" ""
+   flt r12,r6,r0
+   btos r12
+   .traceevent "O" 4 "R" "S" "r" 12 14 14 0 "" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 6 14 14 0 "nan" ""
+   .traceevent "V" 6 "R" "F" "r" 0 14 14 0 "a" ""
+   fgte r12,r6,r0
+   btos r12
+   .traceevent "O" 4 "R" "S" "r" 12 14 14 0 "" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 6 14 14 0 "nan" ""
+   .traceevent "V" 6 "R" "F" "r" 0 14 14 0 "a" ""
+   flte r12,r6,r0
+   btos r12
+   .traceevent "O" 4 "R" "S" "r" 12 14 14 0 "" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 14 14 0 "" ""
+   say r13
+   .srcstep 15 15 17 "levelb.crexx" 22 3 212 "  say \"nan-folded \" || ((0.0 / 0.0) = (0.0 / 0.0)) || \" \" || ((0.0 / 0.0) <> (0.0 / 0.0)) || \" \" || ((0.0 / 0.0) > 1.0) || \" \" || ((0.0 / 0.0) < 1.0) || \" \" || ((0.0 / 0.0) >= 1.0) || \" \" || ((0.0 / 0.0) <= 1.0)"
+   say "nan-folded 0 1 0 0 0 0"
+   .srcstep 16 16 17 "levelb.crexx" 23 3 113 "  say \"nonfinite \" || ((1.0 / 0.0) + a) || \" \" || ((0.0 / 0.0) + a) || \" \" || (a / -0.0) || \" \" || (a / -(-0.0))"
+   .traceevent "V" 6 "R" "F" "r" 0 16 16 0 "a" ""
+   fadd r13,r0,inf
+   ftos r13
+   .traceevent "O" 4 "R" "S" "r" 13 16 16 0 "" ""
+   concat r13,"nonfinite ",r13
+   .traceevent "O" 4 "R" "S" "r" 13 16 16 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 16 16 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 0 16 16 0 "a" ""
+   fadd r12,r0,nan
+   ftos r12
+   .traceevent "O" 4 "R" "S" "r" 12 16 16 0 "" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 16 16 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 16 16 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 0 16 16 0 "a" ""
+   fdiv r12,r0,-0.0
+   ftos r12
+   .traceevent "O" 4 "R" "S" "r" 12 16 16 0 "" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 16 16 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 16 16 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 0 16 16 0 "a" ""
+   fdiv r12,r0,0.0
+   ftos r12
+   .traceevent "O" 4 "R" "S" "r" 12 16 16 0 "" ""
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 16 16 0 "" ""
+   say r13
+   .srcstep 17 17 17 "levelb.crexx" 24 3 21 "  runtimeInf = a / z"
+   .meta "levelb.main.runtimeinf"="b" ".float" r9
+   .traceevent "V" 6 "R" "F" "r" 0 17 17 0 "a" ""
+   .traceevent "V" 6 "R" "F" "r" 10 17 17 0 "z" ""
+   fdiv r9,r0,r10
+   .traceevent "O" 4 "R" "F" "r" 9 17 17 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 9 17 17 0 "runtimeinf" ""
+   .srcstep 18 18 17 "levelb.crexx" 29 3 145 "  say \"decimal-special \" || (runtimeInf as .decimal) || \" \" || (nan as .decimal) || \" \" || (foldInf as .decimal) || \" \" || (foldNan as .decimal)"
+   .meta "levelb.main.foldinf"="b" ".float" "inf"
+   .meta "levelb.main.foldnan"="b" ".float" "nan"
+   .traceevent "V" 6 "R" "F" "r" 9 18 18 0 "runtimeinf" ""
+   fcopy r13,r9
+   ftod r13
+   dtos r13
+   concat r13,"decimal-special ",r13
+   .traceevent "O" 4 "R" "S" "r" 13 18 18 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 18 18 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 6 18 18 0 "nan" ""
+   fcopy r12,r6
+   ftod r12
+   dtos r12
+   concat r13,r13,r12
+   .traceevent "O" 4 "R" "S" "r" 13 18 18 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 18 18 0 "" ""
+   concat r13,r13,"inf"
+   .traceevent "O" 4 "R" "S" "r" 13 18 18 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 18 18 0 "" ""
+   concat r13,r13,"nan"
+   .traceevent "O" 4 "R" "S" "r" 13 18 18 0 "" ""
+   say r13
+   .srcstep 19 19 17 "levelb.crexx" 30 3 56 "  say \"zero-runtime \" || (a / -z) || \" \" || (a / -(-z))"
+   .traceevent "V" 6 "R" "F" "r" 0 19 19 0 "a" ""
+   .traceevent "V" 6 "R" "F" "r" 10 19 19 0 "z" ""
+   fmult r13,r10,-1.0
+   .traceevent "P" 4 "R" "F" "r" 13 19 19 0 "" ""
+   fdiv r13,r0,r13
+   ftos r13
+   .traceevent "O" 4 "R" "S" "r" 13 19 19 0 "" ""
+   concat r13,"zero-runtime ",r13
+   .traceevent "O" 4 "R" "S" "r" 13 19 19 0 "" ""
+   concat r13,r13," "
+   .traceevent "O" 4 "R" "S" "r" 13 19 19 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 0 19 19 0 "a" ""
+   .traceevent "V" 6 "R" "F" "r" 10 19 19 0 "z" ""
+   fmult r12,r10,-1.0
+   .traceevent "P" 4 "R" "F" "r" 12 19 19 0 "" ""
+   fmult r14,r12,-1.0
+   .traceevent "P" 4 "R" "F" "r" 14 19 19 0 "" ""
+   fdiv r14,r0,r14
+   ftos r14
+   .traceevent "O" 4 "R" "S" "r" 14 19 19 0 "" ""
+   concat r14,r13,r14
+   .traceevent "O" 4 "R" "S" "r" 14 19 19 0 "" ""
+   say r14
+   .srcstep 20 20 17 "levelb.crexx" 31 3 19 "  negActual = -nan"
+   .meta "levelb.main.negactual"="b" ".float" r8
+   .traceevent "V" 6 "R" "F" "r" 6 20 20 0 "nan" ""
+   fmult r8,r6,-1.0
+   .traceevent "P" 4 "R" "F" "r" 8 20 20 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 8 20 20 0 "negactual" ""
+   .srcstep 21 21 17 "levelb.crexx" 34 3 60 "  nanBytes = '00000000000000000000000000000000'x as .binary"
+   .meta "levelb.main.negfolded"="b" ".float" "nan"
+   load r7,0x00000000000000000000000000000000
+   .traceevent "L" 4 "R" "X" "r" 7 21 21 0 "" ""
+   .traceevent "A" 6 "R" "X" "r" 7 21 21 0 "nanbytes" ""
+   .srcstep 22 22 17 "levelb.crexx" 35 3 38 "  <at..float>(0) nanBytes = negActual"
+   .traceevent "V" 6 "R" "X" "r" 7 22 22 0 "nanbytes" ""
+   load r14,0
+   .traceevent "L" 4 "R" "I" "r" 14 22 22 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 8 22 22 0 "negactual" ""
+   bsetf64 r7,r14,r8
+   .srcstep 23 23 17 "levelb.crexx" 36 3 38 "  <at..float>(8) nanBytes = negFolded"
+   .traceevent "V" 6 "R" "X" "r" 7 23 23 0 "nanbytes" ""
+   load r14,8
+   .traceevent "L" 4 "R" "I" "r" 14 23 23 0 "" ""
+   load r13,nan
+   .traceevent "L" 4 "R" "F" "r" 13 23 23 0 "" ""
+   bsetf64 r7,r14,r13
+   .srcstep 24 24 17 "levelb.crexx" 37 3 37 "  actualBits = <at..int>(0) nanBytes"
+   .meta "levelb.main.actualbits"="b" ".int" r1
+   .traceevent "V" 6 "R" "X" "r" 7 24 24 0 "nanbytes" ""
+   load r14,0
+   .traceevent "L" 4 "R" "I" "r" 14 24 24 0 "" ""
+   bgeti64 r1,r7,r14
+   .traceevent "A" 6 "R" "I" "r" 1 24 24 0 "actualbits" ""
+   .srcstep 25 25 17 "levelb.crexx" 38 3 37 "  foldedBits = <at..int>(8) nanBytes"
+   .meta "levelb.main.foldedbits"="b" ".int" r5
+   .traceevent "V" 6 "R" "X" "r" 7 25 25 0 "nanbytes" ""
+   load r14,8
+   .traceevent "L" 4 "R" "I" "r" 14 25 25 0 "" ""
+   bgeti64 r5,r7,r14
+   .traceevent "A" 6 "R" "I" "r" 5 25 25 0 "foldedbits" ""
+   .srcstep 26 26 17 "levelb.crexx" 39 3 51 "  say \"nan-negation \" || (actualBits = foldedBits)"
+   .traceevent "V" 6 "R" "I" "r" 1 26 26 0 "actualbits" ""
+   .traceevent "V" 6 "R" "I" "r" 5 26 26 0 "foldedbits" ""
+   ieq r14,r1,r5
+   btos r14
+   .traceevent "O" 4 "R" "S" "r" 14 26 26 0 "" ""
+   concat r14,"nan-negation ",r14
+   .traceevent "O" 4 "R" "S" "r" 14 26 26 0 "" ""
+   say r14
+   .srcstep 27 27 17 "levelb.crexx" 42 3 98 "  say \"subnormal \" || (small > 0.0) || \" \" || (1e-310 + 1e-310 = 2e-310) || \" \" || (1e-999 = 0.0)"
+   .meta "levelb.main.small"="b" ".float" "1e-310"
+   say "subnormal 1 1 1"
+   .srcstep 28 28 17 "levelb.crexx" 43 3 38 "  call integerContext argv[3] as .int"
+   minlinkattr1 r12,a1,3
+   .traceevent "V" 6 "R" "S" "r" 12 28 28 0 "argv" ""
+   stoi r15,r12
+   unlink r12
+   call1 r16,integerContext(),r15
+   .traceevent "F" 4 "R" "V" "r" 16 28 28 0 "integercontext" ""
+   .srcstep 29 29 17 "levelb.crexx" 44 3 22 "  call decimalContext"
+   call r15,decimalContext()
+   .traceevent "F" 4 "R" "V" "r" 15 29 29 0 "decimalcontext" ""
+   .srcstep 30 30 17 "levelb.crexx" 45 3 11 "  return 0"
+   ret 0
+   .meta "levelb.main.a"
+   .meta "levelb.main.actualbits"
+   .meta "levelb.main.argv"
+   .meta "levelb.main.d"
+   .meta "levelb.main.f"
+   .meta "levelb.main.f2"
+   .meta "levelb.main.foldedbits"
+   .meta "levelb.main.foldinf"
+   .meta "levelb.main.foldnan"
+   .meta "levelb.main.nan"
+   .meta "levelb.main.nanbytes"
+   .meta "levelb.main.negactual"
+   .meta "levelb.main.negfolded"
+   .meta "levelb.main.runtimeinf"
+   .meta "levelb.main.s"
+   .meta "levelb.main.small"
+   .meta "levelb.main.z"
+
+integerContext() .locals=4
+   .meta "levelb.integercontext"="b" ".void" integerContext() "runtime=.int"
+   .srcstep 36 36 17 "levelb.crexx" 47 1 26 "integerContext: procedure"
+   numsci 5,1,1
+   .srcstep 32 32 17 "levelb.crexx" 49 7 21 "  arg runtime = .int"
+   .meta "levelb.integercontext.runtime"="b" ".int" a1
+   .srcstep 33 33 17 "levelb.crexx" 54 3 183 "  say \"integer \" || (BIG = i) || \" \" || (9007199254740992 + 1 = BIG) || \" \" || (MAX = 9223372036854775807) || \" \" || (i + runtime = 9007199254740994) || \" \" || (j + runtime = 123457)"
+   .meta "levelb.integercontext.big"="b" ".int" "9007199254740993"
+   .meta "levelb.integercontext.i"="b" ".int" "9.007199254740993e+15"
+   .meta "levelb.integercontext.j"="b" ".int" "1.23456e+5"
+   .meta "levelb.integercontext.max"="b" ".int" "9223372036854775807"
+   .traceevent "V" 6 "R" "I" "a" 1 33 33 0 "runtime" ""
+   iadd r2,a1,9007199254740993
+   .traceevent "O" 4 "R" "I" "r" 2 33 33 0 "" ""
+   ieq r2,r2,9007199254740994
+   btos r2
+   .traceevent "O" 4 "R" "S" "r" 2 33 33 0 "" ""
+   concat r2,"integer 1 1 1 ",r2
+   .traceevent "O" 4 "R" "S" "r" 2 33 33 0 "" ""
+   concat r2,r2," "
+   .traceevent "O" 4 "R" "S" "r" 2 33 33 0 "" ""
+   .traceevent "V" 6 "R" "I" "a" 1 33 33 0 "runtime" ""
+   iadd r3,a1,123456
+   .traceevent "O" 4 "R" "I" "r" 3 33 33 0 "" ""
+   ieq r3,r3,123457
+   btos r3
+   .traceevent "O" 4 "R" "S" "r" 3 33 33 0 "" ""
+   concat r3,r2,r3
+   .traceevent "O" 4 "R" "S" "r" 3 33 33 0 "" ""
+   say r3
+   .srcstep 34 34 17 "levelb.crexx" 55 3 43 "  say \"integer-display \" || (j as .string)"
+   say "integer-display 1.23456e+5"
+   .srcstep 35 35 17 "levelb.crexx" 56 3 9 "  return"
+   ret
+   .meta "levelb.integercontext.big"
+   .meta "levelb.integercontext.i"
+   .meta "levelb.integercontext.j"
+   .meta "levelb.integercontext.max"
+   .meta "levelb.integercontext.runtime"
+
+decimalContext() .locals=5
+   .meta "levelb.decimalcontext"="b" ".void" decimalContext() ""
+   .srcstep 46 46 17 "levelb.crexx" 58 1 26 "decimalContext: procedure"
+   numsci 5,1,1
+   .meta "levelb.decimalcontext.d"="b" ".decimal" r0
+   .srcstep 37 37 17 "levelb.crexx" 62 3 15 "  d = .decimal"
+   .srcstep 38 38 17 "levelb.crexx" 63 3 20 "  d = f as .decimal"
+   .meta "levelb.decimalcontext.f"="b" ".float" "1.2346"
+   load r0,1.2346d
+   .traceevent "L" 4 "R" "D" "r" 0 38 38 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 0 38 38 0 "d" ""
+   .srcstep 39 39 17 "levelb.crexx" 64 3 66 "  say \"decimal-context \" || (d = 1.2346d) || \" \" || (1.0d / 3.0d)"
+   .traceevent "V" 6 "R" "D" "r" 0 39 39 0 "d" ""
+   deq r2,r0,1.2346d
+   btos r2
+   .traceevent "O" 4 "R" "S" "r" 2 39 39 0 "" ""
+   concat r2,"decimal-context ",r2
+   .traceevent "O" 4 "R" "S" "r" 2 39 39 0 "" ""
+   concat r2,r2," "
+   .traceevent "O" 4 "R" "S" "r" 2 39 39 0 "" ""
+   concat r2,r2,"0.33333"
+   .traceevent "O" 4 "R" "S" "r" 2 39 39 0 "" ""
+   say r2
+   .srcstep 44 44 17 "levelb.crexx" 65 3 24 "  call inheritedContext"
+   .meta "levelb.decimalcontext.d"="b" ".decimal" r3
+   .srcstep 40 40 17 "levelb.crexx" 71 3 15 "  d = .decimal"
+   null r3
+   .srcstep 41 41 17 "levelb.crexx" 70 3 24 "  f = 1.234567890123456"
+   load r4,1.234567890123456
+   .traceevent "L" 4 "R" "F" "r" 4 41 41 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 4 41 41 0 "f" ""
+   .srcstep 42 42 17 "levelb.crexx" 72 3 20 "  d = f as .decimal"
+   .traceevent "V" 6 "R" "F" "r" 4 42 42 0 "f" ""
+   fcopy r3,r4
+   ftod r3
+   .traceevent "A" 6 "R" "D" "r" 3 42 42 0 "d" ""
+   .srcstep 43 43 17 "levelb.crexx" 73 3 36 "  say \"inherited \" || f || \" \" || d"
+   ftos r4
+   .traceevent "V" 6 "R" "S" "r" 4 43 43 0 "f" ""
+   concat r2,"inherited ",r4
+   .traceevent "O" 4 "R" "S" "r" 2 43 43 0 "" ""
+   concat r2,r2," "
+   .traceevent "O" 4 "R" "S" "r" 2 43 43 0 "" ""
+   dtos r3
+   .traceevent "V" 6 "R" "S" "r" 3 43 43 0 "d" ""
+   concat r2,r2,r3
+   .traceevent "O" 4 "R" "S" "r" 2 43 43 0 "" ""
+   say r2
+   .srcstep 45 45 17 "levelb.crexx" 66 3 9 "  return"
+   ret
+   .meta "levelb.decimalcontext.d"
+   .meta "levelb.decimalcontext.f"

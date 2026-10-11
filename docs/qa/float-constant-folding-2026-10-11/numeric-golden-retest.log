@@ -1,0 +1,10 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 155: opt_numeric_safety_opt
+1/1 Test #155: opt_numeric_safety_opt ...........   Passed    0.49 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+comprehensive    =   0.49 sec*proc (1 test)
+
+Total Test time (real) =   0.55 sec

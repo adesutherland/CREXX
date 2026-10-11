@@ -1,0 +1,2332 @@
+[
+  {
+    "stage": "screening",
+    "case": "integer-small-fold",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "integer-small-fold",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "integer-small-propagate",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n6\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n6\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "integer-small-propagate",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n6\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n6\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "integer-to-float-small",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "integer-to-float-small",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-int-near",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-int-near",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-int-rounded",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-int-rounded",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-int-exact",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-int-exact",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-int-fractional",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-int-fractional",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "int64-to-float-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "int64-to-float-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "decimal-to-float-small",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "decimal-to-float-small",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "decimal-small-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n1.2346\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n1.2346\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "decimal-small-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n1.2346\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n1.2346\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-decimal",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-to-decimal",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "signed-zero-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "-inf\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "signed-zero-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "-inf\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-infinity",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-infinity",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-overflow",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-overflow",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-nan-output",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "nan\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "nan\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-nan-output",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "nan\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "nan\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-nan-equal",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-nan-equal",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-nan-neq",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-nan-neq",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-nan-order",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "0\n0\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-nan-order",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "0\n0\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-infinity-equal",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-infinity-equal",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-subnormal-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-subnormal-control-levelb.crexx @ 2:5 - #BAD_CONVERSION: Value cannot be converted to the required type., \"1e-310\""
+      ]
+    }
+  },
+  {
+    "stage": "screening",
+    "case": "float-subnormal-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-subnormal-control-levelg.crexx @ 2:5 - #BAD_CONVERSION: Value cannot be converted to the required type., \"1e-310\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "integer-fold-context",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in integer-fold-context-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-fold-context-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "integer-fold-context",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in integer-fold-context-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-fold-context-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "integer-propagate-context",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in integer-propagate-context-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-propagate-context-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "integer-propagate-context",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in integer-propagate-context-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-propagate-context-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "integer-float-context",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in integer-float-context-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-float-context-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "integer-float-context",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in integer-float-context-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-float-context-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "integer-float-literal",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in integer-float-literal-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-float-literal-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "integer-float-literal",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in integer-float-literal-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-float-literal-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-int-near-typed",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 6,
+          "stdout": "",
+          "signal": "PANIC: (SIGNAL CONVERSION_ERROR)"
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-int-near-typed",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 6,
+          "stdout": "",
+          "signal": "PANIC: (SIGNAL CONVERSION_ERROR)"
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-int-rounded-typed",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-int-rounded-typed-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-int-rounded-typed-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-int-rounded-typed",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-int-rounded-typed-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-int-rounded-typed-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-int-exact-typed",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-int-exact-typed",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-int-fractional-typed",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 6,
+          "stdout": "",
+          "signal": "PANIC: (SIGNAL CONVERSION_ERROR)"
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-int-fractional-typed-levelb.crexx @ 5:5 - #BAD_CONVERSION: Value cannot be converted to the required type., \"1.5 as .int\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-int-fractional-typed",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 6,
+          "stdout": "",
+          "signal": "PANIC: (SIGNAL CONVERSION_ERROR)"
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-int-fractional-typed-levelg.crexx @ 5:5 - #BAD_CONVERSION: Value cannot be converted to the required type., \"1.5 as .int\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-decimal-typed",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-typed-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 18\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-typed-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 18\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-decimal-typed",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-typed-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 18\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-typed-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 18\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-decimal-rounded-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-rounded-control-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-rounded-control-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-decimal-rounded-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-rounded-control-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-rounded-control-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 5\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-decimal-roundtrip",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-roundtrip-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 18\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-roundtrip-levelb.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 18\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-decimal-roundtrip",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-roundtrip-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 18\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-roundtrip-levelg.crexx @ 4:9 - #NUMERIC_DIGITS_NOT_FIRST_INST: NUMERIC DIGITS must precede executable instructions., \"digits 18\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-nan-transport",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "nan\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "assembler exit 255: "
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-nan-transport",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "nan\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "assembler exit 255: "
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-inf-transport",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "assembler exit 255: "
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-inf-transport",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "assembler exit 255: "
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-inf-minus-inf",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-inf-minus-inf",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-negative-zero-typed",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "-inf\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-negative-zero-typed",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "inf\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "-inf\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-subnormal-typed",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-subnormal-typed-levelb.crexx @ 5:5 - #BAD_CONVERSION: Value cannot be converted to the required type., \"1e-310\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-subnormal-typed",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-subnormal-typed-levelg.crexx @ 5:5 - #BAD_CONVERSION: Value cannot be converted to the required type., \"1e-310\""
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-normal-small-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "deep",
+    "case": "float-normal-small-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "integer-fold-context",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "integer-fold-context",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "integer-propagate-context",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n6\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n6\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "integer-propagate-context",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n6\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n6\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "integer-float-context",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "integer-float-context",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "integer-float-literal",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "integer-float-literal",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "float-int-rounded-typed",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 6,
+          "stdout": "",
+          "signal": "PANIC: (SIGNAL CONVERSION_ERROR)"
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "float-int-rounded-typed",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 6,
+          "stdout": "",
+          "signal": "PANIC: (SIGNAL CONVERSION_ERROR)"
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "float-decimal-typed",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-typed-levelb.crexx @ 6:5 - #CLASS_NOT_FOUND: Class was not found., \".float(1.234567890123456)\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-typed-levelb.crexx @ 6:5 - #CLASS_NOT_FOUND: Class was not found., \".float(1.234567890123456)\""
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "float-decimal-typed",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-typed-levelg.crexx @ 6:5 - #CLASS_NOT_FOUND: Class was not found., \".float(1.234567890123456)\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-typed-levelg.crexx @ 6:5 - #CLASS_NOT_FOUND: Class was not found., \".float(1.234567890123456)\""
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "float-decimal-rounded-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-rounded-control-levelb.crexx @ 6:5 - #CLASS_NOT_FOUND: Class was not found., \".float(1.234567890123456)\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-rounded-control-levelb.crexx @ 6:5 - #CLASS_NOT_FOUND: Class was not found., \".float(1.234567890123456)\""
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "float-decimal-rounded-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        "compiler exit 2: Error in float-decimal-rounded-control-levelg.crexx @ 6:5 - #CLASS_NOT_FOUND: Class was not found., \".float(1.234567890123456)\""
+      ],
+      "opt": [
+        "compiler exit 2: Error in float-decimal-rounded-control-levelg.crexx @ 6:5 - #CLASS_NOT_FOUND: Class was not found., \".float(1.234567890123456)\""
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "float-decimal-roundtrip",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "context",
+    "case": "float-decimal-roundtrip",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "float-decimal-local",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "float-decimal-local",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "float-decimal-local-rounded-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "float-decimal-local-rounded-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "decimal-float-local-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "decimal-float-local-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "decimal-bool-huge",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "decimal-bool-huge",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "integer-bool-large-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-bool-large-control-levelb.crexx @ 5:1 - #OVERFLOW_UNDERFLOW: Arithmetic overflow or underflow during optimisation., \"i\""
+      ]
+    }
+  },
+  {
+    "stage": "conversions",
+    "case": "integer-bool-large-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-bool-large-control-levelg.crexx @ 5:1 - #OVERFLOW_UNDERFLOW: Arithmetic overflow or underflow during optimisation., \"i\""
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-precision-propagation",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-precision-propagation",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-precision-fold",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-precision-fold",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "0\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-max-propagation",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-max-propagation-levelb.crexx @ 5:1 - #OVERFLOW_UNDERFLOW: Arithmetic overflow or underflow during optimisation., \"i\""
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-max-propagation",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "compiler exit 2: Error in integer-max-propagation-levelg.crexx @ 5:1 - #OVERFLOW_UNDERFLOW: Arithmetic overflow or underflow during optimisation., \"i\""
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-default-large-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-default-large-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-default-max-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "integers",
+    "case": "integer-default-max-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "integer-transport",
+    "case": "integer-large-runtime-use",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "assembler exit 255: "
+      ]
+    }
+  },
+  {
+    "stage": "integer-transport",
+    "case": "integer-large-runtime-use",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "assembler exit 255: "
+      ]
+    }
+  },
+  {
+    "stage": "integer-transport",
+    "case": "integer-small-runtime-use",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "assembler exit 255: "
+      ]
+    }
+  },
+  {
+    "stage": "integer-transport",
+    "case": "integer-small-runtime-use",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        "assembler exit 255: "
+      ]
+    }
+  },
+  {
+    "stage": "cast-consumer",
+    "case": "cast-int-string-consumer",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "cast-consumer",
+    "case": "cast-int-string-consumer",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "cast-consumer",
+    "case": "cast-bool-string-consumer",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "cast-consumer",
+    "case": "cast-bool-string-consumer",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "2\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "cast-consumer",
+    "case": "cast-bool-typed-control",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "cast-consumer",
+    "case": "cast-bool-typed-control",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "cast-consumer",
+    "case": "cast-int-string-assignment",
+    "level": "levelb",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ]
+    }
+  },
+  {
+    "stage": "cast-consumer",
+    "case": "cast-int-string-assignment",
+    "level": "levelg",
+    "outcomes": {
+      "noopt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ],
+      "opt": [
+        {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "signal": ""
+        }
+      ]
+    }
+  }
+]

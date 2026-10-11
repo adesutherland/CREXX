@@ -1,0 +1,4 @@
+options levelg numeric_common
+arg argv = .string[]
+a = argv[1] as .float
+say a / -0.0

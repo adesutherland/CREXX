@@ -1,0 +1,19 @@
+/*
+ * SOURCE                 : integer-precision-propagation-levelg.crexx
+ */
+
+.globals=0
+
+main() .locals=2
+   .meta "integer-precision-propagation-levelg.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 4 4 17 "integer-precision-propagation-levelg.crexx" 2 1 23 "main: procedure = .int"
+   numsci 5,1,1
+   .srcstep 1 1 17 "integer-precision-propagation-levelg.crexx" 4 7 21 "  arg argv = .string[]"
+   .meta "integer-precision-propagation-levelg.main.argv"="b" ".string[*]" a1
+   .srcstep 2 2 17 "integer-precision-propagation-levelg.crexx" 6 1 25 "say i = 9007199254740993"
+   .meta "integer-precision-propagation-levelg.main.i"="b" ".int" "9.007199254740992e+15"
+   say "0"
+   .srcstep 3 3 17 "integer-precision-propagation-levelg.crexx" 7 1 9 "return 0"
+   ret 0
+   .meta "integer-precision-propagation-levelg.main.argv"
+   .meta "integer-precision-propagation-levelg.main.i"

@@ -1,0 +1,59 @@
+{
+  "revision": "bb0d211a8d17f0b66fdd6fcb99ad6ffd849a0283",
+  "delivery": "local, uncommitted, unpublished; research checkout unchanged",
+  "platform": "Darwin 25.6.0 arm64",
+  "inputs": {
+    "compiler/rxcp_opt.c": "d98923593bbd22cde41a680230c0631ddcda61b562e942e2b6b1e9973e1dcf2e",
+    "compiler/rxcp_emit_core.c": "6a04f1e9c49d860695897768453fdec79065e6a6936ff445e9c00e60b2082821",
+    "compiler/tests/CMakeLists.txt": "7b7723a194d5cf3b506d98e448911dfe94275c29dfcd13f0b19376d57583593d",
+    "compiler/tests/float_constant_folding_contract.cmake": "f4ead687ad41d624c6a7e771c015ae4504673e1dc9edf9d9cb6b14dd2b9f3b4d",
+    "compiler/tests/rexx_src/float_constant_folding.crexx": "feef09ca8627a36a91be781fff0e790316451408d5dfac9a3d1a7d3211f58a6c",
+    "compiler/tests/rexx_src/float_constant_folding.expected": "fb217f3952b57f1b37f5f1da70cd0ec8287066b6434bd35c7f4047e6319f40ea",
+    "compiler/tests/rexx_src/float_fold_provider.crexx": "f79b843e44e10194c33b61ef1cdf2974f1b9813925ca4cf1ae32d38fa82e3544",
+    "compiler/tests/rexx_src/float_fold_consumer.crexx": "e33b4a1ee75a63207ac622ebd7aab067f9145ddc562dc8d0a70d922584850987",
+    "compiler/tests/golden/opt/opt_numeric_safety.rxas": "7c42df6e1f4d483330efe33e0a59e60c2b5a79ed7159154f0ed8051513d16a09"
+  },
+  "tools": {
+    "cmake-build-float-repair": {
+      "rxc": "dec1bcd3ddb4fe5bab01e6533ff4e757fee8214dd23e018e0486e9afbe3acd3d",
+      "rxas": "29bc5854865b2a18bbc7a3d8c690a03ddaad0219f30a1ce5ed4c772f3a4e47cb",
+      "rxlink": "62b7766105c0be6bae58a256215b4ef1b73e14f0b7f2760200fcc5b6f479a002",
+      "rxtvm": "bba677c858ed912b719ab2f5a89d5f8d8f912ef19f4763c25a83d05166c2efc1",
+      "rxbvm": "b764fd48842e27326f8df978d35b2f218b4f603a8448fc84ad8a77a3fa7e6ea3"
+    },
+    "cmake-build-debug": {
+      "rxc": "bd6b2c0f32487fe906f33e92ab205a15773619303b13eb39fd25cb11ba45762d",
+      "rxas": "a3e3742506fca9192bd7a102b5520a12709f1836cd8b8da67e730421ad66d7f5",
+      "rxlink": "a0ac33484dbf4cb0c5323a8b74cc4acf2713ecadd4f0fc40c1b34a0cd35da2b0",
+      "rxtvm": "cf9a163a1bee68d7627c2adb03eac69543a3e5bb58a1a47ba8fe13da723e1126",
+      "rxbvm": "399f59b401b34574adfaa9c3957970fd613bbadc6ea331e55d5cee69b5db8124"
+    },
+    "cmake-build-debugasan": {
+      "rxc": "011505b2129d3e1c10a7203e7bb380d5c6356ac5b60dcc400bf8dc860f56bb06",
+      "rxas": "5eb0d3ceca7b455e0e55cb203a3a02614bd726b5cab6cb9fe74ff1159ec2d2de",
+      "rxlink": "f6785bf5ca230c13b6f108ca5957dddd547e9783f124010bf1982c32b40b586c",
+      "rxtvm": "3c218f7886d924dc69759e18ea8f6d3988f0a68a3fa5c9ca8657564890454521",
+      "rxbvm": "686f63127fcfb1da3b08c6b1701f77ae9f8866d6465466aff29564215f82ef06"
+    }
+  },
+  "normal_build_warning_count": {
+    "fresh-core-build.log": 0,
+    "repaired-core-build.log": 0,
+    "normal-tools-libraries-build.log": 0
+  },
+  "commands": [
+    "cmake -S . -B cmake-build-float-repair -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_LLAMA=OFF -DENABLE_PARSER_MODE=OFF",
+    "cmake --build cmake-build-float-repair --target rxc rxas rxlink rxtvm rxbvm --parallel 10",
+    "cmake --build cmake-build-debug --target rxc rxas rxlink rxvm rxbvm rxtvm crexx_test_driver library classlib rxfnsc --parallel 10",
+    "ctest --test-dir cmake-build-debug --parallel 10 --output-on-failure -R 'float_constant_folding_contract|opt_(numeric|decimal)_safety|repro_strict_compare|strict_compare_codegen|numeric_mixed_compare|constants_levelb|decimal_literal_context|nr09_numeric_context|inline_test_object_const_arg_mutation|level[bg]_bif_numeric_context'",
+    "ctest --test-dir cmake-build-debug --output-on-failure -R '^opt_numeric_safety_opt$'",
+    "ctest --test-dir cmake-build-debug --output-on-failure -R '^float_constant_folding_contract$'",
+    "tools/asan-run.sh --phase build --build-target qa-measure-float-constant-folding --build-leaks off --leaks off --build-jobs 10 --no-live-tail --tail-lines 12",
+    "tools/asan-run.sh --phase ctest --regex '^float_constant_folding_contract$' --leaks off --test-jobs 1 --no-live-tail --tail-lines 10"
+  ],
+  "libraries": {
+    "library.rxbin": "1831ef8ae3cd377bdf632bb091dbb2547a566a81cd7f06480b15b1dc298cc5c6",
+    "classlib.rxbin": "1c7ff05accbb5502f35f5d03e7b7d40e68d0be7788c17d06de9f41bee05ea5fb",
+    "rxfnsc.rxbin": "ac8cc7d09ddbef431e7cb69369a938f5c149bb7218150a6847486e4599e084a2"
+  }
+}

@@ -46,6 +46,8 @@ set_tests_properties(import_directory_errors PROPERTIES
 add_executable(crexx_test_driver src/test_driver.c)
 
 add_executable(mutate_rxbin_feature mutate_rxbin_feature.c)
+add_executable(mutate_rxbin_float mutate_rxbin_float.c)
+target_link_libraries(mutate_rxbin_float PRIVATE rxbin)
 
 if(UNIX)
     add_executable(test_import_discovery_snapshot test_import_discovery_snapshot.c)
@@ -2448,6 +2450,30 @@ set_tests_properties(float_constant_folding_contract PROPERTIES
         RUN_SERIAL TRUE TIMEOUT 120
         CREXX_PREP_TARGETS "${_float_fold_tools}")
 
+set(_numeric_constant_args ${_float_fold_args}
+        -DRXDAS=$<TARGET_FILE:rxdas> -DMUTATE_FLOAT=$<TARGET_FILE:mutate_rxbin_float>)
+add_custom_target(qa-measure-numeric-constant-values
+        COMMAND ${CMAKE_COMMAND} ${_numeric_constant_args} -DVALUES_ONLY=ON
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/numeric_values_measure
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/numeric_constant_contract.cmake
+        DEPENDS ${_float_fold_tools} rxdas mutate_rxbin_float
+        VERBATIM USES_TERMINAL)
+add_custom_target(qa-measure-numeric-constant-contract
+        COMMAND ${CMAKE_COMMAND} ${_numeric_constant_args}
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/numeric_constant_measure
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/numeric_constant_contract.cmake
+        DEPENDS ${_float_fold_tools} rxdas mutate_rxbin_float
+        VERBATIM USES_TERMINAL)
+# Final isolated workload: Debug 1.34 s, maintained Apple ASan 25 s.
+# Serialize nested tools and allow slower hosts a generous hang backstop.
+add_test(NAME numeric_constant_contract
+        COMMAND ${CMAKE_COMMAND} ${_numeric_constant_args}
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/numeric_constant_contract
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/numeric_constant_contract.cmake)
+set_tests_properties(numeric_constant_contract PROPERTIES
+        LABELS "compiler;numeric;optimizer-parity;correctness"
+        RUN_SERIAL TRUE TIMEOUT 300
+        CREXX_PREP_TARGETS "${_float_fold_tools};rxdas;mutate_rxbin_float")
 add_crexx_run_test(binary_memory_source rexx_src/binary_memory_source.crexx)
 add_crexx_run_test(binary_memory_span_oob rexx_src/binary_memory_span_oob.crexx)
 add_crexx_run_test(binary_memory_packed_lookup rexx_src/binary_memory_packed_lookup.crexx)

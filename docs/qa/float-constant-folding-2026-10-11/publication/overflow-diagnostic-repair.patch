@@ -1,0 +1,16 @@
+--- a/compiler/rxcp_opt.c
++++ b/compiler/rxcp_opt.c
+@@ -503,8 +503,11 @@
+                         node->int_value = RXINTEGER_MIN;
+                         return;
+                     }
+-                    /* Text casts use STOI, not a rounded binary64 detour. */
+-                    mknd_err(node, "BAD_CONVERSION");
++                    /* Text casts use STOI, not a rounded binary64 detour.
++                     * A lexer-validated integer literal still reports range
++                     * overflow distinctly from an invalid text conversion. */
++                    mknd_err(node, node->token && node->token->token_type == TK_INTEGER &&
++                                   errno == ERANGE ? "OVERFLOW_UNDERFLOW" : "BAD_CONVERSION");
+                 }
+                 return;
+ 

@@ -1,0 +1,40 @@
+Command: cmake --build cmake-build-debugasan --target rxc rxas --parallel 10
+ASAN_OPTIONS=detect_leaks=0
+
+[  0%] Built target rxpa
+[  0%] Built target avl_tree
+[  0%] Built target lemon
+[  0%] Built target rxvmmemory
+[  0%] Built target rxbin
+[  0%] Built target re2c_objects_autogen_ver_to_vernum
+[  0%] Built target dslsyntax_parser
+[  0%] Built target platform
+[  0%] Built target rxbvm_core_objects
+[  0%] Built target rxvm_platform_objects
+[  0%] Built target decnumber
+[ 12%] Built target rxvmref
+[ 12%] Built target re2c_objects_autogen
+[ 12%] Built target rxvmplugin
+[ 12%] Built target mc_decimal_manual
+[ 12%] Built target rxbvml
+[ 50%] Built target re2c
+[ 50%] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[ 50%] Linking C static library ../bin/librxaslib.a
+[ 62%] Built target rxaslib
+[ 75%] Built target rxc_classic_objects
+[ 75%] Built target rxc_typed_objects
+[100%] Built target rxc_backend_objects
+[100%] Built target rxclib
+[100%] Linking C executable ../bin/rxc
+[100%] Built target rxc
+[  0%] Built target avl_tree
+[  0%] Built target rxbin
+[  0%] Built target lemon
+[  0%] Built target platform
+[  0%] Built target dslsyntax_parser
+[  0%] Built target re2c_objects_autogen_ver_to_vernum
+[  0%] Built target re2c_objects_autogen
+[ 75%] Built target re2c
+[100%] Built target rxaslib
+[100%] Linking C executable ../bin/rxas
+[100%] Built target rxas

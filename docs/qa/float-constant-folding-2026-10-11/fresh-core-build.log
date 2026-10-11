@@ -1,0 +1,361 @@
+-- The C compiler identification is AppleClang 21.0.0.21000101
+-- The CXX compiler identification is AppleClang 21.0.0.21000101
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.gbb0d211a8d17
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20261011T081354Z
+-- CREXX Build Commit: bb0d211a8d17
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+-- Performing Test cxxflag__W
+-- Performing Test cxxflag__W - Success
+-- Performing Test cxxflag__Wall
+-- Performing Test cxxflag__Wall - Success
+-- Performing Test cxxflag__Wextra
+-- Performing Test cxxflag__Wextra - Success
+-- Performing Test cxxflag__Weffc__
+-- Performing Test cxxflag__Weffc__ - Success
+-- Performing Test cxxflag__pedantic
+-- Performing Test cxxflag__pedantic - Success
+-- Performing Test cxxflag__Wformat_2
+-- Performing Test cxxflag__Wformat_2 - Success
+-- Performing Test cxxflag__Wredundant_decls
+-- Performing Test cxxflag__Wredundant_decls - Success
+-- Performing Test cxxflag__Wsuggest_attribute_format
+-- Performing Test cxxflag__Wsuggest_attribute_format - Failed
+-- Performing Test cxxflag__Wconversion
+-- Performing Test cxxflag__Wconversion - Success
+-- Performing Test cxxflag__Wsign_conversion
+-- Performing Test cxxflag__Wsign_conversion - Success
+-- Performing Test cxxflag__Werror_return_type
+-- Performing Test cxxflag__Werror_return_type - Success
+-- Performing Test cxxflag__Weverything
+-- Performing Test cxxflag__Weverything - Success
+-- Performing Test cxxflag__fdiagnostics_color_always
+-- Performing Test cxxflag__fdiagnostics_color_always - Success
+-- C compiler flags: 
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always 
+-- Linker flags for executables: 
+-- Linker flags for shared libs: 
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for sys/stat.h
+-- Looking for sys/stat.h - found
+-- Looking for fcntl.h
+-- Looking for fcntl.h - found
+-- Looking for unistd.h
+-- Looking for unistd.h - found
+-- Looking for io.h
+-- Looking for io.h - not found
+-- Writing config.h
+-- Found Python3: /opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14 (found version "3.14.6") found components: Interpreter
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Smoke test 'rxc_help_syntaxhighlight' is not present in this configuration; skipping
+-- Smoke test 'syntaxhighlight_trace_keywords' is not present in this configuration; skipping
+-- Smoke test 'source_semantics' is not present in this configuration; skipping
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Smoke test 'rxpp_sh_tokens' is not present in this configuration; skipping
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (5.0s)
+-- Generating done (0.6s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-float-repair
+[0/2] Re-checking globbed directories...
+[1/280] Copying bootstrap src/options/parse_opts.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[2/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[3/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[4/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[5/280] Copying bootstrap src/parse/conf_lexer.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[6/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[7/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[8/280] Copying bootstrap src/parse/lexer.cc and src/parse/lexer.h, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[9/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[10/280] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[11/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[12/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[13/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[14/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[15/280] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[16/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[17/280] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[18/280] Generating doc/re2c.1
+[19/280] Copying bootstrap src/msg/ver_to_vernum.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[20/280] Building C object platform/CMakeFiles/platform.dir/platform_tso.c.o
+[21/280] Building C object platform/CMakeFiles/platform.dir/platform_native.c.o
+[22/280] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[23/280] Building C object platform/CMakeFiles/platform.dir/text_codec.c.o
+[24/280] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[25/280] Building C object platform/CMakeFiles/platform.dir/oom.c.o
+[26/280] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[27/280] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[28/280] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[29/280] Building C object lemon/CMakeFiles/lemon.dir/lemon.c.o
+[30/280] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[31/280] Building C object binutils/CMakeFiles/rxbin.dir/rxcontract.c.o
+[32/280] Building C object binutils/CMakeFiles/rxbin.dir/rxsha256.c.o
+[33/280] Linking C executable lemon/lemon
+[34/280] Linking C static library bin/libplatform.a
+[35/280] Building C object interpreter/CMakeFiles/rxvmmemory.dir/rxvmmemory.c.o
+[36/280] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[37/280] Building CXX object re2c/CMakeFiles/re2c_objects_autogen_ver_to_vernum.dir/src/msg/ver_to_vernum.cc.o
+[38/280] Building C object interpreter/CMakeFiles/rxvmref.dir/rxpacompat.c.o
+[39/280] Linking C static library bin/libavl_tree.a
+[40/280] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[41/280] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[42/280] Linking C static library bin/librxvmmemory.a
+[43/280] Linking C static library bin/librxbin.a
+[44/280] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[45/280] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[46/280] Linking C static library bin/librxvmref.a
+[47/280] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[48/280] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[49/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmworker.c.o
+[50/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprogram.c.o
+[51/280] Linking C static library bin/librxvmplugin.a
+[52/280] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_parser.cc.o
+[53/280] Linking C static library bin/libdecnumber.a
+[54/280] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/parser.cc.o
+[55/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_process.c.o
+[56/280] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvmlib.c.o
+[57/280] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/options/parse_opts.cc.o
+[58/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel.c.o
+[59/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmexecutor.c.o
+[60/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprocessprotocol.c.o
+[61/280] Linking C static library bin/rxvm_mc_decimal_manual.a
+[62/280] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvml.c.o
+[63/280] Linking C static library bin/librxpa.a
+[64/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprocessworker.c.o
+[65/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmbyteendpoint.c.o
+[66/280] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[67/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_byte.c.o
+[68/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmactive.c.o
+[69/280] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[70/280] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[71/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_child.c.o
+[72/280] Building C object interpreter/CMakeFiles/rxtvm.dir/rxvmmain.c.o
+[73/280] Building C object linker/CMakeFiles/rxlink.dir/rxlinkmain.c.o
+[74/280] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/lexer.cc.o
+[75/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[76/280] Linking C static library bin/librxpashim.a
+[77/280] Linking C executable bin/rxlink
+[78/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[79/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxenv.c.o
+[80/280] Building CXX object re2c/CMakeFiles/re2c_objects_autogen.dir/src/parse/conf_lexer.cc.o
+[81/280] Generating src/msg/help_re2c.cc
+[82/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[83/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[84/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[85/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/helpers.cc.o
+[86/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/symtab.cc.o
+[87/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass3_fixup.cc.o
+[88/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/nfa/re_to_nfa.cc.o
+[89/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/output.cc.o
+[90/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass4_render.cc.o
+[91/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass1_analyze.cc.o
+[92/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[93/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/codegen/pass2_generate.cc.o
+[94/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_cfg.cc.o
+[95/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_adfa.cc.o
+[96/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/options/opt.cc.o
+[97/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_interf.cc.o
+[98/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/adfa/adfa.cc.o
+[99/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa.cc.o
+[100/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_nfa.cc.o
+[101/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/compact.cc.o
+[102/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/cfg.cc.o
+[103/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/dce.cc.o
+[104/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/debug/dump_dfa_tree.cc.o
+[105/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/freeze.cc.o
+[106/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/interfere.cc.o
+[107/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/liveanal.cc.o
+[108/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/varalloc.cc.o
+[109/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/rename.cc.o
+[110/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/normalize.cc.o
+[111/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/cfg/optimize.cc.o
+[112/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fallback_tags.cc.o
+[113/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/dead_rules.cc.o
+[114/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tagver_table.cc.o
+[115/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/ebcdic.cc.o
+[116/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/closure.cc.o
+[117/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/tcmd.cc.o
+[118/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/fillpoints.cc.o
+[119/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/determinization.cc.o
+[120/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/minimization.cc.o
+[121/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/dfa/find_state.cc.o
+[122/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/range_suffix.cc.o
+[123/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/enc.cc.o
+[124/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf8.cc.o
+[125/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/utf16.cc.o
+[126/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/msg.cc.o
+[127/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/default_tags.cc.o
+[128/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/nullable.cc.o
+[129/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/fixed_tags.cc.o
+[130/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/warn.cc.o
+[131/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/ast_to_re.cc.o
+[132/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/regexp.cc.o
+[133/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/regexp/split_charset.cc.o
+[134/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/file_utils.cc.o
+[135/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/control_flow.cc.o
+[136/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_code.cc.o
+[137/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/msg/help_re2c.cc.o
+[138/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/maxpath.cc.o
+[139/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/skeleton.cc.o
+[140/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/input.cc.o
+[141/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/skeleton/generate_data.cc.o
+[142/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpacallmethod.c.o
+[143/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[144/280] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[145/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmworker.c.o
+[146/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/range.cc.o
+[147/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/util/string_utils.cc.o
+[148/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/parse/ast.cc.o
+[149/280] Linking C static library bin/librxbvml.a
+[150/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprogram.c.o
+[151/280] Linking C executable bin/rxbvm
+[152/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel.c.o
+[153/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/encoding/unicode_casemap.cc.o
+[154/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmexecutor.c.o
+[155/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprocessprotocol.c.o
+[156/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_process.c.o
+[157/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprocessworker.c.o
+[158/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmbyteendpoint.c.o
+[159/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_byte.c.o
+[160/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_child.c.o
+[161/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmactive.c.o
+[162/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o
+[163/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmload.c.o
+[164/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxenv.c.o
+[165/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxspawn.c.o
+[166/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/exitfunc.c.o
+[167/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxcrexxcmd.c.o
+[168/280] Building CXX object re2c/CMakeFiles/re2c.dir/src/main.cc.o
+[169/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpacallmethod.c.o
+[170/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpafuncs.c.o
+[171/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvml/rxvm_run.c.o
+[172/280] Linking CXX executable re2c/re2c
+[173/280] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmintp.c.o
+[174/280] Create REXX ASSEMBLER Parser...
+[175/280] Linking C executable bin/rxtvm
+[176/280] Create REXX ASSEMBLER Lexer...
+[177/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_pass.c.o
+[178/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_batch.c.o
+[179/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxaseror.c.o
+[180/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxastoke.c.o
+[181/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_rewrite.c.o
+[182/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o
+[183/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_graph.c.o
+[184/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_analysis.c.o
+[185/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxasscan.c.o
+[186/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o
+[187/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o
+[188/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_use.c.o
+[189/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o
+[190/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_signal.c.o
+[191/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o
+[192/280] Building C object assembler/CMakeFiles/rxaslib.dir/__/binutils/rxopmeta.c.o
+[193/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o
+[194/280] Building C object assembler/CMakeFiles/rxas.dir/rxasmain.c.o
+[195/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[196/280] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o
+[197/280] Linking C static library bin/librxaslib.a
+[198/280] Create Options Parser...
+[199/280] Linking C executable bin/rxas
+[200/280] Create REXX B Parser...
+[201/280] Create REXX C Parser...
+[202/280] Create Options Lexer...
+[203/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_ast_walk.c.o
+[204/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_diag_fallback.c.o
+[205/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_diag.c.o
+[206/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_ast_print.c.o
+[207/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcpmain.c.o
+[208/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_source_tree.c.o
+[209/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_util.c.o
+[210/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_ast_core.c.o
+[211/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_source_ext.c.o
+[212/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcpopgr.c.o
+[213/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_srcmap.c.o
+[214/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcpopar.c.o
+[215/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_val_trans.c.o
+[216/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcposcn.c.o
+[217/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_ast_rewrite.c.o
+[218/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_val_sym.c.o
+[219/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_val_plugin.c.o
+[220/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_val_check.c.o
+[221/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_fixup.c.o
+[222/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_val_type.c.o
+[223/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_remap.c.o
+[224/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_ast_val.c.o
+[225/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_val_orch.c.o
+[226/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcpsymb.c.o
+[227/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_remap_build.c.o
+[228/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_emit_super.c.o
+[229/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_inline_rules.c.o
+[230/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_emit_core.c.o
+[231/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcpemit.c.o
+[232/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_emit_reg.c.o
+[233/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_emit_expr.c.o
+[234/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_emit_proc.c.o
+[235/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_emit_meta.c.o
+[236/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_emit_flow.c.o
+[237/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/__/platform/platform_tso.c.o
+[238/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/__/platform/text_codec.c.o
+[239/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_flow.c.o
+[240/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_inline.c.o
+[241/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_dispatch.c.o
+[242/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/__/platform/platform.c.o
+[243/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_opt.c.o
+[244/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/__/platform/platform_native.c.o
+[245/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/__/platform/rxinteger.c.o
+[246/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_partial_call.c.o
+[247/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/__/platform/oom.c.o
+[248/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_import_publish.c.o
+[249/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_import_report.c.o
+[250/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_project_dependencies.c.o
+[251/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_instr.c.o
+[252/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_contract.c.o
+[253/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_frontend.c.o
+[254/280] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcpfunc.c.o
+[255/280] Create REXX C Lexer...
+[256/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rxcpcval.c.o
+[257/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rxcp_frontend_c.c.o
+[258/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rxcpcsym.c.o
+[259/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rxcp_c_source_import.c.o
+[260/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rxcpcpar.c.o
+[261/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rxcpcdiag.c.o
+[262/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rxcc.c.o
+[263/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rxcpcgmr.c.o
+[264/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rxcp_levelc_lower.c.o
+[265/280] Building C object compiler/CMakeFiles/rxc_classic_objects.dir/rexcscan.c.o
+[266/280] Create REXX B Lexer...
+[267/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rxcp_dsl.c.o
+[268/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rxcp_highlight_controller.c.o
+[269/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rxcp_parse_buffer.c.o
+[270/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rxcp_frontend_full.c.o
+[271/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rxcpbpar.c.o
+[272/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rxcp_typed_orch.c.o
+[273/280] Building C object compiler/CMakeFiles/rxc.dir/rxc_main.c.o
+[274/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rxcp_task_lower.c.o
+[275/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rxcp_exit.c.o
+[276/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rxcpbgmr.c.o
+[277/280] Building C object compiler/CMakeFiles/rxc_typed_objects.dir/rexbscan.c.o
+[278/280] Linking C static library bin/librxclib.a
+[279/280] Linking C executable bin/rxc

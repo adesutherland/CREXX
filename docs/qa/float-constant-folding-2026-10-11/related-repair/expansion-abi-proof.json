@@ -1,0 +1,55 @@
+[
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/bin/rxas",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/nonfinite-abi-proof/original",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/nonfinite-abi-proof/return.rxas"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/nonfinite-abi-proof/original"
+    ],
+    "exit": 0,
+    "stdout": "0\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/bin/rxdas",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/nonfinite-abi-proof/roundtrip.rxas",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/nonfinite-abi-proof/original"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/bin/rxas",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/nonfinite-abi-proof/roundtrip",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/nonfinite-abi-proof/roundtrip.rxas"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/nonfinite-abi-proof/roundtrip"
+    ],
+    "exit": 0,
+    "stdout": "0\n",
+    "stderr": ""
+  }
+]

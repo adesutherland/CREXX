@@ -1284,7 +1284,7 @@ static walker_result opt1_walker(walker_direction direction,
 
             if (can_do_code_folding)
                 switch (node->node_type) {
-                    case OP_TYPE_CAST:
+                    case OP_TYPE_CAST: {
                         if (child1 && child2 &&
                             (child1->node_type == CONSTANT ||
                              child1->node_type == STRING ||
@@ -1292,6 +1292,8 @@ static walker_result opt1_walker(walker_direction direction,
                              child1->node_type == FLOAT ||
                              child1->node_type == DECIMAL ||
                              child1->node_type == INTEGER)) {
+                            ValueType consumer_type = node->target_type;
+                            node->target_type = child2->target_type;
                             switch (child1->value_type) {
                                 case TP_STRING:
                                     buffer = malloc(child1->node_string_length ? child1->node_string_length : 1);
@@ -1344,8 +1346,16 @@ static walker_result opt1_walker(walker_direction direction,
                                 default:
                                     break;
                             }
+                            node->target_type = consumer_type;
+                            if (node->node_type == CONSTANT && !ast_hase(node) &&
+                                !(consumer_type == TP_STRING &&
+                                  node->value_type != TP_STRING &&
+                                  strict_string_compare_operand(node))) {
+                                typed_constant_to_type(node, consumer_type);
+                            }
                         }
                         break;
+                    }
 
                     case OP_COMPARE_EQUAL:
                         compare = compare_standard_constants(node, child1, child2);

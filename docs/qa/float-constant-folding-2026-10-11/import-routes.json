@@ -1,0 +1,218 @@
+[
+  {
+    "case": "levelb_rxas_noopt_imports",
+    "selected": [
+      {
+        "stage": "binary",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@binary/0/float_fold_provider.rxas",
+          "kind": "rxas",
+          "root_kind": "binary",
+          "root_index": 0,
+          "sha256": "7aecaaf4a982dd7cbcc405421a738dac073cfd828880f5b8160650009f018840",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelb_rxas_opt_imports",
+    "selected": [
+      {
+        "stage": "binary",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@binary/0/float_fold_provider.rxas",
+          "kind": "rxas",
+          "root_kind": "binary",
+          "root_index": 0,
+          "sha256": "7aecaaf4a982dd7cbcc405421a738dac073cfd828880f5b8160650009f018840",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelb_rxbin_noopt_imports",
+    "selected": [
+      {
+        "stage": "binary",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@binary/0/float_fold_provider.rxbin",
+          "kind": "rxbin",
+          "root_kind": "binary",
+          "root_index": 0,
+          "sha256": "1bd6146f8f4a82bd2d65a189e1e79b5af4b026a5d9200d96b8d5cc814b2a989a",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelb_rxbin_opt_imports",
+    "selected": [
+      {
+        "stage": "binary",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@binary/0/float_fold_provider.rxbin",
+          "kind": "rxbin",
+          "root_kind": "binary",
+          "root_index": 0,
+          "sha256": "1bd6146f8f4a82bd2d65a189e1e79b5af4b026a5d9200d96b8d5cc814b2a989a",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelb_source_noopt_imports",
+    "selected": [
+      {
+        "stage": "source",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@source/0/float_fold_provider.crexx",
+          "kind": "source",
+          "root_kind": "source",
+          "root_index": 0,
+          "sha256": "f79b843e44e10194c33b61ef1cdf2974f1b9813925ca4cf1ae32d38fa82e3544",
+          "digest_status": "available",
+          "mtime_seconds": 1791707213
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelb_source_opt_imports",
+    "selected": [
+      {
+        "stage": "source",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@source/0/float_fold_provider.crexx",
+          "kind": "source",
+          "root_kind": "source",
+          "root_index": 0,
+          "sha256": "f79b843e44e10194c33b61ef1cdf2974f1b9813925ca4cf1ae32d38fa82e3544",
+          "digest_status": "available",
+          "mtime_seconds": 1791707213
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelg_rxas_noopt_imports",
+    "selected": [
+      {
+        "stage": "binary",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@binary/0/float_fold_provider.rxas",
+          "kind": "rxas",
+          "root_kind": "binary",
+          "root_index": 0,
+          "sha256": "7aecaaf4a982dd7cbcc405421a738dac073cfd828880f5b8160650009f018840",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelg_rxas_opt_imports",
+    "selected": [
+      {
+        "stage": "binary",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@binary/0/float_fold_provider.rxas",
+          "kind": "rxas",
+          "root_kind": "binary",
+          "root_index": 0,
+          "sha256": "7aecaaf4a982dd7cbcc405421a738dac073cfd828880f5b8160650009f018840",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelg_rxbin_noopt_imports",
+    "selected": [
+      {
+        "stage": "binary",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@binary/0/float_fold_provider.rxbin",
+          "kind": "rxbin",
+          "root_kind": "binary",
+          "root_index": 0,
+          "sha256": "9330d3a821c5ace566c28261932b9a53fdf05691a4c4eeb03cfc199aa7557b2e",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelg_rxbin_opt_imports",
+    "selected": [
+      {
+        "stage": "binary",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@binary/0/float_fold_provider.rxbin",
+          "kind": "rxbin",
+          "root_kind": "binary",
+          "root_index": 0,
+          "sha256": "9330d3a821c5ace566c28261932b9a53fdf05691a4c4eeb03cfc199aa7557b2e",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelg_source_noopt_imports",
+    "selected": [
+      {
+        "stage": "source",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@source/0/float_fold_provider.crexx",
+          "kind": "source",
+          "root_kind": "source",
+          "root_index": 0,
+          "sha256": "c5fb02f67b7549e8a90f347643c4f7be263a0d663915fe4b95aaa78b7dfe0ac8",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  },
+  {
+    "case": "levelg_source_opt_imports",
+    "selected": [
+      {
+        "stage": "source",
+        "module": "float_fold_provider",
+        "candidate": {
+          "path": "@source/0/float_fold_provider.crexx",
+          "kind": "source",
+          "root_kind": "source",
+          "root_index": 0,
+          "sha256": "c5fb02f67b7549e8a90f347643c4f7be263a0d663915fe4b95aaa78b7dfe0ac8",
+          "digest_status": "available",
+          "mtime_seconds": 1791707214
+        }
+      }
+    ]
+  }
+]

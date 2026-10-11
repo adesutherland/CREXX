@@ -1,0 +1,4 @@
+options levelg numeric_common
+numeric digits 5
+a = 1.000001
+say a as .int

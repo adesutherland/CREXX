@@ -1,0 +1,5 @@
+options levelg numeric_common
+main: procedure = .int
+  arg argv = .string[]
+say (1.5 as .int)
+return 0

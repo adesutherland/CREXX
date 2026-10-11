@@ -1,0 +1,2 @@
+options levelg numeric_common
+say 1e308 * 1e308

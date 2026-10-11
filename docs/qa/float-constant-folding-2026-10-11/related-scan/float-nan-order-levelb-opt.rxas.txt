@@ -1,0 +1,15 @@
+/*
+ * SOURCE                 : float-nan-order-levelb.crexx
+ */
+
+.globals=0
+
+main() .locals=0
+   .meta "float-nan-order-levelb.main"="b" ".void" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "float-nan-order-levelb.crexx" 2 1 23 "say (0.0 / 0.0) >= 1.0"
+   say "1"
+   .srcstep 2 2 17 "float-nan-order-levelb.crexx" 3 1 23 "say (0.0 / 0.0) <= 1.0"
+   say "1"
+   .srcstep 3 3 1 "float-nan-order-levelb.crexx" 3 23 23 "say (0.0 / 0.0) <= 1.0"
+   ret

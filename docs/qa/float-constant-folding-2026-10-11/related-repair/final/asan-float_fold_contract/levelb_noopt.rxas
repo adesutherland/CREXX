@@ -1,0 +1,482 @@
+/*
+ * SOURCE                 : levelb.crexx
+ */
+
+.globals=0
+
+main() .locals=11
+   .meta "levelb.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 24 24 17 "levelb.crexx" 5 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "levelb.crexx" 6 7 21 "  arg argv = .string[]"
+   .meta "levelb.main.argv"="b" ".string[*]" a1
+   .srcstep 2 2 17 "levelb.crexx" 7 3 24 "  a = argv[1] as .float"
+   .meta "levelb.main.a"="b" ".float" r0
+   minlinkattr1 r6,a1,1
+   .traceevent "V" 6 "R" "S" "r" 6 2 2 0 "argv" ""
+   scopy r0,r6
+   stof r0
+   unlink r6
+   .traceevent "A" 6 "R" "F" "r" 0 2 2 0 "a" ""
+   .srcstep 3 3 17 "levelb.crexx" 8 3 24 "  b = argv[2] as .float"
+   .meta "levelb.main.b"="b" ".float" r2
+   minlinkattr1 r6,a1,2
+   .traceevent "V" 6 "R" "S" "r" 6 3 3 0 "argv" ""
+   scopy r2,r6
+   stof r2
+   unlink r6
+   .traceevent "A" 6 "R" "F" "r" 2 3 3 0 "b" ""
+   .srcstep 4 4 17 "levelb.crexx" 9 3 24 "  c = argv[3] as .float"
+   .meta "levelb.main.c"="b" ".float" r3
+   minlinkattr1 r6,a1,3
+   .traceevent "V" 6 "R" "S" "r" 6 4 4 0 "argv" ""
+   scopy r3,r6
+   stof r3
+   unlink r6
+   .traceevent "A" 6 "R" "F" "r" 3 4 4 0 "c" ""
+   .srcstep 5 5 17 "levelb.crexx" 10 3 18 "  runtime = a + b"
+   .meta "levelb.main.runtime"="b" ".float" r5
+   .traceevent "V" 6 "R" "F" "r" 0 5 5 0 "a" ""
+   .traceevent "V" 6 "R" "F" "r" 2 5 5 0 "b" ""
+   fadd r5,r0,r2
+   .traceevent "O" 4 "R" "F" "r" 5 5 5 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 5 5 5 0 "runtime" ""
+   .srcstep 6 6 17 "levelb.crexx" 11 3 25 "  propagated = 0.1 + 0.2"
+   .meta "levelb.main.propagated"="b" ".float" r4
+   load r6,0.1
+   .traceevent "L" 4 "R" "F" "r" 6 6 6 0 "" ""
+   fadd r4,r6,0.2
+   .traceevent "O" 4 "R" "F" "r" 4 6 6 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 4 6 6 0 "propagated" ""
+   .srcstep 7 7 17 "levelb.crexx" 15 3 38 "  say \"literal \" || (0.1 + 0.2 = 0.3)"
+   .meta "levelb.main.exact_literal"="b" ".float" "0.3"
+   .meta "levelb.main.sum"="b" ".float" "0.3"
+   load r6,0.1
+   .traceevent "L" 4 "R" "F" "r" 6 7 7 0 "" ""
+   fadd r6,r6,0.2
+   .traceevent "O" 4 "R" "F" "r" 6 7 7 0 "" ""
+   feq r6,r6,0.3
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 7 7 0 "" ""
+   concat r6,"literal ",r6
+   .traceevent "O" 4 "R" "S" "r" 6 7 7 0 "" ""
+   say r6
+   .srcstep 8 8 17 "levelb.crexx" 16 3 47 "  say \"residual \" || ((0.1 + 0.2) - 0.3 > 0.0)"
+   load r6,0.1
+   .traceevent "L" 4 "R" "F" "r" 6 8 8 0 "" ""
+   fadd r6,r6,0.2
+   .traceevent "O" 4 "R" "F" "r" 6 8 8 0 "" ""
+   fsub r6,r6,0.3
+   .traceevent "O" 4 "R" "F" "r" 6 8 8 0 "" ""
+   fgt r6,r6,0.0
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 8 8 0 "" ""
+   concat r6,"residual ",r6
+   .traceevent "O" 4 "R" "S" "r" 6 8 8 0 "" ""
+   say r6
+   .srcstep 9 9 17 "levelb.crexx" 17 3 38 "  say \"equal \" || (0.25 + 0.5 = 0.75)"
+   load r6,0.25
+   .traceevent "L" 4 "R" "F" "r" 6 9 9 0 "" ""
+   fadd r6,r6,0.5
+   .traceevent "O" 4 "R" "F" "r" 6 9 9 0 "" ""
+   feq r6,r6,0.75
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 9 9 0 "" ""
+   concat r6,"equal ",r6
+   .traceevent "O" 4 "R" "S" "r" 6 9 9 0 "" ""
+   say r6
+   .srcstep 10 10 17 "levelb.crexx" 18 3 41 "  say \"decimal \" || (0.1d + 0.2d = 0.3d)"
+   load r6,0.1d
+   .traceevent "L" 4 "R" "D" "r" 6 10 10 0 "" ""
+   dadd r6,r6,0.2d
+   .traceevent "O" 4 "R" "D" "r" 6 10 10 0 "" ""
+   deq r6,r6,0.3d
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 10 10 0 "" ""
+   concat r6,"decimal ",r6
+   .traceevent "O" 4 "R" "S" "r" 6 10 10 0 "" ""
+   say r6
+   .srcstep 11 11 17 "levelb.crexx" 19 3 64 "  say \"runtime \" || (runtime = c) || \" \" || (runtime - c > 0.0)"
+   .traceevent "V" 6 "R" "F" "r" 5 11 11 0 "runtime" ""
+   .traceevent "V" 6 "R" "F" "r" 3 11 11 0 "c" ""
+   feq r6,r5,r3
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 11 11 0 "" ""
+   concat r6,"runtime ",r6
+   .traceevent "O" 4 "R" "S" "r" 6 11 11 0 "" ""
+   concat r6,r6," "
+   .traceevent "O" 4 "R" "S" "r" 6 11 11 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 5 11 11 0 "runtime" ""
+   .traceevent "V" 6 "R" "F" "r" 3 11 11 0 "c" ""
+   fsub r7,r5,r3
+   .traceevent "O" 4 "R" "F" "r" 7 11 11 0 "" ""
+   fgt r7,r7,0.0
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 11 11 0 "" ""
+   concat r7,r6,r7
+   .traceevent "O" 4 "R" "S" "r" 7 11 11 0 "" ""
+   say r7
+   .srcstep 12 12 17 "levelb.crexx" 20 3 93 "  say \"folded-runtime \" || ((0.1 + 0.2) - c = runtime - c) || \" \" || ((0.1 + 0.2) - c > 0.0)"
+   load r7,0.1
+   .traceevent "L" 4 "R" "F" "r" 7 12 12 0 "" ""
+   fadd r7,r7,0.2
+   .traceevent "O" 4 "R" "F" "r" 7 12 12 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 3 12 12 0 "c" ""
+   fsub r7,r7,r3
+   .traceevent "O" 4 "R" "F" "r" 7 12 12 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 5 12 12 0 "runtime" ""
+   .traceevent "V" 6 "R" "F" "r" 3 12 12 0 "c" ""
+   fsub r6,r5,r3
+   .traceevent "O" 4 "R" "F" "r" 6 12 12 0 "" ""
+   feq r7,r7,r6
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 12 12 0 "" ""
+   concat r7,"folded-runtime ",r7
+   .traceevent "O" 4 "R" "S" "r" 7 12 12 0 "" ""
+   concat r7,r7," "
+   .traceevent "O" 4 "R" "S" "r" 7 12 12 0 "" ""
+   load r6,0.1
+   .traceevent "L" 4 "R" "F" "r" 6 12 12 0 "" ""
+   fadd r6,r6,0.2
+   .traceevent "O" 4 "R" "F" "r" 6 12 12 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 3 12 12 0 "c" ""
+   fsub r6,r6,r3
+   .traceevent "O" 4 "R" "F" "r" 6 12 12 0 "" ""
+   fgt r6,r6,0.0
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 12 12 0 "" ""
+   concat r7,r7,r6
+   .traceevent "O" 4 "R" "S" "r" 7 12 12 0 "" ""
+   say r7
+   .srcstep 13 13 17 "levelb.crexx" 21 3 106 "  say \"propagated \" || (propagated = c) || \" \" || (propagated - c > 0.0) || \" \" || (propagated = runtime)"
+   .traceevent "V" 6 "R" "F" "r" 4 13 13 0 "propagated" ""
+   .traceevent "V" 6 "R" "F" "r" 3 13 13 0 "c" ""
+   feq r7,r4,r3
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 13 13 0 "" ""
+   concat r7,"propagated ",r7
+   .traceevent "O" 4 "R" "S" "r" 7 13 13 0 "" ""
+   concat r7,r7," "
+   .traceevent "O" 4 "R" "S" "r" 7 13 13 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 4 13 13 0 "propagated" ""
+   .traceevent "V" 6 "R" "F" "r" 3 13 13 0 "c" ""
+   fsub r6,r4,r3
+   .traceevent "O" 4 "R" "F" "r" 6 13 13 0 "" ""
+   fgt r6,r6,0.0
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 13 13 0 "" ""
+   concat r7,r7,r6
+   .traceevent "O" 4 "R" "S" "r" 7 13 13 0 "" ""
+   concat r7,r7," "
+   .traceevent "O" 4 "R" "S" "r" 7 13 13 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 4 13 13 0 "propagated" ""
+   .traceevent "V" 6 "R" "F" "r" 5 13 13 0 "runtime" ""
+   feq r6,r4,r5
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 13 13 0 "" ""
+   concat r7,r7,r6
+   .traceevent "O" 4 "R" "S" "r" 7 13 13 0 "" ""
+   say r7
+   .srcstep 14 14 17 "levelb.crexx" 22 3 80 "  say \"named \" || (SUM = c) || \" \" || (SUM - c > 0.0) || \" \" || (SUM = runtime)"
+   .traceevent "V" 6 "R" "F" "r" 3 14 14 0 "c" ""
+   feq r7,r3,0.30000000000000004
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 14 14 0 "" ""
+   concat r7,"named ",r7
+   .traceevent "O" 4 "R" "S" "r" 7 14 14 0 "" ""
+   concat r7,r7," "
+   .traceevent "O" 4 "R" "S" "r" 7 14 14 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 3 14 14 0 "c" ""
+   fsub r6,0.30000000000000004,r3
+   .traceevent "O" 4 "R" "F" "r" 6 14 14 0 "" ""
+   fgt r6,r6,0.0
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 14 14 0 "" ""
+   concat r7,r7,r6
+   .traceevent "O" 4 "R" "S" "r" 7 14 14 0 "" ""
+   concat r7,r7," "
+   .traceevent "O" 4 "R" "S" "r" 7 14 14 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 5 14 14 0 "runtime" ""
+   feq r6,r5,0.30000000000000004
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 14 14 0 "" ""
+   concat r7,r7,r6
+   .traceevent "O" 4 "R" "S" "r" 7 14 14 0 "" ""
+   say r7
+   .srcstep 15 15 17 "levelb.crexx" 23 3 92 "  say \"literal-transport \" || (EXACT_LITERAL = c) || \" \" || (0.30000000000000004 = runtime)"
+   .traceevent "V" 6 "R" "F" "r" 3 15 15 0 "c" ""
+   feq r7,r3,0.30000000000000004
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 15 15 0 "" ""
+   concat r7,"literal-transport ",r7
+   .traceevent "O" 4 "R" "S" "r" 7 15 15 0 "" ""
+   concat r7,r7," "
+   .traceevent "O" 4 "R" "S" "r" 7 15 15 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 5 15 15 0 "runtime" ""
+   feq r6,r5,0.30000000000000004
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 15 15 0 "" ""
+   concat r7,r7,r6
+   .traceevent "O" 4 "R" "S" "r" 7 15 15 0 "" ""
+   say r7
+   .srcstep 16 16 17 "levelb.crexx" 24 3 57 "  say \"integral-transport \" || (1.0 + 1.0 - a = 2.0 - a)"
+   load r7,1.0
+   .traceevent "L" 4 "R" "F" "r" 7 16 16 0 "" ""
+   fadd r7,r7,1.0
+   .traceevent "O" 4 "R" "F" "r" 7 16 16 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 0 16 16 0 "a" ""
+   fsub r7,r7,r0
+   .traceevent "O" 4 "R" "F" "r" 7 16 16 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 0 16 16 0 "a" ""
+   fsub r6,2.0,r0
+   .traceevent "O" 4 "R" "F" "r" 6 16 16 0 "" ""
+   feq r7,r7,r6
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 16 16 0 "" ""
+   concat r7,"integral-transport ",r7
+   .traceevent "O" 4 "R" "S" "r" 7 16 16 0 "" ""
+   say r7
+   .srcstep 17 17 17 "levelb.crexx" 25 3 74 "  say \"display \" || (0.1 + 0.2 as .string) || \" \" || (runtime as .string)"
+   load r7,0.2
+   .traceevent "L" 4 "R" "F" "r" 7 17 17 0 "" ""
+   fcopy r6,r7
+   ftos r6
+   stof r6
+   fadd r6,r6,0.1
+   ftos r6
+   .traceevent "O" 4 "R" "S" "r" 6 17 17 0 "" ""
+   concat r6,"display ",r6
+   .traceevent "O" 4 "R" "S" "r" 6 17 17 0 "" ""
+   concat r6,r6," "
+   .traceevent "O" 4 "R" "S" "r" 6 17 17 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 5 17 17 0 "runtime" ""
+   fcopy r8,r5
+   ftos r8
+   concat r8,r6,r8
+   .traceevent "O" 4 "R" "S" "r" 8 17 17 0 "" ""
+   say r8
+   .srcstep 18 18 17 "levelb.crexx" 26 3 120 "  say \"strict \" || ((0.1 + 0.2) == \"0.3\") || \" \" || (runtime == \"0.3\") || \" \" || ((0.1 + 0.2) == \"0.30000000000000004\")"
+   load r8,0.1
+   .traceevent "L" 4 "R" "F" "r" 8 18 18 0 "" ""
+   fadd r8,r8,0.2
+   ftos r8
+   .traceevent "O" 4 "R" "S" "r" 8 18 18 0 "" ""
+   seq r8,r8,"0.3"
+   btos r8
+   .traceevent "O" 4 "R" "S" "r" 8 18 18 0 "" ""
+   concat r8,"strict ",r8
+   .traceevent "O" 4 "R" "S" "r" 8 18 18 0 "" ""
+   concat r8,r8," "
+   .traceevent "O" 4 "R" "S" "r" 8 18 18 0 "" ""
+   ftos r5
+   .traceevent "V" 6 "R" "S" "r" 5 18 18 0 "runtime" ""
+   seq r7,r5,"0.3"
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 18 18 0 "" ""
+   concat r8,r8,r7
+   .traceevent "O" 4 "R" "S" "r" 8 18 18 0 "" ""
+   concat r8,r8," "
+   .traceevent "O" 4 "R" "S" "r" 8 18 18 0 "" ""
+   load r7,0.1
+   .traceevent "L" 4 "R" "F" "r" 7 18 18 0 "" ""
+   fadd r7,r7,0.2
+   ftos r7
+   .traceevent "O" 4 "R" "S" "r" 7 18 18 0 "" ""
+   seq r7,r7,"0.30000000000000004"
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 18 18 0 "" ""
+   concat r8,r8,r7
+   .traceevent "O" 4 "R" "S" "r" 8 18 18 0 "" ""
+   say r8
+   .srcstep 19 19 17 "levelb.crexx" 27 3 141 "  say \"loose \" || ((0.1 + 0.2 as .string) = \"0.30\") || \" \" || ((runtime as .string) = \"0.30\") || \" \" || (\"a\" = \"a \") || \" \" || (\"a\" == \"a \")"
+   load r8,0.2
+   .traceevent "L" 4 "R" "F" "r" 8 19 19 0 "" ""
+   fcopy r7,r8
+   ftos r7
+   stof r7
+   fadd r7,r7,0.1
+   ftos r7
+   .traceevent "O" 4 "R" "S" "r" 7 19 19 0 "" ""
+   req r7,r7,"0.30"
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 19 19 0 "" ""
+   concat r7,"loose ",r7
+   .traceevent "O" 4 "R" "S" "r" 7 19 19 0 "" ""
+   concat r7,r7," "
+   .traceevent "O" 4 "R" "S" "r" 7 19 19 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 5 19 19 0 "runtime" ""
+   fcopy r6,r5
+   ftos r6
+   req r6,r6,"0.30"
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 19 19 0 "" ""
+   concat r7,r7,r6
+   .traceevent "O" 4 "R" "S" "r" 7 19 19 0 "" ""
+   concat r7,r7," "
+   .traceevent "O" 4 "R" "S" "r" 7 19 19 0 "" ""
+   load r6,"a"
+   .traceevent "L" 4 "R" "S" "r" 6 19 19 0 "" ""
+   req r6,r6,"a "
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 19 19 0 "" ""
+   concat r7,r7,r6
+   .traceevent "O" 4 "R" "S" "r" 7 19 19 0 "" ""
+   concat r7,r7," "
+   .traceevent "O" 4 "R" "S" "r" 7 19 19 0 "" ""
+   load r6,"a"
+   .traceevent "L" 4 "R" "S" "r" 6 19 19 0 "" ""
+   seq r6,r6,"a "
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 19 19 0 "" ""
+   concat r7,r7,r6
+   .traceevent "O" 4 "R" "S" "r" 7 19 19 0 "" ""
+   say r7
+   .srcstep 20 20 17 "levelb.crexx" 28 3 75 "  say \"mixed-loose \" || ((0.1 + 0.2) = \"0.3\") || \" \" || (runtime = \"0.30\")"
+   load r8,0.1
+   .traceevent "L" 4 "R" "F" "r" 8 20 20 0 "" ""
+   fadd r8,r8,0.2
+   ftos r8
+   .traceevent "O" 4 "R" "S" "r" 8 20 20 0 "" ""
+   req r8,r8,"0.3"
+   btos r8
+   .traceevent "O" 4 "R" "S" "r" 8 20 20 0 "" ""
+   concat r8,"mixed-loose ",r8
+   .traceevent "O" 4 "R" "S" "r" 8 20 20 0 "" ""
+   concat r8,r8," "
+   .traceevent "O" 4 "R" "S" "r" 8 20 20 0 "" ""
+   ftos r5
+   .traceevent "V" 6 "R" "S" "r" 5 20 20 0 "runtime" ""
+   req r7,r5,"0.30"
+   btos r7
+   .traceevent "O" 4 "R" "S" "r" 7 20 20 0 "" ""
+   concat r8,r8,r7
+   .traceevent "O" 4 "R" "S" "r" 8 20 20 0 "" ""
+   say r8
+   .srcstep 21 21 17 "levelb.crexx" 29 3 26 "  call smallContext a,b,c"
+   .traceevent "V" 6 "R" "F" "r" 0 21 21 0 "a" ""
+   .traceevent "V" 6 "R" "F" "r" 2 21 21 0 "b" ""
+   .traceevent "V" 6 "R" "F" "r" 3 21 21 0 "c" ""
+   call3 r10,smallContext(),r0,r2,r3
+   .traceevent "F" 4 "R" "V" "r" 10 21 21 0 "smallcontext" ""
+   .srcstep 22 22 17 "levelb.crexx" 30 3 26 "  call engineeringContext"
+   call r9,engineeringContext()
+   .traceevent "F" 4 "R" "V" "r" 9 22 22 0 "engineeringcontext" ""
+   .srcstep 23 23 17 "levelb.crexx" 31 3 11 "  return 0"
+   ret 0
+   .meta "levelb.main.a"
+   .meta "levelb.main.argv"
+   .meta "levelb.main.b"
+   .meta "levelb.main.c"
+   .meta "levelb.main.exact_literal"
+   .meta "levelb.main.propagated"
+   .meta "levelb.main.runtime"
+   .meta "levelb.main.sum"
+
+smallContext() .locals=7
+   .meta "levelb.smallcontext"="b" ".void" smallContext() "a=.float,b=.float,c=.float"
+   .srcstep 31 31 17 "levelb.crexx" 33 1 24 "smallContext: procedure"
+   numsci 5,1,1
+   .srcstep 25 25 17 "levelb.crexx" 35 7 17 "  arg a = .float, b = .float, c = .float"
+   .meta "levelb.smallcontext.a"="b" ".float" a1
+   .srcstep 26 26 17 "levelb.crexx" 35 19 29 "  arg a = .float, b = .float, c = .float"
+   .meta "levelb.smallcontext.b"="b" ".float" a2
+   .srcstep 27 27 17 "levelb.crexx" 35 31 41 "  arg a = .float, b = .float, c = .float"
+   .meta "levelb.smallcontext.c"="b" ".float" a3
+   .srcstep 28 28 17 "levelb.crexx" 37 3 18 "  runtime = a + b"
+   .meta "levelb.smallcontext.runtime"="b" ".float" r3
+   .traceevent "V" 6 "R" "F" "a" 1 28 28 0 "a" ""
+   .traceevent "V" 6 "R" "F" "a" 2 28 28 0 "b" ""
+   fadd r3,a1,a2
+   .traceevent "O" 4 "R" "F" "r" 3 28 28 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 3 28 28 0 "runtime" ""
+   .srcstep 29 29 17 "levelb.crexx" 38 3 189 "  say \"small \" || (SMALL_SUM = c) || \" \" || (SMALL_SUM = runtime) || \" \" || (1.0 / 3.0) || \" \" || (1.0 / 3.0 == \"0.33333\") || \" \" || (1.0d / 3.0d == \"0.33333\") || \" \" || (runtime == \"0.3\")"
+   .meta "levelb.smallcontext.small_sum"="b" ".float" "0.3"
+   .traceevent "V" 6 "R" "F" "a" 3 29 29 0 "c" ""
+   feq r5,a3,0.30000000000000004
+   btos r5
+   .traceevent "O" 4 "R" "S" "r" 5 29 29 0 "" ""
+   concat r5,"small ",r5
+   .traceevent "O" 4 "R" "S" "r" 5 29 29 0 "" ""
+   concat r5,r5," "
+   .traceevent "O" 4 "R" "S" "r" 5 29 29 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 3 29 29 0 "runtime" ""
+   feq r6,r3,0.30000000000000004
+   btos r6
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   concat r6,r5,r6
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   concat r6,r6," "
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   load r5,3.0
+   .traceevent "L" 4 "R" "F" "r" 5 29 29 0 "" ""
+   fdiv r5,1.0,r5
+   ftos r5
+   .traceevent "O" 4 "R" "S" "r" 5 29 29 0 "" ""
+   concat r6,r6,r5
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   concat r6,r6," "
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   load r5,3.0
+   .traceevent "L" 4 "R" "F" "r" 5 29 29 0 "" ""
+   fdiv r5,1.0,r5
+   ftos r5
+   .traceevent "O" 4 "R" "S" "r" 5 29 29 0 "" ""
+   seq r5,r5,"0.33333"
+   btos r5
+   .traceevent "O" 4 "R" "S" "r" 5 29 29 0 "" ""
+   concat r6,r6,r5
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   concat r6,r6," "
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   load r5,3.0d
+   .traceevent "L" 4 "R" "D" "r" 5 29 29 0 "" ""
+   ddiv r5,1.0d,r5
+   dtos r5
+   .traceevent "O" 4 "R" "S" "r" 5 29 29 0 "" ""
+   seq r5,r5,"0.33333"
+   btos r5
+   .traceevent "O" 4 "R" "S" "r" 5 29 29 0 "" ""
+   concat r6,r6,r5
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   concat r6,r6," "
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   ftos r3
+   .traceevent "V" 6 "R" "S" "r" 3 29 29 0 "runtime" ""
+   seq r5,r3,"0.3"
+   btos r5
+   .traceevent "O" 4 "R" "S" "r" 5 29 29 0 "" ""
+   concat r6,r6,r5
+   .traceevent "O" 4 "R" "S" "r" 6 29 29 0 "" ""
+   say r6
+   .srcstep 30 30 17 "levelb.crexx" 39 3 9 "  return"
+   ret
+   .meta "levelb.smallcontext.a"
+   .meta "levelb.smallcontext.b"
+   .meta "levelb.smallcontext.c"
+   .meta "levelb.smallcontext.runtime"
+   .meta "levelb.smallcontext.small_sum"
+
+engineeringContext() .locals=3
+   .meta "levelb.engineeringcontext"="b" ".void" engineeringContext() ""
+   .srcstep 34 34 17 "levelb.crexx" 41 1 30 "engineeringContext: procedure"
+   numeng 5,2,1
+   .srcstep 32 32 17 "levelb.crexx" 45 3 76 "  say \"engineering \" || (10000.0 * 10000.0) || \" \" || (10000.0d * 10000.0d)"
+   load r1,10000.0
+   .traceevent "L" 4 "R" "F" "r" 1 32 32 0 "" ""
+   fmult r1,r1,10000.0
+   ftos r1
+   .traceevent "O" 4 "R" "S" "r" 1 32 32 0 "" ""
+   concat r1,"engineering ",r1
+   .traceevent "O" 4 "R" "S" "r" 1 32 32 0 "" ""
+   concat r1,r1," "
+   .traceevent "O" 4 "R" "S" "r" 1 32 32 0 "" ""
+   load r2,10000.0d
+   .traceevent "L" 4 "R" "D" "r" 2 32 32 0 "" ""
+   dmult r2,r2,10000.0d
+   dtos r2
+   .traceevent "O" 4 "R" "S" "r" 2 32 32 0 "" ""
+   concat r2,r1,r2
+   .traceevent "O" 4 "R" "S" "r" 2 32 32 0 "" ""
+   say r2
+   .srcstep 33 33 17 "levelb.crexx" 46 3 9 "  return"
+   ret

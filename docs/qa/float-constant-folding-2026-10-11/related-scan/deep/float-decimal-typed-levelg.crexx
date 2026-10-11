@@ -1,0 +1,8 @@
+options levelg numeric_common
+main: procedure = .int
+  arg argv = .string[]
+numeric digits 18
+d = .decimal
+d = .float(1.234567890123456) as .decimal
+say d = 1.234567890123456d
+return 0

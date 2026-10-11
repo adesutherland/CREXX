@@ -1,0 +1,5 @@
+options levelg numeric_common
+numeric digits 5
+a = 123456
+say a = 123456
+say a - 123450
