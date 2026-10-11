@@ -1804,8 +1804,12 @@ static walker_result opt1_walker(walker_direction direction,
 
                     case OP_NEG:
                         if (node->value_type == TP_FLOAT) {
+                            /* Match emitted FMULT, including NaN sign/payload
+                             * propagation and signaling-NaN quieting. Prevent
+                             * the host C optimizer substituting unary minus. */
+                            volatile double multiplier = -1.0;
                             rewrite_to_float_constant(node, payload,
-                                                          -child1->float_value);
+                                                          child1->float_value * multiplier);
                         }
                         else if (node->value_type == TP_DECIMAL) {
                             /* Decimal negation */

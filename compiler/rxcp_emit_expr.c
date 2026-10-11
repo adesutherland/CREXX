@@ -1877,7 +1877,9 @@ void emit_expression(ASTNode *node, void *payload) {
             }
             else if (node->value_type == TP_FLOAT) {
                 if (child1->output) output_concat(node->output, child1->output);
-                temp1 = mprintf("   fsub %c%d,0.0,%c%d\n",
+                /* Subtracting from +0 loses the sign of zero. Multiplication
+                 * by -1 preserves both zero signs and negates finite values. */
+                temp1 = mprintf("   fmult %c%d,%c%d,-1.0\n",
                                 node->register_type,
                                 node->register_num,
                                 child1->register_type,
