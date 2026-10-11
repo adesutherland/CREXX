@@ -53,15 +53,17 @@ implemented Classic contract; no syntax or language-design decision is needed.
    with exact conversion in all four modes. Preserve existing output and
    range-error behavior, retain generated-code inspection, and replay relevant
    BIF checks in normal Debug and the maintained sanitizer build.
-9. **CI-CS-AC-09 — open:** SAN-QA-018 closes only after its permanent focused
+9. **CI-CS-AC-09 — verified, 2026-10-11:** SAN-QA-018 closes only after its permanent focused
    normal/sanitizer proof and full supported platform sanitizer gates. This
    concrete observed failure justifies a targeted repeat of Sanitizer QA;
    ordinary push checks remain separate. Keep this criterion visibly open
-   while hosted platform proof runs; do not claim sanitizer-clean completion.
+   while hosted platform proof runs; do not claim sanitizer-clean completion
+   before those gates pass. The renewed full request below now satisfies them.
    **Adrian's explicit scope decision, 2026-10-10:** publish the fixes and
    assign remaining SAN-QA-018 platform proof to **Codex at the next Release 1
-   release-QA gate**. This criterion remains open for that gate, outside the
-   bounded implementation/publication phase; no closure/clean claim is made.
+   release-QA gate**. This was outside the original bounded publication phase.
+   Adrian's subsequent immediate full-QA request is fulfilled by the closure
+   disposition linked below; no release-candidate or release claim is made.
 
 ## Implementation steps
 
@@ -88,10 +90,11 @@ implemented Classic contract; no syntax or language-design decision is needed.
    Retain existing boundary reproducer and inspect generated conversion ops.
    Register SAN-QA-018 before unrelated closeout. No compiler/VM core rewrite
    or language design gate is required for this contract repair.
-8. **CI-CS-STEP-08 — assigned; AC-09:** after focused normal/ASan proof, publish
+8. **CI-CS-STEP-08 — complete through renewed full gate; AC-09:** after focused normal/ASan proof, publish
    compatible build/harness and numeric repair commits together. Per Adrian's
-   explicit 2026-10-10 decision, **Codex owns full SAN-QA-018 platform closure
-   at the next Release 1 release-QA gate**. Reuse unchanged valid results and
+   explicit 2026-10-10 decision, **Codex originally owned full SAN-QA-018 platform closure
+   at the next Release 1 release-QA gate**. The renewed request below completes
+   it now. Reuse unchanged valid results and
    report platform proof independently of bounded implementation completion.
 
 ## Retained evidence
@@ -141,26 +144,26 @@ at roughly ten-minute intervals while independent useful work continues.
 
 **Additional numbered acceptance criteria:**
 
-10. **CI-CS-AC-10 — open:** Windows MSVC and MinGW build the Classic source
+10. **CI-CS-AC-10 — verified:** Windows MSVC and MinGW build the Classic source
     broker with no Windows/AST enum collisions. Preserve numeric AST/inline
     payload identities and typed source-import/editor behavior. Retain failed
     compile logs, a minimal namespace reproducer, focused local frontend/contract
     controls and actual repaired Windows product/deep jobs.
-11. **CI-CS-AC-11 — open:** the normal Build and CodeQL workflows pass for the
+11. **CI-CS-AC-11 — verified:** the normal Build and CodeQL workflows pass for the
     repaired develop delivery, including Intel Mac signing/notarization. The
     observed Apple offline/no-route error is treated as a transport failure;
     retry that operation/job if needed without waiving signing or notarization.
     Both workflows pass on `a69745746`, including Intel Mac notarization and
     all optional-plugin consumer packages. The next substantive repair will
     receive its own normal automatic publication checks.
-12. **CI-CS-AC-12 — open:** full Sanitizer QA passes Linux x64 ASan/LSan with
+12. **CI-CS-AC-12 — verified:** full Sanitizer QA passes Linux x64 ASan/LSan with
     build/test leaks on and macOS arm64 ASan with the documented Apple LSan
     capability limit. Full Deep Build QA passes all five core platforms,
     comprehensive/qualification checks, Linux books and parallel product graph
     checks. Only the established performance-measurement sanitizer exclusion is
     allowed. Retain exact code/test/build identity; unchanged valid results may
     be reused across history/documentation-only changes.
-13. **CI-CS-AC-13 — open:** monitor lightly until every required workflow is
+13. **CI-CS-AC-13 — verified product proof; final documentation publication ready:** monitor lightly until every required workflow is
     green; diagnose/reproduce and fix any new failure, record any first-party
     sanitizer finding immediately with its stable SAN entry and closure gates,
     and preserve unresolved SAN-011/012/SAN-QA-018 status until their recorded
@@ -174,22 +177,22 @@ at roughly ten-minute intervals while independent useful work continues.
    fixes. Windows fails in rxcp_c_source_import.c through FLOAT/PATTERN/DECIMAL
    enum collisions with windows.h. Intel Mac failed notarytool --wait when its
    network route disappeared. The older missing stream archive is repaired.
-10. **CI-CS-STEP-10 — local controls complete; hosted Windows proof open; AC-10:** retain the minimal collision control, reuse
+10. **CI-CS-STEP-10 — complete; AC-10:** retain the minimal collision control, reuse
     the existing compiler header-isolation pattern, then run focused normal
     Debug and maintained ASan frontend/import/contract checks. This is an
     implementation repair, not a new syntax or architectural design decision.
-11. **CI-CS-STEP-11 — publication ready; AC-11/12:** prepare the fix receipt and expected
+11. **CI-CS-STEP-11 — complete; AC-11/12:** prepare the fix receipt and expected
     publication status before the first push; publish the combined repair and
     dispatch full Deep Build QA (platform=all) and Sanitizer QA on the repaired
     revision. Normal Build/CodeQL run automatically. Depends on STEP-10.
-12. **CI-CS-STEP-12 — open; AC-11/12/13:** use infrequent status reads, retain
+12. **CI-CS-STEP-12 — complete; final documentation publication ready; AC-11/12/13:** use infrequent status reads, retain
     failed job logs/artifacts, and fix distinct reproduced causes in reviewable
     commits. Retry transient service failures narrowly. Do not cancel healthy
     work, busy-poll or repeat unchanged valid broad evidence. Close only after
     all explicitly requested gates pass; update sanitizer disposition only from
     actual focused/original/full-platform evidence.
 
-**Current checkpoint:** collision control and numeric enum identity control pass;
+**Local checkpoint before publication:** collision control and numeric enum identity control pass;
 normal Debug and maintained Apple ASan frontend/contract panels pass 4/4
 (48.17 s / 119.26 s). The repair receipt is
 [ci-windows-classic-broker-2026-10-10](../../qa/ci-windows-classic-broker-2026-10-10/README.md).
@@ -218,12 +221,12 @@ retains every argument, including spaces, backslashes and Unicode, without a
 shell. Existing Latin byte ordinals and explicit external stream encodings
 remain unchanged. Keep the existing Unicode filename regression enabled.
 
-14. **CI-CS-AC-14 — open:** both actual Windows Deep lanes pass the unchanged
+14. **CI-CS-AC-14 — verified:** both actual Windows Deep lanes pass the unchanged
     Classic frontend parity and Unicode contract, then install/package checks.
     Embed the standard UTF-8 process manifest in the core CLI executables for
     MSVC and MinGW. Record its Windows 10 version 1903+ capability boundary;
     do not claim older Windows Unicode path qualification.
-15. **CI-CS-AC-15 — open:** broker argv serialization preserves empty arguments,
+15. **CI-CS-AC-15 — verified:** broker argv serialization preserves empty arguments,
     whitespace, quotes and backslash runs, including trailing backslashes.
     Retain permanent focused controls of the production quoting helper in
     Debug and maintained ASan, plus the existing end-to-end typed import proof.
@@ -234,7 +237,7 @@ remain unchanged. Keep the existing Unicode filename regression enabled.
     reconcile exact failed test inventories. The permanent workloads already
     reproduce both observed causes; namespace compilation repair is verified
     by normal Windows product builds. No memory diagnostic is reported here.
-14. **CI-CS-STEP-14 — local controls complete; hosted proof open; AC-14/15:** embed the standard Windows process
+14. **CI-CS-STEP-14 — complete; AC-14/15:** embed the standard Windows process
     manifest, quote each broker argument using CRT rules, retain focused
     boundary controls and Debug-then-ASan evidence. Preserve process ownership,
     authored diagnostics and frontend/metadata separation.
@@ -242,7 +245,7 @@ remain unchanged. Keep the existing Unicode filename regression enabled.
     helper (1/1, 0.38 s / 0.40 s); Debug compiler entry points build cleanly.
     All 15 matrix/package workflow controls pass. Unix preprocessing is
     byte-identical to `a69745746`; the added manifest acts only on Windows.
-15. **CI-CS-STEP-15 — open; AC-11–15:** publish the bounded Windows repair with
+15. **CI-CS-STEP-15 — complete; AC-11–15:** publish the bounded Windows repair with
     complete receipt and expected publication state. Add a paired Windows-only
     Deep selection so both failed lanes run concurrently without repeating
     healthy Unix/books/stress/graph work. Verify ordinary matrix selection is
@@ -255,3 +258,38 @@ green normal Build/CodeQL with the paired Windows-only Deep replay launched.
 Actual hosted acceptance remains open, with exact run IDs in active-runs.json.
 Existing full Unix sanitizer proof plus the newly added focused helper covers
 the final Unix delta; no unchanged full lane is restarted merely for a new SHA.
+
+## Mandatory sanitizer disposition and final acceptance — 11 October 2026
+
+The required [SAN-011/012/SAN-QA-018 closure disposition](../../SANITIZER-WORKLIST.md#11-october-closure-disposition)
+verifies the retained focused Debug/maintained-sanitizer commands, their input
+hashes, the original generators in fresh full builds, and both complete full
+sanitizer platforms. Linux passes 3,122/3,122 with build/test leaks on; macOS
+passes 3,126/3,126 with its documented unavailable LSan. No sanitizer finding
+or failed/timed-out test appears in the downloaded build/preparation/CTest logs.
+This fulfills AC-09 and the sanitizer parts of AC-12/13; the historical
+later-gate assignments and bounded receipts above retain their original scope.
+
+Published product `5e8275768355fa3dc84c24e815de91d6d63a6ca3` passes normal
+[Build CREXX](https://github.com/adesutherland/CREXX/actions/runs/38090392553)
+and [CodeQL](https://github.com/adesutherland/CREXX/actions/runs/38090392224).
+The [paired Windows Deep replay](https://github.com/adesutherland/CREXX/actions/runs/38090414968)
+passes 2,891/2,891 MSVC and 3,011/3,011 MinGW correctness checks, plus each
+lane's 3/3 install/package/external-consumer checks. Both previously failing
+Classic tests pass on both Windows toolchains. The unchanged successful Unix,
+books, isolated stress and product/RXBIN graph jobs from
+[full Deep 38086282692](https://github.com/adesutherland/CREXX/actions/runs/38086282692)
+complete the full requested Deep scope. The Windows receipt's byte-identical
+Unix preprocessing, unchanged matrix controls and focused helper proof retain
+[full Sanitizer QA](https://github.com/adesutherland/CREXX/actions/runs/38086283792)
+on `a69745746` for the final Unix product inputs. This verifies AC-10–12/14/15.
+
+All product and finding-closure proof is complete. Expected final publication is
+the required canonical sanitizer dispositions and this acceptance record on
+synchronized `origin/develop`, with a clean workspace and the heartbeat paused.
+Only these documentation records change after `5e8275768`; their publication
+reuses the qualified non-documentation tree hash recorded in the worklist and
+does not launch duplicate CI through a status-only push. GitHub's completed
+runs remain the workflow evidence. No new product change, release, unsupported
+Apple leak coverage, older-Windows Unicode-path qualification or upstream
+inference-engine sanitizer coverage is claimed.

@@ -81,12 +81,13 @@ artifact.
 
 ### SAN-012 — detached source anchors retain semantic annotation allocations
 
-Status: repaired; full platform proof remains open. Owner: **Codex / next
-Release 1 release-QA gate**. Affected inputs: C-first split/metadata-reader
+Status: **closed, 2026-10-11**; focused, original-trigger and both full platform
+gates pass as recorded in the [closure disposition below](#11-october-closure-disposition).
+Owner: **Codex**. Affected inputs: C-first split/metadata-reader
 candidate based on `91313bcc5a447e9403f95b1f0bfc4dd9503d0618`.
-On 2026-10-10 Adrian explicitly assigned SAN-011 and SAN-012 closure to that
-gate. This permits bounded local phase completion; it does not close or
-downgrade either release-blocking item.
+On 2026-10-10 Adrian initially assigned SAN-011 and SAN-012 closure to the next
+Release 1 release-QA gate, then explicitly requested full sanitizer and Deep
+QA immediately. The completed proof below fulfills that renewed request.
 
 - Original trigger: Linux `tools/asan-run.sh --build-dir build-asan-clang
   --phase full --build-jobs 4 --test-jobs 8 --exclude-label
@@ -113,19 +114,19 @@ downgrade either release-blocking item.
 - Full Apple `20261010-171343-full` passed build/preparation and was stopped at
   CTest; Linux `20261010-161345-full` was stopped during preparation after
   Adrian's later-gate assignment. Neither is completed full-gate evidence.
-- Next action, **Codex / next Release 1 release-QA gate**: pass the permanent
-  focused command and original class-library build trigger, then complete
-  supported Linux ASan/LSan and Apple full sanitizer closure on the release
-  candidate inputs. No suppression or exclusion is introduced. This item stays
-  release-blocking until the recorded closure conditions pass.
+- Closure: the permanent focused regression and its unchanged repair inputs
+  match the retained Debug/Apple/Linux evidence. Fresh hosted full builds
+  execute the original class-library generators with Linux build leaks on;
+  both complete platform gates pass. No suppression or exclusion is introduced.
 
 ### SAN-011 — imported metadata declaration source anchors outlive their Context
 
-Status: repaired; full platform proof remains open. Owner: **Codex / next
-Release 1 release-QA gate**. Affected inputs: C-first split/metadata-reader
+Status: **closed, 2026-10-11**; focused, original-trigger and both full platform
+gates pass as recorded in the [closure disposition below](#11-october-closure-disposition).
+Owner: **Codex**. Affected inputs: C-first split/metadata-reader
 candidate based on `91313bcc5a447e9403f95b1f0bfc4dd9503d0618`.
-Adrian's explicit 2026-10-10 assignment above permits bounded local phase
-completion; this item remains open and release-blocking.
+The initial later-gate assignment above was followed by Adrian's explicit
+request for immediate full sanitizer and Deep QA. That proof is now complete.
 
 - Original trigger: `tools/asan-run.sh --phase build --build-target
   qa-measure-classic-frontend --build-jobs 4 --build-leaks off --leaks off
@@ -150,21 +151,22 @@ completion; this item remains open and release-blocking.
   Apple ASan `20261010-171147-ctest` and Linux ASan/LSan
   `20261010-161146-ctest`. The [receipt](qa/classic-frontend-split-2026-10-10/README.md)
   records final-input coverage and the intentionally stopped full runs.
-- Next action, **Codex / next Release 1 release-QA gate**: pass the permanent
-  focused command and original runtime-library build trigger, then complete
-  supported Linux ASan/LSan and Apple full sanitizer closure on the release
-  candidate inputs. No suppression or exclusion is introduced. Do not claim
-  sanitizer-clean or release-ready status before closure.
+- Closure: the unchanged owner-first teardown regression passes in the retained
+  focused Debug/Apple/Linux commands and both hosted full gates. Fresh hosted
+  instrumented builds regenerate `_rxsystem`, the original broader trigger.
+  No suppression or exclusion is introduced. This closes the finding; it does
+  not designate a new release candidate or release.
 
 ### SAN-QA-018 — Classic whole-number BIF operands round through binary float
 
-Status: repaired; full platform proof remains open. Owner: Codex, GitHub pipeline
+Status: **closed, 2026-10-11**; focused, original-trigger and both full platform
+gates pass as recorded in the [closure disposition below](#11-october-closure-disposition).
+Owner: Codex, GitHub pipeline
 diagnosis/repair requested by Adrian on 2026-10-10. Affected revision:
 `10e8184e39ad28e62178055473249925f9db82a7`.
-On 2026-10-10 Adrian explicitly authorized publishing the fixes and assigned
-remaining SAN-QA-018 platform proof to **Codex at the next Release 1 release-QA
-gate**. This permits bounded implementation/publication closeout; it does not
-close or downgrade this release-blocking item.
+On 2026-10-10 Adrian initially authorized publication with later Release 1
+release-QA proof, then explicitly requested immediate full sanitizer and Deep
+QA. The completed proof below fulfills that renewed request.
 
 - Scheduled [Sanitizer QA 38022249457](https://github.com/adesutherland/CREXX/actions/runs/38022249457),
   Linux x64 ASan/LSan, fails all four `levelc_bif_integer_limits` modes at
@@ -194,11 +196,68 @@ close or downgrade this release-blocking item.
   and Release ARG procedures use `stoi` rather than the lossy float sequence.
   The [development receipt](qa/ci-core-stream-packaging-2026-10-10/README.md)
   owns exact final-input focused normal/maintained-ASan evidence.
-- Next action, **Codex / next Release 1 release-QA gate**: run the permanent
-  focused command and complete supported Linux ASan/LSan and Apple full
-  sanitizer closure on the release candidate inputs. No suppression or
-  exclusion is proposed. This item remains release-blocking until those gates
-  pass; current bounded closeout supports no sanitizer-clean/release-ready claim.
+- Closure: the retained matching six-test Debug/Apple-ASan panel and all four
+  permanent integer-limit modes pass. Both fresh full sanitizer gates build
+  the repaired runtime and execute every mode plus the exact INT64_MAX stream
+  positions in `classic_unicode_contract_opt`. Linux keeps build/test leaks on.
+  No suppression or exclusion is introduced.
+
+### 11 October closure disposition
+
+SAN-011, SAN-012 and SAN-QA-018 satisfy all four closure requirements in
+[`CREXX_ASAN_TESTING.md`](ai-context/CREXX_ASAN_TESTING.md). Original failing
+diagnostics and permanent regressions remain above; the prior local receipts
+retain their historical qualification boundary. Their focused logs were
+reread and their recorded hashes verified, without repeating valid tests.
+`rxcp_ast_core.c`, `rxcp_source_tree.c`, `test_contract_builder.c` and every
+repaired Classic integer source retain the focused qualification hashes.
+Later build-stage changes are exercised by the fresh full gates.
+
+[Sanitizer QA 38086283792](https://github.com/adesutherland/CREXX/actions/runs/38086283792)
+passes on `a69745746117ab01df47ae24d47793f397962488`:
+
+| Platform | Fresh full build and preparation | Complete CTest | Leak capability |
+| --- | --- | --- | --- |
+| Linux x64 ASan/LSan | Pass, including `_rxsystem` and class-library generators | 3,122/3,122; 9,653.00 s | Build and test leaks **on** |
+| macOS arm64 ASan | Pass, including `_rxsystem` and class-library generators | 3,126/3,126; 9,410.31 s | Apple LSan unavailable; covered by Linux |
+
+Both logs explicitly pass `compiler_contract_builder`, all four
+`levelc_bif_integer_limits` modes and `classic_unicode_contract_opt`. Neither
+platform's complete build, QA preparation or CTest logs contains an ASan/LSan
+finding or failed/timed-out test. Only the established `performance-measurement`
+label is excluded; the core gate uses `ENABLE_LLAMA=OFF` and does not claim
+upstream inference-engine coverage.
+
+Full downloaded logs are retained under
+`output/ci-regression-20261010.79vob9/`, with inspected line references and hashes
+in `linux-full-sanitizer-pass-evidence.json` and
+`macos-full-sanitizer-pass-evidence.json`. Artifact digests are
+`175eab694d4c0eea55e9c40b6e3a42a6eded825e3822ab2485c156b6e6d8c650`
+(Linux) and `90d847e0a26cf0ea6a43a8ad183af57601aa00c1c840af6e779411911a5c655a`
+(macOS). Linux build/preparation/CTest log hashes are
+`2f8d4cc3c5a5586f67073a7d653a52c751223f276bbd8363464847c29983c574`,
+`bdf51afc62724883d2fa12042536e559b371db3301db7db6d72e9d3e3aba73f5`,
+`e14b1d578f10b9e5f969d05330d15ab10f2bd4ba5eb10e9493c588effc163c32`;
+macOS hashes are
+`a4c8d55496ce6bf32820d278ec33e111dab4ee1fab7bc12a467961a0faf87715`,
+`9cbce0ad83c92db5a584412ff546c53eefe4036906c233a5fcb3e4194f6caac0`,
+`f40017cdb27b69d8f166e3c74f7253fb03dd3eddfdd28d4730b93816158699a6`.
+
+Final product revision `5e8275768355fa3dc84c24e815de91d6d63a6ca3` changes only
+Windows execution of the broker and its process manifest, plus the separately
+qualified portable quoting helper. The
+[Windows host-text receipt](qa/ci-windows-hosttext-2026-10-10/README.md) proves
+byte-identical Unix broker preprocessing and unchanged existing QA selections;
+the helper passes nine vectors in Debug and maintained Apple ASan. This
+retains the full Unix proof for the final product inputs. Both Windows full
+comprehensive/qualification lanes also pass, and normal Build/CodeQL are green.
+
+This is the required finding disposition, not a new product change. Its
+documentation-only publication reuses these exact qualified inputs; no broad
+gate is repeated to close the register. The unchanged non-documentation Git
+tree inventory has SHA-256
+`bd7d85c27b3770f0a3877303970d5525cdb86a15796df3685f434bb38b9426be`.
+The pipeline plan owns final delivery acceptance. No release is cut here.
 
 ## Previous overnight regression — 9 October 2026
 
