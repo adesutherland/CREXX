@@ -807,10 +807,10 @@ static void parse_numeric_literal(ASTNode *node, ValueType type) {
     }
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
+#define CONSTANT_COMPARE_UNORDERED 2
 
 /* Compares two typed numeric/string nodes returns -1, 0, 1 as appropriate. */
 static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
-    double fdiff;
     int cmp;
 
     if (node1->value_type == TP_INTEGER) {
@@ -823,8 +823,10 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     }
 
     if (node1->value_type == TP_FLOAT) {
-        fdiff = node1->float_value - node2->float_value;
-        return fdiff>0 ? 1 : (fdiff<0 ? -1 : 0);
+        if (isnan(node1->float_value) || isnan(node2->float_value))
+            return CONSTANT_COMPARE_UNORDERED;
+        return (node1->float_value > node2->float_value) -
+               (node1->float_value < node2->float_value);
     }
 
     if (node1->value_type == TP_DECIMAL) {
@@ -1359,7 +1361,8 @@ static walker_result opt1_walker(walker_direction direction,
 
                     case OP_COMPARE_GT:
                         compare = compare_standard_constants(node, child1, child2);
-                        rewrite_to_boolean_constant(node, payload, compare > 0);
+                        rewrite_to_boolean_constant(node, payload,
+                                                    compare != CONSTANT_COMPARE_UNORDERED && compare > 0);
                         break;
 
                     case OP_COMPARE_LT:
@@ -1370,7 +1373,7 @@ static walker_result opt1_walker(walker_direction direction,
                     case OP_COMPARE_GTE:
                         compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
-                                                    compare >= 0);
+                                                    compare != CONSTANT_COMPARE_UNORDERED && compare >= 0);
                         break;
 
                     case OP_COMPARE_LTE:
