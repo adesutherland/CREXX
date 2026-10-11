@@ -17,7 +17,8 @@ int main(void) {
         "reference .void", ".int[1 + 2]", ".int; say 1", "say .int", ".int[foo]" };
     const char *bad_args[] = { "value=.", "value=.void", ",value=.int", "value=.int,",
         "value=.int,,other=.int", "...=.int,other=.int", "?...=.int", "value=.int; say 1",
-        "value=1+2", "value='unterminated", "value=.int\nsay 1" };
+        "value=1+2", "value='unterminated", "value=.int\nsay 1",
+        "value=nan(7ff0000000000000)", "value=nan(3ff0000000000000)" };
     size_t i;
     char exact[] = { '.', 'i', 'n', 't', 0, 'x' };
     for (i = 0; i < sizeof(valid)/sizeof(*valid); ++i) {
@@ -44,6 +45,11 @@ int main(void) {
         "needle=.string,haystack=.string,start=1", 0, &c, &error));
     CHECK(c.args[2].optional && c.args[2].default_kind == RX_CONTRACT_INTEGER_DEFAULT);
     CHECK(!strcmp(c.args[2].default_literal, "1")); rx_contract_callable_free(&c);
+    CHECK(rx_contract_parse_callable(RX_CONTRACT_PROCEDURE, "special", ".float",
+        "a=inf,b=-INF,c=+inf,d=nan,e=nan(fff8000000000001)", 0, &c, &error));
+    CHECK(c.arg_count == 5 && c.args[4].optional && c.args[4].default_kind == RX_CONTRACT_FLOAT_DEFAULT);
+    CHECK(!strcmp(c.args[4].default_literal, "nan(fff8000000000001)"));
+    rx_contract_callable_free(&c);
     CHECK(rx_contract_parse_callable(RX_CONTRACT_METHOD, "zero", NULL, " \t", 0, &c, &error));
     CHECK(c.arg_count == 0 && !strcmp(c.result.name, ".void")); rx_contract_callable_free(&c);
     CHECK(rx_contract_parse_callable(RX_CONTRACT_FACTORY, "*", ".void", "v=.string", 0, &c, &error));

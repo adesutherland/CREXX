@@ -112,12 +112,25 @@ each argument can be a
 \item
   Integer - e.g.~5
 \item
-  Float - e.g.~5.0
+  Float - e.g.~5.0, \texttt{inf}, \texttt{+inf}, \texttt{-inf}, or \texttt{nan}
 \item
   Function - e.g.~proc()
 \item
   Identifiers / Label - e.g.~label1
 \end{itemize}
+
+Special float literals are case insensitive. Bare \texttt{nan} denotes the
+canonical positive quiet binary64 NaN. The form
+\texttt{nan(<16 hexadecimal IEEE binary64 bits>)} preserves another NaN's
+sign, payload and signaling bit; the exponent must be all ones and the
+fraction nonzero. For example, \texttt{nan(fff8000000001234)} denotes a
+negative quiet NaN. These FLOAT operands keep the original opcode and RXBIN
+constant type. The disassembler emits the same forms for exact reassembly.
+Function names such as \texttt{inf()} and label definitions such as
+\texttt{inf:} retain their existing tokens. Bare \texttt{inf} and \texttt{nan}
+are float literals, so branch targets and constant aliases need other names.
+Quoted strings are unchanged. Decimal overload promotion
+uses provider text and does not retain binary NaN payloads.
 
 \hypertarget{directives}{%
 \subsubsection{Directives}\label{directives}}

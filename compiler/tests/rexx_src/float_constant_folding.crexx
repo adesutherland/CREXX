@@ -1,0 +1,46 @@
+options levelb numeric_common
+
+/* CLI inputs keep the reference calculation at runtime, even after inlining
+ * and constant propagation. Run with: -a 0.1 0.2 0.3 */
+main: procedure = .int
+  arg argv = .string[]
+  a = argv[1] as .float
+  b = argv[2] as .float
+  c = argv[3] as .float
+  runtime = a + b
+  propagated = 0.1 + 0.2
+  constant SUM = 0.1 + 0.2
+  constant EXACT_LITERAL = 0.30000000000000004
+
+  say "literal " || (0.1 + 0.2 = 0.3)
+  say "residual " || ((0.1 + 0.2) - 0.3 > 0.0)
+  say "equal " || (0.25 + 0.5 = 0.75)
+  say "decimal " || (0.1d + 0.2d = 0.3d)
+  say "runtime " || (runtime = c) || " " || (runtime - c > 0.0)
+  say "folded-runtime " || ((0.1 + 0.2) - c = runtime - c) || " " || ((0.1 + 0.2) - c > 0.0)
+  say "propagated " || (propagated = c) || " " || (propagated - c > 0.0) || " " || (propagated = runtime)
+  say "named " || (SUM = c) || " " || (SUM - c > 0.0) || " " || (SUM = runtime)
+  say "literal-transport " || (EXACT_LITERAL = c) || " " || (0.30000000000000004 = runtime)
+  say "integral-transport " || (1.0 + 1.0 - a = 2.0 - a)
+  say "display " || (0.1 + 0.2 as .string) || " " || (runtime as .string)
+  say "strict " || ((0.1 + 0.2) == "0.3") || " " || (runtime == "0.3") || " " || ((0.1 + 0.2) == "0.30000000000000004")
+  say "loose " || ((0.1 + 0.2 as .string) = "0.30") || " " || ((runtime as .string) = "0.30") || " " || ("a" = "a ") || " " || ("a" == "a ")
+  say "mixed-loose " || ((0.1 + 0.2) = "0.3") || " " || (runtime = "0.30")
+  call smallContext a,b,c
+  call engineeringContext
+  return 0
+
+smallContext: procedure
+  numeric digits 5
+  arg a = .float, b = .float, c = .float
+  constant SMALL_SUM = 0.1 + 0.2
+  runtime = a + b
+  say "small " || (SMALL_SUM = c) || " " || (SMALL_SUM = runtime) || " " || (1.0 / 3.0) || " " || (1.0 / 3.0 == "0.33333") || " " || (1.0d / 3.0d == "0.33333") || " " || (runtime == "0.3")
+  return
+
+engineeringContext: procedure
+  numeric digits 5
+  numeric form engineering
+  numeric case upper
+  say "engineering " || (10000.0 * 10000.0) || " " || (10000.0d * 10000.0d)
+  return

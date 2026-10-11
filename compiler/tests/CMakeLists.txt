@@ -2418,6 +2418,36 @@ add_crexx_isolated_run_test(qualified_namespace_same_module rexx_src/qualified_n
 add_crexx_isolated_run_test(class_attr_string_promotion rexx_src/class_attr_string_promotion.crexx)
 add_crexx_run_test(class_attr_register_views rexx_src/class_attr_register_views.crexx)
 add_crexx_run_test(constants_levelb_payloads rexx_src/constants_levelb_payloads.crexx)
+
+# Measure this aggregate in Debug and maintained ASan before CTest registration.
+# It has no library, exits or native-provider dependency.
+set(_float_fold_args
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXBVM=$<TARGET_FILE:rxbvm>
+        -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src)
+set(_float_fold_tools rxc rxas rxlink rxbvm)
+if(CREXX_THREADED_VM_SUPPORTED)
+    list(APPEND _float_fold_args -DRXTVM=$<TARGET_FILE:rxtvm>)
+    list(APPEND _float_fold_tools rxtvm)
+endif()
+add_custom_target(qa-measure-float-constant-folding
+        COMMAND ${CMAKE_COMMAND} ${_float_fold_args}
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/float_fold_measure
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/float_constant_folding_contract.cmake
+        DEPENDS ${_float_fold_tools}
+        VERBATIM USES_TERMINAL)
+# Isolated B/G x compiler/assembler modes x concrete VMs/import routes measured
+# 0.75 s in Debug and 9.49 s in maintained macOS ASan.
+# Keep generous hang protection and avoid nested tool contention in broad QA.
+add_test(NAME float_constant_folding_contract
+        COMMAND ${CMAKE_COMMAND} ${_float_fold_args}
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/float_fold_contract
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/float_constant_folding_contract.cmake)
+set_tests_properties(float_constant_folding_contract PROPERTIES
+        LABELS "compiler;numeric;optimizer-parity;correctness"
+        RUN_SERIAL TRUE TIMEOUT 120
+        CREXX_PREP_TARGETS "${_float_fold_tools}")
+
 add_crexx_run_test(binary_memory_source rexx_src/binary_memory_source.crexx)
 add_crexx_run_test(binary_memory_span_oob rexx_src/binary_memory_span_oob.crexx)
 add_crexx_run_test(binary_memory_packed_lookup rexx_src/binary_memory_packed_lookup.crexx)

@@ -1,6 +1,7 @@
 /* cREXX License (MIT), Copyright (c) 2026 Adrian Sutherland */
 #include "rxcontract.h"
 #include "rxsignature.h"
+#include "rxfloatformat.h"
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -157,6 +158,15 @@ static int default_value(const char *text, rx_contract_arg *arg) {
         arg->type.name = copy(".string", 7);
     } else {
         const char *number = s;
+        double special_value;
+        int special = rx_double_from_special_literal(s, n, &special_value);
+        if (special < 0) return 0;
+        if (special) {
+            arg->default_kind = RX_CONTRACT_FLOAT_DEFAULT;
+            arg->type.name = copy(".float", 6);
+            arg->default_literal = copy(s, n);
+            return arg->type.name && arg->default_literal;
+        }
         if (*number == '+' || *number == '-') ++number;
         if (!isdigit((unsigned char)*number) &&
             !(*number == '.' && isdigit((unsigned char)number[1]))) return 0;

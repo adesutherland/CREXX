@@ -86,6 +86,8 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
 
     "*" (any\[\r\n])* { goto regular; }
 
+    [-+]? [iI][nN][fF] {return(FLOAT);}
+    [nN][aA][nN] ("(" [0-9a-fA-F]{16} ")")? {return(FLOAT);}
     float "d" {return(DECIMAL);}
     float {return(FLOAT);}
     integer "d" {return(DECIMAL);}

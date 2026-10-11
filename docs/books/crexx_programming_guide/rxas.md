@@ -53,6 +53,28 @@ is running always, except when switched off by the `-n`
 option. When there is any doubt whether any encountered problem is
 caused by the optimizer, switching it off can help diagnosing the problem.
 
+## Floating-point constants
+
+Binary64 constants accept ordinary decimal/exponent notation and the
+case-insensitive special forms `inf`, `+inf`, `-inf` and `nan`.
+Bare `nan` denotes the canonical positive quiet NaN. For an exact NaN sign,
+payload or signaling bit, write `nan(<16 hexadecimal IEEE binary64 bits>)`;
+for example, `nan(fff8000000001234)`. The bits must encode a NaN, not a finite
+number or infinity. These forms preserve the instruction's FLOAT overload.
+
+```rxas
+load r0,inf
+fadd r1,r0,-inf
+load r2,nan(7ff8000000001234)
+```
+
+`rxdas` emits these forms for lossless reassembly. Function names such as
+`inf()` and label definitions such as `inf:` retain their existing tokens;
+bare `inf` and `nan` are numeric tokens, so use other names for branch targets
+and constant aliases. Quoted strings and Rexx source syntax are unchanged.
+Decimal instruction overloads convert special float operands to the decimal
+provider's text form; binary64 NaN payloads are specific to binary floats.
+
 ## Assembler Directives
 
 For machine instructions, see the *cRexx VM

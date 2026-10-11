@@ -223,7 +223,10 @@ l259iffalse:
    .srcstep 78 78 17 "select_dispatch_general.crexx" 60 8 21 "  else if value == 0 then return 410"
    itos a1
    .traceevent "V" 6 "R" "S" "a" 1 78 78 0 "value" ""
-   seq r2,a1,"0"
+   load r2,0
+   itos r2
+   .traceevent "L" 4 "R" "S" "r" 2 78 78 0 "" ""
+   seq r2,a1,r2
    .traceevent "O" 4 "R" "B" "r" 2 78 78 0 "" ""
    brf l258iffalse,r2
    .srcstep 79 79 17 "select_dispatch_general.crexx" 60 22 26 "  else if value == 0 then return 410"
@@ -235,7 +238,10 @@ l258iffalse:
    .srcstep 75 75 17 "select_dispatch_general.crexx" 61 8 21 "  else if value == 1 then return 420"
    itos a1
    .traceevent "V" 6 "R" "S" "a" 1 75 75 0 "value" ""
-   seq r3,a1,"1"
+   load r3,1
+   itos r3
+   .traceevent "L" 4 "R" "S" "r" 3 75 75 0 "" ""
+   seq r3,a1,r3
    .traceevent "O" 4 "R" "B" "r" 3 75 75 0 "" ""
    brf l257iffalse,r3
    .srcstep 76 76 17 "select_dispatch_general.crexx" 61 22 26 "  else if value == 1 then return 420"
@@ -247,7 +253,10 @@ l257iffalse:
    .srcstep 72 72 17 "select_dispatch_general.crexx" 62 8 21 "  else if value == 2 then return 430"
    itos a1
    .traceevent "V" 6 "R" "S" "a" 1 72 72 0 "value" ""
-   seq r4,a1,"2"
+   load r4,2
+   itos r4
+   .traceevent "L" 4 "R" "S" "r" 4 72 72 0 "" ""
+   seq r4,a1,r4
    .traceevent "O" 4 "R" "B" "r" 4 72 72 0 "" ""
    brf l256iffalse,r4
    .srcstep 73 73 17 "select_dispatch_general.crexx" 62 22 26 "  else if value == 2 then return 430"
@@ -259,7 +268,10 @@ l256iffalse:
    .srcstep 69 69 17 "select_dispatch_general.crexx" 63 8 21 "  else if value == 3 then return 440"
    itos a1
    .traceevent "V" 6 "R" "S" "a" 1 69 69 0 "value" ""
-   seq r5,a1,"3"
+   load r5,3
+   itos r5
+   .traceevent "L" 4 "R" "S" "r" 5 69 69 0 "" ""
+   seq r5,a1,r5
    .traceevent "O" 4 "R" "B" "r" 5 69 69 0 "" ""
    brf l255iffalse,r5
    .srcstep 70 70 17 "select_dispatch_general.crexx" 63 22 26 "  else if value == 3 then return 440"
@@ -271,7 +283,10 @@ l255iffalse:
    .srcstep 66 66 17 "select_dispatch_general.crexx" 64 8 21 "  else if value == 4 then return 450"
    itos a1
    .traceevent "V" 6 "R" "S" "a" 1 66 66 0 "value" ""
-   seq r6,a1,"4"
+   load r6,4
+   itos r6
+   .traceevent "L" 4 "R" "S" "r" 6 66 66 0 "" ""
+   seq r6,a1,r6
    .traceevent "O" 4 "R" "B" "r" 6 66 66 0 "" ""
    brf l254iffalse,r6
    .srcstep 67 67 17 "select_dispatch_general.crexx" 64 22 26 "  else if value == 4 then return 450"
@@ -283,7 +298,10 @@ l254iffalse:
    .srcstep 63 63 17 "select_dispatch_general.crexx" 65 8 21 "  else if value == 5 then return 460"
    itos a1
    .traceevent "V" 6 "R" "S" "a" 1 63 63 0 "value" ""
-   seq r7,a1,"5"
+   load r7,5
+   itos r7
+   .traceevent "L" 4 "R" "S" "r" 7 63 63 0 "" ""
+   seq r7,a1,r7
    .traceevent "O" 4 "R" "B" "r" 7 63 63 0 "" ""
    brf l253iffalse,r7
    .srcstep 64 64 17 "select_dispatch_general.crexx" 65 22 26 "  else if value == 5 then return 460"
@@ -295,7 +313,10 @@ l253iffalse:
    .srcstep 60 60 17 "select_dispatch_general.crexx" 66 8 21 "  else if value == 6 then return 470"
    itos a1
    .traceevent "V" 6 "R" "S" "a" 1 60 60 0 "value" ""
-   seq r8,a1,"6"
+   load r8,6
+   itos r8
+   .traceevent "L" 4 "R" "S" "r" 8 60 60 0 "" ""
+   seq r8,a1,r8
    .traceevent "O" 4 "R" "B" "r" 8 60 60 0 "" ""
    brf l252iffalse,r8
    .srcstep 61 61 17 "select_dispatch_general.crexx" 66 22 26 "  else if value == 6 then return 470"

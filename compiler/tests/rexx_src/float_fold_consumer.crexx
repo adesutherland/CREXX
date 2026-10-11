@@ -1,0 +1,11 @@
+options levelb numeric_common
+import float_fold_provider
+
+main: procedure = .int
+  arg argv = .string[]
+  a = argv[1] as .float
+  b = argv[2] as .float
+  c = argv[3] as .float
+  imported = sum()
+  say "imported " || (imported = c) || " " || (imported - c > 0.0) || " " || (imported = a + b) || " " || (imported == "0.3")
+  return 0

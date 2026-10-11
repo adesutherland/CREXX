@@ -31,11 +31,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
+#include <math.h>
 #include "rxcpmain.h"
 #include "rxcp_tokens.h"
 #include "rxcp_source_tree.h"
 #include "rxcp_util.h"
 #include "rxbin.h"
+#include "rxfloatformat.h"
 
 /* Type promotion matrix for numeric operators */
 const char* emit_promotion[10][10] = {
@@ -1198,23 +1200,34 @@ char* format_constant(ValueType type, ASTNode* node) {
                          node->node_string);
     }
     else if (type == TP_FLOAT) {
-        /* Need to make sure the float literal has an ".0" (for the assembler) */
+        char special[22];
+        /* Transport the typed binary64 value, not its contextual display
+         * string. Match the round-trip precision used by inline metadata and
+         * rxdas. Unoptimized raw literals have not initialized float_value;
+         * their source spelling is already the transport representation. */
+        if (node->node_type == CONSTANT && node->value_type == TP_FLOAT &&
+            rx_double_special_literal(node->float_value, special))
+            return mprintf("%s", special);
+        if (node->node_type == CONSTANT && node->value_type == TP_FLOAT)
+            buffer = mprintf("%.17g", node->float_value);
+        else
+            buffer = mprintf("%.*s",
+                             printf_string_precision(node->node_string_length),
+                             node->node_string);
+        /* Keep integer-looking values lexically float for RXAS. */
         flag = 1; /* Assume we should add .0 */
-        for (i=0; i<node->node_string_length; i++) {
-            if (node->node_string[i] == '.' || node->node_string[i] == 'e' || node->node_string[i] == 'E') {
+        for (i=0; buffer[i]; i++) {
+            if (buffer[i] == '.' || buffer[i] == 'e' || buffer[i] == 'E') {
                 /* Already in a float format */
                 flag = 0; /* don't add .0 */
                 break;
             }
         }
-        if (flag)
-            buffer = mprintf("%.*s.0",
-                             printf_string_precision(node->node_string_length),
-                             node->node_string);
-        else
-            buffer = mprintf("%.*s",
-                             printf_string_precision(node->node_string_length),
-                             node->node_string);
+        if (flag) {
+            char *literal = buffer;
+            buffer = mprintf("%s.0", literal);
+            free(literal);
+        }
     }
     else if (type == TP_DECIMAL) {
         buffer = mprintf("%.*sd",
@@ -1233,7 +1246,10 @@ char* format_constant(ValueType type, ASTNode* node) {
     }
     else {
         /* Integer */
-        buffer = mprintf("%.*s",
+        if (node->node_type == CONSTANT &&
+            (node->value_type == TP_INTEGER || node->value_type == TP_BOOLEAN))
+            buffer = mprintf("%" RXINTEGER_PRI, node->int_value);
+        else buffer = mprintf("%.*s",
                          printf_string_precision(node->node_string_length),
                          node->node_string);
     }
@@ -1260,6 +1276,10 @@ char* type_to_prefix(ValueType value_type) {
 
 /* Tests if a node is a constant */
 int is_constant(ASTNode* node) {
+    /* Decimal special values still use their existing string conversion. */
+    if (node->node_type == CONSTANT &&
+        node->value_type == TP_DECIMAL && rx_decimal_special_literal(node->decimal_value))
+        return 0;
     switch (node->node_type) {
         case CONSTANT: /* This is what the optimiser changes all constants to */
         case CONST_SYMBOL: /* Should not be being used in the AST at this stage - but for safety */

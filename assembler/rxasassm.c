@@ -32,6 +32,7 @@
 #include "../binutils/include/rxjtable.h"
 #include "../binutils/include/rxnumparse.h"
 #include "../binutils/include/rxgraph.h"
+#include "rxfloatformat.h"
 #include "../binutils/include/opdata.c"
 #include <ctype.h>
 #include <limits.h>
@@ -2219,6 +2220,14 @@ static OperandType token_to_operand_type(Assembler_Context *context, Assembler_T
 }
 
 static void convert_float_to_decimal(Assembler_Token *token) {
+    /* Decimal overloads consume provider text, not binary64 NaN payloads. */
+    if (!isfinite(token->token_value.real)) {
+        const char *text = isnan(token->token_value.real) ? "nan" :
+                           signbit(token->token_value.real) ? "-inf" : "inf";
+        strcpy((char *)token->token_value.string, text);
+        token->token_type = DECIMAL;
+        return;
+    }
     token->token_type = DECIMAL;
     memcpy(token->token_value.string, token->token_source, token->length);
     token->token_value.string[token->length] = 0;

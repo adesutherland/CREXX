@@ -28,10 +28,12 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <math.h>
 #include "rxcpmain.h"
 #include "rxcp_tokens.h"
 #include "rxcp_emit.h"
 #include "rxsignature.h"
+#include "rxfloatformat.h"
 
 static int emit_is_rxinteger_min_magnitude_literal(ASTNode *node) {
     static const char magnitude[] = "9223372036854775808";
@@ -2405,14 +2407,20 @@ void emit_expression(ASTNode *node, void *payload) {
                     if (node->value_type == TP_STRING) skip_promotion = 1;
                 }
 
-                /* Get the constant string */
-                temp2 = format_constant(load_type, node);
-
-                /* Make the register load instruction */
-                temp1 = mprintf("   load %c%d,%s\n",
-                                node->register_type,
-                                node->register_num,
-                                temp2);
+                temp2 = NULL;
+                if (load_type == TP_DECIMAL &&
+                         rx_decimal_special_literal(node->decimal_value)) {
+                    temp1 = mprintf("   load %c%d,\"%s\"\n   stod %c%d\n",
+                                    node->register_type, node->register_num, node->decimal_value,
+                                    node->register_type, node->register_num);
+                }
+                else {
+                    temp2 = format_constant(load_type, node);
+                    temp1 = mprintf("   load %c%d,%s\n",
+                                    node->register_type,
+                                    node->register_num,
+                                    temp2);
+                }
 
                 /* Set the node output */
                 if (node->output) output_append_text(node->output, temp1);

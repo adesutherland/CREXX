@@ -234,6 +234,25 @@ readers.
 The complete packed layout, canonicalization, corruption, disassembly, and
 ownership contract is in [RXBIN_JUMP_TABLES.md](RXBIN_JUMP_TABLES.md).
 
+### Floating-point literals
+
+Finite literals retain their decimal/exponent spelling. Binary64 exceptional
+values use case-insensitive `inf`, `+inf`, `-inf` and `nan`. Bare `nan` is the
+canonical positive quiet NaN (bits `7ff8000000000000`).
+`nan(<16 hexadecimal IEEE binary64 bits>)` preserves another NaN's sign,
+payload and signaling bit; the exponent must be all ones and the fraction
+nonzero. For example, `nan(fff8000000001234)` is a negative quiet NaN.
+These are FLOAT operands and retain the original opcode overload, constant
+pool type and RXBIN layout. They are RXAS literals, not new Rexx keywords.
+Bare `inf` and `nan` are numeric tokens. Function names such as `inf()` and
+label definitions such as `inf:` retain their existing tokens, but a bare
+branch target or constant alias with either name is now a float literal;
+choose another symbol name for those operands. Quoted strings are unchanged.
+Decimal overload promotion normalizes exceptional FLOAT operands to provider
+text (`inf`, `-inf`, `nan`); binary NaN payloads have no decimal counterpart.
+RXDAS emits the same literal forms so reassembly preserves exact float bits,
+including signed zero through the existing finite formatter.
+
 ### Binary Literals
 
 RXAS binary literals are written as byte-paired hex with a `0x` or `0X`

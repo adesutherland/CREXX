@@ -108,6 +108,9 @@ than a solved optional type. The reader admits complete integer, floating
 and quoted-string literals in that historical default position, retains
 the literal and marks the formal optional. It infers the declaration type;
 the provider owns default execution. This is not an expression evaluator.
+The RXAS `inf`, signed `inf`, `nan` and `nan(<16 IEEE bits>)` forms are admitted
+as floating defaults without changing `RX_CONTRACT_FLOAT_DEFAULT` or the
+provider's ownership of execution. Malformed/non-NaN bit forms are rejected.
 The legacy signature splitter does not admit commas inside quoted defaults;
 generated metadata uses solved optional types, and executable/default trees
 belong to the separately validated inline payload.

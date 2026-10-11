@@ -38,6 +38,7 @@
 #include "../binutils/include/rxdefs.h"
 #include "../binutils/include/rxjtable.h"
 #include "../binutils/include/rxnumparse.h"
+#include "rxfloatformat.h"
 
 /* Max buffer size - todo change to a dynamic solution */
 #define MAX_LINE_SIZE 5000
@@ -611,6 +612,13 @@ static size_t disassemble_operand(bin_space *pgm,
                                pgm->binary[index].iconst);
             break;
         case OP_FLOAT:
+            {
+                char special[22];
+                if (rx_double_special_literal(FLOAT_CONST_VALUE(pgm->const_pool, pgm->binary[index].index), special)) {
+                    out_len = snprintf(buffer, buffer_len, "%s", special);
+                    break;
+                }
+            }
             out_len = format_float_literal(buffer, buffer_len,
                                            FLOAT_CONST_VALUE(pgm->const_pool, pgm->binary[index].index));
             break;
