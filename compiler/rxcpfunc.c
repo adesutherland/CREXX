@@ -2405,6 +2405,9 @@ static void append_rxpa_metadata(struct static_linked_metadata **head, char *kin
                                  char *owner, char *member_kind, char *member, char *args) {
     struct static_linked_metadata *new_meta = malloc(sizeof(struct static_linked_metadata));
 
+    if (!new_meta)
+        RX_PANIC_OOM("malloc compiler RXPA metadata", sizeof(*new_meta), kind);
+
     new_meta->kind = kind;
     new_meta->symbol = symbol;
     new_meta->option = option;
@@ -2547,7 +2550,8 @@ void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
                 malloc(sizeof(struct static_linked_function));
 
         (void)func;
-        if (!pending) return;
+        if (!pending)
+            RX_PANIC_OOM("malloc compiler RXPA function", sizeof(*pending), name);
         pending->provider_id = (char *)plugin_id;
         pending->name = name;
         pending->option = option;
@@ -2560,6 +2564,8 @@ void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
     else {
         // Add to the list of statically linked functions
         struct static_linked_function *new_static_func = malloc(sizeof(struct static_linked_function));
+        if (!new_static_func)
+            RX_PANIC_OOM("malloc compiler RXPA function", sizeof(*new_static_func), name);
         new_static_func->provider_id = (char *)plugin_id;
         new_static_func->name = name;
         new_static_func->option = option;

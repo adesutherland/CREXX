@@ -27,6 +27,14 @@ add_test(NAME ast_allocation_failure COMMAND test_ast_allocation)
 set_tests_properties(ast_allocation_failure PROPERTIES
         LABELS "unit;compiler;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_ast_allocation)
 
+add_executable(test_rxpa_allocation test_rxpa_allocation.c)
+target_include_directories(test_rxpa_allocation PRIVATE ${symbol_test_includes})
+target_link_libraries(test_rxpa_allocation PRIVATE rxclib)
+add_test(NAME rxpa_allocation_failure COMMAND test_rxpa_allocation)
+set_tests_properties(rxpa_allocation_failure PROPERTIES
+        LABELS "unit;compiler;allocation;mainframe" TIMEOUT 30
+        CREXX_PREP_TARGETS test_rxpa_allocation)
+
 add_executable(test_frame_control_ast test_frame_control_ast.c)
 target_include_directories(test_frame_control_ast PRIVATE ${symbol_test_includes})
 target_link_libraries(test_frame_control_ast PRIVATE rxclib)
