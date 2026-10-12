@@ -1,0 +1,85 @@
+/* cREXX License (MIT). Complete Level L calculator: selected tree to value. */
+options levelb
+import rxfnsb
+import llcore
+import lllanguage
+import llsource
+import lltree
+import levell_calculator
+
+/** Parse the whole file before evaluating. Decimal arithmetic belongs to this
+ * example, not the grammar or parser. A postorder walk evaluates children first;
+ * it does not reparse source or use an additional recursive evaluator stack.
+ * @param argv One input filename.
+ * @return 0 on success; a parser status or 3 for an application/value failure.
+ */
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do
+    say 'usage: calculator expression.calc'; return 3
+  end
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'CALC_IO: cannot read ' || argv[1]; return 3
+  end
+  language = levell_calculator..language()
+  request = .lllanguage..request(language,source)
+  status = request.parse()
+  if status <> 0 then do
+    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'CALC_PARSE',request.error())
+    return status
+  end
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'CALC_TREE: ' || tree.error(); return 3
+  end
+  pending = .int[]; expanded = .int[]; values = .decimal[]
+  top = 1; pending[top] = tree.root(); expanded[top] = 0
+  node = .int; child = .int; count = .int; name = .string
+  a = .decimal; b = .decimal; value = .decimal
+  do
+    do while top > 0
+      node = pending[top]; count = tree.count(node); name = tree.name(node)
+      if expanded[top] = 0 then do
+        expanded[top] = 1
+        do child = count to 1 by -1
+          top = top + 1; pending[top] = tree.child(node,child); expanded[top] = 0
+        end
+        iterate
+      end
+      top = top - 1
+      if name = 'number' & count = 0 then value = tree.text(node) as .decimal
+      else if (name = 'arithmetic' | name = 'group' | name = 'negative') & count = 1 then do
+        value = values[tree.child(node,1)]
+        if name = 'negative' then value = -value
+      end
+      else if wordpos(name,'sum difference product quotient') > 0 & count = 2 then do
+        a = values[tree.child(node,1)]; b = values[tree.child(node,2)]
+        select name
+          when 'sum' then value = a + b
+          when 'difference' then value = a - b
+          when 'product' then value = a * b
+          when 'quotient' then do
+            if b = 0 then do
+              say argv[1] || ': ' || llsource..diagnostic(source,tree.start(tree.child(node,2)),'CALC_DIVIDE_BY_ZERO','The denominator evaluates to zero.')
+              return 3
+            end
+            value = a / b
+          end
+          otherwise nop
+        end
+      end
+      else do
+        say 'CALC_TREE: unexpected node or child count: ' || name || ' / ' || count
+        return 3
+      end
+      values[node] = value
+    end
+  on signal
+    say argv[1] || ': ' || llsource..diagnostic(source,tree.start(node),'CALC_VALUE','Decimal conversion or arithmetic failed.')
+    return 3
+  end
+  say 'RESULT|' || values[tree.root()]
+  return 0

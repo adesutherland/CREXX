@@ -120,6 +120,77 @@ branch-review scope. Actual local/remote commit verification is reported in the
 conversation. Integration and release remain separate; no acceptance criterion
 is closed merely by pushing this checkpoint.
 
+### Teaching examples and comment/migration review — 12 October 2026
+
+Adrian requests a commit and clearer backend selection, success/error-path
+explanations, an end-to-end calculator, generalized comments, and a review of
+handwritten RexxScript code. The preceding continuation is already committed
+and remotely backed up as `13041b644`. This extension preserves the complete
+vision and all open original/LANG obligations; examples do not close them.
+
+**Vision:** a reader can choose a backend by intended language semantics,
+understand a selected tree versus a forest, and build a complete calculator
+whose visitor supplies meaning. RexxScript is explained as the larger example
+of that same pattern. Comment handling should eventually be a shared,
+source-preserving facility for configurable line, nonnested block and nested
+block forms, with explicit quoting, delimiter and newline policies. General
+stages should replace consumer syntax mechanics when their contracts are
+implemented and equivalent; application semantics and required legacy paths
+must retain their owners.
+
+1. **EX-AC01 (LANG-AC02/03/09/13):** inventory implemented comment behavior and
+   record a concrete generalized-comment proposal with boundaries, admission,
+   diagnostics and tests. New spellings/semantics require Adrian's decision;
+   proposal preparation is not implementation or acceptance of that feature.
+2. **EX-AC02 (LANG-AC01/05/07/12/13/14):** runnable small grammars demonstrate
+   predictive admission, left recursion, common-prefix/ordered choice and
+   genuinely ambiguous arithmetic. Verify admitted/refused engines, complete
+   input, forest multiplicity and honest error messages on both VMs and
+   optimized/unoptimized consumer builds. Explain that a failed parse path
+   is not itself a user error, and a conflict is not proof of ambiguity.
+3. **EX-AC03 (LANG-AC04/07/12/13):** a complete calculator includes grammar,
+   generated module, Level B tree evaluator, input, build instructions and
+   expected results. Test precedence, associativity, grouping, decimals,
+   alternative comment delimiters, malformed input and located division by
+   zero. Parsing must succeed before evaluation; invalid input emits no result.
+4. **EX-AC04 (LANG-AC09/12/13):** reconcile modern and legacy RexxScript guides
+   against their sources; inventory syntax mechanics that can migrate and
+   semantics that remain handwritten. No legacy removal or forced Pratt
+   conversion without consumer/semantic proof and maintainer direction.
+
+1. **EX-STEP01 (EX-AC01/04):** inspect source and prepare the comment/migration
+   review. Record remaining decisions before changing language architecture.
+2. **EX-STEP02 (EX-AC02):** add backend selection examples/probe and guide
+   walkthrough using existing syntax. No automatic fallback or new resolver.
+3. **EX-STEP03 (EX-AC03):** implement the calculator using existing operator,
+   lexer/comment and source-tree APIs; qualify its complete toolchain.
+4. **EX-STEP04 (EX-AC02–04):** qualify focused teaching regressions, retain
+   exact inputs, correct guide drift and commit the concrete increment.
+5. **EX-STEP05 (EX-AC01):** after approval of the concrete generalized-comment
+   contract, implement it in the common model/runtime/emitters/bootstrap and
+   qualify quoting, prefixes, nesting, newline and recovery behavior across
+   admitted backends. Pending design approval; no implication that teaching
+   example completion satisfies this step.
+
+**Current status:** EX-STEP01–04 delivered for review; EX-AC02–04 verified in
+the bounded native increment. EX-AC01's inventory/concrete proposal is ready,
+but the generalized-comment design and EX-STEP05 await Adrian's approval.
+SURFACE.md records the proposed `line`, `block`, `nested`, optional shielding
+pattern and newline contracts. The current one-pair frontend's incomplete
+duplicate-declaration rejection remains an open LANG-AC02/05 obligation; it
+must not be mistaken for supported multiple forms.
+
+`evidence/teaching-20261012/` retains 808 runtime checks and 16 expected build
+refusals across complete opt/no-opt Level L builds and both VMs, with source/RXAS
+calculator emission and both consumer compiler modes. A separate seven-command
+guide replay prints exactly `RESULT|11` on both VMs. All checks are warning-free;
+local links/fences pass, and all 64 checked prior core-source/artifact identities
+match. No aggregate CTest is added/expanded, product core is unchanged, and its
+qualified evidence is reused. This increment adds six backend grammars, an
+end-to-end calculator and modern/legacy/migration guidance; it does not close
+full LANG or original research obligations. Source/examples/evidence are
+prepared for the requested commit and existing authorized remote safety branch.
+
 ### Current step status — latest review
 
 | Original step | Current state |

@@ -12,6 +12,16 @@ located diagnostics plus lexical/UTF8 recovery have new native regressions.
 CONT-AC01–04 pass for their bounded scope; full LANG and original research
 criteria remain open. See the [continuation receipt](evidence/continuation-20261012/README.md).
 
+**12 October teaching increment:** the user guide now explains backend choice,
+complete versus speculative paths and explicit Earley forests with runnable
+language examples. A complete Pratt calculator includes its Level B evaluator,
+build commands and syntax/value diagnostics. Modern RexxScript is documented
+as the larger tree-interpreter example, with a source-based migration inventory.
+The [teaching receipt](evidence/teaching-20261012/README.md) records 808 runtime
+checks and 16 expected build refusals. The
+[generalized-comment contract](SURFACE.md#generalized-comments-proposal--12-october-2026)
+is prepared for maintainer approval; its new spellings are not implemented.
+
 **11 October safety checkpoint:** the maintainer has requested a commit and
 remote backup on `origin/levell`. This preserves the implementation and retained
 evidence for review. Bootstrap checkpoint 1 is locally verified; the common

@@ -615,3 +615,88 @@ production would change the language. Automaton dumps remain optional detail.
 These are executed diagnostic examples, not a measured user study. Source
 line formatting, names for arbitrary token IDs and richer editor links still
 need product presentation work.
+
+## Generalized comments proposal — 12 October 2026
+
+**For Adrian's review, not implemented syntax.** This is the EX-AC01 design
+gate in PLAN.md. Keep the existing small declaration family and add forms:
+
+```rexx
+shell.notes: comments line '#'
+cpp.notes: comments line '//'
+c.notes: comments block '/*' '*/'
+rexx.notes: comments nested '/*' '*/'
+```
+
+`block` ends at its first closing delimiter; an opener inside it has no
+special meaning. `nested` counts its own opener/closer pair. It is structured
+nesting, not arbitrary grammar recursion. Several declarations may coexist,
+but the two `/*` forms above are alternatives, not a valid combined example.
+Line and nonnested block recognition is regular; nested blocks need a counter
+or stack. Parser backend selection does not change that lexical meaning.
+
+Proposed contracts to approve together:
+
+1. **Original source remains owned.** Mask only scanning bytes; never delete
+   bytes or alter token origins. All comment text remains available through
+   source gaps. Separate classified trivia records can be added under the
+   already open source/trivia contract; this proposal does not promise a
+   complete new trivia API.
+2. **Line boundaries.** A line comment stops before CR, LF or the CRLF pair;
+   the lexer sees that original line ending. EOF closes a line comment.
+   Existing `comments nested` keeps its current default of masking internal
+   newlines for compatibility. New `block` uses that same default. Optional
+   `newlines keep` retains CR/LF in the scanning copy, allowing a newline-token
+   language to count them deliberately. It changes tokenization, so it must
+   be explicit rather than a formatter preference.
+3. **Opaque strings.** The default remains current single/double quotes with
+   doubled-quote escapes. An advanced optional `outside PATTERN` selects a
+   named existing regular lexical pattern instead; reject unknown, nullable,
+   recursive or nonregular patterns. The same authoritative pattern should
+   be used by the string's lexical rule. This removes an implicit duplicate
+   quoting implementation. No inference from token names. Before implementation,
+   verify deterministic shielding and comment/string overlap admission with
+   this model; unsupported overlaps fail construction, not silently skip text.
+4. **Overlaps are explicit.** At an unshielded position, longest opening
+   delimiter wins; equal spellings are a duplicate-declaration error with both
+   source ranges. Inside a comment, only its own closer/nested opener applies;
+   markers for other styles and quotes are text. Closers take precedence over
+   nested openers at an identical position, retaining current behavior for
+   prefix overlaps; equal opener/closer is invalid for block/nested forms.
+   Cross-style nesting is outside this initial profile and must be rejected
+   if requested. Never use declaration order to resolve duplicate openers.
+5. **Failures and progress.** Reject empty delimiters, invalid scalar/byte
+   spellings under the input profile and invalid shielding at build time.
+   Unterminated blocks report their named form and original opening range.
+   Malformed UTF-8/resource statuses remain distinct. Every scanning branch
+   advances; nesting work is bounded by source bytes and the host scan budget.
+   Recovery must respect quote/comment opacity, report skipped damage, and
+   never turn an unterminated comment into a clean document.
+
+For example, after approval:
+
+```rexx
+quoted.text: pattern = '"' (string.body | '""')* '"'
+notes: comments nested '/*' '*/' outside quoted.text newlines keep
+```
+
+`string.body` is an ordinary explicitly declared charset. Basic users need
+none of these qualifiers. The optional pattern and newline policies let a
+language author grow the same grammar when the default Rexx quoting/layout
+is inappropriate. Languages with context-dependent string modes need a
+declared lexical mode/stage contract; a regular shielding pattern is not a
+claim to cover every language's interpolation or raw-string syntax.
+
+Implementation after review: store a list of checked comment descriptors in
+the common model, emit the same descriptors in source/RXAS, and implement one
+source-preserving lexical coordinator shared by strict/recovery requests.
+Run all forms on LL/LR/PEG/Earley/Pratt inputs, quote/escape adversaries, opener
+prefixes, nesting, CR/CRLF/EOF, Unicode/NUL and lowered budgets. Verify unchanged
+existing grammars, L0/L1/L2 agreement and last-good-artifact preservation. Do
+not replace the old one-pair contract first and leave one emitter/seed behind.
+
+The current alternative of line-comment DFA rules plus a pre-DFA nested
+stage is useful but does not provide this composition: a block opener inside
+a line comment is still seen by the earlier preparation stage. The user guide
+states that limitation. Unifying these responsibilities is the purpose of the
+proposal, not simply accepting more spellings.

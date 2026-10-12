@@ -41,8 +41,10 @@ read [Building Level L from Level B](bootstrap.md).
 - [Overview: from a language description to a useful program](#overview-from-a-language-description-to-a-useful-program)
 - [How RexxScript IF statements get their structure](#how-rexxscript-if-statements-get-their-structure)
 - [How to divide a language problem into components](#how-to-divide-a-language-problem-into-components)
+- [Choose a backend and understand competing paths](#choose-a-backend-and-understand-competing-paths)
 - [Grow one settings grammar](#grow-one-settings-grammar)
 - [Build and run a complete example](#build-and-run-a-complete-example)
+- [Build an end-to-end calculator](#build-an-end-to-end-calculator)
 - [Write the language specification](#write-the-language-specification)
 - [Define lexical rules](#define-lexical-rules)
 - [Define parser rules](#define-parser-rules)
@@ -469,6 +471,119 @@ composition, specialized regional parsers and generated richer tree passes
 remain separately qualified research work. Begin with the working components
 described here rather than assuming those experiments are already product APIs.
 
+## Choose a backend and understand competing paths
+
+Begin with the language's intended meaning, then choose a backend that can
+implement it. **Use DFA plus the default LR(1) for an ordinary structured
+language; use Pratt for a small operator-expression language or a checked
+expression region.** LL(1) is a useful simpler choice when prediction is
+straightforward. PEG is appropriate when priority is part of your intended
+rules. Earley is useful when you need general CFG exploration or to inspect
+ambiguity. This is a starting recommendation, not a speed ranking of unmeasured
+workloads.
+
+| Component | Good starting use | Important consequence |
+|---|---|---|
+| DFA lexer | Words, numbers, punctuation, regular strings, line comments, binary records | Longest match wins; authored priority breaks equal-length ties. It does not recognize arbitrary nested structure. |
+| LL(1), `backend ll1` | Predictable commands, small configuration/format grammars | Choices must be predictable from one next token, including empty alternatives and following context. This implementation refuses left-corner cycles and overlapping predictions. Factoring may help. |
+| Canonical LR(1), `backend lr1` (default) | Structured statements, left-recursive lists, expressions written as precedence rules | The parser combines its stack context with one lookahead token. A build conflict means this grammar is not admitted; it does not alone prove ambiguity. Tables can be large. |
+| Ordinary packrat PEG, `semantics ordered backend packrat` | Languages whose alternatives deliberately have priority, useful lookahead/predicates | A locally successful choice commits. Left recursion and nonprogressing repetition are refused. Memoization consumes storage; unlimited lookahead does not mean arbitrary grammar acceptance. |
+| Pratt, `backend pratt` | Calculator, operator DSL, bracketed expressions inside an outer LR language | Declare the implemented atom/group/prefix/infix profile. It is not a backend for arbitrary statement rules. Current prefix operators bind tighter than every infix operator. |
+| Earley, `backend earley` | General CFG prototyping, grammars outside deterministic admission, investigating multiple parses | A unique finite parse can become a tree. Multiple/cyclic derivations remain an explicit forest result. This runtime has chart/forest/work safeguards; broader grammar acceptance does not imply cheap parsing. |
+
+CFG alternatives describe possible derivations; PEG alternatives describe
+prioritized recognition. That distinction is fundamental in
+[Ford's PEG definition](https://pdos.csail.mit.edu/~baford/packrat/popl04/).
+The separate distinction between a parser-class conflict and proven ambiguity
+is also illustrated in the
+[Bison counterexample documentation](https://www.gnu.org/software/bison/manual/html_node/Counterexamples.html).
+The Level L examples below verify this implementation's actual admission and
+results; other generators' defaults are not implicitly Level L policies.
+
+### Small examples where the choice matters
+
+These are complete [runnable grammars](../examples/backends/), with an
+[inspection program](../examples/backends/inspect.crexx) that prints the
+selected tree or reports the forest. Names such as `a` below are **token names**,
+whose spellings are declared in each file.
+
+| Example | Rules that matter | Observed lesson |
+|---|---|---|
+| [Predictable commands](../examples/backends/predictive.levell) | `command = readword identifier \| writeword identifier number` | LL/LR/Earley admit the CFG. Explicitly ordered PEG also accepts these tested commands because the first tokens are disjoint. `read port` and `write port 3` have one selected tree. |
+| [Left-recursive list](../examples/backends/left-recursive-list.levell) | `list = list comma identifier \| identifier` | LR/Earley accept `a,b,c`. LL(1)/ordinary packrat refuse the left-corner cycle. An equivalent `identifier (comma identifier)*` may fit them, but changes the derivation-tree shape; check your consumer. |
+| [Ordered prefix](../examples/backends/ordered-prefix.levell) | `root = fragment stop`; `fragment = a \| a b`, with `stop` spelling `c` | The CFG admits `ac` and `abc` in LR/Earley. LL(1) refuses the common prediction. Ordered PEG admits `ac` but rejects `abc`: `fragment` succeeded on `a` before the caller needed `c`. In this small example, explicitly changing priority to `a b \| a` admits both. |
+| [Even palindrome](../examples/backends/palindrome.levell) | `palindrome = a palindrome a \| b palindrome b \| ''` | Earley accepts `abba` with a unique finite tree; this grammar is refused by the current LL/LR routes. This illustrates a general-CFG use beyond deliberately ambiguous input. |
+| [Ambiguous arithmetic](../examples/backends/ambiguous-arithmetic.levell) | `expression = expression plus expression \| expression times expression \| number` | Earley accepts `2+3*4` but returns a forest: the grammar allows both `2+(3*4)` and `(2+3)*4`. LR refuses a conflict. LL/ordinary packrat refuse this recursive profile. |
+
+The palindrome row describes admission of **this grammar**, rather than claiming
+that every grammar for a similar language has been classified. The PEG prefix
+repair is specific to these rules; “put the longest alternative first” is not
+a general proof that CFG and PEG recognize the same language. The lexer has
+already made its separate longest-match decision before these token rules run.
+
+For arithmetic, the usual repair is to write precedence/association rules or
+the operator declarations used by the calculator below. If your language
+intentionally permits multiple interpretations, keep a forest and apply a
+separately specified semantic selection rule. Do not select whichever tree is
+first in storage. A semantic constraint may leave zero, one or several valid
+interpretations; only one supports a consumer that requires a single tree.
+A general declarative forest-selection service is still open work.
+
+### Successful paths and failed paths are different facts
+
+Several alternatives may share a prefix without producing several complete
+parses. A complete successful tree means the entire input fits the start rule.
+A failed alternative explored on the way is not an error in that input. For
+CFG semantics, **two complete derivations of the same input** establish
+ambiguity for that input; unrelated continuations or failed choices do not.
+PEG suppresses grammar ambiguity through priority, but that does not establish
+that the chosen interpretation is the language designer's intended one.
+
+Earley request status **5** means accepted input without a unique finite tree.
+Inspect `request.forest()` and `request.forestroot()` instead of executing a
+tree visitor. In the inspection lesson:
+
+```text
+STATUS|5
+DERIVATIONS_CAPPED_AT_2|2
+FOREST_VALID|1
+LL_FOREST: accepted input has no unique finite tree; inspect the forest and choose an explicit policy
+```
+
+The count is capped: 2 means **at least two**, not exactly two for every input.
+`forest.derivations(root,cap)` returns -1 for a reachable derivation cycle and
+-2 for traversal exhaustion; neither should be rendered as an ordinary finite
+count. A cycle is also not a demonstrated successful infinite execution.
+
+When the whole parse fails, many speculative paths may have failed too. There
+is no universal “right failed path” to select. Level L reports the backend's
+failure position/expectations and applies your rule message only when its
+context is applicable. If several contexts compete, generic expectations are
+more accurate than an invented construct name. PEG predicate/alternative
+failures must remain speculative until they contribute to final failure.
+Resource exhaustion is a separate outcome; it says neither “invalid language”
+nor “ambiguous input”. The regression panels check that these distinctions
+survive backend changes; identical repair choices or wording are not required.
+
+To work out why a grammar fails: first check the diagnostic category, then its
+named rules/lookahead and related locations, then minimize the grammar/input.
+For a CFG conflict, trying Earley on the same rules can expose complete competing
+derivations. Finding only one tree for a small corpus does not prove the grammar
+unambiguous. Switching to ordered semantics solely to silence a conflict can
+silently change what your language accepts.
+
+Run the teaching regression panel from the repository root:
+
+```sh
+python3 lib/rxfnsl/tests_functional/check-teaching-examples.py \
+  cmake-build-levell-product research/level-l/build/teaching-review
+```
+
+It builds isolated current imports, executes both VMs with optimized/unoptimized
+consumers, and verifies admission refusals, full-input errors, forest results
+and the calculator. Its retained review receipt records the exact qualification
+scope; it is not an automatically selected backend or a new broad-suite gate.
+
 ## Grow one settings grammar
 
 The numbered files in [examples/settings](../examples/settings) develop the
@@ -534,7 +649,8 @@ identifier character classes. Its [input](../examples/settings/unicode.settings)
 includes `café`, a decomposed `cafe` plus U+0301, `温度`, `Δ`, and supplementary
 U+10400. The lexer matches scalars; tokens and trees retain original byte spans.
 The example's sets are deliberately explicit, not a Unicode XID definition.
-Pinned property sets and comparison keys remain checkpoint work.
+The seventh lesson below supplies pinned property sets. Comparison keys remain
+checkpoint work.
 
 The two spellings of café remain different spellings. Neither the lexer nor
 the parser silently normalizes or folds them. An application may use a declared
@@ -592,8 +708,10 @@ checkpoint's acceptance boundary.
 The proper Level L readers also recover specification syntax at lexically
 recognized `name:` declaration boundaries, collect up to 16 errors and retain
 valid later declarations for inspection. Any error prevents artifact generation.
-L0 remains the small first-error seed. Specification lexical damage and cascading
-semantic-error suppression remain separate open work.
+L0 remains the small first-error seed. The proper readers also retain later
+declaration candidates after lexical quote/comment/UTF-8 damage, while the
+original document stays failed. Complete cascading semantic-error suppression
+remains open work.
 
 ### Put an expression parser inside the settings parser
 
@@ -640,7 +758,8 @@ PEG does not silently reinterpret that lowering.
 The initial regional provider uses an LR outer parser and one Pratt component.
 Generation rejects overlapping delimiter ownership, a missing operator
 component and a lexer that emits the reserved virtual token. An invalid inner
-expression reports the opening region's byte position; a missing closer cannot
+expression reports the unexpected input and relates it to the opening region;
+a missing closer cannot
 be mistaken for a successful partial expression. Recovery ignores separator
 tokens inside the declared region and preserves the failure status.
 Multiple/nested language components, richer operator forms and general named
@@ -800,6 +919,88 @@ and deliberate failures are retained in the
 The bounded [audit script](../../../research/level-l/cases/check-user-guide.py)
 recreates the tutorial and diagnostic probes using the configured tools.
 
+## Build an end-to-end calculator
+
+The [calculator grammar](../examples/calculator/calculator.levell),
+[Level B evaluator](../examples/calculator/calculator.crexx) and
+[input](../examples/calculator/example.calc) form a complete small interpreter.
+This is a second useful endpoint for the same Level L concepts, alongside the
+progressive settings example and the larger RexxScript interpreter.
+
+The language has decimal number spellings, `+ - * /`, prefix minus and
+parentheses. Its `(* ... *)` comments can nest. Multiplication/division bind
+tighter than addition/subtraction; infix operators associate left; prefix
+minus binds tightest under the current operator profile. The grammar chooses
+Pratt explicitly:
+
+```rexx
+parse: parser start arithmetic backend pratt
+arithmetic: operators atom number group lparen rparen
+sum: infix arithmetic plus precedence 10 left
+difference: infix arithmetic minus precedence 10 left
+product: infix arithmetic times precedence 20 left
+quotient: infix arithmetic divide precedence 20 left
+negative: prefix arithmetic minus
+```
+
+For `2+3*4`, the named tree is:
+
+```text
+arithmetic
+└── sum
+    ├── number    "2"
+    └── product
+        ├── number    "3"
+        └── number    "4"
+```
+
+The parser creates this structure; the evaluator computes 14. It walks children
+before their parent, stores decimal values by node handle, and handles `sum`,
+`difference`, `product`, `quotient`, `negative` and `group`. The start-rule wrapper
+`arithmetic` passes its child's value through. There is no second expression
+parser hidden in the evaluator. The decimal conversion/arithmetic policy is
+this application's choice, subject to the cREXX runtime's decimal limits;
+Level L itself neither evaluates literals nor promises arbitrary precision.
+
+Run these commands from the repository root after preparing the tools as above:
+
+```sh
+task_bin="$PWD/cmake-build-levell-product/bin"
+task_work="$PWD/research/level-l/build/calculator"
+mkdir -p "$task_work/imports"
+cmake -DLEVEL_L="$task_bin/levell" \
+  -DSPEC="$PWD/lib/rxfnsl/examples/calculator/calculator.levell" \
+  -DOUTPUT="$task_work/levell_calculator.rxas" -DFORMAT=rxas \
+  -P lib/rxfnsl/tools/generate.cmake
+"$task_bin/rxas" "$task_work/levell_calculator"
+cp "$task_bin/library.rxbin" "$task_bin/rxfnsl.rxbin" \
+  "$task_work/levell_calculator.rxbin" "$task_work/imports/"
+"$task_bin/rxc" -x --no-exe-import -i "$task_work/imports" \
+  -o "$task_work/calculator" lib/rxfnsl/examples/calculator/calculator.crexx
+"$task_bin/rxas" "$task_work/calculator"
+"$task_bin/rxlink" -s -o "$task_work/calculator-linked" \
+  "$task_work/calculator.rxbin" "$task_work/levell_calculator.rxbin" \
+  "$task_bin/rxfnsl.rxbin" "$task_bin/library.rxbin"
+"$task_bin/rxtvm" "$task_work/calculator-linked.rxbin" \
+  -a lib/rxfnsl/examples/calculator/example.calc
+```
+
+The documented input `2 + 3 * (4 - 1)` prints `RESULT|11`. Run the same image
+with `rxbvm`. The private import directory prevents old linked examples from
+supplying obsolete prototypes. Generation must succeed before assembly; the
+CMake wrapper preserves a previous artifact if generation fails.
+
+The whole file is parsed before evaluation. `2+*3` reports `CALC_PARSE` at byte
+2 with the unexpected `*`; `7/(3-3)` reports `CALC_DIVIDE_BY_ZERO` at the
+denominator's original byte 2. Neither prints `RESULT`. `7/0 +` reports the
+syntax error before any attempted division. Parser resource/contract statuses
+are returned unchanged; decimal conversion/arithmetic failures use `CALC_VALUE`.
+This calculator requires a clean tree and does not execute recovered input.
+The teaching panel checks all these paths, precedence/association, exact
+`0.1+0.2=0.3` in this decimal evaluator, comment nesting/Unicode/newlines and
+both emission formats. This decimal example is distinct from RexxScript's
+Level G rule that unsuffixed fractional literals use binary floats.
+
 ## Write the language specification
 
 The complete tutorial specification is:
@@ -929,8 +1130,9 @@ scan: lexer input utf8
 
 `scalar` excludes surrogates. Positions remain zero-based byte offsets even
 when rules match scalars. NUL is data; only the explicit buffer boundary is EOF.
-Quoted literals may contain Unicode. Unicode-property classes and automatic
-Unicode identifier rules are not yet supplied.
+Quoted literals may contain Unicode. Pinned property charsets such as
+`unicode.XID_Start` are available as shown in lesson 7; identifier recognition
+still needs an authored rule and does not automatically normalize/fold names.
 
 The tutorial and RexxScript retain their earlier byte patterns under the
 explicit `utf8bytes` compatibility profile. Binary formats should keep slices
@@ -950,6 +1152,44 @@ putting the only newline inside the comment does not separate `a=1` from
 `b=2`. Languages that count comment-contained newlines as statement boundaries
 need a deliberate layout stage. Neither layout nor indentation is inferred.
 An unclosed nested comment is reported at its opening delimiter.
+
+The delimiters are not fixed to Rexx spelling. The calculator uses
+`notes: comments nested '(*' '*)'`; the same stage supports other nonempty,
+distinct pairs. Only **one nested pair** is stored in the current language
+definition. The current frontend does not yet reject every duplicate comment
+declaration, so declaring several pairs must not be used as a supported way to
+combine styles.
+
+Line comments can already be ordinary regular lexer rules, for example:
+
+```rexx
+line.character: charset = scalar except (U+000A | U+000D)
+hash.notes: rule = '#' line.character* then skip
+slash.notes: rule = '//' line.character* then skip
+```
+
+The complete [line-comment example](../examples/backends/line-comments.levell)
+combines both forms with quoted strings. Its tests cover CRLF/EOF, markers
+inside strings, doubled quotes, Unicode comments and a later lexical error on
+all four grammar engines. It deliberately has no pre-DFA nested-comment stage.
+
+The original CR/LF remains for the lexer to classify. Each rule progresses
+because its marker is nonempty, and matches to EOF when no newline follows.
+String tokens shield their own contents only when their lexical match/priority
+wins; no global “everything after #” substitution is implied. Nonnested block
+comments are regular too, but their pattern must exclude the **first complete
+closing delimiter**, not merely its individual characters. Character classes
+are sets of scalars/bytes, not sets of strings.
+
+There is an important current composition limit: the nested-comment preparation
+stage runs **before** line-comment DFA rules. A block marker inside a line
+comment may therefore be interpreted by preparation. Likewise the built-in
+quote shielding does not adopt arbitrary target-language escapes. For coherent
+multiple styles and configurable shielding/newline preservation, the
+[generalized-comment proposal](../../../research/level-l/SURFACE.md#generalized-comments-proposal--12-october-2026)
+extends the same `comments` family with `line`, `block` and `nested`. It is for
+review, not accepted executable syntax. Use only the documented current profile
+until that shared coordinator is implemented.
 
 ## Define parser rules
 

@@ -6,6 +6,12 @@ RexxScript borrows familiar syntax from REXX but implements only the subset
 described in this guide; it is not a full REXX interpreter.
 It is a RexxScript product, not the Level C compiler path.
 
+**Two explicit versions:** the command/API described first here is legacy
+`rexxscript`, including the `REXXSCRIPT` compiler exit. The unreleased
+[modern `rexxscript1` review implementation](#rexxscript-1-modern-level-l-review-implementation)
+is selected separately and uses the generated Level L tree. Neither command
+automatically tries the other dialect.
+
 RexxScript is delivered as:
 
 - `bin/rexxscript.rxbin`: runtime image used by CREXX programs.
