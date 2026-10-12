@@ -50,15 +50,23 @@ add_custom_command(OUTPUT "${_generated_grammar}"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
   DEPENDS levell_cli "${_generated_spec}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate.cmake"
   VERBATIM)
-add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/testGenerated-linked.rxbin"
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/levell_example.rxbin"
   COMMAND $<TARGET_FILE:rxas> levell_example
+  DEPENDS rxas "${_generated_grammar}"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+crexx_add_import_root(levell_generated_test_imports
+  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/imports" OUTPUT_VARIABLE _generated_imports
+  FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+    "${CMAKE_CURRENT_BINARY_DIR}/levell_example.rxbin"
+  DEPENDS library rxfnsl)
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/testGenerated-linked.rxbin"
   COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
-    -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
+    -i "${CMAKE_CURRENT_BINARY_DIR}/imports"
     -o testGenerated "${CMAKE_CURRENT_SOURCE_DIR}/testGenerated.crexx"
   COMMAND $<TARGET_FILE:rxas> testGenerated
   COMMAND $<TARGET_FILE:rxlink> -s -o testGenerated-linked testGenerated levell_example
     "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
-  DEPENDS rxc rxas rxlink rxfnsl "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+  DEPENDS rxc rxas rxlink rxfnsl levell_generated_test_imports ${_generated_imports} "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
     "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${_generated_grammar}" testGenerated.crexx
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
 add_custom_target(testlevell_generated ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/testGenerated-linked.rxbin")

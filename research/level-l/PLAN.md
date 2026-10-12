@@ -37,6 +37,89 @@ status-only follow-up commit is needed. No acceptance criterion is closed by
 this backup. Earlier dated statements that work was unpublished describe their
 historical checkpoint, before this explicit remote-backup authorization.
 
+### Continuation authorized — 12 October 2026
+
+Adrian directs continuation on `levell`: finish clean user-facing resource
+limits, then Unicode, diagnostic reporting and resynchronization, with additional
+regressions across backends and synchronized guide/plan updates. The complete
+vision and LANG-AC01–14 below remain unchanged. This increment serves
+LANG-STEP02/04/05/07/08 and does not close the broader programme by itself.
+
+1. **CONT-AC01 (LANG-AC05/10/11/13):** every remaining construction or recovery
+   safeguard is a connected optional host budget or a named, checked format/
+   stack ceiling. Tiny budgets produce resource outcomes, raised successful
+   budgets preserve artifacts, loaders accept valid artifacts independently of
+   build defaults, and overflow fails before index/allocation arithmetic.
+2. **CONT-AC02 (LANG-AC03/11/12):** compile pinned Unicode 17 property sets using
+   Level B inputs without Level G; exercise identifiers and scalar boundaries
+   against independently read raw data, retaining exact source-byte spans.
+   Comparison-key and display policies retain their full LANG-AC03 obligations.
+3. **CONT-AC03 (LANG-AC06/07/08/14):** regress diagnostic category, expected
+   tokens, authored context, byte/line coordinates and later valid structure
+   across admitted backends; keep resource failure distinct from syntax,
+   recovery and ambiguity, and preserve no-execution/last-good-output contracts.
+4. **CONT-AC04 (LANG-AC12/13):** retain exact test inputs/tool identities and
+   update runnable examples, guide and this plan with measured scope and gaps.
+
+1. **CONT-STEP01 (CONT-AC01/04):** inventory fixed limits and connect remaining
+   construction/recovery settings; preserve safe stack/format ceilings, add
+   loader/overflow/budget regressions and qualify the Level B bootstrap.
+2. **CONT-STEP02 (CONT-AC02/04):** after STEP01, generate pinned property ranges,
+   add optional charset property references, extend the same settings example
+   and qualify scalar/data/build provenance without a Level G cycle.
+3. **CONT-STEP03 (CONT-AC03/04):** after the relevant STEP01/02 services, improve
+   accurate contextual/Unicode diagnostics and grammar/target resync; add
+   backend-specific regressions and retain failures honestly.
+4. **CONT-STEP04 (CONT-AC01–04):** reconcile acceptance evidence and update the
+   guide and status. New language semantics beyond approved LANG-D03–10 still
+   require maintainer review; routine lowering and test details are authorized.
+
+All CONT criteria start open. Existing evidence is reused only for unchanged
+inputs. No new aggregate CTest is registered by this increment; focused scripts
+provide the additional qualification without expanding broad-suite scheduling.
+
+**12 October checkpoint — verified native increment:** CONT-STEP01–04 and
+CONT-AC01–04 are verified for their stated bounded continuation scope. The
+complete LANG-AC01–14 and original seven research criteria remain open.
+
+| Continuation criterion | Current evidence and boundary |
+|---|---|
+| CONT-AC01 | Eighteen connected host settings, discoverable defaults/ceilings, checked dynamic LR item membership, fixed stack/format messages and independent loaders. `resource-cleanup/limits-fixed` and `limits-noopt`: 35 commands each plus 24 boundary/loader checks each; 114 request cases + seven build controls in each complete library mode. Defaults remain engineering safeguards; global memory/time and workload calibration are not established. |
+| CONT-AC02 | Level B compiles 45 pinned Unicode 17 sets from three checksummed raw files. Independent raw-data comparison passes four native cells per library mode. XID lexer: 12,523 inputs in eight cells, including every interval edge/neighbor, random scalars, NUL and byte spans; wrong-profile/unknown-property refusals. The seventh settings lesson executes source/RXAS on both VMs. No normalization/folding key or terminal-cell service is claimed. |
+| CONT-AC03 | 78 located/message/speculation cases per complete library mode across all six parser routes. 160 record-recovery cases per mode, including malformed UTF-8 and source ordering. Eight origin checks retain original bytes and associate sorted diagnostics with error nodes. L1/L2 declaration candidates: 24 cases + twelve last-good-output checks per library mode across quote/comment/group damage. Strict parsing and execution remain strict; nested/token-stage recovery and unclosed target comments retain their stated limits. |
+| CONT-AC04 | User guide, diagnostic assessment, mathematics and progressive example updated. `evidence/continuation-20261012/` records inputs and logs; current Level B-only cold/no-op property bootstrap runs three cases with zero re2c calls and no Level G source tree. Exact L1/L2 and opt/no-opt self-description agree. Current consumer checks, six native CLI controls and unoptimized 60-case interpreter cells pass. |
+
+The constructor now uses binary membership masks, queue closure and sorted
+sparse state keys. The full worked XID language has 2,993 DFA states; the 4,096
+DFA default admits it without extra settings. The independent XID probe has
+16,127 NFA states and 2,954 DFA states. The 65,536 NFA/lexical-clause defaults
+accommodate these larger lexical graphs separately from dense parser analysis.
+MATH.md records the preservation argument and remaining construction costs;
+this is not a formal speed verdict.
+
+**CONT-F01, repaired:** the regular builder overwrote NFA exhaustion with
+"no lexical rules". Named-budget refusal regression is permanent.
+**CONT-F02, repaired:** stale linked RexxScript drivers/tests supplied an obsolete
+four-argument diagnostic prototype during native packing. Module and driver
+imports now stage exact current dependencies. The permanent import-isolation
+probe leaves an obsolete export beside outputs, forces consumer compilation,
+and passes native packing plus both interpreter consumers. Generated Level L
+consumer tests use the same exact-import discipline.
+
+Earlier compiler warnings and a scalar-in-pattern test-fixture error are retained
+as intermediate failures, not passes. Final optimized/unoptimized builds are
+warning-free. After replacing a shadowed seed-array declaration with an explicit
+empty-value reset, all 32 retained coordinate/recovery/property artifacts
+regenerate byte-identically. Runtime sources did not change, so their retained
+execution evidence remains valid for those artifacts. No source/test input is
+silently normalized merely to qualify it.
+
+**Delivery checkpoint:** source, guides and qualification receipts are prepared
+for a further safety commit on `origin/levell`, within Adrian's authorized
+branch-review scope. Actual local/remote commit verification is reported in the
+conversation. Integration and release remain separate; no acceptance criterion
+is closed merely by pushing this checkpoint.
+
 ### Current step status — latest review
 
 | Original step | Current state |
@@ -57,7 +140,7 @@ historical checkpoint, before this explicit remote-backup authorization.
 | GUIDE-STEP01–03 | Comprehensive Level L guide, runnable settings language and diagnostic audit delivered; GUIDE-AC01–03 verified locally. This row records the earlier guide checkpoint; the current recovery increment is below. LL-D01–06 remain open for their full obligations. |
 | BOOT-STEP01–05 | Checkpoint 1 implemented and verified locally: Level B foundation, L0/L1/L2 bootstrap, native Unicode lexing and retained consumer/lifecycle evidence. BOOT-AC01–08 verified within the stated native-host scope; unmerged for review. |
 | LANG-STEP01 | Portfolio and proposed common-surface direction approved; one settings language is the progressive worked example. |
-| LANG-STEP02–08 | In progress: all six components have authored product routes. Shared messages, declaration resync, flat-record recovery, Pratt/LR regions and tree projection have executable increments and bounded evidence below. Captures and optional host budgets have bounded functional evidence. Full Unicode, composition/recovery contracts, remaining limit migration and final qualification remain open. |
+| LANG-STEP02–08 | In progress: all six components have authored product routes. Shared messages, declaration resync, flat-record recovery, Pratt/LR regions and tree projection have executable increments and bounded evidence below. Captures, eighteen host budgets, pinned property classes, escaped coordinates and lexical/UTF8 recovery have bounded functional evidence under CONT-STEP01–04. Full Unicode comparison/display policies, wider composition/recovery contracts, default calibration and final qualification remain open. |
 
 The original research acceptance audit has 19 verified criteria and seven still open.
 Implemented/tested steps do not automatically close every cross-cutting

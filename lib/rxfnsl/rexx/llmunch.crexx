@@ -32,7 +32,7 @@ automaton: class
       _error = 'truncated DFA header'; return
     end
     _states = <at..i32>(0) table; _classes = <at..i32>(4) table
-    if _states < 1 | _states > 4096 | _classes < 1 | _classes > 256 then do
+    if _states < 1 | _classes < 1 | _classes > 256 then do
       _error = 'unsupported DFA dimensions'; return
     end
     extent = 136 + _states * 4 + _states * _classes * 4
@@ -56,7 +56,7 @@ automaton: class
     if <blen>(data) < 1040 then return
     if <at..i32>(0) data <> 1279542833 then return
     states = <at..i32>(4) data; classes = <at..i32>(8) data
-    if states < 1 | states > 4096 | classes < 1 | classes > 256 then return
+    if states < 1 | classes < 1 | classes > 256 then return
     if <blen>(data) <> 1040 + 4 * states * (classes + 1) then return
     _states = states; _classes = classes
     /* The image is owned/shared as a binary value; runtime reads never expand
@@ -124,7 +124,7 @@ automaton: class
   verify: method = .int
     if _error <> '' then return 0
     if <blen>(_image) <> 0 then return 1
-    if _states < 1 | _states > 4096 | _classes < 1 | _classes > 256 then do
+    if _states < 1 | _classes < 1 | _classes > 256 then do
       _error = 'unsupported DFA dimensions'; return 0
     end
     if _accept[1] <> 0 then do

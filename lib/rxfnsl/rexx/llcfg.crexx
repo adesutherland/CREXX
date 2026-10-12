@@ -3,6 +3,7 @@ options levelb
 namespace llcfg expose productions
 import llcore
 import llcheck
+import lllimits
 
 /** Stable clause handles are nonterminals; terminals are -(symbol+1).
  * Production 1 is the augmented root. Original labels remain on each lhs.
@@ -21,9 +22,12 @@ productions: class
   _first = .int[]
   _length = .int[]
   _rhs = .int[]
+  _limits = .lllimits..policy
   *: factory
-    arg graph = .llcore..grammar, root = .int
-    _g = graph; _root = root; _facts = .llcheck..analysis(graph,root)
+    arg graph = .llcore..grammar, root = .int, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
+    _g = graph; _root = root; _facts = .llcheck..analysis(graph,root,limits)
     _count = 0; _slots = 0; _max = 0; _status = 0; _error = ''; _built = 0
     return
   build: method = .void
@@ -97,8 +101,9 @@ productions: class
     return append(lhs,rhs)
   append: method = .int
     arg lhs = .int, rhs = .int[]
-    if _count >= 4096 then do
-      _status = 4; _error = 'CFG construction limit: more than 4096 productions'; return 0
+    if _status <> 0 then return 0
+    if _count >= _limits.limit('cfg.productions') then do
+      _status = 4; _error = _limits.exhausted('cfg.productions',_count + 1); return 0
     end
     _count = _count + 1; _lhs[_count] = lhs
     _first[_count] = _slots + 1; _length[_count] = rhs[0]

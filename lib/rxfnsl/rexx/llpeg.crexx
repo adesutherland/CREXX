@@ -51,10 +51,11 @@ parser: class
   _contexts = .binary
 
   *: factory
-    arg graph = .llcore..grammar, root = .int, input = .llcore..stream, engine = .string, fuel = 1000000
+    arg graph = .llcore..grammar, root = .int, input = .llcore..stream, engine = .string, fuel = 1000000, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
     _g = graph; _root = root; _input = input; _engine = engine; _fuel = fuel
     _width = input.size() + 1; _tree = .llcore..tree.from_source(input.source())
-    _facts = .llcheck..analysis(graph,root)
+    _facts = .llcheck..analysis(graph,root,limits)
     _status = 0; _ran = 0; _calls = 0; _work = 0; _memo = 0
     _depth = 0; _maxdepth = 0; _expansions = 0
     _result = -1; _selected = 0; _last = 0; _far = -1; _silent = 0; _error = ''
@@ -70,7 +71,9 @@ parser: class
       _status = 3; _error = _input.error(); return _status
     end
     if _facts.run() = 0 then do
-      _status = 3; _error = _facts.error(); return _status
+      _status = 3; _error = _facts.error()
+      if _facts.limit() then _status = 2
+      return _status
     end
     backend = .llcap..backend
     backend = .engine(_engine)

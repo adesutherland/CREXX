@@ -1,0 +1,53 @@
+{
+  "records": [
+    {
+      "name": "configure",
+      "argv": [
+        "cmake",
+        "-S",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/property-bootstrap-20261012/source/lib/rxfnsl/bootstrap",
+        "-B",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/property-bootstrap-20261012/build",
+        "-DCREXX_HOST_BIN=/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-DCMAKE_BUILD_TYPE=Debug"
+      ],
+      "exit": 0,
+      "sha256": "c8a92f85dee7cc21664d670c9925ffe22672babe618eec55967239217b6ba14f"
+    },
+    {
+      "name": "cold",
+      "argv": [
+        "cmake",
+        "--build",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/property-bootstrap-20261012/build",
+        "--target",
+        "rxfnsl",
+        "levell_unicode_lexer",
+        "--parallel",
+        "4"
+      ],
+      "exit": 0,
+      "sha256": "bfe6a9826a67d71917893ee8382031235dc94c98a3f809f661b873bbf1fdc0ad"
+    },
+    {
+      "name": "noop",
+      "argv": [
+        "cmake",
+        "--build",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/property-bootstrap-20261012/build",
+        "--target",
+        "rxfnsl",
+        "levell_unicode_lexer",
+        "--parallel",
+        "4"
+      ],
+      "exit": 0,
+      "sha256": "ef1bd708663645d02afca591de4f559ee27d2624d19bc5171902ffea7d9c82d5"
+    }
+  ],
+  "re2c_invocations": 0,
+  "level_g_present": false,
+  "no_op_unchanged": true,
+  "pinned_properties_generated": true,
+  "scope": "New property-data/compiler closure: clean standalone source copy, exact fixed point and no-op. Earlier nine-case incremental evidence remains scoped to its inputs."
+}

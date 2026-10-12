@@ -9,25 +9,31 @@ import lllimits
 import rxfnsb
 
 items: class
+  _limit = .int
+  _capacity = .int
   _size = .int
   _p = .int[]
   _dot = .int[]
   _look = .int[]
   _membership = .binary
   *: factory
+    arg limit = 16384
+    _limit = limit; _capacity = 0
+    if limit >= 1 & limit <= 134217726 then _capacity = 2 * limit + 3
     _size = 0
     return
   add: method = .int
     arg p = .int, dot = .int, look = .int
-    if <blen>(_membership) = 0 then call binresize _membership,32771 * 8
+    if _limit < 1 | _limit > 134217726 | p < 1 | p > 2147483647 | dot < 0 | dot > 4194303 | look < 0 | look > 256 then return -1
+    if <blen>(_membership) = 0 then call binresize _membership,_capacity * 8
     key = p * 4294967296 + dot * 1024 + look + 1
-    slot = key <mod> 32771
+    slot = key <mod> _capacity
     do while <at..i64>(slot * 8) _membership <> 0
       if <at..i64>(slot * 8) _membership = key then return 0
-      slot = (slot + 1) <mod> 32771
+      slot = (slot + 1) <mod> _capacity
     end
+    if _size >= _limit then return -1
     <at..i64>(slot * 8) _membership = key
-    if _size >= 16384 then return -1
     _size = _size + 1; _p[_size] = p; _dot[_size] = dot; _look[_size] = look
     return 1
   seal: method = .void
@@ -126,7 +132,7 @@ tables: class
     if ?limits = 0 then limits = .lllimits..policy()
     _limits = limits
     if initialized(_limits) = 0 then _limits = .lllimits..policy()
-    _cfg = .llcfg..productions(graph,root); _status = 0; _error = ''; _built = 0; _requested = mode
+    _cfg = .llcfg..productions(graph,root,_limits); _status = 0; _error = ''; _built = 0; _requested = mode
     _canonical = 0; _count = 0; _merged = 0; _conflictstate = 0; _conflictsymbol = -1
     _leftaction = 0; _rightaction = 0
     return
@@ -134,7 +140,8 @@ tables: class
    * @param identity Common-grammar signature plus the selected root. */
   loaded: factory
     arg graph = .llcore..grammar, root = .int, image = .binary, identity = .string
-    _cfg = .llcfg..productions(graph,root); _built = 1; _requested = 'lr1'
+    _limits = .lllimits..policy.artifact(graph.size())
+    _cfg = .llcfg..productions(graph,root,_limits); _built = 1; _requested = 'lr1'
     _status = 3; _error = 'invalid generated LR image'; _merged = 0; _count = 0
     if identity <> graph.signature() || '|root=' || root then return
     if <blen>(image) < 12 then return
@@ -219,8 +226,8 @@ tables: class
     if mode <> 'lr1' & mode <> 'lalr' then do
       _status = 1; _error = 'unsupported LR table family'; return
     end
-    if _cfg.maxrhs() > 2048 then do
-      _status = 4; _error = 'LR construction limit: RHS longer than 2048 symbols'; return
+    if _cfg.maxrhs() > _limits.limit('lr.rhs') then do
+      _status = 4; _error = _limits.exhausted('lr.rhs',_cfg.maxrhs()); return
     end
     do production = _cfg.count() to 1 by -1
       lhs = _cfg.lhs(production)
@@ -229,7 +236,7 @@ tables: class
     end
     call prepareclosure()
     _symbols = 256 + _cfg.nonterminals()
-    initial = .items(); ok = initial.add(1,0,256)
+    initial = .items(_limits.limit('lr.items')); ok = initial.add(1,0,256)
     initial = closure(initial)
     if _status <> 0 then return
     ok = intern(initial)
@@ -243,7 +250,7 @@ tables: class
       end
       do symbol = 1 to _symbols
         if active[symbol] = 0 then iterate
-        selected = .items()
+        selected = .items(_limits.limit('lr.items'))
         do i = 1 to current.size()
           p = current.production(i); dot = current.dot(i)
           next = _cfg.rhs(p,dot)
@@ -322,13 +329,13 @@ tables: class
             terminal = _suffixterms[_suffixhead[slot] + j]
             ok = set.add(candidate,0,terminal)
             if ok < 0 then do
-              _status = 4; _error = 'LR construction limit: too many items in a state'; return set
+              _status = 4; _error = _limits.exhausted('lr.items',set.size() + 1); return set
             end
           end
           if _suffixnullable[slot] then do
             ok = set.add(candidate,0,la)
             if ok < 0 then do
-              _status = 4; _error = 'LR construction limit: too many items in a state'; return set
+              _status = 4; _error = _limits.exhausted('lr.items',set.size() + 1); return set
             end
           end
           candidate = _productionnext[candidate]
@@ -418,13 +425,13 @@ tables: class
         if _cores[existing] = core then group = existing
       end
       if group = 0 then do
-        count = count + 1; group = count; _cores[group] = core; _mergedstates[group] = .items()
+        count = count + 1; group = count; _cores[group] = core; _mergedstates[group] = .items(_limits.limit('lr.items'))
       end
       merged = _mergedstates[group]
       do item = 1 to current.size()
         ok = merged.add(current.production(item),current.dot(item),current.look(item))
         if ok < 0 then do
-          _status = 4; _error = 'LALR construction limit: too many merged items'; return
+          _status = 4; _error = _limits.exhausted('lr.items',merged.size() + 1); return
         end
       end
       _mergedstates[group] = merged; _map[state] = group

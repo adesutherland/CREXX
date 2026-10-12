@@ -8,6 +8,8 @@ import llcore
 import llproject
 import llstage
 import llcharset
+import llproperties
+import llmunch
 import lllimits
 import llpratt
 import lltree
@@ -70,6 +72,10 @@ document: class
   _diagnosticrule = .int[]
   _diagnostictext = .string[]
   _recovered = .string[]
+  _damagefirst = .int[]
+  _damagelast = .int[]
+  _damagetext = .string[]
+  _lexicalrecovery = .int
   _sync = .int
   _operators = .llpratt..operators
   _operatorname = .string
@@ -79,7 +85,7 @@ document: class
   _regionclose = .int
 
   *: factory
-    arg source = .string, limit = 512, ?limits = .lllimits..policy
+    arg source = .string, limit = 0, ?limits = .lllimits..policy
     _source = source; _bytes = source as .binary; _limit = limit
     _status = 0; _ran = 0; _error = ''; _at = 1; _end = 0; _depth = 0
     _count = 0; _decls = 0; _root = 0; _profile = ''; _units = ''; _module = ''
@@ -90,6 +96,8 @@ document: class
     if ?limits = 0 then limits = .lllimits..policy()
     _limits = limits
     if initialized(_limits) = 0 then _limits = .lllimits..policy()
+    _limit = _limits.limit('grammar.clauses')
+    if limit > 0 then _limit = min(_limit,limit)
     _operatorname = ''; _operatorhandle = 0; _regiontoken = -1; _regionopen = -1; _regionclose = -1
     return
   fail: method = .void
@@ -100,8 +108,8 @@ document: class
     return
   emit: method = .void
     arg kind = .string, text = .string, line = .int, start = .int
-    if _count >= 8192 then do
-      _status = 4; _error = 'authored token construction budget exceeded'; return
+    if _count >= _limits.limit('spec.tokens') then do
+      _status = 4; _error = _limits.exhausted('spec.tokens',_count + 1); return
     end
     _count = _count + 1; _kind[_count] = kind; _text[_count] = text
     _line[_count] = line; _start[_count] = start
@@ -252,7 +260,7 @@ document: class
         end
         when 'tokenstage' then do
           ok = expect('start'); initial = number()
-          declaredstage = .llstage..rules(initial)
+          declaredstage = .llstage..rules(initial,_limits.limit('stage.rules'))
           if declaredstage.error() <> '' then call fail(declaredstage.error(),_first[d])
           _stages[d] = declaredstage
           if _at <> _end + 1 then call fail('unexpected tokenstage qualifier',_at)
@@ -301,7 +309,12 @@ document: class
         if _status = 0 then do
           stage = _stages[staged]
           ok = stage.add(_name[d],state,first,second,take,unless,word,emit,next)
-          if ok = 0 then call fail(stage.error(),_first[d])
+          if ok = 0 then do
+            if left(stage.error(),18) = 'LL_RESOURCE_LIMIT:' then do
+              _status = 4; _error = stage.error()
+            end
+            else call fail(stage.error(),_first[d])
+          end
           _stages[staged] = stage
         end
       end
@@ -344,7 +357,7 @@ document: class
     else if _type[target] <> 'rule' & _type[target] <> 'operators' then call fail('start must name a rule or operators declaration',_first[target])
     else _root = _handle[target]
     if _graph.size() > _limit then do
-      _status = 4; _error = 'grammar construction budget exceeded: ' || _graph.size() || ' clauses'
+      _status = 4; _error = lllimits..describe('grammar.clauses',_limit,_graph.size())
     end
     return _status
   /** One optional operator component. Its checked CFG lowering is shared with
@@ -465,8 +478,11 @@ document: class
   repeatnode: method = .int
     arg child = .int, low = .int, high = .int, line = .int
     result = 0; i = .int; tail = .int
-    if low > 256 | high > 256 | (high >= 0 & low > high) then do
-      call fail('repetition requires 0 <= minimum <= maximum <= 256',_at - 1); return 0
+    if high >= 0 & low > high then do
+      call fail('repetition requires minimum <= maximum',_at - 1); return 0
+    end
+    if max(low,high) > _limits.limit('grammar.repeat') then do
+      _status = 4; _error = _limits.exhausted('grammar.repeat',max(low,high)); return 0
     end
     do i = 1 to low
       if result = 0 then result = child
@@ -496,9 +512,13 @@ document: class
     if op = 2 | op = 4 | op = 6 | op = 7 then do i = 1 to _graph.size()
       if _graph.op(i) = op & _graph.left(i) = a & _graph.right(i) = b & _graph.label(i) = label then return i
     end
-    if _graph.size() >= _limit | _status <> 0 then do
+    limit = _limit
+    if _lexmode then limit = _limits.limit('lexer.clauses')
+    if _graph.size() >= limit | _status <> 0 then do
       if _status = 0 then do
-        _status = 4; _error = 'grammar construction budget exceeded at line ' || line
+        _status = 4; setting = 'grammar.clauses'
+        if _lexmode then setting = 'lexer.clauses'
+        _error = lllimits..describe(setting,limit,_graph.size() + 1) || ' At line ' || line
       end
       return 0
     end
@@ -744,6 +764,20 @@ document: class
   eof: method = .int
     return _eof
 
+  property: method = .llcharset..ranges
+    arg name = .string, token = .int
+    result = .llcharset..ranges()
+    if _encoding <> 'utf8' then do
+      call fail('Unicode properties require lexer input utf8',token); return result
+    end
+    name = substr(name,9)
+    if llproperties..known(name) = 0 then do
+      call fail('unknown Unicode 17.0.0 property ' || name,token); return result
+    end
+    result = llproperties..ranges(name)
+    if result.error() <> '' then call fail(result.error(),token)
+    return result
+
 /* BEGIN FRONTEND READER */
   /** Generated lexer, declared token stage and canonical LR parser are the
    * sole syntax authority here. The seed reader is absent from L1/L2. */
@@ -756,9 +790,10 @@ document: class
       if status = 2 then _status = 4
       _error = llsource..diagnostic(_bytes,request.offset(),'LL_SYNTAX',request.error())
       if lexicalstatus = 0 & status = 1 then call resynchronize(language,request.tokens(),request.offset())
+      if lexicalstatus = 1 then call lexicalresynchronize(language,request.offset())
       return
     end
-    tree = request.tree(); _syntax = .lltree..view(tree,request.root(),4000000)
+    tree = request.tree(); _syntax = .lltree..view(tree,request.root(),_limits.limit('tree.entries'))
     if _syntax.error() <> '' then do
       _status = 4; _error = _syntax.error(); return
     end
@@ -852,7 +887,7 @@ document: class
     if _status <> 0 then return 0
     _depth = _depth + 1
     if _depth > 128 then do
-      _status = 4; _error = 'authored expression nesting budget exceeded'; return 0
+      _status = 4; _error = 'LL_IMPLEMENTATION_LIMIT: authored expression depth exceeds 128; this stack ceiling requires an iterative implementation to grow'; return 0
     end
     select name
       when 'expression' then do
@@ -946,18 +981,67 @@ document: class
   /** The proper reader can resume at a lexically proven declaration name.
    * Quoted text/comments cannot supply this token. No repaired artifact is
    * emitted; good later declarations are retained for inspection only. */
+  /** Inspect isolated declaration candidates after lexical damage. The
+   * original document remains failed; no recovered candidate is compiled. */
+  lexicalresynchronize: method = .void
+    arg language = .lllanguage..definition, failure = .int
+    i = .int
+    prepared = .llsource..prepared(_bytes,'utf8','/*','*/',_limits.limit('source.bytes'),1)
+    status = prepared.status()
+    if status > 1 then do
+      _status = 4; _error = prepared.error(); return
+    end
+    if status = 1 then do
+      _damagefirst[1] = prepared.offset(); _damagelast[1] = prepared.offset() + 2
+      _damagetext[1] = prepared.error()
+    end
+    scanner = .llmunch..scanner(language.automaton(),prepared.bytes(),'recover',_limits.limit('scan.work'))
+    status = scanner.run()
+    if status > 1 then do
+      _status = 4; _error = scanner.error(); return
+    end
+    do i = 1 to scanner.errors()
+      slot = _damagefirst[0] + 1
+      if slot > _limits.limit('recovery.errors') then do
+        _status = 4; _error = _limits.exhausted('recovery.errors',slot); return
+      end
+      _damagefirst[slot] = scanner.badstart(i); _damagelast[slot] = scanner.badend(i)
+      _damagetext[slot] = 'lexical damage; isolated declaration is not compiled'
+    end
+    raw = scanner.tokens(); tokens = .llcore..stream.tokens(_bytes)
+    do i = 0 to raw.size() - 1
+      ok = tokens.append(raw.symbol(i),raw.start(i),raw.finish(i + 1))
+    end
+    request = .lllanguage..request(language,_bytes,_limits)
+    if request.classify_tokens(tokens) <> 0 then do
+      _status = 4; _error = request.error(); return
+    end
+    _lexicalrecovery = 1
+    call resynchronize(language,request.tokens(),failure)
+    return
+  lineboundary: method = .int
+    arg offset = .int
+    do at = offset - 1 to 0 by -1
+      c = <at..u8>(at) _bytes
+      if c = 10 | c = 13 then return 1
+      if c <> 32 & c <> 9 then return 0
+    end
+    return 1
   resynchronize: method = .void
     arg language = .lllanguage..definition, tokens = .llcore..stream, failure = .int
     i = .int
     boundaries = .int[]; declaration = language.tokenid('declarationname')
     do i = 0 to tokens.size() - 1
-      if tokens.symbol(i) = declaration then boundaries[boundaries[0] + 1] = i
+      if tokens.symbol(i) = declaration then do
+        if _lexicalrecovery & lineboundary(tokens.start(i)) = 0 then iterate
+        boundaries[boundaries[0] + 1] = i
+      end
     end
     if boundaries[0] = 0 then return
     first = boundaries[1]
     if failure < tokens.start(first) then return
-    if boundaries[0] > 512 then do
-      _status = 4; _error = 'LL_RECOVERY_LIMIT: more than 512 declaration boundaries'; return
+    if boundaries[0] > _limits.limit('recovery.declarations') then do
+      _status = 4; _error = _limits.exhausted('recovery.declarations',boundaries[0]); return
     end
     collected = ''; errors = 0
     do d = 1 to boundaries[0]
@@ -972,18 +1056,27 @@ document: class
       end
       ok = fragment.boundary(tokens.start(finish))
       probe = .lllanguage..request(language,_bytes,_limits); status = probe.parse_tokens(fragment)
+      damage = 0
+      do i = 1 to _damagefirst[0]
+        if _damagefirst[i] >= tokens.start(start) & _damagefirst[i] < tokens.start(finish) then damage = i
+      end
+      if damage > 0 then status = 1
       if status = 0 then do
         text = binsubstr(_bytes,tokens.start(start) + 1,tokens.finish(start + 1) - tokens.start(start)) as .string
         _recovered[_recovered[0] + 1] = strip(left(text,pos(':',text) - 1))
       end
       else do
-        if collected <> '' then collected = collected || '0a'x
-        collected = collected || llsource..diagnostic(_bytes,probe.offset(),'LL_SYNTAX',probe.error())
         errors = errors + 1
-        if status <> 1 | errors >= 16 then do
+        if status = 1 & errors > _limits.limit('recovery.errors') then do
           _status = 4
-          collected = collected || '0a'x || 'LL_RECOVERY_LIMIT: declaration inspection stopped'
+          collected = collected || '0a'x || _limits.exhausted('recovery.errors',errors)
           leave
+        end
+        if collected <> '' then collected = collected || '0a'x
+        if damage > 0 then collected = collected || llsource..diagnostic(_bytes,_damagefirst[damage],'LL_LEXICAL',_damagetext[damage])
+        else collected = collected || llsource..diagnostic(_bytes,probe.offset(),'LL_SYNTAX',probe.error())
+        if status <> 1 then do
+          _status = 4; leave
         end
       end
     end
@@ -1002,7 +1095,7 @@ document: class
     result = .llcharset..ranges(); name = _syntax.name(node); count = _syntax.count(node)
     at = tokenfor(_syntax.start(node)); _depth = _depth + 1
     if _depth > 128 then do
-      _status = 4; _error = 'charset nesting budget exceeded'; return result
+      _status = 4; _error = 'LL_IMPLEMENTATION_LIMIT: charset depth exceeds 128; this stack ceiling requires an iterative implementation to grow'; return result
     end
     if name = 'set.expression' | name = 'set.difference' then do
       result = setnode(_syntax.child(node,1))
@@ -1021,10 +1114,13 @@ document: class
           call result.add(0,55295); call result.add(57344,1114111)
         end
         when 'set.reference' then do
+          if left(lower(_text[at]),8) = 'unicode.' & index(_text[at]) = 0 then result = property(_text[at],at)
+          else do
           named = index(_text[at])
           if named = 0 then call fail('unknown charset',at)
           else if _type[named] <> 'charset' | _lexical[named] = 0 then call fail('expected lexical charset',at)
           else result = charset(named)
+          end
         end
         when 'scalar.value' then do
           _at = at; low = codepoint(); high = low

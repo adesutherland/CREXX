@@ -32,16 +32,16 @@ assert before==after,'No-op build rewrote generated artifacts'
 # let all three stages rebuild without manually deleting the linked images.
 frontend=source/'lib/rxfnsl/rexx/llfront.crexx'
 text=frontend.read_text()
-signature='arg source = .string, limit = 512, ?limits = .lllimits..policy'
+signature='arg source = .string, limit = 0, ?limits = .lllimits..policy'
 assert signature in text
 text=text.replace(signature,signature+', revision = 0',1)
 text=text.replace('_source = source; _bytes = source as .binary; _limit = limit',
                   '_source = source; _bytes = source as .binary; _limit = limit + revision',1)
 frontend.write_text(text)
 driver=source/'lib/rxfnsl/tools/levell.crexx';text=driver.read_text()
-call='.llfront..document(source as .string,512,limits)'
+call='.llfront..document(source as .string,0,limits)'
 assert call in text
-driver.write_text(text.replace(call,'.llfront..document(source as .string,512,limits,0)',1))
+driver.write_text(text.replace(call,'.llfront..document(source as .string,0,limits,0)',1))
 run('frontend-api-edit',cmd);after_api=snapshot()
 for stage in range(3):
  name=f'tools/bootstrap/L{stage}/levell-linked.rxbin'

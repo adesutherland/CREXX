@@ -10,9 +10,27 @@ ranges: class
   _low = .int[]
   _high = .int[]
   _count = .int
+  _error = .string
   *: factory
     _count = 0
     return
+  packed: factory
+    arg image = .binary
+    _count = 0; _error = ''
+    if <blen>(image) % 8 <> 0 then do
+      _error = 'LL_UNICODE_DATA: malformed property intervals'; return
+    end
+    previous = -1
+    do at = 0 to <blen>(image) - 1 by 8
+      low = <at..i32>(at) image; high = <at..i32>(at + 4) image
+      if low <= previous | low > high | high > 1114111 | (low <= 57343 & high >= 55296) then do
+        _count = 0; _error = 'LL_UNICODE_DATA: invalid scalar property interval'; return
+      end
+      _count = _count + 1; _low[_count] = low; _high[_count] = high; previous = high
+    end
+    return
+  error: method = .string
+    return _error
   add: method = .void
     arg low = .int, high = .int
     if low > high then return
@@ -79,12 +97,12 @@ ranges: class
  * The result uses ordinary byte clauses and the existing DFA runtime. */
 lower: procedure = .int
   arg expose graph = .llcore..grammar, ranges = .ranges, scalar = .int, line = .int
-  result = 0; node = .int
+  result = 0; node = .int; i = .int; nodes = .int[]
   do i = 1 to ranges.count()
     low = ranges.low(i); high = ranges.high(i)
     if scalar = 0 then do
       node = graph.add(11,low,high,'byte range',line)
-      result = unionnode(graph,result,node,line)
+      nodes[nodes[0] + 1] = node
     end
     else do
       boundaries = .int[]; boundaries[1] = 0; boundaries[2] = 128
@@ -96,10 +114,20 @@ lower: procedure = .int
         if first > last then iterate
         a = encoded(first); b = encoded(last)
         node = box(graph,a,b,1,line)
-        result = unionnode(graph,result,node,line)
+        nodes[nodes[0] + 1] = node
       end
     end
   end
+  do while nodes[0] > 1
+    next = .int[]
+    do i = 1 to nodes[0] by 2
+      node = nodes[i]
+      if i < nodes[0] then node = unionnode(graph,node,nodes[i + 1],line)
+      next[next[0] + 1] = node
+    end
+    nodes = next
+  end
+  if nodes[0] > 0 then result = nodes[1]
   /* An empty character set recognizes no word, including the empty word. */
   if result = 0 then result = graph.characters('' as .binary,0,'empty charset',line)
   return result

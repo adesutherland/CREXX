@@ -2,6 +2,7 @@
 options levelb
 namespace llcheck expose analysis
 import llcore
+import lllimits
 
 /** Immutable analysis snapshot of a grammar revision.
  * @param graph Grammar to analyze; future mutations require another analysis.
@@ -28,9 +29,12 @@ analysis: class
   _emptyloop = .int
   _limit = .int
   _extended = .int
+  _limits = .lllimits..policy
 
   *: factory
-    arg graph = .llcore..grammar, root = .int
+    arg graph = .llcore..grammar, root = .int, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
     _g = graph; _n = graph.size(); _root = root
     _revision = graph.revision(); _signature = graph.signature()
     _valid = 0; _error = ''; _cycle = 0; _conflict = 0; _witness = -1
@@ -46,8 +50,11 @@ analysis: class
     if _n = 0 | _root < 1 | _root > _n then do
       _error = 'invalid or empty root'; return 0
     end
-    if _n > 512 then do
-      _limit = 1; _error = 'construction limit: analysis admits at most 512 clauses'; return 0
+    if _limits.error() <> '' then do
+      _error = _limits.error(); return 0
+    end
+    if _n > _limits.limit('grammar.clauses') then do
+      _limit = 1; _error = _limits.exhausted('grammar.clauses',_n); return 0
     end
     do i = 1 to _n
       op = _g.op(i); a = _g.left(i); b = _g.right(i)

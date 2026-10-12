@@ -1,0 +1,19 @@
+/* cREXX License (MIT). Observe failed-document diagnostics and later candidates. */
+options levelb
+import rxfnsb
+import llfront
+import lllimits
+
+main: procedure = .int
+  arg argv = .string[]
+  limits = .lllimits..policy()
+  if argv[0] = 2 then ok = limits.set('recovery.errors',argv[2] as .int)
+  document = .llfront..document(readbinary(argv[1]) as .string,0,limits)
+  status = document.run()
+  say 'STATUS|' || status
+  say document.error()
+  names = document.recovered()
+  do i = 1 to names[0]
+    say 'CANDIDATE|' || names[i]
+  end
+  return status

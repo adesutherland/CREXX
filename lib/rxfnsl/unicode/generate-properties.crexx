@@ -1,0 +1,131 @@
+/* cREXX License (MIT). Level B compiler for pinned Unicode scalar properties. */
+options levelb
+import rxfnsb
+
+intervals: class
+  _image = .binary
+  _count = .int
+  _error = .int
+  *: factory
+    _count = 0
+    return
+  append: method = .void
+    arg low = .int, high = .int
+    /* Every property is scalar-valued; the surrogate category stays empty. */
+    if low >= 55296 & high <= 57343 then return
+    if low < 0 | low > high | high > 1114111 then do
+      _error = 1; return
+    end
+    if _count > 0 then do
+      previous = <at..i32>((_count - 1) * 8 + 4) _image
+      if low <= previous then do
+        _error = 1; return
+      end
+      if low = previous + 1 then do
+        <at..i32>((_count - 1) * 8 + 4) _image = high; return
+      end
+    end
+    call binresize _image,(_count + 1) * 8
+    <at..i32>(_count * 8) _image = low
+    <at..i32>(_count * 8 + 4) _image = high
+    _count = _count + 1
+    return
+  error: method = .int
+    return _error
+  image: method = .binary
+    return _image
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 2 then do
+    say 'usage: generate-properties data-directory output.crexx'; return 2
+  end
+  i = .int; file = .int; line = .int; slot = .int; split = .int
+  low = .int; high = .int; pending = .int; previous = .int
+  lines = .string[]; fields = .string[]; table = .intervals
+  text = .string; pendingcategory = .string
+  keys = 'XID_Start XID_Continue Alphabetic Lowercase Uppercase Default_Ignorable_Code_Point White_Space Pattern_White_Space'
+  categories = 'Lu Ll Lt Lm Lo Mn Mc Me Nd Nl No Pc Pd Ps Pe Pi Pf Po Sm Sc Sk So Zs Zl Zp Cc Cf Cs Co Cn'
+  do i = 1 to words(categories)
+    keys = keys || ' gc.' || word(categories,i)
+  end
+  keys = keys || ' gc.L gc.M gc.N gc.P gc.S gc.Z gc.C'
+  tables = .intervals[]
+  do i = 1 to words(keys)
+    tables[i] = .intervals()
+  end
+  do file = 1 to 2
+    name = 'DerivedCoreProperties.txt'
+    if file = 2 then name = 'PropList.txt'
+    lines = readlines(argv[1] || '/' || name)
+    if lines[0] = 0 then return 1
+    do line = 1 to lines[0]
+      text = lines[line]; comment = pos('#',text)
+      if comment > 0 then text = left(text,comment - 1)
+      if strip(text) = '' then iterate
+      fields = qsplit(text,';')
+      if fields[0] < 2 then return 1
+      slot = wordpos(strip(fields[2]),keys)
+      if slot = 0 then iterate
+      text = strip(fields[1]); split = pos('..',text)
+      low = 0; high = 0
+      if split > 0 then do
+        low = x2d(left(text,split - 1)); high = x2d(substr(text,split + 2))
+      end
+      else do
+        low = x2d(text); high = low
+      end
+      table = tables[slot]; call table.append(low,high); tables[slot] = table
+    end
+  end
+  lines = readlines(argv[1] || '/UnicodeData.txt'); pending = -1; previous = -1
+  do line = 1 to lines[0]
+    fields = qsplit(lines[line],';')
+    if fields[0] <> 15 then return 1
+    low = x2d(fields[1]); high = low; category = fields[3]
+    if right(fields[2],8) = ', First>' then do
+      pending = low; pendingcategory = category; iterate
+    end
+    if right(fields[2],7) = ', Last>' then do
+      if pending < 0 | category <> pendingcategory then return 1
+      low = pending; pending = -1
+    end
+    else if pending >= 0 then return 1
+    if low > previous + 1 then do
+      do i = 1 to 2
+        slot = wordpos(word('gc.Cn gc.C',i),keys)
+        table = tables[slot]; call table.append(previous + 1,low - 1); tables[slot] = table
+      end
+    end
+    do i = 1 to 2
+      key = 'gc.' || category
+      if i = 2 then key = 'gc.' || left(category,1)
+      slot = wordpos(key,keys)
+      table = tables[slot]; call table.append(low,high); tables[slot] = table
+    end
+    previous = high
+  end
+  if pending >= 0 then return 1
+  do i = 1 to 2
+    slot = wordpos(word('gc.Cn gc.C',i),keys)
+    table = tables[slot]; call table.append(previous + 1,1114111); tables[slot] = table
+  end
+  do i = 1 to words(keys)
+    table = tables[i]
+    if table.error() then do
+      say 'LL_UNICODE_DATA: invalid/unsorted ranges for ' || word(keys,i); return 1
+    end
+  end
+  path = argv[2]
+  if erasefile(path) <> 0 then return 1
+  if charout(path,'/* Generated from pinned Unicode 17.0.0 raw data; do not edit. */' || '0a'x) <> 0 then return 1
+  if charout(path,'options levelb' || '0a'x || 'namespace lludata expose version names data' || '0a'x || 'import rxfnsb' || '0a'x) <> 0 then return 1
+  if charout(path,"version: procedure = .string" || '0a'x || "  return '17.0.0'" || '0a'x) <> 0 then return 1
+  if charout(path,"names: procedure = .string" || '0a'x || "  return '" || keys || "'" || '0a'x) <> 0 then return 1
+  if charout(path,"data: procedure = .binary" || '0a'x || "  arg name = .string" || '0a'x || "  select upper(name)" || '0a'x) <> 0 then return 1
+  do i = 1 to words(keys)
+    table = tables[i]
+    if charout(path,"    when '" || upper(word(keys,i)) || "' then return '" || bin2x(table.image()) || "'x as .binary" || '0a'x) <> 0 then return 1
+  end
+  if charout(path,"  end" || '0a'x || "  return '' as .binary" || '0a'x) <> 0 then return 1
+  return charout(path)

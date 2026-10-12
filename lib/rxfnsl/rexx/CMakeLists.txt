@@ -6,7 +6,7 @@ if(CREXX_LEVEL_L_NOOPT)
 endif()
 
 set(RXFNSL_REXX_MODULES
-  tinyexpr lllimits
+  tinyexpr lllimits lludata llproperties
   llcore llcheck llcap llcfg lllr llmunch llproject llstage llcharset
   llregular llsource llpeg llforest llearley llpratt llregional lllanguage llrecover lltree
 )
@@ -24,16 +24,19 @@ crexx_add_import_root(rxfnsl_imports
   DEPENDS library
   COMMENT "Staging deterministic Level L imports ...")
 
-set(RXFNSL_DEPS_llcheck llcore)
+include("${CMAKE_CURRENT_SOURCE_DIR}/../unicode/Properties.cmake")
+
+set(RXFNSL_DEPS_llproperties lludata llcharset)
+set(RXFNSL_DEPS_llcheck llcore lllimits)
 set(RXFNSL_DEPS_llcap llcore llcheck)
-set(RXFNSL_DEPS_llcfg llcore llcheck)
+set(RXFNSL_DEPS_llcfg llcore llcheck lllimits)
 set(RXFNSL_DEPS_lllr lllimits llcore llcheck llcap llcfg)
 set(RXFNSL_DEPS_llmunch lllimits llcore)
 set(RXFNSL_DEPS_llproject lllimits llcore)
 set(RXFNSL_DEPS_llstage lllimits llcore)
 set(RXFNSL_DEPS_llcharset llcore)
 set(RXFNSL_DEPS_llfront llcore llproject llstage llcharset)
-set(RXFNSL_DEPS_llregular llcore llmunch)
+set(RXFNSL_DEPS_llregular llcore llmunch lllimits)
 set(RXFNSL_DEPS_llpeg lllimits llcore llcheck llcap)
 set(RXFNSL_DEPS_llearley lllimits llcore llcfg llcheck llcap llforest)
 set(RXFNSL_DEPS_llpratt lllimits llcore llcheck llcap)
@@ -41,10 +44,14 @@ set(RXFNSL_DEPS_llregional lllimits llcore llcfg llpratt lllr)
 set(RXFNSL_DEPS_lllanguage lllimits llcore lllr llpeg llearley llforest llpratt llregional llproject llmunch llstage llsource)
 set(RXFNSL_DEPS_llrecover lllimits llcore lllanguage llmunch llsource)
 set(RXFNSL_DEPS_llsource lllimits)
-set(RXFNSL_DEPS_lltree llcore)
+set(RXFNSL_DEPS_lltree llcore lllimits)
 foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
 
+  set(_module_source "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
+  if(_basename STREQUAL "lludata")
+    set(_module_source "${_ll_data_source}")
+  endif()
   set(_source_root "${CMAKE_CURRENT_BINARY_DIR}/source/${_basename}")
   set(_module_deps)
   foreach(_dep IN LISTS RXFNSL_DEPS_${_basename})
@@ -54,7 +61,7 @@ foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
     OUTPUT "${_binfile}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_source_root}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx" "${_source_root}/${_basename}.crexx"
+            "${_module_source}" "${_source_root}/${_basename}.crexx"
     COMMAND $<TARGET_FILE:rxc>
             ${_ll_flags} -x
             --no-exe-import
@@ -63,7 +70,7 @@ foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
             "${_source_root}/${_basename}.crexx"
     COMMAND $<TARGET_FILE:rxas> ${_ll_flags} "${_basename}"
     DEPENDS
-      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+      "${_module_source}"
       rxfnsl_imports
       ${_module_deps}
       ${_rxfnsl_import_files}

@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Host resource policy, separate from grammar meaning. */
 options levelb
-namespace lllimits expose policy describe
+namespace lllimits expose policy describe names
 import rxfnsb
 
 /** A resource outcome is separate from syntax rejection. A zero required
@@ -12,6 +12,9 @@ describe: procedure = .string
   detail = ', more required'
   if required > 0 then detail = ', required at least ' || required
   return 'LL_RESOURCE_LIMIT: ' || name || ' budget ' || limit || detail || '. Increase the host budget or reduce the workload.'
+
+names: procedure = .string
+  return 'lr.states source.bytes scan.work parse.work earley.cells tree.entries grammar.clauses spec.tokens cfg.productions nfa.states dfa.states lr.items lr.rhs recovery.errors recovery.declarations stage.rules grammar.repeat lexer.clauses'
 
 /** Optional build/request budgets. Defaults are engineering policy, not
  * mathematical language limits or promises about resident memory or time.
@@ -25,7 +28,7 @@ policy: class
     return
   slot: method = .int
     arg name = .string
-    return wordpos(lower(name),'lr.states source.bytes scan.work parse.work earley.cells tree.entries')
+    return wordpos(lower(name),names())
   limit: method = .int
     arg name = .string
     which = slot(name)
@@ -38,17 +41,51 @@ policy: class
       when 4 then return 1000000
       when 5 then return 8000000
       when 6 then return 1000000
+      when 7 then return 512
+      when 8 then return 8192
+      when 9 then return 4096
+      when 10 then return 65536
+      when 11 then return 4096
+      when 12 then return 16384
+      when 13 then return 2048
+      when 14 then return 16
+      when 15 then return 512
+      when 16 then return 128
+      when 17 then return 256
+      when 18 then return 65536
+    end
+    return 0
+  /** Loader validation must not inherit the generating host's build defaults. */
+  artifact: factory
+    arg clauses = .int
+    _error = ''
+    if clauses < 1 | clauses > 2147483646 then do
+      _error = 'LL_REPRESENTATION_LIMIT: artifact grammar dimensions'; return
+    end
+    _values[7] = max(512,clauses)
+    _values[9] = 2147483647
+    return
+  ceiling: method = .int
+    arg name = .string
+    select lower(name)
+      when 'lr.states' then return 999998
+      when 'lr.items' then return 134217726
+      when 'lr.rhs' then return 4194303
+      otherwise return 2147483647
     end
     return 0
   set: method = .int
     arg name = .string, value = .int
     which = slot(name)
     if which = 0 then do
-      _error = 'unknown resource budget ' || name || '; supported: lr.states, source.bytes, scan.work, parse.work, earley.cells, tree.entries'
+      _error = 'unknown resource budget ' || name || '; supported: ' || names()
       return 0
     end
     if value < 1 then do
       _error = 'resource budget ' || name || ' must be a positive count'; return 0
+    end
+    if value > ceiling(name) then do
+      _error = 'resource budget ' || name || ' exceeds representation ceiling ' || ceiling(name); return 0
     end
     _values[which] = value
     return 1
@@ -57,4 +94,3 @@ policy: class
     return describe(name,limit(name),used)
   error: method = .string
     return _error
-

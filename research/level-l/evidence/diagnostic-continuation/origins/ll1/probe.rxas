@@ -1,0 +1,327 @@
+/*
+ * SOURCE                 : recovery-origin-probe.crexx
+ */
+
+.globals=0
+
+main() .locals=19
+   .meta "recovery-origin-probe.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 56 56 17 "recovery-origin-probe.crexx" 8 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "recovery-origin-probe.crexx" 9 7 21 "  arg argv = .string[]"
+   .meta "recovery-origin-probe.main.argv"="b" ".string[*]" a1
+   .srcstep 2 2 17 "recovery-origin-probe.crexx" 10 3 29 "  source = readbinary(argv[1])"
+   .meta "recovery-origin-probe.main.source"="b" ".binary" r2
+   minlinkattr1 r7,a1,1
+   .traceevent "V" 6 "R" "S" "r" 7 2 2 0 "argv" ""
+   load r11,1
+   settpswapcall r2,rxfnsb.readbinary(),r11,r7,256,r12
+   swap r7,r12
+   unlink r7
+   .traceevent "F" 4 "R" "X" "r" 2 2 2 0 "readbinary" ""
+   .traceevent "A" 6 "R" "X" "r" 2 2 2 0 "source" ""
+   .srcstep 3 3 17 "recovery-origin-probe.crexx" 11 3 67 "  request = .llrecover..request(levell_settings..language(),source)"
+   .meta "recovery-origin-probe.main.request"="b" ".llrecover..request" r6
+   load r12,0
+   call r1,levell_settings.language(),r12
+   .traceevent "F" 4 "R" "O" "r" 1 3 3 0 "language" ""
+   .traceevent "V" 6 "R" "X" "r" 2 3 3 0 "source" ""
+   load r0,4
+   settp r1,256
+   settp r2,256
+   settp r3,0
+   settpcall r6,§llrecover.request.§factory(),r0,r4,512
+   .traceevent "F" 4 "R" "O" "r" 6 3 3 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 6 3 3 0 "request" ""
+   .srcstep 5 5 17 "recovery-origin-probe.crexx" 12 3 24 "  if request.run() <> 1 then return 1"
+   .traceevent "V" 6 "R" "O" "r" 6 5 5 0 "request" ""
+   load r5,1
+   settpcall r12,§llrecover.request.run(),r5,r6,256
+   .traceevent "F" 4 "R" "I" "r" 12 5 5 0 "run" ""
+   ine r12,r12,1
+   .traceevent "O" 4 "R" "B" "r" 12 5 5 0 "" ""
+   brf l40iffalse,r12
+   .srcstep 6 6 17 "recovery-origin-probe.crexx" 12 25 29 "  if request.run() <> 1 then return 1"
+   .srcstep 4 4 17 "recovery-origin-probe.crexx" 12 30 38 "  if request.run() <> 1 then return 1"
+   ret 1
+l40iffalse:
+   .srcstep 7 7 17 "recovery-origin-probe.crexx" 13 3 22 "  tree = request.tree()"
+   .meta "recovery-origin-probe.main.tree"="b" ".llcore..tree" r8
+   .traceevent "V" 6 "R" "O" "r" 6 7 7 0 "request" ""
+   load r5,1
+   settpcall r8,§llrecover.request.tree(),r5,r6,256
+   .traceevent "F" 4 "R" "O" "r" 8 7 7 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 8 7 7 0 "tree" ""
+   .srcstep 9 9 17 "recovery-origin-probe.crexx" 14 3 51 "  if tree.source() <> source | tree.validate() = 0 then return 2"
+   .traceevent "V" 6 "R" "O" "r" 8 9 9 0 "tree" ""
+   load r7,1
+   settpcall r12,§llcore.tree.source(),r7,r8,256
+   .traceevent "F" 4 "R" "X" "r" 12 9 9 0 "source" ""
+   .traceevent "V" 6 "R" "X" "r" 2 9 9 0 "source" ""
+   binne r12,r12,r2
+   .traceevent "O" 4 "R" "B" "r" 12 9 9 0 "" ""
+   brt l59orend,r12
+   .traceevent "V" 6 "R" "O" "r" 8 9 9 0 "tree" ""
+   load r7,1
+   settpcall r12,§llcore.tree.validate(),r7,r8,256
+   .traceevent "F" 4 "R" "I" "r" 12 9 9 0 "validate" ""
+   ieq r12,r12,0
+   .traceevent "O" 4 "R" "B" "r" 12 9 9 0 "" ""
+l59orend:
+   .traceevent "O" 4 "R" "B" "r" 12 9 9 0 "" ""
+   brf l62iffalse,r12
+   .srcstep 10 10 17 "recovery-origin-probe.crexx" 14 52 56 "  if tree.source() <> source | tree.validate() = 0 then return 2"
+   .srcstep 8 8 17 "recovery-origin-probe.crexx" 14 57 65 "  if tree.source() <> source | tree.validate() = 0 then return 2"
+   ret 2
+l62iffalse:
+   .srcstep 11 11 17 "recovery-origin-probe.crexx" 15 3 16 "  previous = -1"
+   .meta "recovery-origin-probe.main.previous"="b" ".int" r10
+   load r10,-1
+   .traceevent "L" 4 "R" "I" "r" 10 11 11 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 11 11 0 "previous" ""
+   .srcstep 49 49 17 "recovery-origin-probe.crexx" 16 3 5 "  do i = 1 to request.errors()"
+   .srcstep 12 12 17 "recovery-origin-probe.crexx" 16 6 11 "  do i = 1 to request.errors()"
+   .meta "recovery-origin-probe.main.i"="b" ".int" r12
+   load r12,1
+   .traceevent "L" 4 "R" "I" "r" 12 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 12 12 0 "i" ""
+   .srcstep 13 13 17 "recovery-origin-probe.crexx" 16 12 29 "  do i = 1 to request.errors()"
+   .traceevent "V" 6 "R" "O" "r" 6 0 0 0 "request" ""
+   load r5,1
+   settpcall r4,§llrecover.request.errors(),r5,r6,256
+   .traceevent "F" 4 "R" "I" "r" 4 0 0 0 "errors" ""
+l67dostart:
+   .srcstep 13 13 17 "recovery-origin-probe.crexx" 16 12 29 "  do i = 1 to request.errors()"
+   igt r5,r12,r4
+   brt l67doend,r5
+   .srcstep 21 21 17 "recovery-origin-probe.crexx" 17 5 31 "    offset = request.offset(i); node = request.errornode(i)"
+   .srcstep 15 15 33 "recovery-origin-probe.crexx" 17 14 21 "    offset = request.offset(i); node = request.errornode(i)"
+   .traceevent "V" 6 "R" "O" "r" 6 15 15 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 6 15 15 0 "§this" ""
+   .srcstep 16 16 33 "recovery-origin-probe.crexx" 17 21 21 "    offset = request.offset(i); node = request.errornode(i)"
+   .traceevent "V" 6 "R" "I" "r" 12 16 16 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 12 16 16 0 "i" ""
+   .srcstep 17 17 6 "llrecover@rxfnsl.rxbin" 17 21 21 "    offset = request.offset(i); node = request.errornode(i)"
+   .traceevent "V" 6 "R" "O" "r" 6 0 0 0 "§this" ""
+   assertinitialized r6
+   .srcstep 18 18 25 "llrecover.crexx" 184 5 15 "    call order()"
+   .traceevent "V" 6 "R" "O" "r" 6 18 18 0 "§this" ""
+   load r14,1
+   settpswapcall r3,§llrecover.request.order(),r14,r6,256,r15
+   swap r6,r15
+   .traceevent "F" 4 "R" "V" "r" 3 18 18 0 "order" ""
+   linkattr1 r14,r6,8
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 12 0 0 0 "_offsets" ""
+   minlinkattr1 r15,r14,r12,0
+   .traceevent "V" 6 "R" "I" "r" 15 0 0 0 "_offsets" ""
+   igetunlink r13,r15
+   .traceevent "A" 6 "R" "I" "r" 13 0 0 0 "__inline_ret_628_627" ""
+   unlink r14
+   .srcstep 19 19 6 "recovery-origin-probe.crexx" 17 14 31 "    offset = request.offset(i); node = request.errornode(i)"
+   .traceevent "V" 6 "R" "O" "r" 6 0 0 0 "§this" ""
+   .srcstep 20 20 33 "recovery-origin-probe.crexx" 17 31 31 "    offset = request.offset(i); node = request.errornode(i)"
+   .traceevent "V" 6 "R" "I" "r" 13 20 20 0 "__inline_ret_628_627" ""
+   copy r7,r13
+   .traceevent "A" 6 "R" "I" "r" 7 20 20 0 "offset" ""
+   .srcstep 26 26 17 "recovery-origin-probe.crexx" 17 33 60 "    offset = request.offset(i); node = request.errornode(i)"
+   .srcstep 22 22 33 "recovery-origin-probe.crexx" 17 40 47 "    offset = request.offset(i); node = request.errornode(i)"
+   .traceevent "V" 6 "R" "O" "r" 6 22 22 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 6 22 22 0 "§this" ""
+   .srcstep 23 23 33 "recovery-origin-probe.crexx" 17 47 47 "    offset = request.offset(i); node = request.errornode(i)"
+   .traceevent "V" 6 "R" "I" "r" 12 23 23 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 12 23 23 0 "i" ""
+   .srcstep 24 24 6 "llrecover@rxfnsl.rxbin" 17 47 47 "    offset = request.offset(i); node = request.errornode(i)"
+   .traceevent "V" 6 "R" "O" "r" 6 0 0 0 "§this" ""
+   assertinitialized r6
+   .srcstep 25 25 33 "recovery-origin-probe.crexx" 17 47 47 "    offset = request.offset(i); node = request.errornode(i)"
+   linkattr1 r14,r6,7
+   .traceevent "V" 6 "R" "I" "r" 12 25 25 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 12 25 25 0 "_nodes" ""
+   minlinkattr1 r15,r14,r12,0
+   .traceevent "V" 6 "R" "I" "r" 15 25 25 0 "_nodes" ""
+   copy r11,r15
+   .traceevent "A" 6 "R" "I" "r" 11 25 25 0 "node" ""
+   unlinkn r15,r14
+   .srcstep 28 28 17 "recovery-origin-probe.crexx" 18 5 36 "    if offset < previous | node < 1 then return 3"
+   .traceevent "V" 6 "R" "I" "r" 13 28 28 0 "offset" ""
+   .traceevent "V" 6 "R" "I" "r" 10 28 28 0 "previous" ""
+   ilt r15,r13,r10
+   .traceevent "O" 4 "R" "B" "r" 15 28 28 0 "" ""
+   brt l96orend,r15
+   .traceevent "V" 6 "R" "I" "r" 11 28 28 0 "node" ""
+   ilt r15,r11,1
+   .traceevent "O" 4 "R" "B" "r" 15 28 28 0 "" ""
+l96orend:
+   .traceevent "O" 4 "R" "B" "r" 15 28 28 0 "" ""
+   brf l99iffalse,r15
+   .srcstep 29 29 17 "recovery-origin-probe.crexx" 18 37 41 "    if offset < previous | node < 1 then return 3"
+   .srcstep 27 27 17 "recovery-origin-probe.crexx" 18 42 50 "    if offset < previous | node < 1 then return 3"
+   .meta "recovery-origin-probe.main.node"="b" ".int" r11
+   .meta "recovery-origin-probe.main.offset"="b" ".int" r7
+   ret 3
+l99iffalse:
+   .srcstep 46 46 17 "recovery-origin-probe.crexx" 19 5 86 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .srcstep 34 34 17 "recovery-origin-probe.crexx" 19 8 12 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .srcstep 30 30 33 "recovery-origin-probe.crexx" 19 8 12 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .traceevent "V" 6 "R" "O" "r" 8 30 30 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 8 30 30 0 "§this" ""
+   .srcstep 31 31 33 "recovery-origin-probe.crexx" 19 12 12 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .traceevent "V" 6 "R" "I" "r" 11 31 31 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 11 31 31 0 "node" ""
+   .srcstep 32 32 6 "llcore@rxfnsl.rxbin" 19 12 12 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .traceevent "V" 6 "R" "O" "r" 8 46 46 0 "§this" ""
+   assertinitialized r8
+   .srcstep 33 33 25 "llcore.crexx" 314 5 22 "    return _kind[node]"
+   linkattr1 r14,r8,5
+   .traceevent "V" 6 "R" "I" "r" 11 46 46 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 11 46 46 0 "_kind" ""
+   minlinkattr1 r15,r14,r11,0
+   .traceevent "V" 6 "R" "I" "r" 15 46 46 0 "_kind" ""
+   igetunlink r3,r15
+   unlink r14
+l7808bexprend:
+   ine r0,r3,-1
+   .traceevent "O" 4 "R" "B" "r" 0 46 46 0 "" ""
+   brt l113orend,r0
+   .srcstep 39 39 17 "recovery-origin-probe.crexx" 19 32 36 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .srcstep 35 35 33 "recovery-origin-probe.crexx" 19 32 36 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .traceevent "V" 6 "R" "O" "r" 8 35 35 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 8 35 35 0 "§this" ""
+   .srcstep 36 36 33 "recovery-origin-probe.crexx" 19 36 36 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .traceevent "V" 6 "R" "I" "r" 11 36 36 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 11 36 36 0 "node" ""
+   .srcstep 37 37 6 "llcore@rxfnsl.rxbin" 19 36 36 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .traceevent "V" 6 "R" "O" "r" 8 46 46 0 "§this" ""
+   assertinitialized r8
+   .srcstep 38 38 25 "llcore.crexx" 320 5 23 "    return _start[node]"
+   linkattr1 r1,r8,13
+   .traceevent "V" 6 "R" "I" "r" 11 46 46 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 11 46 46 0 "_start" ""
+   minlinkattr1 r3,r1,r11,0
+   .traceevent "V" 6 "R" "I" "r" 3 46 46 0 "_start" ""
+   igetunlink r0,r3
+   unlink r1
+l7821bexprend:
+   .traceevent "V" 6 "R" "I" "r" 7 46 46 0 "offset" ""
+   igt r0,r0,r7
+   .traceevent "O" 4 "R" "B" "r" 0 46 46 0 "" ""
+l113orend:
+   .traceevent "O" 4 "R" "B" "r" 0 46 46 0 "" ""
+   brt l120ortrue,r0
+   .srcstep 44 44 17 "recovery-origin-probe.crexx" 19 60 64 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .srcstep 40 40 33 "recovery-origin-probe.crexx" 19 60 64 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .traceevent "V" 6 "R" "O" "r" 8 40 40 0 "tree" ""
+   .traceevent "A" 6 "R" "O" "r" 8 40 40 0 "§this" ""
+   .srcstep 41 41 33 "recovery-origin-probe.crexx" 19 64 64 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .traceevent "V" 6 "R" "I" "r" 11 41 41 0 "node" ""
+   .traceevent "A" 6 "R" "I" "r" 11 41 41 0 "node" ""
+   .srcstep 42 42 6 "llcore@rxfnsl.rxbin" 19 64 64 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .traceevent "V" 6 "R" "O" "r" 8 46 46 0 "§this" ""
+   assertinitialized r8
+   .srcstep 43 43 25 "llcore.crexx" 323 5 21 "    return _end[node]"
+   linkattr1 r17,r8,3
+   .traceevent "V" 6 "R" "I" "r" 11 46 46 0 "node" ""
+   .traceevent "C" 4 "R" "I" "r" 11 46 46 0 "_end" ""
+   minlinkattr1 r16,r17,r11,0
+   .traceevent "V" 6 "R" "I" "r" 16 46 46 0 "_end" ""
+   igetunlink r18,r16
+   unlink r17
+l7834bexprend:
+   .traceevent "V" 6 "R" "I" "r" 7 46 46 0 "offset" ""
+   ilt r18,r18,r7
+   .traceevent "O" 4 "R" "B" "r" 18 46 46 0 "" ""
+   br l120orend
+l120ortrue:
+   load r18,1
+l120orend:
+   .traceevent "O" 4 "R" "B" "r" 18 46 46 0 "" ""
+   brf l123iffalse,r18
+   .srcstep 47 47 17 "recovery-origin-probe.crexx" 19 87 91 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   .srcstep 45 45 17 "recovery-origin-probe.crexx" 19 92 100 "    if tree.kind(node) <> -1 | tree.start(node) > offset | tree.finish(node) < offset then return 4"
+   ret 4
+l123iffalse:
+   .srcstep 48 48 17 "recovery-origin-probe.crexx" 20 5 22 "    previous = offset"
+   .traceevent "V" 6 "R" "I" "r" 7 48 48 0 "offset" ""
+   icopy r10,r7
+   .traceevent "A" 6 "R" "I" "r" 10 48 48 0 "previous" ""
+l67doinc:
+   .srcstep 14 14 17 "recovery-origin-probe.crexx" 16 6 7 "  do i = 1 to request.errors()"
+   inc r12
+   .srcstep 50 50 17 "recovery-origin-probe.crexx" 21 3 6 "  end"
+   br l67dostart
+l67doend:
+   .meta "recovery-origin-probe.main.i"
+   .meta "recovery-origin-probe.main.node"
+   .meta "recovery-origin-probe.main.offset"
+   .srcstep 52 52 17 "recovery-origin-probe.crexx" 22 3 27 "  if request.errors() <> 2 then return 5"
+   .traceevent "V" 6 "R" "O" "r" 6 52 52 0 "request" ""
+   load r5,1
+   settpcall r18,§llrecover.request.errors(),r5,r6,256
+   .traceevent "F" 4 "R" "I" "r" 18 52 52 0 "errors" ""
+   ine r18,r18,2
+   .traceevent "O" 4 "R" "B" "r" 18 52 52 0 "" ""
+   brf l135iffalse,r18
+   .srcstep 53 53 17 "recovery-origin-probe.crexx" 22 28 32 "  if request.errors() <> 2 then return 5"
+   .srcstep 51 51 17 "recovery-origin-probe.crexx" 22 33 41 "  if request.errors() <> 2 then return 5"
+   ret 5
+l135iffalse:
+   .srcstep 54 54 17 "recovery-origin-probe.crexx" 23 3 51 "  say 'ordered_original_error_nodes=2; failures=0'"
+   say "ordered_original_error_nodes=2; failures=0"
+   .srcstep 55 55 17 "recovery-origin-probe.crexx" 24 3 11 "  return 0"
+   ret 0
+   .meta "recovery-origin-probe.main.argv"
+   .meta "recovery-origin-probe.main.previous"
+   .meta "recovery-origin-probe.main.request"
+   .meta "recovery-origin-probe.main.source"
+   .meta "recovery-origin-probe.main.tree"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/diagnostic-continuation/final-recovery/ll1/levell_settings@levell_settings.rxbin */
+
+levell_settings.language() .expose=levell_settings.language
+   .meta "levell_settings.language"="b" ".lllanguage..definition" levell_settings.language() ""
+   .meta "levell_settings.language"=".autoload" "levell_settings"
+
+/* Imported Declaration from file: llrecover@rxfnsl.rxbin */
+
+§llrecover.request.§factory() .expose=llrecover.request.§factory
+   .meta "llrecover.request.§factory"="b" ".llrecover..request" §llrecover.request.§factory() "language=.lllanguage..definition,source=.binary,?errors=.int,?limits=.lllimits..policy"
+   .meta "llrecover.request.§factory"=".autoload" "rxfnsl"
+
+§llrecover.request.run() .expose=llrecover.request.run
+   .meta "llrecover.request.run"="b" ".int" §llrecover.request.run() ""
+   .meta "llrecover.request.run"=".autoload" "rxfnsl"
+
+§llrecover.request.tree() .expose=llrecover.request.tree
+   .meta "llrecover.request.tree"="b" ".llcore..tree" §llrecover.request.tree() ""
+   .meta "llrecover.request.tree"=".autoload" "rxfnsl"
+
+§llrecover.request.order() .expose=llrecover.request.order
+   .meta "llrecover.request.order"="b" ".void" §llrecover.request.order() ""
+   .meta "llrecover.request.order"=".autoload" "rxfnsl"
+
+§llrecover.request.errors() .expose=llrecover.request.errors
+   .meta "llrecover.request.errors"="b" ".int" §llrecover.request.errors() ""
+   .meta "llrecover.request.errors"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llcore@rxfnsl.rxbin */
+
+§llcore.tree.validate() .expose=llcore.tree.validate
+   .meta "llcore.tree.validate"="b" ".int" §llcore.tree.validate() ""
+   .meta "llcore.tree.validate"=".autoload" "rxfnsl"
+
+§llcore.tree.source() .expose=llcore.tree.source
+   .meta "llcore.tree.source"="b" ".binary" §llcore.tree.source() ""
+   .meta "llcore.tree.source"=".autoload" "rxfnsl"

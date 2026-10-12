@@ -6,12 +6,13 @@ module, then use that module to tokenize text or produce a tree with original
 source locations. Your application gives the tree meaning: evaluating a
 script, reading configuration, compiling code or inspecting a source file.
 
-This guide describes the **local `levell` review implementation**, checked on
-11 October 2026. The common-surface implementation now connects the byte DFA
-lexer to canonical LR(1), LL(1), ordinary packrat PEG and Earley. The expanded
-checkpoint is still in progress. Pratt operator declarations, a bounded region
-provider and a separate recovery request are being qualified alongside those
-backends. This is not a released or cross-platform-qualified tool.
+This guide describes the **`levell` review implementation**, checked on
+12 October 2026. Product routes connect DFA lexing to LR(1), LL(1), ordinary
+packrat PEG, Earley forests and Pratt expressions, with a checked Pratt/LR
+region provider. Named captures, authored messages, optional host budgets,
+pinned Unicode properties and explicit record recovery have native functional
+coverage. The complete common-surface programme remains in progress; see the
+plan for the exact profiles and open obligations.
 RexxScript 1 is a larger example, not a dependency of the general library.
 
 **Next approved scope:** the initial supported toolkit will include DFA,
@@ -581,8 +582,9 @@ RexxScript path uses strict parsing and still refuses syntax errors.
 This initial policy is deliberately bounded: whole records are skipped, with
 a default limit of 16 errors; it does not search for globally optimal edits or
 invent missing values. Resource exhaustion, an unsafe/missing contract and an
-unrecoverable boundary have separate statuses. Malformed UTF-8 and unclosed
-comments currently stop source preparation. Token-stage recovery requires a
+unrecoverable boundary have separate statuses. Strict parsing stops at malformed UTF-8. Explicit recovery retains bad byte
+regions and skips their containing record; an unclosed target comment still
+stops preparation. Token-stage recovery requires a
 checked state-reset contract and is rejected at generation in this profile.
 These are explicit limits of the delivered increment, not the full recovery
 checkpoint's acceptance boundary.
@@ -678,6 +680,47 @@ while leaving recognition unchanged. Parser-rule messages still refer to the
 surrounding grammar rule. Lexical captures are rejected: tokens already carry
 their spelling and original range. General application node/list shaping and
 captured-name message placeholders remain work in progress.
+
+### 7. Use pinned Unicode identifier classes
+
+[07-properties.levell](../examples/settings/07-properties.levell) grows the same
+field/expression grammar by replacing its illustrative character ranges:
+
+```rexx
+letter: charset = unicode.XID_Start | '_'
+continuation: charset = unicode.XID_Continue | '_'
+name.lex: rule = letter continuation* then emit identifier
+```
+
+Property references belong inside charset expressions. Use a named charset in
+a lexical pattern, exactly as with explicit ranges. The parser rules, captures,
+recovery declaration and Pratt region stay the same. The 12 October checks cover all 45 property sets and 12,523 lexer inputs
+across both VMs, generated optimization modes and complete optimized/unoptimized
+Level L builds. Exact table/spelling/span evidence is retained in the plan.
+
+The data is pinned to Unicode **17.0.0**, compiled by Level B and checked against
+raw-file checksums. `language.unicodeversion()` retains that version even when
+source comments are stripped from bytecode. A host's locale or installed Unicode
+library does not change recognition. `unicode.XID_Start` and
+`unicode.XID_Continue` are building blocks: each language chooses its identifier
+policy and additions such as underscore. Level L's own declaration names and
+RexxScript's current identifiers retain their existing contracts.
+
+The available sets are `XID_Start`, `XID_Continue`, `Alphabetic`, `Lowercase`,
+`Uppercase`, `Default_Ignorable_Code_Point`, `White_Space`, `Pattern_White_Space`,
+the thirty general categories (`unicode.gc.Lu`, `unicode.gc.Mn`, etc.), and seven
+category groups (`unicode.gc.L`, `unicode.gc.N`, etc.). Names are case-insensitive.
+An authored charset with the same name takes precedence over a builtin
+property reference; no authored declaration is silently ignored.
+All sets contain Unicode scalars: `unicode.gc.Cs` is known but empty because
+surrogates are excluded. Unknown properties and use under `bytes` or `utf8bytes`
+fail generation; there is no fallback to ASCII or to a host database.
+
+Recognition preserves original spelling and byte spans. `café` and `cafe` plus
+a combining acute accent can both be valid names while remaining different
+spellings. Property selection does **not** request normalization or case folding.
+Comparison keys remain separate LANG-AC03 work. Selecting Unicode whitespace
+also does not add new statement terminators; the grammar still owns them.
 
 ## Build and run a complete example
 
@@ -975,7 +1018,7 @@ Unmatched input copies through without a state change.
 `take` accepts one or two named token kinds; `any` is a wildcard there. An
 `emit TOKEN` replacement spans all consumed tokens. `emit copy` keeps the
 first token's kind, with the consumed span; `emit skip` emits nothing. `next`
-sets state 1..32. A stage has at most 128 declarations. Stages run in their
+sets a positive integer state. A stage has 128 declarations by default (`stage.rules`). Stages run in their
 declaration order and preserve source coordinates. They do not create an
 unbounded fixed-point transformation.
 
@@ -1134,8 +1177,10 @@ at the opening quote. An unclosed nested comment has a specific message.
 `llsource..diagnostic(source,offset,code,message)` formats original text with
 one-based line/column and a zero-based byte offset. It handles CRLF, CR and LF
 target-source lines and uses a hexadecimal excerpt for malformed UTF-8. Columns
-count Unicode scalars, not terminal display cells or grapheme clusters; tabs,
-combining marks and wide characters can affect visual caret alignment.
+count Unicode scalars. The default escaped excerpt renders tabs, controls and
+non-ASCII characters as ASCII escapes, placing its caret by rendered length.
+The optional fifth argument `'unicode'` keeps Unicode glyphs; font-dependent
+cells and grapheme clusters are not that view's scalar-column contract.
 
 The generated grammar frontend handles LF, CRLF and CR consistently. Syntax
 errors use the source formatter's caret treatment. Semantic errors such as
@@ -1148,7 +1193,8 @@ tokens, not a promise that every following suffix will parse. LL(1), PEG and
 Earley provide their own named expectations; an ambiguous diagnostic context
 keeps generic wording. Whole-source preparation and lexing precede strict
 parsing. The recovery request can collect lexical and syntax damage, but its
-initial profile stops at malformed UTF-8 or an unclosed comment.
+profile can retain malformed UTF-8 as located damage and skip its record. An
+unclosed target comment remains unrecoverable under this profile.
 
 **Resynchronization means continuing after a damaged region to find later
 errors or useful structure.** The generated recovery policy enables a separate
@@ -1163,7 +1209,8 @@ search or a general solution to nested-language recovery.
 The standalone command is:
 
 ```text
-levell specification.levell [--rxas|--graph]
+levell specification.levell [--rxas|--graph] [--limit name=count]
+levell --limits
 ```
 
 | Mode | Output |
@@ -1198,7 +1245,7 @@ working example.
 
 ## Limits, costs and ownership
 
-These are the current default implementation limits, not mathematical limits
+These are the current defaults, including the 12 October policy increment, not mathematical limits
 of all languages:
 
 | Resource | Bound |
@@ -1206,10 +1253,10 @@ of all languages:
 | Prepared source, including specification ingress | 1,048,576 bytes |
 | Authored scanner tokens / expression nesting | 8,192 / 128 |
 | Common grammar graph | 512 clauses per graph |
-| Generated NFA / DFA | 4,096 / 2,048 states |
+| Generated NFA / DFA | 65,536 / 4,096 states by default |
 | Productions / canonical LR states | 4,096 / 8,192 by default |
 | LR items per state / production RHS | 16,384 / 2,048 symbols |
-| Finite token stage | 128 declarations; states 1..32 |
+| Finite token stage | 128 declarations by default; positive integer states |
 | Scanner / parser default work fuel | 10,000,000 / 1,000,000 |
 | Token-stage work / named-tree projection | 1,000,000 each |
 
@@ -1225,17 +1272,19 @@ LR(1) theorem nor an inherent 12-bit field in the packed image.
 |---|---|---|
 | 512 clauses / 4,096 productions | Bound shared analysis and lowering. The current reachability pass has quadratic storage and cubic worst-case loop structure. | Analysis/construction exhaustion; not an invalid language. |
 | Default 8,192 LR states / 16,384 items per state | Bound canonical construction's potentially large state/item sets. State count alone is not a byte-memory budget. | No admission result within this build budget; not proof of ambiguity or non-LR(1). |
-| 4,096 NFA / 2,048 generated DFA states | Bound regular-expression expansion and subset construction. Determinization can expand substantially. | Lexer construction exhaustion; not proof of nonregularity. |
+| 65,536 NFA / 4,096 generated DFA states | Bound regular-expression expansion and subset construction. Determinization can expand substantially. | Lexer construction exhaustion; not proof of nonregularity. |
 | 1 MiB source / work fuel / tree-map entries / error count | Bound request size, counted operations, result expansion and repeated attempts. | An explicit resource outcome; not a clean or repaired parse. |
 | 128/512 recursive depth | Protect the current recursive implementation. This is not a grammar nesting theorem. | Stack-oriented implementation budget; raising it needs a stack assessment or an iterative executor. |
 | Token IDs through 255, with 256 used internally for EOF | Fixed terminal-alphabet conventions in shared analysis, token passes and table lookup. Unicode scalars are lowered to byte sequences before DFA matching. | A representation change is needed to support more token kinds; this does not limit source text to Latin-1. |
-| Token stages: 32 states, 128 rules, one/two-token consumption | The current provider's finite-pass profile; the numbers are implementation choices, not a theorem about composition. | A provider/profile refusal; broader stages need an explicit supported contract. |
+| Token stages: one/two-token consumption | The current provider's finite-pass profile; state names are positive integers and rule count is host policy. | A profile refusal for wider lookahead; raising `stage.rules` allows more rules. |
 | LL conflicts / unsupported PEG left recursion / unsafe region boundaries | Recognition semantics and the implemented provider's admission obligations. | More memory or fuel does not fix the conflict or justify a semantic conversion. |
 
-An optional `lllimits..policy` now connects `lr.states`, `source.bytes`,
-`scan.work`, `parse.work`, `earley.cells` and `tree.entries`. These connected
-budgets have optimized/unoptimized functional coverage. Basic grammars have no
-budget declarations.
+The optional `lllimits..policy` supplies build/request safeguards. Basic grammars
+have no budget declarations. Run `levell --limits` to list every supported
+setting, its default and its representation ceiling. Unknown or malformed
+settings fail immediately; accepted settings are connected to actual checks.
+The first six settings have retained optimized/unoptimized functional coverage;
+the expanded construction/recovery panels cover the 12 October implementation.
 An advanced build can use `levell file.levell --rxas --limit lr.states=12000`.
 The setting limits work on that host; it is not embedded as a semantic property
 of the generated language. A larger successful budget produces the same artifact.
@@ -1248,6 +1297,16 @@ of the generated language. A larger successful budget produces the same artifact
 | `parse.work` | 1,000,000 | Counted operations for one parser or token pass, including its diagnostic work. A regional parser shares this allowance with its inner and outer parsers. |
 | `earley.cells` | 8,000,000 | Earley's dense chart and forest index domains. These are index capacities, not a byte-memory allowance. |
 | `tree.entries` | 1,000,000 | The application projection returned by `request.projection()`. A separately constructed named view takes its own explicit entry limit. |
+| `grammar.clauses` | 512 | Authored parser graph and shared analysis. |
+| `spec.tokens` | 8,192 | Tokens in the authored specification, including the reader's EOF marker. |
+| `cfg.productions` | 4,096 | Productions after CFG lowering, for LR construction and Earley requests. |
+| `nfa.states` / `dfa.states` | 65,536 / 4,096 | Expanded regular construction and subset construction. |
+| `lr.items` / `lr.rhs` | 16,384 / 2,048 | Items in one LR state and maximum production length. |
+| `recovery.errors` | 16 | Collected target/specification errors; an explicit legacy target-error argument is an additional cap when a policy is supplied. |
+| `recovery.declarations` | 512 | Declaration intervals inspected while recovering a damaged specification. |
+| `stage.rules` | 128 | Rules built for one finite token pass. Loaded generated passes retain their admitted rules. |
+| `grammar.repeat` | 256 | Largest finite authored repetition count before lowering. |
+| `lexer.clauses` | 65,536 | Byte/scalar lexical graph, separate from the parser graph used by dense shared analysis. |
 
 Each token pass and each recovery retry receives its own operation allowance.
 Consequently `parse.work` is not a cumulative limit on the entire recovery
@@ -1283,11 +1342,34 @@ default state cap. The new 8,192 default accommodates the specification grammar'
 full field-name vocabulary; it remains an engineering default, not a measured
 memory guarantee. A raised default is not a mathematical improvement to LR.
 
-Other analysis/construction/depth/provider bounds above have not all migrated
-to this policy yet. Do not edit one constant and assume the whole pipeline
-admits a larger case: constructors, analyses, loaders, integer arithmetic and
-request defaults must agree. Completing that migration, numeric diagnostics for
-the remaining bounds and calibrating defaults remain open in LANG-AC10.
+Construction/recovery counts above now use named policy settings. Recursive
+stack ceilings remain explicit implementation constraints: authored and lexical
+lowering use depth 128; recursive PEG/LL/Pratt and forest traversals use depth
+512. Increasing a work budget cannot safely change those stack ceilings; an
+iterative implementation and qualification are needed. Token IDs 0..255 and
+packed integer/action encodings remain format constraints.
+
+Budget values are checked against representation ceilings before allocation:
+LR state actions reserve 999999 for accept, item keys have 22 bits for the dot
+position, and the current item membership layout has a checked 32-bit byte
+extent. Defaults are conservative engineering choices, rather than measured
+maximums or promises about elapsed time/memory. For example, 16,384 LR items
+use a 262,168-byte membership buffer while a state is being constructed; a
+4,096-state NFA has 1,114,112 bytes of packed node payload, excluding other
+objects. Shared analysis also has quadratic reachability storage. The policy currently
+uses a common positive signed-32-bit count envelope for its general settings;
+that is a conservative implementation profile, not a theorem limiting input
+languages. LR actions, item keys and membership-buffer layout have the more
+specific checked ceilings listed by `--limits`. Raising a
+count raises its possible costs. The full XID worked example constructs 2,993 DFA states; the 4,096-state
+default accommodates it without an advanced setting. This is workload evidence,
+not a theorem about every Unicode grammar. Default calibration remains open in LANG-AC10.
+
+DFA/LR loaders validate actual packed dimensions and graph identity independently
+of the generator's default construction budgets. Thus raising a build budget
+does not create an artifact that can only be loaded on that generating host.
+Interpreted backends still perform analysis/lowering at request time and use
+that request's host policy.
 
 Earley's current dense-index bound illustrates a genuinely calculated check.
 For input length `n` tokens, its required index domain is proportional to

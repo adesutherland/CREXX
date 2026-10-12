@@ -44,6 +44,23 @@ concurrent compiler activity. The corrected boundary is qualified; uncontended
 measurements and final interpretation remain open. No speed ranking, per-engine
 live-memory result or production selection follows from that block.
 
+**LEVEL-L-PARSER-01 continuation, 12 October.** Pinned XID classes expose
+expensive string-mask copying and repeated whole-NFA scans in the provisional
+regular constructor. Hypothesis: binary membership masks plus a work-queue
+for epsilon closure preserve the exact subset construction while making large
+property classes usable. Semantic risks: missing epsilon edges, changed
+alphabet equivalence, lexical priority and nullable-token admission. Required
+checks: generated DFA recognition/spans against raw Unicode membership, byte/
+scalar controls, both VMs and opt/no-opt, plus unchanged simple-language
+artifacts where representation permits. This remains an experimental,
+non-representative Level L mechanism repair, with no production compiler/VM
+edit or formal speed verdict. The first full-XID attempt was stopped during
+concurrent functional build work; it is not a timing comparison. The binary-mask,
+queue and sparse-key implementation now passes independent XID membership/span
+checks over 12,523 inputs in eight cells, legacy Unicode workload parity and
+32 byte-identical artifact regenerations after warning cleanup. No speed ratio
+or representative performance verdict is selected.
+
 **RXJSON-ACCESS-01 — published and normal hosted checks green
 (18 September).** Five read-only JSON helpers borrow existing immutable binary
 buffers, preserving public ownership and representation. Combined with RAG

@@ -36,7 +36,7 @@ for name in ['rxc', 'rxas', 'rxlink', 'rxtvm', 'rxbvm']:
     link(host / name, binary / name)
 for source in (build / 'rexx').glob('*.rxbin'):
     link(source, binary / source.name)
-for name in ['library.rxbin', 'rxfnsl.rxbin']:
+for name in ['library.rxbin', 'rxfnsl.rxbin', 'rxfnsl-base.rxbin']:
     link(build / 'bin' / name, binary / name)
 stages = build / 'tools/bootstrap'
 for name in ['llfront.rxbin', 'llsyntax.rxbin']:
@@ -50,5 +50,8 @@ inputs['generator'] = dict(source=str(tool), sha256=hashlib.sha256(tool.read_byt
 stage_link = out / 'lib/rxfnsl/tools/bootstrap'
 stage_link.parent.mkdir(parents=True, exist_ok=True)
 link(stages, stage_link)
+property_link = out / 'lib/rxfnsl/rexx/properties'
+property_link.parent.mkdir(parents=True, exist_ok=True)
+link(build / 'rexx/properties', property_link)
 (out / 'inputs.json').write_text(json.dumps(inputs, indent=2) + '\n')
 print(out)

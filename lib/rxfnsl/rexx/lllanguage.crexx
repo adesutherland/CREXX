@@ -26,6 +26,7 @@ definition: class
   _expressionname = .string
   _schema = .llproject..schema
   _encoding = .string
+  _unicodeversion = .string
   _open = .string
   _close = .string
   _stages = .llstage..rules[]
@@ -76,6 +77,12 @@ definition: class
     _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1; _root = 0
     _schema = .llproject..schema()
     return
+  unicode: method = .void
+    arg version = .string
+    _unicodeversion = version
+    return
+  unicodeversion: method = .string
+    return _unicodeversion
   keep: method = .int
     arg name = .string, kind = .int, arity = .int
     return _schema.keep(name,kind,arity)
@@ -262,6 +269,15 @@ request: class
       _status = expression.run(); _tree = expression.namedtree(); _root = expression.root()
       _offset = expression.offset(); _error = expression.error()
       if _status = 0 then _root = _tree.add(5,_language.expressionname(),_tree.start(_root),_tree.finish(_root),_root,0)
+      if _status = 1 then do
+        at = 0
+        do while at < tokens.size() & tokens.start(at) < _offset
+          at = at + 1
+        end
+        bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
+        found = llsource..lexeme(bytes,at >= tokens.size())
+        _error = 'unexpected ' || found || '; ' || _error
+      end
       return _status
     end
     if backend = 'regional' then do
@@ -270,20 +286,19 @@ request: class
       _offset = composite.offset(); _error = composite.error()
       if _status = 1 then do
         contexts = composite.contexts()
-        if <blen>(contexts) > 0 then do
           at = 0
           do while at < tokens.size() & tokens.start(at) < _offset
             at = at + 1
           end
           bytes = binsubstr(_source,tokens.start(at) + 1,tokens.finish(at + 1) - tokens.start(at))
           found = llsource..lexeme(bytes,at >= tokens.size())
-          _error = _language.explain(contexts,found,composite.expected(),_error)
-        end
+          _error = 'unexpected ' || found || '; ' || _error
+          if <blen>(contexts) > 0 then _error = _language.explain(contexts,found,composite.expected(),_error)
       end
       return _status
     end
     if backend = 'll1' | backend = 'packrat' then do
-      predictive = .llpeg..parser(_language.grammar(),_language.root(),tokens,backend,_limits.limit('parse.work'))
+      predictive = .llpeg..parser(_language.grammar(),_language.root(),tokens,backend,_limits.limit('parse.work'),_limits)
       _status = predictive.run(); _tree = predictive.arena(); _root = predictive.root()
       _offset = predictive.offset(); _error = predictive.error()
       if _status = 1 then do
@@ -296,7 +311,7 @@ request: class
       return _status
     end
     if backend = 'earley' then do
-      chart = .llearley..parser(_language.grammar(),_language.root(),tokens,_limits.limit('parse.work'),_limits.limit('earley.cells'))
+      chart = .llearley..parser(_language.grammar(),_language.root(),tokens,_limits.limit('parse.work'),_limits.limit('earley.cells'),_limits)
       _status = chart.run(); _offset = chart.offset(); _error = chart.error()
       _forest = chart.forest(); _forestroot = chart.root()
       if _status = 1 then do

@@ -1,0 +1,2478 @@
+{
+  "records": [
+    {
+      "backend": "lr1",
+      "vm": "rxtvm",
+      "case": "default"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxtvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxtvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxtvm",
+      "case": "source"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxtvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxtvm",
+      "case": "parser"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxtvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxtvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxtvm",
+      "case": "projection"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxbvm",
+      "case": "default"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxbvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxbvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxbvm",
+      "case": "source"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxbvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxbvm",
+      "case": "parser"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxbvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxbvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "lr1",
+      "vm": "rxbvm",
+      "case": "projection"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxtvm",
+      "case": "default"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxtvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxtvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxtvm",
+      "case": "source"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxtvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxtvm",
+      "case": "parser"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxtvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxtvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxtvm",
+      "case": "projection"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxbvm",
+      "case": "default"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxbvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxbvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxbvm",
+      "case": "source"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxbvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxbvm",
+      "case": "parser"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxbvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxbvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "ll1",
+      "vm": "rxbvm",
+      "case": "projection"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxtvm",
+      "case": "default"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxtvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxtvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxtvm",
+      "case": "source"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxtvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxtvm",
+      "case": "parser"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxtvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxtvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxtvm",
+      "case": "projection"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxbvm",
+      "case": "default"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxbvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxbvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxbvm",
+      "case": "source"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxbvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxbvm",
+      "case": "parser"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxbvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxbvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "packrat",
+      "vm": "rxbvm",
+      "case": "projection"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "default"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "source"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "parser"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "projection"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxtvm",
+      "case": "chart"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "default"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "source"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "parser"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "projection"
+    },
+    {
+      "backend": "earley",
+      "vm": "rxbvm",
+      "case": "chart"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxtvm",
+      "case": "default"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxtvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxtvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxtvm",
+      "case": "source"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxtvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxtvm",
+      "case": "parser"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxtvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxtvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxbvm",
+      "case": "default"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxbvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxbvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxbvm",
+      "case": "source"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxbvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxbvm",
+      "case": "parser"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxbvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "pratt",
+      "vm": "rxbvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "default"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "source"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "parser"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "recovery-default"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "recovery-source"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "recovery-scan"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxtvm",
+      "case": "recovery-parse"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "default"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "exact-source-boundary"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "larger-work-budget"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "source"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "scanner"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "parser"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "unknown"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "nonpositive"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "recovery-default"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "recovery-source"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "recovery-scan"
+    },
+    {
+      "backend": "regional",
+      "vm": "rxbvm",
+      "case": "recovery-parse"
+    }
+  ],
+  "commands": [
+    {
+      "name": "lr1-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "45fa8ea53b3618c8d6681e7fae3eb68bb61908dbbb6e5ab7ee3c886b7cfb7e6b"
+    },
+    {
+      "name": "lr1-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/levell_settings"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "lr1-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/budget-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "lr1-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "lr1-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "lr1-rxtvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "lr1-rxtvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "source.bytes",
+        "9"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "lr1-rxtvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "lr1-rxtvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "9e25f7c7cfab54ec398ca157fdc1b61b2f778f545b5002ac9063ef128e8d9971"
+    },
+    {
+      "name": "lr1-rxtvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "lr1-rxtvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "lr1-rxtvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "lr1-rxtvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "lr1-rxtvm-projection",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "tree.entries",
+        "1",
+        "project"
+      ],
+      "status": 2,
+      "sha256": "25518f1b2fb23a3c3f4f1f249120f9c5964408a5774b8fa8ecc492733f740d60"
+    },
+    {
+      "name": "lr1-rxbvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "lr1-rxbvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "source.bytes",
+        "9"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "lr1-rxbvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "lr1-rxbvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "9e25f7c7cfab54ec398ca157fdc1b61b2f778f545b5002ac9063ef128e8d9971"
+    },
+    {
+      "name": "lr1-rxbvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "lr1-rxbvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "lr1-rxbvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "lr1-rxbvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "lr1-rxbvm-projection",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.txt",
+        "tree.entries",
+        "1",
+        "project"
+      ],
+      "status": 2,
+      "sha256": "25518f1b2fb23a3c3f4f1f249120f9c5964408a5774b8fa8ecc492733f740d60"
+    },
+    {
+      "name": "build-budget-high",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.levell",
+        "--rxas",
+        "--limit",
+        "lr.states=100000"
+      ],
+      "status": 0,
+      "sha256": "45fa8ea53b3618c8d6681e7fae3eb68bb61908dbbb6e5ab7ee3c886b7cfb7e6b"
+    },
+    {
+      "name": "build-budget-low",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.levell",
+        "--limit",
+        "lr.states=1",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "abe994e302ee1856e5c23e3f62276dbf234477321b69c12a00ba40e030f4740f"
+    },
+    {
+      "name": "build-invalid-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.levell",
+        "--limit",
+        "wrong.name=1"
+      ],
+      "status": 2,
+      "sha256": "ab4288b5058596477d805bfac68b19aaa935ea88adc99701db03dd6745364194"
+    },
+    {
+      "name": "build-invalid-zero",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.levell",
+        "--limit",
+        "lr.states=0"
+      ],
+      "status": 2,
+      "sha256": "fc461c551f415c2df205147f2156675e6a8d4145eb494aa63388f97668e5fc65"
+    },
+    {
+      "name": "build-invalid-bad",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.levell",
+        "--limit",
+        "lr.states=x"
+      ],
+      "status": 2,
+      "sha256": "a78c1801ab5fb884741ce8cc5f72940df193054d45eadb3628779b144d68ef5f"
+    },
+    {
+      "name": "build-invalid-overflow",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/lr1/input.levell",
+        "--limit",
+        "lr.states=9999999999999999999999999999999999999999"
+      ],
+      "status": 2,
+      "sha256": "ba1b4592ff8dd7074c0784d3cc06395edbf89cb50a91ddfbb55ca982c8e14b2f"
+    },
+    {
+      "name": "ll1-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "aec9dfd2f957fc46123b568455d60bfbce248be78682e248f643f18e4b2846bb"
+    },
+    {
+      "name": "ll1-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/levell_settings"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ll1-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/budget-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ll1-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ll1-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ll1-rxtvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "ll1-rxtvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "source.bytes",
+        "9"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "ll1-rxtvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "ll1-rxtvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "9e25f7c7cfab54ec398ca157fdc1b61b2f778f545b5002ac9063ef128e8d9971"
+    },
+    {
+      "name": "ll1-rxtvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "ll1-rxtvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "ll1-rxtvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "ll1-rxtvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "ll1-rxtvm-projection",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "tree.entries",
+        "1",
+        "project"
+      ],
+      "status": 2,
+      "sha256": "25518f1b2fb23a3c3f4f1f249120f9c5964408a5774b8fa8ecc492733f740d60"
+    },
+    {
+      "name": "ll1-rxbvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "ll1-rxbvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "source.bytes",
+        "9"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "ll1-rxbvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "ll1-rxbvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "9e25f7c7cfab54ec398ca157fdc1b61b2f778f545b5002ac9063ef128e8d9971"
+    },
+    {
+      "name": "ll1-rxbvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "ll1-rxbvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "ll1-rxbvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "ll1-rxbvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "ll1-rxbvm-projection",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/ll1/input.txt",
+        "tree.entries",
+        "1",
+        "project"
+      ],
+      "status": 2,
+      "sha256": "25518f1b2fb23a3c3f4f1f249120f9c5964408a5774b8fa8ecc492733f740d60"
+    },
+    {
+      "name": "packrat-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "65c5a301c0888c6570d3acb2da9d4658ae7fd3050c6f1f3bf90f57e0b7bcf0cc"
+    },
+    {
+      "name": "packrat-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/levell_settings"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "packrat-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/budget-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "packrat-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "packrat-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "packrat-rxtvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "packrat-rxtvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "source.bytes",
+        "9"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "packrat-rxtvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "packrat-rxtvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "9e25f7c7cfab54ec398ca157fdc1b61b2f778f545b5002ac9063ef128e8d9971"
+    },
+    {
+      "name": "packrat-rxtvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "packrat-rxtvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "packrat-rxtvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "packrat-rxtvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "packrat-rxtvm-projection",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "tree.entries",
+        "1",
+        "project"
+      ],
+      "status": 2,
+      "sha256": "25518f1b2fb23a3c3f4f1f249120f9c5964408a5774b8fa8ecc492733f740d60"
+    },
+    {
+      "name": "packrat-rxbvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "packrat-rxbvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "source.bytes",
+        "9"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "packrat-rxbvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "packrat-rxbvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "9e25f7c7cfab54ec398ca157fdc1b61b2f778f545b5002ac9063ef128e8d9971"
+    },
+    {
+      "name": "packrat-rxbvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "packrat-rxbvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "packrat-rxbvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "packrat-rxbvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "packrat-rxbvm-projection",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/packrat/input.txt",
+        "tree.entries",
+        "1",
+        "project"
+      ],
+      "status": 2,
+      "sha256": "25518f1b2fb23a3c3f4f1f249120f9c5964408a5774b8fa8ecc492733f740d60"
+    },
+    {
+      "name": "earley-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "cd267a1244a7500d3ec82b127c8ff15244741b79d28d690e7907b259891eb028"
+    },
+    {
+      "name": "earley-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/levell_settings"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "earley-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/budget-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "earley-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "earley-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "earley-rxtvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "earley-rxtvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "source.bytes",
+        "9"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "earley-rxtvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "earley-rxtvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "9e25f7c7cfab54ec398ca157fdc1b61b2f778f545b5002ac9063ef128e8d9971"
+    },
+    {
+      "name": "earley-rxtvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "earley-rxtvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "1ee48f342de748b7fea697c47e9804dfa26dc367cca413ccdbff18ce20180614"
+    },
+    {
+      "name": "earley-rxtvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "earley-rxtvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "earley-rxtvm-projection",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "tree.entries",
+        "1",
+        "project"
+      ],
+      "status": 2,
+      "sha256": "25518f1b2fb23a3c3f4f1f249120f9c5964408a5774b8fa8ecc492733f740d60"
+    },
+    {
+      "name": "earley-rxtvm-chart",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "earley.cells",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "e6d0954d2567b9062e5ad92154a3e2b2b24778c729133df80356a725568ea9c1"
+    },
+    {
+      "name": "earley-rxbvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "earley-rxbvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "source.bytes",
+        "9"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "earley-rxbvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "earley-rxbvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "9e25f7c7cfab54ec398ca157fdc1b61b2f778f545b5002ac9063ef128e8d9971"
+    },
+    {
+      "name": "earley-rxbvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "earley-rxbvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "1ee48f342de748b7fea697c47e9804dfa26dc367cca413ccdbff18ce20180614"
+    },
+    {
+      "name": "earley-rxbvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "earley-rxbvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "earley-rxbvm-projection",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "tree.entries",
+        "1",
+        "project"
+      ],
+      "status": 2,
+      "sha256": "25518f1b2fb23a3c3f4f1f249120f9c5964408a5774b8fa8ecc492733f740d60"
+    },
+    {
+      "name": "earley-rxbvm-chart",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/earley/input.txt",
+        "earley.cells",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "e6d0954d2567b9062e5ad92154a3e2b2b24778c729133df80356a725568ea9c1"
+    },
+    {
+      "name": "pratt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "68aa92964042bd264e1b020a66a0f9810530fc9c98bbd0515c2bd08e79859e8a"
+    },
+    {
+      "name": "pratt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/levell_settings"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pratt-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/budget-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pratt-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pratt-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pratt-rxtvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "pratt-rxtvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "source.bytes",
+        "5"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "pratt-rxtvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "pratt-rxtvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "184b90699f6bf0c0b4fa3545e65400de14e5bbc2ccaded6b865a8df9bbb5951f"
+    },
+    {
+      "name": "pratt-rxtvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "pratt-rxtvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "pratt-rxtvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "pratt-rxtvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "pratt-rxbvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "pratt-rxbvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "source.bytes",
+        "5"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "pratt-rxbvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "pratt-rxbvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "184b90699f6bf0c0b4fa3545e65400de14e5bbc2ccaded6b865a8df9bbb5951f"
+    },
+    {
+      "name": "pratt-rxbvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "pratt-rxbvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "pratt-rxbvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "pratt-rxbvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/pratt/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "regional-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "009e507faced08809ff6e3ba891aaa724d91a1f9d8e28abb22f8cf9d1b581444"
+    },
+    {
+      "name": "regional-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/levell_settings"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "regional-compile-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional;/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/budget-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "regional-assemble-probe",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "regional-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/levell_settings.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "regional-rxtvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "regional-rxtvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "source.bytes",
+        "17"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "regional-rxtvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "regional-rxtvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "164382bf59461158e9e2487bf350c23d3eb92750c31181a75fb0ce533a0a4bea"
+    },
+    {
+      "name": "regional-rxtvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "regional-rxtvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "regional-rxtvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "regional-rxtvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "regional-rxtvm-recovery-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "2000000",
+        "recover"
+      ],
+      "status": 0,
+      "sha256": "1fb3324f8829a0361e1a0044a462b6d084c5c7f3e91fcd85ab4215401a98d538"
+    },
+    {
+      "name": "regional-rxtvm-recovery-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "source.bytes",
+        "1",
+        "recover"
+      ],
+      "status": 2,
+      "sha256": "b445407b99bb21ab2e5932759a352d299e1808b76622d2e0eb4b5b9c13cf34c4"
+    },
+    {
+      "name": "regional-rxtvm-recovery-scan",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "scan.work",
+        "1",
+        "recover"
+      ],
+      "status": 2,
+      "sha256": "eb76da6a84c6bf79a940dcf0f469648f44b6e2ff34f4d553f49f83b879e5a36f"
+    },
+    {
+      "name": "regional-rxtvm-recovery-parse",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "1",
+        "recover"
+      ],
+      "status": 2,
+      "sha256": "e0f95edaebe5b67b7f7f6e2dd891bb8f41e185a020fd9de5fcf14d09e6550f3d"
+    },
+    {
+      "name": "regional-rxbvm-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "regional-rxbvm-exact-source-boundary",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "source.bytes",
+        "17"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "regional-rxbvm-larger-work-budget",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "2000000"
+      ],
+      "status": 0,
+      "sha256": "bfc0c312c89208c8d3387a3a9d546a5732a9f998e4bcde30ba730dde1fac99de"
+    },
+    {
+      "name": "regional-rxbvm-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "source.bytes",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "164382bf59461158e9e2487bf350c23d3eb92750c31181a75fb0ce533a0a4bea"
+    },
+    {
+      "name": "regional-rxbvm-scanner",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "scan.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "4e2760d70f203433489d2f75bc74a5e524cc97b31f52e86db9591d53fdef85cc"
+    },
+    {
+      "name": "regional-rxbvm-parser",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "1"
+      ],
+      "status": 2,
+      "sha256": "32d34bf2adfc3f7ab597cdabcea4424c77dd62681c131b32b1aa10c4fb737962"
+    },
+    {
+      "name": "regional-rxbvm-unknown",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "wrong.name",
+        "1"
+      ],
+      "status": 3,
+      "sha256": "8041b3847f7c14d68fa2ddc04e6d98d65da22625ed9e64d0a7065f54d6970d61"
+    },
+    {
+      "name": "regional-rxbvm-nonpositive",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "0"
+      ],
+      "status": 3,
+      "sha256": "32b711dce6a6b3807651a592941be89d50ee3c2746f9917016edbb3cfb035e27"
+    },
+    {
+      "name": "regional-rxbvm-recovery-default",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "2000000",
+        "recover"
+      ],
+      "status": 0,
+      "sha256": "1fb3324f8829a0361e1a0044a462b6d084c5c7f3e91fcd85ab4215401a98d538"
+    },
+    {
+      "name": "regional-rxbvm-recovery-source",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "source.bytes",
+        "1",
+        "recover"
+      ],
+      "status": 2,
+      "sha256": "b445407b99bb21ab2e5932759a352d299e1808b76622d2e0eb4b5b9c13cf34c4"
+    },
+    {
+      "name": "regional-rxbvm-recovery-scan",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "scan.work",
+        "1",
+        "recover"
+      ],
+      "status": 2,
+      "sha256": "eb76da6a84c6bf79a940dcf0f469648f44b6e2ff34f4d553f49f83b879e5a36f"
+    },
+    {
+      "name": "regional-rxbvm-recovery-parse",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/regional/input.txt",
+        "parse.work",
+        "1",
+        "recover"
+      ],
+      "status": 2,
+      "sha256": "e0f95edaebe5b67b7f7f6e2dd891bb8f41e185a020fd9de5fcf14d09e6550f3d"
+    },
+    {
+      "name": "large-budget-does-not-change-admission",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/final-budgets/conflict.levell",
+        "--rxas",
+        "--limit",
+        "lr.states=100000"
+      ],
+      "status": 1,
+      "sha256": "7964f6947a5f1ae7fa3bbfa1cc7ca1106af170b75c8bef33959a4949f325b2e4"
+    }
+  ]
+}

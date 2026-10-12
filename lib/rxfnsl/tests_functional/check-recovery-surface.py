@@ -56,10 +56,13 @@ for backend in a.backends:
             'clean': (b'first = 1\nthird = 3\n', 0, b'errors: 0', []),
             'two-errors': (b'first = many\nsecond =\nthird = 3\n', 1, b'errors: 2', []),
             'lexical-damage': (b'first = $\nsecond = many\nthird = 3\n', 1, b'errors: 2', []),
+            'mixed-order': (b'first = many\nsecond = \xff\nthird = 3\n', 1, b'errors: 2', []),
             'quoted-sync': (b'first = "a;b"\nsecond = many\nthird = 3\n', 1, b'first -> "a;b"', []),
             'eof': (b'third = 3\nlast =', 1, b'end of input', []),
-            'bounded': (b'first = many\nsecond =\nthird = 3\n', 2, b'LL_RECOVERY_LIMIT', ['1']),
-            'utf8-damage': (b'first = \xff\nthird = 3', 4, b'LL_UTF8', []),
+            'bounded': (b'first = many\nsecond =\nthird = 3\n', 2, b'LL_RESOURCE_LIMIT: recovery.errors budget 1, required at least 2', ['1']),
+            'utf8-truncated': (b'first = \xe2\x82\nthird = 3', 1, b'LL_UTF8', []),
+            'utf8-surrogate': (b'first = \xed\xa0\x80\nthird = 3', 1, b'LL_UTF8', []),
+            'utf8-damage': (b'first = \xff\nthird = 3', 1, b'LL_UTF8', []),
         }
         for vm in ['rxtvm', 'rxbvm']:
             for case, (source, status, expected, extra) in cases.items():
@@ -70,6 +73,8 @@ for backend in a.backends:
                 assert expected in observed, (key, case, observed)
                 if status < 2:
                     assert b'third -> 3' in observed, (key, case, observed)
+                if case == 'mixed-order':
+                    assert observed.index(b'value.error:') < observed.index(b'LL_UTF8:'), ('diagnostic order', observed)
                 if case == 'two-errors':
                     assert observed.count(b'value.error:') == 2, (key, case, observed)
                     assert b'first ->' not in observed and b'second ->' not in observed
@@ -95,5 +100,5 @@ for stage in [1, 2]:
     assert b'.globals=' not in result, result
 
 (out / 'receipt.json').write_text(json.dumps(dict(records=records, commands=commands,
-    boundary='Flat records; strict UTF-8/comment preparation; no nested or token-stage recovery claim.'), indent=2) + '\n')
+    boundary='Flat records; explicit malformed UTF-8 masking/origins; unclosed comments stop; no general nested or token-stage recovery claim.'), indent=2) + '\n')
 print(f'recovery_cases={len(records)}; specification_resync=2; failures=0')

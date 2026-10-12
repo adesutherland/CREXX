@@ -1,5 +1,26 @@
 # Level L diagnostic and recovery assessment
 
+**12 October continuation, bounded native qualification verified:** source excerpts now
+use ASCII escapes by default for tabs, controls and non-ASCII scalars, so caret
+positions are deterministic. Headers still report original byte offsets and
+Unicode scalar columns. `llsource..diagnostic(...,'unicode')` provides an
+optional Unicode excerpt; font-dependent cell widths remain outside that view.
+Pratt and regional failures include the actual unexpected lexeme. Recovery
+messages are presented in source order.
+
+Target recovery can explicitly mask malformed UTF-8 in a working copy, retain
+original damaged byte ranges and skip the containing synchronization interval.
+It returns a recovered result, never a clean/executable result. Strict parsing
+still rejects malformed encoding. Unclosed target comments remain unrecoverable
+under the current flat-record contract.
+
+Proper grammar readers inspect isolated declaration candidates after lexical
+quote/comment damage, using line-aligned declaration boundaries. Such candidates
+are diagnostic information; the original document stays failed and no code is
+emitted. Valid quoted/commented text remains opaque. L0 keeps its minimal
+first-error behavior. The new backend/coordinate and resync panels pass
+under CONT-AC03; historical baseline descriptions below remain dated.
+
 **Common-surface implementation update, 11 October:** the product now has
 simple rule messages, unexpected lexemes, stack-checked LR expectations, and
 shared message rendering for LR, LL(1), PEG and Earley. Proper specification

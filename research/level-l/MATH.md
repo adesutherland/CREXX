@@ -1267,3 +1267,37 @@ claiming safe pruning. REC-04 establishes one sufficient common-continuation
 dominance relation. Search availability, budget gates, versions and tree ties
 remain explicit obligations. A better scalar score alone does not discharge
 them. Q020 in RECOVERY.md also separates rank from intended reconstruction.
+
+
+## Property construction representation — 12 October
+
+**Implementation argument, functional qualification in progress.** The Unicode
+property compiler emits sorted disjoint scalar intervals from pinned raw data.
+Balanced union lowering changes grouping, not set union: associativity preserves
+membership, while a balanced union over `r` boxes has logarithmic union depth.
+The existing byte-box lowering still supplies its own scalar/UTF-8 argument.
+
+For one NFA epsilon closure, maintain a binary membership vector and a queue.
+Initially all seeds are marked and queued. Mark a destination before enqueueing
+it, and process only epsilon edges of popped states. The invariant is that all
+marked states are reachable from a seed by epsilon edges. Completeness follows
+by induction on path length: when the predecessor is popped, an unmarked
+successor is marked and queued. Each state enters the queue once, so cycles do
+not prevent termination. Queue traversal is `O(R + E_reached)` for `R` reached states, plus the
+`O(N)` membership-vector allocation. Canonical sorted sparse state keys cost
+`O(R log R)` and preserve set equality; transitions inspect those active state
+keys rather than scanning the whole NFA for every byte class. This is an algorithmic
+argument, not machine verification of cREXX value ownership or a wall-clock
+bound.
+
+The alphabet partition remains identical: the former byte signature contained
+one bit for each character NFA state; the binary signature places those bits at
+state positions and inserts constant zeroes for other states. Two bytes have
+equal signatures under one representation iff they do under the other. Subset
+membership/equality is unchanged. Acceptance still visits NFA state numbers in
+ascending order, preserving lexical rule priority and nullable-token admission.
+DFA subset construction can still be exponential; its ordinary scans and
+interning have not become a linear construction algorithm. Native/raw-data and
+legacy lexer controls must qualify the code before the argument supports a
+product behavior claim. The abandoned first full-XID attempt overlapped build
+activity and supplies no before/after timing verdict.

@@ -4,6 +4,7 @@ namespace llregular expose builder
 import rxfnsb
 import llcore
 import llmunch
+import lllimits
 
 /** Bounded construction; recursive lexical definitions and nullable tokens fail.
  * UTF-8 is validated by the source stage; this machine consumes exact bytes.
@@ -21,8 +22,11 @@ builder: class
   _kinds = .int[]
   _built = .int
   _dfa = .llmunch..automaton
+  _limits = .lllimits..policy
   *: factory
-    arg graph = .llcore..grammar, roots = .int[], kinds = .int[]
+    arg graph = .llcore..grammar, roots = .int[], kinds = .int[], ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
+    _limits = limits
     _graph = graph; _count = 0; _root = 0; _depth = 0; _error = ''
     _dfa = .llmunch..automaton(0,0)
     _roots = roots; _kinds = kinds; _built = 0
@@ -30,6 +34,9 @@ builder: class
   build: method = .void
     if _built then return
     _built = 1; roots = _roots; kinds = _kinds
+    if _limits.error() <> '' then do
+      _error = _limits.error(); return
+    end
     do i = 1 to roots[0] while _error = ''
       part = fragment(roots[i]); accept = node(2,0,roots[i],kinds[i],'')
       call patch(part[2],accept)
@@ -38,13 +45,13 @@ builder: class
         combined = node(0,_root,part[1],0,''); _root = combined
       end
     end
-    if _root = 0 then _error = 'no lexical rules'
+    if _root = 0 & _error = '' then _error = 'no lexical rules'
     if _error = '' then call determinize()
     return
   node: method = .int
     arg type = .int, a = .int, b = .int, kind = .int, mask = .string
-    if _count >= 4096 then do
-      _error = 'LL_BUILD_LIMIT: more than 4096 expanded NFA states'; return 0
+    if _count >= _limits.limit('nfa.states') then do
+      _error = _limits.exhausted('nfa.states',_count + 1); return 0
     end
     _count = _count + 1; base = (_count - 1) * 272
     call binresize _nfa,base + 272
@@ -66,7 +73,7 @@ builder: class
       _error = 'LL_BAD_GRAMMAR: invalid lexical reference'; return result
     end
     if _depth >= 128 then do
-      _error = 'LL_BUILD_LIMIT: lexical nesting exceeds 128 in ' || _graph.label(id) || ' at line ' || _graph.line(id); return result
+      _error = 'LL_IMPLEMENTATION_LIMIT: lexical depth exceeds 128 in ' || _graph.label(id) || ' at line ' || _graph.line(id); return result
     end
     if _visiting[id] then do
       _error = 'LL_LEX_RECURSION: unsupported recursive lexical rule ' || _graph.label(id) || ' at line ' || _graph.line(id) || '. DFA generation requires acyclic regular definitions; use a declared counter stage for nesting.'; return result
@@ -112,51 +119,86 @@ builder: class
     end
     _visiting[id] = 0; _depth = _depth - 1
     return result
-  closure: method = .string
-    arg active = .string
-    changed = 1
-    do while changed
-      changed = 0
-      do state = 1 to _count
-        if substr(active,state,1) <> '1' then iterate
-        base = (state - 1) * 272
-        if <at..i32>(base) _nfa <> 0 then iterate
-        do edge = 1 to 2
-          target = <at..i32>(base + edge * 4) _nfa
-          if target > 0 then do
-            if substr(active,target,1) <> '1' then do
-              active = overlay('1',active,target); changed = 1
-            end
+  /** Each epsilon-reachable state enters the queue once. Membership is a
+   * binary vector, so setting a bit does not rebuild a Unicode string. */
+  closure: method = .binary
+    arg active = .binary, pending = .int[]
+    at = 1; state = .int
+    do while at <= pending[0]
+      state = pending[at]; at = at + 1; base = (state - 1) * 272
+      if <at..i32>(base) _nfa <> 0 then iterate
+      do edge = 1 to 2
+        target = <at..i32>(base + edge * 4) _nfa
+        if target > 0 then do
+          if <at..u8>(target - 1) active = 0 then do
+            <at..u8>(target - 1) active = 1
+            pending[pending[0] + 1] = target
           end
         end
       end
     end
-    return active
+    return subsetkey(pending)
+  /** Canonical sparse membership: byte equality iff the state sets agree. */
+  subsetkey: method = .binary
+    arg keys = .int[]
+    width = 1; size = keys[0]; scratch = .int[]
+    first = .int; middle = .int; last = .int; a = .int; b = .int; out = .int
+    do while width < size
+      do first = 1 to size by width * 2
+        middle = min(first + width,size + 1); last = min(first + width * 2,size + 1)
+        a = first; b = middle
+        do out = first to last - 1
+          if a < middle then do
+            if b >= last then do
+              scratch[out] = keys[a]; a = a + 1
+            end
+            else if keys[a] <= keys[b] then do
+              scratch[out] = keys[a]; a = a + 1
+            end
+            else do
+              scratch[out] = keys[b]; b = b + 1
+            end
+          end
+          else do
+            scratch[out] = keys[b]; b = b + 1
+          end
+        end
+      end
+      keys = scratch; width = width * 2
+    end
+    result = .binary; call binresize result,size * 4
+    do out = 1 to size
+      <at..i32>((out - 1) * 4) result = keys[out]
+    end
+    return result
   determinize: method = .void
-    byte = .int; state = .int; base = .int; cls = .int; i = .int; ok = .int
-    signatures = .string[]; representatives = .int[]; mapping = .int[]; classes = 0
+    byte = .int; state = .int; base = .int; cls = .int; i = .int; member = .int; ok = .int; seeds = .int[]; emptyseeds = .int[]
+    signatures = .binary[]; representatives = .int[]; mapping = .int[]; classes = 0
     do byte = 0 to 255
-      signature = ''
+      signature = .binary; call binresize signature,_count
       do state = 1 to _count
         base = (state - 1) * 272
-        if <at..i32>(base) _nfa = 1 then signature = signature || <at..u8>(base + 16 + byte) _nfa
+        if <at..i32>(base) _nfa = 1 then <at..u8>(state - 1) signature = <at..u8>(base + 16 + byte) _nfa
       end
       cls = 0
       do i = 1 to classes
-        if signatures[i] == signature then cls = i
+        if signatures[i] = signature then cls = i
       end
       if cls = 0 then do
         classes = classes + 1; cls = classes; signatures[cls] = signature; representatives[cls] = byte
       end
       mapping[byte + 1] = cls - 1
     end
-    sets = .string[]; kinds = .int[]; edges = .int[]; owner = 0
-    sets[1] = closure(overlay('1',copies('0',_count),_root)); total = 1; next = 1
+    sets = .binary[]; kinds = .int[]; edges = .int[]; owner = 0
+    initial = .binary; call binresize initial,_count
+    <at..u8>(_root - 1) initial = 1
+    seeds[1] = _root
+    sets[1] = closure(initial,seeds); total = 1; next = 1
     do while next <= total
       active = sets[next]; kind = 0
-      do state = 1 to _count
-        base = (state - 1) * 272
-        if substr(active,state,1) = '1' & <at..i32>(base) _nfa = 2 then do
+      do member = 0 to <blen>(active) - 1 by 4
+        state = <at..i32>(member) active; base = (state - 1) * 272
+        if <at..i32>(base) _nfa = 2 then do
           kind = <at..i32>(base + 12) _nfa; owner = <at..i32>(base + 8) _nfa; leave
         end
       end
@@ -165,24 +207,27 @@ builder: class
         _error = 'LL_NULLABLE_TOKEN: ' || _graph.label(owner) || ' (line ' || _graph.line(owner) || ') accepts empty input. Every lexical rule must consume at least one byte; replace optional/repeated-only content with a consuming pattern.'; return
       end
       do cls = 1 to classes
-        byte = representatives[cls]; following = copies('0',_count); live = 0
-        do state = 1 to _count
-          if substr(active,state,1) <> '1' then iterate
-          base = (state - 1) * 272
+        byte = representatives[cls]; following = .binary; call binresize following,_count; live = 0
+        seeds = emptyseeds
+        do member = 0 to <blen>(active) - 1 by 4
+          state = <at..i32>(member) active; base = (state - 1) * 272
           if <at..i32>(base) _nfa = 1 & <at..u8>(base + 16 + byte) _nfa = 1 then do
             target = <at..i32>(base + 4) _nfa
-            following = overlay('1',following,target); live = 1
+            if <at..u8>(target - 1) following = 0 then do
+              <at..u8>(target - 1) following = 1; live = 1
+              seeds[seeds[0] + 1] = target
+            end
           end
         end
         target = 0
         if live then do
-          following = closure(following)
+          following = closure(following,seeds)
           do i = 1 to total
-            if sets[i] == following then target = i
+            if sets[i] = following then target = i
           end
           if target = 0 then do
-            if total >= 2048 then do
-              _error = 'LL_BUILD_LIMIT: more than 2048 DFA states'; return
+            if total >= _limits.limit('dfa.states') then do
+              _error = _limits.exhausted('dfa.states',total + 1); return
             end
             total = total + 1; target = total; sets[target] = following
           end
@@ -203,6 +248,8 @@ builder: class
     end
     if _dfa.verify() = 0 then _error = _dfa.error()
     return
+  nfastates: method = .int
+    return _count
   automaton: method = .llmunch..automaton
     return _dfa
   error: method = .string

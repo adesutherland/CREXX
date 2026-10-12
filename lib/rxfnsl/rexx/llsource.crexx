@@ -16,14 +16,21 @@ prepared: class
   _closing = .string
   _limit = .int
   _ran = .int
+  _recover = .int
+  _badfirst = .int[]
+  _badlast = .int[]
+  _badpoint = .int[]
   *: factory
-    arg source = .binary, encoding = 'utf8', opening = '', closing = '', limit = 1048576
+    arg source = .binary, encoding = 'utf8', opening = '', closing = '', limit = 1048576, recover = 0
     _source = source; _masked = source; _status = 0; _offset = 0; _error = ''
-    _encoding = encoding; _opening = opening; _closing = closing; _limit = limit; _ran = 0
+    _encoding = encoding; _opening = opening; _closing = closing; _limit = limit; _ran = 0; _recover = recover
     return
   run: method = .void
     if _ran then return
     _ran = 1; source = _source; encoding = _encoding; opening = _opening; closing = _closing; limit = _limit
+    if _recover <> 0 & _recover <> 1 then do
+      _status = 3; _error = 'LL_ENCODING: recovery flag must be 0 or 1'; return
+    end
     if <blen>(source) > limit then do
       _status = 2; _error = lllimits..describe('source.bytes',limit,<blen>(source)); return
     end
@@ -34,7 +41,7 @@ prepared: class
     if _status = 0 & opening <> '' then call comments(opening as .binary,closing as .binary)
     return
   utf8: method = .void
-    at = 0; extent = <blen>(_source)
+    at = 0; extent = <blen>(_source); broken = 0
     do while at < extent
       c = <at..u8>(at) _source; start = at; count = 0; scalar = c; minimum = 0
       if c < 128 then do
@@ -50,24 +57,55 @@ prepared: class
         count = 3; scalar = c - 240; minimum = 65536
       end
       else do
-        call invalid(start); return
+        call damage(start,start + 1,start)
+        if _status <> 0 then return
+        at = start + 1; iterate
       end
-      at = at + 1
+      at = at + 1; broken = 0
       do i = 1 to count
         if at >= extent then do
-          call invalid(start); return
+          call damage(start,extent,start); broken = 1; at = extent; leave
         end
         c = <at..u8>(at) _source
         if c < 128 | c > 191 then do
-          call invalid(at); return
+          call damage(start,at,at); broken = 1; leave
         end
         scalar = scalar * 64 + c - 128; at = at + 1
       end
+      if _status <> 0 then return
+      if broken then iterate
       if scalar < minimum | scalar > 1114111 | (scalar >= 55296 & scalar <= 57343) then do
-        call invalid(start); return
+        call damage(start,at,start)
+        if _status <> 0 then return
       end
     end
     return
+  damage: method = .void
+    arg first = .int, last = .int, point = .int
+    if _recover = 0 then do
+      call invalid(point); return
+    end
+    entry = _badfirst[0]
+    if entry = 0 | _badlast[entry] <> first then do
+      entry = entry + 1
+      _badfirst[entry] = first; _badpoint[entry] = point
+    end
+    _badlast[entry] = last
+    do byte = first to last - 1
+      <at..u8>(byte) _masked = 32
+    end
+    return
+  errors: method = .int
+    return _badfirst[0]
+  badstart: method = .int
+    arg error = .int
+    return _badfirst[error]
+  badend: method = .int
+    arg error = .int
+    return _badlast[error]
+  badpoint: method = .int
+    arg error = .int
+    return _badpoint[error]
   invalid: method = .void
     arg offset = .int
     _status = 1; _offset = offset; _error = 'LL_UTF8: malformed UTF-8'
@@ -79,6 +117,7 @@ prepared: class
     if a = 0 | b = 0 | opening = closing then do
       _status = 3; _error = 'LL_COMMENT_CONTRACT: invalid delimiters'; return
     end
+    before = _masked
     at = 0; depth = 0; quote = 0; origin = 0
     do while at < extent
       c = <at..u8>(at) _source
@@ -121,6 +160,9 @@ prepared: class
     end
     if depth > 0 then do
       _status = 1; _offset = origin; _error = 'LL_COMMENT: unclosed nested comment'
+      if _recover then do i = origin + a to extent - 1
+        <at..u8>(i) _masked = <at..u8>(i) before
+      end
     end
     return
   bytes: method = .binary
@@ -135,7 +177,8 @@ prepared: class
 
 /** Diagnostic columns count Unicode scalars; offsets remain exact byte offsets. */
 diagnostic: procedure = .string
-  arg source = .binary, offset = .int, code = .string, message = .string
+  arg source = .binary, offset = .int, code = .string, message = .string, display = 'escaped'
+  if display <> 'escaped' & display <> 'unicode' then return 'LL_DIAGNOSTIC_POLICY: display must be escaped or unicode'
   offset = max(0,min(offset,<blen>(source))); line = 1; column = 1; first = 0; last = <blen>(source)
   i = .int; c = .int; start = .int; previous = -1
   do i = 0 to offset - 1
@@ -154,17 +197,35 @@ diagnostic: procedure = .string
     end
   end
   header = code || ' at line ' || line || ', column ' || column || ' (byte ' || offset || '): ' || message
-  checked = .prepared(source,'utf8')
+  checked = .prepared(source,'utf8','','',max(1,<blen>(source)))
   if checked.status() <> 0 then do
     /* Never decode malformed input while reporting its original error. */
     start = max(0,offset - 8)
     return header || '0a'x || '  source bytes: ' || bin2x(binsubstr(source,start + 1,24))
   end
   text = binsubstr(source,first + 1,last - first) as .string
-  text = changestr('09'x,text,' ')
-  start = max(1,column - 60); marker = column - start
-  excerpt = substr(text,start,min(160,max(0,length(text) - start + 1)))
+  start = max(1,column - 20); marker = 0; excerpt = ''; part = .string
+  if start > 1 then do
+    excerpt = '...'; marker = 3
+  end
+  do i = start to min(length(text),start + 159)
+    part = excerptchar(substr(text,i,1),display)
+    if i < column then marker = marker + length(part)
+    excerpt = excerpt || part
+  end
+  if length(text) > start + 159 then excerpt = excerpt || '...'
   return header || '0a'x || '  ' || excerpt || '0a'x || '  ' || copies(' ',marker) || '^'
+
+/** An escaped excerpt has deterministic ASCII marker positions, independent
+ * of grapheme/font cell widths. The Unicode view still escapes controls. */
+excerptchar: procedure = .string
+  arg character = .string, display = .string
+  ordinal = c2d(character)
+  if ordinal = 9 then return '\t'
+  if ordinal < 32 | ordinal = 127 then return '\x' || right(d2x(ordinal),2,'0')
+  if character = '\' then return '\\'
+  if ordinal >= 128 & display = 'escaped' then return '\u{' || d2x(ordinal) || '}'
+  return character
 
 /** Safe unexpected-input text. Preserve Unicode spelling; escape controls so
  * the lexeme cannot introduce a second terminal line or terminal escape. */

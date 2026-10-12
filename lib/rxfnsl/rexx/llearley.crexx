@@ -42,8 +42,9 @@ parser: class
   _end = .int[]
   _prefix = .int[]
   *: factory
-    arg graph = .llcore..grammar, root = .int, input = .llcore..stream, fuel = 1000000, cells = 8000000
-    _cfg = .llcfg..productions(graph,root); _input = input; _width = input.size() + 1
+    arg graph = .llcore..grammar, root = .int, input = .llcore..stream, fuel = 1000000, cells = 8000000, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy()
+    _cfg = .llcfg..productions(graph,root,limits); _input = input; _width = input.size() + 1
     _fuel = fuel; _cells = cells; _work = 0; _ran = 0; _status = 0; _root = 0; _items = 0; _error = ''
     _far = 0; _expected = ''; _treeroot = 0; _selected = 0
     _tree = .llcore..tree.from_source(input.source())
@@ -54,7 +55,9 @@ parser: class
     if _ran then return _status
     _ran = 1
     if _cfg.status() <> 0 | _input.error() <> '' then do
-      _status = 3; _error = _cfg.error() || _input.error(); return _status
+      _status = 3; _error = _cfg.error() || _input.error()
+      if _cfg.status() = 4 then _status = 2
+      return _status
     end
     stride = _cfg.count() + 1
     if _width > stride then stride = _width

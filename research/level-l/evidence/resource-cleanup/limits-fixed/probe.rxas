@@ -1,0 +1,494 @@
+/*
+ * SOURCE                 : limit-regression-probe.crexx
+ */
+
+.globals=0
+
+main() .locals=40
+   .meta "limit-regression-probe.main"="b" ".int" main() ""
+   .srcstep 65 65 17 "limit-regression-probe.crexx" 11 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "limit-regression-probe.crexx" 12 3 29 "  limits = .lllimits..policy()"
+   .meta "limit-regression-probe.main.limits"="b" ".lllimits..policy" r1
+   load r26,0
+   call r1,§lllimits.policy.§factory(),r26
+   .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 1 1 0 "limits" ""
+   .srcstep 3 3 17 "limit-regression-probe.crexx" 13 3 43 "  if limits.set('lr.items',134217727) <> 0 then return 1"
+   .traceevent "V" 6 "R" "O" "r" 1 3 3 0 "limits" ""
+   load r2,"lr.items"
+   .traceevent "L" 4 "R" "S" "r" 2 3 3 0 "" ""
+   load r3,134217727
+   .traceevent "L" 4 "R" "I" "r" 3 3 3 0 "" ""
+   load r0,3
+   settp r1,256
+   settp r2,768
+   call r26,§lllimits.policy.set(),r0
+   .traceevent "F" 4 "R" "I" "r" 26 3 3 0 "set" ""
+   ine r26,r26,0
+   .traceevent "O" 4 "R" "B" "r" 26 3 3 0 "" ""
+   brf l33iffalse,r26
+   .srcstep 4 4 17 "limit-regression-probe.crexx" 13 44 48 "  if limits.set('lr.items',134217727) <> 0 then return 1"
+   .srcstep 2 2 17 "limit-regression-probe.crexx" 13 49 57 "  if limits.set('lr.items',134217727) <> 0 then return 1"
+   ret 1
+l33iffalse:
+   .srcstep 10 10 17 "limit-regression-probe.crexx" 14 3 54 "  if pos('representation ceiling',limits.error()) = 0 then return 2"
+   load r24,"representation ceiling"
+   .traceevent "L" 4 "R" "S" "r" 24 10 10 0 "" ""
+   .srcstep 8 8 17 "limit-regression-probe.crexx" 14 35 41 "  if pos('representation ceiling',limits.error()) = 0 then return 2"
+   .srcstep 5 5 33 "limit-regression-probe.crexx" 14 35 41 "  if pos('representation ceiling',limits.error()) = 0 then return 2"
+   .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "limits" ""
+   .traceevent "A" 6 "R" "O" "r" 1 5 5 0 "§this" ""
+   .srcstep 6 6 6 "lllimits@rxfnsl-base.rxbin" 14 41 41 "  if pos('representation ceiling',limits.error()) = 0 then return 2"
+   .traceevent "V" 6 "R" "O" "r" 1 10 10 0 "§this" ""
+   assertinitialized r1
+   .srcstep 7 7 25 "lllimits.crexx" 96 5 18 "    return _error"
+   linkattr1 r22,r1,1
+   .traceevent "V" 6 "R" "S" "r" 22 10 10 0 "_error" ""
+   scopy r21,r22
+   unlink r22
+l7409bexprend:
+   load r23,3
+   settp r24,768
+   settp r21,768
+   swap r25,r21
+   settpcall r20,rxfnsb.pos(),r23,r26,0
+   swap r21,r25
+   .traceevent "F" 4 "R" "I" "r" 20 10 10 0 "pos" ""
+   ieq r26,r20,0
+   .traceevent "O" 4 "R" "B" "r" 26 10 10 0 "" ""
+   brf l44iffalse,r26
+   .srcstep 11 11 17 "limit-regression-probe.crexx" 14 55 59 "  if pos('representation ceiling',limits.error()) = 0 then return 2"
+   .srcstep 9 9 17 "limit-regression-probe.crexx" 14 60 68 "  if pos('representation ceiling',limits.error()) = 0 then return 2"
+   ret 2
+l44iffalse:
+   .srcstep 12 12 17 "limit-regression-probe.crexx" 15 3 26 "  items = .lllr..items(2)"
+   .meta "limit-regression-probe.main.items"="b" ".lllr..items" r5
+   load r26,2
+   .traceevent "L" 4 "R" "I" "r" 26 12 12 0 "" ""
+   load r25,1
+   settpcall r5,§lllr.items.§factory(),r25,r26,256
+   .traceevent "F" 4 "R" "O" "r" 5 12 12 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 12 12 0 "items" ""
+   .srcstep 14 14 17 "limit-regression-probe.crexx" 16 3 27 "  if items.add(1,0,1) <> 1 then return 3"
+   .traceevent "V" 6 "R" "O" "r" 5 14 14 0 "items" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 14 14 0 "" ""
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 14 14 0 "" ""
+   load r8,1
+   .traceevent "L" 4 "R" "I" "r" 8 14 14 0 "" ""
+   load r4,4
+   settp r5,256
+   call r26,§lllr.items.add(),r4
+   .traceevent "F" 4 "R" "I" "r" 26 14 14 0 "add" ""
+   ine r26,r26,1
+   .traceevent "O" 4 "R" "B" "r" 26 14 14 0 "" ""
+   brf l59iffalse,r26
+   .srcstep 15 15 17 "limit-regression-probe.crexx" 16 28 32 "  if items.add(1,0,1) <> 1 then return 3"
+   .srcstep 13 13 17 "limit-regression-probe.crexx" 16 33 41 "  if items.add(1,0,1) <> 1 then return 3"
+   ret 3
+l59iffalse:
+   .srcstep 17 17 17 "limit-regression-probe.crexx" 17 3 27 "  if items.add(1,0,1) <> 0 then return 4"
+   .traceevent "V" 6 "R" "O" "r" 5 17 17 0 "items" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 17 17 0 "" ""
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 17 17 0 "" ""
+   load r8,1
+   .traceevent "L" 4 "R" "I" "r" 8 17 17 0 "" ""
+   load r4,4
+   settp r5,256
+   call r26,§lllr.items.add(),r4
+   .traceevent "F" 4 "R" "I" "r" 26 17 17 0 "add" ""
+   ine r26,r26,0
+   .traceevent "O" 4 "R" "B" "r" 26 17 17 0 "" ""
+   brf l70iffalse,r26
+   .srcstep 18 18 17 "limit-regression-probe.crexx" 17 28 32 "  if items.add(1,0,1) <> 0 then return 4"
+   .srcstep 16 16 17 "limit-regression-probe.crexx" 17 33 41 "  if items.add(1,0,1) <> 0 then return 4"
+   ret 4
+l70iffalse:
+   .srcstep 20 20 17 "limit-regression-probe.crexx" 18 3 27 "  if items.add(2,0,1) <> 1 then return 5"
+   .traceevent "V" 6 "R" "O" "r" 5 20 20 0 "items" ""
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 20 20 0 "" ""
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 20 20 0 "" ""
+   load r8,1
+   .traceevent "L" 4 "R" "I" "r" 8 20 20 0 "" ""
+   load r4,4
+   settp r5,256
+   call r26,§lllr.items.add(),r4
+   .traceevent "F" 4 "R" "I" "r" 26 20 20 0 "add" ""
+   ine r26,r26,1
+   .traceevent "O" 4 "R" "B" "r" 26 20 20 0 "" ""
+   brf l81iffalse,r26
+   .srcstep 21 21 17 "limit-regression-probe.crexx" 18 28 32 "  if items.add(2,0,1) <> 1 then return 5"
+   .srcstep 19 19 17 "limit-regression-probe.crexx" 18 33 41 "  if items.add(2,0,1) <> 1 then return 5"
+   ret 5
+l81iffalse:
+   .srcstep 23 23 17 "limit-regression-probe.crexx" 19 3 28 "  if items.add(3,0,1) <> -1 then return 6"
+   .traceevent "V" 6 "R" "O" "r" 5 23 23 0 "items" ""
+   load r6,3
+   .traceevent "L" 4 "R" "I" "r" 6 23 23 0 "" ""
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 23 23 0 "" ""
+   load r8,1
+   .traceevent "L" 4 "R" "I" "r" 8 23 23 0 "" ""
+   load r4,4
+   settp r5,256
+   call r26,§lllr.items.add(),r4
+   .traceevent "F" 4 "R" "I" "r" 26 23 23 0 "add" ""
+   ine r26,r26,-1
+   .traceevent "O" 4 "R" "B" "r" 26 23 23 0 "" ""
+   brf l93iffalse,r26
+   .srcstep 24 24 17 "limit-regression-probe.crexx" 19 29 33 "  if items.add(3,0,1) <> -1 then return 6"
+   .srcstep 22 22 17 "limit-regression-probe.crexx" 19 34 42 "  if items.add(3,0,1) <> -1 then return 6"
+   ret 6
+l93iffalse:
+   .srcstep 26 26 17 "limit-regression-probe.crexx" 20 3 27 "  if items.add(2,0,1) <> 0 then return 7"
+   .traceevent "V" 6 "R" "O" "r" 5 26 26 0 "items" ""
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 26 26 0 "" ""
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 26 26 0 "" ""
+   load r8,1
+   .traceevent "L" 4 "R" "I" "r" 8 26 26 0 "" ""
+   load r4,4
+   settp r5,256
+   call r26,§lllr.items.add(),r4
+   .traceevent "F" 4 "R" "I" "r" 26 26 26 0 "add" ""
+   ine r26,r26,0
+   .traceevent "O" 4 "R" "B" "r" 26 26 26 0 "" ""
+   brf l104iffalse,r26
+   .srcstep 27 27 17 "limit-regression-probe.crexx" 20 28 32 "  if items.add(2,0,1) <> 0 then return 7"
+   .srcstep 25 25 17 "limit-regression-probe.crexx" 20 33 41 "  if items.add(2,0,1) <> 0 then return 7"
+   ret 7
+l104iffalse:
+   .srcstep 28 28 17 "limit-regression-probe.crexx" 21 3 35 "  dfa = .llmunch..automaton(4097,1)"
+   .meta "limit-regression-probe.main.dfa"="b" ".llmunch..automaton" r10
+   load r25,4097
+   .traceevent "L" 4 "R" "I" "r" 25 28 28 0 "" ""
+   load r26,1
+   .traceevent "L" 4 "R" "I" "r" 26 28 28 0 "" ""
+   load r24,2
+   call r10,§llmunch.automaton.§factory(),r24
+   .traceevent "F" 4 "R" "O" "r" 10 28 28 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 10 28 28 0 "dfa" ""
+   .srcstep 29 29 17 "limit-regression-probe.crexx" 22 3 24 "  ok = dfa.mapping(97,0)"
+   .meta "limit-regression-probe.main.ok"="b" ".int" r28
+   .traceevent "V" 6 "R" "O" "r" 10 29 29 0 "dfa" ""
+   load r11,97
+   .traceevent "L" 4 "R" "I" "r" 11 29 29 0 "" ""
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 29 29 0 "" ""
+   load r9,3
+   settp r10,256
+   call r28,§llmunch.automaton.mapping(),r9
+   .traceevent "F" 4 "R" "I" "r" 28 29 29 0 "mapping" ""
+   .traceevent "A" 6 "R" "I" "r" 28 29 29 0 "ok" ""
+   .srcstep 30 30 17 "limit-regression-probe.crexx" 23 3 25 "  ok = dfa.accepting(2,1)"
+   .traceevent "V" 6 "R" "O" "r" 10 30 30 0 "dfa" ""
+   load r11,2
+   .traceevent "L" 4 "R" "I" "r" 11 30 30 0 "" ""
+   load r12,1
+   .traceevent "L" 4 "R" "I" "r" 12 30 30 0 "" ""
+   load r9,3
+   settp r10,256
+   call r28,§llmunch.automaton.accepting(),r9
+   .traceevent "F" 4 "R" "I" "r" 28 30 30 0 "accepting" ""
+   .traceevent "A" 6 "R" "I" "r" 28 30 30 0 "ok" ""
+   .srcstep 31 31 17 "limit-regression-probe.crexx" 24 3 28 "  ok = dfa.transition(1,0,2)"
+   .traceevent "V" 6 "R" "O" "r" 10 31 31 0 "dfa" ""
+   load r11,1
+   .traceevent "L" 4 "R" "I" "r" 11 31 31 0 "" ""
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 31 31 0 "" ""
+   load r13,2
+   .traceevent "L" 4 "R" "I" "r" 13 31 31 0 "" ""
+   load r9,4
+   settp r10,256
+   call r28,§llmunch.automaton.transition(),r9
+   .traceevent "F" 4 "R" "I" "r" 28 31 31 0 "transition" ""
+   .traceevent "A" 6 "R" "I" "r" 28 31 31 0 "ok" ""
+   .srcstep 33 33 17 "limit-regression-probe.crexx" 25 3 22 "  if dfa.verify() = 0 then return 8"
+   .traceevent "V" 6 "R" "O" "r" 10 33 33 0 "dfa" ""
+   load r9,1
+   settpcall r26,§llmunch.automaton.verify(),r9,r10,256
+   .traceevent "F" 4 "R" "I" "r" 26 33 33 0 "verify" ""
+   ieq r26,r26,0
+   .traceevent "O" 4 "R" "B" "r" 26 33 33 0 "" ""
+   brf l140iffalse,r26
+   .srcstep 34 34 17 "limit-regression-probe.crexx" 25 23 27 "  if dfa.verify() = 0 then return 8"
+   .srcstep 32 32 17 "limit-regression-probe.crexx" 25 28 36 "  if dfa.verify() = 0 then return 8"
+   ret 8
+l140iffalse:
+   .srcstep 35 35 17 "limit-regression-probe.crexx" 26 3 48 "  loaded = .llmunch..automaton.loaded(dfa.image())"
+   .meta "limit-regression-probe.main.loaded"="b" ".llmunch..automaton" r14
+   .traceevent "V" 6 "R" "O" "r" 10 35 35 0 "dfa" ""
+   load r9,1
+   settpcall r26,§llmunch.automaton.image(),r9,r10,256
+   .traceevent "F" 4 "R" "X" "r" 26 35 35 0 "image" ""
+   load r25,1
+   settpcall r14,§llmunch.automaton.§factory.loaded(),r25,r26,256
+   .traceevent "F" 4 "R" "O" "r" 14 35 35 0 "§factory.loaded" ""
+   .traceevent "A" 6 "R" "O" "r" 14 35 35 0 "loaded" ""
+   .srcstep 40 40 17 "limit-regression-probe.crexx" 27 3 51 "  if loaded.verify() = 0 | loaded.states() <> 4097 then return 9"
+   .traceevent "V" 6 "R" "O" "r" 14 40 40 0 "loaded" ""
+   load r13,1
+   settpcall r26,§llmunch.automaton.verify(),r13,r14,256
+   .traceevent "F" 4 "R" "I" "r" 26 40 40 0 "verify" ""
+   ieq r25,r26,0
+   .traceevent "O" 4 "R" "B" "r" 25 40 40 0 "" ""
+   brt l161orend,r25
+   .srcstep 38 38 17 "limit-regression-probe.crexx" 27 28 34 "  if loaded.verify() = 0 | loaded.states() <> 4097 then return 9"
+   .srcstep 36 36 33 "limit-regression-probe.crexx" 27 28 34 "  if loaded.verify() = 0 | loaded.states() <> 4097 then return 9"
+   .traceevent "V" 6 "R" "O" "r" 14 36 36 0 "loaded" ""
+   .traceevent "A" 6 "R" "O" "r" 14 36 36 0 "§this" ""
+   .srcstep 37 37 25 "llmunch.crexx" 150 5 19 "    return _states"
+   linkattr1 r26,r14,7
+   .traceevent "V" 6 "R" "I" "r" 26 40 40 0 "_states" ""
+   igetunlink r25,r26
+l7402bexprend:
+   ine r25,r25,4097
+   .traceevent "O" 4 "R" "B" "r" 25 40 40 0 "" ""
+l161orend:
+   .traceevent "O" 4 "R" "B" "r" 25 40 40 0 "" ""
+   brf l164iffalse,r25
+   .srcstep 41 41 17 "limit-regression-probe.crexx" 27 52 56 "  if loaded.verify() = 0 | loaded.states() <> 4097 then return 9"
+   .srcstep 39 39 17 "limit-regression-probe.crexx" 27 57 65 "  if loaded.verify() = 0 | loaded.states() <> 4097 then return 9"
+   ret 9
+l164iffalse:
+   .srcstep 42 42 17 "limit-regression-probe.crexx" 28 3 31 "  stage = .llstage..rules(100)"
+   .meta "limit-regression-probe.main.stage"="b" ".llstage..rules" r16
+   load r25,100
+   .traceevent "L" 4 "R" "I" "r" 25 42 42 0 "" ""
+   load r24,2
+   settp r25,256
+   settpcall r16,§llstage.rules.§factory(),r24,r26,0
+   .traceevent "F" 4 "R" "O" "r" 16 42 42 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 16 42 42 0 "stage" ""
+   .srcstep 49 49 17 "limit-regression-probe.crexx" 29 3 5 "  do i = 1 to 129"
+   .srcstep 43 43 17 "limit-regression-probe.crexx" 29 6 11 "  do i = 1 to 129"
+   .meta "limit-regression-probe.main.i"="b" ".int" r26
+   load r26,1
+   .traceevent "L" 4 "R" "I" "r" 26 43 43 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 43 43 0 "i" ""
+   .srcstep 44 44 17 "limit-regression-probe.crexx" 29 12 18 "  do i = 1 to 129"
+   load r25,129
+   .traceevent "L" 4 "R" "I" "r" 25 0 0 0 "" ""
+l169dostart:
+   .srcstep 44 44 17 "limit-regression-probe.crexx" 29 12 18 "  do i = 1 to 129"
+   igt r24,r26,r25
+   brt l169doend,r24
+   .srcstep 47 47 17 "limit-regression-probe.crexx" 30 5 59 "    if stage.add('rule.' || i,100,1,-1,1,-1,'',-1,100) = 0 then return 10"
+   .traceevent "V" 6 "R" "O" "r" 16 47 47 0 "stage" ""
+   itos r26
+   .traceevent "V" 6 "R" "S" "r" 26 47 47 0 "i" ""
+   concat r31,"rule.",r26
+   .traceevent "O" 4 "R" "S" "r" 31 47 47 0 "" ""
+   load r32,100
+   .traceevent "L" 4 "R" "I" "r" 32 47 47 0 "" ""
+   load r33,1
+   .traceevent "L" 4 "R" "I" "r" 33 47 47 0 "" ""
+   load r34,-1
+   .traceevent "L" 4 "R" "I" "r" 34 47 47 0 "" ""
+   load r35,1
+   .traceevent "L" 4 "R" "I" "r" 35 47 47 0 "" ""
+   load r36,-1
+   .traceevent "L" 4 "R" "I" "r" 36 47 47 0 "" ""
+   load r37,""
+   .traceevent "L" 4 "R" "S" "r" 37 47 47 0 "" ""
+   load r38,-1
+   .traceevent "L" 4 "R" "I" "r" 38 47 47 0 "" ""
+   load r39,100
+   .traceevent "L" 4 "R" "I" "r" 39 47 47 0 "" ""
+   load r29,10
+   settp r16,256
+   swap r30,r16
+   settp r31,768
+   settp r37,768
+   call r23,§llstage.rules.add(),r29
+   swap r16,r30
+   .traceevent "F" 4 "R" "I" "r" 23 47 47 0 "add" ""
+   ieq r39,r23,0
+   .traceevent "O" 4 "R" "B" "r" 39 47 47 0 "" ""
+   brf l197iffalse,r39
+   .srcstep 48 48 17 "limit-regression-probe.crexx" 30 60 64 "    if stage.add('rule.' || i,100,1,-1,1,-1,'',-1,100) = 0 then return 10"
+   .srcstep 46 46 17 "limit-regression-probe.crexx" 30 65 74 "    if stage.add('rule.' || i,100,1,-1,1,-1,'',-1,100) = 0 then return 10"
+   ret 10
+l197iffalse:
+l169doinc:
+   .srcstep 45 45 17 "limit-regression-probe.crexx" 29 6 7 "  do i = 1 to 129"
+   inc r26
+   .srcstep 50 50 17 "limit-regression-probe.crexx" 31 3 6 "  end"
+   br l169dostart
+l169doend:
+   .meta "limit-regression-probe.main.i"
+   .srcstep 52 52 17 "limit-regression-probe.crexx" 32 3 38 "  if stage.choose(100,1,-1,'',1) <> 1 then return 11"
+   .traceevent "V" 6 "R" "O" "r" 16 52 52 0 "stage" ""
+   load r17,100
+   .traceevent "L" 4 "R" "I" "r" 17 52 52 0 "" ""
+   load r18,1
+   .traceevent "L" 4 "R" "I" "r" 18 52 52 0 "" ""
+   load r19,-1
+   .traceevent "L" 4 "R" "I" "r" 19 52 52 0 "" ""
+   load r20,""
+   .traceevent "L" 4 "R" "S" "r" 20 52 52 0 "" ""
+   load r21,1
+   .traceevent "L" 4 "R" "I" "r" 21 52 52 0 "" ""
+   load r15,6
+   settp r16,256
+   settp r20,768
+   call r39,§llstage.rules.choose(),r15
+   .traceevent "F" 4 "R" "I" "r" 39 52 52 0 "choose" ""
+   ine r39,r39,1
+   .traceevent "O" 4 "R" "B" "r" 39 52 52 0 "" ""
+   brf l212iffalse,r39
+   .srcstep 53 53 17 "limit-regression-probe.crexx" 32 39 43 "  if stage.choose(100,1,-1,'',1) <> 1 then return 11"
+   .srcstep 51 51 17 "limit-regression-probe.crexx" 32 44 53 "  if stage.choose(100,1,-1,'',1) <> 1 then return 11"
+   ret 11
+l212iffalse:
+   .srcstep 54 54 17 "limit-regression-probe.crexx" 33 3 84 "  request = .lllanguage..request(levell_settings..language(),'port = 42' as .binary)"
+   .meta "limit-regression-probe.main.request"="b" ".lllanguage..request" r27
+   load r35,0
+   call r37,levell_settings.language(),r35
+   .traceevent "F" 4 "R" "O" "r" 37 54 54 0 "language" ""
+   load r38,0x706f7274203d203432
+   .traceevent "L" 4 "R" "X" "r" 38 54 54 0 "" ""
+   load r36,3
+   settp r37,256
+   settp r38,768
+   settpcall r27,§lllanguage.request.§factory(),r36,r39,512
+   .traceevent "F" 4 "R" "O" "r" 27 54 54 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 27 54 54 0 "request" ""
+   .srcstep 61 61 17 "limit-regression-probe.crexx" 34 3 26 "  if request.parse() <> 0 then do"
+   .traceevent "V" 6 "R" "O" "r" 27 61 61 0 "request" ""
+   load r26,1
+   settpcall r39,§lllanguage.request.parse(),r26,r27,256
+   .traceevent "F" 4 "R" "I" "r" 39 61 61 0 "parse" ""
+   ine r39,r39,0
+   .traceevent "O" 4 "R" "B" "r" 39 61 61 0 "" ""
+   brf l235iffalse,r39
+   .srcstep 62 62 17 "limit-regression-probe.crexx" 34 27 31 "  if request.parse() <> 0 then do"
+   .srcstep 59 59 17 "limit-regression-probe.crexx" 35 5 22 "    say request.error(); return 12"
+   .srcstep 58 58 17 "limit-regression-probe.crexx" 35 9 16 "    say request.error(); return 12"
+   .srcstep 55 55 33 "limit-regression-probe.crexx" 35 9 16 "    say request.error(); return 12"
+   .traceevent "V" 6 "R" "O" "r" 27 55 55 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 27 55 55 0 "§this" ""
+   .srcstep 56 56 6 "lllanguage@rxfnsl.rxbin" 35 16 16 "    say request.error(); return 12"
+   .traceevent "V" 6 "R" "O" "r" 27 59 59 0 "§this" ""
+   assertinitialized r27
+   .srcstep 57 57 25 "lllanguage.crexx" 364 5 18 "    return _error"
+   linkattr1 r38,r27,1
+   .traceevent "V" 6 "R" "S" "r" 38 59 59 0 "_error" ""
+   scopy r37,r38
+   unlink r38
+l7466bexprend:
+   say r37
+   .srcstep 60 60 17 "limit-regression-probe.crexx" 35 26 35 "    say request.error(); return 12"
+   ret 12
+l235iffalse:
+   .srcstep 63 63 17 "limit-regression-probe.crexx" 37 3 50 "  say 'loader_and_boundary_checks=12; failures=0'"
+   say "loader_and_boundary_checks=12; failures=0"
+   .srcstep 64 64 17 "limit-regression-probe.crexx" 38 3 11 "  return 0"
+   ret 0
+   .meta "limit-regression-probe.main.dfa"
+   .meta "limit-regression-probe.main.items"
+   .meta "limit-regression-probe.main.limits"
+   .meta "limit-regression-probe.main.loaded"
+   .meta "limit-regression-probe.main.ok"
+   .meta "limit-regression-probe.main.request"
+   .meta "limit-regression-probe.main.stage"
+
+/* Imported Declaration from file: pos@library.rxbin */
+
+rxfnsb.pos() .expose=rxfnsb.pos
+   .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int"
+   .meta "rxfnsb.pos"=".autoload" "library"
+
+/* Imported Declaration from file: /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/resource-cleanup/limits-fixed/levell_settings@levell_settings.rxbin */
+
+levell_settings.language() .expose=levell_settings.language
+   .meta "levell_settings.language"="b" ".lllanguage..definition" levell_settings.language() ""
+   .meta "levell_settings.language"=".autoload" "levell_settings"
+
+/* Imported Declaration from file: lllimits@rxfnsl-base.rxbin */
+
+§lllimits.policy.§factory() .expose=lllimits.policy.§factory
+   .meta "lllimits.policy.§factory"="b" ".lllimits..policy" §lllimits.policy.§factory() ""
+   .meta "lllimits.policy.§factory"=".autoload" "rxfnsl-base"
+
+§lllimits.policy.set() .expose=lllimits.policy.set
+   .meta "lllimits.policy.set"="b" ".int" §lllimits.policy.set() "name=.string,value=.int"
+   .meta "lllimits.policy.set"=".autoload" "rxfnsl-base"
+
+/* Imported Declaration from file: lllr@rxfnsl.rxbin */
+
+§lllr.items.§factory() .expose=lllr.items.§factory
+   .meta "lllr.items.§factory"="b" ".lllr..items" §lllr.items.§factory() "?limit=.int"
+   .meta "lllr.items.§factory"=".autoload" "rxfnsl"
+
+§lllr.items.add() .expose=lllr.items.add
+   .meta "lllr.items.add"="b" ".int" §lllr.items.add() "p=.int,dot=.int,look=.int"
+   .meta "lllr.items.add"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llmunch@rxfnsl.rxbin */
+
+§llmunch.automaton.§factory() .expose=llmunch.automaton.§factory
+   .meta "llmunch.automaton.§factory"="b" ".llmunch..automaton" §llmunch.automaton.§factory() "states=.int,classes=.int"
+   .meta "llmunch.automaton.§factory"=".autoload" "rxfnsl"
+
+§llmunch.automaton.§factory.loaded() .expose=llmunch.automaton.§factory.loaded
+   .meta "llmunch.automaton.§factory.loaded"="b" ".llmunch..automaton" §llmunch.automaton.§factory.loaded() "data=.binary"
+   .meta "llmunch.automaton.§factory.loaded"=".autoload" "rxfnsl"
+
+§llmunch.automaton.image() .expose=llmunch.automaton.image
+   .meta "llmunch.automaton.image"="b" ".binary" §llmunch.automaton.image() ""
+   .meta "llmunch.automaton.image"=".autoload" "rxfnsl"
+
+§llmunch.automaton.mapping() .expose=llmunch.automaton.mapping
+   .meta "llmunch.automaton.mapping"="b" ".int" §llmunch.automaton.mapping() "byte=.int,cls=.int"
+   .meta "llmunch.automaton.mapping"=".autoload" "rxfnsl"
+
+§llmunch.automaton.transition() .expose=llmunch.automaton.transition
+   .meta "llmunch.automaton.transition"="b" ".int" §llmunch.automaton.transition() "state=.int,cls=.int,target=.int"
+   .meta "llmunch.automaton.transition"=".autoload" "rxfnsl"
+
+§llmunch.automaton.accepting() .expose=llmunch.automaton.accepting
+   .meta "llmunch.automaton.accepting"="b" ".int" §llmunch.automaton.accepting() "state=.int,kind=.int"
+   .meta "llmunch.automaton.accepting"=".autoload" "rxfnsl"
+
+§llmunch.automaton.verify() .expose=llmunch.automaton.verify
+   .meta "llmunch.automaton.verify"="b" ".int" §llmunch.automaton.verify() ""
+   .meta "llmunch.automaton.verify"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llstage@rxfnsl.rxbin */
+
+§llstage.rules.§factory() .expose=llstage.rules.§factory
+   .meta "llstage.rules.§factory"="b" ".llstage..rules" §llstage.rules.§factory() "?initial=.int,?limit=.int"
+   .meta "llstage.rules.§factory"=".autoload" "rxfnsl"
+
+§llstage.rules.add() .expose=llstage.rules.add
+   .meta "llstage.rules.add"="b" ".int" §llstage.rules.add() "name=.string,state=.int,first=.int,second=.int,take=.int,unless=.int,word=.string,emit=.int,next=.int"
+   .meta "llstage.rules.add"=".autoload" "rxfnsl"
+
+§llstage.rules.choose() .expose=llstage.rules.choose
+   .meta "llstage.rules.choose"="b" ".int" §llstage.rules.choose() "state=.int,first=.int,second=.int,text=.string,remaining=.int"
+   .meta "llstage.rules.choose"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: lllanguage@rxfnsl.rxbin */
+
+§lllanguage.request.§factory() .expose=lllanguage.request.§factory
+   .meta "lllanguage.request.§factory"="b" ".lllanguage..request" §lllanguage.request.§factory() "language=.definition,source=.binary,?limits=.lllimits..policy"
+   .meta "lllanguage.request.§factory"=".autoload" "rxfnsl"
+
+§lllanguage.request.parse() .expose=lllanguage.request.parse
+   .meta "lllanguage.request.parse"="b" ".int" §lllanguage.request.parse() ""
+   .meta "lllanguage.request.parse"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: wordpos@library.rxbin */
+
+rxfnsb.wordpos() .expose=rxfnsb.wordpos
+   .meta "rxfnsb.wordpos"="b" ".int" rxfnsb.wordpos() "search=.string,string=.string,?start=.int"
+   .meta "rxfnsb.wordpos"=".autoload" "library"

@@ -6,6 +6,12 @@ settings-language example. The
 [diagnostic and recovery assessment](../../lib/rxfnsl/doc/diagnostics.md)
 distinguishes product behavior from the research engines below.
 
+**12 October continuation:** resource settings now cover construction and
+recovery, pinned Unicode 17 properties grow the same settings grammar, and
+located diagnostics plus lexical/UTF8 recovery have new native regressions.
+CONT-AC01–04 pass for their bounded scope; full LANG and original research
+criteria remain open. See the [continuation receipt](evidence/continuation-20261012/README.md).
+
 **11 October safety checkpoint:** the maintainer has requested a commit and
 remote backup on `origin/levell`. This preserves the implementation and retained
 evidence for review. Bootstrap checkpoint 1 is locally verified; the common

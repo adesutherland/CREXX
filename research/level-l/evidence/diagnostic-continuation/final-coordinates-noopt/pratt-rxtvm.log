@@ -1,0 +1,5 @@
+STATUS|1|BYTE|2
+MESSAGE|unexpected '*'; unexpected input at byte 2; expected atom, prefix operator or opening delimiter
+LL_TARGET at line 1, column 3 (byte 2): unexpected '*'; unexpected input at byte 2; expected atom, prefix operator or opening delimiter
+  2+*3
+    ^

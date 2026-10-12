@@ -1,0 +1,4 @@
+CMake Error at lib/rxfnsl/unicode/generate-properties.cmake:15 (message):
+  Pinned Unicode data checksum mismatch: PropList.txt
+
+

@@ -30,28 +30,32 @@ request: class
   _skiplast = .int[]
   _nodes = .int[]
   _error = .string
+  _ordered = .int
   *: factory
-    arg language = .lllanguage..definition, source = .binary, errors = 16, ?limits = .lllimits..policy
+    arg language = .lllanguage..definition, source = .binary, errors = 0, ?limits = .lllimits..policy
     _language = language; _source = source; _limit = errors
     _ran = 0; _status = 0; _root = 0; _error = ''
     if ?limits = 0 then limits = .lllimits..policy()
     _limits = limits
     if initialized(_limits) = 0 then _limits = .lllimits..policy()
+    if errors = 0 then _limit = _limits.limit('recovery.errors')
+    else if ?limits then _limit = min(errors,_limits.limit('recovery.errors'))
+    else _limit = errors
     _tokens = .llcore..stream.tokens(source); _tree = .llcore..tree.from_source(source)
     return
   run: method = .int
-    i = .int
+    i = .int; ignored = .int; text = .string
     if _ran then return _status
     _ran = 1
     if _limits.error() <> '' then do
       _status = 3; _error = _limits.error(); return _status
     end
     stages = _language.stages()
-    if _language.sync() < 0 | _language.hasparser() = 0 | stages[0] > 0 | _limit < 1 | _limit > 256 then do
-      _status = 3; _error = 'LL_RECOVERY_CONTRACT: declare root recovery; initial flat-record profile requires no token stages and 1..256 errors'
+    if _language.sync() < 0 | _language.hasparser() = 0 | stages[0] > 0 | _limit < 1 then do
+      _status = 3; _error = 'LL_RECOVERY_CONTRACT: declare root recovery; initial flat-record profile requires no token stages and a positive error allowance'
       return _status
     end
-    prepared = .llsource..prepared(_source,_language.encoding(),_language.opening(),_language.closing(),_limits.limit('source.bytes'))
+    prepared = .llsource..prepared(_source,_language.encoding(),_language.opening(),_language.closing(),_limits.limit('source.bytes'),1)
     _status = prepared.status()
     if _status <> 0 then do
       _error = prepared.error(); call report(prepared.offset(),prepared.offset(),_error)
@@ -66,6 +70,13 @@ request: class
     raw = scan.tokens()
     do i = 0 to raw.size() - 1
       ok = _tokens.append(raw.symbol(i),raw.start(i),raw.finish(i + 1))
+    end
+    do i = 1 to prepared.errors()
+      if covered(prepared.badstart(i)) then iterate
+      text = 'LL_UTF8: malformed UTF-8; original bytes ' || bin2x(binsubstr(_source,prepared.badstart(i) + 1,prepared.badend(i) - prepared.badstart(i)))
+      call report(prepared.badstart(i),prepared.badend(i),text)
+      if _status = 2 then return _status
+      ignored = skip(prepared.badstart(i))
     end
     do i = 1 to scan.errors()
       if covered(scan.badstart(i)) then iterate
@@ -94,13 +105,14 @@ request: class
         _status = 4; _error = 'LL_RECOVERY_STOP: no further tokens can be skipped at the declared boundary'; return _status
       end
     end
-    _status = 2; _error = 'LL_RECOVERY_LIMIT: parse attempts exhausted'
+    _status = 2; _error = lllimits..describe('recovery.errors',_limit,_limit + 1)
     return _status
   report: method = .void
     arg first = .int, last = .int, message = .string
     if _messages[0] >= _limit then do
-      _status = 2; _error = 'LL_RECOVERY_LIMIT: error limit reached'; return
+      _status = 2; _error = lllimits..describe('recovery.errors',_limit,_messages[0] + 1); return
     end
+    _ordered = 0
     i = _messages[0] + 1
     _messages[i] = message; _offsets[i] = first; _ends[i] = last
     return
@@ -146,16 +158,34 @@ request: class
     return _tree
   root: method = .int
     return _root
+  /** Report diagnostics in source order, irrespective of pipeline discovery. */
+  order: method = .void
+    if _ordered then return
+    _ordered = 1
+    i = .int; j = .int; first = .int; last = .int; node = .int; text = .string
+    do i = 2 to _messages[0]
+      first = _offsets[i]; last = _ends[i]; node = _nodes[i]; text = _messages[i]; j = i - 1
+      do while j > 0 & _offsets[j] > first
+        _offsets[j + 1] = _offsets[j]; _ends[j + 1] = _ends[j]; _nodes[j + 1] = _nodes[j]; _messages[j + 1] = _messages[j]
+        j = j - 1
+      end
+      _offsets[j + 1] = first; _ends[j + 1] = last; _nodes[j + 1] = node; _messages[j + 1] = text
+    end
+    return
   errors: method = .int
+    call order()
     return _messages[0]
   message: method = .string
     arg i = .int
+    call order()
     return _messages[i]
   offset: method = .int
     arg i = .int
+    call order()
     return _offsets[i]
   finish: method = .int
     arg i = .int
+    call order()
     return _ends[i]
   errornode: method = .int
     arg i = .int

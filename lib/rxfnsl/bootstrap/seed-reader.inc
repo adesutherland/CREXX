@@ -106,7 +106,7 @@
   setatom: method = .llcharset..ranges
     result = .llcharset..ranges(); _depth = _depth + 1
     if _depth > 128 then do
-      _status = 4; _error = 'charset nesting budget exceeded'; return result
+      _status = 4; _error = 'LL_IMPLEMENTATION_LIMIT: seed reader depth exceeds 128; this stack ceiling requires an iterative implementation to grow'; return result
     end
     select
       when _kind[_at] = '(' then do
@@ -117,10 +117,15 @@
         _at = _at + 1; call result.add(0,55295); call result.add(57344,1114111)
       end
       when _kind[_at] = 'symbol' then do
+        if left(lower(_text[_at]),8) = 'unicode.' & index(_text[_at]) = 0 then do
+          result = property(_text[_at],_at); _at = _at + 1
+        end
+        else do
         named = index(_text[_at]); _at = _at + 1
         if named = 0 then call fail('unknown charset',_at - 1)
         else if _type[named] <> 'charset' | _lexical[named] = 0 then call fail('expected lexical charset',_at - 1)
         else result = charset(named)
+        end
       end
       otherwise do
         low = codepoint(); high = low
@@ -153,7 +158,7 @@
   term: method = .int
     _depth = _depth + 1
     if _depth > 128 then do
-      _status = 4; _error = 'authored expression nesting budget exceeded'; return 0
+      _status = 4; _error = 'LL_IMPLEMENTATION_LIMIT: seed reader depth exceeds 128; this stack ceiling requires an iterative implementation to grow'; return 0
     end
     at = _at; kind = _kind[at]; _at = _at + 1; result = 0
     select kind

@@ -3,6 +3,7 @@ options levelb
 namespace lltree expose view
 import rxfnsb
 import llcore
+import lllimits
 
 /** Keep authored rules and named terminals, erase only normalization wrappers.
  * Child order and source spans are unchanged. Construction is explicitly
@@ -30,7 +31,7 @@ view: class
       kept = source.kind(node) = 5 | (source.kind(node) = 1 & left(source.label(node),7) <> 'symbol.')
       heads[node] = entries + 1
       if entries + ca + cb + 1 > limit | output + ca + cb > limit then do
-        _error = 'named tree projection budget exceeded'; return
+        _error = lllimits..describe('tree.entries',limit,max(entries + ca + cb + 1,output + ca + cb)); return
       end
       if kept then do
         _first[node] = output + 1; _counts[node] = ca + cb
