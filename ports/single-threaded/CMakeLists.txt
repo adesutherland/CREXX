@@ -16,7 +16,7 @@ set(CREXX_VM_SLAB_SIZE 4096 CACHE STRING "Bytes per aligned VM allocator slab")
 set(CREXX_VM_MAX_POOLED_SIZE 2048 CACHE STRING "Maximum pooled byte/value allocation")
 
 set(vm_sources
-    interpreter/rxvmintp.c interpreter/rxvmworker.c interpreter/rxvmprogram.c
+    interpreter/rxvmintp.c interpreter/rxvmlinkindex.c interpreter/rxvmworker.c interpreter/rxvmprogram.c
     interpreter/rxvmactive.c interpreter/rxvmload.c interpreter/interrupt_single.c
     interpreter/rxenv.c interpreter/exitfunc.c interpreter/rxpacallmethod.c interpreter/rxpafuncs.c
     interpreter/rxvml/rxvm_run.c

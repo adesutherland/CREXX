@@ -1,0 +1,16 @@
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug
+    Start 2141: rxpp_fortran_block
+1/2 Test #2141: rxpp_fortran_block ...............   Passed    0.29 sec
+    Start 2142: rxpp_rexxscript_block
+2/2 Test #2142: rxpp_rexxscript_block ............   Passed    0.71 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+fortran         =   0.29 sec*proc (1 test)
+preprocessor    =   1.00 sec*proc (2 tests)
+regression      =   1.00 sec*proc (2 tests)
+rexxscript      =   0.71 sec*proc (1 test)
+smoke           =   1.00 sec*proc (2 tests)
+
+Total Test time (real) =   1.08 sec

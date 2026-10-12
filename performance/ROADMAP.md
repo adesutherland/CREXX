@@ -101,6 +101,22 @@ Beta 6; April provides exact-candidate verification and defect repair.
 
 ## Activity Register
 
+`VM-STARTUP-01`: repaired, validated and approved for publication through hotfix
+to develop in this change, 2026-10-12. Adrian accepted
+the first Release verdict and requested integration of remote develop's fixes;
+final base is `b1b2a7423`. Optional rebuild indexes use explicit context scope,
+owned-worker cleanup and ordered metadata fallback on allocation failure.
+Focused Release and Debug pass 78 checks each; all 3,129 normal Release checks
+are verified, including focused replay of two repaired upstream RXPP fixtures.
+Current matched startup observations retain about 79% extended and 63–65% bare
+elapsed reduction. Fine-grained contributor cost remains noisy as disclosed in
+the accepted first verdict. The [final review/receipts](evidence/2026-10-12-vm-startup-repair/README.md)
+and [scope record](VM-STARTUP-REVIEW-WORKLIST.md) cover the findings, ownership
+repair, architecture review and limits. No public layout, RXBIN, graph or dispatch
+change. Normal automatic publication workflows are expected to succeed; their
+live run records provide hosted results. No release is cut. These are local, non-representative startup
+observations, not general throughput or release-wide claims.
+
 Native-inference qualification is owned by the
 [parent plan](../docs/planning/native-inference-backlog.md) and
 [pipeline plan](../docs/planning/native-inference-ci.md). Accepted embedding

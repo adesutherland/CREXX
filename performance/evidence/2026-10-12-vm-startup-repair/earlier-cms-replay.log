@@ -1,0 +1,16 @@
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release
+    Start  4: mainframe_console_signals
+1/2 Test  #4: mainframe_console_signals ........   Passed    0.64 sec
+    Start 11: platform_cms_text
+2/2 Test #11: platform_cms_text ................   Passed    1.25 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+cms              =   1.89 sec*proc (2 tests)
+comprehensive    =   1.89 sec*proc (2 tests)
+platform         =   1.89 sec*proc (2 tests)
+text             =   1.89 sec*proc (2 tests)
+vm               =   0.64 sec*proc (1 test)
+
+Total Test time (real) =   1.96 sec
