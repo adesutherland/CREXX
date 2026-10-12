@@ -1,0 +1,12 @@
+POLICY|hash.notes|KEEP|0
+POLICY|slash.notes|KEEP|0
+POLICY|c.notes|KEEP|0
+POLICY|rexx.notes|KEEP|0
+POLICY|angle.notes|KEEP|1
+POLICY|long.hash|KEEP|0
+COMMENTS|6|SHIELDED|6
+STATUS|2|BYTE|0
+MESSAGE|LL_RESOURCE_LIMIT: scan.work budget 2, required at least 3. Increase the host budget or reduce the workload.
+COMMENT_TARGET at line 1, column 1 (byte 0): LL_RESOURCE_LIMIT: scan.work budget 2, required at least 3. Increase the host budget or reduce the workload.
+  port=1(* many bytes *)
+  ^

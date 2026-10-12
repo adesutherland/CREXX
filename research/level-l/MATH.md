@@ -1301,3 +1301,62 @@ interning have not become a linear construction algorithm. Native/raw-data and
 legacy lexer controls must qualify the code before the argument supports a
 product behavior claim. The abandoned first full-XID attempt overlapped build
 activity and supplies no before/after timing verdict.
+# Comment coordination contract — 12 October 2026
+
+This is a preservation/progress argument for the implemented Level B coordinator,
+not a machine-checked theorem or a global parsing-speed certificate.
+
+Let the source have `n` bytes and let `m` named comment forms have maximum
+delimiter length `d`. Each form specifies a line boundary or a block closer,
+same-form nesting or no nesting, a newline flag and an opacity recognizer.
+Openers are nonempty and distinct; the selected opener is the longest eligible
+one. Inside a selected block, only its own closer/nested opener has meaning,
+with closer priority when both match. Quoted/regular matches remove that form's
+eligibility within their byte interval; they do not change source spelling.
+
+**Source preservation.** Every output write replaces one existing scanning byte
+with ASCII space or keeps that byte. No insertion/deletion occurs. Consequently
+the scanning extent remains `n`, every token boundary remains an original byte
+boundary, and the owned source used by trees/messages is unchanged. `newlines
+keep` additionally preserves each original CR/LF byte; a line comment stops
+before them. The lexer still decides whether the preserved line ending is a
+token. This is a lexical policy, not equivalence of keep/hide languages.
+
+**Progress and termination.** An outer noncomment step advances one byte.
+A selected opener advances its positive length. Every block step consumes a
+positive delimiter length or one byte; every line step consumes one byte until
+CR/LF/EOF. Nesting changes a counter, never calls a recursive parser. Depth is
+at most the number of consumed opening delimiters, hence at most `n`. A block
+that reaches EOF with nonzero depth returns damage, never clean acceptance.
+Failed custom-opacity probes do not advance the main cursor, but each probe
+transition and each outer dispatch/comparison/mask write consumes finite host
+work. Work exhaustion returns resource status before a further charged action.
+Thus termination follows from advancing source position or finite work; this
+does not prove that a finite budget suffices for successful parsing.
+
+**Cost boundary.** Delimiter dispatch/comparison is conservatively
+`O(m*n*d)` plus masking. Default doubled-quote probes cost `O(m*n)` over
+complete quote intervals. General regular opacity may have arbitrarily long
+unsuccessful prefixes at successive positions (`a* b` on `a^n`), producing
+quadratic probe work in this straightforward coordinator. It is not certified
+linear merely because its individual recognizer is a DFA. `scan.work` charges
+those transitions and bounds an attempted pass; the independent adversarial
+regression distinguishes exhaustion from syntax/unterminated-comment errors.
+The downstream lexer/parser has its own pass allowance and existing cost
+obligations. No wall-time or resident-memory theorem is inferred from fuel.
+
+**Opacity admission.** The existing regular builder refuses nullable,
+recursive and unsupported pattern roots. The coordinator additionally refuses
+same-position delimiter/shielding prefix competition. This sufficient check is
+conservative, not a complete test for every lexical-mode design. Complete
+longest matches of an admitted custom pattern are opaque to its form; incomplete
+custom matches are not silently repaired. Default broken Rexx quotes retain the
+existing EOF-opacity policy so the string lexer owns their damage.
+
+**Recovery.** Strict and record-recovery requests use the same prepared bytes
+and original source owner. Separators inside valid comments/strings are absent
+from the token stream; only explicitly retained comment newlines remain visible.
+An unclosed target block maps to unrecoverable status and cannot be executed.
+The specification reader's candidate-inspection restoration remains failed and
+cannot publish a grammar. These are bounded profile contracts, not globally
+optimal repair or general nested/lexical-mode recovery proofs.

@@ -1,3 +1,22 @@
+## Generalized comment diagnostics — 12 October 2026
+
+The shared coordinator now reports named unclosed block/nested forms with the
+original opening byte range. Duplicate opener admission includes related
+rule locations; invalid/nullable/recursive/overlapping outside patterns and
+unsupported qualifiers have explicit build explanations. Strict UTF-8,
+resource/contract failure and target recovery remain distinct.
+
+The focused comment panels cover default/custom opacity, kept versus hidden
+line endings, original spans and record recovery on LL/LR/PEG/Earley, plus
+Pratt, the LR/Pratt region and the standalone DFA route. Three additional
+regressions guard custom metadata in RXAS, optional integer argument presence,
+and the first exhaustion count; literal delimiter identity has its own numeric
+spelling control. Counts and current source/tool identities are in the
+[comment receipt](../../../research/level-l/evidence/comments-20261012/README.md).
+An unclosed target block is unrecoverable under the current profile. General
+nested/token-stage repair, captured-context placeholders and wider display
+coordinates retain their open programme obligations.
+
 # Level L diagnostic and recovery assessment
 
 **12 October continuation, bounded native qualification verified:** source excerpts now

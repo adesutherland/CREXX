@@ -7,6 +7,7 @@ import lllr
 import llmunch
 import llstage
 import llsource
+import llcomments
 import llpeg
 import llearley
 import llforest
@@ -29,6 +30,7 @@ definition: class
   _unicodeversion = .string
   _open = .string
   _close = .string
+  _comments = .llcomments..rules
   _stages = .llstage..rules[]
   _tokens = .string[]
   _malformed = .string
@@ -46,6 +48,8 @@ definition: class
     _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1
     _backend = 'lr1'; _root = 0; _sync = -1
     _schema = .llproject..schema()
+    _comments = .llcomments..rules()
+    if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
   interpreted: factory
     arg dfa = .llmunch..automaton, graph = .llcore..grammar, root = .int, backend = .string, encoding = .string, opening = '', closing = ''
@@ -54,6 +58,8 @@ definition: class
     _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1
     _sync = -1
     _schema = .llproject..schema()
+    _comments = .llcomments..rules()
+    if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
   scanner: factory
     arg dfa = .llmunch..automaton, encoding = .string, opening = '', closing = ''
@@ -61,6 +67,8 @@ definition: class
     _hasparser = 0; _malformed = ''; _unmatched = ''; _eof = -1
     _backend = 'none'; _root = 0; _sync = -1
     _schema = .llproject..schema()
+    _comments = .llcomments..rules()
+    if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
   operatorform: factory
     arg dfa = .llmunch..automaton, operators = .llpratt..operators, name = .string, encoding = .string, opening = '', closing = ''
@@ -68,6 +76,8 @@ definition: class
     _encoding = encoding; _open = opening; _close = closing; _sync = -1
     _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1; _root = 0
     _schema = .llproject..schema()
+    _comments = .llcomments..rules()
+    if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
   regional: factory
     arg dfa = .llmunch..automaton, parser = .lllr..tables, operators = .llpratt..operators, virtual = .int, open = .int, close = .int, encoding = .string, opening = '', closing = ''
@@ -76,7 +86,15 @@ definition: class
     _encoding = encoding; _open = opening; _close = closing; _sync = -1
     _hasparser = 1; _malformed = ''; _unmatched = ''; _eof = -1; _root = 0
     _schema = .llproject..schema()
+    _comments = .llcomments..rules()
+    if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
+  usecomments: method = .void
+    arg policies = .llcomments..rules
+    _comments = policies
+    return
+  comments: method = .llcomments..rules
+    return _comments
   unicode: method = .void
     arg version = .string
     _unicodeversion = version
@@ -207,7 +225,7 @@ request: class
     arg classify = 1
     if _lexed then return _status
     _lexed = 1
-    prepared = .llsource..prepared(_source,_language.encoding(),_language.opening(),_language.closing(),_limits.limit('source.bytes'))
+    prepared = .llsource..prepared(_source,_language.encoding(),'','',_limits.limit('source.bytes'),0,_language.comments(),_limits.limit('scan.work'))
     _status = prepared.status()
     if _status <> 0 then do
       _error = prepared.error(); _offset = prepared.offset()

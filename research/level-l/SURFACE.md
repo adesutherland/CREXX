@@ -618,8 +618,10 @@ need product presentation work.
 
 ## Generalized comments proposal — 12 October 2026
 
-**For Adrian's review, not implemented syntax.** This is the EX-AC01 design
-gate in PLAN.md. Keep the existing small declaration family and add forms:
+**Approved by Adrian on 12 October 2026; implementation/qualification is
+tracked by COM-AC01–05 and EX-STEP05 in PLAN.md.** The contract below is the
+approved direction; the user guide records the delivered syntax and admission
+profile. Keep the existing small declaration family and add forms:
 
 ```rexx
 shell.notes: comments line '#'
@@ -635,7 +637,7 @@ but the two `/*` forms above are alternatives, not a valid combined example.
 Line and nonnested block recognition is regular; nested blocks need a counter
 or stack. Parser backend selection does not change that lexical meaning.
 
-Proposed contracts to approve together:
+Approved contracts:
 
 1. **Original source remains owned.** Mask only scanning bytes; never delete
    bytes or alter token origins. All comment text remains available through
@@ -673,7 +675,7 @@ Proposed contracts to approve together:
    Recovery must respect quote/comment opacity, report skipped damage, and
    never turn an unterminated comment into a clean document.
 
-For example, after approval:
+Advanced form:
 
 ```rexx
 quoted.text: pattern = '"' (string.body | '""')* '"'
@@ -687,7 +689,7 @@ is inappropriate. Languages with context-dependent string modes need a
 declared lexical mode/stage contract; a regular shielding pattern is not a
 claim to cover every language's interpolation or raw-string syntax.
 
-Implementation after review: store a list of checked comment descriptors in
+Implementation contract: store a list of checked comment descriptors in
 the common model, emit the same descriptors in source/RXAS, and implement one
 source-preserving lexical coordinator shared by strict/recovery requests.
 Run all forms on LL/LR/PEG/Earley/Pratt inputs, quote/escape adversaries, opener
@@ -695,8 +697,8 @@ prefixes, nesting, CR/CRLF/EOF, Unicode/NUL and lowered budgets. Verify unchange
 existing grammars, L0/L1/L2 agreement and last-good-artifact preservation. Do
 not replace the old one-pair contract first and leave one emitter/seed behind.
 
-The current alternative of line-comment DFA rules plus a pre-DFA nested
+The legacy alternative of line-comment DFA rules plus a pre-DFA nested
 stage is useful but does not provide this composition: a block opener inside
 a line comment is still seen by the earlier preparation stage. The user guide
-states that limitation. Unifying these responsibilities is the purpose of the
-proposal, not simply accepting more spellings.
+states that ordering limit. Shared declarations coordinate these responsibilities
+in one pass rather than merely accepting additional spellings.

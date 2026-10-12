@@ -1,0 +1,38 @@
+/* Complete expression language: meaning lives in calculator.crexx. */
+options levell
+namespace levell_settings
+number: token
+plus: token
+minus: token
+times: token
+divide: token
+lparen: token
+rparen: token
+
+/* Any nonempty distinct delimiter pair can select the existing nested stage. */
+hash.notes: comments line '#'
+slash.notes: comments line '//'
+c.notes: comments block '/*' '*/'
+rexx.notes: comments nested '(*' '*)'
+angle.notes: comments block '<!--' '-->' newlines keep
+long.hash: comments nested '##' '$$'
+
+scan: lexer input utf8
+  digit: charset = '0' to '9'
+  space: charset = ' ' | U+0009 | U+000A | U+000D
+  numeric: rule = digit+ ('.' digit+)? then emit number
+  plus.lex: rule = '+' then emit plus
+  minus.lex: rule = '-' then emit minus
+  times.lex: rule = '*' then emit times
+  divide.lex: rule = '/' then emit divide
+  open.lex: rule = '(' then emit lparen
+  close.lex: rule = ')' then emit rparen
+  whitespace: rule = space+ then skip
+
+parse: parser start arithmetic backend pratt
+arithmetic: operators atom number group lparen rparen
+sum: infix arithmetic plus precedence 10 left
+difference: infix arithmetic minus precedence 10 left
+product: infix arithmetic times precedence 20 left
+quotient: infix arithmetic divide precedence 20 left
+negative: prefix arithmetic minus

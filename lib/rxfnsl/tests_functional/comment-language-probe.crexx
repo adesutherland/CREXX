@@ -1,0 +1,60 @@
+/* cREXX License (MIT). Original spans and common strict/recovery comment policy. */
+options levelb
+import rxfnsb
+import llcore
+import llcomments
+import lllanguage
+import llsource
+import llrecover
+import lltree
+import lllimits
+import levell_settings
+
+main: procedure = .int
+  arg argv = .string[]
+  i = .int; node = .int; status = .int
+  source = readbinary(argv[1]); language = levell_settings..language()
+  policies = language.comments(); shielded = 0
+  do i = 1 to policies.size()
+    shielded = shielded + policies.custom(i)
+    say 'POLICY|' || policies.name(i) || '|KEEP|' || policies.keep(i)
+  end
+  say 'COMMENTS|' || policies.size() || '|SHIELDED|' || shielded
+  limits = .lllimits..policy()
+  if argv[0] > 2 then ok = limits.set('scan.work',argv[3] as .int)
+  if argv[0] > 1 then do
+    if argv[2] = 'recover' then do
+      recovery = .llrecover..request(language,source,0,limits)
+      status = recovery.run()
+      say 'STATUS|' || status || '|ERRORS|' || recovery.errors()
+      say 'MESSAGE|' || recovery.error()
+      do i = 1 to recovery.errors()
+        say 'DIAGNOSTIC|' || recovery.offset(i) || '|' || recovery.message(i)
+      end
+      if status > 1 then return status
+      raw = recovery.tree(); root = recovery.root()
+      if raw.source() <> source then return 7
+      recoveredview = .lltree..view(raw,root)
+      if recoveredview.error() <> '' then return 8
+      do node = 1 to raw.size()
+        if recoveredview.name(node) = 'assignment' then say 'ASSIGNMENT|' || recoveredview.text(recoveredview.child(node,1))
+      end
+      return status
+    end
+  end
+  request = .lllanguage..request(language,source,limits)
+  status = request.parse()
+  say 'STATUS|' || status || '|BYTE|' || request.offset()
+  say 'MESSAGE|' || request.error()
+  tokens = request.tokens()
+  if tokens.source() <> source then return 7
+  do i = 0 to tokens.size() - 1
+    say 'TOKEN|' || language.tokenname(tokens.symbol(i)) || '|' || tokens.start(i) || '|' || tokens.finish(i + 1) || '|' || bin2x(binsubstr(source,tokens.start(i) + 1,tokens.finish(i + 1) - tokens.start(i)))
+  end
+  if status = 0 then do
+    tree = request.tree()
+    if tree.source() <> source then return 7
+    say 'TREE_VALID|' || tree.validate()
+  end
+  else say llsource..diagnostic(source,request.offset(),'COMMENT_TARGET',request.error())
+  return status

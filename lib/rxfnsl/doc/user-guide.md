@@ -10,7 +10,7 @@ This guide describes the **`levell` review implementation**, checked on
 12 October 2026. Product routes connect DFA lexing to LR(1), LL(1), ordinary
 packrat PEG, Earley forests and Pratt expressions, with a checked Pratt/LR
 region provider. Named captures, authored messages, optional host budgets,
-pinned Unicode properties and explicit record recovery have native functional
+pinned Unicode properties, shared line/block/nested comments and explicit record recovery have native functional
 coverage. The complete common-surface programme remains in progress; see the
 plan for the exact profiles and open obligations.
 RexxScript 1 is a larger example, not a dependency of the general library.
@@ -841,6 +841,23 @@ spellings. Property selection does **not** request normalization or case folding
 Comparison keys remain separate LANG-AC03 work. Selecting Unicode whitespace
 also does not add new statement terminators; the grammar still owns them.
 
+### 8. Add coherent comment styles
+
+[08-comments.levell](../examples/settings/08-comments.levell) grows lesson 7
+with `#` and `//` line notes, nested `/* ... */`, and nonnested `(* ... *)`
+with `newlines keep`. Its [input](../examples/settings/comments.settings)
+combines quoted markers, a block marker inside line-comment text, Unicode
+names and comments inside a Pratt expression. The existing field reader needs
+no new parser or visitor logic. The `contents` field still returns the original
+spelling, including notes within an expression's span. The retained newline
+inside the plain block separates `first` and `second` assignments. The lesson
+runs through source/RXAS, both VMs and complete optimized/unoptimized Level L
+builds; its original-source field output is recorded in the comment receipt.
+
+The complete reference below explains defaults, advanced shielding and build
+refusals. Start with the simple forms; the `outside`/`newlines` options are
+needed only when the target language chooses different quoting or layout.
+
 ## Build and run a complete example
 
 The tutorial reads a small settings language:
@@ -1140,56 +1157,121 @@ as `.binary` rather than converting arbitrary bytes to strings.
 
 ### Comments and layout
 
-`notes: comments nested '/*' '*/'` selects a counter stage before the DFA.
-It masks each comment byte with a space and retains the original source.
-Declare whitespace handling in the lexer. The built-in shielding recognizes
-single/double-quoted strings with doubled quotes; it is not configurable for
-every target language's quoting convention.
-
-**Newlines inside comments are masked too.** They do not become separator
-tokens. Thus `a=1 /* comment */` followed by an external newline works, but
-putting the only newline inside the comment does not separate `a=1` from
-`b=2`. Languages that count comment-contained newlines as statement boundaries
-need a deliberate layout stage. Neither layout nor indentation is inferred.
-An unclosed nested comment is reported at its opening delimiter.
-
-The delimiters are not fixed to Rexx spelling. The calculator uses
-`notes: comments nested '(*' '*)'`; the same stage supports other nonempty,
-distinct pairs. Only **one nested pair** is stored in the current language
-definition. The current frontend does not yet reject every duplicate comment
-declaration, so declaring several pairs must not be used as a supported way to
-combine styles.
-
-Line comments can already be ordinary regular lexer rules, for example:
+Most languages need only small declarations:
 
 ```rexx
-line.character: charset = scalar except (U+000A | U+000D)
-hash.notes: rule = '#' line.character* then skip
-slash.notes: rule = '//' line.character* then skip
+hash.notes: comments line '#'
+slash.notes: comments line '//'
+plain.notes: comments block '/*' '*/'
+rexx.notes: comments nested '(*' '*)'
 ```
 
-The complete [line-comment example](../examples/backends/line-comments.levell)
-combines both forms with quoted strings. Its tests cover CRLF/EOF, markers
-inside strings, doubled quotes, Unicode comments and a later lexical error on
-all four grammar engines. It deliberately has no pre-DFA nested-comment stage.
+These four forms can coexist. Choose your own nonempty delimiters. `line`
+ends before CR/LF or at EOF; `block` ends at its first closer; `nested` counts
+its own opening/closing pair. This is structured comment nesting, not arbitrary
+recursive grammar recognition. Parser backend choice does not change comment
+meaning. Use the shared declarations when combining styles: a block marker
+inside a line comment is ordinary comment text, and another style's marker
+inside a block does not start a separate comment.
 
-The original CR/LF remains for the lexer to classify. Each rule progresses
-because its marker is nonempty, and matches to EOF when no newline follows.
-String tokens shield their own contents only when their lexical match/priority
-wins; no global “everything after #” substitution is implied. Nonnested block
-comments are regular too, but their pattern must exclude the **first complete
-closing delimiter**, not merely its individual characters. Character classes
-are sets of scalars/bytes, not sets of strings.
+The coordinator runs before the DFA, replaces comment bytes with spaces in
+its scanning copy, and retains exact original bytes for tokens, trees and
+messages. Declare the corresponding whitespace handling in the lexer. Comments
+remain inspectable through original source gaps; this increment does not add
+separate public trivia records.
 
-There is an important current composition limit: the nested-comment preparation
-stage runs **before** line-comment DFA rules. A block marker inside a line
-comment may therefore be interpreted by preparation. Likewise the built-in
-quote shielding does not adopt arbitrary target-language escapes. For coherent
-multiple styles and configurable shielding/newline preservation, the
-[generalized-comment proposal](../../../research/level-l/SURFACE.md#generalized-comments-proposal--12-october-2026)
-extends the same `comments` family with `line`, `block` and `nested`. It is for
-review, not accepted executable syntax. Use only the documented current profile
-until that shared coordinator is implemented.
+At an unshielded position, the **longest opening delimiter** wins. Duplicate
+opening spellings fail generation with both declaration locations; order cannot
+resolve them. For example, `#` line and `## ... $$` nested forms can coexist:
+`## notes $$` is the nested form. Within a nested form, the closer wins over an
+opener at the same position, including prefix overlaps. Opening and closing
+strings must be distinct for block/nested forms. Cross-style nesting is not
+part of this profile, and requests for it are rejected.
+
+Line comments always leave the original CR, LF or CRLF pair for your lexer.
+Block/nested comments retain the existing default: **internal newlines are
+masked too**. If those newlines should separate statements, opt in explicitly:
+
+```rexx
+plain.notes: comments block '(*' '*)' newlines keep
+```
+
+`keep` preserves CR/LF bytes in the scanning copy; it does not insert synthetic
+separators. Your lexical rules decide what the surviving line ending means.
+Thus `a=1 /* internal newline */ b=2` is not automatically two statements under
+the default, while a kept newline can be a separator in the settings language.
+Neither indentation nor continuation is inferred. A newline inside an ordinary
+external whitespace gap retains the language's existing lexical meaning.
+
+**Default shielding** recognizes single/double-quoted strings with doubled
+quotes, matching the existing Rexx-oriented profile. To use another regular
+string convention, reuse an explicitly named lexical pattern:
+
+```rexx
+scan: lexer input utf8
+  any.character: charset = scalar
+  string.body: charset = scalar except ('"' | U+005C | U+000A | U+000D)
+  quoted.text: pattern = '"' (string.body | U+005C any.character)* '"'
+  string.lex: rule = quoted.text then emit string
+  /* Other lexical rules follow. */
+notes: comments nested '/*' '*/' outside quoted.text
+```
+
+This example uses backslash escapes. Each `outside` selects the pattern for
+that comment form, replacing its default shielding. Apply it to every form that
+should use that convention. A complete longest regular match is opaque to the
+selected form. An incomplete custom pattern is not implicitly completed or
+repaired; its actual matching and lexical error behavior remain explicit.
+Default broken quotes remain opaque through EOF so their string lexer owns the
+error. Interpolated/context-dependent modes need a broader declared stage;
+a regular pattern alone does not describe them.
+
+The pattern must be a named lexical `pattern`, nonnullable and accepted by the
+existing acyclic regular builder. Unknown names, lexical recursion, predicates,
+empty patterns and conflicting comment/string opening prefixes fail generation.
+The prefix-overlap test is deliberately conservative: a completed shielding
+prefix of an opener, or an opener still inside a possible shielding prefix,
+cannot have two owners at the same position. Markers *inside* a completed string
+are allowed. These refusals explain unsupported ownership; they do not prove
+that no richer lexical-mode implementation is possible.
+
+Unclosed blocks report `LL_COMMENT`, their authored form/name and original
+opening byte range. Malformed UTF-8 is still checked before comment recognition;
+comments do not hide malformed source bytes. Source size and coordinator work
+use the existing optional `source.bytes` and `scan.work` policies. Coordinator
+work charges dispatch, byte comparisons/masking and shielding transitions;
+a regular pattern with long unsuccessful prefixes can exhaust it. Each pass
+has its own work allowance, rather than a claim of a universal wall-time or
+resident-memory bound.
+
+Strict and explicit recovery requests use the same coordinator. Valid comment
+and string contents cannot supply a recovery separator. An unclosed target
+block remains unrecoverable and never becomes a clean or executable tree.
+The proper specification reader's failed-declaration candidate inspection is
+separate; it never publishes a repaired grammar.
+
+The complete [eighth settings lesson](../examples/settings/08-comments.levell)
+combines these forms with Unicode names, fields and the Pratt region. Existing
+line-comment DFA rules remain useful for lexer-only descriptions, as in the
+[regular lexer example](../examples/backends/line-comments.levell). When mixing
+those raw DFA skip rules with preparation styles, their markers are seen only
+later; use shared `comments` declarations for coherent opacity across styles.
+
+
+The permanent focused regression scripts are `check-comments.py`,
+`check-comment-lexer.py` and `check-comment-contracts.py` under
+`lib/rxfnsl/tests_functional/`. Each takes a configured build and an owned output
+directory, for example:
+
+```sh
+python3 lib/rxfnsl/tests_functional/check-comments.py \
+  cmake-build-levell-product research/level-l/build/comment-review
+```
+
+`check-comment-stages.py` verifies L0/L1/L2 and atomic failure;
+`check-comment-bootstrap.py` takes native tools, a fresh work directory and an
+evidence directory for the Level B-only cold/no-op proof. These focused scripts
+are explicit checks and do not add nested builds to the broad CTest pool.
 
 ## Define parser rules
 

@@ -55,7 +55,7 @@ request: class
       _status = 3; _error = 'LL_RECOVERY_CONTRACT: declare root recovery; initial flat-record profile requires no token stages and a positive error allowance'
       return _status
     end
-    prepared = .llsource..prepared(_source,_language.encoding(),_language.opening(),_language.closing(),_limits.limit('source.bytes'),1)
+    prepared = .llsource..prepared(_source,_language.encoding(),'','',_limits.limit('source.bytes'),1,_language.comments(),_limits.limit('scan.work'))
     _status = prepared.status()
     if _status <> 0 then do
       _error = prepared.error(); call report(prepared.offset(),prepared.offset(),_error)

@@ -1,0 +1,381 @@
+/*
+ * SOURCE                 : comment-preparation-probe.crexx
+ */
+
+.globals=0
+
+main() .locals=36
+   .meta "comment-preparation-probe.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 44 44 17 "comment-preparation-probe.crexx" 7 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "comment-preparation-probe.crexx" 8 7 21 "  arg argv = .string[]"
+   .meta "comment-preparation-probe.main.argv"="b" ".string[*]" a1
+   .srcstep 2 2 17 "comment-preparation-probe.crexx" 9 3 29 "  source = readbinary(argv[1]); policies = .llcomments..rules()"
+   .meta "comment-preparation-probe.main.source"="b" ".binary" r19
+   minlinkattr1 r27,a1,1
+   .traceevent "V" 6 "R" "S" "r" 27 2 2 0 "argv" ""
+   load r32,1
+   settpswapcall r19,rxfnsb.readbinary(),r32,r27,256,r33
+   swap r27,r33
+   unlink r27
+   .traceevent "F" 4 "R" "X" "r" 19 2 2 0 "readbinary" ""
+   .traceevent "A" 6 "R" "X" "r" 19 2 2 0 "source" ""
+   .srcstep 3 3 17 "comment-preparation-probe.crexx" 9 33 62 "  source = readbinary(argv[1]); policies = .llcomments..rules()"
+   .meta "comment-preparation-probe.main.policies"="b" ".llcomments..rules" r1
+   load r33,0
+   call r1,§llcomments.rules.§factory(),r33
+   .traceevent "F" 4 "R" "O" "r" 1 3 3 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 3 3 0 "policies" ""
+   .srcstep 4 4 17 "comment-preparation-probe.crexx" 10 3 38 "  ok = policies.add('hash','line','#')"
+   .meta "comment-preparation-probe.main.ok"="b" ".int" r30
+   .traceevent "V" 6 "R" "O" "r" 1 4 4 0 "policies" ""
+   load r2,"hash"
+   .traceevent "L" 4 "R" "S" "r" 2 4 4 0 "" ""
+   load r3,"line"
+   .traceevent "L" 4 "R" "S" "r" 3 4 4 0 "" ""
+   load r4,"#"
+   .traceevent "L" 4 "R" "S" "r" 4 4 4 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,512
+   settp r6,0
+   settp r7,0
+   settpcall r30,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 30 4 4 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 30 4 4 0 "ok" ""
+   .srcstep 5 5 17 "comment-preparation-probe.crexx" 11 3 40 "  ok = policies.add('slash','line','//')"
+   .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "policies" ""
+   load r2,"slash"
+   .traceevent "L" 4 "R" "S" "r" 2 5 5 0 "" ""
+   load r3,"line"
+   .traceevent "L" 4 "R" "S" "r" 3 5 5 0 "" ""
+   load r4,"//"
+   .traceevent "L" 4 "R" "S" "r" 4 5 5 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,512
+   settp r6,0
+   settp r7,0
+   settpcall r30,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 30 5 5 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 30 5 5 0 "ok" ""
+   .srcstep 6 6 17 "comment-preparation-probe.crexx" 12 3 46 "  ok = policies.add('block','block','/*','*/')"
+   .traceevent "V" 6 "R" "O" "r" 1 6 6 0 "policies" ""
+   load r2,"block"
+   .traceevent "L" 4 "R" "S" "r" 2 6 6 0 "" ""
+   load r3,"block"
+   .traceevent "L" 4 "R" "S" "r" 3 6 6 0 "" ""
+   load r4,"/*"
+   .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
+   load r5,"*/"
+   .traceevent "L" 4 "R" "S" "r" 5 6 6 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,0
+   settp r7,0
+   settpcall r30,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 30 6 6 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 30 6 6 0 "ok" ""
+   .srcstep 7 7 17 "comment-preparation-probe.crexx" 13 3 48 "  ok = policies.add('nested','nested','(*','*)')"
+   .traceevent "V" 6 "R" "O" "r" 1 7 7 0 "policies" ""
+   load r2,"nested"
+   .traceevent "L" 4 "R" "S" "r" 2 7 7 0 "" ""
+   load r3,"nested"
+   .traceevent "L" 4 "R" "S" "r" 3 7 7 0 "" ""
+   load r4,"(*"
+   .traceevent "L" 4 "R" "S" "r" 4 7 7 0 "" ""
+   load r5,"*)"
+   .traceevent "L" 4 "R" "S" "r" 5 7 7 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,0
+   settp r7,0
+   settpcall r30,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 30 7 7 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 30 7 7 0 "ok" ""
+   .srcstep 8 8 17 "comment-preparation-probe.crexx" 14 3 11 "  keep = 0"
+   .meta "comment-preparation-probe.main.keep"="b" ".int" r15
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 8 8 0 "keep" ""
+   .srcstep 10 10 17 "comment-preparation-probe.crexx" 15 3 17 "  if argv[0] > 1 then keep = argv[2] as .int"
+   .traceevent "C" 4 "R" "V" "r" 33 10 10 0 "argv" ""
+   getattrs r32,a1,0
+   .traceevent "V" 6 "R" "I" "r" 32 10 10 0 "argv" ""
+   igt r32,r32,1
+   .traceevent "O" 4 "R" "B" "r" 32 10 10 0 "" ""
+   brf l75iffalse,r32
+   .srcstep 11 11 17 "comment-preparation-probe.crexx" 15 18 22 "  if argv[0] > 1 then keep = argv[2] as .int"
+   .srcstep 9 9 17 "comment-preparation-probe.crexx" 15 23 45 "  if argv[0] > 1 then keep = argv[2] as .int"
+   minlinkattr1 r27,a1,2
+   .traceevent "V" 6 "R" "S" "r" 27 9 9 0 "argv" ""
+   stoi r15,r27
+   unlink r27
+   .traceevent "A" 6 "R" "I" "r" 15 9 9 0 "keep" ""
+l75iffalse:
+   .srcstep 12 12 17 "comment-preparation-probe.crexx" 16 3 54 "  ok = policies.add('angle','block','<!--','-->',keep)"
+   .traceevent "V" 6 "R" "O" "r" 1 12 12 0 "policies" ""
+   load r2,"angle"
+   .traceevent "L" 4 "R" "S" "r" 2 12 12 0 "" ""
+   load r3,"block"
+   .traceevent "L" 4 "R" "S" "r" 3 12 12 0 "" ""
+   load r4,"<!--"
+   .traceevent "L" 4 "R" "S" "r" 4 12 12 0 "" ""
+   load r5,"-->"
+   .traceevent "L" 4 "R" "S" "r" 5 12 12 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 15 12 12 0 "keep" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r15,256
+   swap r6,r15
+   settp r7,0
+   settpcall r30,§llcomments.rules.add(),r0,r8,0
+   swap r15,r6
+   .traceevent "F" 4 "R" "I" "r" 30 12 12 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 30 12 12 0 "ok" ""
+   .srcstep 13 13 17 "comment-preparation-probe.crexx" 17 3 51 "  ok = policies.add('long.hash','nested','##','$$')"
+   .traceevent "V" 6 "R" "O" "r" 1 13 13 0 "policies" ""
+   load r2,"long.hash"
+   .traceevent "L" 4 "R" "S" "r" 2 13 13 0 "" ""
+   load r3,"nested"
+   .traceevent "L" 4 "R" "S" "r" 3 13 13 0 "" ""
+   load r4,"##"
+   .traceevent "L" 4 "R" "S" "r" 4 13 13 0 "" ""
+   load r5,"$$"
+   .traceevent "L" 4 "R" "S" "r" 5 13 13 0 "" ""
+   load r0,8
+   settp r1,256
+   settp r2,768
+   settp r3,768
+   settp r4,768
+   settp r5,768
+   settp r6,0
+   settp r7,0
+   settpcall r30,§llcomments.rules.add(),r0,r8,0
+   .traceevent "F" 4 "R" "I" "r" 30 13 13 0 "add" ""
+   .traceevent "A" 6 "R" "I" "r" 30 13 13 0 "ok" ""
+   .srcstep 14 14 17 "comment-preparation-probe.crexx" 18 3 18 "  fuel = 10000000"
+   .meta "comment-preparation-probe.main.fuel"="b" ".int" r26
+   load r26,10000000
+   .traceevent "L" 4 "R" "I" "r" 26 14 14 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 14 14 0 "fuel" ""
+   .srcstep 16 16 17 "comment-preparation-probe.crexx" 19 3 17 "  if argv[0] > 2 then fuel = argv[3] as .int"
+   .traceevent "C" 4 "R" "V" "r" 33 16 16 0 "argv" ""
+   getattrs r32,a1,0
+   .traceevent "V" 6 "R" "I" "r" 32 16 16 0 "argv" ""
+   igt r32,r32,2
+   .traceevent "O" 4 "R" "B" "r" 32 16 16 0 "" ""
+   brf l108iffalse,r32
+   .srcstep 17 17 17 "comment-preparation-probe.crexx" 19 18 22 "  if argv[0] > 2 then fuel = argv[3] as .int"
+   .srcstep 15 15 17 "comment-preparation-probe.crexx" 19 23 45 "  if argv[0] > 2 then fuel = argv[3] as .int"
+   minlinkattr1 r27,a1,3
+   .traceevent "V" 6 "R" "S" "r" 27 15 15 0 "argv" ""
+   stoi r26,r27
+   unlink r27
+   .traceevent "A" 6 "R" "I" "r" 26 15 15 0 "fuel" ""
+l108iffalse:
+   .srcstep 18 18 17 "comment-preparation-probe.crexx" 20 3 20 "  encoding = 'utf8'"
+   .meta "comment-preparation-probe.main.encoding"="b" ".string" r20
+   load r20,"utf8"
+   .traceevent "L" 4 "R" "S" "r" 20 18 18 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 20 18 18 0 "encoding" ""
+   .srcstep 20 20 17 "comment-preparation-probe.crexx" 21 3 17 "  if argv[0] > 3 then encoding = argv[4]"
+   .traceevent "C" 4 "R" "V" "r" 33 20 20 0 "argv" ""
+   getattrs r32,a1,0
+   .traceevent "V" 6 "R" "I" "r" 32 20 20 0 "argv" ""
+   igt r32,r32,3
+   .traceevent "O" 4 "R" "B" "r" 32 20 20 0 "" ""
+   brf l120iffalse,r32
+   .srcstep 21 21 17 "comment-preparation-probe.crexx" 21 18 22 "  if argv[0] > 3 then encoding = argv[4]"
+   .srcstep 19 19 17 "comment-preparation-probe.crexx" 21 23 40 "  if argv[0] > 3 then encoding = argv[4]"
+   minlinkattr1 r27,a1,4
+   .traceevent "V" 6 "R" "S" "r" 27 19 19 0 "argv" ""
+   scopy r20,r27
+   .traceevent "A" 6 "R" "S" "r" 20 19 19 0 "encoding" ""
+   unlink r27
+l120iffalse:
+   .srcstep 22 22 17 "comment-preparation-probe.crexx" 22 3 78 "  request = .llsource..prepared(source,encoding,'','',1048576,0,policies,fuel)"
+   .meta "comment-preparation-probe.main.request"="b" ".llsource..prepared" r28
+   .traceevent "V" 6 "R" "X" "r" 19 22 22 0 "source" ""
+   .traceevent "V" 6 "R" "S" "r" 20 22 22 0 "encoding" ""
+   load r21,""
+   .traceevent "L" 4 "R" "S" "r" 21 22 22 0 "" ""
+   load r22,""
+   .traceevent "L" 4 "R" "S" "r" 22 22 22 0 "" ""
+   load r23,1048576
+   .traceevent "L" 4 "R" "I" "r" 23 22 22 0 "" ""
+   load r24,0
+   .traceevent "L" 4 "R" "I" "r" 24 22 22 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 1 22 22 0 "policies" ""
+   .traceevent "V" 6 "R" "I" "r" 26 22 22 0 "fuel" ""
+   load r18,8
+   settp r19,256
+   settp r20,256
+   settp r21,768
+   settp r22,768
+   settp r23,256
+   settp r24,256
+   settp r1,256
+   swap r25,r1
+   settpcall r28,§llsource.prepared.§factory(),r18,r26,256
+   swap r1,r25
+   .traceevent "F" 4 "R" "O" "r" 28 22 22 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 28 22 22 0 "request" ""
+   .srcstep 28 28 17 "comment-preparation-probe.crexx" 23 3 26 "  status = request.status()"
+   .srcstep 23 23 33 "comment-preparation-probe.crexx" 23 12 19 "  status = request.status()"
+   .traceevent "V" 6 "R" "O" "r" 28 23 23 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 28 23 23 0 "§this" ""
+   .srcstep 24 24 6 "llsource@rxfnsl.rxbin" 23 19 19 "  status = request.status()"
+   .traceevent "V" 6 "R" "O" "r" 28 0 0 0 "§this" ""
+   assertinitialized r28
+   .srcstep 25 25 25 "llsource.crexx" 135 5 13 "    call run()"
+   .traceevent "V" 6 "R" "O" "r" 28 25 25 0 "§this" ""
+   load r27,1
+   settpcall r33,§llsource.prepared.run(),r27,r28,256
+   .traceevent "F" 4 "R" "V" "r" 33 25 25 0 "run" ""
+   linkattr1 r33,r28,15
+   .traceevent "V" 6 "R" "I" "r" 33 0 0 0 "_status" ""
+   igetunlink r34,r33
+   .traceevent "A" 6 "R" "I" "r" 34 0 0 0 "__inline_ret_1623_1622" ""
+   .srcstep 26 26 6 "comment-preparation-probe.crexx" 23 12 26 "  status = request.status()"
+   .traceevent "V" 6 "R" "O" "r" 28 0 0 0 "§this" ""
+   .srcstep 27 27 33 "comment-preparation-probe.crexx" 23 26 26 "  status = request.status()"
+   .traceevent "V" 6 "R" "I" "r" 34 27 27 0 "__inline_ret_1623_1622" ""
+   copy r31,r34
+   .traceevent "A" 6 "R" "I" "r" 31 27 27 0 "status" ""
+   .srcstep 35 35 17 "comment-preparation-probe.crexx" 24 3 56 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .meta "comment-preparation-probe.main.status"="b" ".int" r31
+   .srcstep 34 34 17 "comment-preparation-probe.crexx" 24 7 16 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .srcstep 29 29 33 "comment-preparation-probe.crexx" 24 27 29 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   itos r31
+   .traceevent "V" 6 "R" "S" "r" 31 29 29 0 "status" ""
+   concat r33,"STATUS|",r31
+   .traceevent "O" 4 "R" "S" "r" 33 29 29 0 "" ""
+   concat r35,r33,"|BYTE|"
+   .traceevent "O" 4 "R" "S" "r" 35 29 29 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 35 29 29 0 "__inline_lhs_142_147" ""
+   .srcstep 33 33 33 "comment-preparation-probe.crexx" 24 39 41 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .traceevent "V" 6 "R" "S" "r" 35 35 35 0 "__inline_lhs_142_147" ""
+   .srcstep 32 32 17 "comment-preparation-probe.crexx" 24 42 49 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .srcstep 30 30 33 "comment-preparation-probe.crexx" 24 42 49 "  say 'STATUS|' || status || '|BYTE|' || request.offset()"
+   .traceevent "V" 6 "R" "O" "r" 28 30 30 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 28 30 30 0 "§this" ""
+   .srcstep 31 31 25 "llsource.crexx" 138 5 19 "    return _offset"
+   linkattr1 r33,r28,10
+   .traceevent "V" 6 "R" "I" "r" 33 35 35 0 "_offset" ""
+   igetunlink r32,r33
+l1852bexprend:
+   itos r32
+   concat r32,r35,r32
+   .traceevent "O" 4 "R" "S" "r" 32 35 35 0 "" ""
+   scopy r27,r32
+l1838bexprend:
+   say r27
+   .srcstep 36 36 17 "comment-preparation-probe.crexx" 25 3 35 "  say 'ORIGINAL|' || bin2x(source)"
+   .traceevent "V" 6 "R" "X" "r" 19 36 36 0 "source" ""
+   load r18,1
+   settpcall r33,rxfnsb.bin2x(),r18,r19,256
+   .traceevent "F" 4 "R" "S" "r" 33 36 36 0 "bin2x" ""
+   concat r33,"ORIGINAL|",r33
+   .traceevent "O" 4 "R" "S" "r" 33 36 36 0 "" ""
+   say r33
+   .srcstep 37 37 17 "comment-preparation-probe.crexx" 26 3 37 "  say 'MASK|' || bin2x(request.bytes())"
+   .traceevent "V" 6 "R" "O" "r" 28 37 37 0 "request" ""
+   load r27,1
+   settpcall r33,§llsource.prepared.bytes(),r27,r28,256
+   .traceevent "F" 4 "R" "X" "r" 33 37 37 0 "bytes" ""
+   load r32,1
+   settpcall r27,rxfnsb.bin2x(),r32,r33,256
+   .traceevent "F" 4 "R" "S" "r" 27 37 37 0 "bin2x" ""
+   concat r33,"MASK|",r27
+   .traceevent "O" 4 "R" "S" "r" 33 37 37 0 "" ""
+   say r33
+   .srcstep 42 42 17 "comment-preparation-probe.crexx" 27 3 32 "  say 'ERROR|' || request.error()"
+   .srcstep 41 41 17 "comment-preparation-probe.crexx" 27 19 26 "  say 'ERROR|' || request.error()"
+   .srcstep 38 38 33 "comment-preparation-probe.crexx" 27 19 26 "  say 'ERROR|' || request.error()"
+   .traceevent "V" 6 "R" "O" "r" 28 38 38 0 "request" ""
+   .traceevent "A" 6 "R" "O" "r" 28 38 38 0 "§this" ""
+   .srcstep 39 39 6 "llsource@rxfnsl.rxbin" 27 26 26 "  say 'ERROR|' || request.error()"
+   .traceevent "V" 6 "R" "O" "r" 28 42 42 0 "§this" ""
+   assertinitialized r28
+   .srcstep 40 40 25 "llsource.crexx" 140 5 18 "    return _error"
+   linkattr1 r33,r28,7
+   .traceevent "V" 6 "R" "S" "r" 33 42 42 0 "_error" ""
+   scopy r32,r33
+   unlink r33
+l2283bexprend:
+   concat r32,"ERROR|",r32
+   .traceevent "O" 4 "R" "S" "r" 32 42 42 0 "" ""
+   say r32
+   .srcstep 43 43 17 "comment-preparation-probe.crexx" 28 3 16 "  return status"
+   .traceevent "V" 6 "R" "I" "r" 31 43 43 0 "status" ""
+   ret r31
+   .meta "comment-preparation-probe.main.argv"
+   .meta "comment-preparation-probe.main.encoding"
+   .meta "comment-preparation-probe.main.fuel"
+   .meta "comment-preparation-probe.main.keep"
+   .meta "comment-preparation-probe.main.ok"
+   .meta "comment-preparation-probe.main.policies"
+   .meta "comment-preparation-probe.main.request"
+   .meta "comment-preparation-probe.main.source"
+   .meta "comment-preparation-probe.main.status"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.readbinary() .expose=rxfnsb.readbinary
+   .meta "rxfnsb.readbinary"="b" ".binary" rxfnsb.readbinary() "fname=.string"
+   .meta "rxfnsb.readbinary"=".autoload" "library"
+
+/* Imported Declaration from file: raise@library.rxbin */
+
+_rxsysb.raise() .expose=_rxsysb.raise
+   .meta "_rxsysb.raise"="b" ".int" _rxsysb.raise() "type=.string,code=.string,parm1=.string"
+   .meta "_rxsysb.raise"=".autoload" "library"
+
+/* Imported Declaration from file: binary@library.rxbin */
+
+rxfnsb.bin2x() .expose=rxfnsb.bin2x
+   .meta "rxfnsb.bin2x"="b" ".string" rxfnsb.bin2x() "data=.binary"
+   .meta "rxfnsb.bin2x"=".autoload" "library"
+
+/* Imported Declaration from file: llcomments@rxfnsl.rxbin */
+
+§llcomments.rules.§factory() .expose=llcomments.rules.§factory
+   .meta "llcomments.rules.§factory"="b" ".llcomments..rules" §llcomments.rules.§factory() ""
+   .meta "llcomments.rules.§factory"=".autoload" "rxfnsl"
+
+§llcomments.rules.add() .expose=llcomments.rules.add
+   .meta "llcomments.rules.add"="b" ".int" §llcomments.rules.add() "name=.string,form=.string,opening=.string,?closing=.string,?keep=.int,?line=.int,?byte=.int"
+   .meta "llcomments.rules.add"=".autoload" "rxfnsl"
+
+/* Imported Declaration from file: llsource@rxfnsl.rxbin */
+
+§llsource.prepared.§factory() .expose=llsource.prepared.§factory
+   .meta "llsource.prepared.§factory"="b" ".llsource..prepared" §llsource.prepared.§factory() "source=.binary,?encoding=.string,?opening=.string,?closing=.string,?limit=.int,?recover=.int,?policies=.llcomments..rules,?work=.int"
+   .meta "llsource.prepared.§factory"=".autoload" "rxfnsl"
+
+§llsource.prepared.run() .expose=llsource.prepared.run
+   .meta "llsource.prepared.run"="b" ".void" §llsource.prepared.run() ""
+   .meta "llsource.prepared.run"=".autoload" "rxfnsl"
+
+§llsource.prepared.bytes() .expose=llsource.prepared.bytes
+   .meta "llsource.prepared.bytes"="b" ".binary" §llsource.prepared.bytes() ""
+   .meta "llsource.prepared.bytes"=".autoload" "rxfnsl"

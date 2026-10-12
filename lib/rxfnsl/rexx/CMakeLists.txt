@@ -8,7 +8,7 @@ endif()
 set(RXFNSL_REXX_MODULES
   tinyexpr lllimits lludata llproperties
   llcore llcheck llcap llcfg lllr llmunch llproject llstage llcharset
-  llregular llsource llpeg llforest llearley llpratt llregional lllanguage llrecover lltree
+  llregular llcomments llsource llpeg llforest llearley llpratt llregional lllanguage llrecover lltree
 )
 
 set(RXFNSL_REXX_BINS)
@@ -41,9 +41,10 @@ set(RXFNSL_DEPS_llpeg lllimits llcore llcheck llcap)
 set(RXFNSL_DEPS_llearley lllimits llcore llcfg llcheck llcap llforest)
 set(RXFNSL_DEPS_llpratt lllimits llcore llcheck llcap)
 set(RXFNSL_DEPS_llregional lllimits llcore llcfg llpratt lllr)
-set(RXFNSL_DEPS_lllanguage lllimits llcore lllr llpeg llearley llforest llpratt llregional llproject llmunch llstage llsource)
+set(RXFNSL_DEPS_lllanguage lllimits llcore lllr llpeg llearley llforest llpratt llregional llproject llmunch llstage llsource llcomments)
 set(RXFNSL_DEPS_llrecover lllimits llcore lllanguage llmunch llsource)
-set(RXFNSL_DEPS_llsource lllimits)
+set(RXFNSL_DEPS_llcomments llmunch lllimits)
+set(RXFNSL_DEPS_llsource lllimits llcomments)
 set(RXFNSL_DEPS_lltree llcore lllimits)
 foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)

@@ -3,6 +3,7 @@ options levelb
 namespace llsource expose prepared diagnostic lexeme message
 import rxfnsb
 import lllimits
+import llcomments
 
 /** Own exact bytes. Never reinterpret a decoding error as a syntax error. */
 prepared: class
@@ -17,17 +18,24 @@ prepared: class
   _limit = .int
   _ran = .int
   _recover = .int
+  _comments = .llcomments..rules
+  _work = .int
   _badfirst = .int[]
   _badlast = .int[]
   _badpoint = .int[]
   *: factory
-    arg source = .binary, encoding = 'utf8', opening = '', closing = '', limit = 1048576, recover = 0
+    arg source = .binary, encoding = 'utf8', opening = '', closing = '', limit = 1048576, recover = 0, ?policies = .llcomments..rules, work = 10000000
     _source = source; _masked = source; _status = 0; _offset = 0; _error = ''
-    _encoding = encoding; _opening = opening; _closing = closing; _limit = limit; _ran = 0; _recover = recover
+    _encoding = encoding; _opening = opening; _closing = closing; _limit = limit; _ran = 0; _recover = recover; _work = work
+    if ?policies then _comments = policies
+    else do
+      _comments = .llcomments..rules()
+      if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
+    end
     return
   run: method = .void
     if _ran then return
-    _ran = 1; source = _source; encoding = _encoding; opening = _opening; closing = _closing; limit = _limit
+    _ran = 1; source = _source; encoding = _encoding; limit = _limit
     if _recover <> 0 & _recover <> 1 then do
       _status = 3; _error = 'LL_ENCODING: recovery flag must be 0 or 1'; return
     end
@@ -38,7 +46,7 @@ prepared: class
     else if encoding <> 'bytes' then do
       _status = 3; _error = 'LL_ENCODING: unsupported source encoding'; return
     end
-    if _status = 0 & opening <> '' then call comments(opening as .binary,closing as .binary)
+    if _status = 0 then call comments()
     return
   utf8: method = .void
     at = 0; extent = <blen>(_source); broken = 0
@@ -111,58 +119,14 @@ prepared: class
     _status = 1; _offset = offset; _error = 'LL_UTF8: malformed UTF-8'
     return
   comments: method = .void
-    arg opening = .binary, closing = .binary
-    i = .int
-    a = <blen>(opening); b = <blen>(closing); extent = <blen>(_source)
-    if a = 0 | b = 0 | opening = closing then do
-      _status = 3; _error = 'LL_COMMENT_CONTRACT: invalid delimiters'; return
-    end
     before = _masked
-    at = 0; depth = 0; quote = 0; origin = 0
-    do while at < extent
-      c = <at..u8>(at) _source
-      if depth > 0 then do
-        take = 1
-        if binsubstr(_source,at + 1,b) = closing then do
-          depth = depth - 1; take = b
-        end
-        else if binsubstr(_source,at + 1,a) = opening then do
-          depth = depth + 1; take = a
-        end
-        do i = at to at + take - 1
-          c = <at..u8>(i) _source
-          <at..u8>(i) _masked = 32
-        end
-        at = at + take
-      end
-      else if quote <> 0 then do
-        at = at + 1
-        if c = quote then do
-          if at < extent then do
-            if <at..u8>(at) _source = quote then do
-              at = at + 1; iterate
-            end
-          end
-          quote = 0
-        end
-      end
-      else if binsubstr(_source,at + 1,a) = opening then do
-        origin = at; depth = 1
-        do i = at to at + a - 1
-          <at..u8>(i) _masked = 32
-        end
-        at = at + a
-      end
-      else do
-        if c = 34 | c = 39 then quote = c
-        at = at + 1
-      end
-    end
-    if depth > 0 then do
-      _status = 1; _offset = origin; _error = 'LL_COMMENT: unclosed nested comment'
-      if _recover then do i = origin + a to extent - 1
-        <at..u8>(i) _masked = <at..u8>(i) before
-      end
+    coordinator = .llcomments..processor(_masked,_comments,_work)
+    _status = coordinator.run(); _offset = coordinator.offset(); _error = coordinator.error()
+    _masked = coordinator.bytes()
+    /* Only the proper specification reader requests this candidate-inspection
+     * fallback. The original preparation remains failed, never publishable. */
+    if _status = 1 & _recover then do i = coordinator.openingend() to <blen>(_masked) - 1
+      <at..u8>(i) _masked = <at..u8>(i) before
     end
     return
   bytes: method = .binary

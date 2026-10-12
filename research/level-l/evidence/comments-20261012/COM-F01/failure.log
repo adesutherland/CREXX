@@ -1,0 +1,5 @@
+STATUS|1|BYTE|10
+MESSAGE|LL_COMMENT: unclosed nested comment rexx.notes; opening bytes [10,12)
+COMMENT_TARGET at line 1, column 11 (byte 10): LL_COMMENT: unclosed nested comment rexx.notes; opening bytes [10,12)
+  port="a\\" (* still quoted"
+             ^

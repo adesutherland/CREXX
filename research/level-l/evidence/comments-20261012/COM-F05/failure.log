@@ -1,0 +1,10 @@
+
+Error Severity 1 in file /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/comments-delimiter-controls/nul
+10:11 - Error at "§llcore.grammar.§factory()", unknown procedure
+24:11 - Error at "§llcore.grammar.add()", unknown procedure
+29:11 - Error at "§llmunch.automaton.§factory.loaded()", unknown procedure
+39:11 - Error at "§lllanguage.definition.§factory.scanner()", unknown procedure
+42:11 - Error at "§llcomments.rules.§factory()", unknown procedure
+49:0 - Illegal Character
+49:0 - Illegal Character
+Errors in assembler can't generate output file: (null)

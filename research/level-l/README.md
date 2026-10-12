@@ -20,7 +20,16 @@ as the larger tree-interpreter example, with a source-based migration inventory.
 The [teaching receipt](evidence/teaching-20261012/README.md) records 808 runtime
 checks and 16 expected build refusals. The
 [generalized-comment contract](SURFACE.md#generalized-comments-proposal--12-october-2026)
-is prepared for maintainer approval; its new spellings are not implemented.
+is approved and implemented; current qualification is tracked in PLAN.md and
+the comment receipt below.
+
+**12 October generalized comments:** shared `line`, `block` and `nested`
+forms, custom delimiters, optional regular shielding and kept newlines are now
+implemented in the common source layer and both emitters. The eighth settings
+lesson grows the existing Unicode/field/Pratt example. Backend, ownership,
+recovery, budget and bootstrap evidence is retained in
+[evidence/comments-20261012/](evidence/comments-20261012/README.md). This is a
+bounded increment; the complete LANG/research programme remains open.
 
 **11 October safety checkpoint:** the maintainer has requested a commit and
 remote backup on `origin/levell`. This preserves the implementation and retained

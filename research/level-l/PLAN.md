@@ -174,11 +174,12 @@ must retain their owners.
 
 **Current status:** EX-STEP01–04 delivered for review; EX-AC02–04 verified in
 the bounded native increment. EX-AC01's inventory/concrete proposal is ready,
-but the generalized-comment design and EX-STEP05 await Adrian's approval.
+The generalized-comment design was subsequently approved and EX-STEP05
+is tracked to closure by COM-AC01–05 below.
 SURFACE.md records the proposed `line`, `block`, `nested`, optional shielding
-pattern and newline contracts. The current one-pair frontend's incomplete
-duplicate-declaration rejection remains an open LANG-AC02/05 obligation; it
-must not be mistaken for supported multiple forms.
+pattern and newline contracts. At that earlier checkpoint, the one-pair frontend incompletely rejected
+duplicate declarations. The generalized-comment increment below repairs this
+comment-specific gap; the wider LANG-AC02/05 obligations remain open.
 
 `evidence/teaching-20261012/` retains 808 runtime checks and 16 expected build
 refusals across complete opt/no-opt Level L builds and both VMs, with source/RXAS
@@ -190,6 +191,107 @@ qualified evidence is reused. This increment adds six backend grammars, an
 end-to-end calculator and modern/legacy/migration guidance; it does not close
 full LANG or original research obligations. Source/examples/evidence are
 prepared for the requested commit and existing authorized remote safety branch.
+
+### Generalized comments implementation — approved 12 October 2026
+
+Adrian approves the complete generalized-comment contract in SURFACE.md and
+instructs implementation, simple defaults, backend regressions and updated
+plan/guide. This opens EX-STEP05; no further approval of the same contract is
+required. Preserve the programme vision and all wider open criteria above.
+
+**Vision:** one Level B source coordinator implements named line, block and
+nested forms for every generated backend. Several forms compose coherently,
+quote shielding is explicit when advanced patterns are needed, original bytes
+and newline policy survive, and unsupported/damaged inputs produce accurate
+build/runtime/recovery outcomes. Source and RXAS carry identical checked
+metadata. Existing nested declarations and the acyclic L0/L1/L2 bootstrap keep
+working. No compiler/assembler re2c migration or RexxScript semantic change.
+
+1. **COM-AC01 (EX-AC01, LANG-AC02/05/13):** the three forms, distinct custom
+   delimiters, optional `outside PATTERN` and `newlines keep` execute. Multiple
+   forms choose longest opener and reject duplicate openers with related source
+   locations. Unknown/empty/invalid/recursive/nullable shielding and unsupported
+   qualifiers fail admission; no ignored declaration.
+2. **COM-AC02 (LANG-AC03/04/07/10):** a shared coordinator keeps exact original
+   bytes/spans, preserves line-comment CR/LF and declared block newlines, honors
+   quote/regular-pattern opacity and same-form nesting/close priority. Named
+   unterminated diagnostics point to the original opener. UTF-8, source/work
+   limits and contract errors remain distinct; scanning progresses or exhausts.
+3. **COM-AC03 (LANG-AC08/09/14):** strict/recovery routes use the same comment
+   policy; delimiters/separators inside opaque regions cannot trigger spurious
+   comments or record recovery. Unclosed blocks never become clean/executable.
+   Recovery and later valid structure remain checked within admitted profiles.
+4. **COM-AC04 (LANG-AC11/12):** source/RXAS, both VMs and complete opt/no-opt
+   Level L builds pass focused independent comment panels. L0/L1/L2 agree,
+   current settings/calculator/RexxScript consumers pass, and the required
+   Level B-only bootstrap remains independent of Level G/re2c. Reuse unchanged
+   broader proof; no new nested aggregate CTest.
+5. **COM-AC05 (LANG-AC12/13):** grow the existing worked example, document simple
+   and advanced contracts/limits, retain exact test/tool identities and reconcile
+   COM/EX progress without closing unrelated LANG/research obligations.
+
+1. **COM-STEP01 (AC01/02):** implement checked common descriptors/coordinator and
+   preserve the legacy prepared/definition constructors. Add focused native
+   preparation tests before broad integration.
+2. **COM-STEP02 (AC01/04):** extend shared lowering/self-grammar, compile shielding
+   patterns through the existing regular builder, emit descriptors/packed images
+   identically in source/RXAS, and rebuild/verify all bootstrap stages.
+3. **COM-STEP03 (AC02/03):** connect strict/recovery/source-author routes and test
+   original spans, errors, newline boundaries, speculative quote patterns and
+   lowered budgets. Depends on STEP01/02.
+4. **COM-STEP04 (AC01–05):** run backend/consumer/optimization panels and focused
+   build lifecycle checks, update guide/plan/receipts and preserve remaining
+   programme scope. Depends on the relevant preceding implementation steps.
+
+**Current native checkpoint:** COM-STEP01–04, COM-AC01–05 and EX-STEP05 are
+verified for the approved comment profile. EX-AC01's proposal/admission scope is verified. The full LANG and original
+research programme remain open. `evidence/comments-20261012/` owns the receipts.
+
+- Common descriptors and one coordinator execute all three forms, custom
+  delimiters, form-specific regular opacity and optional kept newlines. Duplicate
+  openers, empty/equal delimiters, invalid qualifiers and nullable/recursive/
+  overlapping outside patterns are refused; no comment declaration is ignored.
+- Independent original-byte/mask oracle and generated LL/LR/PEG/Earley, Pratt,
+  region and DFA routes pass: 2,300 comment runtime cases, 28 expected build
+  refusals, 96 standalone lexer cases and 19 native contract assertions in
+  eight optimizer/VM cells. Source/RXAS preserves original token/owned-tree
+  data, including Unicode, NUL/control markers, numeric spelling distinction,
+  nesting/close priority, quote shielding, recovery containment and exact first
+  exhaustion reporting. Target unclosed blocks remain unrecoverable.
+- Six L0/L1/L2 × VM cells produce identical new comment artifacts and a failed
+  duplicate declaration preserves the prior output. Complete opt/no-opt
+  self-description artifacts agree; the earlier frontend's 17 controls × three
+  stages pass. Current three-case cold/no-op Level B-only bootstrap has no G
+  source tree or re2c invocation. No new aggregate CTest was registered.
+- The eighth Unicode/field/region settings lesson passes in eight cells. Current
+  generated-language/RexxScript CTests pass on both VMs, the 404-case teaching
+  runtime panel and eight refusals pass, and retained unchanged-path Unicode/
+  unoptimized interpreter controls are recorded with their exact boundaries.
+  Final product/standalone builds are warning-free; guide/source links pass.
+
+**COM-F01, repaired:** RXAS emission reread the frontend's earlier descriptor
+value after custom shielding was added to a local value. Pass the completed
+checked policy to both emitters; metadata and escaped-quote regressions remain.
+**COM-F02, repaired:** optional integer RXAS arguments lacked `REGTP_VAL`, so
+`newlines keep` could become its default on some backend routes. Every occupied
+literal argument now has explicit call-ABI presence flags. The minimal fix and
+cross-backend metadata/consumer regressions are retained.
+**COM-F03, repaired:** dispatch continued after shielding work exhaustion and
+replaced the first count/location. Stop and retain the first resource outcome;
+the unproductive-prefix regression requires budget 100 / lower bound 101.
+**COM-F04, repaired:** loose string equality treated `01` and `1` as equal
+comment delimiters. Literal identity now uses strict comparison; numeric
+spelling controls execute in both emission formats.
+**COM-F05, repaired:** unescaped NUL/control delimiters produced invalid RXAS.
+The Level L emitter uses supported C-style hexadecimal escapes; source/RXAS
+NUL/control/Unicode-marker lexer controls execute. No rxc/rxas C scanner edit.
+
+The failed reproductions and fixture corrections remain dispositioned in the
+receipt. All remaining Unicode comparison/display, general nested/token-stage
+recovery, broader pipeline/tree contracts, cost/default calibration and original
+research/support-reconciliation obligations stay open. Native evidence does not
+claim hosted, install/package, Windows/Linux or sanitizer qualification.
+Surface implementation restrictions remain explicit admission errors.
 
 ### Current step status — latest review
 

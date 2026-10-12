@@ -1,0 +1,4 @@
+STATUS|1|BYTE|0
+ORIGINAL|2F2A206F70656E
+MASK|20202020202020
+ERROR|LL_COMMENT: unclosed block comment block; opening bytes [0,2)

@@ -1,0 +1,3 @@
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/evidence/comments-20261012/frontend/unclosed-quote.levell: LL_GRAMMAR: LL_LEXICAL at line 30, column 19 (byte 1115): lexical damage; isolated declaration is not compiled
+  bad: diagnostic = 'missing
+                    ^

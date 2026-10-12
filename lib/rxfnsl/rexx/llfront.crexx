@@ -8,6 +8,7 @@ import llcore
 import llproject
 import llstage
 import llcharset
+import llcomments
 import llproperties
 import llmunch
 import lllimits
@@ -58,6 +59,10 @@ document: class
   _encoding = .string
   _commentopen = .string
   _commentclose = .string
+  _comments = .llcomments..rules
+  _commentdecl = .int[]
+  _commentoutside = .string[]
+  _commentroots = .int[]
   _tokenvalue = .int[]
   _sets = .llcharset..ranges[]
   _setstate = .int[]
@@ -91,6 +96,7 @@ document: class
     _count = 0; _decls = 0; _root = 0; _profile = ''; _units = ''; _module = ''
     _schema = .llproject..schema()
     _encoding = ''; _commentopen = ''; _commentclose = ''
+    _comments = .llcomments..rules()
     _malformed = ''; _otherwise = ''; _eof = -1; _lexmode = 0
     _backend = ''; _sync = -1
     if ?limits = 0 then limits = .lllimits..policy()
@@ -641,11 +647,7 @@ document: class
         end
         if (_encoding <> 'utf8' & _encoding <> 'utf8bytes' & _encoding <> 'bytes') | _at <> _end + 1 then call fail('lexer requires input utf8, utf8bytes or bytes',_at)
       end
-      else if _type[d] = 'comments' then do
-        ok = expect('nested'); _commentopen = _text[_at]; _at = _at + 1
-        _commentclose = _text[_at]; _at = _at + 1
-        if _commentopen = '' | _commentclose = '' | _at <> _end + 1 then call fail('comments requires nested opening closing',_first[d])
-      end
+      else if _type[d] = 'comments' then call commentdeclaration(d)
       if _lexical[d] then do
         created = addnode(5,0,0,_name[d],_line[_first[d]]); _handle[d] = created
       end
@@ -729,11 +731,69 @@ document: class
         end
       end
     end
+    do entry = 1 to _comments.size() while _status = 0
+      if _commentoutside[entry] = '' then iterate
+      named = index(_commentoutside[entry])
+      if named = 0 then call fail('LL_COMMENT_CONTRACT: unknown outside pattern ' || _commentoutside[entry],_first[_commentdecl[entry]])
+      else if _lexical[named] = 0 | _type[named] <> 'pattern' then call fail('LL_COMMENT_CONTRACT: outside requires a named lexical pattern',_first[_commentdecl[entry]])
+      else _commentroots[entry] = _handle[named]
+    end
     _lexgraph = _graph; _profile = saved; _lexmode = 0
     do d = 1 to _decls
       _handle[d] = 0
     end
     return
+  commentdeclaration: method = .void
+    arg declaration = .int
+    form = wordat(_at); _at = _at + 1
+    if wordpos(form,'line block nested') = 0 then do
+      call fail('LL_COMMENT_CONTRACT: comments requires line, block or nested',_at - 1); return
+    end
+    if _kind[_at] <> 'string' then do
+      call fail('LL_COMMENT_CONTRACT: comment opener must be quoted',_at); return
+    end
+    opening = _text[_at]; _at = _at + 1; closing = ''
+    if form <> 'line' then do
+      if _kind[_at] <> 'string' then do
+        call fail('LL_COMMENT_CONTRACT: block/nested closer must be quoted',_at); return
+      end
+      closing = _text[_at]; _at = _at + 1
+    end
+    keep = 0; outside = ''; seen = '|'
+    do while _at <= _end & _status = 0
+      qualifier = wordat(_at); first = _at; _at = _at + 1
+      if pos('|' || qualifier || '|',seen) > 0 then do
+        call fail('LL_COMMENT_CONTRACT: duplicate comment qualifier ' || qualifier,first); return
+      end
+      seen = seen || qualifier || '|'
+      select qualifier
+        when 'outside' then do
+          if _kind[_at] <> 'symbol' then call fail('LL_COMMENT_CONTRACT: outside requires a pattern name',_at)
+          outside = _text[_at]; _at = _at + 1
+        end
+        when 'newlines' then do
+          if wordat(_at) <> 'keep' then call fail('LL_COMMENT_CONTRACT: optional newlines policy is keep',_at)
+          keep = 1; _at = _at + 1
+        end
+        otherwise call fail('LL_COMMENT_CONTRACT: unsupported comment qualifier ' || qualifier || '; cross-style nesting is not supported',first)
+      end
+    end
+    if _status <> 0 then return
+    ok = _comments.add(_name[declaration],form,opening,closing,keep,_line[_first[declaration]],_start[_first[declaration]])
+    if ok = 0 then do
+      call fail(_comments.error(),_first[declaration]); return
+    end
+    entry = _comments.size(); _commentdecl[entry] = declaration; _commentoutside[entry] = outside
+    return
+  comments: method = .llcomments..rules
+    return _comments
+  commentroot: method = .int
+    arg entry = .int
+    return _commentroots[entry]
+  commentlocation: method = .string
+    arg entry = .int
+    declaration = _commentdecl[entry]
+    return 'line ' || _line[_first[declaration]] || ', byte ' || _start[_first[declaration]] || ': ' || _name[declaration]
   lexgrammar: method = .llcore..grammar
     return _lexgraph
   lexroots: method = .int[]
@@ -743,9 +803,15 @@ document: class
   encoding: method = .string
     return _encoding
   commentopen: method = .string
-    return _commentopen
+    if _comments.size() = 1 then do
+      if _comments.form(1) = 'nested' then return _comments.opening(1) as .string
+    end
+    return ''
   commentclose: method = .string
-    return _commentclose
+    if _comments.size() = 1 then do
+      if _comments.form(1) = 'nested' then return _comments.closing(1) as .string
+    end
+    return ''
   declarations: method = .int
     return _decls
   declarationname: method = .string

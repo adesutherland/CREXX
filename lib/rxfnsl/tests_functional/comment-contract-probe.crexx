@@ -1,0 +1,44 @@
+/* cREXX License (MIT). Legacy constructors, close priority and checked policies. */
+options levelb
+import rxfnsb
+import llcomments
+import llsource
+
+main: procedure = .int
+  policies = .llcomments..rules()
+  if policies.add('prefix','nested','ab','a') = 0 then return 1
+  request = .llsource..prepared('ababa' as .binary,'utf8','','',100,0,policies)
+  if request.status() <> 0 | request.bytes() <> '   ba' as .binary then return 2
+  request = .llsource..prepared('(*a(*b*)c*)tail' as .binary,'utf8','(*','*)')
+  if request.status() <> 0 | request.bytes() <> (copies(' ',11) || 'tail') as .binary then return 3
+  policies = .llcomments..rules()
+  if policies.add('first','line','#','',0,4,7) = 0 then return 4
+  if policies.add('second','nested','#','!',0,12,30) <> 0 then return 5
+  if pos('first at line 4, byte 7',policies.error()) = 0 then return 6
+  policies = .llcomments..rules()
+  if policies.add('empty','block','','!') <> 0 then return 7
+  policies = .llcomments..rules()
+  if policies.add('same','nested','!','!') <> 0 then return 8
+  policies = .llcomments..rules()
+  if policies.add('quoted','line','"') = 0 then return 9
+  if policies.validate() <> 0 then return 10
+  request = .llsource..prepared('"text' as .binary,'utf8','','',100,0,policies)
+  if request.status() <> 3 | pos('LL_COMMENT_CONTRACT',request.error()) = 0 then return 11
+  policies = .llcomments..rules()
+  if policies.add('once','line','#') = 0 | policies.validate() = 0 then return 12
+  if policies.add('later','line','//') <> 0 | pos('frozen',policies.error()) = 0 then return 13
+  nul = '00'x as .string
+  policies = .llcomments..rules()
+  if policies.add('nul','block','|' || nul,nul || '|') = 0 then return 14
+  request = .llsource..prepared(('1|' || nul || 'body' || nul || '|2') as .binary,'utf8','','',100,0,policies)
+  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',8) || '2') as .binary then return 15
+  policies = .llcomments..rules()
+  if policies.add('unicode','nested','«','»') = 0 then return 16
+  request = .llsource..prepared('1«a«b»c»2' as .binary,'utf8','','',100,0,policies)
+  if request.status() <> 0 | request.bytes() <> ('1' || copies(' ',11) || '2') as .binary then return 17
+  policies = .llcomments..rules()
+  if policies.add('numeric','block','01','1') = 0 then return 18
+  request = .llsource..prepared('01body1tail' as .binary,'utf8','','',100,0,policies)
+  if request.status() <> 0 | request.bytes() <> (copies(' ',7) || 'tail') as .binary then return 19
+  say 'comment_contract_checks=19; failures=0'
+  return 0

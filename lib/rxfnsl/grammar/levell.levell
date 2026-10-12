@@ -152,7 +152,8 @@ parse: parser semantics contextfree input tokens start document
   diagnostic.declaration: rule = kw.diagnostic (kw.rule name)? equals string
   recovery.declaration: rule = kw.recovery kw.rule name kw.sync name
   lexer.declaration: rule = kw.lexer (kw.input name)? (kw.backend name)?
-  comments.declaration: rule = kw.comments kw.nested string string
+  comments.declaration: rule = kw.comments name string string? comment.qualifier*
+  comment.qualifier: rule = name name
   parser.declaration: rule = kw.parser parser.qualifier*
   parser.qualifier: rule = kw.semantics name | kw.input name | kw.start name | kw.backend name
   charset.declaration: rule = kw.charset equals set.expression
