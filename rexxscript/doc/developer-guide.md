@@ -114,6 +114,14 @@ evaluator-local ordered collection stream without terminating execution or
 changing the `SAY` output stream. The embedded compiler exit exposes that stream
 through the `VALUES target` clause, where the target is a `.string[]`.
 
+RexxScript-local one-dimensional arrays use dotted compound names such as
+`items.1` and `items.i`. The evaluator normalizes the suffix to a non-negative
+integer and stores the resulting string under the existing environment name
+table. Host array sharing is implemented by the RexxScript compiler exit: an
+exposed host array must have a `.string[]` type, and non-string arrays are
+rejected before generated code is emitted. The `EXPOSE` clause contains only
+the host variable name because its declared type supplies the distinction.
+
 When changing intrinsic parsing, remember that intrinsic calls can be nested.
 `_eval_builtin()` must copy parsed argument text and omitted-argument flags
 before evaluating each argument, because evaluating an argument can recursively

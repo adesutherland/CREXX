@@ -18,8 +18,8 @@ main: procedure
   measurements[2] = "20"
   measurements[3] = "30"
 
-  script = "total = 0; do i = 1 to measurements.0; total = total + measurements.i; end; measurements.2 = 'TWENTY'; measurements.4 = total + 1"
-  REXXSCRIPT script EXPOSE measurements RESULT raw
+  test_script = "total = 0; do i = 1 to measurements.0; total = total + measurements.i; end; measurements.2 = 'TWENTY'; measurements.4 = total + 1"
+  REXXSCRIPT "total = 0; do i = 1 to measurements.0; total = total + measurements.i; end; measurements.2 = 'TWENTY'; measurements.4 = total + 1" EXPOSE measurements RESULT raw
 
   say "RexxScript status:" raw[1]
   say "Array count:" measurements[0]
