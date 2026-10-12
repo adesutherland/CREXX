@@ -1,0 +1,5 @@
+STATUS|1|BYTE|17
+MESSAGE|value.error: Expected a number or quoted string; found 'many'.
+LL_TARGET at line 2, column 8 (byte 17): value.error: Expected a number or quoted string; found 'many'.
+  next = many
+         ^

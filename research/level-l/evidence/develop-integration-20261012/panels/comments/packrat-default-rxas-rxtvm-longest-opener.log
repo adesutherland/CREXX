@@ -1,0 +1,17 @@
+POLICY|hash.notes|KEEP|0
+POLICY|slash.notes|KEEP|0
+POLICY|c.notes|KEEP|0
+POLICY|rexx.notes|KEEP|0
+POLICY|angle.notes|KEEP|1
+POLICY|long.hash|KEEP|0
+COMMENTS|6|SHIELDED|0
+STATUS|0|BYTE|23
+MESSAGE|
+TOKEN|identifier|10|14|706F7274
+TOKEN|equals|14|15|3D
+TOKEN|number|15|16|31
+TOKEN|separator|16|17|0A
+TOKEN|identifier|17|21|6E657874
+TOKEN|equals|21|22|3D
+TOKEN|number|22|23|32
+TREE_VALID|1

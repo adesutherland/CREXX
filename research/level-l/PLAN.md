@@ -34,13 +34,28 @@ after the following gates pass, preserving unrelated checkouts and work.
 **Steps:**
 
 1. **PUB-STEP01 (PUB-AC01/02/04):** repair stage and QA dependencies; add
-   installed-consumer checks. **In progress.** No language-design change.
+   installed-consumer checks. **Verified.** No language-design change.
 2. **PUB-STEP02 (PUB-AC03):** commit the manual and merge current `develop`
-   into the authorized `levell` checkout. **Open.** Depends on STEP01.
+   into the authorized `levell` checkout. **Verified:** manual `fb4972050`, clean
+   merge `2121969ce` includes `a415090dc`. Depends on STEP01.
 3. **PUB-STEP03 (PUB-AC01–04):** fresh product/QA build, relevant correctness
-   runs and installed checks; fix reproduced integration defects. **Open.**
+   runs and installed checks; fix reproduced integration defects. **Verified**
+   by [the integration receipt](evidence/develop-integration-20261012/README.md).
 4. **PUB-STEP04 (PUB-AC05):** record exact inputs/results, commit and publish
-   only after STEP03 passes; verify remote state. **Open.**
+   only after STEP03 passes; verify remote state. **Local publication payload
+   complete; approved delivery is the fast-forward push of the enclosing commit
+   to `develop`.** Remote identity and actual CI state are reported in the
+   conversation, without a status-only follow-up commit.
+
+**PUB-AC01–04 verified:** fresh product and QA dependency closures, byte-identical
+L1/L2 generated RXAS, 249/249 normal correctness tests, six backend/diagnostic/
+recovery/comment/Unicode panels and 24 installed-product commands pass. The
+initial install attempt needed the optional example artifacts; preparing the
+same targets as the publication workflow resolved it without a product edit.
+The reviewed guide has 80 valid links. Adrian additionally requested a PDF while
+QA ran; the 46-page local artifact was rendered and checked, with embedded
+Unicode fonts. The receipt records exact inputs, outputs and qualification
+boundaries. Wider research and full LANG criteria remain open.
 
 Readiness inspection found missing product dependencies for both new commands
 and missing QA preparation dependencies for their test images. The committed

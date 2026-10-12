@@ -64,6 +64,53 @@ def windows_execution_environment(env):
     return runtime
 
 
+def smoke_level_l(prefix, source, work, run, extension):
+    """Exercise the installed generator, library and modern script command."""
+    binary = prefix / 'bin'
+    grammar = work / 'settings.levell'
+    shutil.copy2(source / 'lib/rxfnsl/examples/settings/01-basic.levell', grammar)
+    generated = work / 'levell_settings'
+    run('levell-generate', [binary / ('levell' + extension), grammar, '--rxas'],
+        stdout_path=generated.with_suffix('.rxas'))
+    run('levell-assemble', [binary / ('rxas' + extension), generated])
+    imports = work / 'levell-imports'
+    imports.mkdir()
+    for path in (binary / 'library.rxbin', binary / 'rxfnsl.rxbin',
+                 generated.with_suffix('.rxbin')):
+        shutil.copy2(path, imports / path.name)
+    reader_source = work / 'settings-reader.crexx'
+    shutil.copy2(source / 'lib/rxfnsl/examples/settings-reader.crexx', reader_source)
+    settings = work / 'settings.txt'
+    shutil.copy2(source / 'lib/rxfnsl/examples/settings.txt', settings)
+    reader = work / 'settings-reader'
+    run('levell-consumer-compile', [binary / ('rxc' + extension), '-x',
+        '--no-exe-import', '-i', imports, '-o', reader, reader_source])
+    run('levell-consumer-assemble', [binary / ('rxas' + extension), reader])
+    linked = work / 'settings-linked'
+    run('levell-consumer-link', [binary / ('rxlink' + extension), '-o', linked,
+        reader, generated, binary / 'rxfnsl', binary / 'library'])
+    for vm in ('rxbvm', 'rxtvm'):
+        executable = binary / (vm + extension)
+        if executable.exists():
+            output = run('levell-consumer-' + vm, [executable, linked, '-a', settings],
+                'retries -> 3')
+            if 'greeting -> "café"' not in output or 'note -> "say ""hello"""' not in output:
+                raise RuntimeError('Installed Level L consumer lost Unicode or quoted text')
+    grammar.write_text('options levell\nnamespace bad\nunknown declaration\n', encoding='utf-8')
+    run('levell-invalid-grammar', [binary / ('levell' + extension), grammar, '--rxas'],
+        'LL_GRAMMAR', expected_returncode=1)
+    script = work / 'modern.rxs'
+    script.write_text("say 1+2*3; say 0.1d+0.2d; say length('café')\n", encoding='utf-8')
+    output = run('rexxscript1-installed', [binary / ('rexxscript1' + extension), script])
+    if not output.endswith('7\n0.3\n4\n'):
+        raise RuntimeError('Installed modern RexxScript produced unexpected values: ' + output)
+    script.write_text("say 'MUST_NOT_RUN'; x=(2+\n", encoding='utf-8')
+    output = run('rexxscript1-invalid', [binary / ('rexxscript1' + extension), script],
+        'RS_PARSE', expected_returncode=1)
+    if 'MUST_NOT_RUN\n' in output:
+        raise RuntimeError('Modern RexxScript executed a syntactically invalid script')
+
+
 def smoke(prefix, source, preferred_vm, logs):
     work = Path(tempfile.mkdtemp(prefix='crexx-core-consumer-'))
     extension = '.exe' if os.name == 'nt' else ''
@@ -78,19 +125,27 @@ def smoke(prefix, source, preferred_vm, logs):
     started = time.monotonic()
     outcome = 'failed'
 
-    def run(label, args, marker=None, native_build=False):
+    def run(label, args, marker=None, native_build=False, expected_returncode=0,
+            stdout_path=None):
         args = list(map(str, args))
-        with (logs / (label + '.log')).open('w') as log:
+        with (logs / (label + '.log')).open('w', encoding='utf-8') as log:
             log.write('argv=' + repr(args) + '\n'); log.flush()
-            result = subprocess.run(args, cwd=work,
-                env=dict(env, CREXX_HOME=str(prefix)) if native_build else execution,
-                stdout=log, stderr=log, timeout=1800)
-        output = (logs / (label + '.log')).read_text(errors='replace')
-        records.append(dict(label=label, returncode=result.returncode))
-        if result.returncode or any(x in output for x in ('PANIC:', 'FAIL:', 'ERROR: AddressSanitizer')):
+            generated = stdout_path.open('wb') if stdout_path else None
+            try:
+                result = subprocess.run(args, cwd=work,
+                    env=dict(env, CREXX_HOME=str(prefix)) if native_build else execution,
+                    stdout=generated if generated else log, stderr=log, timeout=1800)
+            finally:
+                if generated:
+                    generated.close()
+        output = (logs / (label + '.log')).read_text(encoding='utf-8', errors='replace')
+        records.append(dict(label=label, returncode=result.returncode,
+            expected_returncode=expected_returncode))
+        if result.returncode != expected_returncode or any(x in output for x in ('PANIC:', 'FAIL:', 'ERROR: AddressSanitizer')):
             raise RuntimeError(label + ': ' + output[-2500:])
         if marker and marker not in output:
             raise RuntimeError(label + ': missing expected output ' + repr(marker))
+        return output
 
     try:
         assert not list(prefix.rglob('*llama*')), 'llama component leaked into core'
@@ -118,6 +173,8 @@ def smoke(prefix, source, preferred_vm, logs):
                 if binary.exists():
                     run(mode + '-' + vm, [binary, linked], 'hello CREXX world!')
                     assert '4711' in (logs / (mode + '-' + vm + '.log')).read_text()
+        smoke_level_l(prefix, source, work, run, extension)
+
         native = work / 'native' / 'hello'
         native.parent.mkdir()
         run('native-build', [prefix / ('bin/crexx' + extension), '--program', native,

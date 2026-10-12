@@ -77,5 +77,9 @@ foreach(_vm rxtvm rxbvm)
       COMMAND $<TARGET_FILE:${_vm}> "${CMAKE_CURRENT_BINARY_DIR}/testGenerated-linked.rxbin" -a "${_generated_spec}")
     set_tests_properties(levell_generated_${_vm} PROPERTIES
       PASS_REGULAR_EXPRESSION "generated_failures=0" TIMEOUT 300 LABELS "library;level-l")
+    crexx_label_smoke_tests(levell_generated_${_vm}
+      PREP_TARGETS testlevell_generated ${_vm})
   endif()
 endforeach()
+
+crexx_finalize_directory_qa_tiers()

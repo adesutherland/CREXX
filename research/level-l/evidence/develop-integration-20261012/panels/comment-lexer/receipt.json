@@ -1,0 +1,1273 @@
+{
+  "records": [
+    {
+      "name": "source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/input.levell"
+      ],
+      "status": 0,
+      "sha256": "d86fe92e7d620badabfc9031d4f8ffa27247eb18c283f7f625ca8ab8fbbf24a0"
+    },
+    {
+      "name": "source-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/levell_comments",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/levell_comments.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/probe-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/probe-opt"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/probe-opt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-opt-rxtvm-coherent",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/coherent.txt"
+      ],
+      "status": 0,
+      "sha256": "a82098d583f0b11c45518dac297df00f5f9f8d33ec1597018784b0718706dddc"
+    },
+    {
+      "name": "source-opt-rxbvm-coherent",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/coherent.txt"
+      ],
+      "status": 0,
+      "sha256": "a82098d583f0b11c45518dac297df00f5f9f8d33ec1597018784b0718706dddc"
+    },
+    {
+      "name": "source-opt-rxtvm-unclosed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/unclosed.txt"
+      ],
+      "status": 1,
+      "sha256": "95cd0feadb779e64db0bd8c09ea0c8cbf25df3dbd9def2e730a31fb61db59904"
+    },
+    {
+      "name": "source-opt-rxbvm-unclosed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/unclosed.txt"
+      ],
+      "status": 1,
+      "sha256": "95cd0feadb779e64db0bd8c09ea0c8cbf25df3dbd9def2e730a31fb61db59904"
+    },
+    {
+      "name": "source-opt-rxtvm-eof",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/eof.txt"
+      ],
+      "status": 0,
+      "sha256": "a5e901bcb67a86bf2424345333665461a247fe4afcc70a8a58849c42043b1f7b"
+    },
+    {
+      "name": "source-opt-rxbvm-eof",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/eof.txt"
+      ],
+      "status": 0,
+      "sha256": "a5e901bcb67a86bf2424345333665461a247fe4afcc70a8a58849c42043b1f7b"
+    },
+    {
+      "name": "source-opt-rxtvm-utf8",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/utf8.txt"
+      ],
+      "status": 1,
+      "sha256": "3af2b757228a89d9f842a68089e9f75ee2bc566f0db17a6fb6f10ecb66505d1b"
+    },
+    {
+      "name": "source-opt-rxbvm-utf8",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/utf8.txt"
+      ],
+      "status": 1,
+      "sha256": "3af2b757228a89d9f842a68089e9f75ee2bc566f0db17a6fb6f10ecb66505d1b"
+    },
+    {
+      "name": "source-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/probe-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/probe-noopt"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/probe-noopt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "source-noopt-rxtvm-coherent",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/coherent.txt"
+      ],
+      "status": 0,
+      "sha256": "a82098d583f0b11c45518dac297df00f5f9f8d33ec1597018784b0718706dddc"
+    },
+    {
+      "name": "source-noopt-rxbvm-coherent",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/coherent.txt"
+      ],
+      "status": 0,
+      "sha256": "a82098d583f0b11c45518dac297df00f5f9f8d33ec1597018784b0718706dddc"
+    },
+    {
+      "name": "source-noopt-rxtvm-unclosed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/unclosed.txt"
+      ],
+      "status": 1,
+      "sha256": "95cd0feadb779e64db0bd8c09ea0c8cbf25df3dbd9def2e730a31fb61db59904"
+    },
+    {
+      "name": "source-noopt-rxbvm-unclosed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/unclosed.txt"
+      ],
+      "status": 1,
+      "sha256": "95cd0feadb779e64db0bd8c09ea0c8cbf25df3dbd9def2e730a31fb61db59904"
+    },
+    {
+      "name": "source-noopt-rxtvm-eof",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/eof.txt"
+      ],
+      "status": 0,
+      "sha256": "a5e901bcb67a86bf2424345333665461a247fe4afcc70a8a58849c42043b1f7b"
+    },
+    {
+      "name": "source-noopt-rxbvm-eof",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/eof.txt"
+      ],
+      "status": 0,
+      "sha256": "a5e901bcb67a86bf2424345333665461a247fe4afcc70a8a58849c42043b1f7b"
+    },
+    {
+      "name": "source-noopt-rxtvm-utf8",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/utf8.txt"
+      ],
+      "status": 1,
+      "sha256": "3af2b757228a89d9f842a68089e9f75ee2bc566f0db17a6fb6f10ecb66505d1b"
+    },
+    {
+      "name": "source-noopt-rxbvm-utf8",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/source/utf8.txt"
+      ],
+      "status": 1,
+      "sha256": "3af2b757228a89d9f842a68089e9f75ee2bc566f0db17a6fb6f10ecb66505d1b"
+    },
+    {
+      "name": "rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "803f2f5eeab45704c0abecbc6f08333b4890e5e53f3c6d84ac3073fb8a46122b"
+    },
+    {
+      "name": "rxas-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rxas-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/probe-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rxas-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/probe-opt"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rxas-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/probe-opt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rxas-opt-rxtvm-coherent",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/coherent.txt"
+      ],
+      "status": 0,
+      "sha256": "a82098d583f0b11c45518dac297df00f5f9f8d33ec1597018784b0718706dddc"
+    },
+    {
+      "name": "rxas-opt-rxbvm-coherent",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/coherent.txt"
+      ],
+      "status": 0,
+      "sha256": "a82098d583f0b11c45518dac297df00f5f9f8d33ec1597018784b0718706dddc"
+    },
+    {
+      "name": "rxas-opt-rxtvm-unclosed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/unclosed.txt"
+      ],
+      "status": 1,
+      "sha256": "95cd0feadb779e64db0bd8c09ea0c8cbf25df3dbd9def2e730a31fb61db59904"
+    },
+    {
+      "name": "rxas-opt-rxbvm-unclosed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/unclosed.txt"
+      ],
+      "status": 1,
+      "sha256": "95cd0feadb779e64db0bd8c09ea0c8cbf25df3dbd9def2e730a31fb61db59904"
+    },
+    {
+      "name": "rxas-opt-rxtvm-eof",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/eof.txt"
+      ],
+      "status": 0,
+      "sha256": "a5e901bcb67a86bf2424345333665461a247fe4afcc70a8a58849c42043b1f7b"
+    },
+    {
+      "name": "rxas-opt-rxbvm-eof",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/eof.txt"
+      ],
+      "status": 0,
+      "sha256": "a5e901bcb67a86bf2424345333665461a247fe4afcc70a8a58849c42043b1f7b"
+    },
+    {
+      "name": "rxas-opt-rxtvm-utf8",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/utf8.txt"
+      ],
+      "status": 1,
+      "sha256": "3af2b757228a89d9f842a68089e9f75ee2bc566f0db17a6fb6f10ecb66505d1b"
+    },
+    {
+      "name": "rxas-opt-rxbvm-utf8",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/utf8.txt"
+      ],
+      "status": 1,
+      "sha256": "3af2b757228a89d9f842a68089e9f75ee2bc566f0db17a6fb6f10ecb66505d1b"
+    },
+    {
+      "name": "rxas-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/probe-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rxas-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/probe-noopt"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rxas-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/probe-noopt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rxas-noopt-rxtvm-coherent",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/coherent.txt"
+      ],
+      "status": 0,
+      "sha256": "a82098d583f0b11c45518dac297df00f5f9f8d33ec1597018784b0718706dddc"
+    },
+    {
+      "name": "rxas-noopt-rxbvm-coherent",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/coherent.txt"
+      ],
+      "status": 0,
+      "sha256": "a82098d583f0b11c45518dac297df00f5f9f8d33ec1597018784b0718706dddc"
+    },
+    {
+      "name": "rxas-noopt-rxtvm-unclosed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/unclosed.txt"
+      ],
+      "status": 1,
+      "sha256": "95cd0feadb779e64db0bd8c09ea0c8cbf25df3dbd9def2e730a31fb61db59904"
+    },
+    {
+      "name": "rxas-noopt-rxbvm-unclosed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/unclosed.txt"
+      ],
+      "status": 1,
+      "sha256": "95cd0feadb779e64db0bd8c09ea0c8cbf25df3dbd9def2e730a31fb61db59904"
+    },
+    {
+      "name": "rxas-noopt-rxtvm-eof",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/eof.txt"
+      ],
+      "status": 0,
+      "sha256": "a5e901bcb67a86bf2424345333665461a247fe4afcc70a8a58849c42043b1f7b"
+    },
+    {
+      "name": "rxas-noopt-rxbvm-eof",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/eof.txt"
+      ],
+      "status": 0,
+      "sha256": "a5e901bcb67a86bf2424345333665461a247fe4afcc70a8a58849c42043b1f7b"
+    },
+    {
+      "name": "rxas-noopt-rxtvm-utf8",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/utf8.txt"
+      ],
+      "status": 1,
+      "sha256": "3af2b757228a89d9f842a68089e9f75ee2bc566f0db17a6fb6f10ecb66505d1b"
+    },
+    {
+      "name": "rxas-noopt-rxbvm-utf8",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/rxas/utf8.txt"
+      ],
+      "status": 1,
+      "sha256": "3af2b757228a89d9f842a68089e9f75ee2bc566f0db17a6fb6f10ecb66505d1b"
+    },
+    {
+      "name": "numeric-source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/input.levell"
+      ],
+      "status": 0,
+      "sha256": "660662e0b94b1cd1256a48c254c3fa566f2500b94c6506541ce9f3cf5b77ecc5"
+    },
+    {
+      "name": "numeric-source-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/levell_comments",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/levell_comments.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "numeric-source-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "numeric-source-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "numeric-source-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "numeric-source-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "numeric-source-rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/input.txt"
+      ],
+      "status": 0,
+      "sha256": "a70d17b483b3519777fe3ef82191a054aaaf845c46bd3e6b75cade0651b9af9d"
+    },
+    {
+      "name": "numeric-source-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-source/input.txt"
+      ],
+      "status": 0,
+      "sha256": "a70d17b483b3519777fe3ef82191a054aaaf845c46bd3e6b75cade0651b9af9d"
+    },
+    {
+      "name": "numeric-rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "251c7a042803de849d3595986ca81b6e72ce69fa157d16d57526345cbef16bf1"
+    },
+    {
+      "name": "numeric-rxas-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "numeric-rxas-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "numeric-rxas-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "numeric-rxas-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "numeric-rxas-rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/input.txt"
+      ],
+      "status": 0,
+      "sha256": "a70d17b483b3519777fe3ef82191a054aaaf845c46bd3e6b75cade0651b9af9d"
+    },
+    {
+      "name": "numeric-rxas-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/numeric-rxas/input.txt"
+      ],
+      "status": 0,
+      "sha256": "a70d17b483b3519777fe3ef82191a054aaaf845c46bd3e6b75cade0651b9af9d"
+    },
+    {
+      "name": "unicode-source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/input.levell"
+      ],
+      "status": 0,
+      "sha256": "65ebe38596d4cd587e07598fe540be974ecdda33a6f3e1d9fe2070d0ddc85b89"
+    },
+    {
+      "name": "unicode-source-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/levell_comments",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/levell_comments.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unicode-source-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unicode-source-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unicode-source-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unicode-source-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unicode-source-rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "unicode-source-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-source/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "unicode-rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "785ce0e517a042653fa5b4068a4e96af88eeb3ba1976e4f3be561f223c6e444d"
+    },
+    {
+      "name": "unicode-rxas-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unicode-rxas-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unicode-rxas-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unicode-rxas-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unicode-rxas-rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "unicode-rxas-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/unicode-rxas/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "nul-source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/input.levell"
+      ],
+      "status": 0,
+      "sha256": "295b63b657f8ac95e5b226e131e277a232c2f1266b99891f3e4672984e56a399"
+    },
+    {
+      "name": "nul-source-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/levell_comments",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/levell_comments.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-source-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-source-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-source-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-source-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-source-rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "nul-source-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-source/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "nul-rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "80ef8919851baa7a9859695dbf7fc985438879c6ed16f1d16ccf8037338ebaca"
+    },
+    {
+      "name": "nul-rxas-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-rxas-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-rxas-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-rxas-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-rxas-rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "nul-rxas-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/nul-rxas/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "control-source-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/input.levell"
+      ],
+      "status": 0,
+      "sha256": "664a74f22891c1e468d1e483584276283b8e3164d87f1db7435031ba16016763"
+    },
+    {
+      "name": "control-source-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/levell_comments",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/levell_comments.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "control-source-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "control-source-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "control-source-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "control-source-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "control-source-rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "control-source-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-source/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "control-rxas-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "cf6105a6257e7960c35bf103dc87263291218d044f5c8c1bc4ce3e18fd881c3d"
+    },
+    {
+      "name": "control-rxas-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/levell_comments"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "control-rxas-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/probe",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/tests_functional/comment-lexer-probe.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "control-rxas-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/probe"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "control-rxas-link",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/linked",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/probe.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/levell_comments.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "control-rxas-rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    },
+    {
+      "name": "control-rxas-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/comment-lexer/control-rxas/input.txt"
+      ],
+      "status": 0,
+      "sha256": "7428d5a47b7ee1214ce20024af63a547cb950fd46e540832164795354ddfd214"
+    }
+  ],
+  "runtime_cases": 48,
+  "products": {
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/levell": "5301ec02aac743e794b9d00f224b1757e969275c58a89e7238a8f96b95fc171c",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxc": "f178b5d0c3d1e4242e210cc53b629952ed9777f8c87c9d6d4bc05367e234f3f4",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxas": "342b08e50700d6e54b850b368f6fe120f453b5e61cbc24efcae9368aaa3c3393",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxlink": "1606ac66593ae8e50b0d7c12fcabf77b9d1ce6dd00012bd4d22635bd72cb44b2",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxtvm": "31c3f64c5f99892b9765538b13624b98dd76ea6e583751780b1092d111001b4d",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxbvm": "4b1a15e2049ddd75166a75f417ef18dfbe4735be3c53b015bfc43772e6db1a4e",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/library.rxbin": "c109db035e9c0b9578a9bafb5d85b353de5b70c9cc4c52ada475df84353a0906",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/bin/rxfnsl.rxbin": "393c19d2cb1f16a26d28c24d10495eec566a3752b1b58b81a11877c76b1a58e5"
+  }
+}

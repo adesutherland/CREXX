@@ -1,0 +1,32 @@
+[
+  {
+    "name": "install-prep",
+    "argv": [
+      "cmake",
+      "--build",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+      "--target",
+      "stage-optional",
+      "sqlite",
+      "sqlite_static",
+      "vector",
+      "vector_static",
+      "--parallel",
+      "10"
+    ],
+    "status": 0,
+    "seconds": 4.17
+  },
+  {
+    "name": "install",
+    "argv": [
+      "cmake",
+      "--install",
+      "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration",
+      "--prefix",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-levell-installed-avtkahvy"
+    ],
+    "status": 0,
+    "seconds": 0.07
+  }
+]

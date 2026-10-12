@@ -71,8 +71,8 @@ crexx_add_build_stage(stage-g-library
         OPTIONAL_TARGETS ui_gtk)
 
 crexx_add_build_stage(stage-l-libraries
-        DESCRIPTION "L Level L libraries"
-        REQUIRED_TARGETS rxfnsl)
+        DESCRIPTION "L Level L language tools and libraries"
+        REQUIRED_TARGETS rxfnsl levell_cli)
 
 crexx_add_build_stage(stage-product
         DESCRIPTION "Assembled cREXX product"
@@ -83,6 +83,7 @@ crexx_add_build_stage(stage-product
             stage-l-libraries
             crexx
             rexxscript_cli
+            rexxscript1_cli
             rxvme
             rxbvme
             rxvml

@@ -1,0 +1,4 @@
+argv=['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-levell-installed-avtkahvy/bin/levell', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-dceqkhgb/settings.levell', '--rxas']
+/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-dceqkhgb/settings.levell: LL_GRAMMAR: LL_SYNTAX at line 3, column 1 (byte 29): unexpected 'unknown'; expected declarationname
+  unknown declaration
+  ^

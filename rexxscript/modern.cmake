@@ -107,6 +107,7 @@ configure_linker_for_static_lib(rexxscript1_cli fs)
 add_dependencies(rexxscript1_cli rxvme rxvml rxpa avl_tree platform)
 
 # Prebuilt functional program: CTest launches one VM, never a nested build.
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 add_custom_command(OUTPUT "${_rs1_root}/testRexxScript1-linked.rxbin"
   COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_rs1_root}/imports;${_rs1_root}/driver-imports"
     -o testRexxScript1 "${CMAKE_CURRENT_SOURCE_DIR}/tests_functional/testRexxScript1.crexx"
@@ -124,5 +125,8 @@ foreach(_vm rxtvm rxbvm)
     set_tests_properties(rexxscript1_${_vm} PROPERTIES
       PASS_REGULAR_EXPRESSION "rexxscript1_failures=0" TIMEOUT 600
       RESOURCE_LOCK rexxscript1_functional LABELS "rexxscript;level-l")
+    crexx_label_smoke_tests(rexxscript1_${_vm}
+      PREP_TARGETS testrexxscript1 ${_vm})
   endif()
 endforeach()
+crexx_finalize_directory_qa_tiers()

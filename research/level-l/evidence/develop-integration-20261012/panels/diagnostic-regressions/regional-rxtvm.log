@@ -1,0 +1,5 @@
+STATUS|1|BYTE|13
+MESSAGE|unexpected '*'; embedded expression opened at byte 10: unexpected input at byte 13; expected atom, prefix operator or opening delimiter
+LL_TARGET at line 1, column 14 (byte 13): unexpected '*'; embedded expression opened at byte 10: unexpected input at byte 13; expected atom, prefix operator or opening delimiter
+  workers = [2+*3]
+               ^

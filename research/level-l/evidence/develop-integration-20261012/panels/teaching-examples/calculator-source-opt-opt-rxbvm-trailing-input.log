@@ -1,0 +1,3 @@
+/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/develop-integration-20261012/teaching-examples/calculator-source-opt/trailing-input.txt: CALC_PARSE at line 1, column 3 (byte 2): unexpected '3'; unexpected input at byte 2; expected operator or end of expression
+  2 3
+    ^
