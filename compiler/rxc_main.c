@@ -38,6 +38,12 @@
 int rxcmain(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
+#if defined(CREXX_MAINFRAME_ADDRESS)
+    /* The native compiler links declaration metadata; its startup does not
+     * run constructors. Publish it before compiler import discovery. */
+    extern void crexx_mainframe_address_init(void);
+    crexx_mainframe_address_init();
+#endif
 #if defined(CREXX_MAINFRAME_ELF)
     mainframe_set_text_conversion(0);
 #endif

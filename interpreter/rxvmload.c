@@ -380,6 +380,15 @@ static int rxinimod_common(rxvm_context *context,
                            rxvm_runtime *runtime,
                            unsigned char owns_runtime) {
     if (!context || !runtime) return 0;
+#if defined(CREXX_VM_CLASSIC_PROVIDERS) && defined(CREXX_VM_SINGLE_THREADED)
+    { extern void crexx_cstream_init(void); extern void crexx_mainframe_fs_init(void);
+      crexx_cstream_init(); crexx_mainframe_fs_init(); }
+#endif
+#if defined(CREXX_MAINFRAME_ADDRESS) && defined(CREXX_VM_SINGLE_THREADED)
+    /* Native startup lacks C constructors. Both CLI and RXVML use this entry;
+       only the immutable RXPA catalogue is process-wide, sessions remain per VM. */
+    { extern void crexx_mainframe_address_init(void); crexx_mainframe_address_init(); }
+#endif
     context->worker.runtime = 0;
     context->worker.memory_worker = 0;
     context->worker.owner_thread_token = 0;
