@@ -1,0 +1,9 @@
+options levell
+namespace manual_projection
+number: token
+scan: lexer
+  digit: charset = '0' to '9'
+  number.lex: rule = digit+ then emit number
+parse: parser start value
+  value: rule = number
+keep.value: tree rule value kind 10 arity 0

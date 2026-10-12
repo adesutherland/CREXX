@@ -1,5 +1,121 @@
 # Level L language tooling research — 10 October 2026
 
+### Develop publication — approved 12 October 2026
+
+**Vision:** publish the implemented Level L toolkit, modern RexxScript consumer
+and reviewed manual on `develop`. A clean product build must deliver both new
+commands, normal QA must prepare their generated inputs, and an installed
+consumer must generate and execute a parser without using build-tree tools.
+This integrates the supported checkpoint; the wider LANG/research obligations
+below remain open. Adrian explicitly authorizes integration and publication
+after the following gates pass, preserving unrelated checkouts and work.
+
+**Acceptance criteria:**
+
+1. **PUB-AC01 — Product closure.** `stage-product` builds `levell`,
+   `rexxscript1` and their libraries from a fresh build directory. Inspect the
+   generated dependency graph and retain the successful product build log.
+2. **PUB-AC02 — QA closure.** Standard QA preparation builds the generated
+   Level L and modern RexxScript test images and concrete VM prerequisites.
+   Existing tests execute in the smoke/correctness tiers on the combined tree.
+3. **PUB-AC03 — Integration correctness.** Commit the reviewed manual/examples,
+   integrate current `develop`, and pass product smoke plus the affected Level L,
+   legacy/modern RexxScript, compiler-exit, RXPP and Unicode correctness tests.
+   Reuse unchanged deeper backend evidence with explicit input boundaries.
+4. **PUB-AC04 — Installed tools.** In an isolated install prefix, generate a
+   grammar, compile/assemble/link its consumer and run it on available concrete
+   VMs. Run modern RexxScript with Unicode, expressions and BIFs; check syntax
+   failure prevents execution. Retain permanent package smoke coverage.
+5. **PUB-AC05 — Reviewable publication.** Include receipts and current plan in
+   the substantive publication, push the qualified descendant to `develop`
+   without force, and verify the remote commit. Normal automatic publication
+   CI follows; no new release tag or full-programme completion is claimed.
+
+**Steps:**
+
+1. **PUB-STEP01 (PUB-AC01/02/04):** repair stage and QA dependencies; add
+   installed-consumer checks. **In progress.** No language-design change.
+2. **PUB-STEP02 (PUB-AC03):** commit the manual and merge current `develop`
+   into the authorized `levell` checkout. **Open.** Depends on STEP01.
+3. **PUB-STEP03 (PUB-AC01–04):** fresh product/QA build, relevant correctness
+   runs and installed checks; fix reproduced integration defects. **Open.**
+4. **PUB-STEP04 (PUB-AC05):** record exact inputs/results, commit and publish
+   only after STEP03 passes; verify remote state. **Open.**
+
+Readiness inspection found missing product dependencies for both new commands
+and missing QA preparation dependencies for their test images. The committed
+tips merge cleanly; current `develop` is `a415090dc379c79ed62ef31298d183d93be7cc91`.
+The latest registered sanitizer findings are closed. No new sanitizer finding
+has been observed in this work; ordinary publication/overnight policy applies.
+
+### User-manual editorial review — 12 October 2026
+
+**Vision:** the Level L user guide is the enduring first reference for a
+programmer learning language tools. It teaches the source-to-result process,
+provides runnable examples, and states the implemented syntax and API in clear
+English. History, qualification receipts, decisions and future work belong in
+the existing planning and implementation documents. This is a documentation
+review of the approved language, not a change to its semantics or wider scope.
+
+**Acceptance criteria:**
+
+1. **DOC-AC01 — Learning sequence.** Explain lexer, token, grammar, parser and
+   tree before relying on those terms; put the first runnable example before
+   advanced backend/composition material. Verify by reading the whole guide.
+2. **DOC-AC02 — Accurate reference.** Check declarations, defaults, tree/API
+   contracts, all request outcomes and resource settings against owning source.
+   Retain practical restrictions with the relevant operation, and explain what
+   the reader should do. Check links and execute changed tutorial commands.
+3. **DOC-AC03 — Enduring prose.** Remove dated delivery/QA/roadmap statements,
+   repetitive qualification provisos and unexplained specialist vocabulary.
+   Preserve needed usage constraints without making claims beyond the code.
+4. **DOC-AC04 — Reviewable closeout.** Record corrected documentation errors,
+   validation and remaining product scope here. Production code and retained
+   implementation qualification remain unchanged unless a separately justified
+   repair becomes necessary.
+
+**Steps:**
+
+1. **DOC-STEP01 (DOC-AC01–03):** audit the current guide and owning code, then
+   arrange introduction, tutorial, progressive examples and reference. **Verified.**
+2. **DOC-STEP02 (DOC-AC01–03):** rewrite the manual and fill reference gaps. **Verified.**
+   Adrian additionally asks for practical first-use cases for each backend.
+   Include a runnable PEG configuration-value example, using existing syntax,
+   with priority, reversed-priority and CFG controls in the focused teaching
+   panel. This changes examples/tests, not the Level L language or runtime.
+3. **DOC-STEP03 (DOC-AC02–04):** check internal links, current source contracts
+   and executable instructions; record the results and present the revised guide.
+   **Verified** by [the manual-review receipt](evidence/manual-review-20261012/README.md).
+
+**DOC-AC01–04 verified for this editorial increment.** The guide now leads from
+tokens/grammar/trees to a complete scalar-UTF-8 settings tutorial, then grows
+that example and supplies a separate declaration/API reference and glossary.
+Practical first projects explain DFA, LL(1), LR(1), PEG, Pratt and Earley. The
+new PEG configuration-value lesson demonstrates deliberate priority, its
+reversal, and the corresponding CFG ambiguity. The manual contains no dated
+qualification diary, acceptance ledger, roadmap or repeated proof caveats.
+Needed restrictions remain beside the affected operation.
+
+Correctness review added the missing strict-request status 5, the separate
+recovery statuses/API, token-boundary forest coordinates, runtime name-lookup
+case behavior, exact charset subtraction precedence, and the two-token meaning
+of `unless next`. It documents the basic example's actual multiline strings,
+Pratt message restrictions, projection child counts and both scanning uses of
+`scan.work`. Adjacent tool notes now refer to the complete current resource
+reference instead of stale NFA/DFA defaults and a six-setting policy.
+
+Validation: 80 guide links resolve; the complete printed specification matches
+the checked-in basic example; all 18 printed defaults match `levell --limits`.
+Three copied tutorial command sequences pass, with matching output on both VMs.
+The projection example passes both VMs. The new focused `--part priorities`
+panel passes 72 runtime observations and two expected LL/LR build refusals
+through source/RXAS and optimized/unoptimized generated consumers, on both VMs.
+The product `levell_cli` build passes. Production generator/runtime code is
+unchanged; earlier implementation evidence remains applicable. The documentation/example update has been reviewed and approved for the
+`develop` integration recorded above.
+
+The complete LANG and research acceptance criteria below remain unchanged.
+
 **Overall status: expanded programme approved by Adrian on 10 October 2026;
 implementation in progress.** The
 initial pilot below is complete. The new strategy, mathematical work and

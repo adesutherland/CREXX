@@ -58,10 +58,13 @@ self-hosted through L0/L1/L2; see [the bootstrap guide](../doc/bootstrap.md).
 preserves the former PoC byte matching with UTF-8 validation. `input bytes`
 selects unchecked raw bytes. Scalar ranges, subtraction and supplementary
 codepoints are lowered to the existing byte DFA without Level G dependencies.
-Named lexical errors and lexer-only definitions are supported. Property classes
-and automatic Unicode identifier policies are not implied.
+Named lexical errors and lexer-only definitions are supported. Unicode 17.0.0
+property charsets are available under `input utf8`; identifier rules choose
+which sets to use. Recognition preserves original spelling.
 
-`comments nested` selects a source-preserving counter stage outside quotes.
+`comments line`, `comments block` and `comments nested` use the shared
+source-preserving comment processor. Optional `outside` patterns customize
+string protection, and `newlines keep` retains block line endings for the lexer.
 `tokenstage` selects finite context and bounded lookahead; first matching
 declaration wins. Consumer-specific transformations remain explicit.
 
@@ -74,19 +77,17 @@ selecting a CFG backend cannot silently change their semantics. Construction
 exhaustion reports a limit, not a
 proof that the language cannot be parsed.
 
-Current explicit construction limits include 512 common clauses, 4,096 NFA
-states, 2,048 generated DFA states, 4,096 productions, a default 8,192 LR states, 16,384 items per
-LR state and a 2,048-symbol maximum production. Limits are separate from parser
-input/action fuel. See the negative specifications in `../tests_functional/grammars`.
+Run `levell --limits` for construction and runtime allowances, defaults and
+representation ceilings. The [user guide's resource reference](../doc/user-guide.md#resource-limits)
+explains all eighteen settings. Negative specifications are in
+`../tests_functional/grammars`.
 
-Optional host budgets do not belong in the grammar. The initial common policy
-connects `lr.states`, `source.bytes`, `scan.work`, `parse.work`, `earley.cells`
-and `tree.entries` to the relevant build/request operations. For example,
+Optional host budgets do not belong in the grammar. For example,
 `levell file.levell --rxas --limit lr.states=12000` changes the build budget;
 applications pass an optional `lllimits..policy` to their parse request. Unknown
-keys fail explicitly. Existing analysis/depth/provider limits have not all
-migrated yet. See the user guide's limit audit for the distinction between
-resource policy, encoded representation and backend capability.
+keys fail explicitly. Recursive depth and token/table representation constraints
+are distinct from configurable work allowances; increasing a budget does not
+change backend capabilities.
 
 
 ## Packed artifacts and ownership

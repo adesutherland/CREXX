@@ -15,7 +15,7 @@ from pathlib import Path
 p = argparse.ArgumentParser()
 p.add_argument('build', type=Path)
 p.add_argument('output', type=Path)
-p.add_argument('--part', choices=['all', 'calculator', 'backends'], default='all')
+p.add_argument('--part', choices=['all', 'calculator', 'backends', 'priorities'], default='all')
 a = p.parse_args()
 root = Path(__file__).resolve().parents[3]
 binary, out = a.build.resolve() / 'bin', a.output.resolve()
@@ -216,11 +216,44 @@ if a.part in ['all', 'backends']:
     generate('prefix-refuse-ll1', select(prefix, 'll1'), 'levell_lesson',
              refusal=['LL_BACKEND_ADMISSION:', 'll1', 'alternatives compete'])
 
+if a.part in ['all', 'priorities']:
+    values = (lessons / 'ordered-values.levell').read_text()
+    cases = [
+        ('true', 'true', 0, ['NODE|boolean|0|4'], ['NODE|bareword|']),
+        ('false', 'false', 0, ['NODE|boolean|0|5'], ['NODE|bareword|']),
+        ('word', 'blue', 0, ['NODE|bareword|0|4'], ['NODE|boolean|']),
+        ('longer-word', 'trueish', 0, ['NODE|bareword|0|7'], ['NODE|boolean|']),
+        ('quoted', '"true"', 0, ['NODE|quoted|0|6'], ['NODE|boolean|', 'NODE|bareword|']),
+        ('trailing', 'true blue', 1, ['LESSON_PARSE', "unexpected 'blue'"], ['NODE|']),
+    ]
+    reversed_values = values.replace('boolean | bareword | quoted', 'bareword | boolean | quoted')
+    cfg = values.replace('semantics ordered ', '').replace('backend packrat', 'backend earley')
+    variants = [
+        ('priority-values', values, cases),
+        ('priority-reversed', reversed_values, [
+            ('true', 'true', 0, ['NODE|bareword|0|4'], ['NODE|boolean|']),
+        ]),
+        ('priority-earley', cfg, [
+            ('true', 'true', 5, ['STATUS|5', 'DERIVATIONS_CAPPED_AT_2|2', 'FOREST_VALID|1'], ['NODE|']),
+            ('word', 'blue', 0, ['NODE|bareword|0|4'], ['NODE|boolean|']),
+        ]),
+    ]
+    for variant, text, inputs in variants:
+        for route in ['rxas', 'source']:
+            for mode in ['opt', 'noopt']:
+                key = variant + '-' + route + '-' + mode
+                work = generate(key, text, 'levell_lesson', route, language_mode=mode)
+                image = consumer(key, work, 'levell_lesson', lessons / 'inspect.crexx', mode)
+                observe(key, work, image, mode, inputs)
+    for backend, diagnostic in [('ll1', 'LL_BACKEND_ADMISSION:'), ('lr1', 'LL_LR_ADMISSION:')]:
+        generate('priority-refuse-' + backend, cfg.replace('backend earley', 'backend ' + backend),
+                 'levell_lesson', refusal=[diagnostic])
+
 sources = list(calculator.glob('*')) + list(lessons.glob('*')) + [Path(__file__).resolve()]
 receipt = dict(commands=commands, observations=observations,
     source_sha256={str(path.relative_to(root)): identity(path) for path in sources if path.is_file()},
     product_sha256={str(path): identity(path) for path in [binary / (name + '.rxbin')
                    for name in ['rxfnsl', 'library']]},
-    scope='Existing Level L syntax; native both-VM optimized/unoptimized consumers; no general forest resolver or generalized-comment implementation claimed.')
+    scope='Level L teaching examples; selected part=' + a.part + '; source and product identities identify the exercised inputs.')
 (out / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
 print(f'observations={len(observations)}; commands={len(commands)}; failures=0')

@@ -1,0 +1,79 @@
+{
+  "links": 80,
+  "broken": [],
+  "code_fences": 61,
+  "full_specification_matches_example": true,
+  "limit_defaults_checked": 18,
+  "runtime_checks": [
+    {
+      "name": "settings-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/examples/settings/settings-reader-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/settings.txt"
+      ],
+      "status": 0,
+      "stdout": "retries -> 3\ngreeting -> \"caf\u00e9\"\nnote -> \"say \"\"hello\"\"\"\n",
+      "stderr": ""
+    },
+    {
+      "name": "calculator-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/examples/calculator/calculator-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/example.calc"
+      ],
+      "status": 0,
+      "stdout": "RESULT|11\n",
+      "stderr": ""
+    },
+    {
+      "name": "backend-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/examples/backend/inspect-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/examples/backend/input.txt"
+      ],
+      "status": 0,
+      "stdout": "STATUS|0\nNODE|value|0|4\nNODE|boolean|0|4\nNODE|trueword|0|4\n",
+      "stderr": ""
+    },
+    {
+      "name": "limits",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "--limits"
+      ],
+      "status": 0,
+      "stdout": "lr.states=8192 (ceiling 999998)\nsource.bytes=1048576 (ceiling 2147483647)\nscan.work=10000000 (ceiling 2147483647)\nparse.work=1000000 (ceiling 2147483647)\nearley.cells=8000000 (ceiling 2147483647)\ntree.entries=1000000 (ceiling 2147483647)\ngrammar.clauses=512 (ceiling 2147483647)\nspec.tokens=8192 (ceiling 2147483647)\ncfg.productions=4096 (ceiling 2147483647)\nnfa.states=65536 (ceiling 2147483647)\ndfa.states=4096 (ceiling 2147483647)\nlr.items=16384 (ceiling 134217726)\nlr.rhs=2048 (ceiling 4194303)\nrecovery.errors=16 (ceiling 2147483647)\nrecovery.declarations=512 (ceiling 2147483647)\nstage.rules=128 (ceiling 2147483647)\ngrammar.repeat=256 (ceiling 2147483647)\nlexer.clauses=65536 (ceiling 2147483647)\n",
+      "stderr": ""
+    },
+    {
+      "name": "settings-multiline",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/examples/settings/settings-reader-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/multiline.settings"
+      ],
+      "status": 0,
+      "stdout": "note -> \"first\nsecond\"\n",
+      "stderr": ""
+    },
+    {
+      "name": "settings-missing-value",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/examples/settings/settings-reader-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/missing-value.settings"
+      ],
+      "status": 1,
+      "stdout": "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/missing-value.settings: SETTINGS_PARSE at line 1, column 8 (byte 7): unexpected end of input; expected number, string\n  first =\n         ^\n",
+      "stderr": ""
+    }
+  ]
+}

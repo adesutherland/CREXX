@@ -1,0 +1,2216 @@
+{
+  "commands": [
+    {
+      "name": "priority-values-rxas-opt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "log_sha256": "a78f987c07f2e920bb08553ffc215010a912a293b68e342ce452dde0706c12f8"
+    },
+    {
+      "name": "priority-values-rxas-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-rxas-opt-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/consumer-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-rxas-opt-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/consumer-opt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-rxas-opt-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/consumer-opt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "6b88258e9900501e750a8206f6ef35356c81ab2d851946fbad614d6f7b7cf66e"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "6b88258e9900501e750a8206f6ef35356c81ab2d851946fbad614d6f7b7cf66e"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxtvm-false",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/false.txt"
+      ],
+      "status": 0,
+      "log_sha256": "bf52ae372b88b51b5c409ae9ba0e6f3a3b43286016c9c180ce648a1269c4c994"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxbvm-false",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/false.txt"
+      ],
+      "status": 0,
+      "log_sha256": "bf52ae372b88b51b5c409ae9ba0e6f3a3b43286016c9c180ce648a1269c4c994"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxtvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxbvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxtvm-longer-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/longer-word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "7e20c89738f3e2789faca6f005d17a3ca972936f9cb88cd6024b81f5ccc2b001"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxbvm-longer-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/longer-word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "7e20c89738f3e2789faca6f005d17a3ca972936f9cb88cd6024b81f5ccc2b001"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxtvm-quoted",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/quoted.txt"
+      ],
+      "status": 0,
+      "log_sha256": "a37cbe6870f8b7d4d200010bdc5dbd09e223855cf1bb4962a289ad45966c534c"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxbvm-quoted",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/quoted.txt"
+      ],
+      "status": 0,
+      "log_sha256": "a37cbe6870f8b7d4d200010bdc5dbd09e223855cf1bb4962a289ad45966c534c"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxtvm-trailing",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/trailing.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a857a70f7c7d7945d56f9e621760bf948072be52a666843e64e5273e32b87cfc"
+    },
+    {
+      "name": "priority-values-rxas-opt-opt-rxbvm-trailing",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-opt/trailing.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a857a70f7c7d7945d56f9e621760bf948072be52a666843e64e5273e32b87cfc"
+    },
+    {
+      "name": "priority-values-rxas-noopt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "log_sha256": "a78f987c07f2e920bb08553ffc215010a912a293b68e342ce452dde0706c12f8"
+    },
+    {
+      "name": "priority-values-rxas-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-rxas-noopt-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/consumer-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-rxas-noopt-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/consumer-noopt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-rxas-noopt-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/consumer-noopt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "6b88258e9900501e750a8206f6ef35356c81ab2d851946fbad614d6f7b7cf66e"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "6b88258e9900501e750a8206f6ef35356c81ab2d851946fbad614d6f7b7cf66e"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxtvm-false",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/false.txt"
+      ],
+      "status": 0,
+      "log_sha256": "bf52ae372b88b51b5c409ae9ba0e6f3a3b43286016c9c180ce648a1269c4c994"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxbvm-false",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/false.txt"
+      ],
+      "status": 0,
+      "log_sha256": "bf52ae372b88b51b5c409ae9ba0e6f3a3b43286016c9c180ce648a1269c4c994"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxtvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxbvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxtvm-longer-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/longer-word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "7e20c89738f3e2789faca6f005d17a3ca972936f9cb88cd6024b81f5ccc2b001"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxbvm-longer-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/longer-word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "7e20c89738f3e2789faca6f005d17a3ca972936f9cb88cd6024b81f5ccc2b001"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxtvm-quoted",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/quoted.txt"
+      ],
+      "status": 0,
+      "log_sha256": "a37cbe6870f8b7d4d200010bdc5dbd09e223855cf1bb4962a289ad45966c534c"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxbvm-quoted",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/quoted.txt"
+      ],
+      "status": 0,
+      "log_sha256": "a37cbe6870f8b7d4d200010bdc5dbd09e223855cf1bb4962a289ad45966c534c"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxtvm-trailing",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/trailing.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a857a70f7c7d7945d56f9e621760bf948072be52a666843e64e5273e32b87cfc"
+    },
+    {
+      "name": "priority-values-rxas-noopt-noopt-rxbvm-trailing",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-rxas-noopt/trailing.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a857a70f7c7d7945d56f9e621760bf948072be52a666843e64e5273e32b87cfc"
+    },
+    {
+      "name": "priority-values-source-opt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/input.levell"
+      ],
+      "status": 0,
+      "log_sha256": "b513eafd05845f83121da6dd6d7fceca29336c917b9791d449a995166e87d978"
+    },
+    {
+      "name": "priority-values-source-opt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/levell_lesson",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/levell_lesson.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-opt-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/consumer-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-opt-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/consumer-opt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-opt-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/consumer-opt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "6b88258e9900501e750a8206f6ef35356c81ab2d851946fbad614d6f7b7cf66e"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "6b88258e9900501e750a8206f6ef35356c81ab2d851946fbad614d6f7b7cf66e"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxtvm-false",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/false.txt"
+      ],
+      "status": 0,
+      "log_sha256": "bf52ae372b88b51b5c409ae9ba0e6f3a3b43286016c9c180ce648a1269c4c994"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxbvm-false",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/false.txt"
+      ],
+      "status": 0,
+      "log_sha256": "bf52ae372b88b51b5c409ae9ba0e6f3a3b43286016c9c180ce648a1269c4c994"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxtvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxbvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxtvm-longer-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/longer-word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "7e20c89738f3e2789faca6f005d17a3ca972936f9cb88cd6024b81f5ccc2b001"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxbvm-longer-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/longer-word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "7e20c89738f3e2789faca6f005d17a3ca972936f9cb88cd6024b81f5ccc2b001"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxtvm-quoted",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/quoted.txt"
+      ],
+      "status": 0,
+      "log_sha256": "a37cbe6870f8b7d4d200010bdc5dbd09e223855cf1bb4962a289ad45966c534c"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxbvm-quoted",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/quoted.txt"
+      ],
+      "status": 0,
+      "log_sha256": "a37cbe6870f8b7d4d200010bdc5dbd09e223855cf1bb4962a289ad45966c534c"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxtvm-trailing",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/trailing.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a857a70f7c7d7945d56f9e621760bf948072be52a666843e64e5273e32b87cfc"
+    },
+    {
+      "name": "priority-values-source-opt-opt-rxbvm-trailing",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-opt/trailing.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a857a70f7c7d7945d56f9e621760bf948072be52a666843e64e5273e32b87cfc"
+    },
+    {
+      "name": "priority-values-source-noopt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/input.levell"
+      ],
+      "status": 0,
+      "log_sha256": "b513eafd05845f83121da6dd6d7fceca29336c917b9791d449a995166e87d978"
+    },
+    {
+      "name": "priority-values-source-noopt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/levell_lesson",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/levell_lesson.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-noopt-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/consumer-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-noopt-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/consumer-noopt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-noopt-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/consumer-noopt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "6b88258e9900501e750a8206f6ef35356c81ab2d851946fbad614d6f7b7cf66e"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "6b88258e9900501e750a8206f6ef35356c81ab2d851946fbad614d6f7b7cf66e"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxtvm-false",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/false.txt"
+      ],
+      "status": 0,
+      "log_sha256": "bf52ae372b88b51b5c409ae9ba0e6f3a3b43286016c9c180ce648a1269c4c994"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxbvm-false",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/false.txt"
+      ],
+      "status": 0,
+      "log_sha256": "bf52ae372b88b51b5c409ae9ba0e6f3a3b43286016c9c180ce648a1269c4c994"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxtvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxbvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxtvm-longer-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/longer-word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "7e20c89738f3e2789faca6f005d17a3ca972936f9cb88cd6024b81f5ccc2b001"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxbvm-longer-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/longer-word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "7e20c89738f3e2789faca6f005d17a3ca972936f9cb88cd6024b81f5ccc2b001"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxtvm-quoted",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/quoted.txt"
+      ],
+      "status": 0,
+      "log_sha256": "a37cbe6870f8b7d4d200010bdc5dbd09e223855cf1bb4962a289ad45966c534c"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxbvm-quoted",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/quoted.txt"
+      ],
+      "status": 0,
+      "log_sha256": "a37cbe6870f8b7d4d200010bdc5dbd09e223855cf1bb4962a289ad45966c534c"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxtvm-trailing",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/trailing.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a857a70f7c7d7945d56f9e621760bf948072be52a666843e64e5273e32b87cfc"
+    },
+    {
+      "name": "priority-values-source-noopt-noopt-rxbvm-trailing",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-values-source-noopt/trailing.txt"
+      ],
+      "status": 1,
+      "log_sha256": "a857a70f7c7d7945d56f9e621760bf948072be52a666843e64e5273e32b87cfc"
+    },
+    {
+      "name": "priority-reversed-rxas-opt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "log_sha256": "3c68901127fdf688abd2be9942b4f3e56fa5634a64301dc2270c9893c8b52a8c"
+    },
+    {
+      "name": "priority-reversed-rxas-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-rxas-opt-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/consumer-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-rxas-opt-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/consumer-opt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-rxas-opt-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/linked-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/consumer-opt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-rxas-opt-opt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "39b4d6ce4c29ba30525313cee9ccb360f6b9a82155f60eb87eeb1c139c5f9bb1"
+    },
+    {
+      "name": "priority-reversed-rxas-opt-opt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-opt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "39b4d6ce4c29ba30525313cee9ccb360f6b9a82155f60eb87eeb1c139c5f9bb1"
+    },
+    {
+      "name": "priority-reversed-rxas-noopt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "log_sha256": "3c68901127fdf688abd2be9942b4f3e56fa5634a64301dc2270c9893c8b52a8c"
+    },
+    {
+      "name": "priority-reversed-rxas-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-rxas-noopt-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/consumer-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-rxas-noopt-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/consumer-noopt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-rxas-noopt-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/linked-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/consumer-noopt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-rxas-noopt-noopt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "39b4d6ce4c29ba30525313cee9ccb360f6b9a82155f60eb87eeb1c139c5f9bb1"
+    },
+    {
+      "name": "priority-reversed-rxas-noopt-noopt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-rxas-noopt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "39b4d6ce4c29ba30525313cee9ccb360f6b9a82155f60eb87eeb1c139c5f9bb1"
+    },
+    {
+      "name": "priority-reversed-source-opt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/input.levell"
+      ],
+      "status": 0,
+      "log_sha256": "8fd4e5e2b33c337456ccf6027fec1a3c68e6e032bebc95e06e2de89f987a540f"
+    },
+    {
+      "name": "priority-reversed-source-opt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/levell_lesson",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/levell_lesson.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-opt-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/consumer-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-opt-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/consumer-opt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-opt-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/linked-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/consumer-opt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-opt-opt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "39b4d6ce4c29ba30525313cee9ccb360f6b9a82155f60eb87eeb1c139c5f9bb1"
+    },
+    {
+      "name": "priority-reversed-source-opt-opt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-opt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "39b4d6ce4c29ba30525313cee9ccb360f6b9a82155f60eb87eeb1c139c5f9bb1"
+    },
+    {
+      "name": "priority-reversed-source-noopt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/input.levell"
+      ],
+      "status": 0,
+      "log_sha256": "8fd4e5e2b33c337456ccf6027fec1a3c68e6e032bebc95e06e2de89f987a540f"
+    },
+    {
+      "name": "priority-reversed-source-noopt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/levell_lesson",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/levell_lesson.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-noopt-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/consumer-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-noopt-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/consumer-noopt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-noopt-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/linked-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/consumer-noopt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-reversed-source-noopt-noopt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "39b4d6ce4c29ba30525313cee9ccb360f6b9a82155f60eb87eeb1c139c5f9bb1"
+    },
+    {
+      "name": "priority-reversed-source-noopt-noopt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-reversed-source-noopt/true.txt"
+      ],
+      "status": 0,
+      "log_sha256": "39b4d6ce4c29ba30525313cee9ccb360f6b9a82155f60eb87eeb1c139c5f9bb1"
+    },
+    {
+      "name": "priority-earley-rxas-opt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "log_sha256": "bbab7f8e3bc24bb6a06d2de0e3de40af0401b2ad3088bd4042807fe142f30184"
+    },
+    {
+      "name": "priority-earley-rxas-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-rxas-opt-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/consumer-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-rxas-opt-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/consumer-opt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-rxas-opt-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/linked-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/consumer-opt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-rxas-opt-opt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/true.txt"
+      ],
+      "status": 5,
+      "log_sha256": "80e55ff3154313ae701b1cdcbe0c5f7299fc12e36213a2b673a796d544788bfd"
+    },
+    {
+      "name": "priority-earley-rxas-opt-opt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/true.txt"
+      ],
+      "status": 5,
+      "log_sha256": "80e55ff3154313ae701b1cdcbe0c5f7299fc12e36213a2b673a796d544788bfd"
+    },
+    {
+      "name": "priority-earley-rxas-opt-opt-rxtvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-earley-rxas-opt-opt-rxbvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-opt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-earley-rxas-noopt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/input.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "log_sha256": "bbab7f8e3bc24bb6a06d2de0e3de40af0401b2ad3088bd4042807fe142f30184"
+    },
+    {
+      "name": "priority-earley-rxas-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-rxas-noopt-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/consumer-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-rxas-noopt-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/consumer-noopt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-rxas-noopt-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/linked-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/consumer-noopt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-rxas-noopt-noopt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/true.txt"
+      ],
+      "status": 5,
+      "log_sha256": "80e55ff3154313ae701b1cdcbe0c5f7299fc12e36213a2b673a796d544788bfd"
+    },
+    {
+      "name": "priority-earley-rxas-noopt-noopt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/true.txt"
+      ],
+      "status": 5,
+      "log_sha256": "80e55ff3154313ae701b1cdcbe0c5f7299fc12e36213a2b673a796d544788bfd"
+    },
+    {
+      "name": "priority-earley-rxas-noopt-noopt-rxtvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-earley-rxas-noopt-noopt-rxbvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-rxas-noopt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-earley-source-opt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/input.levell"
+      ],
+      "status": 0,
+      "log_sha256": "5ea63b7e273257ba4e433ae29cfe190a85715c328206ca17afcab44dd1ca6a90"
+    },
+    {
+      "name": "priority-earley-source-opt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/levell_lesson",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/levell_lesson.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-opt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-opt-compile-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/consumer-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-opt-assemble-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/consumer-opt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-opt-link-opt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/linked-opt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/consumer-opt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-opt-opt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/true.txt"
+      ],
+      "status": 5,
+      "log_sha256": "80e55ff3154313ae701b1cdcbe0c5f7299fc12e36213a2b673a796d544788bfd"
+    },
+    {
+      "name": "priority-earley-source-opt-opt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/true.txt"
+      ],
+      "status": 5,
+      "log_sha256": "80e55ff3154313ae701b1cdcbe0c5f7299fc12e36213a2b673a796d544788bfd"
+    },
+    {
+      "name": "priority-earley-source-opt-opt-rxtvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-earley-source-opt-opt-rxbvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/linked-opt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-opt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-earley-source-noopt-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/input.levell"
+      ],
+      "status": 0,
+      "log_sha256": "5ea63b7e273257ba4e433ae29cfe190a85715c328206ca17afcab44dd1ca6a90"
+    },
+    {
+      "name": "priority-earley-source-noopt-compile-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/levell_lesson",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/levell_lesson.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-noopt-assemble-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/levell_lesson"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-noopt-compile-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "--no-opt",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/imports",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/consumer-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/backends/inspect.crexx"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-noopt-assemble-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/consumer-noopt"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-noopt-link-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxlink",
+        "-s",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/linked-noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/consumer-noopt.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/levell_lesson.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin"
+      ],
+      "status": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "priority-earley-source-noopt-noopt-rxtvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/true.txt"
+      ],
+      "status": 5,
+      "log_sha256": "80e55ff3154313ae701b1cdcbe0c5f7299fc12e36213a2b673a796d544788bfd"
+    },
+    {
+      "name": "priority-earley-source-noopt-noopt-rxbvm-true",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/true.txt"
+      ],
+      "status": 5,
+      "log_sha256": "80e55ff3154313ae701b1cdcbe0c5f7299fc12e36213a2b673a796d544788bfd"
+    },
+    {
+      "name": "priority-earley-source-noopt-noopt-rxtvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-earley-source-noopt-noopt-rxbvm-word",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/linked-noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-earley-source-noopt/word.txt"
+      ],
+      "status": 0,
+      "log_sha256": "64785cdf0a06fbe5bd0e3b6014e163903a279e8afa7728414f7964c2a1ff28de"
+    },
+    {
+      "name": "priority-refuse-ll1-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-refuse-ll1/input.levell",
+        "--rxas"
+      ],
+      "status": 1,
+      "log_sha256": "a0f7506b8a2476daba8ac4c93022ad209fde1416c0a291b22971cd7d13f884ec"
+    },
+    {
+      "name": "priority-refuse-lr1-generate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/manual-review/priorities/priority-refuse-lr1/input.levell",
+        "--rxas"
+      ],
+      "status": 1,
+      "log_sha256": "4b30bd2428fa597bbb827295d244ca394912c5bb7e78eae9ba98894fce2f41ba"
+    }
+  ],
+  "observations": [
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "false",
+      "status": 0,
+      "input_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "false",
+      "status": 0,
+      "input_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "longer-word",
+      "status": 0,
+      "input_sha256": "30ed04df8285f242e1ee21c724543c1b500a83b9faeec6c85e4838702a5928b5"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "longer-word",
+      "status": 0,
+      "input_sha256": "30ed04df8285f242e1ee21c724543c1b500a83b9faeec6c85e4838702a5928b5"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "quoted",
+      "status": 0,
+      "input_sha256": "18d10c7d2b4b04aaf04254d1ae5d655a5dc0407cbcdd5a8c3986e985370f36ee"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "quoted",
+      "status": 0,
+      "input_sha256": "18d10c7d2b4b04aaf04254d1ae5d655a5dc0407cbcdd5a8c3986e985370f36ee"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "trailing",
+      "status": 1,
+      "input_sha256": "1645c09951dbc0bd08676c98a66a0a7ce3a9209149971b78a6d87b8830cafc8d"
+    },
+    {
+      "key": "priority-values-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "trailing",
+      "status": 1,
+      "input_sha256": "1645c09951dbc0bd08676c98a66a0a7ce3a9209149971b78a6d87b8830cafc8d"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "false",
+      "status": 0,
+      "input_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "false",
+      "status": 0,
+      "input_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "longer-word",
+      "status": 0,
+      "input_sha256": "30ed04df8285f242e1ee21c724543c1b500a83b9faeec6c85e4838702a5928b5"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "longer-word",
+      "status": 0,
+      "input_sha256": "30ed04df8285f242e1ee21c724543c1b500a83b9faeec6c85e4838702a5928b5"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "quoted",
+      "status": 0,
+      "input_sha256": "18d10c7d2b4b04aaf04254d1ae5d655a5dc0407cbcdd5a8c3986e985370f36ee"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "quoted",
+      "status": 0,
+      "input_sha256": "18d10c7d2b4b04aaf04254d1ae5d655a5dc0407cbcdd5a8c3986e985370f36ee"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "trailing",
+      "status": 1,
+      "input_sha256": "1645c09951dbc0bd08676c98a66a0a7ce3a9209149971b78a6d87b8830cafc8d"
+    },
+    {
+      "key": "priority-values-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "trailing",
+      "status": 1,
+      "input_sha256": "1645c09951dbc0bd08676c98a66a0a7ce3a9209149971b78a6d87b8830cafc8d"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "false",
+      "status": 0,
+      "input_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "false",
+      "status": 0,
+      "input_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "longer-word",
+      "status": 0,
+      "input_sha256": "30ed04df8285f242e1ee21c724543c1b500a83b9faeec6c85e4838702a5928b5"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "longer-word",
+      "status": 0,
+      "input_sha256": "30ed04df8285f242e1ee21c724543c1b500a83b9faeec6c85e4838702a5928b5"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "quoted",
+      "status": 0,
+      "input_sha256": "18d10c7d2b4b04aaf04254d1ae5d655a5dc0407cbcdd5a8c3986e985370f36ee"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "quoted",
+      "status": 0,
+      "input_sha256": "18d10c7d2b4b04aaf04254d1ae5d655a5dc0407cbcdd5a8c3986e985370f36ee"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "trailing",
+      "status": 1,
+      "input_sha256": "1645c09951dbc0bd08676c98a66a0a7ce3a9209149971b78a6d87b8830cafc8d"
+    },
+    {
+      "key": "priority-values-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "trailing",
+      "status": 1,
+      "input_sha256": "1645c09951dbc0bd08676c98a66a0a7ce3a9209149971b78a6d87b8830cafc8d"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "false",
+      "status": 0,
+      "input_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "false",
+      "status": 0,
+      "input_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "longer-word",
+      "status": 0,
+      "input_sha256": "30ed04df8285f242e1ee21c724543c1b500a83b9faeec6c85e4838702a5928b5"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "longer-word",
+      "status": 0,
+      "input_sha256": "30ed04df8285f242e1ee21c724543c1b500a83b9faeec6c85e4838702a5928b5"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "quoted",
+      "status": 0,
+      "input_sha256": "18d10c7d2b4b04aaf04254d1ae5d655a5dc0407cbcdd5a8c3986e985370f36ee"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "quoted",
+      "status": 0,
+      "input_sha256": "18d10c7d2b4b04aaf04254d1ae5d655a5dc0407cbcdd5a8c3986e985370f36ee"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "trailing",
+      "status": 1,
+      "input_sha256": "1645c09951dbc0bd08676c98a66a0a7ce3a9209149971b78a6d87b8830cafc8d"
+    },
+    {
+      "key": "priority-values-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "trailing",
+      "status": 1,
+      "input_sha256": "1645c09951dbc0bd08676c98a66a0a7ce3a9209149971b78a6d87b8830cafc8d"
+    },
+    {
+      "key": "priority-reversed-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-reversed-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-reversed-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-reversed-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-reversed-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-reversed-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-reversed-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-reversed-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 0,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-earley-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 5,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-earley-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 5,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-earley-rxas-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-earley-rxas-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-earley-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 5,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-earley-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 5,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-earley-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-earley-rxas-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-earley-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 5,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-earley-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 5,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-earley-source-opt",
+      "mode": "opt",
+      "vm": "rxtvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-earley-source-opt",
+      "mode": "opt",
+      "vm": "rxbvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-earley-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "true",
+      "status": 5,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-earley-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "true",
+      "status": 5,
+      "input_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    {
+      "key": "priority-earley-source-noopt",
+      "mode": "noopt",
+      "vm": "rxtvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-earley-source-noopt",
+      "mode": "noopt",
+      "vm": "rxbvm",
+      "case": "word",
+      "status": 0,
+      "input_sha256": "16477688c0e00699c6cfa4497a3612d7e83c532062b64b250fed8908128ed548"
+    },
+    {
+      "key": "priority-refuse-ll1",
+      "kind": "build-refusal",
+      "required": [
+        "LL_BACKEND_ADMISSION:"
+      ]
+    },
+    {
+      "key": "priority-refuse-lr1",
+      "kind": "build-refusal",
+      "required": [
+        "LL_LR_ADMISSION:"
+      ]
+    }
+  ],
+  "source_sha256": {
+    "lib/rxfnsl/examples/calculator/calculator.levell": "d3aaf48df7c7e1173ac6cfd27eddccdbe4437e0446507214cf4609ebe16bcbc7",
+    "lib/rxfnsl/examples/calculator/example.calc": "f79b78352b7bba5c23e44e256e407416ce4627f0b406aee414d1035ec1f59f03",
+    "lib/rxfnsl/examples/calculator/calculator.crexx": "b875babb28d1a01f182dc4fd509cc3566a1fd39fcda3aec3d656310ae306a35d",
+    "lib/rxfnsl/examples/backends/ordered-prefix.levell": "37ba034698c417d9aa692ccaaf2d5f852bf6a398b63347f60c24d6231f4aa582",
+    "lib/rxfnsl/examples/backends/line-comments.levell": "c533f41c50fb3f89c04496205fb14793d9ce4c55e5c271b5b1aa9e5e6eba14c8",
+    "lib/rxfnsl/examples/backends/predictive.levell": "20a936b01c9b1b49a8f6d81dfa4ab70835e2e2db602a5c961efff42a27b274b8",
+    "lib/rxfnsl/examples/backends/ambiguous-arithmetic.levell": "dc91afd8beb9d5432665c1de7ad0f1252737e6cb4561e861806fc20df2d74e51",
+    "lib/rxfnsl/examples/backends/inspect.crexx": "8619076272dbf2546f61dc3358bcff42ae53baffd2a0e0f9c0b2d46105dd6eab",
+    "lib/rxfnsl/examples/backends/left-recursive-list.levell": "40394cff4a7bcf343f27625fabb35f0d7b4a9dc64f89671bb927319c8c8f010a",
+    "lib/rxfnsl/examples/backends/ordered-values.levell": "103ce598133677c7da274d2257eb7399729bb7ef3a051ade600a9a10e480e22b",
+    "lib/rxfnsl/examples/backends/palindrome.levell": "5ec3f4945b6f331194faa7377b7447909418b957f964062048475461c56f0279",
+    "lib/rxfnsl/tests_functional/check-teaching-examples.py": "c24ccf54524b622adf000c02555159073769481448059b4208d5a20b9a5fd6c8"
+  },
+  "product_sha256": {
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/rxfnsl.rxbin": "46360d8c726ad75b95b43462845642be72a2a6946450d45d853749c3dafceb0f",
+    "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-product/bin/library.rxbin": "c1d834aa9a467945686e4fdfe321dde0f2484c6a3f5b0f9b22f06677cd6592a4"
+  },
+  "scope": "Level L teaching examples; selected part=priorities; source and product identities identify the exercised inputs."
+}
