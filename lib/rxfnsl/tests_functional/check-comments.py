@@ -218,7 +218,7 @@ if a.part in ('all', 'backends'):
         ('hide-newline', 'port=1/* notes\n*/next=2', 1, ['value.error' + '!ABSENT']),
         ('eof-line', 'port=1#EOF', 0, []),
         ('unicode', 'café=1(* café 日本 😀 *)\nnext=2', 0, []),
-        ('nul', 'port=1/*\0*/\nnext=2', 0, []),
+        ('nul-byte', 'port=1/*\0*/\nnext=2', 0, []),
         ('wrong-inner-style', 'port=1/* (* */\nnext=2', 0, []),
         ('open-block', 'port=1\nnext=2 /*oops', 1, ['unclosed block comment c.notes', 'line 2, column 8 (byte 14)']),
         ('open-nested', 'port=1\nnext=2 (*oops', 1, ['unclosed nested comment rexx.notes', 'line 2, column 8 (byte 14)']),

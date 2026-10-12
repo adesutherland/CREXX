@@ -1,5 +1,10 @@
 # Generalized comments — 12 October 2026
 
+For Windows checkout compatibility, the 32 retained `nul.txt` inputs are now
+named `nul-byte.txt`. Their bytes are unchanged. Historical logs retain the
+original paths; [the CI repair receipt](../develop-ci-20261012/README.md) records
+the relocation and regression guard.
+
 This record qualifies COM-AC01–05 / EX-STEP05: the approved line, block and
 nested forms, coherent multiple styles, optional regular shielding and kept
 newlines. The complete LANG/research programme remains open. No C compiler or

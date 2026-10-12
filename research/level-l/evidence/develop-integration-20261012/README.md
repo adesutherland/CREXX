@@ -1,5 +1,11 @@
 # Level L development integration - 12 October 2026
 
+The subsequent [CI repair receipt](../develop-ci-20261012/README.md) records
+Windows checkout and Linux link failures that these local checks did not expose.
+The 16 retained `nul.txt` inputs are now named `nul-byte.txt`, with identical
+bytes and updated `panel-files.json` keys. Historical command logs retain their
+original paths; the repair receipt maps all relocated files.
+
 This receipt qualifies PUB-AC01-04 in `research/level-l/PLAN.md`. Adrian
 authorized publication to `develop` after the local gates passed. The enclosing
 commit is the publication payload; verify its remote identity when pushing.

@@ -100,10 +100,12 @@ add_custom_command(OUTPUT "${_rs1_root}/RexxScript1Runner.c"
   WORKING_DIRECTORY "${_rs1_root}" VERBATIM)
 add_executable(rexxscript1_cli "${_rs1_root}/RexxScript1Runner.c")
 set_target_properties(rexxscript1_cli PROPERTIES OUTPUT_NAME rexxscript1)
-target_link_libraries(rexxscript1_cli rxvml rxpashim)
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 configure_linker_for_static_lib(rexxscript1_cli cstream)
 configure_linker_for_static_lib(rexxscript1_cli fs)
+# GNU linkers resolve archive references from left to right. Load providers
+# before the VM and RXPA shim that implement their imported services.
+target_link_libraries(rexxscript1_cli rxvml rxpashim)
 add_dependencies(rexxscript1_cli rxvme rxvml rxpa avl_tree platform)
 
 # Prebuilt functional program: CTest launches one VM, never a nested build.

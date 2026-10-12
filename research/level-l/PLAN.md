@@ -1,5 +1,44 @@
 # Level L language tooling research — 10 October 2026
 
+### Develop CI repair — approved 12 October 2026
+
+**Vision:** make the published Level L checkpoint build and check out on all
+maintained platforms, then verify the normal `develop` workflows are green.
+This repairs the approved implementation without changing the language surface.
+
+**Acceptance criteria:**
+
+1. **CI-AC01 — Portable checkout.** Remove Windows device names from tracked
+   evidence and generated comment fixtures, preserving their bytes. A permanent
+   path guard runs in the existing publication safeguards; Windows checkout
+   succeeds in the resulting hosted run.
+2. **CI-AC02 — Native linkage.** The modern RexxScript runner links its static
+   providers before their RXPA implementation, as the existing `crexx` runner
+   does. Local product and runner checks pass; Linux Release and CodeQL builds
+   confirm GNU linker closure.
+3. **CI-AC03 — Green publication.** Commit the repair and evidence together,
+   push to `develop`, and inspect the resulting Build CREXX and CodeQL runs.
+   Diagnose remaining failures; retry service failures when the logs establish
+   that cause. Report actual green results in the conversation, with no
+   status-only follow-up commit.
+
+**Steps:**
+
+1. **CI-STEP01 (CI-AC01/02):** retain failed-job evidence and identify causes.
+   **Verified:** `bb973735f` Build run `38298866712` fails Windows checkout on
+   `nul.txt` and Linux linkage on RXPA symbols. CodeQL `38298866314` hits the
+   same linkage failure. macOS ARM product/QA/package checks pass; Apple accepts
+   the installer but ticket retrieval loses its network connection (Error 68).
+2. **CI-STEP02 (CI-AC01/02):** repair fixture paths and runner link order, add
+   the path regression, and run focused local checks. **Locally verified:**
+   product build, four CTests, native runner checks, 586 comment-panel
+   observations, Windows/path and package guards pass. All renamed input bytes
+   and 3,169 retained panel hashes match. See [the repair receipt](evidence/develop-ci-20261012/README.md).
+3. **CI-STEP03 (CI-AC03):** publish the qualified repair and follow normal
+   hosted CI to completion. **The enclosing commit is the approved repair
+   payload.** Hosted Windows/GNU link and final green-workflow evidence follows
+   publication and is reported in the conversation. Depends on STEP02.
+
 ### Develop publication — approved 12 October 2026
 
 **Vision:** publish the implemented Level L toolkit, modern RexxScript consumer
