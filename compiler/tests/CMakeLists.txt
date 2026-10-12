@@ -3929,6 +3929,29 @@ add_test(NAME structured_exit_crossed_loop_cleanup_opt_rewrites
 set_tests_properties(structured_exit_crossed_loop_cleanup_opt_rewrites PROPERTIES
         LABELS "compiler;flow;correctness;linked_opt")
 
+foreach(_condition_rxc_mode IN ITEMS opt noopt)
+    foreach(_condition_rxas_mode IN ITEMS opt noopt)
+        set(_condition_name "iterate_condition_cleanup_${_condition_rxc_mode}_${_condition_rxas_mode}")
+        add_test(NAME ${_condition_name}
+                 COMMAND ${CMAKE_COMMAND}
+                         -DRXC=$<TARGET_FILE:rxc>
+                         -DRXAS=$<TARGET_FILE:rxas>
+                         -DRXLINK=$<TARGET_FILE:rxlink>
+                         -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                         -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                         -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                         -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/iterate_condition_cleanup.crexx
+                         -DWORK=${CMAKE_CURRENT_BINARY_DIR}/${_condition_name}_ws
+                         -DCOMPILER_NOOPT=$<STREQUAL:${_condition_rxc_mode},noopt>
+                         -DASSEMBLER_NOOPT=$<STREQUAL:${_condition_rxas_mode},noopt>
+                         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_iterate_condition_cleanup.cmake)
+        set_tests_properties(${_condition_name} PROPERTIES
+                LABELS "compiler;flow;inlining;optimizer-parity;correctness;regression;smoke"
+                TIMEOUT 180
+                CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library")
+    endforeach()
+endforeach()
+
 add_test(NAME signal_crossed_loop_cleanup_opt_rewrites
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>

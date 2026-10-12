@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=5
+main() .locals=6
    .meta "inline_test_say_expr_negative.main"="b" ".int" main() ""
    .srcstep 16 16 17 "inline_test_say_expr_negative.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -30,21 +30,22 @@ l8dostart:
    .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "val" ""
    .srcstep 7 7 17 "inline_test_say_expr_negative.crexx" 13 3 13 "  if val = 2 then return \"two\""
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "val" ""
-   ieq r3,r0,2
-   .traceevent "O" 4 "R" "B" "r" 3 7 7 0 "" ""
-   brf l48iffalse,r3
+   ieq r4,r0,2
+   .traceevent "O" 4 "R" "B" "r" 4 7 7 0 "" ""
+   brf l48iffalse,r4
    .srcstep 8 8 17 "inline_test_say_expr_negative.crexx" 13 14 18 "  if val = 2 then return \"two\""
    .srcstep 6 6 17 "inline_test_say_expr_negative.crexx" 13 19 31 "  if val = 2 then return \"two\""
-   load r4,"two"
-   .traceevent "L" 4 "R" "S" "r" 4 11 11 0 "" ""
+   load r5,"two"
+   .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
+   scopy r3,r5
    br l43bexprend
 l48iffalse:
    .srcstep 9 9 17 "inline_test_say_expr_negative.crexx" 14 3 13 "  return val"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 11 11 0 "val" ""
-   scopy r4,r0
+   scopy r3,r0
 l43bexprend:
-   say r4
+   say r3
 l8doinc:
    .srcstep 4 4 17 "inline_test_say_expr_negative.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0

@@ -1,0 +1,51 @@
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug
+      Start  37: frame_control_ast
+      Start 678: inline_receiver_detached_guard_opt
+      Start 694: inline_receiver_signal_cleanup
+      Start 883: short_circuit_linked_left_run_noopt
+      Start 884: short_circuit_linked_left_run_opt
+      Start 799: structured_exit_crossed_loop_cleanup_run_noopt
+      Start 797: inline_test_loop_bound_early_return_cleanup_run_noopt
+      Start 800: structured_exit_crossed_loop_cleanup_run_opt
+ 1/15 Test  #37: frame_control_ast .......................................   Passed    0.32 sec
+      Start 798: inline_test_loop_bound_early_return_cleanup_run_opt
+ 2/15 Test #799: structured_exit_crossed_loop_cleanup_run_noopt ..........   Passed    0.83 sec
+      Start 688: structured_exit_crossed_loop_cleanup_opt_rewrites
+ 3/15 Test #883: short_circuit_linked_left_run_noopt .....................   Passed    0.84 sec
+      Start 687: inline_loop_bound_early_return_cleanup_opt_rewrites
+ 4/15 Test #884: short_circuit_linked_left_run_opt .......................   Passed    0.85 sec
+      Start 689: iterate_condition_cleanup_opt_opt
+ 5/15 Test #800: structured_exit_crossed_loop_cleanup_run_opt ............   Passed    0.85 sec
+      Start 691: iterate_condition_cleanup_noopt_opt
+ 6/15 Test #797: inline_test_loop_bound_early_return_cleanup_run_noopt ...   Passed    0.85 sec
+      Start 690: iterate_condition_cleanup_opt_noopt
+ 7/15 Test #798: inline_test_loop_bound_early_return_cleanup_run_opt .....   Passed    0.84 sec
+      Start 692: iterate_condition_cleanup_noopt_noopt
+ 8/15 Test #687: inline_loop_bound_early_return_cleanup_opt_rewrites .....   Passed    0.84 sec
+ 9/15 Test #688: structured_exit_crossed_loop_cleanup_opt_rewrites .......   Passed    0.91 sec
+10/15 Test #690: iterate_condition_cleanup_opt_noopt .....................   Passed    0.93 sec
+11/15 Test #689: iterate_condition_cleanup_opt_opt .......................   Passed    0.95 sec
+12/15 Test #691: iterate_condition_cleanup_noopt_opt .....................   Passed    0.96 sec
+13/15 Test #692: iterate_condition_cleanup_noopt_noopt ...................   Passed    0.88 sec
+14/15 Test #694: inline_receiver_signal_cleanup ..........................   Passed    2.08 sec
+15/15 Test #678: inline_receiver_detached_guard_opt ......................   Passed    2.37 sec
+
+100% tests passed, 0 tests failed out of 15
+
+Label Time Summary:
+compiler             =   9.56 sec*proc (10 tests)
+comprehensive        =  14.99 sec*proc (14 tests)
+control_flow         =   0.32 sec*proc (1 test)
+correctness          =   7.56 sec*proc (7 tests)
+essential            =   0.32 sec*proc (1 test)
+flow                 =   6.71 sec*proc (6 tests)
+inlining             =   6.65 sec*proc (6 tests)
+levelc               =   0.32 sec*proc (1 test)
+linked_opt           =   7.90 sec*proc (6 tests)
+receiver             =   4.46 sec*proc (2 tests)
+register-lifetime    =   1.68 sec*proc (2 tests)
+regression           =   5.41 sec*proc (6 tests)
+signals              =   2.08 sec*proc (1 test)
+unit                 =   0.32 sec*proc (1 test)
+
+Total Test time (real) =   2.46 sec
