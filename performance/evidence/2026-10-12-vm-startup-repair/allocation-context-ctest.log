@@ -1,0 +1,14 @@
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release
+    Start 1341: rxvm_link_index_fallback_context
+1/1 Test #1341: rxvm_link_index_fallback_context ...   Passed    0.28 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+comprehensive    =   0.28 sec*proc (1 test)
+interfaces       =   0.28 sec*proc (1 test)
+interpreter      =   0.28 sec*proc (1 test)
+memory           =   0.28 sec*proc (1 test)
+regression       =   0.28 sec*proc (1 test)
+
+Total Test time (real) =   0.34 sec

@@ -10,6 +10,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 set(REXXBINS
   testRexxScriptRuntime
   testRexxScriptCompat
+  testRexxScriptArrayExpose
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
@@ -35,13 +36,21 @@ foreach(_binfile ${REXXBINS})
 
     add_custom_target(${_basename})
     add_dependencies(testrexxscript ${_basename} rexxscript rxfnsc)
+    set(_rxc_flags -x)
+    set(_exit_depends)
+    if(_basename STREQUAL "testRexxScriptArrayExpose")
+        # REXXSCRIPT EXPOSE is implemented by the compiler exit; the other
+        # fixtures exercise the runtime API directly and do not need exits.
+        set(_rxc_flags)
+        list(APPEND _exit_depends ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin)
+    endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
             SOURCE ${_rexx_file}
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-            RXC_FLAGS -x
-            DEPENDS library classlib rxfnsc rexxscript ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} ${REXXSCRIPT_RXBIN} ${_rexx_dep}
+            RXC_FLAGS ${_rxc_flags}
+            DEPENDS library classlib rxfnsc rexxscript ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} ${REXXSCRIPT_RXBIN} ${_exit_depends} ${_rexx_dep}
             RUNTIME_ARGS ${REXXSCRIPT_RUNTIMES}
     )
 endforeach()
@@ -51,6 +60,8 @@ set_tests_properties(testRexxScriptRuntime_noopt testRexxScriptRuntime_opt
                    RESOURCE_LOCK rexxscript_lineio_files)
 set_tests_properties(testRexxScriptCompat_noopt testRexxScriptCompat_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: evaluate helpers")
+set_tests_properties(testRexxScriptArrayExpose_noopt testRexxScriptArrayExpose_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: RexxScript array EXPOSE")
 
 set(REXXSCRIPT_CLI_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_rexxscript_cli_smoke.cmake")
 set(REXXSCRIPT_CLI_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/rexxscript_cli_smoke_ws\")\n")
@@ -73,6 +84,7 @@ add_test(NAME rexxscript_cli_smoke
 crexx_label_smoke_tests(
         testRexxScriptRuntime_noopt
         testRexxScriptCompat_noopt
+        testRexxScriptArrayExpose_noopt
         rexxscript_cli_smoke
         PREP_TARGETS rexxscript_cli
 )

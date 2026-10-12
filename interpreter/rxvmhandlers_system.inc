@@ -36,7 +36,7 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
             prep_string_buffer(op1R, 4);
 
             /* Read the first byte - determines length */
-            first_byte = platform_text_getc((FILE *)op2R->int_value);
+            first_byte = platform_text_getc((FILE *)(uintptr_t)op2R->int_value);
             if (first_byte == EOF) {
                 op1R->int_value = -1;
                 rxvm_value_set_string_length_known(op1R, 0u);
@@ -58,17 +58,17 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
                 }
 
                 if (op1R->string_length > 1) {
-                    next_byte = platform_text_getc((FILE *)op2R->int_value);
+                    next_byte = platform_text_getc((FILE *)(uintptr_t)op2R->int_value);
                     if (next_byte == EOF) invalid = 1;
                     else op1R->string_value[1] = (char)next_byte;
                 }
                 if (op1R->string_length > 2) {
-                    next_byte = platform_text_getc((FILE *)op2R->int_value);
+                    next_byte = platform_text_getc((FILE *)(uintptr_t)op2R->int_value);
                     if (next_byte == EOF) invalid = 1;
                     else op1R->string_value[2] = (char)next_byte;
                 }
                 if (op1R->string_length > 3) {
-                    next_byte = platform_text_getc((FILE *)op2R->int_value);
+                    next_byte = platform_text_getc((FILE *)(uintptr_t)op2R->int_value);
                     if (next_byte == EOF) invalid = 1;
                     else op1R->string_value[3] = (char)next_byte;
                 }
@@ -88,7 +88,7 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
             )
             RXVM_BYTE_ONLY(
             {
-                int byte = fgetc( (FILE*)op2R->int_value );
+                int byte = fgetc( (FILE*)(uintptr_t)op2R->int_value );
                 if (byte == EOF) {
                     op1R->int_value = -1;
                     op1R->string_length = 0;
@@ -112,7 +112,7 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
 RXVM_HANDLER(FWRITE_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FWRITE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         {
-            FILE *stream = (FILE*)op1R->int_value;
+            FILE *stream = (FILE*)(uintptr_t)op1R->int_value;
             RXVM_UTF8_ONLY(
             if (stream == stdout || stream == stderr) {
                 errno = 0;
@@ -137,7 +137,7 @@ RXVM_HANDLER(FWRITE_REG_REG, VM_ADVANCE(2);
 
 RXVM_HANDLER(FWRITEB_REG_REG, VM_ADVANCE(2);
     DEBUG("TRACE - FWRITEB R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-    fwrite(op2R->binary_value, op2R->binary_length, 1, (FILE*)op1R->int_value);
+    fwrite(op2R->binary_value, op2R->binary_length, 1, (FILE*)(uintptr_t)op1R->int_value);
     DISPATCH;
 
     /* fwritebyte - write byte to op1 file*(int) op2 source(int) */
@@ -146,7 +146,7 @@ RXVM_HANDLER(FWRITEB_REG_REG, VM_ADVANCE(2);
 
 RXVM_HANDLER(FWRITEBYTE_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FWRITEBYTE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        fputc(op2R->int_value, (FILE*)op1R->int_value);
+        fputc(op2R->int_value, (FILE*)(uintptr_t)op1R->int_value);
         DISPATCH;
 
     /* fwritecdpt - write codepoint to op1 file*(int) op2 source(int) */
@@ -169,7 +169,7 @@ RXVM_HANDLER(FWRITECDPT_REG_REG, VM_ADVANCE(2);
             codepoint[0] = op2R->int_value;
             )
             {
-                FILE *stream = (FILE*)op1R->int_value;
+                FILE *stream = (FILE*)(uintptr_t)op1R->int_value;
                 RXVM_UTF8_ONLY(
                 if (stream == stdout || stream == stderr) {
                     errno = 0;
@@ -195,7 +195,7 @@ RXVM_HANDLER(FWRITECDPT_REG_REG, VM_ADVANCE(2);
 
 RXVM_HANDLER(FCLEARERR_REG, VM_ADVANCE(1);
         DEBUG("TRACE - FCLEARERR R%lu\n", REG_IDX(1));
-        clearerr((FILE*)op1R->int_value);
+        clearerr((FILE*)(uintptr_t)op1R->int_value);
         DISPATCH;
 
     /* feof - op1 rc(int) = feof op2 file*(int) */
@@ -204,7 +204,7 @@ RXVM_HANDLER(FCLEARERR_REG, VM_ADVANCE(1);
 
 RXVM_HANDLER(FEOF_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FEOF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        op1R->int_value = feof((FILE*)op2R->int_value);
+        op1R->int_value = feof((FILE*)(uintptr_t)op2R->int_value);
         DISPATCH;
 
     /* ferror - op1 rc(int) = ferror op2 file*(int) */
@@ -213,7 +213,7 @@ RXVM_HANDLER(FEOF_REG_REG, VM_ADVANCE(2);
 
 RXVM_HANDLER(FERROR_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FERROR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        op1R->int_value = ferror((FILE*)op2R->int_value);
+        op1R->int_value = ferror((FILE*)(uintptr_t)op2R->int_value);
         DISPATCH;
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
@@ -573,7 +573,7 @@ RXVM_HANDLER(SRCMETHODSEL_REG_REG_STRING, VM_ADVANCE(3);
                 free(descriptor);
 
                 value_zero(op1R);
-                op1R->int_value = (rxinteger) called_function;
+                op1R->int_value = (rxinteger)(uintptr_t) called_function;
                 RXVM_INSTRUMENTATION_DYNAMIC(
                         RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
                         RXVM_PROFILE_DYNAMIC_SUCCESS);
@@ -687,7 +687,7 @@ RXVM_HANDLER(SRCFPROCSEL_REG_STRING_REG, VM_ADVANCE(3);
                 }
 
                 value_zero(op1R);
-                op1R->int_value = (rxinteger) called_function;
+                op1R->int_value = (rxinteger)(uintptr_t) called_function;
                 RXVM_INSTRUMENTATION_DYNAMIC(
                         RXVM_PROFILE_DYNAMIC_FACTORY_SELECTION,
                         RXVM_PROFILE_DYNAMIC_SUCCESS);

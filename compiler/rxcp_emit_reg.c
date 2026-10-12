@@ -568,14 +568,20 @@ static int block_expr_has_crossed_cleanup_exit(ASTNode *node,
     if (!node || !block_expr) return 0;
     if (node->node_type == LEAVE_WITH && node->association == block_expr) {
         ASTNode *ancestor;
+        ASTNode *crossed_child;
 
-        for (ancestor = node->parent;
+        for (crossed_child = node, ancestor = node->parent;
              ancestor && ancestor != block_expr;
-             ancestor = ancestor->parent) {
+             crossed_child = ancestor, ancestor = ancestor->parent) {
             ASTNode *repeat = ancestor->node_type == DO ?
                               ast_chdn(ancestor, 0) : 0;
 
-            if ((repeat && repeat->node_type == REPEAT) ||
+            /* A branch exit must unlink its still-live IF condition. Reserve
+             * the block result before those condition/helper registers are
+             * allocated, just as for crossed repeat expressions. */
+            if ((ancestor->node_type == IF &&
+                 crossed_child != ast_chdn(ancestor, 0)) ||
+                (repeat && repeat->node_type == REPEAT) ||
                 (ancestor->scope &&
                  ancestor->scope->defining_node == ancestor &&
                  block_expr_scope_has_runtime_cleanup(ancestor->scope))) {
@@ -1027,8 +1033,8 @@ walker_result register_walker(walker_direction direction,
             case BLOCK_EXPR:
                 assign_scoped_registers_for_node(node, payload);
                 /* A block result written by an early exit must remain distinct
-                 * from any linked repeat-expression register cleaned up on
-                 * that path. Reserve it before allocating the loop subtree;
+                 * from linked condition/repeat registers cleaned up on that
+                 * path. Reserve it before allocating the crossed subtree;
                  * ordinary block expressions retain the established late
                  * allocation and register reuse. */
                 if (block_expr_has_crossed_cleanup_exit(node, node)) {

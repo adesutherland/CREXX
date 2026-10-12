@@ -1057,6 +1057,69 @@ Notable flags:
 
 `##DATA` captures all subsequent lines up to the matching `##END` directive and converts them into a cREXX string array.
 
+### `REXXSCRIPT RUN` and `END REXXSCRIPT`
+
+RXPP also accepts a multiline RexxScript body without requiring every line to
+be manually quoted and concatenated:
+
+```rexx
+REXXSCRIPT RUN
+  say 'hello'
+  total = 1 + 2
+  say total
+END REXXSCRIPT
+```
+
+RXPP packages the body as one script string and emits the ordinary
+`REXXSCRIPT` statement. Existing clauses may remain on the opening line, for
+example `REXXSCRIPT RUN EXPOSE total OUTPUT output RESULT raw`. The block is a
+source convenience only; RexxScript execution and its existing clause
+semantics are unchanged.
+
+### `FORTRAN RUN` and `END FORTRAN`
+
+The FORTRAN interpreter can use a plain free-form text block without RXPP's
+`##DATA` syntax:
+
+```rexx
+FORTRAN RUN
+       PROGRAM DEMO
+       END
+END FORTRAN
+```
+
+RXPP stores the lines between the markers in the ordered `fortran_source`
+array. The block contents are preserved as text, including fixed-format
+spacing, labels, and comments. `END FORTRAN` is consumed by RXPP and does not
+appear in the generated cREXX source; it emits
+`call fortran_run fortran_source` after the source array.
+
+Additional source units can be collected with a procedures block:
+
+```rexx
+FORTRAN PROCEDURES
+       SUBROUTINE SCALE(A,N)
+       ...
+       END
+END FORTRAN
+```
+
+`FORTRAN RUN` and `FORTRAN PROCEDURES` blocks are appended to the same
+`fortran_source` array. RXPP emits one deferred `call fortran_run
+fortran_source` after all blocks, allowing the procedure block to appear
+before or after the main program. Procedure execution and `CALL` dispatch are
+runtime features planned separately.
+
+Inside either block, `C$RX BIND target = host` imports a typed cREXX array from
+the surrounding REXX program. `host[0]` is the read-only typed-array count and
+`host[1]` through `host[host[0]]` are copied into the declared FORTRAN target
+array. This uses bracket-indexed typed arrays and does not treat a stem's
+`.0` value as the count.
+
+Use `C$RX EXPORT target = host` to copy FORTRAN arrays back to typed cREXX
+arrays after the run. Multiple export directives are supported; the host
+arrays receive values at `[1..count]`.
+
 For example:
 
 ```rexx

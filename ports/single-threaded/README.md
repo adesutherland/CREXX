@@ -81,6 +81,27 @@ success is not proof of CMS compilation, linking, memory capacity or execution.
 
 ## Embedded VM and RXC
 
+The opt-in mainframe ADDRESS provider is documented in
+[`mainframe_address`](../../lib/plugins/mainframe_address/README.md). Native
+RXC/RXAS/RXLINK/RXVM builds use `mainframe-build.crexx` with the selected
+verified SDK overlay, root generated source manifests and this leaf's VM
+manifest. Native RXC links declaration metadata separately from the runtime
+provider; combining `CREXX_MAINFRAME_ADDRESS` and `CREXX_BUILD_COMPILER` in
+the leaf is rejected in favor of that explicit recipe. The recipe checks and
+hashes actual target objects and detects source changes during compilation.
+Native guest qualification remains distinct from these host/export checks.
+
+Native RXVM also selects `CREXX_VM_CLASSIC_PROVIDERS`: the existing stream
+provider uses explicit registration and sequential native record FILEs, and a
+private `rxfs` subset supplies the three signatures required by the current
+Classic/G closure. Positional streams, native absolute-path resolution and
+executable-path discovery are not qualified; unavailable pathname calls signal
+FAILURE. The desktop filesystem provider remains separate. Link the matching
+`classlib.rxbin` alongside library/rxfnsc/rxfnsg so deployment does not depend
+on finding a desktop autoload file. `mainframe-classic-pack.crexx` retains the
+RXVM-only amendment, exact libraries and canonical-library smoke separately
+from the original compiler campaign.
+
 `rxvm_single_embed` adds the public `rxvml` API to the same core without a VM
 CLI entry point. The legacy native ADDRESS redirection endpoint returns an
 explicit error in this build; structured endpoints and ordinary console output
@@ -112,6 +133,16 @@ rejects LeakSanitizer, use `tools/asan-run.sh --build-leaks off` and `--leaks of
 retain ASan/UBSan and do not claim leak qualification.
 
 ## CMS file discovery
+
+For the selected CMS31/TSO31 ADDRESS build and its exact qualification status,
+see [the mainframe runtime checkpoint](../../docs/qa/mainframe-address-2026-10-12-runtime-qualification.md).
+Native TSO file operands passed to Rexx file operations use an explicit
+native spelling such as `DSN:MFA12.INPUT`, a parenthesized PDS member or a
+leading quoted dataset name. Bare `NAME.TYPE` is cREXX logical naming and
+requires a configured search root; the VM's `-l` module location does not
+supply roots to a separate file open. The real OS and emulated personality
+use the same rule. A failed open is a file result, not evidence of heap
+exhaustion.
 
 For the experimental CMS ELF platform only, defining `CREXX_CMS_DIRENT`
 selects the existing prefix/type directory filter over a host-supplied

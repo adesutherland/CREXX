@@ -95,7 +95,7 @@ function(crexx_add_rexx_opt_matrix)
     set(options PASS_TEST_NAME_ARGUMENT LINKED_ALL_MODES)
     set(oneValueArgs NAME SOURCE WORKING_DIRECTORY TARGET_GROUP RUNNER COMPILER_TARGET ASSEMBLER_TARGET
             EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
-    set(multiValueArgs DEPENDS IMPORT_PATHS RXC_FLAGS RXAS_FLAGS RUNTIME_ARGS TEST_LABELS
+    set(multiValueArgs DEPENDS IMPORT_PATHS RXC_ENV RXC_FLAGS RXAS_FLAGS RUNTIME_ARGS TEST_LABELS
             REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -142,7 +142,11 @@ function(crexx_add_rexx_opt_matrix)
             list(PREPEND _crexx_mode_rxas_flags -n)
         endif()
 
-        set(_crexx_compile_cmd $<TARGET_FILE:${CREXX_COMPILER_TARGET}>)
+        if(CREXX_RXC_ENV)
+            set(_crexx_compile_cmd ${CMAKE_COMMAND} -E env ${CREXX_RXC_ENV} $<TARGET_FILE:${CREXX_COMPILER_TARGET}>)
+        else()
+            set(_crexx_compile_cmd $<TARGET_FILE:${CREXX_COMPILER_TARGET}>)
+        endif()
         if(CREXX_IMPORT_PATHS)
             list(APPEND _crexx_compile_cmd -i ${_crexx_import_arg})
         endif()

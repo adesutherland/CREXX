@@ -1,0 +1,23 @@
+{
+  "mode": "opt",
+  "bin": "/Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug/bin",
+  "results": {
+    "controls": 0,
+    "writes": 0,
+    "save_chain": 0
+  },
+  "modules": {
+    "lotto_surface.rxbin": "00968ca4cfd7fb8e6cb120d6b16f0c9329f6153268d9c38df2d1cf5fb3c7fba8",
+    "ui_local_resources.rxbin": "c7cf2e3435070894f23e2543e0973352981e6962a0169d52ef0079eb73d123d7",
+    "test_ui_controls.rxbin": "745da3d337d31d3d1cab94c8f889c7472bda589852129f5b96a017debdd76ade",
+    "checks_writes.rxbin": "9028cafa8fc4680ccaa833e6e28d3521421a8f29cf9160886dddcf04a1c72ec1",
+    "lotto_logic.rxbin": "b30ba072bcf8bd6bcfca682d29740816034f444894b9d0421611d9c36c61f8c5",
+    "checks_controls.rxbin": "92ce07f39861534345f5681b31832b2e17542be4a354f042f80b6db51815ff1f",
+    "lotto_surface_tests.rxbin": "15356684e7a35615f7bb34c20ee0fb1ad6fdf4648769a8b726b83d2018b5d7aa",
+    "test_ui_write.rxbin": "8ab6bfc77d2ce727a4b134e4d80189df8b8870abdf58a4345a21c4f72ed3a4e7",
+    "ui_contract.rxbin": "f0b7017b2d4fe530f0619aa8baa89cadf37d48d03a38471cda1fbb00c761658b",
+    "ui.rxbin": "3472eaca93c035f8ab0755dda5fc17321217612a9a6ea5421f0a94dbe9373f6f",
+    "ui_tui.rxbin": "891112c452c742891abbd803235eceeb93e6b4145a44bed4c8c5d64075586750",
+    "checks_save_chain.rxbin": "0ae9f7c4f3fb8d2d0417d47aa4491ed3ca6e2cb11a709eba0dd746407017bc55"
+  }
+}

@@ -68,6 +68,8 @@ endif()
 
 set(RXVM_CORE_OBJECT_SOURCES
         rxvmintp.h
+        rxvmlinkindex.c
+        rxvmlinkindex.h
         rxvmintp.c
         rxvmhandlerpolicy.h
         rxvmhandlers_core.inc
@@ -1989,6 +1991,18 @@ add_custom_command(
 
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_interfaces ALL DEPENDS tests_interfaces.rxbin)
+
+add_executable(test_rxvmlinkindex tests/test_rxvmlinkindex.c)
+target_link_libraries(test_rxvmlinkindex PRIVATE rxvml rxpashim)
+target_include_directories(test_rxvmlinkindex PRIVATE
+        . ./rxvmplugin ../assembler ../binutils/include
+        ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+add_dependencies(test_rxvmlinkindex run_tests_interfaces)
+add_test(NAME rxvm_link_index_fallback_context
+        COMMAND test_rxvmlinkindex ${CMAKE_CURRENT_BINARY_DIR}/tests_interfaces.rxbin)
+set_tests_properties(rxvm_link_index_fallback_context PROPERTIES
+        TIMEOUT 90 LABELS "interpreter;interfaces;memory;regression"
+        CREXX_PREP_TARGETS test_rxvmlinkindex)
 
 crexx_add_vm_test(NAME rxasinterfacetests RXVM_ARGS tests_interfaces PASS_REGULAR_EXPRESSION "PASS: Interface Dispatch Suite")
 crexx_add_rxas_vm_binary(tests_selector_descriptors "descriptor selector contracts")

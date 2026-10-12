@@ -1,0 +1,11 @@
+[433/435] Generating testRexxScriptArrayExpose_noopt.rxbin
+FAILED: [code=2] rexxscript/tests_functional/testRexxScriptArrayExpose_noopt.rxbin rexxscript/tests_functional/testRexxScriptArrayExpose_noopt.rxas <source>/cmake-build-release/rexxscript/tests_functional/testRexxScriptArrayExpose_noopt.rxbin <source>/cmake-build-release/rexxscript/tests_functional/testRexxScriptArrayExpose_noopt.rxas
+cd <source>/cmake-build-release/rexxscript/tests_functional && <source>/cmake-build-release/bin/rxc -i "<source>/cmake-build-release/bin" -n -x -o testRexxScriptArrayExpose_noopt <source>/rexxscript/tests_functional/testRexxScriptArrayExpose.crexx && <source>/cmake-build-release/bin/rxas -n -o testRexxScriptArrayExpose_noopt testRexxScriptArrayExpose_noopt
+Error in testRexxScriptArrayExpose.crexx @ 22:3 - #SYNTAX_ERROR: Syntax error., "REXXSCRIPT"
+1 error(s) in source file
+[434/435] Generating testRexxScriptArrayExpose_opt.rxbin
+FAILED: [code=2] rexxscript/tests_functional/testRexxScriptArrayExpose_opt.rxbin rexxscript/tests_functional/testRexxScriptArrayExpose_opt.rxas <source>/cmake-build-release/rexxscript/tests_functional/testRexxScriptArrayExpose_opt.rxbin <source>/cmake-build-release/rexxscript/tests_functional/testRexxScriptArrayExpose_opt.rxas
+cd <source>/cmake-build-release/rexxscript/tests_functional && <source>/cmake-build-release/bin/rxc -i "<source>/cmake-build-release/bin" -x -o testRexxScriptArrayExpose_opt <source>/rexxscript/tests_functional/testRexxScriptArrayExpose.crexx && <source>/cmake-build-release/bin/rxas -o testRexxScriptArrayExpose_opt testRexxScriptArrayExpose_opt
+Error in testRexxScriptArrayExpose.crexx @ 22:3 - #SYNTAX_ERROR: Syntax error., "REXXSCRIPT"
+1 error(s) in source file
+ninja: build stopped: subcommand failed.

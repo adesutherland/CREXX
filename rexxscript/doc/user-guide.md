@@ -64,6 +64,19 @@ end
 execution and copies them back afterwards. Variables not listed in `EXPOSE`
 remain local to the script.
 
+For array sharing, declare the host variable as `.string[]` before the call
+and expose only its name:
+
+```rexx
+measurements = .string[]
+REXXSCRIPT script EXPOSE measurements
+```
+
+The array is transferred as `measurements.0`, `measurements.1`, and so on.
+Other host array types, such as `.int[]`, are rejected by the compiler exit
+with a clear diagnostic that exposed arrays must be `.string[]`. A scalar
+declaration such as `.string` remains a scalar expose.
+
 `OUTPUT` receives a `.string[]` array containing captured `SAY` output.
 
 `RESULT` receives the raw evaluator result array. `raw[1]` is the status.
@@ -207,6 +220,7 @@ VERIFY
 WORD
 WORDS
 WORDPOS
+VALUE
 LINEIN
 LINEOUT
 LINES
@@ -216,6 +230,40 @@ ERASEFILE
 Function names are matched case-insensitively. RexxScript owns the sandbox-safe
 name controller, which routes each allowed intrinsic to its specific shared
 `rxfnsc` `RexxClassicBifs` implementation.
+
+`VALUE(name)` is a RexxScript-specific, read-only intrinsic. It evaluates its
+argument to a variable name and returns that variable's value from the current
+RexxScript variable pool. Names are case-insensitive. It is useful for reading
+RXPP-generated scalar names such as `MEASUREMENTS_1`; dynamic assignment is not
+supported.
+
+```rexx
+do i = 1 to MEASUREMENTS_COUNT
+  say VALUE('MEASUREMENTS_' || i)
+end
+```
+
+### One-dimensional string arrays
+
+RexxScript supports script-local one-dimensional string arrays using dotted
+names. The `.0` element conventionally stores the element count:
+
+```rexx
+words.0 = 3
+words.1 = 'red'
+words.2 = 'green'
+words.3 = 'blue'
+
+do i = 1 to words.0
+  say words.i
+end
+```
+
+The suffix may be a literal non-negative integer or the name of an integer
+variable. Missing elements remain undefined variables. Host cREXX array
+Host cREXX arrays can be exposed by declaring the host variable as `.string[]`
+and using `EXPOSE name`; the compiler exit transfers the elements through this
+dotted representation.
 
 The embedded `REXXSCRIPT` statement supports `VALUES array` for collecting
 values produced by `COLLECT expression`. The target is a `.string[]`, and values

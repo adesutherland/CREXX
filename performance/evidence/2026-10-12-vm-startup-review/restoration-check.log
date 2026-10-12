@@ -1,0 +1,5 @@
+rxtvm cmp_exit=0 PASS (byte-identical)
+rxbvm cmp_exit=0 PASS (byte-identical)
+rxvme cmp_exit=0 PASS (byte-identical)
+rxbvme cmp_exit=0 PASS (byte-identical)
+source-diff-exit=0

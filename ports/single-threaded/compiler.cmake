@@ -1,77 +1,12 @@
-# Source closure mirrors compiler/CMakeLists.txt; generated C comes from the
-# pinned normal native build. No compiler language feature is removed.
+# Source closure comes from the actual normal compiler targets. Included C
+# fragments and headers are excluded by the owning target's source properties.
 set(CREXX_HOST_BUILD "" CACHE PATH "Normal build with RXC/RXAS generators and libraries")
-if(NOT EXISTS "${CREXX_HOST_BUILD}/compiler/rexbscan.c")
-    message(FATAL_ERROR "Build normal rxc first and set CREXX_HOST_BUILD")
+set(manifest "${CREXX_HOST_BUILD}/mainframe/compiler_sources.txt")
+if(NOT EXISTS "${manifest}")
+    message(FATAL_ERROR "Configure/build normal rxc first and set CREXX_HOST_BUILD")
 endif()
-add_library(rxc_single_compiler STATIC
-    "${CREXX_SOURCE}/compiler/rxcpmain.c"
-    "${CREXX_SOURCE}/compiler/rxcp_ast_core.c"
-    "${CREXX_SOURCE}/compiler/rxcp_ast_print.c"
-    "${CREXX_SOURCE}/compiler/rxcp_ast_walk.c"
-    "${CREXX_SOURCE}/compiler/rxcp_util.c"
-    "${CREXX_SOURCE}/compiler/rxcp_diag.c"
-    "${CREXX_SOURCE}/compiler/rxcp_diag_fallback.c"
-    "${CREXX_SOURCE}/compiler/rxcp_dsl.c"
-    "${CREXX_SOURCE}/compiler/rxcp_highlight_controller.c"
-    "${CREXX_SOURCE}/compiler/rxcp_source_tree.c"
-    "${CREXX_SOURCE}/compiler/rxcp_source_ext.c"
-    "${CREXX_SOURCE}/compiler/rxcp_srcmap.c"
-    "${CREXX_HOST_BUILD}/compiler/rxcposcn.c"
-    "${CREXX_HOST_BUILD}/compiler/rxcpopgr.c"
-    "${CREXX_SOURCE}/compiler/rxcpopar.c"
-    "${CREXX_HOST_BUILD}/compiler/rexbscan.c"
-    "${CREXX_HOST_BUILD}/compiler/rxcpbgmr.c"
-    "${CREXX_SOURCE}/compiler/rxcpbpar.c"
-    "${CREXX_HOST_BUILD}/compiler/rexcscan.c"
-    "${CREXX_HOST_BUILD}/compiler/rxcpcgmr.c"
-    "${CREXX_SOURCE}/compiler/rxcpcpar.c"
-    "${CREXX_SOURCE}/compiler/rxcpcdiag.c"
-    "${CREXX_SOURCE}/compiler/rxcpcsym.c"
-    "${CREXX_SOURCE}/compiler/rxcpcval.c"
-    "${CREXX_SOURCE}/compiler/rxcp_val_sym.c"
-    "${CREXX_SOURCE}/compiler/rxcp_val_type.c"
-    "${CREXX_SOURCE}/compiler/rxcp_val_trans.c"
-    "${CREXX_SOURCE}/compiler/rxcp_ast_rewrite.c"
-    "${CREXX_SOURCE}/compiler/rxcp_val_check.c"
-    "${CREXX_SOURCE}/compiler/rxcp_val_plugin.c"
-    "${CREXX_SOURCE}/compiler/rxcp_val_orch.c"
-    "${CREXX_SOURCE}/compiler/rxcpsymb.c"
-    "${CREXX_SOURCE}/compiler/rxcp_fixup.c"
-    "${CREXX_SOURCE}/compiler/rxcp_ast_val.c"
-    "${CREXX_SOURCE}/compiler/rxcp_remap.c"
-    "${CREXX_SOURCE}/compiler/rxcp_remap_build.c"
-    "${CREXX_SOURCE}/compiler/rxcp_task_lower.c"
-    "${CREXX_SOURCE}/compiler/rxcp_levelc_lower.c"
-    "${CREXX_SOURCE}/compiler/rxcp_inline.c"
-    "${CREXX_SOURCE}/compiler/rxcp_inline_rules.c"
-    "${CREXX_SOURCE}/compiler/rxcpemit.c"
-    "${CREXX_SOURCE}/compiler/rxcp_emit_core.c"
-    "${CREXX_SOURCE}/compiler/rxcp_emit_super.c"
-    "${CREXX_SOURCE}/compiler/rxcp_emit_reg.c"
-    "${CREXX_SOURCE}/compiler/rxcp_emit_expr.c"
-    "${CREXX_SOURCE}/compiler/rxcp_emit_flow.c"
-    "${CREXX_SOURCE}/compiler/rxcp_emit_proc.c"
-    "${CREXX_SOURCE}/compiler/rxcp_emit_meta.c"
-    "${CREXX_SOURCE}/compiler/rxcp_opt.c"
-    "${CREXX_SOURCE}/compiler/rxcp_partial_call.c"
-    "${CREXX_SOURCE}/compiler/rxcp_flow.c"
-    "${CREXX_SOURCE}/compiler/rxcp_dispatch.c"
-    "${CREXX_SOURCE}/compiler/rxcpfunc.c"
-    "${CREXX_SOURCE}/compiler/rxcp_import_report.c"
-    "${CREXX_SOURCE}/compiler/rxcp_project_dependencies.c"
-    "${CREXX_SOURCE}/compiler/rxcp_import_publish.c"
-    "${CREXX_SOURCE}/compiler/rxcp_exit.c"
-    "${CREXX_SOURCE}/compiler/rxcp_instr.c"
-    "${CREXX_SOURCE}/compiler/rxcp_contract.c"
-    "${CREXX_SOURCE}/compiler/rxcp_parse_buffer.c"
-    "${CREXX_SOURCE}/compiler/rxcp_frontend.c"
-    "${CREXX_SOURCE}/compiler/rxcp_frontend_full.c"
-    "${CREXX_SOURCE}/compiler/rxcp_frontend_c.c"
-    "${CREXX_SOURCE}/compiler/rxcp_c_source_import.c"
-    "${CREXX_SOURCE}/compiler/rxcp_typed_orch.c"
-    "${CREXX_SOURCE}/compiler/rxcc.c"
-)
+file(STRINGS "${manifest}" compiler_sources)
+add_library(rxc_single_compiler STATIC ${compiler_sources})
 target_include_directories(rxc_single_compiler PRIVATE "${CREXX_SOURCE}/compiler"
     "${CREXX_HOST_BUILD}/compiler" "${CREXX_HOST_BUILD}/assembler")
 target_link_libraries(rxc_single_compiler PUBLIC rxvm_single_embed

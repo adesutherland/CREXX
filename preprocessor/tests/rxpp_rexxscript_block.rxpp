@@ -1,0 +1,28 @@
+##CFLAG nosrcmap
+
+/* A small end-to-end RexxScript block example. */
+total = .string
+count = .string
+output = .string[]
+raw = .string[]
+
+REXXSCRIPT RUN EXPOSE total, count OUTPUT output RESULT raw
+  count = 3
+  total = 10 + 20 + 30
+  say 'RexxScript total:' total
+  msg.1=111
+  msg.2=222
+  msg.3=333
+  msg.0=3
+  do i=1 to msg.0
+     say 987' 'msg.i
+  end
+END REXXSCRIPT
+
+say 'Captured output:'
+do i=1 to output[0]
+  say output[i]
+end
+say 'Total from RexxScript:' total
+say 'Count from RexxScript:' count
+say 'Raw status:' raw[1]

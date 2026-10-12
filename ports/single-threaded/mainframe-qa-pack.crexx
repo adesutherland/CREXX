@@ -1,0 +1,87 @@
+/* Freeze the exact reviewed ADDRESS campaign inputs without changing guests.
+   Native producers own source/tool hashes; this pack preserves those receipts.
+   The operator stages original UTF-8 as binary and uses RXC -E UTF8. */
+options levelb
+import rxfnsb
+main: procedure = .int
+  arg args = .string[]
+  if args.0 < 4 | args.0 > 6 then return 2
+  root=args.1; host=args.2; native=args.3; out=args.4
+  cms_suffix=.string
+  tso_suffix=.string
+  cms_suffix=""
+  tso_suffix=""
+  if args.0>=5 then do
+    if args.5<>"heap256" & args.5<>"allocationfix" then return 2
+    cms_suffix=args.5
+  end
+  if args.0=6 then do
+    if args.6<>"memberfix" then return 2
+    tso_suffix=args.6
+  end
+  address crexx "run test ! -e :out"
+  if rc <> 0 then return 2
+  address crexx "mkdir -p :out/cms :out/tso :out/shared"
+  if rc <> 0 then return rc
+  profiles="cms tso"; tools="RXC RXAS RXLINK RXVM"
+  i=.int; j=.int; k=.int
+  source=.string; destination=.string
+  inputs=.string[]; hashes=.string[]
+  do i=1 to words(profiles)
+    profile=word(profiles,i)
+    extension="MODULE"
+    if profile="tso" then extension="XMI"
+    do j=1 to words(tools)
+      tool=word(tools,j)
+      suffix="final"
+      if tool="RXVM" then suffix="reviewed"
+      if profile="cms" & cms_suffix<>"" then suffix=cms_suffix
+      if profile="tso" & tso_suffix<>"" then suffix=tso_suffix
+      dir=native||"/"||profile||"-"||translate(tool,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")||"-"||suffix
+      before=dir||"/source-before.sha256"; after=dir||"/source-after.sha256"
+      address crexx "run cmp :before :after"
+      if rc <> 0 then return rc
+      call arraydrop hashes
+      address crexx "run shasum -a 256 --strict -c :before" output hashes
+      if rc <> 0 then return rc
+      names=tool||"."||extension||" source-before.sha256 source-after.sha256 inputs-outputs.sha256 build-profile.txt"
+      do k=1 to words(names)
+        source=dir||"/"||word(names,k)
+        destination=out||"/"||profile||"/"||word(names,k)
+        if k>1 then destination=out||"/"||profile||"/"||tool||"-"||word(names,k)
+        address crexx "run cmake -E copy :source :destination"
+        if rc <> 0 then return rc
+        call arrayappend inputs,destination
+      end
+    end
+  end
+  sources=.string[]; names=.string[]
+  call arrayappend sources,root||"/lib/plugins/mainframe_address/tests/native_address.crexx"
+  call arrayappend names,"MFADDB.REXX"
+  call arrayappend sources,root||"/lib/plugins/mainframe_address/tests/native_address_classic.rexx"
+  call arrayappend names,"MFADDC.REXX"
+  call arrayappend sources,host||"/lib/plugins/mainframe_address/fixtures/keepin.DATA"
+  call arrayappend names,"KEEPIN.DATA"
+  libraries="library.rxbin rxfnsc.rxbin rxfnsg.rxbin rxcexits.rxbin"
+  do i=1 to words(libraries)
+    call arrayappend sources,host||"/bin/"||word(libraries,i)
+    call arrayappend names,word(libraries,i)
+  end
+  do i=1 to sources.0
+    source=sources[i]; destination=out||"/shared/"||names[i]
+    address crexx "run cmake -E copy :source :destination"
+    if rc <> 0 then return rc
+    call arrayappend inputs,destination
+  end
+  call arraydrop hashes
+  address crexx "run shasum -a 256 :inputs[]" output hashes
+  if rc <> 0 then return rc
+  manifest=out||"/frozen-inputs.sha256"
+  do i=1 to hashes.0
+    call lineout manifest,hashes[i]
+  end
+  call lineout manifest
+  address crexx "run shasum -a 256 --strict -c :manifest"
+  if rc <> 0 then return rc
+  say "MAINFRAME ADDRESS PACK PASS" out
+  return 0

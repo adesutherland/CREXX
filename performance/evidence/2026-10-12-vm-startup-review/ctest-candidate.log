@@ -1,0 +1,176 @@
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-release
+      Start 1169: rxdas_roundtrip_interfaces
+      Start  632: interface_import_provider_source_run_opt
+      Start  633: interface_import_provider_binary_run_noopt
+      Start  636: interface_split_same_namespace_source_run_opt
+      Start  637: interface_split_same_namespace_binary_run_noopt
+      Start  638: interface_split_same_namespace_binary_run_opt
+      Start  639: interface_binary_covariant_run_noopt
+      Start  634: interface_import_provider_binary_run_opt
+      Start  635: interface_split_same_namespace_source_run_noopt
+      Start  640: interface_binary_covariant_run_opt
+ 1/77 Test #1169: rxdas_roundtrip_interfaces ..........................   Passed    0.04 sec
+      Start  641: qualified_interface_import_run_noopt
+ 2/77 Test  #640: interface_binary_covariant_run_opt ..................   Passed    0.98 sec
+      Start  631: interface_import_provider_source_run_noopt
+ 3/77 Test  #633: interface_import_provider_binary_run_noopt ..........   Passed    0.99 sec
+      Start  643: qualified_interface_binary_import_run_noopt
+ 4/77 Test  #637: interface_split_same_namespace_binary_run_noopt .....   Passed    1.00 sec
+      Start  644: qualified_interface_binary_import_run_opt
+ 5/77 Test  #639: interface_binary_covariant_run_noopt ................   Passed    1.01 sec
+      Start  619: interface_source_import_run_noopt
+ 6/77 Test  #635: interface_split_same_namespace_source_run_noopt .....   Passed    1.01 sec
+      Start  642: qualified_interface_import_run_opt
+ 7/77 Test  #638: interface_split_same_namespace_binary_run_opt .......   Passed    1.02 sec
+      Start 1048: dynamic_interface_load_driver
+ 8/77 Test  #634: interface_import_provider_binary_run_opt ............   Passed    1.02 sec
+      Start  615: interface_default_source_import_run_noopt
+ 9/77 Test  #641: qualified_interface_import_run_noopt ................   Passed    1.03 sec
+      Start  622: interface_binary_import_run_opt
+10/77 Test  #632: interface_import_provider_source_run_opt ............   Passed    1.09 sec
+      Start  616: interface_default_source_import_run_opt
+11/77 Test  #636: interface_split_same_namespace_source_run_opt .......   Passed    1.11 sec
+      Start  626: interface_match_binary_import_run_opt
+12/77 Test  #615: interface_default_source_import_run_noopt ...........   Passed    0.71 sec
+      Start  628: interface_named_factory_source_import_run_opt
+13/77 Test  #619: interface_source_import_run_noopt ...................   Passed    0.74 sec
+      Start  620: interface_source_import_run_opt
+14/77 Test  #622: interface_binary_import_run_opt .....................   Passed    0.70 sec
+      Start  623: interface_match_source_import_run_noopt
+15/77 Test  #616: interface_default_source_import_run_opt .............   Passed    0.71 sec
+      Start  627: interface_named_factory_source_import_run_noopt
+16/77 Test  #626: interface_match_binary_import_run_opt ...............   Passed    0.74 sec
+      Start  624: interface_match_source_import_run_opt
+17/77 Test  #644: qualified_interface_binary_import_run_opt ...........   Passed    1.01 sec
+      Start  630: interface_named_factory_binary_import_run_opt
+18/77 Test  #643: qualified_interface_binary_import_run_noopt .........   Passed    1.05 sec
+      Start  618: interface_default_binary_import_run_opt
+19/77 Test  #631: interface_import_provider_source_run_noopt ..........   Passed    1.10 sec
+      Start  617: interface_default_binary_import_run_noopt
+20/77 Test  #642: qualified_interface_import_run_opt ..................   Passed    1.13 sec
+      Start  621: interface_binary_import_run_noopt
+21/77 Test #1048: dynamic_interface_load_driver .......................   Passed    1.23 sec
+      Start  629: interface_named_factory_binary_import_run_noopt
+22/77 Test  #620: interface_source_import_run_opt .....................   Passed    0.74 sec
+      Start  625: interface_match_binary_import_run_noopt
+23/77 Test  #628: interface_named_factory_source_import_run_opt .......   Passed    0.77 sec
+      Start  542: interface_runtime_dispatch_multi_run_noopt
+24/77 Test  #623: interface_match_source_import_run_noopt .............   Passed    0.76 sec
+      Start  541: interface_tracer_run_opt
+25/77 Test  #627: interface_named_factory_source_import_run_noopt .....   Passed    0.77 sec
+      Start  540: interface_tracer_run_noopt
+26/77 Test  #624: interface_match_source_import_run_opt ...............   Passed    0.76 sec
+      Start  612: interface_named_factory_tiebreak_run_opt
+27/77 Test  #630: interface_named_factory_binary_import_run_opt .......   Passed    0.74 sec
+      Start  561: interface_multi_interface_same_module_run_opt
+28/77 Test  #617: interface_default_binary_import_run_noopt ...........   Passed    0.72 sec
+      Start  543: interface_runtime_dispatch_multi_run_opt
+29/77 Test  #621: interface_binary_import_run_noopt ...................   Passed    0.67 sec
+      Start  569: interface_match_reject_single_run_opt
+30/77 Test  #618: interface_default_binary_import_run_opt .............   Passed    0.78 sec
+      Start  566: interface_match_same_module_run_noopt
+31/77 Test  #542: interface_runtime_dispatch_multi_run_noopt ..........   Passed    0.38 sec
+      Start  545: interface_method_arg_same_module_run_opt
+32/77 Test  #540: interface_tracer_run_noopt ..........................   Passed    0.36 sec
+      Start  563: interface_showcase_same_module_run_opt
+33/77 Test  #541: interface_tracer_run_opt ............................   Passed    0.41 sec
+      Start  614: interface_named_factory_no_impl_run_opt
+34/77 Test  #612: interface_named_factory_tiebreak_run_opt ............   Passed    0.37 sec
+      Start  549: interface_signature_static_positive_run_opt
+35/77 Test  #629: interface_named_factory_binary_import_run_noopt .....   Passed    0.75 sec
+      Start  611: interface_named_factory_tiebreak_run_noopt
+36/77 Test  #561: interface_multi_interface_same_module_run_opt .......   Passed    0.41 sec
+      Start  613: interface_named_factory_no_impl_run_noopt
+37/77 Test  #625: interface_match_binary_import_run_noopt .............   Passed    0.72 sec
+      Start  554: interface_no_impl_run_noopt
+38/77 Test  #543: interface_runtime_dispatch_multi_run_opt ............   Passed    0.42 sec
+      Start  603: gate_f_task_interface_result
+39/77 Test  #566: interface_match_same_module_run_noopt ...............   Passed    0.40 sec
+      Start  186: interface_match_without_factory_fail
+40/77 Test  #569: interface_match_reject_single_run_opt ...............   Passed    0.42 sec
+      Start  546: interface_method_object_arg_same_module_run_noopt
+41/77 Test  #614: interface_named_factory_no_impl_run_opt .............   Passed    0.32 sec
+      Start  550: interface_factory_tiebreak_run_noopt
+42/77 Test  #563: interface_showcase_same_module_run_opt ..............   Passed    0.35 sec
+      Start  187: interface_default_redefine_fail
+43/77 Test  #545: interface_method_arg_same_module_run_opt ............   Passed    0.41 sec
+      Start  189: interface_signature_static_bad_method_fail
+44/77 Test  #549: interface_signature_static_positive_run_opt .........   Passed    0.36 sec
+      Start  548: interface_signature_static_positive_run_noopt
+45/77 Test  #611: interface_named_factory_tiebreak_run_noopt ..........   Passed    0.35 sec
+      Start  184: interface_missing_impl_fail
+46/77 Test  #613: interface_named_factory_no_impl_run_noopt ...........   Passed    0.36 sec
+      Start  544: interface_method_arg_same_module_run_noopt
+47/77 Test  #187: interface_default_redefine_fail .....................   Passed    0.28 sec
+      Start  553: interface_factory_signal_restore_run_opt
+48/77 Test  #186: interface_match_without_factory_fail ................   Passed    0.33 sec
+      Start  551: interface_factory_tiebreak_run_opt
+49/77 Test  #554: interface_no_impl_run_noopt .........................   Passed    0.37 sec
+      Start  552: interface_factory_signal_restore_run_noopt
+50/77 Test  #603: gate_f_task_interface_result ........................   Passed    0.36 sec
+      Start  567: interface_match_same_module_run_opt
+51/77 Test  #546: interface_method_object_arg_same_module_run_noopt ...   Passed    0.34 sec
+      Start  207: eq_missing_interface_fail
+52/77 Test  #189: interface_signature_static_bad_method_fail ..........   Passed    0.32 sec
+      Start  568: interface_match_reject_single_run_noopt
+53/77 Test  #184: interface_missing_impl_fail .........................   Passed    0.30 sec
+      Start  547: interface_method_object_arg_same_module_run_opt
+54/77 Test  #550: interface_factory_tiebreak_run_noopt ................   Passed    0.37 sec
+      Start  555: interface_no_impl_run_opt
+55/77 Test  #548: interface_signature_static_positive_run_noopt .......   Passed    0.38 sec
+      Start  559: interface_default_same_module_run_opt
+56/77 Test  #544: interface_method_arg_same_module_run_noopt ..........   Passed    0.37 sec
+      Start  562: interface_showcase_same_module_run_noopt
+57/77 Test  #207: eq_missing_interface_fail ...........................   Passed    0.33 sec
+      Start  556: interface_default_codegen_noopt
+58/77 Test  #552: interface_factory_signal_restore_run_noopt ..........   Passed    0.36 sec
+      Start  609: interface_named_factory_same_module_run_noopt
+59/77 Test  #551: interface_factory_tiebreak_run_opt ..................   Passed    0.38 sec
+      Start  610: interface_named_factory_same_module_run_opt
+60/77 Test  #553: interface_factory_signal_restore_run_opt ............   Passed    0.38 sec
+      Start  557: interface_default_codegen_opt
+61/77 Test  #567: interface_match_same_module_run_opt .................   Passed    0.37 sec
+      Start  560: interface_multi_interface_same_module_run_noopt
+62/77 Test  #568: interface_match_reject_single_run_noopt .............   Passed    0.35 sec
+      Start  185: interface_match_bad_args_fail
+63/77 Test  #547: interface_method_object_arg_same_module_run_opt .....   Passed    0.39 sec
+      Start  558: interface_default_same_module_run_noopt
+64/77 Test  #555: interface_no_impl_run_opt ...........................   Passed    0.40 sec
+      Start  188: interface_factory_return_type_fail
+65/77 Test  #188: interface_factory_return_type_fail ..................   Passed    0.03 sec
+      Start 1047: dynamic_interface_load_rxvm
+66/77 Test  #559: interface_default_same_module_run_opt ...............   Passed    0.37 sec
+      Start 1152: rxlink_interface_run
+67/77 Test #1152: rxlink_interface_run ................................   Passed    0.01 sec
+      Start 1341: rxasinterfacetests
+68/77 Test #1047: dynamic_interface_load_rxvm .........................   Passed    0.01 sec
+69/77 Test #1341: rxasinterfacetests ..................................   Passed    0.01 sec
+70/77 Test  #556: interface_default_codegen_noopt .....................   Passed    0.31 sec
+71/77 Test  #185: interface_match_bad_args_fail .......................   Passed    0.28 sec
+72/77 Test  #562: interface_showcase_same_module_run_noopt ............   Passed    0.36 sec
+73/77 Test  #557: interface_default_codegen_opt .......................   Passed    0.31 sec
+74/77 Test  #609: interface_named_factory_same_module_run_noopt .......   Passed    0.32 sec
+75/77 Test  #610: interface_named_factory_same_module_run_opt .........   Passed    0.33 sec
+76/77 Test  #560: interface_multi_interface_same_module_run_noopt .....   Passed    0.33 sec
+77/77 Test  #558: interface_default_same_module_run_noopt .............   Passed    0.29 sec
+
+100% tests passed, 0 tests failed out of 77
+
+Label Time Summary:
+compiler            =   1.60 sec*proc (3 tests)
+comprehensive       =  41.09 sec*proc (72 tests)
+concurrency         =   0.36 sec*proc (1 test)
+concurrency-sp06    =   0.36 sec*proc (1 test)
+driver              =   1.23 sec*proc (1 test)
+f1f                 =   0.36 sec*proc (1 test)
+gate_f              =   0.36 sec*proc (1 test)
+interfaces          =   1.24 sec*proc (2 tests)
+late-load           =   1.24 sec*proc (2 tests)
+levelg              =   0.36 sec*proc (1 test)
+linked_opt          =  19.40 sec*proc (31 tests)
+negative            =   0.36 sec*proc (1 test)
+smoke               =   1.16 sec*proc (5 tests)
+stage3              =   1.24 sec*proc (2 tests)
+vm                  =   0.01 sec*proc (1 test)
+
+Total Test time (real) =   4.38 sec

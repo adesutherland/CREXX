@@ -1,0 +1,39 @@
+/*
+ * Focused RexxScript array-boundary sample.
+ *
+ * The caller owns a typed cREXX string array.  REXXSCRIPT EXPOSE infers the
+ * array boundary from that declaration; the script sees measurements.0,
+ * measurements.1, ... and can return changed or newly-created elements.
+ */
+options levelb
+import rexxscript
+
+main: procedure
+  measurements = .string[]
+  raw = .string[]
+  failures = .int
+  failures = 0
+
+  measurements[1] = "10"
+  measurements[2] = "20"
+  measurements[3] = "30"
+
+  test_script = "total = 0; do i = 1 to measurements.0; total = total + measurements.i; end; measurements.2 = 'TWENTY'; measurements.4 = total + 1"
+  REXXSCRIPT "total = 0; do i = 1 to measurements.0; total = total + measurements.i; end; measurements.2 = 'TWENTY'; measurements.4 = total + 1" EXPOSE measurements RESULT raw
+
+  say "RexxScript status:" raw[1]
+  say "Array count:" measurements[0]
+  do i = 1 to measurements[0]
+    say "measurements[" || i || "] =" measurements[i]
+  end
+
+  if raw[1] <> "OK" then failures = failures + 1
+  if measurements[0] <> 4 then failures = failures + 1
+  if measurements[1] <> "10" then failures = failures + 1
+  if measurements[2] <> "TWENTY" then failures = failures + 1
+  if measurements[3] <> "30" then failures = failures + 1
+  if measurements[4] <> "61" then failures = failures + 1
+
+  if failures = 0 then say "PASS: RexxScript array EXPOSE"
+  else say "FAIL: RexxScript array EXPOSE" failures
+  return

@@ -235,6 +235,14 @@ evaluator-local ordered collection stream without terminating execution or
 changing the `SAY` output stream. The embedded compiler exit exposes that stream
 through the `VALUES target` clause, where the target is a `.string[]`.
 
+RexxScript-local one-dimensional arrays use dotted compound names such as
+`items.1` and `items.i`. The evaluator normalizes the suffix to a non-negative
+integer and stores the resulting string under the existing environment name
+table. Host array sharing is implemented by the RexxScript compiler exit: an
+exposed host array must have a `.string[]` type, and non-string arrays are
+rejected before generated code is emitted. The `EXPOSE` clause contains only
+the host variable name because its declared type supplies the distinction.
+
 When changing intrinsic parsing, remember that intrinsic calls can be nested.
 `_eval_builtin()` must copy parsed argument text and omitted-argument flags
 before evaluating each argument, because evaluating an argument can recursively
@@ -290,14 +298,15 @@ without making `docs/` and `rexxscript/doc/` drift.
 Focused build:
 
 ```sh
-cmake --build cmake-build-debug --target testrexxscript
+cmake --build cmake-build-debug \
+  --target testrexxscript test_rexxscript_bin test_rexxscript_direct_bin
 ```
 
 Focused tests:
 
 ```sh
 ctest --test-dir cmake-build-debug --output-on-failure \
-  -R 'testRexxScript(Runtime|Compat)_(noopt|opt)|test_rexxscript|rexxscript_cli_smoke'
+  -R 'testRexxScript(Runtime|Compat|ArrayExpose)_(noopt|opt)|test_rexxscript|rexxscript_cli_smoke'
 ```
 
 Related shared BIF tests:
@@ -310,6 +319,11 @@ ctest --test-dir cmake-build-debug --output-on-failure \
 
 The compiler-exit tests prove that the `REXXSCRIPT` statement lowers to the
 runtime facade and that direct exit behavior remains available.
+`testRexxScriptArrayExpose` also uses that statement, so its CMake compile
+commands must enable exits and depend on `rxcexits.rxbin`. The runtime API and
+compatibility fixtures retain `-x`. Generated exit helper variables have
+explicit types so multiple statements in one procedure use intentional local
+bindings without scope warnings.
 
 ## Legacy: Documentation Ownership
 
