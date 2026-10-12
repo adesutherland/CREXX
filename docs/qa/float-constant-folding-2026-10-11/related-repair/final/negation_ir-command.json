@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/usr/bin/clang",
+    "-O3",
+    "-S",
+    "-emit-llvm",
+    "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/nan_negation_probe/negation_ir.c",
+    "-o",
+    "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/compiler/tests/nan_negation_probe/negation_ir.ll"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "",
+  "assertions": "volatile read and fmul retained; no fneg under -O3"
+}

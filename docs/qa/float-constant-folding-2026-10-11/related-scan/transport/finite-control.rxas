@@ -1,0 +1,9 @@
+.globals=0
+main() .locals=2
+load r0,0.30000000000000004
+load r1,0.1
+fadd r1,r1,0.2
+feq r0,r0,r1
+btos r0
+say r0
+ret

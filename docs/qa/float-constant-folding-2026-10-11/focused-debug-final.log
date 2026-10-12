@@ -1,0 +1,14 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 524: float_constant_folding_contract
+1/1 Test #524: float_constant_folding_contract ...   Passed    0.50 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+compiler            =   0.50 sec*proc (1 test)
+comprehensive       =   0.50 sec*proc (1 test)
+correctness         =   0.50 sec*proc (1 test)
+numeric             =   0.50 sec*proc (1 test)
+optimizer-parity    =   0.50 sec*proc (1 test)
+
+Total Test time (real) =   0.56 sec

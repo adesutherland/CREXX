@@ -181,12 +181,28 @@ function(add_rxpa_provider_package plugin_name)
             string(APPEND _package_content "list(APPEND backend_files \"${_backend}|$<TARGET_FILE:${_target}>\")\n")
         endforeach()
         file(GENERATE OUTPUT "${_package_input}" CONTENT "${_package_content}")
-        add_custom_target(${plugin_name}_runtime_package ALL
+        set(_package_outputs "${_crexx_provider_dir}/${_crexx_provider_id}.native.json")
+        if(RXPA_PROVIDER_BACKEND_TARGETS)
+            list(APPEND _package_outputs "${_crexx_provider_dir}/${_crexx_provider_id}.runtime.json")
+        endif()
+        set(_package_files ${RXPA_PROVIDER_RUNTIME_FILES})
+        foreach(_target IN LISTS RXPA_PROVIDER_LINK_TARGETS)
+            list(APPEND _package_files "$<TARGET_LINKER_FILE:${_target}>")
+        endforeach()
+        foreach(_target IN LISTS RXPA_PROVIDER_RUNTIME_TARGETS RXPA_PROVIDER_BACKEND_TARGETS)
+            list(APPEND _package_files "$<TARGET_FILE:${_target}>")
+        endforeach()
+        add_custom_command(OUTPUT ${_package_outputs}
             COMMAND ${CMAKE_COMMAND} "-DINPUT=${_package_input}"
                 -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/WriteProviderPackage.cmake"
-            DEPENDS ${_crexx_dynamic_target} ${_crexx_static_target}
+            DEPENDS "${_package_input}" ${_package_files}
+                "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/WriteProviderPackage.cmake"
+                "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/RuntimePackagePaths.cmake"
+                ${_crexx_dynamic_target} ${_crexx_static_target}
                 ${RXPA_PROVIDER_LINK_TARGETS} ${RXPA_PROVIDER_RUNTIME_TARGETS}
-            VERBATIM)
+            VERBATIM
+            COMMENT "Generating ${_crexx_provider_id} provider package metadata")
+        add_custom_target(${plugin_name}_runtime_package ALL DEPENDS ${_package_outputs})
     endif()
 endfunction()
 

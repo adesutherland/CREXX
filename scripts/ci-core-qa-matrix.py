@@ -8,7 +8,8 @@ def select(requested, event, ref):
     if event != 'workflow_dispatch':
         requested = 'all'
     rows = json.loads((Path(__file__).resolve().parents[1] / '.github/qa/core-matrix.json').read_text())
-    rows = [row for row in rows if requested in ('all', row['selection'])]
+    rows = [row for row in rows if requested in ('all', row['selection'])
+            or (requested == 'windows' and row['platform'] == 'windows')]
     if not rows:
         raise ValueError('Unknown core QA platform: ' + requested)
     return {'include': rows}, requested == 'all'

@@ -1,0 +1,8 @@
+options levelb numeric_common
+main: procedure = .int
+numeric digits 5
+  arg argv = .string[]
+a = 123456
+say a = 123456
+say a - 123450
+return 0

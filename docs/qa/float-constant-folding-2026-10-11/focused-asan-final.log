@@ -1,0 +1,17 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^float_constant_folding_contract\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 524: float_constant_folding_contract
+1/1 Test #524: float_constant_folding_contract ...   Passed    8.03 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+compiler            =   8.03 sec*proc (1 test)
+comprehensive       =   8.03 sec*proc (1 test)
+correctness         =   8.03 sec*proc (1 test)
+numeric             =   8.03 sec*proc (1 test)
+optimizer-parity    =   8.03 sec*proc (1 test)
+
+Total Test time (real) =   8.09 sec

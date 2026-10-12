@@ -1,0 +1,138 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start  407: nr09_numeric_context_contract
+ 1/58 Test  #407: nr09_numeric_context_contract .....................   Passed    2.21 sec
+      Start 1750: levelc_bif_numeric_context_linked_noopt
+      Start 1748: levelc_bif_numeric_context_linked_opt
+      Start 1747: levelc_bif_numeric_context_opt
+      Start 1749: levelc_bif_numeric_context_noopt
+      Start  470: repro_strict_compare_run_noopt
+      Start  520: class_attr_register_views_run_noopt
+      Start  572: type_ops_showcase_run_noopt
+      Start  527: binary_memory_source_run_opt
+      Start  712: scalar_type_casts_run_noopt
+      Start  496: numeric_mixed_compare_run_noopt
+ 2/58 Test  #712: scalar_type_casts_run_noopt .......................   Passed    1.11 sec
+      Start  522: constants_levelb_payloads_run_noopt
+ 3/58 Test  #572: type_ops_showcase_run_noopt .......................   Passed    1.13 sec
+      Start  526: binary_memory_source_run_noopt
+ 4/58 Test  #520: class_attr_register_views_run_noopt ...............   Passed    1.14 sec
+      Start  530: binary_memory_packed_lookup_run_noopt
+ 5/58 Test  #496: numeric_mixed_compare_run_noopt ...................   Passed    1.14 sec
+      Start  578: type_ops_fail_run_noopt
+ 6/58 Test  #527: binary_memory_source_run_opt ......................   Passed    1.28 sec
+      Start  550: interface_runtime_dispatch_multi_run_noopt
+ 7/58 Test  #470: repro_strict_compare_run_noopt ....................   Passed    1.32 sec
+      Start  665: source_import_dotted_floats_decimal_opt
+ 8/58 Test  #522: constants_levelb_payloads_run_noopt ...............   Passed    0.99 sec
+      Start  573: type_ops_showcase_run_opt
+ 9/58 Test  #578: type_ops_fail_run_noopt ...........................   Passed    0.97 sec
+      Start  521: class_attr_register_views_run_opt
+10/58 Test  #526: binary_memory_source_run_noopt ....................   Passed    1.00 sec
+      Start  713: scalar_type_casts_run_opt
+11/58 Test  #530: binary_memory_packed_lookup_run_noopt .............   Passed    1.00 sec
+      Start  497: numeric_mixed_compare_run_opt
+12/58 Test  #665: source_import_dotted_floats_decimal_opt ...........   Passed    0.95 sec
+      Start  471: repro_strict_compare_run_opt
+13/58 Test  #550: interface_runtime_dispatch_multi_run_noopt ........   Passed    1.00 sec
+      Start  531: binary_memory_packed_lookup_run_opt
+14/58 Test  #573: type_ops_showcase_run_opt .........................   Passed    0.93 sec
+      Start  523: constants_levelb_payloads_run_opt
+15/58 Test  #713: scalar_type_casts_run_opt .........................   Passed    0.97 sec
+      Start  579: type_ops_fail_run_opt
+16/58 Test  #497: numeric_mixed_compare_run_opt .....................   Passed    0.98 sec
+      Start 1755: levelg_bif_numeric_context_opt
+17/58 Test  #521: class_attr_register_views_run_opt .................   Passed    1.05 sec
+      Start 1751: levelb_bif_numeric_context_opt
+18/58 Test  #531: binary_memory_packed_lookup_run_opt ...............   Passed    0.94 sec
+      Start 1753: levelb_bif_numeric_context_noopt
+19/58 Test  #471: repro_strict_compare_run_opt ......................   Passed    1.02 sec
+      Start 1757: levelg_bif_numeric_context_noopt
+20/58 Test #1749: levelc_bif_numeric_context_noopt ..................   Passed    3.48 sec
+      Start  551: interface_runtime_dispatch_multi_run_opt
+21/58 Test #1747: levelc_bif_numeric_context_opt ....................   Passed    3.49 sec
+      Start  716: typed_constructor_builtin_run_noopt
+22/58 Test  #523: constants_levelb_payloads_run_opt .................   Passed    1.00 sec
+      Start   97: strict_compare_codegen_opt
+23/58 Test  #579: type_ops_fail_run_opt .............................   Passed    0.95 sec
+      Start   96: strict_compare_codegen_noopt
+24/58 Test #1748: levelc_bif_numeric_context_linked_opt .............   Passed    4.16 sec
+      Start  154: opt_numeric_safety_noopt
+25/58 Test #1750: levelc_bif_numeric_context_linked_noopt ...........   Passed    4.29 sec
+      Start  153: opt_decimal_safety_opt
+26/58 Test  #551: interface_runtime_dispatch_multi_run_opt ..........   Passed    0.95 sec
+      Start  152: opt_decimal_safety_noopt
+27/58 Test  #716: typed_constructor_builtin_run_noopt ...............   Passed    0.98 sec
+      Start  714: decimal_literal_context_run_noopt
+28/58 Test   #96: strict_compare_codegen_noopt ......................   Passed    0.83 sec
+      Start  764: inline_test_composed_expr_contexts_run_noopt
+29/58 Test   #97: strict_compare_codegen_opt ........................   Passed    0.88 sec
+      Start  860: inline_test_object_const_arg_mutation_run_noopt
+30/58 Test #1755: levelg_bif_numeric_context_opt ....................   Passed    1.94 sec
+      Start  717: typed_constructor_builtin_run_opt
+31/58 Test  #154: opt_numeric_safety_noopt ..........................   Passed    0.90 sec
+      Start  532: packed_numeric_source_run_noopt
+32/58 Test #1751: levelb_bif_numeric_context_opt ....................   Passed    1.92 sec
+      Start  715: decimal_literal_context_run_opt
+33/58 Test  #153: opt_decimal_safety_opt ............................   Passed    0.82 sec
+      Start  533: packed_numeric_source_run_opt
+34/58 Test #1753: levelb_bif_numeric_context_noopt ..................   Passed    1.89 sec
+      Start  765: inline_test_composed_expr_contexts_run_opt
+35/58 Test #1757: levelg_bif_numeric_context_noopt ..................   Passed    1.88 sec
+      Start  861: inline_test_object_const_arg_mutation_run_opt
+36/58 Test  #152: opt_decimal_safety_noopt ..........................   Passed    0.88 sec
+      Start 1756: levelg_bif_numeric_context_linked_opt
+37/58 Test  #714: decimal_literal_context_run_noopt .................   Passed    1.00 sec
+      Start 1758: levelg_bif_numeric_context_linked_noopt
+38/58 Test  #764: inline_test_composed_expr_contexts_run_noopt ......   Passed    1.00 sec
+      Start 1754: levelb_bif_numeric_context_linked_noopt
+39/58 Test  #860: inline_test_object_const_arg_mutation_run_noopt ...   Passed    1.00 sec
+      Start 1752: levelb_bif_numeric_context_linked_opt
+40/58 Test  #765: inline_test_composed_expr_contexts_run_opt ........   Passed    0.92 sec
+      Start 1897: rxdas_roundtrip_interfaces
+41/58 Test  #715: decimal_literal_context_run_opt ...................   Passed    0.99 sec
+      Start  155: opt_numeric_safety_opt
+42/58 Test  #533: packed_numeric_source_run_opt .....................   Passed    0.98 sec
+      Start   29: rxas_constant_aliases
+43/58 Test  #532: packed_numeric_source_run_noopt ...................   Passed    1.04 sec
+      Start   17: metadata_contract_conformance
+44/58 Test #1897: rxdas_roundtrip_interfaces ........................   Passed    0.06 sec
+      Start 1898: rxdas_roundtrip_metadata
+45/58 Test   #17: metadata_contract_conformance .....................   Passed    0.01 sec
+      Start 1892: rxdas_roundtrip_int64_contract
+46/58 Test   #29: rxas_constant_aliases .............................   Passed    0.03 sec
+      Start 1893: rxdas_roundtrip_float_pool
+47/58 Test  #861: inline_test_object_const_arg_mutation_run_opt .....   Passed    0.97 sec
+48/58 Test #1892: rxdas_roundtrip_int64_contract ....................   Passed    0.04 sec
+49/58 Test #1898: rxdas_roundtrip_metadata ..........................   Passed    0.04 sec
+50/58 Test #1893: rxdas_roundtrip_float_pool ........................   Passed    0.04 sec
+51/58 Test  #717: typed_constructor_builtin_run_opt .................   Passed    1.11 sec
+52/58 Test #1756: levelg_bif_numeric_context_linked_opt .............   Passed    1.02 sec
+53/58 Test #1758: levelg_bif_numeric_context_linked_noopt ...........   Passed    0.94 sec
+54/58 Test #1754: levelb_bif_numeric_context_linked_noopt ...........   Passed    0.83 sec
+55/58 Test  #155: opt_numeric_safety_opt ............................   Passed    0.64 sec
+56/58 Test #1752: levelb_bif_numeric_context_linked_opt .............   Passed    0.83 sec
+      Start  525: numeric_constant_contract
+57/58 Test  #525: numeric_constant_contract .........................   Passed    1.54 sec
+      Start  524: float_constant_folding_contract
+58/58 Test  #524: float_constant_folding_contract ...................   Passed    0.48 sec
+
+100% tests passed, 0 tests failed out of 58
+
+Label Time Summary:
+binutils                   =   0.01 sec*proc (1 test)
+compiler                   =  31.86 sec*proc (16 tests)
+comprehensive              =  64.56 sec*proc (53 tests)
+correctness                =   2.02 sec*proc (2 tests)
+imports                    =   0.96 sec*proc (2 tests)
+levelb                     =   5.47 sec*proc (4 tests)
+levelc                     =  15.42 sec*proc (4 tests)
+levelg                     =   5.78 sec*proc (4 tests)
+linked_opt                 =  16.00 sec*proc (16 tests)
+numeric                    =   4.23 sec*proc (3 tests)
+optimizer-parity           =   2.02 sec*proc (2 tests)
+performance                =   2.21 sec*proc (1 test)
+performance-measurement    =   2.21 sec*proc (1 test)
+smoke                      =   1.10 sec*proc (4 tests)
+unit                       =   0.01 sec*proc (1 test)
+
+Total Test time (real) =  11.05 sec

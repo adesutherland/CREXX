@@ -1,0 +1,29 @@
+/*
+ * SOURCE                 : float-subnormal-typed-levelb.crexx
+ */
+
+.globals=0
+
+main() .locals=3
+   .meta "float-subnormal-typed-levelb.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 6 6 17 "float-subnormal-typed-levelb.crexx" 2 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "float-subnormal-typed-levelb.crexx" 3 7 21 "  arg argv = .string[]"
+   .meta "float-subnormal-typed-levelb.main.argv"="b" ".string[*]" a1
+   .meta "float-subnormal-typed-levelb.main.a"="b" ".float" r0
+   .srcstep 2 2 17 "float-subnormal-typed-levelb.crexx" 4 1 11 "a = .float"
+   null r0
+   .srcstep 3 3 17 "float-subnormal-typed-levelb.crexx" 5 1 11 "a = 1e-310"
+   load r0,1e-310
+   .traceevent "L" 4 "R" "F" "r" 0 3 3 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 0 3 3 0 "a" ""
+   .srcstep 4 4 17 "float-subnormal-typed-levelb.crexx" 6 1 12 "say a > 0.0"
+   .traceevent "V" 6 "R" "F" "r" 0 4 4 0 "a" ""
+   fgt r2,r0,0.0
+   btos r2
+   .traceevent "O" 4 "R" "S" "r" 2 4 4 0 "" ""
+   say r2
+   .srcstep 5 5 17 "float-subnormal-typed-levelb.crexx" 7 1 9 "return 0"
+   ret 0
+   .meta "float-subnormal-typed-levelb.main.a"
+   .meta "float-subnormal-typed-levelb.main.argv"

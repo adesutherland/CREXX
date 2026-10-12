@@ -10,11 +10,12 @@
 #include <stdarg.h>
 #include "rxcp_val.h"
 #include "rxcp_ast.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcpdary.h"
 #include "rxcp_sym.h"
 #include "rxcp_source_tree.h"
 #include "rxcp_inline_internal.h"
+#include "rxfloatformat.h"
 
 static size_t inline_count_siblings(ASTNode *node);
 static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineCloneState *state);

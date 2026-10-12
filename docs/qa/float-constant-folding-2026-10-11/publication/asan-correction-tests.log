@@ -1,0 +1,40 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(float_constant_folding_contract\|numeric_constant_contract\|metadata_contract_conformance\|int64_literal_overflow_fail\|int64_contract.\*\|16_classes_parse\|address_exit_extended_parse\|address_inline_then_parse\|select_dispatch_general_opt\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start  17: metadata_contract_conformance
+ 1/10 Test  #17: metadata_contract_conformance .....   Passed    0.11 sec
+      Start  93: int64_literal_overflow_fail
+ 2/10 Test  #93: int64_literal_overflow_fail .......   Passed    1.94 sec
+      Start 123: select_dispatch_general_opt
+ 3/10 Test #123: select_dispatch_general_opt .......   Passed    1.07 sec
+      Start 160: 16_classes_parse
+ 4/10 Test #160: 16_classes_parse ..................   Passed    1.06 sec
+      Start 430: int64_contract_run_noopt
+ 5/10 Test #430: int64_contract_run_noopt ..........   Passed    1.25 sec
+      Start 431: int64_contract_run_opt
+ 6/10 Test #431: int64_contract_run_opt ............   Passed    1.24 sec
+      Start 524: float_constant_folding_contract
+ 7/10 Test #524: float_constant_folding_contract ...   Passed    7.48 sec
+      Start 525: numeric_constant_contract
+ 8/10 Test #525: numeric_constant_contract .........   Passed   22.96 sec
+      Start 936: address_exit_extended_parse
+ 9/10 Test #936: address_exit_extended_parse .......   Passed    1.19 sec
+      Start 937: address_inline_then_parse
+10/10 Test #937: address_inline_then_parse .........   Passed    1.15 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Label Time Summary:
+binutils            =   0.11 sec*proc (1 test)
+compiler            =  30.44 sec*proc (2 tests)
+comprehensive       =  39.34 sec*proc (9 tests)
+correctness         =  30.44 sec*proc (2 tests)
+imports             =   0.11 sec*proc (1 test)
+linked_opt          =   1.24 sec*proc (1 test)
+numeric             =  30.44 sec*proc (2 tests)
+optimizer-parity    =  30.44 sec*proc (2 tests)
+smoke               =   0.11 sec*proc (1 test)
+unit                =   0.11 sec*proc (1 test)
+
+Total Test time (real) =  39.52 sec

@@ -94,8 +94,6 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (20:8) [Type: .unknown]
             VAR_SYMBOL : "new_val" (20:14) [Type: .unknown]
           RETURN : "return" (21:8) [Type: .unknown]
-DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
-DEBUG_INLINE stream @ RexxClassicConfig@rxfnsc.rxbin:28:2 - reject imported body: callable summary reconstruction failed
 
 --- STAGE_SYMBOLS (Iteration 0) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]
@@ -287,7 +285,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
         VAR_TARGET : "val" (8:4) [Type: .int]
         CLASS : ".int" (8:10) [Type: .int]
         NODE_REGISTER : "" (8:14) [Type: .unknown]
-          CONSTANT : "1" (-1:-1) [Type: .unknown]
+          CONSTANT : "1" (-1:-1) [Type: .int]
       FACTORY : "*" (10:4) [Type: .void]
         VOID : "" (10:6) [Type: .void]
         ARGS : "" (11:12) [Type: .unknown]

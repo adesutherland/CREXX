@@ -62,7 +62,7 @@ ScenarioD() .locals=2
    setnumcas 1
    setnumstd 1
    .srcstep 17 17 17 "opt_numeric_safety.crexx" 38 5 25 "    if 1.000000001 = 1.0 then say \"Equal\""
-   load r1,1.0
+   load r1,1.0000000010000001
    .traceevent "L" 4 "R" "F" "r" 1 17 17 0 "" ""
    feq r1,r1,1.0
    .traceevent "O" 4 "R" "B" "r" 1 17 17 0 "" ""

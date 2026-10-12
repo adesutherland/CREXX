@@ -1,0 +1,610 @@
+[
+  {
+    "name": "mainframe_console_signals",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "platform_cms_text",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "crexx_contract_installed_consumer",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "example_array_formatting",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "example_pprint_exit",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "text_inspector_ansi_pty",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "text_inspector_rxpp_generation",
+    "cause": "missing generated source"
+  },
+  {
+    "name": "text_inspector_core_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "text_inspector_core_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "text_inspector_tui_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "text_inspector_tui_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "san002_concat_after_wide_decimal_rxbvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "san002_concat_after_wide_decimal_rxbvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "san002_concat_after_wide_decimal_rxtvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "san002_concat_after_wide_decimal_rxtvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "san002_wide_decimal_extract_rxbvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "san002_wide_decimal_extract_rxbvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "san002_wide_decimal_extract_rxtvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "san002_wide_decimal_extract_rxtvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "crexxrag_sha256_a_vs_d_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "crexxrag_sha256_a_vs_d_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "inlining_simple_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "inlining_simple_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "reference_iterator_compare_rxvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "reference_iterator_compare_rxvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_noopt_rxas_integrity",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_opt_rxas_integrity",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_opt_rxas_noopt_rxas_integrity",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxvm_default_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxvm_default_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxvm_default_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxvm_mc_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxvm_mc_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxvm_mc_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxvm_db_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxvm_db_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxvm_db_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxbvm_default_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxbvm_default_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxbvm_default_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxbvm_mc_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxbvm_mc_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxbvm_mc_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxbvm_db_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxbvm_db_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_common18_rxbvm_db_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_noopt_rxas_integrity",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_opt_rxas_integrity",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_opt_rxas_noopt_rxas_integrity",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxvm_default_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxvm_default_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxvm_default_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxvm_mc_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxvm_mc_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxvm_mc_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxvm_db_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxvm_db_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxvm_db_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxbvm_default_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxbvm_default_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxbvm_default_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxbvm_mc_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxbvm_mc_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxbvm_mc_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxbvm_db_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxbvm_db_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_classic9_rxbvm_db_opt_rxas_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxvm_default_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxvm_default_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxvm_mc_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxvm_mc_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxvm_db_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxvm_db_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxbvm_default_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxbvm_default_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxbvm_mc_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxbvm_mc_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxbvm_db_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "decimal_gate1_rexxcps_family_rxbvm_db_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "stringarraylist_iterator_compare_rxvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "stringarraylist_iterator_compare_rxvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "stringtreemap_insert_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "stringtreemap_insert_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "binary_fastpath_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "binary_fastpath_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "binary_byvalue_compare_rxvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "binary_byvalue_compare_rxvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxjson_parser_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxjson_parser_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxjson_numeric_materialization_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxjson_numeric_materialization_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxjson_numeric_materialization_compare_rxbvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxjson_numeric_materialization_compare_rxbvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "postperf04_scalar_access_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "postperf04_scalar_access_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "postperf04_scalar_access_compare_rxbvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "postperf04_scalar_access_compare_rxbvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "postperf04_scalar_access_codegen",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "binary_packed_float_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "binary_packed_float_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "binary_packed_float_compare_rxbvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "packed_numeric_class_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "packed_numeric_class_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "packed_numeric_class_compare_rxbvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rcc5f_rxstats_packed_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rcc5f_rxstats_packed_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rcc5f_rxstats_boxed_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rcc5f_rxstats_boxed_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rcc5f_rxstats_direct_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rcc5f_rxstats_direct_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rcc5f_rxstats_packed_rxbvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rcc5f_rxstats_boxed_rxbvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rcc5f_rxstats_direct_rxbvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxvector01_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxvector01_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "tinyexpr_dispatch_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "tinyexpr_dispatch_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "jump_dispatch_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "jump_dispatch_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "runtime_interface_lookup_compare_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "runtime_interface_lookup_compare_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "inlining_complex_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "inlining_complex_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "nr15_stem_semantics_rxvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "nr15_stem_semantics_rxvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "nr15_stem_access_rxvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "nr15_stem_access_rxvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "nr16_17_stable_state_rxvm_noopt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "nr16_17_stable_state_rxvm_opt",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxpa_external_sdk_consumer",
+    "cause": "missing bytecode/source"
+  },
+  {
+    "name": "rxpa_objects_static_rxbvm_noopt",
+    "cause": "missing executable (CTest did not launch)"
+  },
+  {
+    "name": "rxpa_objects_static_rxtvm_noopt",
+    "cause": "missing executable (CTest did not launch)"
+  },
+  {
+    "name": "rxpa_objects_static_rxbvm_opt",
+    "cause": "missing executable (CTest did not launch)"
+  },
+  {
+    "name": "rxpa_objects_static_rxtvm_opt",
+    "cause": "missing executable (CTest did not launch)"
+  },
+  {
+    "name": "rxpa_objects_class_only_static_rxbvm_noopt",
+    "cause": "missing executable (CTest did not launch)"
+  },
+  {
+    "name": "rxpa_objects_class_only_static_rxtvm_noopt",
+    "cause": "missing executable (CTest did not launch)"
+  },
+  {
+    "name": "rxpa_objects_class_only_static_rxbvm_opt",
+    "cause": "missing executable (CTest did not launch)"
+  },
+  {
+    "name": "rxpa_objects_class_only_static_rxtvm_opt",
+    "cause": "missing executable (CTest did not launch)"
+  },
+  {
+    "name": "rxpa_objects_workers_static_rxbvm_noopt",
+    "cause": "missing executable"
+  },
+  {
+    "name": "rxpa_objects_workers_static_rxtvm_noopt",
+    "cause": "missing executable"
+  },
+  {
+    "name": "rxpa_objects_workers_static_rxbvm_opt",
+    "cause": "missing executable"
+  },
+  {
+    "name": "rxpa_objects_workers_static_rxtvm_opt",
+    "cause": "missing executable"
+  },
+  {
+    "name": "rxpa_objects_text_worker_static_rxbvm_noopt",
+    "cause": "missing executable"
+  },
+  {
+    "name": "rxpa_objects_text_worker_static_rxtvm_noopt",
+    "cause": "missing executable"
+  },
+  {
+    "name": "rxpa_objects_text_worker_static_rxbvm_opt",
+    "cause": "missing executable"
+  },
+  {
+    "name": "rxpa_objects_text_worker_static_rxtvm_opt",
+    "cause": "missing executable (CTest did not launch)"
+  }
+]

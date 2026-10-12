@@ -1,0 +1,2 @@
+options levelb numeric_common
+say 0.0 / 0.0

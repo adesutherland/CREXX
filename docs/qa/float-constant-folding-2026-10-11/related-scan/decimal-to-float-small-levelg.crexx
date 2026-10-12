@@ -1,0 +1,3 @@
+options levelg numeric_common
+numeric digits 5
+say (1.23456789d as .float) = 1.23456789

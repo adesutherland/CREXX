@@ -1,0 +1,322 @@
+{
+  "tools": {
+    "rxdas": "6d3fe15516b74ff02ea154bbc3dcc9e798ab59e83c973e7da487fadb011ffb9e",
+    "rxas": "a3e3742506fca9192bd7a102b5520a12709f1836cd8b8da67e730421ad66d7f5",
+    "rxtvm": "cf9a163a1bee68d7627c2adb03eac69543a3e5bb58a1a47ba8fe13da723e1126",
+    "rxbvm": "399f59b401b34574adfaa9c3957970fd613bbadc6ea331e55d5cee69b5db8124"
+  },
+  "commands": [
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity.rxas"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-noopt"
+      ],
+      "exit": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-noopt"
+      ],
+      "exit": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-noopt-dump.rxas",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-noopt-roundtrip",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-noopt-dump.rxas"
+      ],
+      "exit": 255,
+      "stdout": "\nError Severity 1 in file /Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-noopt-dump.rxas\n13:21 - Error after \"load\", invalid operand, expecting register, integer or register, float or register, string or register, register or register, decimal or integer, integer or integer, register or register, binary\n",
+      "stderr": "Errors in assembler can't generate output file: /Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-noopt-roundtrip\n"
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity.rxas"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-opt"
+      ],
+      "exit": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-opt"
+      ],
+      "exit": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-opt-dump.rxas",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-opt-roundtrip",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-opt-dump.rxas"
+      ],
+      "exit": 255,
+      "stdout": "\nError Severity 1 in file /Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-opt-dump.rxas\n13:21 - Error after \"load\", invalid operand, expecting register, integer or register, float or register, string or register, register or register, decimal or integer, integer or integer, register or register, binary\n",
+      "stderr": "Errors in assembler can't generate output file: /Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/infinity-opt-roundtrip\n"
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity.rxas"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-noopt"
+      ],
+      "exit": 0,
+      "stdout": "-inf\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-noopt"
+      ],
+      "exit": 0,
+      "stdout": "-inf\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-noopt-dump.rxas",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-noopt-roundtrip",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-noopt-dump.rxas"
+      ],
+      "exit": 255,
+      "stdout": "\nError Severity 1 in file /Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-noopt-dump.rxas\n13:0 - Illegal Character\n13:21 - Error after \"load\", invalid operand, expecting register, integer or register, float or register, string or register, register or register, decimal or integer, integer or integer, register or register, binary\n",
+      "stderr": "Errors in assembler can't generate output file: /Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-noopt-roundtrip\n"
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity.rxas"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-opt"
+      ],
+      "exit": 0,
+      "stdout": "-inf\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-opt"
+      ],
+      "exit": 0,
+      "stdout": "-inf\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-opt-dump.rxas",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-opt-roundtrip",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-opt-dump.rxas"
+      ],
+      "exit": 255,
+      "stdout": "\nError Severity 1 in file /Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-opt-dump.rxas\n13:0 - Illegal Character\n13:21 - Error after \"load\", invalid operand, expecting register, integer or register, float or register, string or register, register or register, decimal or integer, integer or integer, register or register, binary\n",
+      "stderr": "Errors in assembler can't generate output file: /Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/negative-infinity-opt-roundtrip\n"
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control.rxas"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-noopt"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-noopt"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-noopt-dump.rxas",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-noopt-roundtrip",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-noopt-dump.rxas"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control.rxas"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-opt"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-opt"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxdas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-opt-dump.rxas",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-opt-roundtrip",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/transport/finite-control-opt-dump.rxas"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

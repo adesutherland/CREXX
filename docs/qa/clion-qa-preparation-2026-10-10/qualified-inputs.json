@@ -1,0 +1,99 @@
+{
+  "base_commit": "04f6052d9ee59b5f71b94ffd9be81fdd17c19341",
+  "branch": "develop",
+  "changed_code_build_test_inputs": {
+    "CMakeLists.txt": "35f1d2814f114308eb6f77990f8d6c54491d4f436b333e3322bcbe13dd062582",
+    "compiler/CMakeLists.txt": "97f2698bf24895dfce63d494180dab57b3717f87b7ab9430fcb6025c2380b028",
+    "demos/llm/llm_address_demo.crexx": "1570e3058f0402d5fe46aff9cdaec18ec8d55d29b1ca87ab9a6f709ef158303f",
+    "lib/plugins/llama/CMakeLists.txt": "0d14734de8da017e59c48e92dc01790b0ba6affb21df841731698eabadef9bf3",
+    "lib/rxfnsg/rexx/LevelGBuilder.cmake": "25dba3f09bb5d2176740fa74a78d603b791eb3d6a97aae7bd460160ddaae121b",
+    "lib/rxfnsg/rexx/RunLevelGBuilder.cmake": null,
+    "lib/rxfnsg/rexx/llm.crexx": "3c132717172de5b9d4ca5e72e201310092ce430e961f09e49aa64fe6adacd032",
+    "preprocessor/rxpp.crexx": "d1c6495f6cd612fc6406a0cbb8c307bab97bb74ee821ce75a4cb89c58def0f2e",
+    "preprocessor/tests/run_rxpp_diagnostics.cmake": "2531cfd9b928163e7dabdb898f1d0d36a7c680d93118b190d23755ab596aeacb",
+    "rxpa/RXPluginFunction.cmake": "3f7758561e025a2c10f076b671e5fe5b1a40e09c74be0783eb7d119e31ef39b6",
+    "tests/performance/CMakeLists.txt": "0b557263081d3d684e1141620f74ce9f6a2f16e72690fb9187b2e0532756a953",
+    "tests/performance/crexxrag_sha256_a_vs_d.crexx": "9721d0c02fe4b524c2dea3f93e84c11885e2359f67f353d7bf687234d48b4085",
+    "tests/performance/nr15_stem_access_compare.crexx": "19f20883cd6c2fe8b91a40f68c5bc5b7e83878049fd5ed246fa132a3f8f2ea8d",
+    "tests/performance/nr15_stem_semantics.crexx": "8ac2b26ce0a930f633b66992276e57996c48a6f4325bf88c5c822f23156d8746",
+    "tests/performance/nr16_17_stable_state_compare.crexx": "3f8754d911c7e8fc0d494e2df6b783948104236683e328f396b8ba898d5b1737",
+    "tests/performance/packed_numeric_class_compare.crexx": "eb1b6cd84312c134c04412d8329d766dfc9e10b966066727f5ff5c23564aac05",
+    "tests/performance/rxvector01_compare.crexx": "e5c2280c086c74bb4c9b1b35dbdb6d87eca05b72fbacb8543e382816bde9a171",
+    "tools/build-system/build_stage_g.crexx": "02cf060f9e185c44c6a61af5949cbdf96a096af8e6f48f397c88165ba75c7270",
+    "tools/build-system/build_stage_g_worker.crexx": "87134f18f270a8349dc3d7a9c49e3f1d2142f15c19727e5693a26cd9efe2ba48"
+  },
+  "publication": "origin/develop development publication authorized 2026-10-10; normal automatic workflows expected; hosted completion unverified",
+  "sanitizer_closure": "SAN-011, SAN-012, SAN-QA-018: Codex / next Release 1 release-QA gate; open and release-blocking",
+  "host": "Darwin 25.6.0 arm64",
+  "logical_cpus": 10,
+  "profiles": {
+    "debug": {
+      "CMAKE_BUILD_TYPE": "Debug",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_C_COMPILER": "/usr/bin/cc",
+      "CREXX_LEVEL_G_BUILD_JOBS": "30",
+      "CREXX_QA_CTEST_JOBS": "32",
+      "GGML_CCACHE": "OFF",
+      "CMAKE_GENERATOR": "Ninja"
+    },
+    "release": {
+      "CMAKE_BUILD_TYPE": "Release",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_C_COMPILER": "/usr/bin/cc",
+      "CREXX_LEVEL_G_BUILD_JOBS": "30",
+      "CREXX_QA_CTEST_JOBS": "32",
+      "GGML_CCACHE": "OFF",
+      "CMAKE_GENERATOR": "Ninja"
+    }
+  },
+  "commands": {
+    "prepare": "cmake --build cmake-build-{debug,release} --target all qa-prep-all --parallel 8",
+    "full_release": "ctest --test-dir cmake-build-release --parallel 30 --output-on-failure",
+    "replay_152": "ctest --test-dir cmake-build-release --tests-from-file <retained-152-test-names> --parallel 30 --output-on-failure",
+    "focused_debug": "ctest --test-dir cmake-build-debug --parallel 30 --output-on-failure -R <affected-families>",
+    "final_rxpp": "ctest --test-dir cmake-build-debug -R ^rxpp_diagnostics$ --output-on-failure"
+  },
+  "runtime_contracts": {
+    "count": 3326,
+    "sha256": "891f000f7ae00f72f1cbe0c4ccabe1e8d58cd674d2226f648c03741b5d2d0d25",
+    "unchanged_after_final_prep_wiring": true,
+    "before": "output/f07-full-runtime-contracts-before.json",
+    "after": "output/f07-full-runtime-contracts-after.json"
+  },
+  "results": {
+    "full_release": {
+      "passed": 3326,
+      "failed": 0,
+      "elapsed_seconds": 917.77
+    },
+    "failed_release_replay": {
+      "passed": 152,
+      "failed": 0,
+      "elapsed_seconds": 44.74
+    },
+    "affected_debug": {
+      "passed": 83,
+      "failed": 0,
+      "elapsed_seconds": 138.01
+    },
+    "final_debug_rxpp": {
+      "passed": 1,
+      "failed": 0,
+      "elapsed_seconds": 2.47
+    },
+    "final_unit_controls": {
+      "debug": 2,
+      "release": 2,
+      "failed": 0
+    },
+    "both_profile_qa_graphs_missing_direct_executables": 0
+  },
+  "clion_configuration": {
+    "target": "qa-prep-all",
+    "all_tests": true,
+    "build_before_launch": true,
+    "arguments": "--extra-verbose --parallel 32",
+    "cmake_reloaded": true,
+    "native_dialog_and_saved_settings_verified": true
+  }
+}

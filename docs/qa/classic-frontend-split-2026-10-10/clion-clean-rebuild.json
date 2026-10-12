@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-10",
+  "plan_finding": "CP-C-FIND-04",
+  "parent_local_split_commit": "cabab25530f67650309093bd56787ac34839267c",
+  "branch": "develop",
+  "delivery": "local-unpublished",
+  "cause": "RexxCPS TRACE VALUE helper consumers omitted rxfnsc target/output prerequisite; clean build compiled consumers before runtime publication",
+  "product_build_input_delta": {
+    "path": "tests/benchmarks/CMakeLists.txt",
+    "before_sha256": "7d588f1d11e278b269e7a1b07d3f0ea83ed4d04bd2e74af8c0e8c007037914f2",
+    "after_sha256": "1e039e2d986cf8f3380bbbe23197b2a56497132363084517d3340f76099644ff"
+  },
+  "unchanged_input_proof": {
+    "previous_manifest_count": 6976,
+    "only_changed_manifest_input": "tests/benchmarks/CMakeLists.txt",
+    "compiler_runtime_metadata_and_benchmark_sources_unchanged": true
+  },
+  "checks": [
+    {
+      "check": "minimal-before-runtime",
+      "retained_log": "/tmp/crexx-clion-trace-repro.XrryxW/compile.log",
+      "sha256": "5672a1a39b7cb072e094b4f4242f2f85ee9249c101a902751ffaf8892ad8ad8b",
+      "exit_code": 2
+    },
+    {
+      "check": "runtime-producer",
+      "retained_log": "/tmp/crexx-clion-rxfnsc-producer.31VgBO",
+      "sha256": "72c00590c02515724c60ea8bc8be576f19aee0e9048cb8b0dd452c2ceb6cc41b",
+      "exit_code": 0
+    },
+    {
+      "check": "minimal-after-runtime",
+      "retained_log": "/tmp/crexx-clion-trace-repro.XrryxW/after-runtime.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0
+    },
+    {
+      "check": "absent-runtime-publication-order",
+      "retained_log": "/tmp/crexx-clion-trace-order.8AKAEp",
+      "sha256": "bbee829482a79616e0f1b2db2875c00c02bbac2d955f54749c3a9dfd562d030f",
+      "exit_code": 0
+    },
+    {
+      "check": "debug-all",
+      "retained_log": "/tmp/crexx-clion-debug-all.7o0PEr",
+      "sha256": "a9115b6c520dd0d6ca727bb7ac5754b0a9b8f1adb11d4923262c614bf47f3bb4",
+      "exit_code": 0
+    },
+    {
+      "check": "release-all",
+      "retained_log": "/tmp/crexx-clion-release-all.xpoJ11",
+      "sha256": "ba95e235f692ec2f34ee800ea65fa3ab043c5e5b0185b36487a7f2be59ef2e73",
+      "exit_code": 0
+    },
+    {
+      "check": "focused-rexxcps-controls",
+      "retained_log": "/tmp/crexx-clion-rexxcps-controls.seg818",
+      "sha256": "07dd58fe58cbe050bce95ec56cb92a960f3ff571827b8e06fa65fb119df8919d",
+      "exit_code": 0
+    }
+  ],
+  "build_commands": [
+    [
+      "cmake",
+      "--build",
+      "cmake-build-debug",
+      "--target",
+      "all",
+      "--parallel",
+      "32"
+    ],
+    [
+      "cmake",
+      "--build",
+      "cmake-build-release",
+      "--target",
+      "all",
+      "--parallel",
+      "8"
+    ]
+  ],
+  "missing_publication_order_verified": true,
+  "ordered_consumers": 4,
+  "focused_test_count": 5,
+  "focused_test_seconds": 14.41,
+  "build_profiles": {
+    "Debug": {
+      "cache_sha256": "a4979c9db95c35e2fd17a646bf11cad37ff258d0f3c40d196be2c386fbd86726",
+      "binary_sha256": {
+        "rxc": "41b643cad99c11ff6e65730a668b504a9e3ef22371241b28213eb36dd20c8ee8",
+        "rxc-c": "5da7b290444274d0e739e46afa92ebb248943de30d3cfb594d34c0b547decf5d",
+        "rxas": "c37d56977ca65d407cf9187c501b27e3b5724b0db041d3b8da866b8e18103ddf",
+        "rxlink": "fd002dccd9b95c2315e47e9ce1cd045f22456dd8ad7b807a2d91d43c931ebd38",
+        "rxvm": "4b4165f5f6032e956eecb2fa96016e0bc9eb0e336eea0ae231227c037fe58bfe"
+      }
+    },
+    "Release": {
+      "cache_sha256": "28bb20969fb00d2f2783f848afacce4472c44c886c771221f38d271fddde0aaa",
+      "binary_sha256": {
+        "rxc": "f59236fcf269f42b1a40b2ba551b86d35061e4fa357f4dfedf3780bae47f6521",
+        "rxc-c": "fc046fe49c4be1083a50307ace33a1f4435654d28f90e74d5e4199708a8f5fcb",
+        "rxas": "5fd6068846c1661dc4fa78ef94064d76707496d4dbe1c5646cef5f9648ad9653",
+        "rxlink": "35b4086467a1a2bbfd17784c8857367a3c24558d6eea0244a747cd086b69207a",
+        "rxvm": "fe3a3a5a37c9bb07226ce2cdedc7edd4bca7c86cacd4a4fa5c15ca1f4539b1e8"
+      }
+    }
+  },
+  "sanitizer_closure": "SAN-011, SAN-012 and SAN-QA-018 remain repaired/open/release-blocking with Codex at the next Release 1 release-QA gate; no sanitizer run required or claimed for this build-dependency-only repair"
+}

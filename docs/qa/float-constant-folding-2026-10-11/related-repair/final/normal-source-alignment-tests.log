@@ -1,0 +1,30 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start   17: metadata_contract_conformance
+1/7 Test   #17: metadata_contract_conformance .....   Passed    0.00 sec
+    Start   29: rxas_constant_aliases
+2/7 Test   #29: rxas_constant_aliases .............   Passed    0.33 sec
+    Start  524: float_constant_folding_contract
+3/7 Test  #524: float_constant_folding_contract ...   Passed    0.79 sec
+    Start  525: numeric_constant_contract
+4/7 Test  #525: numeric_constant_contract .........   Passed    1.39 sec
+    Start 1892: rxdas_roundtrip_int64_contract
+5/7 Test #1892: rxdas_roundtrip_int64_contract ....   Passed    0.02 sec
+    Start 1893: rxdas_roundtrip_float_pool
+6/7 Test #1893: rxdas_roundtrip_float_pool ........   Passed    0.02 sec
+    Start 1898: rxdas_roundtrip_metadata
+7/7 Test #1898: rxdas_roundtrip_metadata ..........   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+binutils            =   0.00 sec*proc (1 test)
+compiler            =   2.18 sec*proc (2 tests)
+comprehensive       =   2.26 sec*proc (5 tests)
+correctness         =   2.18 sec*proc (2 tests)
+imports             =   0.00 sec*proc (1 test)
+numeric             =   2.18 sec*proc (2 tests)
+optimizer-parity    =   2.18 sec*proc (2 tests)
+smoke               =   0.33 sec*proc (2 tests)
+unit                =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   2.66 sec

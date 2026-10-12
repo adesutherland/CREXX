@@ -1,0 +1,74 @@
+options levelb numeric_common
+
+main: procedure = .int
+  numeric digits 18
+  arg argv = .string[]
+  a = argv[1] as .float
+  z = argv[2] as .float
+  f = .float
+  f = 1.234567890123456
+  d = .decimal
+  d = f as .decimal
+  f2 = .float
+  f2 = d as .float
+  say "float-decimal " || (d = 1.234567890123456d) || " " || (f = f2)
+  say "cast-consumer " || (2 as .boolean) || " " || ((2 as .boolean) as .int) || " " || (2.0 as .int)
+  s = .string
+  s = 2 as .boolean
+  say "cast-string " || s
+  say "string-casts " || ("42" as .int) || " " || ("1" as .boolean)
+  nan = z / z
+  say "nan-runtime " || (nan = nan) || " " || (nan <> nan) || " " || (nan > a) || " " || (nan < a) || " " || (nan >= a) || " " || (nan <= a)
+  say "nan-folded " || ((0.0 / 0.0) = (0.0 / 0.0)) || " " || ((0.0 / 0.0) <> (0.0 / 0.0)) || " " || ((0.0 / 0.0) > 1.0) || " " || ((0.0 / 0.0) < 1.0) || " " || ((0.0 / 0.0) >= 1.0) || " " || ((0.0 / 0.0) <= 1.0)
+  say "nonfinite " || ((1.0 / 0.0) + a) || " " || ((0.0 / 0.0) + a) || " " || (a / -0.0) || " " || (a / -(-0.0))
+  runtimeInf = a / z
+  foldInf = .float
+  foldInf = 1.0 / 0.0
+  foldNan = .float
+  foldNan = 0.0 / 0.0
+  say "decimal-special " || (runtimeInf as .decimal) || " " || (nan as .decimal) || " " || (foldInf as .decimal) || " " || (foldNan as .decimal)
+  say "zero-runtime " || (a / -z) || " " || (a / -(-z))
+  negActual = -nan
+  negFolded = -(0.0 / 0.0)
+  nanBytes = .binary
+  nanBytes = '00000000000000000000000000000000'x as .binary
+  <at..float>(0) nanBytes = negActual
+  <at..float>(8) nanBytes = negFolded
+  actualBits = <at..int>(0) nanBytes
+  foldedBits = <at..int>(8) nanBytes
+  say "nan-negation " || (actualBits = foldedBits)
+  small = .float
+  small = 1e-310
+  say "subnormal " || (small > 0.0) || " " || (1e-310 + 1e-310 = 2e-310) || " " || (1e-999 = 0.0)
+  call integerContext argv[3] as .int
+  call decimalContext
+  return 0
+
+integerContext: procedure
+  numeric digits 5
+  arg runtime = .int
+  constant BIG = 9007199254740993
+  constant MAX = 9223372036854775807
+  i = 9007199254740993
+  j = 123456
+  say "integer " || (BIG = i) || " " || (9007199254740992 + 1 = BIG) || " " || (MAX = 9223372036854775807) || " " || (i + runtime = 9007199254740994) || " " || (j + runtime = 123457)
+  say "integer-display " || (j as .string)
+  return
+
+decimalContext: procedure
+  numeric digits 5
+  f = .float
+  f = 1.234567890123456
+  d = .decimal
+  d = f as .decimal
+  say "decimal-context " || (d = 1.2346d) || " " || (1.0d / 3.0d)
+  call inheritedContext
+  return
+
+inheritedContext: procedure
+  numeric digits inherited
+  f = 1.234567890123456
+  d = .decimal
+  d = f as .decimal
+  say "inherited " || f || " " || d
+  return

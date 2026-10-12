@@ -59,11 +59,12 @@
 #define VOID RXCP_VOID
 
 #include "rxcpmain.h"
+#include "rxcp_frontend.h"
 #include "rxcp_highlight_controller.h"
 #include "rxcp_source_tree.h"
 #include "rxcp_srcmap.h"
 #include "rxcp_val.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcpcsym.h"
 #include "rxcp_exit.h"
 #include "rxvml.h"
@@ -588,6 +589,7 @@ static Context *highlight_prepare_root_cache(CodeBuffer *cb) {
         highlight_clear_retained_state(g_highlight_state.root != 0);
 
         root = cntx_f();
+        rxcp_use_full_frontend(root);
         if (!root || !highlight_configure_root_context(root, &info)) {
             if (root) fre_cntx(root);
             highlight_free_document_info(&info);
@@ -2044,6 +2046,7 @@ static void rxc_highlight_controller_parse_owned(CodeBuffer *cb,
     root_context = highlight_prepare_root_cache(cb);
 
     context = cntx_f();
+    rxcp_use_full_frontend(context);
     context->master_context = root_context ? root_context : context;
     context->file_name = strdup(source_name ? source_name :
                                 (have_doc_info && doc_info.document_name ? doc_info.document_name : "dsl_buffer.rexx"));

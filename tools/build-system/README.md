@@ -25,6 +25,12 @@ Configure `CREXX_LEVEL_G_BUILD_JOBS` to control the builder's internal worker
 pool. The default is 30 on Apple ARM64 and 5 elsewhere. Independent jobs run
 within each readable wave; dependency boundaries remain serial.
 
+The controller and worker do not emit routine dependency-wave notices.
+Child-command stdout/stderr is retained in the visible build output, including
+diagnostics from successful commands. Failed actions also print their action
+identity and nonzero status. CMake invokes the builder directly; no output-
+capture launcher sits between the builder and the build console.
+
 ## Build-graph observation
 
 `cmake_catalogue.py` combines three authoritative configured-build views:

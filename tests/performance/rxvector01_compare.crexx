@@ -24,6 +24,9 @@ vector_sqrt: procedure = .float
 
 pure_topk: procedure = .float
   arg vectors = .packedfloat, identities = .packedint, dimensions = .int, query_vector = .packedfloat, requested = .int
+  dimension_index = .int
+  query_value = .float
+  result_index = .int
   query_norm = 0.0
   do dimension_index = 0 to dimensions - 1
     query_value = query_vector.get(dimension_index)
@@ -110,6 +113,7 @@ main: procedure = .int
   end
 
   checksum = 0.0
+  iteration = .int
   started = time("us")
   if variant = "pure" then do iteration = 1 to iterations
     checksum = checksum + pure_topk(vectors, identities, dimensions, query_vector, requested)

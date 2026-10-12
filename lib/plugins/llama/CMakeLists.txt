@@ -44,6 +44,11 @@ FetchContent_Declare(crexx_llama_source URL "${_llama_url}"
 set(BUILD_SHARED_LIBS ON)
 set(GGML_BACKEND_DL ON CACHE BOOL "" FORCE)
 set(GGML_NATIVE OFF CACHE BOOL "" FORCE)
+find_program(_crexx_llama_ccache ccache)
+if(NOT _crexx_llama_ccache)
+    # Don't request an optional compiler-cache feature when its tool is absent.
+    set(GGML_CCACHE OFF CACHE BOOL "Use available upstream compiler caching" FORCE)
+endif()
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
     set(GGML_CPU_ALL_VARIANTS ON CACHE BOOL "" FORCE)
 endif()

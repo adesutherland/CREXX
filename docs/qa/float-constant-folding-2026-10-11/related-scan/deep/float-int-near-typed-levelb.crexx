@@ -1,0 +1,7 @@
+options levelb numeric_common
+main: procedure = .int
+  arg argv = .string[]
+i = .int
+i = 1.0000000000000002 as .int
+say i
+return 0

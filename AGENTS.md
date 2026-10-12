@@ -11,6 +11,17 @@
 3. `rxlink`: linker for combining one or more `rxbin` modules into a shared-pool linked image
 4. `rxvm`: interpreter for register-based `rxbin` bytecode
 
+`rxc-c` is the dedicated Classic Level C compiler over the shared backend.
+`rxc`/`rxclib` retain typed-language and desktop editor compatibility. Common
+and C code use `compiler/rxcp_tokens.h`, checked against the typed grammar's
+generated token table; do not reintroduce generated B parser headers into their
+closure. Metadata fields belong to the independent binutils `rxcontract` reader;
+`rxcp_contract` adapts records to the common AST. Follow
+`compiler/docs/metadata_conformance.md`, preserving original inline enum/payload
+identities and supported optimization shapes. C-only typed source imports and editor
+mode require the installed owning `rxc` tool. `rxcc_parse` is an owned frontend
+API; success precedes backend validation/emission and does not implement INTERPRET.
+
 ## Checkout And Branch Discipline
 
 Use the existing `develop` checkout for normal development, documentation,
@@ -168,6 +179,7 @@ Keep this standing publication policy in `AGENTS.md`, not component worklists.
   gates. Sanitizer worklist requirements below still apply to actual
   first-party sanitizer findings.
 - Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
+- Keep normal successful builds free of compiler warnings and unnecessary generated notices. Remove notices at their emitting source and fix warning/error causes. Do not hide command stdout/stderr, filter diagnostics, or use blanket warning suppression to make a build look clean. Avoid unnecessary generator work on unchanged inputs.
 - For native object providers, use the C RXPA factories/method bindings and
   checked `SETOBJECTTYPE` service documented in `docs/ai-context/CREXX_LIBS.md`.
   Do not add duplicate Rexx construction or forwarding classes when those C

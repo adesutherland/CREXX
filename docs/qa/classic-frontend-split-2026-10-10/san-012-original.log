@@ -1,0 +1,215 @@
+==17318==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 1440 byte(s) in 12 object(s) allocated from:
+    #0 0xabe5bdd93dd8 in calloc (/home/qa/crexx/build-asan-clang/bin/rxc+0x1d3dd8) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde43040 in source_semantic_f /home/qa/crexx/compiler/rxcp_source_tree.c:105:17
+    #2 0xabe5bde3f188 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:324:42
+    #3 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #4 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #7 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #8 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #9 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #10 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #11 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #12 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Direct leak of 840 byte(s) in 7 object(s) allocated from:
+    #0 0xabe5bdd93dd8 in calloc (/home/qa/crexx/build-asan-clang/bin/rxc+0x1d3dd8) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde43040 in source_semantic_f /home/qa/crexx/compiler/rxcp_source_tree.c:105:17
+    #2 0xabe5bde3f188 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:324:42
+    #3 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #4 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #8 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #9 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #10 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #11 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #12 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #13 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Direct leak of 120 byte(s) in 1 object(s) allocated from:
+    #0 0xabe5bdd93dd8 in calloc (/home/qa/crexx/build-asan-clang/bin/rxc+0x1d3dd8) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde43040 in source_semantic_f /home/qa/crexx/compiler/rxcp_source_tree.c:105:17
+    #2 0xabe5bde3f188 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:324:42
+    #3 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #4 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #8 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #9 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #10 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #11 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #12 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #13 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #14 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Direct leak of 120 byte(s) in 1 object(s) allocated from:
+    #0 0xabe5bdd93dd8 in calloc (/home/qa/crexx/build-asan-clang/bin/rxc+0x1d3dd8) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde43040 in source_semantic_f /home/qa/crexx/compiler/rxcp_source_tree.c:105:17
+    #2 0xabe5bde3f188 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:324:42
+    #3 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #4 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #5 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #6 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #7 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #8 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #9 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #10 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #11 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Indirect leak of 20 byte(s) in 1 object(s) allocated from:
+    #0 0xabe5bdd7b7f0 in strdup (/home/qa/crexx/build-asan-clang/bin/rxc+0x1bb7f0) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde43eec in source_semantic_replace_type /home/qa/crexx/compiler/rxcp_source_tree.c:178:35
+    #2 0xabe5bde43530 in source_semantic_promote_type /home/qa/crexx/compiler/rxcp_source_tree.c:208:9
+    #3 0xabe5bde3f4e0 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:331:17
+    #4 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #8 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #9 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #10 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #11 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #12 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #13 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #14 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Indirect leak of 20 byte(s) in 1 object(s) allocated from:
+    #0 0xabe5bdd7b7f0 in strdup (/home/qa/crexx/build-asan-clang/bin/rxc+0x1bb7f0) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde43eec in source_semantic_replace_type /home/qa/crexx/compiler/rxcp_source_tree.c:178:35
+    #2 0xabe5bde43530 in source_semantic_promote_type /home/qa/crexx/compiler/rxcp_source_tree.c:208:9
+    #3 0xabe5bde3f768 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:344:17
+    #4 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #8 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #9 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #10 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #11 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #12 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #13 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #14 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Indirect leak of 18 byte(s) in 1 object(s) allocated from:
+    #0 0xabe5bdd7b7f0 in strdup (/home/qa/crexx/build-asan-clang/bin/rxc+0x1bb7f0) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde43eec in source_semantic_replace_type /home/qa/crexx/compiler/rxcp_source_tree.c:178:35
+    #2 0xabe5bde43530 in source_semantic_promote_type /home/qa/crexx/compiler/rxcp_source_tree.c:208:9
+    #3 0xabe5bde3fcdc in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:363:21
+    #4 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #8 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #9 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #10 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #11 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #12 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #13 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Indirect leak of 14 byte(s) in 2 object(s) allocated from:
+    #0 0xabe5bdd7b7f0 in strdup (/home/qa/crexx/build-asan-clang/bin/rxc+0x1bb7f0) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde43eec in source_semantic_replace_type /home/qa/crexx/compiler/rxcp_source_tree.c:178:35
+    #2 0xabe5bde43530 in source_semantic_promote_type /home/qa/crexx/compiler/rxcp_source_tree.c:208:9
+    #3 0xabe5bde3f768 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:344:17
+    #4 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #8 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #9 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #10 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #11 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #12 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #13 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Indirect leak of 14 byte(s) in 2 object(s) allocated from:
+    #0 0xabe5bdd7b7f0 in strdup (/home/qa/crexx/build-asan-clang/bin/rxc+0x1bb7f0) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde43eec in source_semantic_replace_type /home/qa/crexx/compiler/rxcp_source_tree.c:178:35
+    #2 0xabe5bde43530 in source_semantic_promote_type /home/qa/crexx/compiler/rxcp_source_tree.c:208:9
+    #3 0xabe5bde3f4e0 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:331:17
+    #4 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #8 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #9 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #10 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #11 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #12 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #13 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Indirect leak of 4 byte(s) in 1 object(s) allocated from:
+    #0 0xabe5bdd93c04 in malloc (/home/qa/crexx/build-asan-clang/bin/rxc+0x1d3c04) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde4412c in source_semantic_copy_dims /home/qa/crexx/compiler/rxcp_source_tree.c:143:22
+    #2 0xabe5bde43e38 in source_semantic_replace_type /home/qa/crexx/compiler/rxcp_source_tree.c:172:5
+    #3 0xabe5bde43530 in source_semantic_promote_type /home/qa/crexx/compiler/rxcp_source_tree.c:208:9
+    #4 0xabe5bde3f768 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:344:17
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #8 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #9 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #10 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #11 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #12 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #13 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #14 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Indirect leak of 4 byte(s) in 1 object(s) allocated from:
+    #0 0xabe5bdd93c04 in malloc (/home/qa/crexx/build-asan-clang/bin/rxc+0x1d3c04) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde440e4 in source_semantic_copy_dims /home/qa/crexx/compiler/rxcp_source_tree.c:142:18
+    #2 0xabe5bde43e38 in source_semantic_replace_type /home/qa/crexx/compiler/rxcp_source_tree.c:172:5
+    #3 0xabe5bde43530 in source_semantic_promote_type /home/qa/crexx/compiler/rxcp_source_tree.c:208:9
+    #4 0xabe5bde3f768 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:344:17
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #8 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #9 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #10 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #11 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #12 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #13 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #14 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Indirect leak of 4 byte(s) in 1 object(s) allocated from:
+    #0 0xabe5bdd93c04 in malloc (/home/qa/crexx/build-asan-clang/bin/rxc+0x1d3c04) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde4412c in source_semantic_copy_dims /home/qa/crexx/compiler/rxcp_source_tree.c:143:22
+    #2 0xabe5bde43e38 in source_semantic_replace_type /home/qa/crexx/compiler/rxcp_source_tree.c:172:5
+    #3 0xabe5bde43530 in source_semantic_promote_type /home/qa/crexx/compiler/rxcp_source_tree.c:208:9
+    #4 0xabe5bde3f4e0 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:331:17
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #8 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #9 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #10 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #11 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #12 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #13 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #14 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+Indirect leak of 4 byte(s) in 1 object(s) allocated from:
+    #0 0xabe5bdd93c04 in malloc (/home/qa/crexx/build-asan-clang/bin/rxc+0x1d3c04) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+    #1 0xabe5bde440e4 in source_semantic_copy_dims /home/qa/crexx/compiler/rxcp_source_tree.c:142:18
+    #2 0xabe5bde43e38 in source_semantic_replace_type /home/qa/crexx/compiler/rxcp_source_tree.c:172:5
+    #3 0xabe5bde43530 in source_semantic_promote_type /home/qa/crexx/compiler/rxcp_source_tree.c:208:9
+    #4 0xabe5bde3f4e0 in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:331:17
+    #5 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #6 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #7 0xabe5bde4074c in source_tree_sync_semantics_from_ast /home/qa/crexx/compiler/rxcp_source_tree.c:409:29
+    #8 0xabe5bde3ec5c in source_tree_sync_semantics /home/qa/crexx/compiler/rxcp_source_tree.c:805:15
+    #9 0xabe5bde00490 in rxcp_driver_main /home/qa/crexx/compiler/rxcpmain.c:876:5
+    #10 0xabe5bddd58ac in rxcmain /home/qa/crexx/compiler/rxcp_frontend_full.c:47:12
+    #11 0xabe5bddd1464 in main /home/qa/crexx/compiler/rxc_main.c:45:12
+    #12 0xf74ec5a084c0 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #13 0xf74ec5a08594 in __libc_start_main csu/../csu/libc-start.c:360:3
+    #14 0xabe5bdcf4fec in _start (/home/qa/crexx/build-asan-clang/bin/rxc+0x134fec) (BuildId: f97dc2ec6d4d4b05674d8bd50d41f9940006f286)
+
+SUMMARY: AddressSanitizer: 2622 byte(s) leaked in 32 allocation(s).

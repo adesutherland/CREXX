@@ -380,6 +380,10 @@ if(BUILD_TESTING)
             qa-prep-comprehensive
             qa-prep-qualification
             qa-prep-stress)
+    # IDE "All CTest" needs every tier's fixtures, without making product
+    # builds pay for qualification, stress and measurement preparation.
+    add_custom_target(qa-prep-all)
+    add_dependencies(qa-prep-all qa-prep qa-prep-measurement)
 endif()
 
 add_subdirectory(platform)
@@ -401,6 +405,8 @@ add_subdirectory(demos)
 add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxWindowsUtf8.cmake)
 
 # These non-owning aggregate targets expose the product stages without
 # replacing or duplicating the direct dependencies declared by their members.

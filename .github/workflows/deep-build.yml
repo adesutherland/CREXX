@@ -9,7 +9,7 @@ on:
         description: Core platform to qualify (all for the complete Deep gate)
         type: choice
         default: all
-        options: [all, linux-x64, windows-mingw, windows-msvc, macos-arm64, macos-x86_64]
+        options: [all, windows, linux-x64, windows-mingw, windows-msvc, macos-arm64, macos-x86_64]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -32,6 +32,7 @@
 #include <string.h>
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
+#include "rxcp_frontend.h"
 #include "rxcp_util.h"
 #include "rxcp_exit.h"
 
@@ -146,6 +147,7 @@ static Token *rxcp_take_parser_token(Context *context, int *cli_option_stage, To
 }
 
 int rexbpars(Context *context) {
+    if (!rxcp_frontend(context)) rxcp_use_full_frontend(context);
 
     char *buff, *buff_end;
     size_t bytes;

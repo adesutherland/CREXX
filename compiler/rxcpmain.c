@@ -35,7 +35,7 @@
 #include "rxcp_source_ext.h"
 #include "rxcp_source_tree.h"
 #include "rxcp_srcmap.h"
-#include "rxcp_levelc_lower.h"
+#include "rxcp_frontend.h"
 #include "rxcp_dispatch.h"
 #include "rxcp_flow.h"
 #include "../binutils/include/rxdefs.h"
@@ -105,7 +105,7 @@ static void append_location_arg(char **locations, const char *value) {
     *locations = combined;
 }
 
-static char **split_location_list(const char *locations) {
+char **rxcp_split_location_list(const char *locations) {
     char *copy;
     char *cursor;
     char **result;
@@ -336,7 +336,7 @@ void fre_cntx(Context *context)  {
     free(context);
 }
 
-int rxcmain(int argc, char *argv[]) {
+int rxcp_driver_main(int argc, char *argv[], const RxcpFrontend *frontend) {
 
     FILE *outFile = 0;
     size_t bytes;
@@ -606,8 +606,10 @@ int rxcmain(int argc, char *argv[]) {
 #ifdef ENABLE_PARSER_MODE
     if (parser_mode) {
         /* Call the DSL initialization from rxcp_dsl.c */
-        extern int rxc_parser_mode_main(int stdio_mode, int port, const char *file_name, int debug_mode);
-        return rxc_parser_mode_main(parser_stdio, parser_port, file_name, debug_mode);
+        if (frontend->parser_mode)
+            return frontend->parser_mode(parser_stdio, parser_port, file_name, debug_mode);
+        fprintf(stderr, "Use rxc --syntaxhighlight for the editor service\n");
+        return 2;
     }
 #endif
 
@@ -676,6 +678,7 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Context Structure */
     context = cntx_f();
+    context->frontend = frontend;
     context->initial_source_extension = input_source_extension;
     context->cli_level_override = cli_default_level;
     context->cli_default_level = cli_default_level != UNKNOWN ?
@@ -762,7 +765,7 @@ int rxcmain(int argc, char *argv[]) {
     else context->location = location ? strdup(location) : 0;
 
     if (import_locations) {
-        context->import_locations = split_location_list(import_locations);
+        context->import_locations = rxcp_split_location_list(import_locations);
         context->import_locations_owns_buffer = 1;
         if (debug_mode >= 2) {
             int di;
@@ -776,7 +779,7 @@ int rxcmain(int argc, char *argv[]) {
     }
 
     if (source_import_locations) {
-        context->source_import_locations = split_location_list(source_import_locations);
+        context->source_import_locations = rxcp_split_location_list(source_import_locations);
         context->source_import_locations_owns_buffer = 1;
         if (debug_mode >= 2) {
             int di;
@@ -830,71 +833,11 @@ int rxcmain(int argc, char *argv[]) {
 
     cntx_buf(context, buff_start, bytes);
 
-    /* Parse program for real */
-    switch (context->level){
-        case LEVELC: {
-            const char *levelc_reject_reason = 0;
-
-            if (debug_mode >= 2) fprintf(stderr, "REXX Level C (Classic REXX)\n");
-            rxcp_init_exits(context);
-            rexcpars(context);
-            if (context->debug_mode) {
-                rxcp_debug_header("STAGE_RAW", -1);
-                rxcp_print_ast_recursive(context->ast, 0);
-            }
-
-            if (!context->ast) break;
-
-            rxcp_levelc_prepare_source_ast(context);
-            source_tree_sync_diagnostics(context);
-            if (rxcp_levelc_validate_recovered_syntax(context))
-                source_tree_sync_diagnostics(context);
-            errors = prnterrs(context);
-            if (errors) {
-                fprintf(stderr,"%d error(s) in source file\n", errors);
-                if (context->stop_after_parse) goto dp_stop;
-                goto finish;
-            }
-
-            if (!rxcp_levelc_lower_to_canonical(context, &levelc_reject_reason)) {
-                fprintf(stderr, "%s", rxcp_levelc_compile_unsupported_message());
-                if (levelc_reject_reason) {
-                    fprintf(stderr, ": %s", levelc_reject_reason);
-                }
-                fprintf(stderr, "\n");
-                errors = 1;
-                goto finish;
-            }
-
-            if (context->debug_mode) {
-                rxcp_debug_header("STAGE_LEVELC_LOWERED", -1);
-                rxcp_print_ast_recursive(context->ast, 0);
-            }
-            break;
-        }
-
-        case LEVELA:
-        case LEVELD:
-            fprintf(stderr,"REXX Level A/D (cREXX Classic) - Not supported yet\n");
-            break;
-
-        case LEVELB:
-            /* We need the assembler db for ASSEMBLE */
-            /* init_ops() removed - now using static opdata */
-
-        case LEVELG:
-        case LEVELL:
-            if (debug_mode >= 2) fprintf(stderr, "REXX Level B/G/L (cREXX)\n");
-            rxcp_init_exits(context);
-            rexbpars(context); // Build AST
-            if (context->debug_mode) {
-                rxcp_debug_header("STAGE_RAW", -1);
-                rxcp_print_ast_recursive(context->ast, 0);
-            }
-            break;
-
-        default:
-            fprintf(stderr, "INTERNAL ERROR: Failed to determine REXX Level\n");
+    /* Parse and map through the selected frontend. */
+    if (rxcp_frontend_parse(context)) {
+        errors = 1;
+        if (context->stop_after_parse) goto dp_stop;
+        goto finish;
     }
 
 

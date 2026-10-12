@@ -1,7 +1,6 @@
 #!/usr/local/crexx/rexx.sh
 options levelg
 import rxfnsb
-import rxfnsg
 
 arg args = .string[]
 

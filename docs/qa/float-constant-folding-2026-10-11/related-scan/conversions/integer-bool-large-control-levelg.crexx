@@ -1,0 +1,9 @@
+options levelg numeric_common
+main: procedure = .int
+numeric digits 5
+  arg argv = .string[]
+i = 9223372036854775807
+b = .boolean
+b = i as .boolean
+say b
+return 0

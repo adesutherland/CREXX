@@ -1,0 +1,17 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 572: type_ops_showcase_run_noopt
+    Start 578: type_ops_fail_run_noopt
+    Start 573: type_ops_showcase_run_opt
+    Start 579: type_ops_fail_run_opt
+1/4 Test #573: type_ops_showcase_run_opt ........   Passed    0.68 sec
+2/4 Test #579: type_ops_fail_run_opt ............   Passed    0.70 sec
+3/4 Test #578: type_ops_fail_run_noopt ..........   Passed    0.73 sec
+4/4 Test #572: type_ops_showcase_run_noopt ......   Passed    0.75 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+comprehensive    =   2.86 sec*proc (4 tests)
+linked_opt       =   1.38 sec*proc (2 tests)
+
+Total Test time (real) =   0.80 sec

@@ -355,10 +355,12 @@ The Level C parser/lowerer already targets the canonical compiler tree.
 1. **CP-STEP-01 (CP-AC-01; before the January platform contract freeze):**
    inventory current B/G differences and certified/custom exits; propose the
    Level B freeze and G-only features for Adrian's language-design approval.
-2. **CP-STEP-02 (CP-AC-02; depends on 01):** map today's B/G and C parser,
+2. **CP-STEP-02 (CP-AC-02; full B/G migration depends on 01):** map today's B/G and C parser,
    validation, symbol and lowering outputs to the shared AST/flow/emitter
    contract. Prototype executable wrappers or lean front ends only after an
    approved architecture and prove preservation of existing CLI consumers.
+   The proposed C-only first phase below has its own approval gate and preserves
+   current B/G behavior; it does not complete the full migration or AC-01/02.
 3. **CP-STEP-03 (CP-AC-03/06; independent of 02):** establish the current
    `rxc -n` plus `rxas -n` correctness and compile-time baseline, then measure
    a bounded no-optimizer assembler build against it. Select a separate binary
@@ -404,6 +406,349 @@ lowering, type/flow checks, label resolution and safe module loading. Faster
 compilation makes a compiled INTERPRET route more plausible, but cannot solve
 its caller-frame transfers, resumable handlers or generated-module reclamation.
 Treat those as separate Level C acceptance and approval gates.
+
+### Proposed C-first extraction phase — 2026-10-10
+
+**Status:** approved bounded implementation and local qualification complete on
+`develop`, based on synchronized `91313bcc5a447e9403f95b1f0bfc4dd9503d0618`.
+Adrian approved implementation on 2026-10-10: "work in develop and split level c
+out as agreed". The standalone tool is `rxc-c`; existing `rxc`/`crexx` retain
+compatibility. Adrian authorized development publication on 2026-10-10; the
+qualified split and follow-up repairs are published together to `origin/develop`.
+This is development integration; no release is claimed.
+This phase serves CP-STEP-02/06 and CP-AC-02/06. The complete CP-AC-01–08
+outcome and wider Level C compatibility remain open.
+
+Adrian explicitly assigned **SAN-011 and SAN-012 closure to Codex at the next
+Release 1 release-QA gate** on 2026-10-10. Both have permanent focused repairs
+and normal/maintained-sanitizer proof but remain open and release-blocking.
+This permits bounded local phase completion, not sanitizer-clean or release-ready
+claims. SAN-QA-018 retains the same previously assigned owner/gate. The
+[SAN register](SANITIZER-WORKLIST.md) owns all three closure obligations.
+
+**Vision and intended outcomes:** deliver a separate Level C frontend and
+standalone `rxc-c` compiler over the existing common semantic/optimizer/emitter
+backend. Preserve current Classic behavior, optimized/no-opt compilation,
+typed-library imports, source diagnostics, installed `rxc`/`crexx` use and editor
+services. Give C an exact-length, request-owned frontend entry suitable for reuse
+by the later runtime compiler. Keep current B/G source contracts while their
+full split is reviewed. INTERPRET, fast/lite profiles, direct RXBIN handoff and
+VM code reclamation retain their existing criteria and decision gates; this
+phase supplies a prerequisite.
+
+**Numbered phase acceptance criteria:** evidence is retained in the
+[local qualification receipt](qa/classic-frontend-split-2026-10-10/README.md).
+
+1. **CP-C-AC-01 — physical boundary (verified):** C scanner/glue/grammar/
+   diagnostics/validation/lowering form one frontend feeding shared backend
+   services. The standalone C product does not generate or link the B/G parser,
+   G task mapper or typed source-exit host. Clean parser-mode-off, testing-off
+   `rxc-c` builds generate no B header/scanner. Final Release symbol evidence
+   excludes the typed parser/task/exit symbols. The backend is compiled once
+   per configuration into shared object components.
+2. **CP-C-AC-02 — imports and bootstrap (verified):** common declaration builders
+   consume existing callable/class/constant/layout metadata without reparsing
+   synthetic B/G source. Signed external CALL, source-provider discovery and
+   runtime-library bootstrap retain their contracts. Typed source dependencies
+   use their owning `rxc` outside the C process, preserving caller import order,
+   RXAS opt-in and disabled-exit policy. Existing enum/payload identities remain
+   unchanged. Source/binary/inline/provider regressions and the 109-command
+   direct/linked, optimized/no-opt installed parity workload verify the route,
+   including B and G providers and a source-only RXAS dependency.
+3. **CP-C-AC-03 — user-visible parity (verified):** `rxc`/`crexx` retain existing
+   routing while B/G/L behavior stays compatible. Preserve explicit/default
+   level selection, routine mode, parser/DSLSH tooling, errors, source/TRACE
+   identity and essential metadata. The 1,048-test relevant correctness sweep
+   plus 84 final focused controls cover positive/negative, import/inline/editor,
+   Classic expression/instruction and Unicode/stream behavior. Provenance and
+   parser-debug golden changes are explained in the receipt; executable
+   instruction equivalence is retained for changed optimized class fixtures.
+4. **CP-C-AC-04 — reusable frontend ownership (verified):** `rxcc_parse` accepts
+   source bytes plus exact length and explicit options/import context, returns
+   owned status/diagnostics and releases success, malformed and backend
+   import-failure state. Tests cover embedded NUL, caller-buffer mutation,
+   concurrently live units and repeated failure/success requests. This is a
+   parsed/mapped frontend API whose success precedes backend validation/emission;
+   it does not claim runtime source-to-RXBIN, concurrent embedding or INTERPRET.
+5. **CP-C-AC-05 — product qualification and delivery (verified for the approved
+   bounded local phase):** Debug core product/preparation, relevant normal
+   correctness, final focused regressions, Release stage/install and installed
+   parity pass on recorded code/test/build inputs. The maintained single-threaded
+   compiler passes six assembly/bytecode/execution comparisons with exits
+   enabled. Focused Apple ASan and supported Linux ASan/LSan ownership checks
+   pass. Human/agent guides and receipts are included in the substantive local
+   change. Windows, Intel, native CMS/TSO and 24-bit residency are unrun here;
+   full sanitizer closure remains explicitly assigned to the later gate above.
+   Reuse unchanged evidence; normal automatic workflows accompany a future
+   authorized publication. No hosted pass or release qualification is claimed.
+6. **CP-C-AC-02a — independent metadata reader (verified):** standalone binutils
+   `rxcontract` parses owned records without compiler Context/AST or B/G
+   source-parser dependencies. `metadata_contract_conformance` links only
+   binutils; source/link inspection proves that closure.
+7. **CP-C-AC-02b — language-neutral contracts (verified):** B/G providers and
+   serialized fields preserve callable/result/reference/optional/vararg/task,
+   class/interface and layout identity through the reader and separate AST
+   adapter. Reader/builder unit tests, source/binary/inline regressions and
+   linked B/G provider parity supply evidence. Future Classic-to-G conversions
+   and task-call semantics require their own language decision.
+8. **CP-C-AC-02c — metadata conformance boundary (verified):** the
+   [current-format conformance document](../compiler/docs/metadata_conformance.md)
+   specifies admitted grammar, malformed fields, ownership, versions and
+   separately validated optional inline payloads. Permanent positive/negative
+   reader and builder tests verify the boundary. RXBIN 007 and callable/inline
+   wire formats are unchanged.
+
+**Numbered implementation steps and decision gates:**
+
+1. **CP-C-STEP-01 (AC-01–05; complete):** pin source/baseline receipts and
+   inventory C/common token, import, generated-helper, validation and exit-bridge
+   dependencies. The [split proposal](../compiler/docs/compiler_frontend_split_proposal.md#23-level-c-progress-and-remaining-scope)
+   retains the audit. Adrian approved the boundary before product edits.
+2. **CP-C-STEP-02 (AC-01/02/04; complete; depends on 01):** introduce neutral
+   token and declaration services, preserve binary/source contracts and isolate
+   CLI from request-owned C parsing/lowering. Focused class/constant/signed-call,
+   malformed-input and ownership checks pass. No source/helper contract was
+   silently disabled.
+3. **CP-C-STEP-03 (AC-01–04; complete; depends on 02):** wire the Classic
+   component and common backend into `rxcc_lib`/`rxc-c`, retaining full
+   `rxclib`/driver/editor compatibility and B/G bootstrap. Clean build and final
+   linked closure establish physical extraction. Stage/install include `rxc-c`.
+4. **CP-C-STEP-04 (AC-01–05; complete for the assigned local phase; depends on
+   03/02a):** freeze final inputs, qualify normal/package/portable behavior,
+   reconcile docs and retain receipts. The 6,976-file final code/test/build
+   manifest matches the Linux focused inputs; final import/ownership changes
+   have the recorded focused replay. Publish only if authorized. SAN-011/012
+   broad proof was explicitly assigned later, not counted as passed. Report
+   this phase separately from CP/Level C completion; LC-87 / CP-AC-07 still
+   require their activation/control/lifetime architecture decision.
+5. **CP-C-STEP-02a (AC-02a–c; complete; approved refinement of 02):** pin
+   existing spellings, extract the independent reader, wire a separate AST
+   adapter, preserve forward-declaration/inline attachment order and document
+   the conformance boundary. The original direct-to-AST field parser was
+   replaced. Adrian approved the reusable reader with "Yes", then confirmed
+   "Keep the agreed metadata reader". No new source syntax, conversion rules or
+   serialized format was approved or introduced.
+
+**Final implementation checkpoint, 2026-10-10.** `rxc_backend_objects`,
+`rxc_classic_objects` and `rxc_typed_objects` establish the physical boundary.
+Common/C code uses checked `rxcp_tokens.h`. `binutils/rxcontract` reads owned
+language-neutral records; `rxcp_contract` constructs common declarations.
+C-only typed source imports and editor requests use the installed owning `rxc`
+through explicit argv and private temporary files. Supported imported inlining
+is preserved, including factory body/call-site result distinctions. Source
+contracts retain actual provider identity; tokenless metadata has unknown
+coordinates rather than manufactured source positions.
+
+Qualification repaired borrowed declaration names, historical POS/LASTPOS
+literal defaults, whitespace-only zero-argument signatures, factory-inline
+identity, syntax diagnostics before lowering, and caller-policy forwarding.
+SAN-011 repairs cross-context declaration/generated source-anchor ownership;
+SAN-012 frees semantic sidecars on all Context-owned source anchors, including
+those detached from the visible tree. Both have permanent regressions and
+focused Debug, Apple ASan and Linux ASan/LSan passes. Apple leaks-off records
+its unsupported LSan capability; Linux focused proof keeps leaks enabled.
+Full Apple `20261010-171343-full` reached CTest and full Linux
+`20261010-161345-full` stopped during preparation after Adrian's later-gate
+assignment. Neither is a completed full-gate pass. The SAN register and receipt
+retain the owner, next action and evidence. Broader CP/Level C acceptance remains
+open; delivery is local, with no push or release.
+
+**Clean CLion rebuild follow-up — CP-C-FIND-04 (2026-10-10, closed locally).**
+A clean Debug `all` build at 32 jobs failed four RexxCPS fixture compilations
+at `TRACE VALUE`, reporting `CLASS_NOT_FOUND`. A minimal Level B reproducer
+has the same failure while `library`, `classlib` and `rxcexits` exist but
+`bin/rxfnsc.rxbin` is absent. TRACE's generated helper imports RexxValue from
+that consolidated runtime; these consumers lack the producer dependency.
+This exposed a gap in CP-C-AC-05's clean-build qualification. The repair and
+passing Debug/Release product builds below restore that proof; passed functional
+checks and the agreed metadata format/semantic boundary are retained.
+
+**Vision and intended outcomes:** make a clean CLion rebuild reliably produce
+TRACE-dependent fixtures after their owning runtime, and restore both existing
+Debug and Release build profiles. Preserve benchmark sources, generated runtime
+semantics and metadata. Keep the repair in this C-first issue; no compiler or
+production performance change is planned.
+
+1. **CP-C-F04-AC-01 (verified):** reproduce the failure with minimal authored
+   `TRACE VALUE`, then prove the same unchanged source compiles once `rxfnsc`
+   is available. Retain before/after logs.
+2. **CP-C-F04-AC-02 (verified):** both RexxCPS fixture families depend on the TRACE
+   runtime producer and output; verify the generated graph orders producer
+   publication before all four optimized/no-opt fixture commands even when
+   that published artifact is absent.
+3. **CP-C-F04-AC-03 (verified):** finish the actual CLion Debug/Release `all`
+   builds and pass focused RexxCPS runtime/register controls. Retain commands,
+   inputs and logs; reuse unchanged compiler/sanitizer evidence.
+
+1. **CP-C-F04-STEP-01 (AC-01; complete):** reproduce and inspect TRACE's declared
+   imports and the missing producer/output; build only the identified producer
+   and replay the unchanged minimal source.
+2. **CP-C-F04-STEP-02 (AC-02; complete; depends on 01):** add the existing TRACE runtime
+   dependency to the two owning benchmark registrations. Reconfigure and test
+   absent-output scheduling, without broadening the compiler-exit bootstrap
+   bundle dependency (which would create a runtime/bootstrap cycle).
+3. **CP-C-F04-STEP-03 (AC-03; complete; depends on 02):** complete both user build
+   profiles, run focused controls, update the receipt/plan and commit the local
+   repair. SAN-011/012/SAN-QA-018 keep their assigned next Release 1 QA closure.
+
+Final follow-up evidence: the unchanged minimal source succeeds after runtime
+publication; absent-output scheduling at 32 jobs publishes `rxfnsc` before all
+four fixtures. Full existing Debug and Release `all` builds pass, and five
+RexxCPS runtime/register controls pass in 14.41 seconds. Only the two consumer
+build prerequisites changed. The [follow-up receipt](qa/classic-frontend-split-2026-10-10/clion-clean-rebuild.md)
+retains final inputs/log hashes; source/metadata semantics and the assigned SAN
+closure gates are unchanged. Delivery remains local, unpublished.
+
+**CLion stdin and quiet-build follow-up — CP-C-FIND-05/06 (2026-10-10, closed locally).**
+Adrian requested repair of the two stdin-blocked PULL tests and removal of
+rebuild warnings/routine chatter. Starting local develop is `c2cc9cb59`;
+`origin/develop` remains contained and unrelated active-test artifacts are kept.
+The blocked VMs have been sampled in `FREADLINE`/`read` with an inherited open
+CLion stdin pipe. Only those two confirmed blocked children were terminated;
+the remainder of the user's CTest run continues. Its separate missing-fixture
+failures are retained, not treated as passes or hidden by this repair.
+
+**Vision and intended outcomes:** negative runtime fixtures have deterministic
+stdin under the IDE, terminals and CI, while preserving their expected Classic
+error/source/output contracts. Normal Debug/Release builds produce no avoidable
+compiler warnings or custom successful builder chatter. Keep useful failure
+output and saved builder logs, preserve existing C++17/C++20 UTF-8 path handling,
+local Rexx scopes, documented APIs and the verbose direct Level G builder.
+Compiler/metadata formats and language semantics are outside this repair.
+
+1. **CP-C-F05-AC-01 (verified):** both PULL variants finish and retain 26.4,
+   authored source location and exact `before` output when parent stdin stays
+   open. Verify in normal Debug and Release without another full test run.
+2. **CP-C-F05-AC-02 (verified):** the negative-runtime helper declares deterministic
+   EOF and a generous whole-test hang backstop; neighboring negative cases
+   retain their existing assertions. Existing scheduling/workload is unchanged.
+3. **CP-C-F06-AC-01 (verified):** eliminate observed C++20 filesystem deprecations
+   and Rexx scope/import/shadowing warnings at their sources, with no blanket
+   diagnostic suppression. Verify both standard path tests and affected
+   preprocessor, RexxScript, activation-argument and vector controls.
+4. **CP-C-F06-AC-02 (verified):** normal CMake Level G success emits no custom
+   WAVE/START/BUILT/PUBLISHED output, while preserving logs and visible failure
+   diagnostics/nonzero status. Explicit verbose output and direct builder
+   diagnostics remain available. Verify real success and controlled failure.
+5. **CP-C-F06-AC-03 (verified):** relevant Debug/Release rebuild logs are warning-
+   free and focused correctness passes on retained final inputs. Include docs
+   and receipts in local reviewable commits; publication remains unauthorized.
+   SAN-011/012/SAN-QA-018 retain Codex / next Release 1 release-QA closure.
+
+1. **CP-C-F05-STEP-01 (AC-01/02; complete):** preserve the blocked-read diagnostic,
+   supply an empty input file in the generated negative-runtime helper, add a
+   600-second hang backstop, and replay the two cases with an open parent pipe.
+2. **CP-C-F06-STEP-01 (AC-01; complete):** use the C++20 UTF-8
+   path constructor with the existing C++17 route, disambiguate intentional
+   local bindings and remove the unused test import. Preserve source doc tags.
+3. **CP-C-F06-STEP-02 (AC-02; complete):** capture routine Level G
+   builder output through a CMake launcher, retain full stdout/stderr logs,
+   preserve stderr/failure reporting, and provide explicit verbose replay.
+4. **CP-C-F06-STEP-03 (AC-01–03/F05-AC-01/02; complete):** rebuild affected
+   products in the existing profiles after active testing permits safe reuse,
+   run the smallest decisive controls, retain input/log hashes, update this
+   checkpoint and commit locally. Reuse unchanged broader evidence.
+
+Final follow-up proof: both negative PULL cases pass with a deliberately open
+parent stdin pipe in Debug and Release (2/2 each), retaining their complete
+error/source/output assertions. Debug and Release `all` rebuilds pass with zero
+warnings or custom successful builder chatter; 37 affected controls pass in
+each profile. Real quiet success, explicit verbose replay and controlled
+failure diagnostic/status preservation pass. The
+[stdin receipt](qa/quiet-build-stdin-2026-10-10/stdin-repair.md) and
+[quiet-build receipt](qa/quiet-build-stdin-2026-10-10/quiet-build.md) retain final
+input/log hashes. Ordinary build-tool progress remains; all RexxDoc blocks,
+metadata formats and call semantics are preserved. The earlier full CLion run
+also lacked optional QA fixtures after its product-only rebuild, so it is not
+counted as a full pass. Its prerequisite issue remains separate from this
+requested bounded repair. Delivery is local/unpublished; assigned SAN closure
+is unchanged.
+
+**Complete CLion CTest and visible diagnostics — CP-C-FIND-07 (2026-10-10, closed locally).**
+Adrian explicitly reopened full CTest repair and rejected output capture as a
+quiet-build solution: remove unnecessary notices at their source and do not
+hide log output. The previous F06 launcher approach is superseded; its focused
+warning repairs and F05 deterministic-stdin proof remain valid.
+
+**Vision and intended outcomes:** preserve the agreed product/QA build tiers,
+correct CLion's stale `all` prerequisite for its "All CTest" configuration,
+prepare every registered test's required artifacts explicitly, and the complete
+Release CTest suite must pass. Diagnose every observed failure rather than treating
+missing artifacts as an acceptable closeout. Eliminate unnecessary normal
+parser/builder/package work and notices at their sources, with actual command
+stdout/stderr, warnings and failures visible. Preserve metadata formats,
+call semantics, test assertions and accepted language boundaries. Keep the
+existing user's Release test run intact while inspecting it; build elsewhere
+until it ends. Delivery remains local unless publication is explicitly requested.
+
+1. **CP-C-F07-AC-01 (verified):** retain the live/full failure inventory and classify
+   missing producers, test-harness errors and any product regressions using raw
+   logs and minimal reproducers. Give each distinct repair reviewable evidence.
+2. **CP-C-F07-AC-02 (verified):** CLion "All CTest" builds the explicit `qa-prep-all`
+   correctness/qualification/stress/measurement preparation closure before CTest.
+   Ordinary `all` retains the agreed product-only preparation cost and dedicated
+   `rxc-c` closure retains its behavior. Verify IDE settings, generated
+   dependencies and failing families after the appropriate QA preparation.
+3. **CP-C-F07-AC-03 (verified):** remove the output-hiding launcher, delete routine
+   builder notices at their emitting source, retain all command diagnostics,
+   and make unchanged package generation a genuine no-op. Parser generation
+   emits no unnecessary reports/notices. Verify successful/no-op builds and
+   a controlled failure without output suppression.
+4. **CP-C-F07-AC-04 (verified):** the full existing Release CTest suite passes with
+   no exclusions, weakened assertions or added warning suppression. Validate
+   actual repairs with focused Debug checks, then reuse unchanged passing
+   evidence. Keep all outstanding criteria open until decisive proof passes.
+5. **CP-C-F07-AC-05 (verified):** current guides/receipts reflect visible diagnostics
+   and full normal-test closure accurately. Supersede the rejected capture
+   policy, retain original failures and final code/test/build hashes, commit
+   locally, and preserve SAN-011/012/SAN-QA-018's assigned Release 1 QA closure.
+
+1. **CP-C-F07-STEP-01 (AC-01; complete):** inspect the current CLion run and
+   producer graph without stopping or overlapping its Release build tree.
+2. **CP-C-F07-STEP-02 (AC-02/03; complete):** repair CLion's QA
+   prerequisite configuration, source-level notices and incremental package producers;
+   remove the rejected capture wrapper. Keep source/runtime diagnostics visible.
+3. **CP-C-F07-STEP-03 (AC-01/04; complete):** prepare/replay failed families in
+   Debug, then in Release once the user's run ends. Repair actual remaining
+   causes, without promoting artifact/setup failures to unsupported product
+   defects or dropping failed tests.
+4. **CP-C-F07-STEP-04 (AC-04/05; complete):** freeze final inputs,
+   complete the whole Release CTest gate, retain evidence and update status.
+   No sanitizer-clean or release-ready claim is authorized by normal CTest.
+
+Checkpoint: the retained CLion run had 152 missing-artifact failures: 136
+missing source/bytecode inputs and 16 missing executables (nine were never
+launched). Explicit `qa-prep-all` preparation restores every failed test;
+Release replay passes 152/152 in 44.74 seconds. Debug affected controls pass
+83/83 in 138.01 seconds; the final strengthened RXPP diagnostic case passes
+separately. Both final profile builds have no warnings. Unchanged product/QA
+builds report no work; provider manifest hashes and unchanged bytes/mtime are
+verified. Successful and failing child-command probes preserve stdout/stderr.
+Private SHA256/stats/vector fixture import roots exclude unrelated old linked
+images without changing import formats or compiler semantics. The ignored local
+CLion `All CTest` configuration now names `qa-prep-all`, retaining its Build
+before-launch task, test selection and visible-output arguments. The full
+3,326-test Release replay passes with zero failures in 917.77 seconds;
+AC-04/05 are verified by that proof, the final preparation controls and receipt. The [current receipt](qa/clion-qa-preparation-2026-10-10/README.md)
+owns final evidence. No hosted or new broad sanitizer run is claimed.
+
+The final preparation audit found two C-first unit executables outside their
+directory's QA finalization. Their declared `CREXX_PREP_TARGETS` were correct,
+but the compiler directory had not scheduled its own finalizer. Scheduling it
+connects both unit targets and the owned parity test to their existing tiers.
+Debug `qa-prep-all` restores both absent unit executables and both tests pass;
+the generated QA graph then covers every direct first-party executable.
+Final Release QA-only preparation and both focused controls pass. All 3,326
+runtime commands/properties remain identical after final preparation wiring,
+so the full passed runtime evidence remains valid. The generated graphs cover
+every direct first-party executable in both profiles. Adrian authorized the
+combined development publication and a clean local `develop` checkout on
+2026-10-10. Delivery is published to `origin/develop`; earlier local/unpublished
+checkpoints above describe their original qualification state. Normal automatic
+product/smoke, optimizer-parity and CodeQL checks accompany this publication;
+their successful completion is expected, not claimed as observed. No manual
+overnight assurance dispatch or redundant local full run is required. Assigned
+Release 1 SAN closure is unchanged.
 
 ## Constrained C89 And CMS Portability — PORT-C89
 

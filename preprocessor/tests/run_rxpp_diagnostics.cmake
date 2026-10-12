@@ -139,7 +139,7 @@ execute_process(
             "CREXX_DIAGNOSTICS=localized"
             "CREXX_DIAGNOSTIC_LOCALE=en_GB"
             "CREXX_MESSAGE_PATH=${MESSAGE_PATH}"
-            "${RXPP_BIN}" -I "${warn_input}" -O "${warn_output}" -M "${missing_maclib}" -VERBOSE
+            "${RXPP_BIN}" -I "${warn_input}" -O "${warn_output}" -M "${missing_maclib}" -VERBOSE 0
     WORKING_DIRECTORY "${WORK}"
     RESULT_VARIABLE warn_res
     OUTPUT_VARIABLE warn_out
@@ -151,6 +151,28 @@ if(NOT warn_res EQUAL 0)
 endif()
 expect_contains("localized warning diagnostic" "${warn_full}" "RXPP_MACLIB_MISSING: Macro library was not found or is not accessible")
 expect_contains("localized system warning diagnostic" "${warn_full}" "RXPP_SYSTEM_MACLIB_MISSING: System macro library was not found or is not accessible")
+
+# Routine notices are opt-in, but quiet mode must still show real diagnostics.
+foreach(verbosity IN ITEMS default 0 1)
+    set(verbosity_args)
+    if(NOT verbosity STREQUAL "default")
+        list(APPEND verbosity_args -VERBOSE "${verbosity}")
+    endif()
+    execute_process(
+        COMMAND "${RXPP_BIN}" -I "${warn_input}" -O "${warn_output}"
+                -M "${MACLIB_FILE}" ${verbosity_args}
+        WORKING_DIRECTORY "${WORK}"
+        RESULT_VARIABLE quiet_res OUTPUT_VARIABLE quiet_out ERROR_VARIABLE quiet_err
+        ENCODING UTF-8)
+    if(NOT quiet_res EQUAL 0)
+        message(FATAL_ERROR "${verbosity} preprocessing failed: ${quiet_out}${quiet_err}")
+    endif()
+    if(verbosity STREQUAL "1")
+        expect_contains("verbose notices" "${quiet_out}${quiet_err}" "CRX")
+    else()
+        expect_not_contains("quiet notices" "${quiet_out}${quiet_err}" "CRX")
+    endif()
+endforeach()
 
 execute_process(
     COMMAND "${CMAKE_COMMAND}" -E env

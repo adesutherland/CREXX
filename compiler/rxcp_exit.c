@@ -26,13 +26,13 @@
 #include <string.h>
 #include <ctype.h>
 #include "rxcpmain.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxvml.h"
 #include "rxbin.h"
 #include "rxsignature.h"
 #include "rxvmvars.h"
 #include "platform.h"
-#include "rxcp_exit.h"
+#include "rxcp_exit_typed.h"
 #include "rxcp_val.h"
 
 #define RXCP_OPT_ELIDABLE_IDENTITY_CNOP "assembler cnop /* rxcp-opt-elide-exact-identity */"
@@ -46,35 +46,7 @@ static const char* rexx_builtins[] = {
     "VAR", "VERSION", NULL
 };
 
-typedef struct CertifiedExitSpec {
-    const char *primary_keyword;
-    unsigned int required_flags;
-} CertifiedExitSpec;
-
-typedef struct ExitHelperRecord {
-    ASTNode *file_node;
-    char *helper_id;
-    char *source_text;
-    struct ExitHelperRecord *next;
-} ExitHelperRecord;
-
-static const CertifiedExitSpec certified_exit_specs[] = {
-    { "ADDRESS",
-      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD | RXCP_EXIT_FLAG_IMPLICIT_COMMAND },
-    { "PARSE",
-      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
-    { "PUSH",
-      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
-    { "PULL",
-      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
-    { "QUEUE",
-      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
-    { "SIGNAL",
-      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
-    { "TRACE",
-      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
-    { NULL, 0 }
-};
+#include "rxcp_exit_keywords.h"
 
 static int is_builtin_keyword(const char* keyword) {
     int i = 0;
@@ -166,19 +138,7 @@ static const CertifiedExitSpec *rxcp_find_certified_exit_by_keyword(const char *
     return NULL;
 }
 
-const char *rxcp_match_certified_exit_primary(const char *keyword, size_t len) {
-    int i;
 
-    if (!keyword || len == 0) return NULL;
-
-    for (i = 0; certified_exit_specs[i].primary_keyword; i++) {
-        const char *primary = certified_exit_specs[i].primary_keyword;
-        if (len == strlen(primary) && strncasecmp(primary, keyword, len) == 0) {
-            return primary;
-        }
-    }
-    return NULL;
-}
 
 static ExitEntry *rxcp_find_exit_entry(Context *ctx, const char *keyword, size_t len) {
     Context *root = ctx->master_context ? ctx->master_context : ctx;
@@ -252,7 +212,7 @@ static void rxcp_register_additional_keyword(Context *ctx,
     kw->next = entry->additional_keywords;
     entry->additional_keywords = kw;
 
-    if (!rxcp_is_exit_additional(ctx, keyword_copy, strlen(keyword_copy))) {
+    if (!typed_rxcp_is_exit_additional(ctx, keyword_copy, strlen(keyword_copy))) {
         ExitAdditionalKeywords *akw = calloc(1, sizeof(ExitAdditionalKeywords));
         if (akw) {
             akw->keyword = strdup(keyword_copy);
@@ -267,7 +227,7 @@ static void rxcp_assert_certified_exits_registered(Context *ctx) {
 
     for (i = 0; certified_exit_specs[i].primary_keyword; i++) {
         const CertifiedExitSpec *spec = &certified_exit_specs[i];
-        if (!rxcp_is_exit_primary(ctx, spec->primary_keyword, strlen(spec->primary_keyword))) {
+        if (!typed_rxcp_is_exit_primary(ctx, spec->primary_keyword, strlen(spec->primary_keyword))) {
             fprintf(stderr,
                     "INTERNAL EXIT ERROR: Certified exit '%s' was not registered\n",
                     spec->primary_keyword);
@@ -276,7 +236,7 @@ static void rxcp_assert_certified_exits_registered(Context *ctx) {
     }
 }
 
-void rxcp_free_exits(Context *ctx) {
+void typed_rxcp_free_exits(Context *ctx) {
     Context *root = ctx->master_context ? ctx->master_context : ctx;
     if (ctx != root) return;
 
@@ -532,7 +492,7 @@ static void rxcp_register_descriptor_imports(rxvml_context *vctx,
     }
 }
 
-void rxcp_init_exits(Context *ctx) {
+void typed_rxcp_init_exits(Context *ctx) {
     Context *root = ctx->master_context ? ctx->master_context : ctx;
     rxvml_context* vctx = rxcp_init_bridge(ctx);
 
@@ -613,7 +573,7 @@ void rxcp_init_exits(Context *ctx) {
                 exit(-1);
             }
 
-            if (rxcp_is_exit_primary(ctx, primary_keyword, primary_len)) {
+            if (typed_rxcp_is_exit_primary(ctx, primary_keyword, primary_len)) {
                 free(primary_keyword);
                 rxvml_value_free(descriptor);
                 rxvml_value_free(obj);
@@ -668,7 +628,7 @@ void rxcp_init_exits(Context *ctx) {
     rxcp_assert_certified_exits_registered(ctx);
 }
 
-int rxcp_is_exit_primary(Context *ctx, const char *keyword, size_t len) {
+int typed_rxcp_is_exit_primary(Context *ctx, const char *keyword, size_t len) {
     Context *root = ctx->master_context ? ctx->master_context : ctx;
     ExitEntry *entry = (ExitEntry *)root->exit_registry;
     while (entry) {
@@ -678,7 +638,7 @@ int rxcp_is_exit_primary(Context *ctx, const char *keyword, size_t len) {
     return 0;
 }
 
-int rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len) {
+int typed_rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len) {
     Context *root = ctx->master_context ? ctx->master_context : ctx;
     ExitAdditionalKeywords *akw = (ExitAdditionalKeywords *)root->exit_additional_keywords;
     while (akw) {
@@ -688,7 +648,7 @@ int rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len) {
     return 0;
 }
 
-unsigned int rxcp_get_exit_flags(Context *ctx, const char *keyword, size_t len) {
+unsigned int typed_rxcp_get_exit_flags(Context *ctx, const char *keyword, size_t len) {
     ExitEntry *entry = rxcp_find_exit_entry(ctx, keyword, len);
     return entry ? entry->flags : 0;
 }
@@ -1717,7 +1677,7 @@ static void rxcp_rewrite_diagnostics_in_tree(Context *ctx,
     }
 }
 
-void rxcp_exit_rewrite_diagnostics(Context *ctx) {
+void typed_rxcp_exit_rewrite_diagnostics(Context *ctx) {
     Context *root;
     ExitEntry *entry;
     rxvml_context *vctx;
@@ -2729,7 +2689,7 @@ static int rxcp_exit_invoke_entry(Context *ctx,
     return handled;
 }
 
-int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node) {
+int typed_rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node) {
     rxvml_context* vctx;
     rxvml_value* tok_array;
     rxvml_value* response;
@@ -2833,7 +2793,7 @@ int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node) {
     return handled;
 }
 
-int rxcp_exit_bridge_plan_invoke(Context *ctx, ASTNode *node) {
+int typed_rxcp_exit_bridge_plan_invoke(Context *ctx, ASTNode *node) {
     rxvml_context* vctx;
     rxvml_value* tok_array;
     rxvml_value* response;

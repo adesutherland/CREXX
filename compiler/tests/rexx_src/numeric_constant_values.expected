@@ -1,0 +1,15 @@
+float-decimal 1 1
+cast-consumer 1 1 2
+cast-string 1
+string-casts 42 1
+nan-runtime 0 1 0 0 0 0
+nan-folded 0 1 0 0 0 0
+nonfinite inf nan -inf inf
+decimal-special inf nan inf nan
+zero-runtime -inf inf
+nan-negation 1
+subnormal 1 1 1
+integer 1 1 1 1 1
+integer-display 1.23456e+5
+decimal-context 1 0.33333
+inherited 1.2346 1.2346

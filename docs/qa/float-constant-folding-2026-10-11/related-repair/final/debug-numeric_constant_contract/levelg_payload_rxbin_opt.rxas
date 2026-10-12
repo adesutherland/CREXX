@@ -1,0 +1,47 @@
+/*
+ * SOURCE                 : levelg_payload_consumer.crexx
+ */
+
+.globals=0
+
+main() .locals=4
+   .meta "levelg_payload_consumer.main"="b" ".int" main() ""
+   .srcstep 9 9 17 "levelg_payload_consumer.crexx" 3 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .meta "levelg_payload_consumer.main.data"="b" ".binary" r1
+   .srcstep 1 1 17 "levelg_payload_consumer.crexx" 4 2 16 " data = .binary"
+   null r1
+   .srcstep 2 2 17 "levelg_payload_consumer.crexx" 5 2 39 " data = '0000000000000000'x as .binary"
+   load r1,0x0000000000000000
+   .traceevent "L" 4 "R" "X" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "X" "r" 1 2 2 0 "data" ""
+   .srcstep 4 4 17 "levelg_payload_consumer.crexx" 6 2 14 " f = nanvalue()"
+   .srcstep 3 3 33 "levelg_payload_consumer.crexx" 6 14 14 " f = nanvalue()"
+   load r2,nan(fff8000000001234)
+   .traceevent "L" 4 "R" "F" "r" 2 3 3 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 2 3 3 0 "f" ""
+   .srcstep 5 5 17 "levelg_payload_consumer.crexx" 7 2 25 " <at..float>(0) data = f"
+   .meta "levelg_payload_consumer.main.f"="b" ".float" r2
+   .traceevent "V" 6 "R" "X" "r" 1 5 5 0 "data" ""
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 5 5 0 "" ""
+   .traceevent "V" 6 "R" "F" "r" 2 5 5 0 "f" ""
+   bsetf64 r1,r3,r2
+   .srcstep 6 6 17 "levelg_payload_consumer.crexx" 8 2 26 " bits = <at..int>(0) data"
+   .meta "levelg_payload_consumer.main.bits"="b" ".int" r0
+   .traceevent "V" 6 "R" "X" "r" 1 6 6 0 "data" ""
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
+   bgeti64 r0,r1,r3
+   .traceevent "A" 6 "R" "I" "r" 0 6 6 0 "bits" ""
+   .srcstep 7 7 17 "levelg_payload_consumer.crexx" 9 2 30 " say bits = -2251799813680588"
+   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "bits" ""
+   ieq r3,r0,-2251799813680588
+   btos r3
+   .traceevent "O" 4 "R" "S" "r" 3 7 7 0 "" ""
+   say r3
+   .srcstep 8 8 17 "levelg_payload_consumer.crexx" 10 2 10 " return 0"
+   ret 0
+   .meta "levelg_payload_consumer.main.bits"
+   .meta "levelg_payload_consumer.main.data"
+   .meta "levelg_payload_consumer.main.f"

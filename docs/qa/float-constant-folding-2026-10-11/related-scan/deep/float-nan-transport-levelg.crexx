@@ -1,0 +1,6 @@
+options levelg numeric_common
+main: procedure = .int
+  arg argv = .string[]
+a = argv[1] as .float
+say (0.0 / 0.0) + a
+return 0

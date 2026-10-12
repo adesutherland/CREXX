@@ -1,0 +1,28 @@
+/*
+ * SOURCE                 : cast-int-string-assignment-levelg.crexx
+ */
+
+.globals=0
+
+main() .locals=3
+   .meta "cast-int-string-assignment-levelg.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 6 6 17 "cast-int-string-assignment-levelg.crexx" 2 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "cast-int-string-assignment-levelg.crexx" 3 7 21 "  arg argv = .string[]"
+   .meta "cast-int-string-assignment-levelg.main.argv"="b" ".string[*]" a1
+   .meta "cast-int-string-assignment-levelg.main.s"="b" ".string" r1
+   .srcstep 2 2 17 "cast-int-string-assignment-levelg.crexx" 4 1 12 "s = .string"
+   null r1
+   .srcstep 3 3 17 "cast-int-string-assignment-levelg.crexx" 5 1 18 "s = (1.5 as .int)"
+   load r2,1.5
+   .traceevent "L" 4 "R" "F" "r" 2 3 3 0 "" ""
+   fcopy r1,r2
+   ftos r1
+   .traceevent "A" 6 "R" "S" "r" 1 3 3 0 "s" ""
+   .srcstep 4 4 17 "cast-int-string-assignment-levelg.crexx" 6 1 6 "say s"
+   .traceevent "V" 6 "R" "S" "r" 1 4 4 0 "s" ""
+   say r1
+   .srcstep 5 5 17 "cast-int-string-assignment-levelg.crexx" 7 1 9 "return 0"
+   ret 0
+   .meta "cast-int-string-assignment-levelg.main.argv"
+   .meta "cast-int-string-assignment-levelg.main.s"

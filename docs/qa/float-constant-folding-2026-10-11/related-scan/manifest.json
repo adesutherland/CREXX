@@ -1,0 +1,37 @@
+{
+  "scope": "investigation only; original local repair unchanged; no publication/research edits",
+  "inputs": {
+    "compiler/rxcp_opt.c": "d98923593bbd22cde41a680230c0631ddcda61b562e942e2b6b1e9973e1dcf2e",
+    "compiler/rxcp_emit_core.c": "6a04f1e9c49d860695897768453fdec79065e6a6936ff445e9c00e60b2082821",
+    "compiler/rxcp_emit_expr.c": "e93bd035cff93f38531773f39633a387115886e0d1f3523e108abb4be8ca1925",
+    "compiler/rxcp_inline_payload.c": "da3bab986185e964712428a702625a4faf0649930b21539ba179b1fad4de4030",
+    "compiler/rxcp_contract.c": "9d4cce0196356cabd0426d426592b1773c9533379b4777edfa17069b6aa741a5",
+    "binutils/include/rxnumparse.h": "cfd07c57618735575f473e839c4549fce4a3c4bb098c47a9ea4b0f2d0e629722",
+    "assembler/rxastoke.c": "8e56f4b643f53073c417f0dcfb50d17fbc7fdfc9ed576244f538d2dd6336fba6",
+    "assembler/rxasscan.re": "ac0640282d8f829e505d33e563e1c7b9807fd627b90ec26e3c27a2c683c1ce2b",
+    "disassembler/rxdadism.c": "eb90cf8989f22a72ef2141ae89cd0fc26b9e5790594207c60c5d5b128682a47e",
+    "interpreter/rxvmvars.h": "dbac0ac5f685f7d1271df371d584ca6eca027dc97c2da3d8d9d562f8a134a114",
+    "interpreter/rxvmhandlers_string.inc": "18ade5fb46d0977c16dc6945492d923aa251e79882e0a184036d174070ac6601",
+    "interpreter/rxvmhandlers_numeric.inc": "e01bcfe08303d51676afe919879974085a1bea279d7af9d744b11503b4d9fd9c",
+    "interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal.c": "80b43965b6120fb8b2ec28f79a105791d7ae9600564471890d1ba6ba3b620eca",
+    "interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c": "5fc5ace306bcc18cf7883ec8c4c9840dd906e757a4c9f786259a2a9d91fa3e89",
+    "compiler/rxcp_val_type.c": "fdabb26f9e9f3b6f945dddb6d7e703c191bf4664252b91bdfe85d818fe5ff0b2"
+  },
+  "tools": {
+    "rxc": "bd6b2c0f32487fe906f33e92ab205a15773619303b13eb39fd25cb11ba45762d",
+    "rxas": "a3e3742506fca9192bd7a102b5520a12709f1836cd8b8da67e730421ad66d7f5",
+    "rxdas": "6d3fe15516b74ff02ea154bbc3dcc9e798ab59e83c973e7da487fadb011ffb9e",
+    "rxtvm": "cf9a163a1bee68d7627c2adb03eac69543a3e5bb58a1a47ba8fe13da723e1126",
+    "rxbvm": "399f59b401b34574adfaa9c3957970fd613bbadc6ea331e55d5cee69b5db8124"
+  },
+  "stages": {
+    "": 548,
+    "deep": 244,
+    "context": 176,
+    "conversions": 128,
+    "integers": 128,
+    "transport": 30,
+    "integer-transport": 40,
+    "cast-consumer": 112
+  }
+}

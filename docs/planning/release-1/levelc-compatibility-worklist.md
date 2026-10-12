@@ -6,6 +6,42 @@ contract (`R1-AC-01/02`) and the roadmap owns portfolio order. This worklist
 records coverage, incremental evidence and Adrian-approved scope revisions;
 it does not change the 2026-11-30 target.
 
+## Remaining Classic path review — 2026-10-10
+
+Reviewed synchronized `develop` `91313bcc5a447e9403f95b1f0bfc4dd9503d0618`
+against current source, the whole-instruction queue, reference obligations and
+retained receipts. This is a status/architecture review, not fresh execution
+proof or a new delivery plan. Existing LC/R1 criteria retain their IDs and scope.
+
+| Remaining family | Active owner / next work |
+| --- | --- |
+| INTERPRET | The only unimplemented whole instruction after LC-I-01–24. LC-GAP-01 / LC-87-01–05 still require generated source, live caller state, control/resumption and bounded code lifetime; parked implementation is not an approved exclusion. |
+| Host contracts | LC-GAP-03–05 / LC-AC-06: invocation modes, caller traps/completions, externally visible pool APIs and access windows, configured host/queue/routine adapters, command NUL transport and real host HALT. |
+| Full reference/crosswalk | LC-GAP-02/05–09: configured source/comparison rules, mapped identity, numeric/string/resource limits, complete AST/provenance crosswalk and final PARSE EXTERNAL/NUMERIC dispositions. Admitted-path receipts do not close these wider rows. |
+| Release/platform proof | LC-GAP-10 / R1-AC-01/02 plus SAN-QA-018. The whole-number repair is implemented with focused proof; full supported sanitizer closure remains assigned to Codex at the next Release 1 release-QA gate, not waived. |
+
+The eight formerly missing stream BIFs and the agreed Unicode/ordinal contract
+are implemented and qualified under LC-UNICODE. LC-CLOSE has qualified the
+ordinary expression, physical source NUL, diagnostics and DATE/TIME repairs.
+The [10 October repair receipt](../../qa/ci-core-stream-packaging-2026-10-10/README.md)
+also retains core stream packaging and exact integer-operand proof. Older dated
+absence/deferral/clock-defect text must not be read as the current queue.
+
+Adrian approved C-first extraction on 2026-10-10. Its bounded local phase is
+complete and published to `origin/develop` in the authorized 10 October
+development batch. The
+[COMP-PIPE-01 plan](../../ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10)
+owns acceptance and the [receipt](../../qa/classic-frontend-split-2026-10-10/README.md)
+retains qualification. `rxc-c` links the C frontend and common backend without
+the B/G parser/task/exit host. Imports use an independent binutils metadata
+reader and separate AST adapter; typed source/editor services use the owning
+`rxc` process. The [conformance boundary](../../../compiler/docs/metadata_conformance.md)
+keeps B/G/provider fields language-neutral. SAN-011/012 have focused repairs but
+remain release-blocking: Adrian assigned Codex their full closure at the next
+Release 1 release-QA gate. The full B/G migration, Classic compatibility criteria
+and parked INTERPRET semantic/lifetime decision retain their separate ownership.
+No estimate establishes INTERPRET as most of the remaining effort.
+
 ## LC-UNICODE — compatible byte ordinals, Unicode and encoded streams (2026-10-09)
 
 **Status:** approved implementation and local qualification complete, 2026-10-09;

@@ -1,0 +1,1655 @@
+{
+  "revision": "bb0d211a8d17f0b66fdd6fcb99ad6ffd849a0283",
+  "tools": {
+    "rxc": "bd6b2c0f32487fe906f33e92ab205a15773619303b13eb39fd25cb11ba45762d",
+    "rxas": "a3e3742506fca9192bd7a102b5520a12709f1836cd8b8da67e730421ad66d7f5",
+    "rxtvm": "cf9a163a1bee68d7627c2adb03eac69543a3e5bb58a1a47ba8fe13da723e1126",
+    "rxbvm": "399f59b401b34574adfaa9c3957970fd613bbadc6ea331e55d5cee69b5db8124"
+  },
+  "inputs": {
+    "compiler/rxcp_opt.c": "d98923593bbd22cde41a680230c0631ddcda61b562e942e2b6b1e9973e1dcf2e",
+    "compiler/rxcp_emit_core.c": "6a04f1e9c49d860695897768453fdec79065e6a6936ff445e9c00e60b2082821"
+  },
+  "sources": {
+    "cast-int-string-consumer-levelb.crexx": "6f138de4a0421c937d0f4eba777233c8ad3a72c52b651f2ad1ddbd45b05b6289",
+    "cast-bool-typed-control-levelg.crexx": "0b8a7ceeedee2a30d41e3c4d8fa1a8832e4b657e486bdb56309f5bb4a2e74a9b",
+    "cast-int-string-assignment-levelb.crexx": "34e5726adcee21f4dd53f21d6ac8cc726f345ccf8d062015202181da1f9504d9",
+    "cast-int-string-consumer-levelg.crexx": "8c24ae0befc9779f2950d4986f6997f27a32a3da5a2ffcc5f570924346bf0df9",
+    "cast-int-string-assignment-levelg.crexx": "084fd7b5a6a2df688d450b54745cb3e506c0a55fa2dd244a23ad4243ce3f5517",
+    "cast-bool-typed-control-levelb.crexx": "776ece853cd01419ed175aabb06d8aaf692d1eb61919d0d524331fab1c554937",
+    "cast-bool-string-consumer-levelb.crexx": "109a4342ea8e3a4ffb1e8845a84041995127400b5486e79c705f5c4c8ae201d2",
+    "cast-bool-string-consumer-levelg.crexx": "79be618054b38e550aad2d67cf2db9398989dc976fee487ab4ce408bcaa8a8fa"
+  },
+  "summary": [
+    {
+      "case": "cast-int-string-consumer",
+      "results": {
+        "levelb-noopt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-noopt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-noopt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-noopt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-opt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-opt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-opt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-opt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-noopt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-noopt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-noopt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-noopt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-opt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-opt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-opt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-opt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "case": "cast-bool-string-consumer",
+      "results": {
+        "levelb-noopt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelb-noopt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelb-noopt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelb-noopt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelb-opt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelb-opt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelb-opt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelb-opt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelg-noopt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelg-noopt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelg-noopt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelg-noopt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelg-opt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelg-opt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelg-opt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        },
+        "levelg-opt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "2\n",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "case": "cast-bool-typed-control",
+      "results": {
+        "levelb-noopt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelb-noopt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelb-noopt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelb-noopt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelb-opt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelb-opt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelb-opt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelb-opt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelg-noopt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelg-noopt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelg-noopt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelg-noopt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelg-opt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelg-opt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelg-opt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        },
+        "levelg-opt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1\n",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "case": "cast-int-string-assignment",
+      "results": {
+        "levelb-noopt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-noopt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-noopt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-noopt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-opt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-opt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-opt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelb-opt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-noopt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-noopt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-noopt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-noopt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-opt-noopt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-opt-noopt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-opt-opt-rxtvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        },
+        "levelg-opt-opt-rxbvm": {
+          "exit": 0,
+          "stdout": "1.5\n",
+          "stderr": ""
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-noopt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-noopt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-opt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-opt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelb-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-noopt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-noopt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-opt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-opt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-consumer-levelg-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-noopt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-noopt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-opt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-opt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelb-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-noopt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-noopt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-opt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-opt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-string-consumer-levelg-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-noopt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-noopt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-opt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-opt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelb-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-noopt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-noopt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-opt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-opt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-bool-typed-control-levelg-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-noopt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-noopt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-opt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-opt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelb-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-noopt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-noopt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-noopt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-noopt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-noopt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+        "-x",
+        "--no-exe-import",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg.crexx"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-n",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-opt-noopt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-opt-noopt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-opt-opt",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-opt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-float-repair/related-scan/cast-consumer/cast-int-string-assignment-levelg-opt-opt",
+        "-a",
+        "1.0"
+      ],
+      "exit": 0,
+      "stdout": "1.5\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 Status: active Level C architecture design; the original parser design record
 is retained below for implementation history
-Last updated: 2026-10-08
+Current status refreshed: 2026-10-10 (`develop` `91313bcc5…`)
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
@@ -10,8 +10,9 @@ re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
 The first DSLSH syntax-highlighting milestone is complete. All 24 admitted
 whole-instruction reviews (`LC-I-01–24`) are closed; INTERPRET (`LC-I-25`)
-is parked and unimplemented. Of 70 catalogued Classic BIF names, 62 have direct
-compiler entries; eight stream BIFs remain deferred. Entry presence and
+is parked and unimplemented. All 70 catalogued Classic BIF names have direct
+compiler entries, including the eight stream BIFs; 23 explicit Unicode BIFs
+reuse the shared rxunicode algorithms. Entry presence and
 instruction closure do not establish full Classic conformance. The
 [worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
 owns decisions, acceptance criteria and retained evidence. The detailed
@@ -35,27 +36,44 @@ review owns the current source/test crosswalk; the worklist remains the sole
 programme plan. The final local BIF product checkpoint is not full Level C or
 Release 1 qualification.
 
-Adrian's 2026-10-07 clarification defers changes to Unicode and I/O
-infrastructure pending a compatibility and architectural assessment. Unicode-caused signals
-and logic errors are currently undefined for B/C/G. Existing valid-text,
-codepoint, Latin-1 ordinal and explicit Level G Unicode mechanisms remain
-observable implementation boundaries; this clarification does not change
-RexxScript's separate binary-capable `RexxValue` use. Stream support and broader
-host services remain pending. The
+The approved and qualified 2026-10-09
+[LC-UNICODE contract](levelc_unicode_and_streams.md) supersedes the earlier
+Unicode/I/O deferral for its admitted paths. Level C has UTF-8 source, Unicode
+symbols and ordinary codepoint values, fixed Latin-1 byte ordinals, explicit
+Unicode algorithms and execution-owned raw/encoded streams. Named files default
+to raw ordinals; consoles default to UTF-8. Existing whitespace defaults remain.
+Typed B/G and RexxScript's separate binary-capable `RexxValue`/sandbox contracts
+retain their own ownership. Broader host invocation/pool/HALT services,
+configured scanner/resource limits and full compatibility remain open. The
 [B/C/G compiler split proposal](compiler_frontend_split_proposal.md) now reviews
 separate level front ends, their common canonical AST/backend, fast/lite builds
-and a reusable C-first compilation service for INTERPRET. It does not approve
+and a reusable C-first compilation service for INTERPRET. The
+[10 October C-first phase](../../docs/ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10)
+was approved by Adrian; its bounded implementation and local qualification are
+complete and published to `origin/develop` in the authorized 10 October batch.
+The [receipt](../../docs/qa/classic-frontend-split-2026-10-10/README.md)
+retains final-input evidence and the SAN-011/012 later release-QA assignment.
+`rxc-c` and the exact-length `rxcc_parse` frontend service use the C component
+over the common backend. The independent binutils `rxcontract` reader and
+separate `rxcp_contract` AST adapter replace synthetic B source; the
+[metadata conformance boundary](metadata_conformance.md) specifies acceptable
+fields independently of the producer language. Both B and G provider fixtures
+use this route;
+typed source dependencies and the desktop editor use the owning `rxc` process.
+The full B/G migration remains separate. This extraction does not approve
 implementation of the parked instruction or close the Classic worklist's
 semantic and lifecycle obligations.
 
-The documentation review also exposed a shared DATE/TIME clock defect: ordinary
-linked optimized/no-opt execution retains TIME(L) and TIME(E)=0 after a one-second
-host sleep because no production caller refreshes the pool's clause sample.
-DATE uses that same cached sample; a calendar-boundary crossing was not probed.
-Explicit-date/time conversions and injected-clock tests retain their evidence.
-The worklist and detailed review record the defect and the owner of its host
-and lifecycle investigation;
-this documentation change does not repair it.
+LC-CLOSE repaired and qualified the DATE/TIME clause-refresh defect, ordinary
+Classic expression/error families and physical source NUL/source-diagnostic
+paths. Its worklist and
+[retained receipt](../../docs/planning/release-1/levelc-closeout-evidence-20261009.json)
+own those exact inputs. Historical defect descriptions below retain their dated
+scope; live timezone/DST/calendar/host clock failures and complete resource/
+platform conformance remain separate reference obligations. The 10 October
+whole-number/stream packaging repair has focused proof; SAN-QA-018's full
+platform closure remains assigned to Codex at the next Release 1 release-QA
+gate in the [SAN register](../../docs/SANITIZER-WORKLIST.md).
 
 ```text
 Classic source -> Level C scanner/glue/grammar -> source tree + guarded AST

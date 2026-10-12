@@ -1,0 +1,513 @@
+{
+  "schema_version": "crexx.import-resolution-report/v1",
+  "status": "observed",
+  "tool": {
+    "name": "rxc",
+    "version": "crexx-1.0.0-beta.3+local.gbb0d211a8d17.dirty"
+  },
+  "primary_source": "@primary-source/0/levelg_rxas_consumer.crexx",
+  "options": {
+    "source_roots": ["@primary-source/0"],
+    "binary_roots": ["@binary/0"],
+    "auto_import_rxas": true,
+    "executable_directory": "excluded"
+  },
+  "candidate_events": [
+    {
+      "sequence": 0,
+      "stage": "source",
+      "module": "levelg_say",
+      "candidate": {
+        "path": "@primary-source/0/levelg_say.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "a17f41c067d39f7752fc429c301f60dadc4fb5991f336a4f1d33d77e298be08d",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 1,
+      "stage": "source",
+      "module": "levelg_near",
+      "candidate": {
+        "path": "@primary-source/0/levelg_near.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "4c208d8113036d17d63c554fc8863cfc66feb10361cf9527caa9706d76964aea",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 2,
+      "stage": "source",
+      "module": "levelg",
+      "candidate": {
+        "path": "@primary-source/0/levelg.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "c01e18efb8cc0db4fb5d1c26c6e0b0d254c05ed0c2a875589b113c17b518ae1d",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 3,
+      "stage": "source",
+      "module": "levelb_near",
+      "candidate": {
+        "path": "@primary-source/0/levelb_near.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "4db676ca5af3856f2864a6903213076d3c4dff1c34f9aad5177e9d7332fff57a",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 4,
+      "stage": "source",
+      "module": "levelg_string_fraction",
+      "candidate": {
+        "path": "@primary-source/0/levelg_string_fraction.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "af4546bbdd82f148a78ad2c860d028e925ce3a403e9ae8da3822f64934fcd2e6",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 5,
+      "stage": "source",
+      "module": "levelg_rounded",
+      "candidate": {
+        "path": "@primary-source/0/levelg_rounded.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "613b9669cb25f97aed94d8b5bfa197a0d84278e1ae4a1dce6f7b4e7b69676210",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 6,
+      "stage": "source",
+      "module": "levelb_rxas_consumer",
+      "candidate": {
+        "path": "@primary-source/0/levelb_rxas_consumer.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "294b946a8cbc778d538e5e5469c069441f589b422df769fc77caa98f873e26f3",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 7,
+      "stage": "source",
+      "module": "levelg_source_consumer",
+      "candidate": {
+        "path": "@primary-source/0/levelg_source_consumer.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "0c07572155490f2b039db5314ea45832e75161f40762d0169fea6b8732526757",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 8,
+      "stage": "source",
+      "module": "levelg_string_assignment",
+      "candidate": {
+        "path": "@primary-source/0/levelg_string_assignment.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "9adc82b17df6939c52043c48eb3bec1658fe9ab27916447eac1d3e671d9db53e",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 9,
+      "stage": "source",
+      "module": "levelb",
+      "candidate": {
+        "path": "@primary-source/0/levelb.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "b3ca52fb7f47b384fbd2d2ec0d5aaa993dd8d8f958d8dbbe465eaa1947fa99c5",
+        "digest_status": "available",
+        "mtime_seconds": 1791716539
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 10,
+      "stage": "source",
+      "module": "levelb_rxbin_consumer",
+      "candidate": {
+        "path": "@primary-source/0/levelb_rxbin_consumer.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "294b946a8cbc778d538e5e5469c069441f589b422df769fc77caa98f873e26f3",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 11,
+      "stage": "source",
+      "module": "levelb_source_consumer",
+      "candidate": {
+        "path": "@primary-source/0/levelb_source_consumer.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "294b946a8cbc778d538e5e5469c069441f589b422df769fc77caa98f873e26f3",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 12,
+      "stage": "source",
+      "module": "levelb_rounded",
+      "candidate": {
+        "path": "@primary-source/0/levelb_rounded.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "f621f2b15f2bce3109b35b838c0332bc056ac06c31ccbb86425523b3d6d989f8",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 13,
+      "stage": "source",
+      "module": "levelb_say",
+      "candidate": {
+        "path": "@primary-source/0/levelb_say.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "289c40a75da5fd95f4317c31059f5ff8b1d37f67870d4c35dc8b6dcbca527512",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 14,
+      "stage": "source",
+      "module": "levelb_string_fraction",
+      "candidate": {
+        "path": "@primary-source/0/levelb_string_fraction.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "889b0b49adbb2827e4dcbbb13547a785d1a2b55e76cacf65f966b2bbf86ed211",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 15,
+      "stage": "source",
+      "module": "levelb_string_assignment",
+      "candidate": {
+        "path": "@primary-source/0/levelb_string_assignment.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "87bd016d4ff1585050ef064e70d56c0573a0538ad9a9d7a2a85e5e2fbac8cefb",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    },
+    {
+      "sequence": 16,
+      "stage": "binary",
+      "module": "numeric_nonfinite_provider",
+      "candidate": {
+        "path": "@binary/0/numeric_nonfinite_provider.rxas",
+        "kind": "rxas",
+        "root_kind": "binary",
+        "root_index": 0,
+        "sha256": "c18010759b48e04373319ef39c47815cc7161ab88f245f11e2d7d1928be9d1e7",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      },
+      "decision": "admitted",
+      "reason": "first-candidate-for-stage"
+    }
+  ],
+  "selected_candidates": [
+    {
+      "stage": "source",
+      "module": "levelg_say",
+      "candidate": {
+        "path": "@primary-source/0/levelg_say.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "a17f41c067d39f7752fc429c301f60dadc4fb5991f336a4f1d33d77e298be08d",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelg_near",
+      "candidate": {
+        "path": "@primary-source/0/levelg_near.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "4c208d8113036d17d63c554fc8863cfc66feb10361cf9527caa9706d76964aea",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelg",
+      "candidate": {
+        "path": "@primary-source/0/levelg.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "c01e18efb8cc0db4fb5d1c26c6e0b0d254c05ed0c2a875589b113c17b518ae1d",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelb_near",
+      "candidate": {
+        "path": "@primary-source/0/levelb_near.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "4db676ca5af3856f2864a6903213076d3c4dff1c34f9aad5177e9d7332fff57a",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelg_string_fraction",
+      "candidate": {
+        "path": "@primary-source/0/levelg_string_fraction.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "af4546bbdd82f148a78ad2c860d028e925ce3a403e9ae8da3822f64934fcd2e6",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelg_rounded",
+      "candidate": {
+        "path": "@primary-source/0/levelg_rounded.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "613b9669cb25f97aed94d8b5bfa197a0d84278e1ae4a1dce6f7b4e7b69676210",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelb_rxas_consumer",
+      "candidate": {
+        "path": "@primary-source/0/levelb_rxas_consumer.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "294b946a8cbc778d538e5e5469c069441f589b422df769fc77caa98f873e26f3",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelg_source_consumer",
+      "candidate": {
+        "path": "@primary-source/0/levelg_source_consumer.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "0c07572155490f2b039db5314ea45832e75161f40762d0169fea6b8732526757",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelg_string_assignment",
+      "candidate": {
+        "path": "@primary-source/0/levelg_string_assignment.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "9adc82b17df6939c52043c48eb3bec1658fe9ab27916447eac1d3e671d9db53e",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelb",
+      "candidate": {
+        "path": "@primary-source/0/levelb.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "b3ca52fb7f47b384fbd2d2ec0d5aaa993dd8d8f958d8dbbe465eaa1947fa99c5",
+        "digest_status": "available",
+        "mtime_seconds": 1791716539
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelb_rxbin_consumer",
+      "candidate": {
+        "path": "@primary-source/0/levelb_rxbin_consumer.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "294b946a8cbc778d538e5e5469c069441f589b422df769fc77caa98f873e26f3",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelb_source_consumer",
+      "candidate": {
+        "path": "@primary-source/0/levelb_source_consumer.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "294b946a8cbc778d538e5e5469c069441f589b422df769fc77caa98f873e26f3",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelb_rounded",
+      "candidate": {
+        "path": "@primary-source/0/levelb_rounded.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "f621f2b15f2bce3109b35b838c0332bc056ac06c31ccbb86425523b3d6d989f8",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelb_say",
+      "candidate": {
+        "path": "@primary-source/0/levelb_say.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "289c40a75da5fd95f4317c31059f5ff8b1d37f67870d4c35dc8b6dcbca527512",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelb_string_fraction",
+      "candidate": {
+        "path": "@primary-source/0/levelb_string_fraction.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "889b0b49adbb2827e4dcbbb13547a785d1a2b55e76cacf65f966b2bbf86ed211",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "source",
+      "module": "levelb_string_assignment",
+      "candidate": {
+        "path": "@primary-source/0/levelb_string_assignment.crexx",
+        "kind": "source",
+        "root_kind": "primary-source",
+        "root_index": 0,
+        "sha256": "87bd016d4ff1585050ef064e70d56c0573a0538ad9a9d7a2a85e5e2fbac8cefb",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    },
+    {
+      "stage": "binary",
+      "module": "numeric_nonfinite_provider",
+      "candidate": {
+        "path": "@binary/0/numeric_nonfinite_provider.rxas",
+        "kind": "rxas",
+        "root_kind": "binary",
+        "root_index": 0,
+        "sha256": "c18010759b48e04373319ef39c47815cc7161ab88f245f11e2d7d1928be9d1e7",
+        "digest_status": "available",
+        "mtime_seconds": 1791716540
+      }
+    }
+  ],
+  "provider_bindings": []
+}

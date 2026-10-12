@@ -1,0 +1,79 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start  93: int64_literal_overflow_fail
+      Start 470: repro_strict_compare_run_noopt
+      Start 430: int64_contract_run_noopt
+      Start 520: class_attr_register_views_run_noopt
+      Start 712: scalar_type_casts_run_noopt
+      Start 496: numeric_mixed_compare_run_noopt
+      Start 522: constants_levelb_payloads_run_noopt
+      Start 431: int64_contract_run_opt
+      Start 521: class_attr_register_views_run_opt
+      Start 713: scalar_type_casts_run_opt
+ 1/27 Test  #93: int64_literal_overflow_fail ...........***Failed    0.86 sec
+Mismatch at lines 3/3:
+Gen: [2 error(s) in source file]
+Gold: [Error in int64_literal_overflow.crexx @ 6:3 - #OVERFLOW_UNDERFLOW, "too_high"]
+
+      Start 497: numeric_mixed_compare_run_opt
+ 2/27 Test #431: int64_contract_run_opt ................   Passed    1.08 sec
+      Start 471: repro_strict_compare_run_opt
+ 3/27 Test #713: scalar_type_casts_run_opt .............   Passed    1.09 sec
+      Start 523: constants_levelb_payloads_run_opt
+ 4/27 Test #712: scalar_type_casts_run_noopt ...........   Passed    1.12 sec
+      Start  94: int64_fold_overflow_fail
+ 5/27 Test #520: class_attr_register_views_run_noopt ...   Passed    1.13 sec
+      Start  97: strict_compare_codegen_opt
+ 6/27 Test #430: int64_contract_run_noopt ..............   Passed    1.14 sec
+      Start 480: select_dispatch_general_run_noopt
+ 7/27 Test #522: constants_levelb_payloads_run_noopt ...   Passed    1.14 sec
+      Start  96: strict_compare_codegen_noopt
+ 8/27 Test #496: numeric_mixed_compare_run_noopt .......   Passed    1.18 sec
+      Start 160: 16_classes_parse
+ 9/27 Test #521: class_attr_register_views_run_opt .....   Passed    1.19 sec
+      Start 714: decimal_literal_context_run_noopt
+10/27 Test #470: repro_strict_compare_run_noopt ........   Passed    1.26 sec
+      Start 481: select_dispatch_general_run_opt
+11/27 Test #497: numeric_mixed_compare_run_opt .........   Passed    0.96 sec
+      Start 715: decimal_literal_context_run_opt
+12/27 Test  #94: int64_fold_overflow_fail ..............   Passed    0.81 sec
+      Start 123: select_dispatch_general_opt
+13/27 Test  #97: strict_compare_codegen_opt ............   Passed    0.86 sec
+      Start 936: address_exit_extended_parse
+14/27 Test #160: 16_classes_parse ......................   Passed    0.82 sec
+      Start 937: address_inline_then_parse
+15/27 Test  #96: strict_compare_codegen_noopt ..........   Passed    0.86 sec
+      Start  17: metadata_contract_conformance
+16/27 Test  #17: metadata_contract_conformance .........   Passed    0.00 sec
+17/27 Test #471: repro_strict_compare_run_opt ..........   Passed    0.96 sec
+18/27 Test #523: constants_levelb_payloads_run_opt .....   Passed    0.95 sec
+19/27 Test #480: select_dispatch_general_run_noopt .....   Passed    0.97 sec
+20/27 Test #714: decimal_literal_context_run_noopt .....   Passed    0.96 sec
+21/27 Test #481: select_dispatch_general_run_opt .......   Passed    0.91 sec
+22/27 Test #715: decimal_literal_context_run_opt .......   Passed    0.73 sec
+23/27 Test #123: select_dispatch_general_opt ...........   Passed    0.62 sec
+24/27 Test #937: address_inline_then_parse .............   Passed    0.61 sec
+25/27 Test #936: address_exit_extended_parse ...........   Passed    0.63 sec
+      Start 525: numeric_constant_contract
+26/27 Test #525: numeric_constant_contract .............   Passed    1.20 sec
+      Start 524: float_constant_folding_contract
+27/27 Test #524: float_constant_folding_contract .......   Passed    0.46 sec
+
+96% tests passed, 1 tests failed out of 27
+
+Label Time Summary:
+binutils            =   0.00 sec*proc (1 test)
+compiler            =   1.66 sec*proc (2 tests)
+comprehensive       =  24.49 sec*proc (26 tests)
+correctness         =   1.66 sec*proc (2 tests)
+imports             =   0.00 sec*proc (1 test)
+linked_opt          =   7.87 sec*proc (8 tests)
+numeric             =   1.66 sec*proc (2 tests)
+optimizer-parity    =   1.66 sec*proc (2 tests)
+smoke               =   0.00 sec*proc (1 test)
+unit                =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   4.33 sec
+
+The following tests FAILED:
+	 93 - int64_literal_overflow_fail (Failed)              comprehensive
+Errors while running CTest

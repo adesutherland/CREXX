@@ -1,0 +1,5 @@
+file(STRINGS "${SHARED}" common REGEX "^#define (TK_|ANYTHING)")
+file(STRINGS "${GENERATED}" typed REGEX "^#define (TK_|ANYTHING)")
+if(NOT common STREQUAL typed)
+    message(FATAL_ERROR "Typed grammar token identities differ from rxcp_tokens.h; update the shared source-token contract deliberately")
+endif()

@@ -1,0 +1,26 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start  93: int64_literal_overflow_fail
+    Start 123: select_dispatch_general_opt
+    Start 160: 16_classes_parse
+    Start 936: address_exit_extended_parse
+    Start 937: address_inline_then_parse
+1/5 Test  #93: int64_literal_overflow_fail ......***Failed    1.04 sec
+Mismatch at lines 3/3:
+Gen: [2 error(s) in source file]
+Gold: [Error in int64_literal_overflow.crexx @ 6:3 - #OVERFLOW_UNDERFLOW, "too_high"]
+
+2/5 Test #160: 16_classes_parse .................   Passed    1.05 sec
+3/5 Test #123: select_dispatch_general_opt ......   Passed    1.06 sec
+4/5 Test #937: address_inline_then_parse ........   Passed    1.09 sec
+5/5 Test #936: address_exit_extended_parse ......   Passed    1.11 sec
+
+80% tests passed, 1 tests failed out of 5
+
+Label Time Summary:
+comprehensive    =   5.34 sec*proc (5 tests)
+
+Total Test time (real) =   1.19 sec
+
+The following tests FAILED:
+	 93 - int64_literal_overflow_fail (Failed)              comprehensive
+Errors while running CTest

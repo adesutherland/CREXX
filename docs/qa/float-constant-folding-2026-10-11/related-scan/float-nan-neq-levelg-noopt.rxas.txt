@@ -1,0 +1,24 @@
+/*
+ * SOURCE                 : float-nan-neq-levelg.crexx
+ */
+
+.globals=0
+
+main() .locals=2
+   .meta "float-nan-neq-levelg.main"="b" ".void" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "float-nan-neq-levelg.crexx" 2 1 31 "say (0.0 / 0.0) <> (0.0 / 0.0)"
+   load r0,0.0
+   .traceevent "L" 4 "R" "F" "r" 0 1 1 0 "" ""
+   fdiv r0,0.0,r0
+   .traceevent "O" 4 "R" "F" "r" 0 1 1 0 "" ""
+   load r1,0.0
+   .traceevent "L" 4 "R" "F" "r" 1 1 1 0 "" ""
+   fdiv r1,0.0,r1
+   .traceevent "O" 4 "R" "F" "r" 1 1 1 0 "" ""
+   fne r1,r0,r1
+   btos r1
+   .traceevent "O" 4 "R" "S" "r" 1 1 1 0 "" ""
+   say r1
+   .srcstep 2 2 1 "float-nan-neq-levelg.crexx" 2 31 31 "say (0.0 / 0.0) <> (0.0 / 0.0)"
+   ret

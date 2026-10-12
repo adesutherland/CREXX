@@ -1,0 +1,16 @@
+literal 0
+residual 1
+equal 1
+decimal 1
+runtime 0 1
+folded-runtime 1 1
+propagated 0 1 1
+named 0 1 1
+literal-transport 0 1
+integral-transport 1
+display 0.3 0.3
+strict 1 1 0
+loose 1 1 1 0
+mixed-loose 1 1
+small 0 1 0.33333 1 1 1
+engineering 100E+6 100E+6

@@ -31,6 +31,7 @@
 #include <ctype.h>
 #include "rxasgrmr.h"
 #include "rxas.h"
+#include "rxfloatformat.h"
 
 
 /* Assembler_Token Factory */
@@ -100,7 +101,16 @@ Assembler_Token* rxast_f(Assembler_Context* context, int type) {
         case FLOAT:
             memcpy(token->token_value.string, token->token_source, token->length);
             token->token_value.string[token->length] = 0;
-            token->token_value.real = atof((char*)token->token_value.string); // NOLINT
+            {
+                int special = rx_double_from_special_literal(token->token_source, token->length,
+                                                             &token->token_value.real);
+                if (special < 0) {
+                    rxaserat(context, token, "NaN literal bits must encode a binary64 NaN");
+                    token->token_value.real = NAN;
+                }
+                else if (!special)
+                    token->token_value.real = atof((char*)token->token_value.string); // NOLINT
+            }
             break;
         case LABEL:
             memcpy(token->token_value.string, token->token_source, token->length);

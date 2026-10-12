@@ -1,0 +1,17 @@
+/*
+ * SOURCE                 : float-inf-minus-inf-levelb.crexx
+ */
+
+.globals=0
+
+main() .locals=1
+   .meta "float-inf-minus-inf-levelb.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 4 4 17 "float-inf-minus-inf-levelb.crexx" 2 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "float-inf-minus-inf-levelb.crexx" 3 7 21 "  arg argv = .string[]"
+   .meta "float-inf-minus-inf-levelb.main.argv"="b" ".string[*]" a1
+   .srcstep 2 2 17 "float-inf-minus-inf-levelb.crexx" 4 1 38 "say ((1.0 / 0.0) - (1.0 / 0.0)) = 0.0"
+   say "1"
+   .srcstep 3 3 17 "float-inf-minus-inf-levelb.crexx" 5 1 9 "return 0"
+   ret 0
+   .meta "float-inf-minus-inf-levelb.main.argv"

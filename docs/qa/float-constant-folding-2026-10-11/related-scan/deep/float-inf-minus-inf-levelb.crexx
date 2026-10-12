@@ -1,0 +1,5 @@
+options levelb numeric_common
+main: procedure = .int
+  arg argv = .string[]
+say ((1.0 / 0.0) - (1.0 / 0.0)) = 0.0
+return 0

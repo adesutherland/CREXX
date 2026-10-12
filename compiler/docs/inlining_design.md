@@ -575,6 +575,12 @@ I6 | I7
 ;<
 ```
 
+The scalar `<float>` field preserves finite values with 17 significant digits.
+Exceptional values use `inf`, `-inf`, canonical `nan`, or
+`nan(<16 hexadecimal IEEE binary64 bits>)` for an exact NaN sign/payload or
+signaling bit. Existing C-style signed bare NaN fields remain readable.
+Record arity, enum/payload identities and I6/I7 versions are unchanged.
+
 The `c` record is an immutable pre-inline proof surface. Formal flags cover
 by-reference, optional/default, vararg, body-proved read-only/write/escape and
 exact shape; result and context flags cover the currently proved return,

@@ -1,0 +1,20 @@
+integer-small-fold noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
+integer-small-propagate noopt: {"exit": 0, "stderr": "", "stdout": "1\n6\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n6\n"}
+integer-to-float-small noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
+float-to-int-near noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
+float-to-int-rounded noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
+float-to-int-exact noopt: {"exit": 0, "stderr": "", "stdout": "2\n"} | opt: {"exit": 0, "stderr": "", "stdout": "2\n"}
+float-to-int-fractional noopt: {"exit": 0, "stderr": "", "stdout": "1.5\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1.5\n"}
+int64-to-float-control noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
+decimal-to-float-small noopt: {"exit": 0, "stderr": "", "stdout": "0\n"} | opt: {"exit": 0, "stderr": "", "stdout": "0\n"}
+decimal-small-control noopt: {"exit": 0, "stderr": "", "stdout": "1\n1.2346\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n1.2346\n"}
+float-to-decimal noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
+signed-zero-control noopt: {"exit": 0, "stderr": "", "stdout": "inf\n"}; {"exit": 0, "stderr": "", "stdout": "-inf\n"} | opt: {"exit": 0, "stderr": "", "stdout": "inf\n"}; {"exit": 0, "stderr": "", "stdout": "-inf\n"}
+float-infinity noopt: {"exit": 0, "stderr": "", "stdout": "inf\n"} | opt: {"exit": 0, "stderr": "", "stdout": "inf\n"}
+float-overflow noopt: {"exit": 0, "stderr": "", "stdout": "inf\n"} | opt: {"exit": 0, "stderr": "", "stdout": "inf\n"}
+float-nan-output noopt: {"exit": 0, "stderr": "", "stdout": "nan\n"} | opt: {"exit": 0, "stderr": "", "stdout": "nan\n"}
+float-nan-equal noopt: {"exit": 0, "stderr": "", "stdout": "0\n"}; {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "0\n"}; {"exit": 0, "stderr": "", "stdout": "1\n"}
+float-nan-neq noopt: {"exit": 0, "stderr": "", "stdout": "1\n"}; {"exit": 0, "stderr": "", "stdout": "0\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}; {"exit": 0, "stderr": "", "stdout": "0\n"}
+float-nan-order noopt: {"exit": 0, "stderr": "", "stdout": "0\n0\n"}; {"exit": 0, "stderr": "", "stdout": "1\n1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "0\n0\n"}; {"exit": 0, "stderr": "", "stdout": "1\n1\n"}
+float-infinity-equal noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}
+float-subnormal-control noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: {"exit": 0, "stderr": "", "stdout": "1\n"}; "compiler exit 2: Error in float-subnormal-control-levelb.crexx @ 2:5 - #BAD_CONVERSION: Value cannot be converted to the required type., \"1e-310\""; "compiler exit 2: Error in float-subnormal-control-levelg.crexx @ 2:5 - #BAD_CONVERSION: Value cannot be converted to the required type., \"1e-310\""

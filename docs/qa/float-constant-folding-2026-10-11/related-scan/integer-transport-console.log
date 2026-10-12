@@ -1,0 +1,2 @@
+integer-large-runtime-use noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: "assembler exit 255: "
+integer-small-runtime-use noopt: {"exit": 0, "stderr": "", "stdout": "1\n"} | opt: "assembler exit 255: "

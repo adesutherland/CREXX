@@ -64,7 +64,7 @@
 #include <math.h>
 #include "platform.h"
 #include "rxcpmain.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxvmplugin_framework.h"
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxcp_val.h"
@@ -90,6 +90,7 @@ static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double va
 static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value);
 static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value);
 static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value);
+static void binary_to_type(ASTNode* node, ValueType new_type);
 static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* string, size_t length);
 static void rewrite_to_parsed_literal_constant(ASTNode* node, Payload* payload, ASTNode* literal, ValueType literal_type);
 static int strict_string_compare_operand(ASTNode *node);
@@ -457,7 +458,7 @@ static int is_rxinteger_min_magnitude_literal(ASTNode *node) {
 
 /* Convert a CONSTANT node from a STRING to new_type */
 static void string_to_type(ASTNode* node, ValueType new_type) {
-        double f, floor_val;
+        rxinteger integer;
         char *buffer;
         size_t length;
         switch (new_type) {
@@ -482,12 +483,12 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
             case TP_BOOLEAN:
                 node->value_type = TP_BOOLEAN;
                 node->target_type = TP_BOOLEAN;
-                /* Convert it to a float and then to 1/0 - slow but safe */
-                if (string2float(&f,node->node_string,node->node_string_length)) {
+                /* Match STOI followed by the Boolean view of its payload. */
+                if (string2integer(&integer,node->node_string,node->node_string_length)) {
                     mknd_err(node, "BAD_CONVERSION");
+                    return;
                 }
-                if (f) node->int_value = 1;
-                else node->int_value = 0;
+                node->int_value = integer != 0;
                 update_string(node);
                 break;
 
@@ -502,37 +503,11 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                         node->int_value = RXINTEGER_MIN;
                         return;
                     }
-                    /* Check if it is an int in float format */
-                    if (string2float(&f,node->node_string,node->node_string_length)) {
-                        mknd_err(node, "BAD_CONVERSION");
-                        return;
-                    }
-                    floor_val = floor(f);
-                    /* Less than an "EPSILON" above the floor? */
-                    if (f - floor_val < 1e-015 ) {
-                        /* Yes - so and integer */
-                        if (floor_val < -9223372036854775808.0 ||
-                            floor_val >= 9223372036854775808.0) {
-                            mknd_err(node, "OVERFLOW_UNDERFLOW");
-                            return;
-                        }
-                        node->int_value = (rxinteger)floor_val;
-                        return;
-                    }
-                    /* Less than an "EPSILON" below the next floor (ceiling)? */
-                    floor_val += 1.0;
-                    if (floor_val - f < 1e-015 ) {
-                        /* Yes - so and integer */
-                        if (floor_val < -9223372036854775808.0 ||
-                            floor_val >= 9223372036854775808.0) {
-                            mknd_err(node, "OVERFLOW_UNDERFLOW");
-                            return;
-                        }
-                        node->int_value = (rxinteger)floor_val;
-                        return;
-                    }
-                    /* Not an integer */
-                    mknd_err(node, "BAD_CONVERSION");
+                    /* Text casts use STOI, not a rounded binary64 detour.
+                     * A lexer-validated integer literal still reports range
+                     * overflow distinctly from an invalid text conversion. */
+                    mknd_err(node, node->token && node->token->token_type == TK_INTEGER &&
+                                   errno == ERANGE ? "OVERFLOW_UNDERFLOW" : "BAD_CONVERSION");
                 }
                 return;
 
@@ -558,6 +533,110 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
             default: ;
         }
     }
+
+/* Folded/propagated scalars already own typed payloads. Convert them with the
+ * same services as the VM; contextual node_string is for display only. */
+static void typed_constant_to_type(ASTNode *node, ValueType new_type) {
+    ValueType old_type = node->value_type;
+    decplugin *plugin;
+    value *number;
+    char *decimal;
+    int signal;
+
+    if (old_type == new_type) return;
+    if (old_type == TP_BINARY) {
+        binary_to_type(node, new_type);
+        return;
+    }
+    if (new_type == TP_STRING || old_type == TP_STRING || new_type == TP_BINARY) {
+        string_to_type(node, new_type);
+        return;
+    }
+
+    if (old_type == TP_DECIMAL || new_type == TP_DECIMAL) {
+        plugin = node->context->decimal_plugin;
+        plugin->num_context = node_to_num_context(node);
+        plugin->syncNumericContext(plugin);
+        plugin->base.signal_number = 0;
+        plugin->base.signal_string = NULL;
+        number = value_f();
+        if (old_type == TP_DECIMAL)
+            plugin->decimalFromString(plugin, number, node->decimal_value);
+        else if (old_type == TP_FLOAT)
+            plugin->decimalFromDouble(plugin, number, node->float_value);
+        else
+            plugin->decimalFromInt(plugin, number,
+                                  old_type == TP_BOOLEAN ? node->int_value != 0 : node->int_value);
+        signal = plugin->base.signal_number;
+        if (!signal) {
+            if (new_type == TP_FLOAT)
+                plugin->decimalToDouble(plugin, number, &node->float_value);
+            else if (new_type == TP_INTEGER)
+                plugin->decimalToInt(plugin, number, &node->int_value);
+            else if (new_type == TP_BOOLEAN)
+                node->int_value = !plugin->decimalIsZero(plugin, number);
+            signal = plugin->base.signal_number;
+        }
+        if (!signal && new_type == TP_DECIMAL) {
+            decimal = malloc(plugin->getRequiredStringSize(plugin, number));
+            plugin->decimalToString(plugin, number, decimal);
+            if (node->decimal_value) free(node->decimal_value);
+            node->decimal_value = decimal;
+        }
+        clear_value(number);
+        free(number);
+        if (signal) {
+            mknd_err(node, "BAD_CONVERSION");
+            return;
+        }
+    }
+    else if (new_type == TP_FLOAT) {
+        node->float_value = old_type == TP_BOOLEAN ?
+                           (node->int_value != 0 ? 1.0 : 0.0) : (double)node->int_value;
+    }
+    else if (new_type == TP_INTEGER && old_type == TP_FLOAT) {
+        double f = node->float_value;
+        if (!isfinite(f) || f < -9223372036854775808.0 || f >= 9223372036854775808.0) {
+            mknd_err(node, "OVERFLOW_UNDERFLOW");
+            return;
+        }
+        if (trunc(f) != f) {
+            mknd_err(node, "BAD_CONVERSION");
+            return;
+        }
+        node->int_value = (rxinteger)f;
+    }
+    else if (new_type == TP_BOOLEAN) {
+        node->int_value = old_type == TP_FLOAT ? node->float_value != 0.0 : node->int_value != 0;
+    }
+    else if (new_type == TP_INTEGER && old_type == TP_BOOLEAN) {
+        node->int_value = node->int_value != 0;
+    }
+    else {
+        string_to_type(node, new_type);
+        return;
+    }
+    node->value_type = new_type;
+    node->target_type = new_type;
+    update_string(node);
+}
+
+/* RXAS accepts binary64 literal overflow/underflow, unlike strict text casts.
+ * Keep that existing literal policy local to source literal evaluation. */
+static void parse_numeric_literal(ASTNode *node, ValueType type) {
+    if (type == TP_FLOAT) {
+        char *text = malloc(node->node_string_length + 1);
+        char *end;
+        memcpy(text, node->node_string, node->node_string_length);
+        text[node->node_string_length] = 0;
+        node->float_value = strtod(text, &end);
+        if (end == text || *end) mknd_err(node, "BAD_CONVERSION");
+        free(text);
+        node->value_type = TP_FLOAT;
+        node->target_type = TP_FLOAT;
+    }
+    else string_to_type(node, type);
+}
 
     static void binary_to_type(ASTNode* node, ValueType new_type) {
         unsigned char *bytes;
@@ -659,13 +738,6 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         return buffer;
     }
 
-    static void parse_literal_string_value(ASTNode *node, NodeType literal_node_type) {
-        ValueType literal_type;
-
-        if (!literal_node_value_type(literal_node_type, &literal_type)) return;
-        string_to_type(node, literal_type);
-    }
-
     static void rewrite_to_parsed_literal_constant(ASTNode* node,
                                                    Payload* payload,
                                                    ASTNode* literal,
@@ -685,8 +757,8 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         node->value_type = TP_STRING;
         node->node_type = CONSTANT;
         ast_sstr(node, buffer, length);
-        string_to_type(node, literal_type);
-        string_to_type(node, target_type);
+        parse_numeric_literal(node, literal_type);
+        typed_constant_to_type(node, target_type);
         payload->changed = 1;
     }
 
@@ -696,20 +768,20 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         node->node_type = CONSTANT;
         node->float_value = value;
         update_string(node);
-        string_to_type(node, node->target_type);
+        typed_constant_to_type(node, node->target_type);
         payload->changed = 1;
     }
 
     static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value) {
-        size_t length = strlen(value);
+        /* The source may belong to a child pruned by this rewrite. */
+        char *copy = strdup(value);
         ast_prnc(node);
         node->value_type = TP_DECIMAL;
         node->node_type = CONSTANT;
         if (node->decimal_value) free(node->decimal_value);
-        node->decimal_value = malloc(length + 1); // +1 for null terminator
-        strcpy(node->decimal_value, value);
+        node->decimal_value = copy;
         update_string(node);
-        string_to_type(node, node->target_type);
+        typed_constant_to_type(node, node->target_type);
         payload->changed = 1;
     }
 
@@ -719,7 +791,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         node->node_type = CONSTANT;
         node->int_value = value;
         update_string(node);
-        string_to_type(node, node->target_type);
+        typed_constant_to_type(node, node->target_type);
         payload->changed = 1;
     }
 
@@ -730,15 +802,15 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         node->node_type = CONSTANT;
         node->int_value = value;
         update_string(node);
-        string_to_type(node, node->target_type);
+        typed_constant_to_type(node, node->target_type);
         payload->changed = 1;
     }
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
+#define CONSTANT_COMPARE_UNORDERED 2
 
 /* Compares two typed numeric/string nodes returns -1, 0, 1 as appropriate. */
 static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
-    double fdiff;
     int cmp;
 
     if (node1->value_type == TP_INTEGER) {
@@ -751,8 +823,10 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     }
 
     if (node1->value_type == TP_FLOAT) {
-        fdiff = node1->float_value - node2->float_value;
-        return fdiff>0 ? 1 : (fdiff<0 ? -1 : 0);
+        if (isnan(node1->float_value) || isnan(node2->float_value))
+            return CONSTANT_COMPARE_UNORDERED;
+        return (node1->float_value > node2->float_value) -
+               (node1->float_value < node2->float_value);
     }
 
     if (node1->value_type == TP_DECIMAL) {
@@ -1210,7 +1284,7 @@ static walker_result opt1_walker(walker_direction direction,
 
             if (can_do_code_folding)
                 switch (node->node_type) {
-                    case OP_TYPE_CAST:
+                    case OP_TYPE_CAST: {
                         if (child1 && child2 &&
                             (child1->node_type == CONSTANT ||
                              child1->node_type == STRING ||
@@ -1218,6 +1292,8 @@ static walker_result opt1_walker(walker_direction direction,
                              child1->node_type == FLOAT ||
                              child1->node_type == DECIMAL ||
                              child1->node_type == INTEGER)) {
+                            ValueType consumer_type = node->target_type;
+                            node->target_type = child2->target_type;
                             switch (child1->value_type) {
                                 case TP_STRING:
                                     buffer = malloc(child1->node_string_length ? child1->node_string_length : 1);
@@ -1270,8 +1346,16 @@ static walker_result opt1_walker(walker_direction direction,
                                 default:
                                     break;
                             }
+                            node->target_type = consumer_type;
+                            if (node->node_type == CONSTANT && !ast_hase(node) &&
+                                !(consumer_type == TP_STRING &&
+                                  node->value_type != TP_STRING &&
+                                  strict_string_compare_operand(node))) {
+                                typed_constant_to_type(node, consumer_type);
+                            }
                         }
                         break;
+                    }
 
                     case OP_COMPARE_EQUAL:
                         compare = compare_standard_constants(node, child1, child2);
@@ -1287,7 +1371,8 @@ static walker_result opt1_walker(walker_direction direction,
 
                     case OP_COMPARE_GT:
                         compare = compare_standard_constants(node, child1, child2);
-                        rewrite_to_boolean_constant(node, payload, compare > 0);
+                        rewrite_to_boolean_constant(node, payload,
+                                                    compare != CONSTANT_COMPARE_UNORDERED && compare > 0);
                         break;
 
                     case OP_COMPARE_LT:
@@ -1298,7 +1383,7 @@ static walker_result opt1_walker(walker_direction direction,
                     case OP_COMPARE_GTE:
                         compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
-                                                    compare >= 0);
+                                                    compare != CONSTANT_COMPARE_UNORDERED && compare >= 0);
                         break;
 
                     case OP_COMPARE_LTE:
@@ -1729,8 +1814,12 @@ static walker_result opt1_walker(walker_direction direction,
 
                     case OP_NEG:
                         if (node->value_type == TP_FLOAT) {
+                            /* Match emitted FMULT, including NaN sign/payload
+                             * propagation and signaling-NaN quieting. Prevent
+                             * the host C optimizer substituting unary minus. */
+                            volatile double multiplier = -1.0;
                             rewrite_to_float_constant(node, payload,
-                                                          -child1->float_value);
+                                                          child1->float_value * multiplier);
                         }
                         else if (node->value_type == TP_DECIMAL) {
                             /* Decimal negation */
@@ -1799,47 +1888,19 @@ static walker_result opt1_walker(walker_direction direction,
 
                         literal_node_type = node->node_type;
                         node->node_type = CONSTANT;
-                        if (node->target_type == TP_STRING && strict_string_compare_operand(node)) {
-                            literal_type = node->target_type;
-
-                            switch (literal_node_type) {
-                                case FLOAT:
-                                    literal_type = TP_FLOAT;
-                                    break;
-
-                                case DECIMAL:
-                                    literal_type = TP_DECIMAL;
-                                    break;
-
-                                case INTEGER:
-                                    literal_type = TP_INTEGER;
-                                    break;
-
-                                case STRING:
-                                    literal_type = TP_STRING;
-                                    break;
-
-                                case BINARY:
-                                    literal_type = TP_BINARY;
-                                    break;
-
-                                default:
-                                    if (node->value_type != TP_STRING) literal_type = node->value_type;
-                                    break;
-                            }
-
-                            if (node->value_type == TP_BINARY) binary_to_type(node, literal_type);
-                            else string_to_type(node, literal_type);
-                        }
-                        else {
+                        {
                             ValueType target_type = node->target_type;
-
-                            if (target_type == TP_STRING) {
-                                parse_literal_string_value(node, literal_node_type);
+                            literal_type = node->value_type == TP_BINARY ? TP_BINARY : TP_STRING;
+                            if (node->value_type == TP_DECIMAL) literal_type = TP_DECIMAL;
+                            else literal_node_value_type(literal_node_type, &literal_type);
+                            if (literal_type != TP_BINARY) {
+                                node->value_type = TP_STRING;
+                                parse_numeric_literal(node, literal_type);
                             }
-
-                            if (node->value_type == TP_BINARY) binary_to_type(node, target_type);
-                            else string_to_type(node, target_type);
+                            node->target_type = target_type;
+                            if (!(target_type == TP_STRING && literal_type != TP_STRING &&
+                                  strict_string_compare_operand(node)))
+                                typed_constant_to_type(node, target_type);
                         }
                         update_string(node);
                         payload->changed = 1;
@@ -2188,7 +2249,7 @@ static void copy_constant_value_to_symbol_nodes(Symbol *symbol, Payload *payload
               n->value_type != TP_STRING &&
               strict_string_compare_operand(n))) {
             if (n->value_type == TP_BINARY) binary_to_type(n, n->target_type);
-            else string_to_type(n, n->target_type);
+            else typed_constant_to_type(n, n->target_type);
         }
         update_string(n);
         payload->changed = 1;
@@ -2412,7 +2473,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
         if (!(n->target_type == TP_STRING &&
               n->value_type != TP_STRING &&
               strict_string_compare_operand(n))) {
-            string_to_type(n, n->target_type);
+            typed_constant_to_type(n, n->target_type);
         }
         update_string(n);
         payload->changed = 1;

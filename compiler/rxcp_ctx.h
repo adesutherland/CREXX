@@ -49,6 +49,7 @@
 
 /* Compiler Context Object */
 struct Context {
+    const struct RxcpFrontend *frontend; /* Explicit parser/mapper services. */
     struct pending_import_contracts *pending_import_contracts; /* Active binary metadata forward declarations. */
     struct Context *master_context; /* This points to the context of the file being compiled (rather than imported files* */
     int debug_mode;

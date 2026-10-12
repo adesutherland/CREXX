@@ -1,0 +1,34 @@
+/*
+ * SOURCE                 : float-int-rounded-typed-levelg.crexx
+ */
+
+.globals=0
+
+main() .locals=4
+   .meta "float-int-rounded-typed-levelg.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 7 7 17 "float-int-rounded-typed-levelg.crexx" 2 1 23 "main: procedure = .int"
+   numsci 5,1,1
+   .srcstep 1 1 17 "float-int-rounded-typed-levelg.crexx" 4 7 21 "  arg argv = .string[]"
+   .meta "float-int-rounded-typed-levelg.main.argv"="b" ".string[*]" a1
+   .meta "float-int-rounded-typed-levelg.main.i"="b" ".int" r2
+   .srcstep 2 2 17 "float-int-rounded-typed-levelg.crexx" 6 1 9 "i = .int"
+   null r2
+   .srcstep 3 3 17 "float-int-rounded-typed-levelg.crexx" 5 1 13 "f = 1.000001"
+   .meta "float-int-rounded-typed-levelg.main.f"="b" ".float" r1
+   load r1,1.000001
+   .traceevent "L" 4 "R" "F" "r" 1 3 3 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 1 3 3 0 "f" ""
+   .srcstep 4 4 17 "float-int-rounded-typed-levelg.crexx" 7 1 14 "i = f as .int"
+   .traceevent "V" 6 "R" "F" "r" 1 4 4 0 "f" ""
+   fcopy r2,r1
+   ftoi r2
+   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "i" ""
+   .srcstep 5 5 17 "float-int-rounded-typed-levelg.crexx" 8 1 6 "say i"
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 5 5 0 "i" ""
+   say r2
+   .srcstep 6 6 17 "float-int-rounded-typed-levelg.crexx" 9 1 9 "return 0"
+   ret 0
+   .meta "float-int-rounded-typed-levelg.main.argv"
+   .meta "float-int-rounded-typed-levelg.main.f"
+   .meta "float-int-rounded-typed-levelg.main.i"

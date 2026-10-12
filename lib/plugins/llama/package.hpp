@@ -18,6 +18,13 @@ inline std::string utf8_path(const fs::path &path) {
     const auto encoded = path.u8string();
     return {reinterpret_cast<const char *>(encoded.data()), encoded.size()};
 }
+inline fs::path from_utf8(const std::string &name) {
+#if defined(__cpp_char8_t)
+    return fs::path(std::u8string(name.begin(), name.end()));
+#else
+    return fs::u8path(name);
+#endif
+}
 inline std::string hash(const fs::path &p, const std::atomic<bool> *cancel = nullptr) {
     std::ifstream file(p, std::ios::binary);
     if (!file) throw std::runtime_error("cannot open package/model file");
@@ -34,7 +41,7 @@ inline std::string hash(const fs::path &p, const std::atomic<bool> *cancel = nul
 inline fs::path relative(const fs::path &root, const std::string &name) {
     if (name.empty() || name.find_first_of("\\\r\n\t:") != std::string::npos)
         throw std::runtime_error("invalid package path");
-    auto p = fs::u8path(name);
+    auto p = from_utf8(name);
     if (p.is_absolute()) throw std::runtime_error("absolute package path");
     for (const auto &part : p) if (part == ".." || part == ".") throw std::runtime_error("package path traversal");
     auto base = fs::canonical(root); auto full = fs::canonical(root / p);

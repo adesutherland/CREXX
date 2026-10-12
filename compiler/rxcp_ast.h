@@ -107,6 +107,7 @@ struct ASTNode {
     ASTNode *free_list;
     SourceNode *source_node;
     char source_provenance;
+    char is_metadata_declaration; /* Contract fields have no authored source coordinates. */
     SourceNode **reporting_source_nodes;
     size_t reporting_source_count;
     size_t reporting_source_capacity;

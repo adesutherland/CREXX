@@ -1,0 +1,2 @@
+options levelg numeric_common
+say 1.0000000000000002 as .int

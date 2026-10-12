@@ -65,6 +65,13 @@ contract tests need `mutate_rxbin_feature` before comprehensive QA runs.
 Include `execute_process()`'s `RESULT_VARIABLE` in failure messages so launch
 errors remain visible even when the child produces no stdout or stderr.
 
+Runtime fixtures that read stdin must supply an explicit input file. An IDE can
+keep its parent stdin pipe open indefinitely; terminal/CI EOF is not a portable
+test assumption. Use an empty file for deterministic EOF, keep real input in
+the fixture where needed, and declare a generous CTest timeout as hang protection.
+The negative Classic syntax helper applies this rule to the PULL error tests
+without changing their error, source-location or prior-output assertions.
+
 ### CTest Result Contracts
 
 Do not use `PASS_REGULAR_EXPRESSION` to represent an expected process failure.

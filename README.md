@@ -73,6 +73,14 @@ its matching build preparation before CTest starts, and tests never initiate a
 nested build. Timing-oriented tests are assigned to the serial
 `qa-measurement` target and must run separately on a quiescent host.
 
+In CLion, normal correctness uses the `qa-comprehensive` build target. For an
+explicit **All CTest** run, set **Targets to build** to `qa-prep-all`, keeping
+the **Build** before-launch task enabled. This prepares every QA tier without
+adding its cost to ordinary `all` product builds. From a terminal, build
+`qa-prep-all` first, then run `ctest --test-dir cmake-build-debug --parallel 30
+--output-on-failure`. All CTest includes serial timing tests, so use it on a
+quiescent host; routine development uses the named correctness targets above.
+
 Parser-mode and syntax-highlighting support use DSL Syntax Highlighter (DSLSH).
 If a sibling checkout exists at `../DSL-Syntax-Highlighter`, CMake uses it.
 Otherwise CMake fetches the configured DSLSH repository and tag.

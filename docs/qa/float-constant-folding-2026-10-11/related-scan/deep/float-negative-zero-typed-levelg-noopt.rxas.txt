@@ -1,0 +1,41 @@
+/*
+ * SOURCE                 : float-negative-zero-typed-levelg.crexx
+ */
+
+.globals=0
+
+main() .locals=4
+   .meta "float-negative-zero-typed-levelg.main"="b" ".int" main() "argv=.string[*]"
+   .srcstep 7 7 17 "float-negative-zero-typed-levelg.crexx" 2 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "float-negative-zero-typed-levelg.crexx" 3 7 21 "  arg argv = .string[]"
+   .meta "float-negative-zero-typed-levelg.main.argv"="b" ".string[*]" a1
+   .meta "float-negative-zero-typed-levelg.main.z"="b" ".float" r2
+   .srcstep 2 2 17 "float-negative-zero-typed-levelg.crexx" 5 1 11 "z = .float"
+   null r2
+   .srcstep 3 3 17 "float-negative-zero-typed-levelg.crexx" 4 1 22 "a = argv[1] as .float"
+   .meta "float-negative-zero-typed-levelg.main.a"="b" ".float" r0
+   minlinkattr1 r3,a1,1
+   .traceevent "V" 6 "R" "S" "r" 3 3 3 0 "argv" ""
+   scopy r0,r3
+   stof r0
+   unlink r3
+   .traceevent "A" 6 "R" "F" "r" 0 3 3 0 "a" ""
+   .srcstep 4 4 17 "float-negative-zero-typed-levelg.crexx" 6 1 9 "z = -0.0"
+   load r3,0.0
+   .traceevent "L" 4 "R" "F" "r" 3 4 4 0 "" ""
+   fsub r2,0.0,r3
+   .traceevent "P" 4 "R" "F" "r" 2 4 4 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 2 4 4 0 "z" ""
+   .srcstep 5 5 17 "float-negative-zero-typed-levelg.crexx" 7 1 10 "say a / z"
+   .traceevent "V" 6 "R" "F" "r" 0 5 5 0 "a" ""
+   .traceevent "V" 6 "R" "F" "r" 2 5 5 0 "z" ""
+   fdiv r3,r0,r2
+   ftos r3
+   .traceevent "O" 4 "R" "S" "r" 3 5 5 0 "" ""
+   say r3
+   .srcstep 6 6 17 "float-negative-zero-typed-levelg.crexx" 8 1 9 "return 0"
+   ret 0
+   .meta "float-negative-zero-typed-levelg.main.a"
+   .meta "float-negative-zero-typed-levelg.main.argv"
+   .meta "float-negative-zero-typed-levelg.main.z"

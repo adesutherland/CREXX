@@ -1,7 +1,6 @@
 options levelg
 import rxvector
 import rxfnsg
-import rxfnsb
 main: procedure = .int
   values=.packedfloat(6)
   call values.set(0,1.0); call values.set(1,0.0)
@@ -25,7 +24,7 @@ main: procedure = .int
   do n=0 to 256; call values2.set(n*2,1.0); labels2[n+1]="tie" || n; end
   ties=.vectorindex(rxvector..encodef32le(values2),2,labels2,"")
   call ties.search(rxvector..encodef32le(query_vector),12,keys,scores)
-  do n=0 to 11; if keys.get(n) \= n | scores.get(n) \= 1.0 then return 5; end
+  do rank_index=0 to 11; if keys.get(rank_index) \= rank_index | scores.get(rank_index) \= 1.0 then return 5; end
   do
     call ties.search("0000000000000000"x as .binary,12,keys,scores)
     return 6
@@ -42,7 +41,7 @@ main: procedure = .int
   valid=.vectorindex(rxvector..encodef32le(values),2,labels,"")
   if rxvector..openindex("bad" as .binary,valid,error)=0 then return 9
   do
-    ignored=valid.rows()
+    invalid_rows=valid.rows()
     return 10
   on signal invalid_arguments
     nop

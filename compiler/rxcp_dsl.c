@@ -50,9 +50,10 @@
 #define VOID RXCP_VOID
 
 #include "rxcpmain.h"
+#include "rxcp_frontend.h"
 #include "rxcp_highlight_controller.h"
 #include "rxcp_val.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcpcsym.h"
 #include "rxcp_exit.h"
 #include "utf.h"
@@ -168,6 +169,7 @@ void rxc_dsl_parser_func(CodeBuffer *cb) {
     LOG("rxc_dsl_parser_func: Setting up context...");
     /* Setup compiler context */
     Context *context = cntx_f();
+    rxcp_use_full_frontend(context);
     context->master_context = context;
     context->file_name = strdup("dsl_buffer.rexx");
     context->debug_mode = 0;

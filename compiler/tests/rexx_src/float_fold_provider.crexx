@@ -1,0 +1,6 @@
+options levelb numeric_common
+namespace float_fold_provider expose sum
+
+/* Retain a folded double in exported inline metadata and emitted code. */
+sum: procedure = .float
+  return 0.1 + 0.2

@@ -28,7 +28,38 @@ The platform layer wraps raw native text files with the shared codec and convert
 first-party stdout/stderr diagnostics. Binary opens remain raw; sequential text
 update modes are rejected before opening. See [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md).
 
-## Proposed language-compiler separation
+## Language compiler components
+
+The approved C-first extraction adds `rxc-c`, which links `rxcc_lib` from
+`rxc_backend_objects` and `rxc_classic_objects`. The backend's validation,
+optimizer, flow analysis, register allocation and emitter are compiled once
+per build configuration. The standalone closure excludes the B/G parser,
+task mapper and typed exit host. `rxc` and the existing `rxclib` compatibility
+API also link `rxc_typed_objects`; desktop editor services remain there.
+
+Shared code and C use checked stable identities in `compiler/rxcp_tokens.h`.
+The typed grammar build verifies its generated table against that header;
+building C alone needs only the options and C parser generators. Metadata
+imports use the independent binutils `rxcontract` reader and a separate
+`rxcp_contract` AST adapter without generating B source. The
+[metadata conformance boundary](../../compiler/docs/metadata_conformance.md)
+documents admitted B/G/provider contract fields, failure, ownership and versions.
+Both generated optional type fields and older authored
+RXAS literal defaults are retained. A C-only source import uses its owning
+typed compiler outside the C process to materialize RXAS contracts, with
+argument-vector execution and private temporary files. Install/stage the
+ordinary `rxc` alongside `rxc-c` for typed source imports and editor service.
+
+`compiler/rxcc.h` exposes an internal exact-length frontend request API.
+`rxcc_parse()` returns an owned parsed/mapped unit, status and diagnostics;
+`rxcc_destroy()` releases source, trees, import records and request state.
+`rxcc_status()==0` describes frontend success, before ordinary backend semantic
+validation/emission. It is not an in-process source-to-RXBIN service or Classic
+INTERPRET. Malformed source, concurrent live units and teardown after backend
+import failure have focused tests. Concurrent embedded compilation remains
+outside this phase.
+
+## Remaining compiler separation proposal
 
 The [B/C/G compiler split proposal](../../compiler/docs/compiler_frontend_split_proposal.md)
 is a source-grounded architecture review dated 2026-10-08, with the
@@ -45,8 +76,9 @@ Fast compilation and physically lite builds are separate choices. Mandatory
 constant evaluation, semantic lowering, ownership and metadata remain in all
 profiles. The 24-bit target runs compiler, assembler and VM as separate stages.
 The proposal records current hidden parser/exit/optimizer dependencies and
-unverified runtime/footprint proof obligations. It is not an implementation or
-an approved change to the current behaviour described below.
+unverified runtime/footprint proof obligations. C-first extraction is approved;
+the remaining B/G restrictions, fast/lite products, runtime compiler and
+INTERPRET control/lifetime work retain their separate decision gates.
 
 ## The Compilation Pipeline
 
@@ -77,6 +109,27 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
    - Standard comparison operators (`=`, `<>`, `>`, `<`, `>=`, `<=`) retain loose Rexx comparison semantics for string-targeted operands. The compiler emits the `r*` opcode family (`req`, `rne`, `rgt`, `rlt`, `rgte`, `rlte`), and the VM compares numerically only when both runtime string forms parse as numbers; otherwise it performs blank-padded string comparison. This prevents dynamic nonnumeric text such as `"a" > 1` from raising `CONVERSION_ERROR`.
    - String comparison operators (`==`, `>>`, `<<`, `>>=`, `<<=`) are carried as a distinct `OP_COMPARE_S_*` family. During type validation both operands are retargeted to `TP_STRING`, but the optimiser still preserves intrinsic numeric constant types long enough to stringify from value rather than source spelling. That keeps folded behaviour aligned with runtime cases like `01 == 1`.
    - Inline cloning must preserve the callee scope's numeric context when it builds replacement scopes. Without that, folded float/decimal string comparisons can silently drift from runtime behaviour under local `NUMERIC DIGITS` / `FORM` / `CASE` settings.
+   - Numeric constants have separate typed and display representations.
+     Folding and constant propagation must retain integer/Boolean payloads and `ASTNode.float_value` without
+     reparsing contextual `node_string` (float display caps at `DBL_DIG`). RXAS
+     emission of typed float constants uses 17 significant digits to round-trip
+     binary64; raw unoptimized literals retain their original numeric spelling.
+     `update_string()` and effective-string comparisons keep the existing
+     numeric display context. The `float_constant_folding_contract` regression
+     covers B/G, compiler/assembler modes, both supported concrete VMs, and
+     source/RXAS/RXBIN imports through linked shared-pool images.
+     Typed cross-conversions use checked VM rules and the selected decimal
+     provider (`decimalFromDouble`, currently 16 significant digits), rather
+     than display text. Fractional float-to-int casts fail without tolerance;
+     explicit `as` casts execute before consumer promotion, including SAY.
+     Typed NaN comparisons are unordered. Unary float negation uses multiply
+     by -1 to preserve signed zero. Folding uses the same multiplication, with
+     a volatile multiplier to retain NaN sign/payload/quieting under host C
+     optimization. Literal folding admits binary64 subnormals
+     accepted by RXAS without changing strict text conversion policy.
+     Non-finite float operands/inline fields use the RXAS `inf`/`nan` family
+     with exact NaN bits when required. `numeric_constant_contract` covers
+     these boundaries, rejection, imports and disassembler round trips.
    - Expression-level control flow is supported through `BLOCK_EXPR` (`DO ... END` used as an expression) and `LEAVE_WITH` (`LEAVE WITH expr`). The `association` pointer links each `LEAVE_WITH` back to its owning `BLOCK_EXPR`, similar to how loop `LEAVE` / `ITERATE` link to `DO`.
    - Contains the **Exit Bridge Framework** (`rxcp_exit.c`), which intercepts unrecognized `IMPLICIT_CMD` nodes, invokes user-provided `rxplugin` macros to generate replacement source code, parses the interpolated strings (preserving literal quotes), and surgically grafts the resulting AST back into the main tree without violating return-type constraints. Compiler-exit dispatch is keyed by the first source token in the instruction, not by the first marshalled AST node; this matters for command-position member calls such as `x.add(...)`, whose AST node token is the member name but whose command head is `x`. A non-implicit exit that returns `REJECT` falls through to the certified implicit ADDRESS exit; `ERROR` remains a compiler error.
    - **Implicit Main Argument Bridge**: when the compiler synthesizes the file-level `main()` wrapper, that procedure is marked `is_implicit_main`. Later typing and emission use that marker to interpret `arg[]` / `arg[n]` access against the hidden command-line `.string[]` that the VM already passes to `main`. Ordinary procedures still use normal vararg semantics, and explicit zero-argument `main()` does not gain accidental source-level visibility of the hidden VM argv payload.
@@ -707,7 +760,7 @@ Dynamic RXPA discovery stages initializer callbacks before reconstructing any
 declaration. The initializer runs under the platform loader mutex, so `ADDPROC`
 and class/interface callbacks only collect their metadata at that point. After
 the initializer returns and releases the mutex, `rxc` imports class/interface
-metadata first and then parses the procedure declarations while the provider
+metadata first and then reads the procedure contracts while the provider
 remains open. This ordering permits a native procedure to return a namespaced
 Rexx class such as `.rxfnsg..packedfloat` (returned by `rxvector`) without recursively reopening the
 provider or deadlocking the loader.

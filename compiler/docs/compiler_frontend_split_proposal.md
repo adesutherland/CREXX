@@ -1,8 +1,16 @@
 # Separate language compilers with one common backend
 
-Status: architecture proposal for Adrian's review; not an implemented or fully
-qualified architecture. Reviewed 2026-10-08 against `develop`
+Status: full B/C/G architecture remains a proposal. Adrian approved C-first
+extraction on 2026-10-10; that bounded implementation and local qualification
+are complete and published to `origin/develop` in the authorized 10 October
+development batch. SAN-011/012 remain release-blocking,
+with full closure explicitly assigned to Codex at the next Release 1 release-QA
+gate. The [local receipt](../../docs/qa/classic-frontend-split-2026-10-10/README.md)
+records the physical split, reusable metadata reader and qualification limits. Original architecture review, 2026-10-08:
 `36bced2418092029f76a06aa2acdadcdaf8a87c7`.
+Level C status and proposed C-first sequencing refreshed 2026-10-10 against
+`91313bcc5a447e9403f95b1f0bfc4dd9503d0618`, synchronized with `origin/develop`.
+The original B/G capability review remains a proposal on its recorded inputs.
 
 The authoritative implementation plan is
 [COMP-PIPE-01](../../docs/ROADMAP.md#compiler-profiles-and-low-latency-compilation--comp-pipe-01).
@@ -11,7 +19,8 @@ This document supplies the architectural argument, capability decisions,
 physical decomposition and experiments needed to discharge those criteria.
 The [Level C worklist](../../docs/planning/release-1/levelc-compatibility-worklist.md)
 continues to own Classic compatibility, including `LC-87-01–05` for INTERPRET.
-No product code, grammar, runtime ABI or release commitment changes here.
+The C-first implementation preserves source-language and RXBIN/VM contracts.
+The wider language, lite and INTERPRET proposals remain unimplemented.
 
 ## 1. Recommendation and intended outcome
 
@@ -20,6 +29,16 @@ Each owns its scanner, parser, source rules and mapper. All use the same
 canonical compiler AST, semantic services, optimizer, inliner, constant
 evaluation machinery, register allocator and emitter. Preserve the existing
 RXAS/RXBIN/VM contracts and a small `rxc` compatibility driver.
+
+**2026-10-10 sequencing recommendation:** extract C first, preserving current
+B/G behavior while their remaining capability decisions are reviewed. INTERPRET
+is the only unimplemented whole instruction, but host contracts and complete
+compatibility qualification remain substantial independent work. A separate C
+compiler and reusable front-end entry are useful prerequisites; extraction does
+not implement INTERPRET's caller transfers or reclaim generated modules.
+The proposed C-first phase is recorded in the authoritative
+[COMP-PIPE-01 plan](../../docs/ROADMAP.md#proposed-c-first-extraction-phase--2026-10-10).
+Adrian approved that implementation boundary on 2026-10-10.
 
 The useful boundary is **validated meaning**, not the parser's initial tree.
 Today the parser, imports, exits, type inference and lowering cooperate in a
@@ -108,9 +127,11 @@ source / optional external RXPP expansion
   -> RXAS text -> assembler -> RXBIN -> optional linker -> VM
 ```
 
-The current compile closure is one static `rxclib`, containing both parsers,
-Level C lowering, task lowering, validation, imports, exits, optimization and
-emission. It links `rxaslib`, `rxbvml` and `rxbin`.
+The original review found one static `rxclib` containing both parsers and all
+compiler services. The C-first implementation now compiles shared backend,
+Classic frontend and typed/editor frontend objects separately. `rxcc_lib` and
+`rxc-c` link only the backend and Classic objects; compatibility `rxclib`/`rxc`
+link all three components. Both preserve `rxaslib`, `rxbvml` and `rxbin` services.
 [Source: compiler CMake](../CMakeLists.txt).
 
 The architectural opening is real: Level C already lowers source-specific
@@ -120,6 +141,11 @@ the same generated grammar. `rxcpmain.c` then drives the common stages.
 [parsing anatomy](parsing_pipeline_anatomy.md).
 
 ### 2.2 Findings that determine the decomposition
+
+These findings describe the original review inputs. C-first extraction resolves
+F-05's synthetic metadata declarations and C-process source imports, F-07's
+generated B token-header dependency, and C's link to F-06's typed exit host.
+Other optimizer/lite/embedded-lifecycle findings retain their original scope.
 
 | ID | Source-supported finding | Architectural consequence |
 | --- | --- | --- |
@@ -156,21 +182,33 @@ The compiler uses one-body frame labels/branches/handlers for Classic local
 calls and SIGNAL. Source-specific lowering builds common typed operations and
 runtime calls; the backend does not need a second Classic code generator.
 
-There are audit rows for 70 Classic BIF names and direct entries for 62.
-CHARIN, CHAROUT, CHARS, LINEIN, LINEOUT, LINES, QUALIFY and STREAM remain
-deferred. Source/diagnostic equivalence, physical source NUL handling,
-expression-family proof, host interfaces, real HALT, lifecycle and full
-cross-consumer compatibility remain open. The documented DATE/TIME clause
-clock-refresh defect also remains relevant to runtime activation design.
-Unicode/I/O changes remain subject to Adrian's existing deferred scope;
-this compiler split does not silently change that contract.
+All 70 catalogued Classic BIF names now have direct entries, including CHARIN,
+CHAROUT, CHARS, LINEIN, LINEOUT, LINES, QUALIFY and STREAM. The approved
+LC-UNICODE programme also adds 23 explicit Unicode BIFs, Unicode names,
+fixed Latin-1 byte ordinals and session-owned raw/encoded streams. LC-CLOSE
+has qualified the agreed ordinary expression, physical source NUL,
+source-diagnostic and DATE/TIME clause-refresh repairs. Earlier deferral and
+clock-defect descriptions are superseded for those admitted paths.
 
-Retained `LC-STEP-90F` evidence reports 3296/3296 normal Debug checks, 3113
-unique normal Release checks using documented reuse, 19 installed BIF cases
-and an installed host fixture on its recorded `d7b58e17…` code/test inputs.
-Those are existing receipts, not tests rerun by this review and not full Level C
-conformance. Another active worklist entry now covers rebuild/publication QA;
-its unfinished results are not imported into this report as passes.
+The remaining work separates into four families:
+
+| Family | Current open obligation / authority |
+| --- | --- |
+| Generated source | INTERPRET's compiler service, live activation, transfers/resumption and bounded code lifetime; LC-GAP-01 / LC-87-01–05. |
+| Host integration | Invocation modes, caller traps/completion results, external pool access windows, configured command/queue/routine adapters, exact-length transport and real host HALT; LC-GAP-03–05 / LC-AC-06. |
+| Compatibility audit | Full mapped-source identity, configured scanner/comparison rules, numeric/string/resource limits, final AST/source crosswalk and individually recorded PARSE EXTERNAL/NUMERIC dispositions; LC-GAP-02/05–09. |
+| Final qualification | Complete reference/Release 1 and required platform proof; LC-GAP-10 / R1-AC-01/02. SAN-QA-018's whole-number repair has focused proof, but supported full sanitizer closure remains assigned to Codex at the next Release 1 release-QA gate. |
+
+INTERPRET dominates the missing instruction surface; there is no evidence that
+it represents most of the remaining engineering effort. The host/API inventory
+contains several independent unimplemented contracts. No split may silently
+turn them into exclusions or weaken the existing completion criteria.
+
+Retained proof comes from the [LC-CLOSE receipt](../../docs/planning/release-1/levelc-closeout-evidence-20261009.json),
+[LC-UNICODE receipt](../../docs/qa/levelc-unicode-2026-10-09/README.md) and
+[10 October package/integer repair receipt](../../docs/qa/ci-core-stream-packaging-2026-10-10/README.md).
+They qualify their recorded inputs and cases, not complete Classic conformance.
+This review inspects source and receipts; it does not rerun builds or broad QA.
 
 The existing lowered-tree verifier rejects residual C-only nodes, bad parent
 links and sibling cycles. Its permanent `test_levelc_tree_boundary` test is
@@ -872,12 +910,21 @@ and explicit scheduling before registration, as AGENTS.md requires.
 
 ## 12. Evidence and limitations of this review
 
-The source audit used the checked-out implementation and fetched remote
+The original 2026-10-08 source audit used the checked-out implementation and fetched remote
 `develop`; at review start it was 222 commits ahead and zero behind. Existing
 untracked `output/` was preserved. A separate ongoing task added
 `LC-QA-PUB` to the Level C worklist during this review; this task did not edit
 that worklist or run competing builds/tests. The source revision above is the
 review baseline, not a claim about future concurrent changes or release status.
+
+The 2026-10-10 refresh inspected synchronized `develop` `91313bcc5…`, the
+current instruction/gap/reference registers and retained closeout/Unicode/
+package receipts. Source inspection reconfirmed both parsers in `rxclib`,
+Level C lowering before the common semantic pipeline, B/G-source import stubs
+in `rxcpfunc.c`, generated B token-header dependencies in C/common code,
+exit-bridge initialization even for C, CLI process-exit paths, and buffer loading
+without public per-module unload in `rxvml.h`. Only documentation is changed.
+No new execution, performance, sanitizer or release result is claimed.
 
 | Finding / contract | Primary owning source inspected |
 | --- | --- |
@@ -940,8 +987,18 @@ headroom, and acceptable latency/generated-code tradeoff must be fixed before
 performance/fit acceptance. Provisional executable names and source-contract
 cache representation also need selection before exposing them publicly.
 
+The approved C-first local phase has verified physical extraction, independent
+metadata conformance and import/CLI compatibility in COMP-PIPE-01. Adrian assigned
+SAN-011/012 full platform closure to Codex at the next Release 1 release-QA gate;
+they remain open and release-blocking. The phase does not select the remaining B
+convenience removals or reopen INTERPRET. Those broader decisions retain their
+separate gates.
+
 Handoff: read AGENTS.md, COMP-PIPE-01 and this document before implementation.
-All CP product acceptance criteria remain open; REV review completion is not
-product completion. Start with P0's parsed migration inventory and P1's import,
-constant-evaluation and canonical-boundary seams after approval. Preserve the
-Level C worklist's open compatibility criteria and concurrent QA work.
+The broad CP-AC-01–08 criteria remain open; the C-first phase has its own
+completed bounded criteria and retained local evidence. Continue from its final
+checkpoint rather than repeating extraction. The full B/G migration retains
+P0/P1 and CP-STEP-01. Preserve the Level C worklist's open compatibility criteria
+and SAN-QA-018/SAN-011/SAN-012 release-QA ownership. The bounded implementation
+and follow-up repairs are published to `origin/develop` with retained local
+qualification; this does not imply release or broader programme completion.

@@ -24,6 +24,15 @@ run_argv: procedure = .int
   address crexx "run :argv[]" output captured error errors
   command_rc = rc
   if command_rc <> 0 then call show_command_failure action, command_rc, captured, errors
+  else do
+    output_index = .int
+    do output_index = 1 to captured[0]
+      say captured[output_index]
+    end
+    do output_index = 1 to errors[0]
+      say errors[output_index]
+    end
+  end
   return command_rc
 
 remove_tree: procedure = .int
@@ -119,7 +128,6 @@ compilework: class implements .taskwork
     private_source = source_dir || "/" || name || ".crexx"
     if copy_file(cmake, source, private_source) <> 0 then return .channelvalue.integer_value(1)
 
-    say "START: G member" name
     compile = .string[]
     call arrayappend compile, rxc
     if compiler_exits = 0 then call arrayappend compile, "-x"
@@ -140,7 +148,6 @@ compilework: class implements .taskwork
     if file_exists(cmake, output) = 0 then return .channelvalue.integer_value(1)
     stamp = work_dir || "/action.sha256"
     if write_stamp(cmake, stamp, key) <> 0 then return .channelvalue.integer_value(1)
-    say "BUILT: G member" name
     return .channelvalue.integer_value(0)
 
 commandwork: class implements .taskwork
@@ -164,11 +171,9 @@ commandwork: class implements .taskwork
       argv[i] = encoded_argv.item(i).as_string()
     end
 
-    say "START:" label
     if run_in_directory(label, cmake, work_dir, argv) <> 0 then return .channelvalue.integer_value(1)
     if file_exists(cmake, output) = 0 then return .channelvalue.integer_value(1)
     if write_stamp(cmake, stamp, key) <> 0 then return .channelvalue.integer_value(1)
-    say "BUILT:" label
     return .channelvalue.integer_value(0)
 
 compile_target: procedure = .tasktarget

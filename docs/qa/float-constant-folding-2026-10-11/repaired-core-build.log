@@ -1,0 +1,4 @@
+[0/2] Re-checking globbed directories...
+[1/4] Building C object compiler/CMakeFiles/rxc_backend_objects.dir/rxcp_emit_core.c.o
+[2/4] Linking C static library bin/librxclib.a
+[3/4] Linking C executable bin/rxc

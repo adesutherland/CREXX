@@ -26,12 +26,18 @@ target_link_libraries(crexxrag_sha256_c_ceiling PRIVATE rxbin)
 add_custom_target(performance_crexxrag_sha256)
 add_dependencies(performance_crexxrag_sha256
         _crexxrag_sha256_gate crexxrag_sha256_c_ceiling _hash)
+crexx_add_import_root(crexxrag_sha256_imports
+        DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/imports/crexxrag_sha256
+        FILES ${CMAKE_CURRENT_BINARY_DIR}/rx_crexxrag_sha256_gate.rxplugin
+        DEPENDS _crexxrag_sha256_gate
+        OUTPUT_VARIABLE _crexxrag_sha256_import_files)
 crexx_add_rexx_opt_matrix(
         NAME crexxrag_sha256_a_vs_d
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/crexxrag_sha256_a_vs_d.crexx
         TARGET_GROUP performance_crexxrag_sha256
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library compiler_exit_bin _crexxrag_sha256_gate _hash
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR}/imports/crexxrag_sha256 ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin crexxrag_sha256_imports
+                ${_crexxrag_sha256_import_files} _hash
         RUNTIME_ARGS rx_crexxrag_sha256_gate ${LIBRPATH} -a selftest
         TEST_LABELS "performance;sha256;crexx-rag;qualification"
         REQUIRED_OUTPUT_REGEX "PASS: CREXXRAG-SHA256 vectors"
@@ -563,12 +569,18 @@ target_link_libraries(_rcc5f_stats_direct PRIVATE
 add_custom_target(performance_rcc5f_rxstats)
 add_dependencies(performance_rcc5f_rxstats
         stats rxfnsg _rcc5f_stats_boxed _rcc5f_stats_direct)
+crexx_add_import_root(rcc5f_imports
+        DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/imports/rcc5f
+        FILES ${CMAKE_CURRENT_BINARY_DIR}/rx_rcc5f_stats_boxed.rxplugin
+              ${CMAKE_CURRENT_BINARY_DIR}/rx_rcc5f_stats_direct.rxplugin
+        DEPENDS _rcc5f_stats_boxed _rcc5f_stats_direct
+        OUTPUT_VARIABLE _rcc5f_import_files)
 
 crexx_add_rexx_opt_matrix(
         NAME rcc5f_rxstats_packed
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_packed.crexx
         TARGET_GROUP performance_rcc5f_rxstats
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library rxfnsg stats compiler_exit_bin
         RUNTIME_ARGS $<TARGET_FILE:stats> ${LIBRPATH}
                      ${CMAKE_BINARY_DIR}/bin/rxfnsg
@@ -580,8 +592,8 @@ crexx_add_rexx_opt_matrix(
         NAME rcc5f_rxstats_boxed
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_boxed.crexx
         TARGET_GROUP performance_rcc5f_rxstats
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library _rcc5f_stats_boxed compiler_exit_bin
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR}/imports/rcc5f ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library rcc5f_imports ${_rcc5f_import_files} compiler_exit_bin
         RUNTIME_ARGS $<TARGET_FILE:_rcc5f_stats_boxed> ${LIBRPATH}
         TEST_LABELS "performance;math;stats;boxed;oracle;rcc5f"
         REQUIRED_OUTPUT_REGEX "PASS: RCC-5F boxed statistics oracle workload"
@@ -591,8 +603,8 @@ crexx_add_rexx_opt_matrix(
         NAME rcc5f_rxstats_direct
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_direct.crexx
         TARGET_GROUP performance_rcc5f_rxstats
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library rxfnsg _rcc5f_stats_direct compiler_exit_bin
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR}/imports/rcc5f ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library rxfnsg rcc5f_imports ${_rcc5f_import_files} compiler_exit_bin
         RUNTIME_ARGS $<TARGET_FILE:_rcc5f_stats_direct> ${LIBRPATH}
                      ${CMAKE_BINARY_DIR}/bin/rxfnsg
         TEST_LABELS "performance;math;stats;packed;direct-control;rcc5f"
@@ -651,12 +663,18 @@ target_link_libraries(_rxvector01_direct PRIVATE
 add_custom_target(performance_rxvector01)
 add_dependencies(performance_rxvector01
         vector rxfnsg _rxvector01_direct)
+crexx_add_import_root(rxvector01_imports
+        DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/imports/rxvector01
+        FILES ${CMAKE_CURRENT_BINARY_DIR}/rx_rxvector01_direct.rxplugin
+        DEPENDS _rxvector01_direct
+        OUTPUT_VARIABLE _rxvector01_import_files)
 crexx_add_rexx_opt_matrix(
         NAME rxvector01_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxvector01_compare.crexx
         TARGET_GROUP performance_rxvector01
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library rxfnsg vector _rxvector01_direct compiler_exit_bin
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR}/imports/rxvector01 ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library rxfnsg vector rxvector01_imports
+                ${_rxvector01_import_files} compiler_exit_bin
         RUNTIME_ARGS $<TARGET_FILE:_rxvector01_direct> ${LIBRPATH}
                      ${CMAKE_BINARY_DIR}/bin/rxfnsg -a public 1
         TEST_LABELS "performance;vector;packed;rxvector01"

@@ -46,6 +46,8 @@ set_tests_properties(import_directory_errors PROPERTIES
 add_executable(crexx_test_driver src/test_driver.c)
 
 add_executable(mutate_rxbin_feature mutate_rxbin_feature.c)
+add_executable(mutate_rxbin_float mutate_rxbin_float.c)
+target_link_libraries(mutate_rxbin_float PRIVATE rxbin)
 
 if(UNIX)
     add_executable(test_import_discovery_snapshot test_import_discovery_snapshot.c)
@@ -2418,6 +2420,60 @@ add_crexx_isolated_run_test(qualified_namespace_same_module rexx_src/qualified_n
 add_crexx_isolated_run_test(class_attr_string_promotion rexx_src/class_attr_string_promotion.crexx)
 add_crexx_run_test(class_attr_register_views rexx_src/class_attr_register_views.crexx)
 add_crexx_run_test(constants_levelb_payloads rexx_src/constants_levelb_payloads.crexx)
+
+# Measure this aggregate in Debug and maintained ASan before CTest registration.
+# It has no library, exits or native-provider dependency.
+set(_float_fold_args
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXBVM=$<TARGET_FILE:rxbvm>
+        -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src)
+set(_float_fold_tools rxc rxas rxlink rxbvm)
+if(CREXX_THREADED_VM_SUPPORTED)
+    list(APPEND _float_fold_args -DRXTVM=$<TARGET_FILE:rxtvm>)
+    list(APPEND _float_fold_tools rxtvm)
+endif()
+add_custom_target(qa-measure-float-constant-folding
+        COMMAND ${CMAKE_COMMAND} ${_float_fold_args}
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/float_fold_measure
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/float_constant_folding_contract.cmake
+        DEPENDS ${_float_fold_tools}
+        VERBATIM USES_TERMINAL)
+# Isolated B/G x compiler/assembler modes x concrete VMs/import routes measured
+# 0.75 s in Debug and 9.49 s in maintained macOS ASan.
+# Keep generous hang protection and avoid nested tool contention in broad QA.
+add_test(NAME float_constant_folding_contract
+        COMMAND ${CMAKE_COMMAND} ${_float_fold_args}
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/float_fold_contract
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/float_constant_folding_contract.cmake)
+set_tests_properties(float_constant_folding_contract PROPERTIES
+        LABELS "compiler;numeric;optimizer-parity;correctness"
+        RUN_SERIAL TRUE TIMEOUT 120
+        CREXX_PREP_TARGETS "${_float_fold_tools}")
+
+set(_numeric_constant_args ${_float_fold_args}
+        -DRXDAS=$<TARGET_FILE:rxdas> -DMUTATE_FLOAT=$<TARGET_FILE:mutate_rxbin_float>)
+add_custom_target(qa-measure-numeric-constant-values
+        COMMAND ${CMAKE_COMMAND} ${_numeric_constant_args} -DVALUES_ONLY=ON
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/numeric_values_measure
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/numeric_constant_contract.cmake
+        DEPENDS ${_float_fold_tools} rxdas mutate_rxbin_float
+        VERBATIM USES_TERMINAL)
+add_custom_target(qa-measure-numeric-constant-contract
+        COMMAND ${CMAKE_COMMAND} ${_numeric_constant_args}
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/numeric_constant_measure
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/numeric_constant_contract.cmake
+        DEPENDS ${_float_fold_tools} rxdas mutate_rxbin_float
+        VERBATIM USES_TERMINAL)
+# Final isolated workload: Debug 1.34 s, maintained Apple ASan 25 s.
+# Serialize nested tools and allow slower hosts a generous hang backstop.
+add_test(NAME numeric_constant_contract
+        COMMAND ${CMAKE_COMMAND} ${_numeric_constant_args}
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/numeric_constant_contract
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/numeric_constant_contract.cmake)
+set_tests_properties(numeric_constant_contract PROPERTIES
+        LABELS "compiler;numeric;optimizer-parity;correctness"
+        RUN_SERIAL TRUE TIMEOUT 300
+        CREXX_PREP_TARGETS "${_float_fold_tools};rxdas;mutate_rxbin_float")
 add_crexx_run_test(binary_memory_source rexx_src/binary_memory_source.crexx)
 add_crexx_run_test(binary_memory_span_oob rexx_src/binary_memory_span_oob.crexx)
 add_crexx_run_test(binary_memory_packed_lookup rexx_src/binary_memory_packed_lookup.crexx)
@@ -5661,6 +5717,9 @@ endfunction()
 
 function(add_levelc_runtime_syntax_signal_test NAME SOURCE_FILE EXPECTED_CODE EXPECTED_OUTPUT EXPECTED_SOURCE_LOCATION)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    # IDE runners can keep parent stdin open. Negative cases must get EOF.
+    set(STDIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.stdin")
+    file(WRITE "${STDIN_FILE}" "")
     set(SCRIPT_CONTENT "")
     string(APPEND SCRIPT_CONTENT
            "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${ARGN} -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
@@ -5670,13 +5729,13 @@ function(add_levelc_runtime_syntax_signal_test NAME SOURCE_FILE EXPECTED_CODE EX
            "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" RESULT_VARIABLE status ERROR_VARIABLE diagnostic)\n"
            "if(NOT status EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: ${RXAS_DIAG_DOLLAR}{diagnostic}\")\nendif()\n"
            "execute_process(COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${NAME}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library\" \"${CMAKE_BINARY_DIR}/bin/classlib\" \"${CMAKE_BINARY_DIR}/bin/rxfnsc\"\n"
-           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" OUTPUT_VARIABLE output ERROR_VARIABLE diagnostic RESULT_VARIABLE status)\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" INPUT_FILE \"${STDIN_FILE}\" OUTPUT_VARIABLE output ERROR_VARIABLE diagnostic RESULT_VARIABLE status)\n"
            "string(FIND \"${RXAS_DIAG_DOLLAR}{diagnostic}\" \"source: ${EXPECTED_SOURCE_LOCATION}\" source_location)\n"
            "if(status EQUAL 0 OR NOT diagnostic MATCHES \"CLASSIC_SYNTAX\" OR NOT diagnostic MATCHES \"RXC-LC-${EXPECTED_CODE}\" OR NOT output STREQUAL \"${EXPECTED_OUTPUT}\" OR source_location EQUAL -1)\n"
            "  message(FATAL_ERROR \"Expected Classic SYNTAX ${EXPECTED_CODE}, authored source ${EXPECTED_SOURCE_LOCATION}, and exact prior output; status=${RXAS_DIAG_DOLLAR}{status}, output=${RXAS_DIAG_DOLLAR}{output}, diagnostic=${RXAS_DIAG_DOLLAR}{diagnostic}\")\nendif()\n")
     file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
     add_test(NAME ${NAME} COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}")
-    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc" TIMEOUT 600)
 endfunction()
 
 add_levelc_runtime_slice_test(levelc_bare_stem_read

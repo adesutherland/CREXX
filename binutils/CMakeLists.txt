@@ -10,9 +10,11 @@ add_library(rxbin STATIC
         rxbin.c
         rxbin007.c
         rxsignature.c
+        rxcontract.c
         rxsha256.c
         rxgraph.c
         include/rxsignature.h
+        include/rxcontract.h
         include/rxsha256.h
         include/rxgraph.h
         include/rxbin.h)
@@ -23,6 +25,13 @@ target_include_directories(rxbin
 set_target_properties(rxbin PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(BUILD_TESTING)
+    add_executable(test_rxcontract tests/test_rxcontract.c)
+    target_link_libraries(test_rxcontract PRIVATE rxbin)
+    add_test(NAME metadata_contract_conformance COMMAND test_rxcontract)
+    set_tests_properties(metadata_contract_conformance PROPERTIES
+        LABELS "unit;binutils;imports;smoke" TIMEOUT 60
+        CREXX_PREP_TARGETS test_rxcontract)
+
     add_executable(test_record_allocation tests/test_record_allocation.c)
     target_link_libraries(test_record_allocation PRIVATE rxbin)
     add_test(NAME record_allocation_failure COMMAND test_record_allocation)

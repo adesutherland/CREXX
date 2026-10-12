@@ -1573,6 +1573,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
     char *value_class_hex;
     char *target_class_hex;
     char int_buffer[64];
+    char float_buffer[32];
 
     if (!node) return 1;
 
@@ -1616,9 +1617,11 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
     }
 
     snprintf(int_buffer, sizeof(int_buffer), "%" RXINTEGER_PRI, node->int_value);
+    if (!rx_double_special_literal(node->float_value, float_buffer))
+        snprintf(float_buffer, sizeof(float_buffer), "%.17g", node->float_value);
 
     if (!inline_meta_text_appendf(text,
-                                  ";>,%zu,%ld,%d,%d,%d,%zu,%zu,%s,%s,%s,%s,%s,%s,%u,%ld,%ld,%u,%u,%s,%d,%.17g,%s,%s",
+                                  ";>,%zu,%ld,%d,%d,%d,%zu,%zu,%s,%s,%s,%s,%s,%s,%u,%ld,%ld,%u,%u,%s,%d,%s,%s,%s",
                                   scope_id,
                                   source_id == (size_t)-1 ? -1L : (long)source_id,
                                   (int)node->node_type,
@@ -1639,7 +1642,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
                                   symbol_write_usage,
                                   int_buffer,
                                   node->bool_value,
-                                  node->float_value,
+                                  float_buffer,
                                   node_hex,
                                   decimal_hex)) {
         free(node_hex);
@@ -2727,7 +2730,11 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
         if (rxinteger_parse(int_field, &int_end, &node->int_value) || *int_end != 0) return 0;
     }
     node->bool_value = atoi(bool_field);
-    node->float_value = atof(float_field);
+    {
+        int special = rx_double_from_special_literal(float_field, strlen(float_field), &node->float_value);
+        if (special < 0) return 0;
+        if (!special) node->float_value = atof(float_field);
+    }
     node->scope = node_scope;
     flags = (unsigned int)strtoul(flags_field, NULL, 10);
     inline_meta_apply_node_flags(node, flags);

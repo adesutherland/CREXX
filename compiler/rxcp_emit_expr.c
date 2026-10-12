@@ -28,10 +28,12 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <math.h>
 #include "rxcpmain.h"
-#include "rxcpbgmr.h"
+#include "rxcp_tokens.h"
 #include "rxcp_emit.h"
 #include "rxsignature.h"
+#include "rxfloatformat.h"
 
 static int emit_is_rxinteger_min_magnitude_literal(ASTNode *node) {
     static const char magnitude[] = "9223372036854775808";
@@ -1875,7 +1877,9 @@ void emit_expression(ASTNode *node, void *payload) {
             }
             else if (node->value_type == TP_FLOAT) {
                 if (child1->output) output_concat(node->output, child1->output);
-                temp1 = mprintf("   fsub %c%d,0.0,%c%d\n",
+                /* Subtracting from +0 loses the sign of zero. Multiplication
+                 * by -1 preserves both zero signs and negates finite values. */
+                temp1 = mprintf("   fmult %c%d,%c%d,-1.0\n",
                                 node->register_type,
                                 node->register_num,
                                 child1->register_type,
@@ -2040,13 +2044,13 @@ void emit_expression(ASTNode *node, void *payload) {
             if (!node->output) node->output = output_f();
             if (child1->output) output_concat(node->output, child1->output);
 
-            if (node->target_type != TP_OBJECT &&
+            if (node->value_type != TP_OBJECT &&
                 (node->register_type != child1->register_type ||
                  node->register_num != child1->register_num) &&
-                ((child1->value_type == TP_INTEGER && node->target_type == TP_FLOAT) ||
-                 (child1->value_type == TP_STRING && node->target_type == TP_INTEGER))) {
+                ((child1->value_type == TP_INTEGER && node->value_type == TP_FLOAT) ||
+                 (child1->value_type == TP_STRING && node->value_type == TP_INTEGER))) {
                 const char *direct_promotion =
-                        emit_promotion[child1->value_type][node->target_type];
+                        emit_promotion[child1->value_type][node->value_type];
                 if (direct_promotion) {
                     temp1 = mprintf("   %s %c%d,%c%d\n",
                                     direct_promotion,
@@ -2056,6 +2060,7 @@ void emit_expression(ASTNode *node, void *payload) {
                                     child1->register_num);
                     output_append_text(node->output, temp1);
                     free(temp1);
+                    type_promotion(node);
                     if (child1->cleanup) output_concat(node->output, child1->cleanup);
                     break;
                 }
@@ -2074,20 +2079,20 @@ void emit_expression(ASTNode *node, void *payload) {
                 free(temp1);
             }
 
-            if (node->target_type == TP_OBJECT &&
-                node->target_class &&
-                !is_builtin_object_contract_name(node->target_class)) {
+            if (node->value_type == TP_OBJECT &&
+                node->value_class &&
+                !is_builtin_object_contract_name(node->value_class)) {
                 temp2 = resolve_object_contract_name(child2);
-                if (!temp2) temp2 = strdup(node->target_class);
+                if (!temp2) temp2 = strdup(node->value_class);
                 temp1 = mprintf("   asserttype %c%d,\"%s\"\n",
                                 node->register_type,
                                 node->register_num,
-                                temp2 ? temp2 : node->target_class);
+                                temp2 ? temp2 : node->value_class);
                 output_append_text(node->output, temp1);
                 free(temp1);
                 if (temp2) free(temp2);
-            } else if (node->target_type != TP_OBJECT) {
-                const char *promotion = emit_promotion[child1->value_type][node->target_type];
+            } else if (node->value_type != TP_OBJECT) {
+                const char *promotion = emit_promotion[child1->value_type][node->value_type];
                 if (promotion) {
                     temp1 = mprintf("   %s %c%d\n",
                                     promotion,
@@ -2098,6 +2103,7 @@ void emit_expression(ASTNode *node, void *payload) {
                 }
             }
 
+            type_promotion(node);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
             break;
 
@@ -2405,14 +2411,20 @@ void emit_expression(ASTNode *node, void *payload) {
                     if (node->value_type == TP_STRING) skip_promotion = 1;
                 }
 
-                /* Get the constant string */
-                temp2 = format_constant(load_type, node);
-
-                /* Make the register load instruction */
-                temp1 = mprintf("   load %c%d,%s\n",
-                                node->register_type,
-                                node->register_num,
-                                temp2);
+                temp2 = NULL;
+                if (load_type == TP_DECIMAL &&
+                         rx_decimal_special_literal(node->decimal_value)) {
+                    temp1 = mprintf("   load %c%d,\"%s\"\n   stod %c%d\n",
+                                    node->register_type, node->register_num, node->decimal_value,
+                                    node->register_type, node->register_num);
+                }
+                else {
+                    temp2 = format_constant(load_type, node);
+                    temp1 = mprintf("   load %c%d,%s\n",
+                                    node->register_type,
+                                    node->register_num,
+                                    temp2);
+                }
 
                 /* Set the node output */
                 if (node->output) output_append_text(node->output, temp1);

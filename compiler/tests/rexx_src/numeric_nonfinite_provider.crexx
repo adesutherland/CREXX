@@ -1,0 +1,8 @@
+options levelb numeric_common
+namespace numeric_nonfinite_provider expose infinity nanvalue
+
+infinity: procedure = .float
+  return 1.0 / 0.0
+
+nanvalue: procedure = .float
+  return 0.0 / 0.0

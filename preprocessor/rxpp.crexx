@@ -56,6 +56,7 @@ arg command=.string[]
   outfile = .string
   maclib  = .string
   verbose = .int
+  verbose = 0
   cnext   = .string
   dalias  = .string
   rexx_version = .string
@@ -81,7 +82,6 @@ arg command=.string[]
      else if command.i='-M' then maclib=command.j
      else if command.i='-VERBOSE' then verbose=command.j
   end
-  verbose=1
   if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started RXPP build 'rxpp_build_timestamp
   
   if internal_testing=1 then do
@@ -220,7 +220,7 @@ RXPPPassOne: procedure = .int
 /* ---- 1a. Load Macros from MACLIB  */
   macnum=readSource(maclib,0)    /* error doesn't terminate program */
   if macnum<0 then do
-     if verbose then call rxpp_diag 'warning','RXPP_MACLIB_MISSING','file',maclib
+     call rxpp_diag 'warning','RXPP_MACLIB_MISSING','file',maclib
   end
   else do
      call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
@@ -240,7 +240,7 @@ RXPPPassOne: procedure = .int
 /* ---- 1b. Load System Macros from MACSYS  */
   macnum=readSource(macsys,0)    /* error doesn't terminate program */
   if macnum<0 then do
-     if verbose then call rxpp_diag 'warning','RXPP_SYSTEM_MACLIB_MISSING','file',macsys
+     call rxpp_diag 'warning','RXPP_SYSTEM_MACLIB_MISSING','file',macsys
   end
   else do
      call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
@@ -560,7 +560,7 @@ findMatchingEndif: procedure=.int
     end
     i = fsearch(source, i + 1, '##IF ', '##IFN ','##END', which)
   end
-  if verbose then call rxpp_diag 'error','RXPP_MISSING_ENDIF','line',startline
+  call rxpp_diag 'error','RXPP_MISSING_ENDIF','line',startline
 return 0
 /* ------------------------------------------------------------------
  * Read Rexx Source file into the global source[] buffer.
@@ -974,8 +974,8 @@ normalizeCommandKeywords: procedure=.string
    deftext=changestr(',',parmdef,' ')
    positional_count=0
    saw_keyword=0
-   do i=1 to qwords(deftext)
-      declaration=qword(deftext,i)
+   do definition_index=1 to qwords(deftext)
+      declaration=qword(deftext,definition_index)
       if pos('=',declaration)>0 then saw_keyword=1
       else if saw_keyword=0 then positional_count=positional_count+1
    end
@@ -2081,8 +2081,8 @@ newMacros:  procedure=.string
      end
      if left(testline, 7) = '@.main@' then do
         main_insert = main_insert + 1
-        p = pos('@.main@', line)
-        out[kk] = substr(line, p + 7)
+        main_pos = pos('@.main@', line)
+        out[kk] = substr(line, main_pos + 7)
         iterate
      end
      if left(testline, 7) = '@.tail@' then do
@@ -2231,8 +2231,8 @@ injectVariable: procedure=.string
 
    if force then line2change = strip(substr(testline, length(marker) + 1))
    else do
-     cmt = left(testline, 2)
-     if cmt = '/*' | cmt = '##' then return original
+     initial_comment = left(testline, 2)
+     if initial_comment = '/*' | initial_comment = '##' then return original
    end
 
   /* Do not process comments or RXPP directives. */
