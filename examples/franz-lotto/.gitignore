@@ -1,0 +1,18 @@
+# Generated application, compiler and Java artifacts are local to this example.
+*.rxas
+*.rxbin
+*.class
+*.java
+*.java.keep
+*.crexx-driver.lock
+*.rxplugin
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.exe
+lotto-test-output.txt
+Lotto-Tipps-*.txt
+gui-provider/build*/
+build/

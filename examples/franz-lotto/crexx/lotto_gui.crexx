@@ -1,0 +1,113 @@
+/* OPTIONAL cREXX GTK 3 window using the existing Beta 3 gui plugin.
+ * It needs a platform-matched rx_gui.rxplugin and GTK runtime dependencies.
+ * The standard Beta 3 Windows package alone does not include those files.
+ * MIT License; see ../LICENSE.txt. This deliberately reuses lotto_logic.
+ * The plugin's existing single-choice combo replaces the ANSI choice group.
+ */
+options levelb
+import rxfnsb
+import gui
+import lotto_logic
+
+main: procedure = .int
+  arg args = .string[]
+  if gui..init_window("cREXX Lotto - experimental GTK example", 660, 590) \= 1 then do
+    say "GTK could not initialize. Check the GUI plugin and GTK runtime."
+    return 1
+  end
+  rc = .int
+  label = .int
+  automated = args[0] > 0
+  test_step = 0
+  result = 0
+  do
+    label = gui..add_text("Choose one game (AT 6/45, DE 6/49, Euro 5/50 + 2/12):", 15, 15)
+    games = .string[]
+    games[1] = "AT 6/45"
+    games[2] = "DE 6/49"
+    games[3] = "Euro 5+2"
+    choice = gui..add_combo(games, 15, 50)
+    label = gui..add_text("Tips (1-50):", 150, 50)
+    entry = gui..add_edit(245, 50, 70)
+    rc = gui..set_edit(entry, "10")
+    generate = gui..add_button("Generate", 15, 95)
+    save = gui..add_button("Save", 130, 95)
+    quit = gui..add_button("Quit", 215, 95)
+    list = gui..add_list(15, 140, 620, 365)
+    rc = gui..list_set_header(list, "Generated tips (scroll for all results)", "black", "white")
+    status = gui..add_status_bar()
+    if choice < 1 | entry < 1 | generate < 1 | save < 1 | quit < 1 | list < 1 | status < 1 then do
+      result = 1
+    end
+    else do
+      rc = gui..set_status(status, "Choose a game, enter 1-50 tips, then Generate.")
+      rc = gui..show_window(-1, -1)
+      tips = .string[]
+      generated_game = 1
+      save_pending = 0
+      i = .int
+      do forever
+        event = gui..process_events(100)
+        if automated then do
+          test_step = test_step + 1
+          if test_step = 1 then do
+            rc = gui..set_edit(entry, "50")
+            event = generate
+          end
+          if test_step = 2 then do
+            if gui..list_get_count(list) \= 51 /* tips plus the header row */ then result = 1
+            rc = gui..set_edit(entry, "0")
+            event = generate
+          end
+          if test_step = 3 then do
+            if gui..list_get_count(list) \= 51 /* tips plus the header row */ then result = 1
+            rc = gui..set_edit(entry, "1")
+            event = generate
+          end
+          if test_step = 4 then do
+            if gui..list_get_count(list) \= 2 then result = 1
+            event = quit
+          end
+        end
+        if event = -1 | event = quit then leave
+        if event = generate then do
+          save_pending = 0
+          count = parse_count(gui..get_edit(entry))
+          game = gui..get_combo_index(choice) + 1 /* GTK combo indices are zero-based */
+          if count = 0 then rc = gui..set_status(status, "Enter a whole number from 1 to 50. Results kept.")
+          else if game < 1 | game > 3 then rc = gui..set_status(status, "Choose one of the three games.")
+          else do
+            tips = generate_tips(game, count)
+            generated_game = game
+            rc = gui..list_clear(list)
+            rc = gui..list_set_header(list, game_name(generated_game), "black", "white")
+            do i = 1 to tips[0]
+              line = right(i, 2, "0") || ": " || tips[i]
+              rc = gui..list_add_item(list, line, "white")
+            end
+            rc = gui..set_status(status, "Generated " || count || " tips. Save explicitly; scroll for all results.")
+          end
+        end
+        if event = save then do
+          if tips[0] = 0 then rc = gui..set_status(status, "Generate some tips before saving.")
+          else if \save_pending then do
+            save_pending = 1
+            rc = gui..set_status(status, "Save again: replace Lotto-Tipps-cREXX-GUI.txt with these results.")
+          end
+          else do
+            saved = save_tips("Lotto-Tipps-cREXX-GUI.txt", generated_game, tips)
+            save_pending = 0
+            if saved = 0 then rc = gui..set_status(status, "Saved Lotto-Tipps-cREXX-GUI.txt in the example folder.")
+            else rc = gui..set_status(status, "Save failed. Check folder permissions; results kept.")
+          end
+        end
+        if event = choice | event = entry then save_pending = 0
+      end
+    end
+  on signal
+    result = 1
+  end
+  call gui..cleanup_gui
+  if result then say "The GTK Lotto example stopped after an initialization or UI error."
+  if automated & result = 0 then say "PASS: cREXX GTK widget creation, generation, invalid entry, replacement, cleanup"
+  return result

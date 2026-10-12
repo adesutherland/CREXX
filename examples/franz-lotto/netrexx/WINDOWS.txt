@@ -1,0 +1,93 @@
+NETREXX LOTTO - WINDOWS INSTRUCTIONS
+
+SOURCE CHECKOUT: REBUILD WITH NETREXX BEFORE RUNNING
+
+1. Install Java if it is not already available. JDK 21 is the tested choice:
+   https://adoptium.net/temurin/releases/?version=21&os=windows
+   Choose the Windows x64 JDK. Enable the installer's PATH option, or add its
+   bin folder to PATH. Open a NEW Command Prompt after installing.
+
+2. Fetch the transport branch into a clean CREXX checkout. Open Command Prompt
+   (cmd.exe). Follow READING / REBUILDING THE NETREXX SOURCE below before running:
+
+     cd /d "C:\src\CREXX\examples\franz-lotto\netrexx"
+     java -version
+     java -cp . LottoWindow
+
+   Alternatively, invoke the installed Java by its full quoted path, for example:
+   "C:\Program Files\Eclipse Adoptium\YOUR-JDK-FOLDER\bin\java.exe" -cp . LottoWindow
+   Replace YOUR-JDK-FOLDER with the actual installed folder name.
+
+Generated .class files are deliberately excluded from this branch. After
+rebuilding, the classes use standard Java libraries only. No NetRexx JAR, HTML,
+browser or Java bridge is required to RUN the compiled example. The retained
+Mac build targeted Java 8 bytecode and ran on JDK 21; record the Windows build
+target and runtime versions separately.
+The NetRexx compiler is needed only when rebuilding the .nrx source.
+
+USING THE WINDOW
+
+  Select one of the three radio buttons.
+  Enter an integer tip count from 1 to 50.
+  Click Generate, or press Enter in the numeric field.
+  Scroll the results pane to see all tips. Text can also be selected/copied.
+  Save... opens a file chooser, initially suggesting Lotto-Tipps-NetRexx.txt.
+  An existing file is replaced only after confirmation. The chosen path is
+  shown in the status line after a successful save.
+  Quit, or the window's X, closes the application.
+
+Startup and Generate do not write a file. Save is disabled until results exist.
+Invalid entry keeps the last results and displays a message. Save failure keeps
+the application usable. Changing the selected game after generation does not
+relabel the saved results. No external editor is launched.
+
+READING / REBUILDING THE NETREXX SOURCE
+
+  LottoModel.nrx: rules, validation, sampling, formatting and file output.
+  LottoWindow.nrx: Swing controls, action listeners, generation and saving.
+  LottoTests.nrx: model/file checks.
+  LottoGuiTests.nrx: real Swing-control checks, run on the event-dispatch thread.
+
+To edit and rebuild, download NetRexx 5.10-GA from:
+  https://www.netrexx.org/downloads.nsp
+
+Extract it, for example under C:\Tools\NetRexx-5.10-GA. Find its lib folder
+containing NetRexxC.jar; if the ZIP has another nested directory, adjust below.
+You need a JDK, including its Java compiler, rather than a runtime-only JRE.
+
+In Command Prompt, still in the netrexx example folder:
+
+  set "NETREXX_JAR=C:\Tools\NetRexx-5.10-GA\lib\NetRexxC.jar"
+  java -cp "%NETREXX_JAR%" org.netrexx.process.NetRexxC -noverbose LottoModel.nrx LottoWindow.nrx LottoTests.nrx LottoGuiTests.nrx
+  java -cp . LottoWindow
+
+The compiler may be quiet on success. Stop if compilation reports an error;
+do not run an older .class file after a failed rebuild.
+
+AUTOMATED CHECKS
+
+After compiling all four .nrx files, run the checks:
+
+  java -cp . LottoTests
+  java -cp . LottoGuiTests
+
+The first reports a PASS for 3825 tips, validation, Save, replacement and failure.
+The second briefly opens a window, exercises the real controls and closes it.
+It reports a PASS for Swing controls, generation, validation, Save, recovery
+and Quit. Tests use their own temporary folders and do not modify your saved tips.
+
+TROUBLESHOOTING
+
+"java is not recognized": reopen Command Prompt after installing, or use the
+full quoted java.exe path as shown above.
+"Could not find or load main class": enter the extracted netrexx folder and
+keep the exact class name LottoWindow (Java class names are case-sensitive).
+"No Java compiler": install the JDK, then rebuild with that JDK's java.exe.
+Missing NetRexxC.jar affects REBUILDING only; the compiled example does not
+need that file on the runtime classpath.
+
+TEST STATUS
+
+Compiled with NetRexx 5.10-GA and tested on macOS/JDK 21, including real Swing
+controls and save failure/recovery. Native Windows execution is pending
+native Windows checks; see ../WINDOWS-CHECKLIST.txt.

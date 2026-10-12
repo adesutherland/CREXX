@@ -1,0 +1,273 @@
+/* Lotto ANSI form for released cREXX 1.0.0 Beta 3.
+ * MIT License; see ../LICENSE.txt. This uses the shipped rxconsole primitives,
+ * not a new widget or compiler feature. Game rules live in lotto_logic.crexx.
+ * No file is written until Save is pressed twice to confirm replacement.
+ */
+options levelb
+import rxfnsb
+import rxconsole
+import lotto_logic
+
+main: procedure = .int
+  arg args = .string[]
+  i = .int
+  rc = .int
+  game = 1
+  generated_game = 1
+  count_text = "10"
+  tips = .string[]
+  page = 0
+  focus = 0
+  replace_digits = 1
+  save_pending = 0
+  status = "Choose a game, enter 1-50 tips, then Generate."
+  pressed = 0
+  dirty = 1
+  running = 1
+  result = 0
+  columns = 80
+  rows = 24
+  fields = .int[]
+  text = ""
+  handle = rxconsole..open(11)
+  if handle < 0 then do
+    say "Open a real terminal and run again. Console status:" handle
+    return 1
+  end
+
+  /* A single owner loop. Every exit passes through close() below. */
+  do
+    rc = rxconsole..size(handle, columns, rows)
+    if rc < 0 then do
+      result = 1
+      running = 0
+    end
+    do while running
+      if dirty then do
+        rc = rxconsole..write(handle, frame(game, count_text, tips, generated_game, page, focus, status, columns, rows))
+        if rc < 0 then do
+          result = 1
+          leave
+        end
+        dirty = 0
+      end
+      kind = rxconsole..poll(handle, 100, fields, text)
+      action = 0
+      if kind = 7 then leave /* Ctrl-C */
+      if kind = 8 then do
+        result = 1
+        leave
+      end
+      if kind = -5 | kind = -6 then iterate /* malformed/oversize input */
+      if kind < 0 then do
+        result = 1
+        leave
+      end
+      if kind = 4 then do
+        columns = fields[3]
+        rows = fields[4]
+        pressed = 0
+        dirty = 1
+        iterate
+      end
+      if columns < 80 | rows < 24 then do
+        if kind = 1 & text = "Escape" then leave
+        if kind = 2 & lower(text) = "q" then leave
+        iterate
+      end
+
+      if kind = 1 then do
+        dirty = 1
+        if text = "Escape" then leave
+        if text = "Tab" then do
+          delta = 1
+          if fields[5] <mod> 2 = 1 then delta = -1
+          focus = (focus + delta + 7) <mod> 7
+          if focus = 1 then replace_digits = 1
+          save_pending = 0
+        end
+        if focus = 0 & (text = "Left" | text = "Up") then do
+          game = (game + 1) <mod> 3 + 1
+          save_pending = 0
+        end
+        if focus = 0 & (text = "Right" | text = "Down") then do
+          game = game <mod> 3 + 1
+          save_pending = 0
+        end
+        if focus = 1 & (text = "Backspace" | text = "Delete") then do
+          if text = "Delete" then count_text = ""
+          else count_text = left(count_text, max(0, length(count_text) - 1))
+          replace_digits = 0
+          save_pending = 0
+        end
+        if text = "Enter" then do
+          if focus = 1 then action = 4
+          if focus >= 2 then action = focus + 2
+        end
+        if text = "PageUp" then action = 6
+        if text = "PageDown" then action = 7
+      end
+
+      /* Paste is data only. On Windows committed text is also kept as data
+       * while the numeric field has focus; letters never become shortcuts. */
+      if kind = 2 | kind = 3 then do
+        dirty = 1
+        if focus = 1 then do
+          candidate = text
+          if \replace_digits then candidate = count_text || text
+          valid_text = length(candidate) <= 2
+          do i = 1 to length(candidate)
+            if pos(substr(candidate, i, 1), "0123456789") = 0 then valid_text = 0
+          end
+          if valid_text then do
+            count_text = candidate
+            replace_digits = 0
+            status = "Tips: enter a whole number from 1 to 50."
+          end
+          else status = "Only one or two digits are accepted."
+          save_pending = 0
+        end
+        else if kind = 2 then do
+          key = lower(text)
+          if key = "a" | key = "1" then action = 1
+          if key = "d" | key = "2" then action = 2
+          if key = "e" | key = "3" then action = 3
+          if key = "t" then do
+            focus = 1
+            replace_digits = 1
+            save_pending = 0
+          end
+          if key = "g" then action = 4
+          if key = "s" then action = 5
+          if key = "p" then action = 6
+          if key = "n" then action = 7
+          if key = "q" then action = 8
+        end
+      end
+
+      /* Activate only when left press and release hit the SAME control. */
+      if kind = 5 then do
+        node = hit(fields[1], fields[2])
+        if fields[7] = 1 & fields[8] = 1 then do
+          pressed = node
+          if node >= 1 & node <= 3 then focus = 0
+          if node = 9 then do
+            focus = 1
+            replace_digits = 1
+          end
+          if node >= 4 & node <= 8 then focus = node - 2
+          dirty = 1
+        end
+        if fields[7] = 1 & fields[8] = 2 then do
+          if node > 0 & node = pressed then do
+            if node <= 8 then action = node
+          end
+          pressed = 0
+          dirty = 1
+        end
+      end
+
+      if action >= 1 & action <= 3 then do
+        game = action
+        focus = 0
+        save_pending = 0
+        status = "Selected " || game_name(game) || ". Generate to update results."
+      end
+      if action = 4 then do
+        save_pending = 0
+        count = parse_count(count_text)
+        if count = 0 then do
+          status = "Enter a whole number from 1 to 50. Results kept."
+          focus = 1
+          replace_digits = 1
+        end
+        else do
+          tips = generate_tips(game, count)
+          generated_game = game
+          page = 0
+          focus = 2
+          status = "Generated " || count || " tips. Save explicitly; P/N view pages."
+        end
+      end
+      if action = 5 then do
+        focus = 3
+        if tips[0] = 0 then status = "Generate some tips before saving."
+        else if \save_pending then do
+          save_pending = 1
+          status = "S again: replace Lotto-Tipps-cREXX.txt with these results."
+        end
+        else do
+          rc = save_tips("Lotto-Tipps-cREXX.txt", generated_game, tips)
+          save_pending = 0
+          if rc = 0 then status = "Saved Lotto-Tipps-cREXX.txt in the example folder."
+          else status = "Save failed. Check folder permissions; results kept."
+        end
+      end
+      if action = 6 then do
+        page = max(0, page - 1)
+        save_pending = 0
+      end
+      if action = 7 then do
+        page = min(max(0, (tips[0] - 1) <idiv> 8), page + 1)
+        save_pending = 0
+      end
+      if action = 8 then leave
+      if action > 0 then dirty = 1
+    end
+  on signal
+    result = 1
+  end
+  rc = rxconsole..close(handle)
+  if rc < 0 then result = 1
+  if result then say "The Lotto screen stopped after an input/output error."
+  return result
+
+/** ANSI cell output: row/column parameters are ONE-based. */
+at: procedure = .string
+  arg row = .int, column = .int, text = .string, highlighted = 0
+  esc = '1B'x
+  result = esc || "[" || row || ";" || column || "H"
+  if highlighted then result = result || esc || "[7m"
+  return result || text || esc || "[0m"
+
+/** Pure screen rendering, kept separate from input and number selection. */
+frame: procedure = .string
+  arg game = .int, count_text = .string, tips = .string[], generated_game = .int, page = .int, focus = .int, status = .string, columns = .int, rows = .int
+  i = .int
+  esc = '1B'x
+  result = esc || "[?25l" || esc || "[0m" || esc || "[2J" || esc || "[H"
+  result = result || "cREXX Lotto - Beta 3 teaching example"
+  if columns < 80 | rows < 24 then return result || at(3, 1, "Resize to at least 80 columns x 24 rows. Esc/Ctrl-C quits.")
+  result = result || at(2, 2, "A small ANSI form using rxconsole; game choices from Franz Marx.")
+  do i = 1 to 3
+    marker = "( ) "
+    if i = game then marker = "(*) "
+    result = result || at(i + 3, 2, marker || game_name(i), focus = 0 & i = game)
+  end
+  result = result || at(8, 2, "Tips (1-50):") || at(8, 16, "[ " || left(count_text, 2) || " ]", focus = 1)
+  result = result || at(10, 2, "[ Generate ]", focus = 2) || at(10, 16, "[ Save ]", focus = 3)
+  result = result || at(10, 28, "[ Prev ]", focus = 4) || at(10, 41, "[ Next ]", focus = 5) || at(10, 53, "[ Quit ]", focus = 6)
+  result = result || at(12, 2, left(status, 76))
+  if tips[0] > 0 then do
+    first = page * 8 + 1
+    last = min(tips[0], first + 7)
+    result = result || at(13, 2, game_name(generated_game) || " - tips " || first || "-" || last || " of " || tips[0])
+    do i = first to last
+      result = result || at(14 + i - first, 2, right(i, 2, "0") || ": " || tips[i])
+    end
+  end
+  result = result || at(23, 2, "Tab: focus | arrows: game | T: tips | G/S/P/N/Q | Enter | Esc: quit")
+  return result
+
+/** Match exactly the control rectangles drawn above; x/y are ZERO-based. */
+hit: procedure = .int
+  arg x = .int, y = .int
+  if y >= 3 & y <= 5 & x >= 1 & x < 39 then return y - 2
+  if y = 7 & x >= 15 & x < 21 then return 9
+  if y \= 9 then return 0
+  if x >= 1 & x < 13 then return 4
+  if x >= 15 & x < 23 then return 5
+  if x >= 27 & x < 35 then return 6
+  if x >= 40 & x < 48 then return 7
+  if x >= 52 & x < 60 then return 8
+  return 0
