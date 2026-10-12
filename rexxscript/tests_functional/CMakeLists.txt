@@ -10,6 +10,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 set(REXXBINS
   testRexxScriptRuntime
   testRexxScriptCompat
+  testRexxScriptArrayExpose
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
@@ -51,6 +52,8 @@ set_tests_properties(testRexxScriptRuntime_noopt testRexxScriptRuntime_opt
                    RESOURCE_LOCK rexxscript_lineio_files)
 set_tests_properties(testRexxScriptCompat_noopt testRexxScriptCompat_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: evaluate helpers")
+set_tests_properties(testRexxScriptArrayExpose_noopt testRexxScriptArrayExpose_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: RexxScript array EXPOSE")
 
 set(REXXSCRIPT_CLI_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_rexxscript_cli_smoke.cmake")
 set(REXXSCRIPT_CLI_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/rexxscript_cli_smoke_ws\")\n")
@@ -73,6 +76,7 @@ add_test(NAME rexxscript_cli_smoke
 crexx_label_smoke_tests(
         testRexxScriptRuntime_noopt
         testRexxScriptCompat_noopt
+        testRexxScriptArrayExpose_noopt
         rexxscript_cli_smoke
         PREP_TARGETS rexxscript_cli
 )

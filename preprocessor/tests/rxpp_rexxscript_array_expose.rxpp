@@ -1,0 +1,70 @@
+options levelb
+##CFLAG nosrcmap
+
+/* RexxScript data-exchange demonstration.
+ *
+ * The host program owns these arrays. RexxScript receives them through
+ * EXPOSE, reads the input arrays, and writes results back into the host
+ * arrays.
+ */
+prices = .string[]
+quantities = .string[]
+lineTotals = .string[]
+summary = .string[]
+
+/* Unit prices supplied by the host program. */
+prices[1] = 12
+prices[2] = 8
+prices[3] = 15
+prices[4] = 20
+
+/* Quantities supplied by the host program. */
+quantities[1] = 3
+quantities[2] = 5
+quantities[3] = 2
+quantities[4] = 4
+
+/*
+ * Start an embedded RexxScript block.
+ *
+ * The arrays are exposed to the script.
+ * The host arrays contain strings; arithmetic causes numeric conversion.
+ * ==================== Start of embedded RexxScript block ======================================= */
+REXXSCRIPT RUN EXPOSE prices, quantities, lineTotals, summary
+  /* Accumulate the total value of all order lines. */
+  grandTotal = 0
+  do i = 1 to prices.0
+    lineTotals.i = prices.i * quantities.i
+    /* Add the line total to the overall total. */
+    grandTotal = grandTotal + lineTotals.i
+  end
+  /*
+   * Return a small summary through another exposed host array:
+   * summary.1 = number of items
+   * summary.2 = grand total
+   */
+  summary.1 = prices.0
+  summary.2 = grandTotal
+END REXXSCRIPT
+/* ==================== End of embedded RexxScript block ======================================= */
+
+/* script_status is supplied by the RexxScript execution. */
+say 'RexxScript status:' script_status
+
+/* Display the values written back by RexxScript. */
+say 'Number of items:' summary[1]
+say 'Grand total:' summary[2]
+
+say
+say 'Line totals:'
+
+/* Display the result array produced inside the script. */
+do i = 1 to lineTotals.0
+  say '  item' i ':' lineTotals[i]
+end
+
+/* Report a failed RexxScript execution to the host environment. */
+if script_status <> "OK" then do
+  say "RexxScript failed:" script_status
+  exit 1
+end

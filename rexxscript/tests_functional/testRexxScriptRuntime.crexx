@@ -176,6 +176,36 @@ if rexxscript_value("x") <> "1:ababab:2:the:4:12.5:-1:-1:MIXED:mixed:3" then do
   say "REXXSCRIPT expanded BIF value failed:" rexxscript_value("x")
 end
 
+result = rexxscript_evaluate("measurements_count = 3; measurements_1 = 10; measurements_2 = 20; measurements_3 = 30; total = 0; do i = 1 to measurements_count; total = total + VALUE('measurements_' || i); end", 0)
+if result[1] <> "OK" | rexxscript_value("total") <> "60" then do
+  errors = errors + 1
+  say "REXXSCRIPT VALUE intrinsic failed:" result[1] rexxscript_value("total")
+end
+
+result = rexxscript_evaluate("words.1 = 'red'; words.2 = 'green'; words.3 = 'blue'; joined = ''; do i = 1 to words.0; joined = joined || words.i; end", 0)
+if result[1] <> "OK" | rexxscript_value("joined") <> "redgreenblue" | rexxscript_value("words.2") <> "green" then do
+  errors = errors + 1
+  say "REXXSCRIPT dotted array failed:" result[1] rexxscript_value("joined") rexxscript_value("words.2")
+end
+
+result = rexxscript_evaluate("words.0 = 1; words.1 = 'arbitrary text'; x = VALUE('words.1')", 0)
+if result[1] <> "OK" | rexxscript_value("x") <> "arbitrary text" then do
+  errors = errors + 1
+  say "REXXSCRIPT dotted array string/VALUE failed:" result[1] rexxscript_value("x")
+end
+
+result = rexxscript_evaluate("i = 1; words.i = 'ok'; x = words.i", 0)
+if result[1] <> "OK" | rexxscript_value("x") <> "ok" then do
+  errors = errors + 1
+  say "REXXSCRIPT dynamic array index failed:" result[1] rexxscript_value("x")
+end
+
+result = rexxscript_evaluate("words.1.2 = 'bad'", 0)
+if pos("one suffix", lower(result[1])) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT malformed dotted array failed:" result[1]
+end
+
 result = rexxscript_evaluate("x = wordpos('brown fox', 'the quick brown fox') || ':' || lastpos('a', 'banana') || ':' || changestr('a', 'banana', 'X') || ':' || countstr('ana', 'banana') || ':' || translate('abc', '123', 'abc') || ':' || delstr('abcdef', 2, 2) || ':' || insert('X', 'abc', 2) || ':' || overlay('XY', 'abcdef', 2) || ':' || delword('one two three', 2, 1)", 0)
 if result[1] <> "OK" | rexxscript_value("x") <> "3:6:bXnXnX:1:123:adef:abXc:aXYdef:one three" then do
   errors = errors + 1

@@ -10,6 +10,8 @@ main: procedure
   failures = failures + test_descriptor()
   failures = failures + test_output_result_rewrite()
   failures = failures + test_expose_rewrite()
+  failures = failures + test_expose_array_rewrite()
+  failures = failures + test_reject_non_string_array()
   failures = failures + test_missing_script()
 
   call report_result failures
@@ -84,6 +86,46 @@ test_expose_rewrite: procedure = .int
   if check_contains("rexxscript expose copyback a", replacement, "a = rexxscript_value('a')") = 0 then failures = failures + 1
   if check_contains("rexxscript expose output", replacement, "out = rexxscript_output()") = 0 then failures = failures + 1
 
+  return failures
+
+test_expose_array_rewrite: procedure = .int
+  failures = .int
+  rxs = .rexxscriptexit(3004)
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "REXXSCRIPT"
+  call pushstring tokens, '"measurements.0 = measurements.0 + 1; measurements.4 = ''four''"'
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "measurements", ".string[]", 0
+
+  result = rxs.process(tokens)
+  if check_equal("rexxscript array expose process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("rexxscript array seed count", replacement, "'measurements.0'") = 0 then failures = failures + 1
+  if check_contains("rexxscript array seed loop", replacement, "measurements[__rexxscript_array_index]") = 0 then failures = failures + 1
+  if check_contains("rexxscript array copyback", replacement, "__rexxscript_array_count = rexxscript_value('measurements.0') + 0") = 0 then failures = failures + 1
+
+  return failures
+
+test_reject_non_string_array: procedure = .int
+  failures = .int
+  rxs = .rexxscriptexit(3005)
+  result = .exitresult
+  tokens = newtokens()
+  failures = 0
+
+  call pushidentifier tokens, "REXXSCRIPT"
+  call pushstring tokens, '"x = 1"'
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "values", ".int[]", 0
+
+  result = rxs.process(tokens)
+  if check_equal("rexxscript non-string array status", "ERROR", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("rexxscript non-string array diagnostic", result.get_diagnostic(1).get_code(), "arrays must be .string[]") = 0 then failures = failures + 1
   return failures
 
 test_missing_script: procedure = .int

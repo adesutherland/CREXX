@@ -488,6 +488,11 @@ ABS(balance)
 MAX(score, threshold, 0)
 ```
 
+`VALUE(name)` is a RexxScript-specific, read-only intrinsic. It evaluates its
+argument to a variable name and reads that name from the current RexxScript
+variable pool. Names are case-insensitive; dynamic assignment is not supported.
+It can read RXPP-generated scalar names such as `MEASUREMENTS_1`.
+
 Unknown function names result in a runtime error.
 
 ### Intrinsic Compatibility

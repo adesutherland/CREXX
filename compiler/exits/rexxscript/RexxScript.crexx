@@ -60,6 +60,7 @@ rexxscriptexit: class
         result_name = .string
         debug_flag  = .string
         expose_names = .string[]
+        expose_arrays = .int[]
         expose_seen = .int
         expect_name = .int
         keyword = .string
@@ -75,6 +76,7 @@ rexxscriptexit: class
         result_name = ""
         debug_flag  = 0
         expose_names = .string[]
+        expose_arrays = .int[]
         expose_seen = 0
 
         i = 2
@@ -108,7 +110,16 @@ rexxscriptexit: class
                     if isClauseKeyword(keyword) = 1 then leave
                     if expect_name = 1 then do
                         if strip(tokens[i].get_type()) <> "identifier" then return error_result(i, "REXXSCRIPT EXPOSE only accepts variable names")
+                        if strip(tokens[i].get_value_type()) = ".unknown" then do
+                            result = .exitresult("PENDING")
+                            return result
+                        end
                         expose_names[expose_names[0] + 1] = strip(tokens[i].get_text())
+                        if pos("[", strip(tokens[i].get_value_type())) > 0 then do
+                            if left(strip(tokens[i].get_value_type()), 7) <> ".string" then return error_result(i, "REXXSCRIPT EXPOSE arrays must be .string[]")
+                            expose_arrays[expose_names[0]] = 1
+                        end
+                        else expose_arrays[expose_names[0]] = 0
                         expect_name = 0
                     end
                     else do
@@ -147,34 +158,56 @@ rexxscriptexit: class
         if expose_names[0] > 0 then do
             call result.add_replacement_line("__rexxscript_names = .string[]")
             call result.add_replacement_line("__rexxscript_values = .string[]")
+            call result.add_replacement_line("__rexxscript_expose_pos = 1")
             do i = 1 to expose_names[0]
                 name = expose_names[i]
-                call result.add_replacement_line("__rexxscript_names[" || i || "] = '" || name || "'")
-                call result.add_replacement_line("__rexxscript_values[" || i || "] = " || name)
+                if expose_arrays[i] = 1 then do
+                    call result.add_replacement_line("__rexxscript_names[__rexxscript_expose_pos] = '" || name || ".0'")
+                    call result.add_replacement_line("__rexxscript_values[__rexxscript_expose_pos] = " || name || "[0]")
+                    call result.add_replacement_line("__rexxscript_expose_pos = __rexxscript_expose_pos + 1")
+                    call result.add_replacement_line("__rexxscript_array_index = 1")
+                    call result.add_replacement_line("do while __rexxscript_array_index <= " || name || "[0]")
+                    call result.add_replacement_line("  __rexxscript_names[__rexxscript_expose_pos] = '" || name || ".' || __rexxscript_array_index")
+                    call result.add_replacement_line("  __rexxscript_values[__rexxscript_expose_pos] = " || name || "[__rexxscript_array_index]")
+                    call result.add_replacement_line("  __rexxscript_expose_pos = __rexxscript_expose_pos + 1")
+                    call result.add_replacement_line("  __rexxscript_array_index = __rexxscript_array_index + 1")
+                    call result.add_replacement_line("end")
+                end
+                else do
+                    call result.add_replacement_line("__rexxscript_names[__rexxscript_expose_pos] = '" || name || "'")
+                    call result.add_replacement_line("__rexxscript_values[__rexxscript_expose_pos] = " || name)
+                    call result.add_replacement_line("__rexxscript_expose_pos = __rexxscript_expose_pos + 1")
+                end
             end
             call result.add_replacement_line("__rexxscript_result = rexxscript_evaluate_exposed(" || script_expr || ", __rexxscript_names, __rexxscript_values, "debug_flag")")
             do i = 1 to expose_names[0]
                 name = expose_names[i]
-                call result.add_replacement_line(name || " = rexxscript_value('" || name || "')")
+                if expose_arrays[i] = 1 then do
+                    call result.add_replacement_line("assembler SETATTRS " || name || ",0")
+                    call result.add_replacement_line("__rexxscript_array_count = rexxscript_value('" || name || ".0') + 0")
+                    call result.add_replacement_line("__rexxscript_array_index = 1")
+                    call result.add_replacement_line("do while __rexxscript_array_index <= __rexxscript_array_count")
+                    call result.add_replacement_line("  " || name || "[__rexxscript_array_index] = rexxscript_value('" || name || ".' || __rexxscript_array_index)")
+                    call result.add_replacement_line("  __rexxscript_array_index = __rexxscript_array_index + 1")
+                    call result.add_replacement_line("end")
+                end
+                else call result.add_replacement_line(name || " = rexxscript_value('" || name || "')")
             end
         end
         else call result.add_replacement_line("__rexxscript_result = rexxscript_evaluate(" || script_expr || ", "debug_flag")")
         if output_name <> "" then call result.add_replacement_line(output_name || " = rexxscript_output()")
         if values_name <> "" then do
-            /* Preserve the old raw layout and locate only the appended marker. */
-            /* Reset the caller-owned array without introducing a shadow variable. */
+            /* The exposed-variable section can expand for arrays, so locate
+             * the collection marker instead of calculating a fixed offset. */
             call result.add_replacement_line("assembler SETATTRS " || values_name || ",0")
-            call result.add_replacement_line("__rexxscript_collect_base = " || (expose_names[0] * 2 + 2))
             call result.add_replacement_line("__rexxscript_collect_marker = 0")
-            call result.add_replacement_line("if __rexxscript_result[0] >= __rexxscript_collect_base then do")
-            call result.add_replacement_line("  if __rexxscript_result[__rexxscript_collect_base] = '__REXXSCRIPT_COLLECT__' then __rexxscript_collect_marker = __rexxscript_collect_base")
-            call result.add_replacement_line("  else do")
-            call result.add_replacement_line("    __rexxscript_output_count = __rexxscript_result[__rexxscript_collect_base] + 0")
-            call result.add_replacement_line("    __rexxscript_candidate = __rexxscript_collect_base + __rexxscript_output_count + 1")
-            call result.add_replacement_line("    if __rexxscript_result[0] >= __rexxscript_candidate then do")
-            call result.add_replacement_line("      if __rexxscript_result[__rexxscript_candidate] = '__REXXSCRIPT_COLLECT__' then __rexxscript_collect_marker = __rexxscript_candidate")
-            call result.add_replacement_line("    end")
+            call result.add_replacement_line("__rexxscript_collect_scan = 2")
+            call result.add_replacement_line("do while __rexxscript_collect_scan <= __rexxscript_result[0]")
+            call result.add_replacement_line("  if __rexxscript_result[__rexxscript_collect_scan] = '__REXXSCRIPT_COLLECT__' then do")
+            call result.add_replacement_line("    __rexxscript_collect_marker = __rexxscript_collect_scan")
+            call result.add_replacement_line("    leave")
             call result.add_replacement_line("  end")
+            call result.add_replacement_line("  __rexxscript_collect_scan = __rexxscript_collect_scan + 1")
             call result.add_replacement_line("end")
             call result.add_replacement_line("if __rexxscript_collect_marker > 0 then do")
             call result.add_replacement_line("  __rexxscript_collect_count = __rexxscript_result[__rexxscript_collect_marker + 1] + 0")

@@ -4,6 +4,8 @@ import rexxscript
 main: procedure
   failures = .int
   out = .string[]
+  values = .string[]
+  measurements = .string[]
   raw = .string[]
   a = .string
   message = .string
@@ -42,6 +44,47 @@ main: procedure
   if out[0] <> 1 | out[1] <> "good" then do
     failures = failures + 1
     say "bad second output" out[0] out[1]
+  end
+
+  say
+  say "Sample 3"
+  say "--------"
+  REXXSCRIPT "collect 'one'; say 'finished'; collect 'two'" VALUES values OUTPUT out RESULT raw DEBUG
+  if values[0] <> 2 | values[1] <> "one" | values[2] <> "two" then do
+    failures = failures + 1
+    say "bad collected values" values[0] values[1] values[2]
+  end
+  if out[0] <> 1 | out[1] <> "finished" then do
+    failures = failures + 1
+    say "bad collected output" out[0] out[1]
+  end
+  if raw[1] <> "OK" | raw[4] <> "__REXXSCRIPT_COLLECT__" | raw[5] <> "2" then do
+    failures = failures + 1
+    say "bad collected raw result" raw[1] raw[4] raw[5]
+  end
+
+  do i=1 to raw[0]
+     say "raw["i"] = "raw[i]
+  end
+
+
+  REXXSCRIPT "say 'plain'" VALUES values OUTPUT out
+  if values[0] <> 0 | out[0] <> 1 | out[1] <> "plain" then do
+    failures = failures + 1
+    say "bad empty collected values" values[0] out[0] out[1]
+  end
+
+  measurements[1] = "one"
+  measurements[2] = "two"
+  measurements[3] = "three"
+  REXXSCRIPT "measurements.2 = 'TWO'; measurements.4 = 'four'; measurements.0 = 4; collect measurements.3" EXPOSE measurements VALUES values OUTPUT out RESULT raw
+  if measurements[0] <> 4 | measurements[1] <> "one" | measurements[2] <> "TWO" | measurements[4] <> "four" then do
+    failures = failures + 1
+    say "bad exposed array round trip" measurements[0] measurements[1] measurements[2] measurements[4]
+  end
+  if values[0] <> 1 | values[1] <> "three" then do
+    failures = failures + 1
+    say "bad exposed array collect layout" values[0] values[1]
   end
 
   if failures = 0 then say "SUCCESS"
