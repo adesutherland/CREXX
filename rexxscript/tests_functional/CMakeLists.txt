@@ -36,13 +36,21 @@ foreach(_binfile ${REXXBINS})
 
     add_custom_target(${_basename})
     add_dependencies(testrexxscript ${_basename} rexxscript rxfnsc)
+    set(_rxc_flags -x)
+    set(_exit_depends)
+    if(_basename STREQUAL "testRexxScriptArrayExpose")
+        # REXXSCRIPT EXPOSE is implemented by the compiler exit; the other
+        # fixtures exercise the runtime API directly and do not need exits.
+        set(_rxc_flags)
+        list(APPEND _exit_depends ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin)
+    endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
             SOURCE ${_rexx_file}
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-            RXC_FLAGS -x
-            DEPENDS library classlib rxfnsc rexxscript ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} ${REXXSCRIPT_RXBIN} ${_rexx_dep}
+            RXC_FLAGS ${_rxc_flags}
+            DEPENDS library classlib rxfnsc rexxscript ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} ${REXXSCRIPT_RXBIN} ${_exit_depends} ${_rexx_dep}
             RUNTIME_ARGS ${REXXSCRIPT_RUNTIMES}
     )
 endforeach()

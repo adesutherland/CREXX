@@ -158,7 +158,10 @@ rexxscriptexit: class
         if expose_names[0] > 0 then do
             call result.add_replacement_line("__rexxscript_names = .string[]")
             call result.add_replacement_line("__rexxscript_values = .string[]")
+            call result.add_replacement_line("__rexxscript_expose_pos = .int")
             call result.add_replacement_line("__rexxscript_expose_pos = 1")
+            call result.add_replacement_line("__rexxscript_array_index = .int")
+            call result.add_replacement_line("__rexxscript_array_count = .int")
             do i = 1 to expose_names[0]
                 name = expose_names[i]
                 if expose_arrays[i] = 1 then do
@@ -200,6 +203,10 @@ rexxscriptexit: class
             /* The exposed-variable section can expand for arrays, so locate
              * the collection marker instead of calculating a fixed offset. */
             call result.add_replacement_line("assembler SETATTRS " || values_name || ",0")
+            call result.add_replacement_line("__rexxscript_collect_marker = .int")
+            call result.add_replacement_line("__rexxscript_collect_scan = .int")
+            call result.add_replacement_line("__rexxscript_collect_count = .int")
+            call result.add_replacement_line("__rexxscript_collect_index = .int")
             call result.add_replacement_line("__rexxscript_collect_marker = 0")
             call result.add_replacement_line("__rexxscript_collect_scan = 2")
             call result.add_replacement_line("do while __rexxscript_collect_scan <= __rexxscript_result[0]")

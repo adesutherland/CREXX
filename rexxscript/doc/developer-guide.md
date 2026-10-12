@@ -169,14 +169,15 @@ without making `docs/` and `rexxscript/doc/` drift.
 Focused build:
 
 ```sh
-cmake --build cmake-build-debug --target testrexxscript
+cmake --build cmake-build-debug \
+  --target testrexxscript test_rexxscript_bin test_rexxscript_direct_bin
 ```
 
 Focused tests:
 
 ```sh
 ctest --test-dir cmake-build-debug --output-on-failure \
-  -R 'testRexxScript(Runtime|Compat)_(noopt|opt)|test_rexxscript|rexxscript_cli_smoke'
+  -R 'testRexxScript(Runtime|Compat|ArrayExpose)_(noopt|opt)|test_rexxscript|rexxscript_cli_smoke'
 ```
 
 Related shared BIF tests:
@@ -189,6 +190,11 @@ ctest --test-dir cmake-build-debug --output-on-failure \
 
 The compiler-exit tests prove that the `REXXSCRIPT` statement lowers to the
 runtime facade and that direct exit behavior remains available.
+`testRexxScriptArrayExpose` also uses that statement, so its CMake compile
+commands must enable exits and depend on `rxcexits.rxbin`. The runtime API and
+compatibility fixtures retain `-x`. Generated exit helper variables have
+explicit types so multiple statements in one procedure use intentional local
+bindings without scope warnings.
 
 ## Documentation Ownership
 

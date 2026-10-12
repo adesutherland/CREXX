@@ -80,8 +80,9 @@ test_expose_rewrite: procedure = .int
   if check_equal("rexxscript expose process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
 
   replacement = join_result_lines(result)
-  if check_contains("rexxscript expose names", replacement, "__rexxscript_names[1] = 'a'") = 0 then failures = failures + 1
-  if check_contains("rexxscript expose values", replacement, "__rexxscript_values[2] = message") = 0 then failures = failures + 1
+  if check_contains("rexxscript expose cursor", replacement, "__rexxscript_expose_pos = 1") = 0 then failures = failures + 1
+  if check_contains("rexxscript expose names", replacement, "__rexxscript_names[__rexxscript_expose_pos] = 'a'") = 0 then failures = failures + 1
+  if check_contains("rexxscript expose values", replacement, "__rexxscript_values[__rexxscript_expose_pos] = message") = 0 then failures = failures + 1
   if check_contains("rexxscript exposed evaluate", replacement, "rexxscript_evaluate_exposed(") = 0 then failures = failures + 1
   if check_contains("rexxscript expose copyback a", replacement, "a = rexxscript_value('a')") = 0 then failures = failures + 1
   if check_contains("rexxscript expose output", replacement, "out = rexxscript_output()") = 0 then failures = failures + 1
@@ -121,7 +122,7 @@ test_reject_non_string_array: procedure = .int
   call pushidentifier tokens, "REXXSCRIPT"
   call pushstring tokens, '"x = 1"'
   call pushidentifier tokens, "EXPOSE"
-  call pushidentifier tokens, "values", ".int[]", 0
+  call pushidentifier tokens, "numbers", ".int[]", 0
 
   result = rxs.process(tokens)
   if check_equal("rexxscript non-string array status", "ERROR", result.get_status()) = 0 then failures = failures + 1
