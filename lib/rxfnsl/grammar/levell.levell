@@ -145,7 +145,7 @@ classify.open: transform stage words state 1 take identifier text 'OPEN' emit kw
 classify.close: transform stage words state 1 take identifier text 'CLOSE' emit kw.close next 1
 parse: parser semantics contextfree input tokens start document
   document: rule = header declaration+
-  header: rule = kw.options kw.levell kw.namespace name
+  header: rule = (kw.options kw.levell)? kw.namespace name
   declaration: rule = declarationname body
   body: rule = token.declaration | diagnostic.declaration | lexer.declaration | comments.declaration | parser.declaration | charset.declaration | pattern.declaration | rule.declaration | stage.declaration | transform.declaration | tree.declaration | recovery.declaration | operators.declaration | infix.declaration | prefix.declaration | region.declaration
   token.declaration: rule = kw.token (equals integer)?

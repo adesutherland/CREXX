@@ -45,7 +45,7 @@ for backend in ([] if a.negative_only else a.backends):
     for lesson in ['01-basic', '02-messages', '03-unicode']:
         work = out / (backend + '-' + lesson)
         work.mkdir(exist_ok=True)
-        spec = (examples / (lesson + '.levell')).read_text()
+        spec = (examples / (lesson + ('.crexx' if lesson == '01-basic' else '.levell'))).read_text()
         spec = spec.replace('parser start settings', 'parser start settings backend ' + backend
                             + (' semantics ordered' if backend == 'packrat' else ''))
         path = work / 'settings.levell'

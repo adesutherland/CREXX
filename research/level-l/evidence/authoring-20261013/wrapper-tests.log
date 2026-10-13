@@ -1,0 +1,103 @@
+Test project /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration
+      Start 3307: crexx_project_build_contract
+ 1/24 Test #3307: crexx_project_build_contract ...................***Failed    2.09 sec
+-- project contract: clean optimized library build
+CMake Error at /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_project_build.cmake:15 (message):
+  clean optimized library build failed (1)
+
+  stdout:
+
+  WAVE: project compile/assemble jobs=2
+
+  START: project member projectalpha
+
+  START: project member projectbeta
+
+  BUILT: project member projectbeta
+
+  BUILT: project member projectalpha
+
+  BARRIER: link library
+
+  FAILED: link project library rc=1
+
+  ERROR: opening input -r
+
+
+
+  stderr:
+
+Call Stack (most recent call first):
+  /Users/adrian/CLionProjects/CREXX-level-l-inline-storage/bin/tests/crexx_project_build.cmake:89 (run_checked)
+
+
+
+      Start   48: source_import_private_dependency_provider
+ 2/24 Test   #48: source_import_private_dependency_provider ......   Passed   15.59 sec
+      Start   47: source_import_private_dependency_convergence
+ 3/24 Test   #47: source_import_private_dependency_convergence ...   Passed   11.51 sec
+      Start 3293: crexx_headerless_simple_smoke
+      Start   45: project_dependencies
+      Start   53: import_resolution_report
+ 4/24 Test   #45: project_dependencies ...........................   Passed    0.34 sec
+ 5/24 Test   #53: import_resolution_report .......................   Passed    0.60 sec
+ 6/24 Test #3293: crexx_headerless_simple_smoke ..................   Passed    1.39 sec
+      Start 3300: crexx_status_diagnostics
+ 7/24 Test #3300: crexx_status_diagnostics .......................   Passed    1.51 sec
+      Start 3297: crexx_args_smoke
+ 8/24 Test #3297: crexx_args_smoke ...............................   Passed    0.70 sec
+      Start 3320: crexx_native_explicit_header_smoke
+ 9/24 Test #3320: crexx_native_explicit_header_smoke .............   Passed    1.04 sec
+      Start 3322: crexx_native_rx_hash_provider
+10/24 Test #3322: crexx_native_rx_hash_provider ..................   Passed    1.05 sec
+      Start 3323: crexx_native_default_link_strip
+11/24 Test #3323: crexx_native_default_link_strip ................   Passed    0.79 sec
+      Start 3316: crexx_source_root_compile_only
+12/24 Test #3316: crexx_source_root_compile_only .................   Passed    0.61 sec
+      Start 3292: crexx_help_smoke
+13/24 Test #3292: crexx_help_smoke ...............................   Passed    0.02 sec
+      Start 3294: crexx_headerless_rexx_levelc_smoke
+14/24 Test #3294: crexx_headerless_rexx_levelc_smoke .............   Passed    1.51 sec
+      Start 3295: crexx_explicit_header_smoke
+15/24 Test #3295: crexx_explicit_header_smoke ....................   Passed    0.69 sec
+      Start 3301: crexx_spaced_source_smoke
+16/24 Test #3301: crexx_spaced_source_smoke ......................   Passed    2.40 sec
+      Start 3305: crexx_diagnostic_plumbing
+17/24 Test #3305: crexx_diagnostic_plumbing ......................   Passed    0.57 sec
+      Start 3317: crexx_rxas_import_compile_only
+18/24 Test #3317: crexx_rxas_import_compile_only .................   Passed    0.54 sec
+      Start 3318: crexx_nocompile_exec_smoke
+19/24 Test #3318: crexx_nocompile_exec_smoke .....................   Passed    0.71 sec
+      Start 3319: crexx_native_nocompile_smoke
+20/24 Test #3319: crexx_native_nocompile_smoke ...................   Passed    1.07 sec
+      Start 3321: crexx_native_address_crexx_smoke
+21/24 Test #3321: crexx_native_address_crexx_smoke ...............   Passed    5.06 sec
+      Start 3324: crexx_native_linkmap_keep_source
+22/24 Test #3324: crexx_native_linkmap_keep_source ...............   Passed    0.81 sec
+      Start 3325: crexx_native_link_keep_inline
+23/24 Test #3325: crexx_native_link_keep_inline ..................   Passed    1.22 sec
+      Start 3326: crexx_native_nokeep_cleanup
+24/24 Test #3326: crexx_native_nokeep_cleanup ....................   Passed    1.01 sec
+
+96% tests passed, 1 tests failed out of 24
+
+Label Time Summary:
+autoload         =   2.09 sec*proc (1 test)
+build            =   2.09 sec*proc (1 test)
+compiler         =  28.05 sec*proc (4 tests)
+comprehensive    =  16.53 sec*proc (13 tests)
+driver           =   2.09 sec*proc (1 test)
+imports          =  28.05 sec*proc (4 tests)
+incremental      =  29.54 sec*proc (4 tests)
+inline           =  27.10 sec*proc (2 tests)
+newbuild         =   0.60 sec*proc (1 test)
+parallel         =   2.09 sec*proc (1 test)
+regression       =  29.54 sec*proc (4 tests)
+smoke            =  36.31 sec*proc (11 tests)
+stage0           =   0.60 sec*proc (1 test)
+
+Total Test time (real) =  51.98 sec
+
+The following tests FAILED:
+	3307 - crexx_project_build_contract (Failed)             autoload build driver incremental parallel regression smoke
+Errors while running CTest

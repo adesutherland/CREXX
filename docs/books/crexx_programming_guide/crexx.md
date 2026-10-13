@@ -288,6 +288,36 @@ also aborts publication and invalidates its member stamps. RXAS-enabled waves
 recheck compiler dependency snapshots before publishing to catch timestamp-only
 selection changes too; retry once inputs are stable.
 
+## Level L grammars in a project
+
+A `.crexx` file beginning with `options levell` describes a language. The short
+suffix `.rxl` selects Level L and permits the OPTIONS line to be omitted.
+Existing `.levell` sources remain supported. Namespace declarations name the
+language module imported by your application.
+
+```sh
+crexx --program build/reader reader.crexx settings.rxl
+```
+
+The driver generates the grammar module before compiling the reader, then
+links the module and the Level L runtime into the program. File order does not
+matter. A separate library build is optional:
+
+```sh
+crexx --library build/languages/settings settings.rxl
+crexx --program build/reader reader.crexx -i build/languages -l build/languages/settings
+```
+
+An ordinary `crexx reader.crexx settings.rxl --args input.txt` builds and runs;
+a grammar-only invocation builds a reusable library beside its source.
+Generated grammar members have separate private output names, so a grammar
+and its consumer can both be named `calculator` with different suffixes.
+Duplicate output member names within the same kind are diagnosed.
+Grammar errors stop the build and preserve the previous published output.
+Generator, grammar and runtime identities participate in incremental rebuilds.
+See the [Level L user guide](../../../lib/rxfnsl/doc/user-guide.md) for a complete
+settings reader and calculator.
+
 ## Examples
 
 ### Just run it

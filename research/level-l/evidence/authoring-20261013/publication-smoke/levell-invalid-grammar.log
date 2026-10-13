@@ -1,0 +1,5 @@
+argv=['/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/publication-install/bin/crexx', '--program', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-1bb6h3sr/settings-linked', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-1bb6h3sr/settings-reader.crexx', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-1bb6h3sr/settings.rxl']
+START: grammar settings_grammar
+/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-core-consumer-1bb6h3sr/settings.rxl: LL_GRAMMAR: LL_SYNTAX at line 2, column 1 (byte 14): unexpected 'unknown'; expected declarationname
+  unknown declaration
+  ^

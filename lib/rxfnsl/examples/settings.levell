@@ -21,8 +21,7 @@ scan: lexer input utf8bytes
   separator.rule: rule = cr lf | cr | lf | ';' then emit separator
   whitespace: rule = space+ then skip
 parse: parser semantics contextfree input tokens start settings
-  settings: rule = separator settings | assignment tail | ''
-  tail: rule = separator settings | ''
+  settings: rule = separator* (assignment (separator assignment?)*)?
   assignment: rule = name.value equals value
   name.value: rule = identifier
   value: rule = number | string

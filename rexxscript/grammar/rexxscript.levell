@@ -128,8 +128,7 @@ scan: lexer input utf8bytes
 
 parse: parser semantics contextfree input tokens start program
   program: rule = statements
-  statements: rule = separator statements | statement tail | ''
-  tail: rule = separator statements | ''
+  statements: rule = separator* (statement (separator statement?)*)?
   statement: rule = closed.statement | open.statement
   closed.statement: rule = simple | block | if.closed
   open.statement: rule = if.open | if.continued

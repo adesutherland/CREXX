@@ -2991,12 +2991,23 @@ static char *default_import_namespace_from_file_name(const char *file_name) {
 static void ensure_importable_source_header(importable_file *file, RexxLevel cli_level_override) {
     char *raw_namespace = 0;
     RexxLevel default_level;
+    RexxLevel source_level;
 
     if (!file || file->type != REXX_FILE || file->header_scanned) return;
 
     default_level = cli_level_override != UNKNOWN ? cli_level_override : file->source_default_level;
     if (default_level == UNKNOWN) default_level = rxcp_source_default_level_for_file(file->name);
-    rxcp_scan_source_header(file->location, file->name, default_level, 0, &raw_namespace);
+    rxcp_scan_source_header(file->location, file->name, default_level, &source_level, &raw_namespace);
+    /* Level L sources are compiled by the build driver. Keep the candidate in
+     * dependency discovery, but let its generated binary supply the namespace.
+     * An empty header fingerprint also invalidates a snapshot when a source
+     * changes between a grammar and an ordinary B/G/C provider. */
+    if (source_level == LEVELL) {
+        free(raw_namespace);
+        file->namespace_name = strdup("");
+        file->header_scanned = 1;
+        return;
+    }
     if (raw_namespace) {
         file->namespace_name = rxcp_normalize_source_symbol_name(raw_namespace, strlen(raw_namespace), 0, 1);
         free(raw_namespace);
@@ -3036,6 +3047,7 @@ static int source_import_file_is_visible(Context *context, importable_file *file
                                     context && context->master_context ?
                                     context->master_context->cli_level_override :
                                     UNKNOWN);
+    if (file->namespace_name && !file->namespace_name[0]) return 0;
     if (!file->namespace_name || !file->namespace_name[0]) return 1;
     if (!context || !context->ast || !context->ast->scope) return 1;
 

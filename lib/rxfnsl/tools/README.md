@@ -8,9 +8,7 @@ on generator implementation and qualification details.
 
 Level L is reusable language-engineering infrastructure. RexxScript 1 is its
 first product consumer; the library has no dependency on RexxScript values,
-compiler AST classes or compiler globals. This implementation is local to the
-`levell` branch and is not a release or a replacement of the production
-compiler's re2c/Lemon frontends.
+compiler AST classes or compiler globals. The product compiler's re2c/Lemon frontends are maintained separately.
 
 Build and run from the repository root:
 
@@ -27,6 +25,31 @@ Direct shell redirection does not offer that atomic replacement guarantee.
 Without `--rxas`, the command emits Level B-compatible source for inspection and
 comparison. `--graph` prints the common parser graph for independent analysis;
 it does not certify DFA/LR admission.
+
+## Driver integration and regressions
+
+`crexx` recognizes `.crexx` sources headed by `options levell`, `.rxl` sources
+with an optional OPTIONS header, and existing `.levell` files. It generates
+packed RXAS, assembles providers before compiling consumers, and tracks grammar,
+generator, assembler and runtime identities. A library contains the authored
+modules; a program selects their shared runtime once. This keeps independently
+built grammar libraries composable. CMake's Level B bootstrap remains independent
+of the high-level driver.
+
+Focused panels take an existing build and a new scratch output directory:
+
+```sh
+python3 lib/rxfnsl/tests_functional/check-authoring-build.py BUILD OUTPUT
+python3 lib/rxfnsl/tests_functional/check-list-shorthand.py BUILD OUTPUT
+```
+
+The first covers source selection, L0/L1/L2 parity, combined and separate builds,
+rebuilds, last-good-output preservation and native packaging. Use `--bin PREFIX/bin`
+to exercise installed tools. The second compares retained recursive rules with
+repetition across LL(1), LR(1), packrat and Earley, including order, spans and
+failure locations. Existing generated-runtime CTests include an exact-budget
+3,000-item named-tree regression. The installed package smoke uses the driver
+for both source forms and checks that a failed grammar preserves the program.
 
 ## Authored rules and admission
 

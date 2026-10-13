@@ -88,9 +88,11 @@ document: class
   _regiontoken = .int
   _regionopen = .int
   _regionclose = .int
+  _implicitLevel = .int
 
   *: factory
-    arg source = .string, limit = 0, ?limits = .lllimits..policy
+    arg source = .string, limit = 0, ?limits = .lllimits..policy, implicitLevel = 0
+    _implicitLevel = implicitLevel
     _source = source; _bytes = source as .binary; _limit = limit
     _status = 0; _ran = 0; _error = ''; _at = 1; _end = 0; _depth = 0
     _count = 0; _decls = 0; _root = 0; _profile = ''; _units = ''; _module = ''
@@ -160,8 +162,11 @@ document: class
     end
     call scan()
     if _status <> 0 then return _status
-    _at = 1; first = .int; named = .int
-    ok = expect('options'); ok = expect('levell'); ok = expect('namespace')
+    _at = 1; first = .int; named = .int; ok = .int
+    if wordat(_at) = 'options' | _implicitLevel = 0 then do
+      ok = expect('options'); ok = expect('levell')
+    end
+    ok = expect('namespace')
     if _kind[_at] <> 'symbol' then call fail('expected module name',_at)
     _module = _text[_at]; _at = _at + 1
     do while _at < _count & _status = 0

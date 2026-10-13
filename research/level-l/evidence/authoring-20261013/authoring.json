@@ -1,0 +1,666 @@
+{
+  "part": "all",
+  "seconds": 107.23926629195921,
+  "commands": [
+    {
+      "name": "form-explicit.crexx",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/explicit.crexx",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "f1dae4fbe4fc0c47a8088d86505dd60d1e478ac4417d74522782160215dbfaec"
+    },
+    {
+      "name": "form-explicit.rxl",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/explicit.rxl",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "f1dae4fbe4fc0c47a8088d86505dd60d1e478ac4417d74522782160215dbfaec"
+    },
+    {
+      "name": "form-short.rxl",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/short.rxl",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "2b9117d2f52d3063482402ead340b59d559ee0b3f2326449e731715f0a74769e"
+    },
+    {
+      "name": "form-short.RXL",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/short.RXL",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "2b9117d2f52d3063482402ead340b59d559ee0b3f2326449e731715f0a74769e"
+    },
+    {
+      "name": "form-legacy.levell",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/legacy.levell",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "f1dae4fbe4fc0c47a8088d86505dd60d1e478ac4417d74522782160215dbfaec"
+    },
+    {
+      "name": "form-comments.crexx",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/comments.crexx",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "32ec6d319462487ed368a95ab1dc620d43dfd5ddd9d25ea882feeec198e82a7a"
+    },
+    {
+      "name": "bootstrap-0-explicit.crexx",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/explicit.crexx",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "f1dae4fbe4fc0c47a8088d86505dd60d1e478ac4417d74522782160215dbfaec"
+    },
+    {
+      "name": "bootstrap-0-short.rxl",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L0/levell-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/short.rxl",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "2b9117d2f52d3063482402ead340b59d559ee0b3f2326449e731715f0a74769e"
+    },
+    {
+      "name": "bootstrap-1-explicit.crexx",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/explicit.crexx",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "f1dae4fbe4fc0c47a8088d86505dd60d1e478ac4417d74522782160215dbfaec"
+    },
+    {
+      "name": "bootstrap-1-short.rxl",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L1/levell-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/short.rxl",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "2b9117d2f52d3063482402ead340b59d559ee0b3f2326449e731715f0a74769e"
+    },
+    {
+      "name": "bootstrap-2-explicit.crexx",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/explicit.crexx",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "f1dae4fbe4fc0c47a8088d86505dd60d1e478ac4417d74522782160215dbfaec"
+    },
+    {
+      "name": "bootstrap-2-short.rxl",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/cmake-build-levell-integration/lib/rxfnsl/tools/bootstrap/L2/levell-linked.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/short.rxl",
+        "--rxas"
+      ],
+      "status": 0,
+      "sha256": "2b9117d2f52d3063482402ead340b59d559ee0b3f2326449e731715f0a74769e"
+    },
+    {
+      "name": "invalid-missing.crexx",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/missing.crexx",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "c12fb7ca8a52c9ee818136ab31406ab1b7798c7035c6fb563424ca064f21e8d2"
+    },
+    {
+      "name": "invalid-conflict.rxl",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/conflict.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "ca1aeb5b2ee6ceff550025ec33f24d230e829d460a8d728f730736f9fb36117a"
+    },
+    {
+      "name": "invalid-located.rxl",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/levell",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/forms/located.rxl",
+        "--rxas"
+      ],
+      "status": 1,
+      "sha256": "b6cb299d16fe1a541669a34e9dedc006363c77a3db1573bfa9a81cd5e7a5a56b"
+    },
+    {
+      "name": "mixed-clean",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/settings grammar.crexx",
+        "--jobs",
+        "2"
+      ],
+      "status": 0,
+      "sha256": "322f1e8fdd5ecf4fe1169fc8a0d696dbdd8b8b03aa7c8066e0528aeb5e6061c6"
+    },
+    {
+      "name": "mixed-rxtvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 0,
+      "sha256": "e228a98260785276aa5de0b84beb9e27e73a12e3559cb1f3582ee72106557a4c"
+    },
+    {
+      "name": "mixed-rxbvm",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 0,
+      "sha256": "e228a98260785276aa5de0b84beb9e27e73a12e3559cb1f3582ee72106557a4c"
+    },
+    {
+      "name": "mixed-noop",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/settings grammar.crexx",
+        "--jobs",
+        "2"
+      ],
+      "status": 0,
+      "sha256": "b8eacd75db418cd2ad1d4bbd78fa90e106093e2666ef92e17d27698d206f6fc0"
+    },
+    {
+      "name": "grammar-edit",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/settings grammar.crexx",
+        "--jobs",
+        "2"
+      ],
+      "status": 0,
+      "sha256": "322f1e8fdd5ecf4fe1169fc8a0d696dbdd8b8b03aa7c8066e0528aeb5e6061c6"
+    },
+    {
+      "name": "changed-language",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 1,
+      "sha256": "d017887d27bbe6c0843ed6a92cea6549bab60bb280f2c7c3838f76943f446c6f"
+    },
+    {
+      "name": "failed-grammar",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/settings grammar.crexx",
+        "--jobs",
+        "2"
+      ],
+      "status": 1,
+      "sha256": "249169d02a8c043be7bf5933e3be81883496f74b96a89fc49af8cd8b0c62a8ff"
+    },
+    {
+      "name": "restored",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/settings grammar.crexx",
+        "--jobs",
+        "2"
+      ],
+      "status": 0,
+      "sha256": "322f1e8fdd5ecf4fe1169fc8a0d696dbdd8b8b03aa7c8066e0528aeb5e6061c6"
+    },
+    {
+      "name": "restored-run",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 0,
+      "sha256": "9d038a8d0940075988c0c2ca45b9fb4d60e13857f0274a501fe994fe2f490a53"
+    },
+    {
+      "name": "short-first",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reordered",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx"
+      ],
+      "status": 0,
+      "sha256": "6cc33235d4161e0106b9533a391a23a04583fed113663840a637984790a885b6"
+    },
+    {
+      "name": "short-first-run",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxtvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reordered.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 0,
+      "sha256": "9d038a8d0940075988c0c2ca45b9fb4d60e13857f0274a501fe994fe2f490a53"
+    },
+    {
+      "name": "mixed-noopt",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/noopt",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl",
+        "--noopt"
+      ],
+      "status": 0,
+      "sha256": "cccff9f1106753d4825315f6b70bec53dad2f0d7803ebf9cc9cdc170c7a71440"
+    },
+    {
+      "name": "mixed-noopt-run",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxbvm",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/noopt.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 0,
+      "sha256": "9d038a8d0940075988c0c2ca45b9fb4d60e13857f0274a501fe994fe2f490a53"
+    },
+    {
+      "name": "library",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library/settings",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl"
+      ],
+      "status": 0,
+      "sha256": "39e7632e417270d348b06583d56819a7b48c8a55da4e88bbd5eb3c410e1d00f0"
+    },
+    {
+      "name": "library-consumer",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library-reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library",
+        "-l",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library/settings"
+      ],
+      "status": 0,
+      "sha256": "38bfb041497b337b024ac055c863cebfc670842b9c14f671cc9233640dbf13b2"
+    },
+    {
+      "name": "library-run",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxvme",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library-reader.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 0,
+      "sha256": "9d038a8d0940075988c0c2ca45b9fb4d60e13857f0274a501fe994fe2f490a53"
+    },
+    {
+      "name": "two-library",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library/both",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/second.rxl"
+      ],
+      "status": 0,
+      "sha256": "b88ec3d1e23fdd3342184b4d9d8ee1153fbdf2d964f2e483fb62e6976a02cb58"
+    },
+    {
+      "name": "second-library",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library/second",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/second.rxl"
+      ],
+      "status": 0,
+      "sha256": "719ba1cbca0229ca7d4cff12292a2d8ec5805ba0b233d60bd882511e0dc7b4f9"
+    },
+    {
+      "name": "two-combined",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/two-combined",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/both.crexx",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library",
+        "-l",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library/both"
+      ],
+      "status": 0,
+      "sha256": "7d381553da16e5a15c9b68671641243aac8038c568dd11a4bc10ed103c2f9f2e"
+    },
+    {
+      "name": "two-combined-run",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxvme",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/two-combined.rxbin"
+      ],
+      "status": 0,
+      "sha256": "8514e6f39b8a4da0751f0a174c0024b25837da849cf21813e283521ac8bafac1"
+    },
+    {
+      "name": "two-separate",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/two-separate",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/both.crexx",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library",
+        "-l",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library/settings",
+        "-l",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library/second"
+      ],
+      "status": 0,
+      "sha256": "6690a3e29bdf23e1172f3936889d7baa32f53cd8975009b3273c139f8c91598c"
+    },
+    {
+      "name": "two-separate-run",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxvme",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/two-separate.rxbin"
+      ],
+      "status": 0,
+      "sha256": "8514e6f39b8a4da0751f0a174c0024b25837da849cf21813e283521ac8bafac1"
+    },
+    {
+      "name": "implicit-library",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl"
+      ],
+      "status": 0,
+      "sha256": "1b87b89d7344edfad3b828a95a59b69f6067097b45e37cce9cb363780ecfea3f"
+    },
+    {
+      "name": "implicit-program",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl",
+        "--args",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 0,
+      "sha256": "43baaa368eaa190e4e088cfbd16ce5713999db135817a8c6af4a036237bf4b81"
+    },
+    {
+      "name": "uppercase",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/caps",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/caps.RXL"
+      ],
+      "status": 0,
+      "sha256": "75a830037486ea5f3f5e19ed5a886797b6fb16df074ab181ba81caa2f46071ff"
+    },
+    {
+      "name": "commented-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/settings grammar.crexx",
+        "--jobs",
+        "2"
+      ],
+      "status": 0,
+      "sha256": "322f1e8fdd5ecf4fe1169fc8a0d696dbdd8b8b03aa7c8066e0528aeb5e6061c6"
+    },
+    {
+      "name": "conflicting-header",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/reordered",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx"
+      ],
+      "status": 1,
+      "sha256": "dd55a2b71fa34afb20db9d84b090ece49572520e3e3d5e93704a57e9db3544e9"
+    },
+    {
+      "name": "stem-collision",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/collision",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.crexx"
+      ],
+      "status": 2,
+      "sha256": "0e392618a8a1ed52c687ae35253cfa13abd7a54eeb32a4d8a3780251d8abfbbc"
+    },
+    {
+      "name": "native",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/native-reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl",
+        "--native"
+      ],
+      "status": 0,
+      "sha256": "aa3ccf8a9f7befab13545942c9712e02b42cd19cdaf00fb941372b18abafb728"
+    },
+    {
+      "name": "native-run",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/native-reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 0,
+      "sha256": "9d038a8d0940075988c0c2ca45b9fb4d60e13857f0274a501fe994fe2f490a53"
+    },
+    {
+      "name": "native-noop",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/native-reader",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl",
+        "--native"
+      ],
+      "status": 0,
+      "sha256": "3042ab0782f2f2b77bf91d30d803520a4216a956007dfe838bcfff4050690f0e"
+    },
+    {
+      "name": "native-library",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/native-library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/reader.crexx",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library",
+        "-l",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/library/settings",
+        "--native"
+      ],
+      "status": 0,
+      "sha256": "4982fe6d447824b4bebcdbd47c75eace3963c263f30a6c088faf10eaede8a344"
+    },
+    {
+      "name": "native-library-run",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/native-library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/sample.settings"
+      ],
+      "status": 0,
+      "sha256": "9d038a8d0940075988c0c2ca45b9fb4d60e13857f0274a501fe994fe2f490a53"
+    },
+    {
+      "name": "calculator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/crexx",
+        "--program",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/calculator",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.crexx",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/lib/rxfnsl/examples/calculator/calculator.rxl"
+      ],
+      "status": 0,
+      "sha256": "86e7842fcecada3873b0abd0a149f7068438026a2af50f17482f8440819fd725"
+    },
+    {
+      "name": "calculator-run",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxvme",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/calculator.rxbin",
+        "-a",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/expression.calc"
+      ],
+      "status": 0,
+      "sha256": "a23a9927712996a2757f18c314ad58941b5c66b5834d8c3f5f0032fc0757bd88"
+    },
+    {
+      "name": "tool-before",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/toolchain/bin/crexx",
+        "--library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/tool-change",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl"
+      ],
+      "status": 0,
+      "sha256": "9f0df326b20903dcbd4081dc772b27eb69cceb61bca92cf9a5524758793ca0d0"
+    },
+    {
+      "name": "tool-changed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/toolchain/bin/crexx",
+        "--library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/tool-change",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl"
+      ],
+      "status": 0,
+      "sha256": "eb021253a0126c0818b06e31428ec815b2b5b0952819bfeb6c15460907e70c79"
+    },
+    {
+      "name": "runtime-marker-compile",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxc",
+        "--no-exe-import",
+        "-i",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin",
+        "-o",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/runtime_identity",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/runtime_identity.crexx"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "runtime-marker-assemble",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/install/bin/rxas",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/runtime_identity"
+      ],
+      "status": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "runtime-changed",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/toolchain/bin/crexx",
+        "--library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/tool-change",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl"
+      ],
+      "status": 0,
+      "sha256": "9f0df326b20903dcbd4081dc772b27eb69cceb61bca92cf9a5524758793ca0d0"
+    },
+    {
+      "name": "missing-generator",
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/toolchain/bin/crexx",
+        "--library",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/tool-change",
+        "/Users/adrian/CLionProjects/CREXX-level-l-inline-storage/research/level-l/build/authoring-20261013/installed-authoring/project with spaces/source/short.rxl"
+      ],
+      "status": 2,
+      "sha256": "5e387207020cd11a52e66bcfe647b77a96758b66b6f0c02a1a56460c1dca709b"
+    }
+  ],
+  "tools": {
+    "crexx": "c3533302ca7dde8deb4bac6a8bb7eb01de1539b2f579410c567e2a9c6590f7c2",
+    "levell": "e04705456f5a40d142421cda803bcd0c39618ebce42ebf81aabf45407f5bff44",
+    "rxc": "114c0edead0b991baa62f9fd1a2fcbd69ba710ebcd827d00a629b074509451bf",
+    "rxas": "96ea529032fb417fa3cb5492d67e2479c493d20666bf5bc8f1531b0ff7c6b672",
+    "rxlink": "1606ac66593ae8e50b0d7c12fcabf77b9d1ce6dd00012bd4d22635bd72cb44b2"
+  }
+}

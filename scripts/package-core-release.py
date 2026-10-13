@@ -67,28 +67,15 @@ def windows_execution_environment(env):
 def smoke_level_l(prefix, source, work, run, extension):
     """Exercise the installed generator, library and modern script command."""
     binary = prefix / 'bin'
-    grammar = work / 'settings.levell'
-    shutil.copy2(source / 'lib/rxfnsl/examples/settings/01-basic.levell', grammar)
-    generated = work / 'levell_settings'
-    run('levell-generate', [binary / ('levell' + extension), grammar, '--rxas'],
-        stdout_path=generated.with_suffix('.rxas'))
-    run('levell-assemble', [binary / ('rxas' + extension), generated])
-    imports = work / 'levell-imports'
-    imports.mkdir()
-    for path in (binary / 'library.rxbin', binary / 'rxfnsl.rxbin',
-                 generated.with_suffix('.rxbin')):
-        shutil.copy2(path, imports / path.name)
+    grammar = work / 'settings.crexx'
+    shutil.copy2(source / 'lib/rxfnsl/examples/settings/01-basic.crexx', grammar)
     reader_source = work / 'settings-reader.crexx'
     shutil.copy2(source / 'lib/rxfnsl/examples/settings-reader.crexx', reader_source)
     settings = work / 'settings.txt'
     shutil.copy2(source / 'lib/rxfnsl/examples/settings.txt', settings)
-    reader = work / 'settings-reader'
-    run('levell-consumer-compile', [binary / ('rxc' + extension), '-x',
-        '--no-exe-import', '-i', imports, '-o', reader, reader_source])
-    run('levell-consumer-assemble', [binary / ('rxas' + extension), reader])
     linked = work / 'settings-linked'
-    run('levell-consumer-link', [binary / ('rxlink' + extension), '-o', linked,
-        reader, generated, binary / 'rxfnsl', binary / 'library'])
+    driver = binary / ('crexx' + extension)
+    run('levell-program-build', [driver, '--program', linked, reader_source, grammar])
     for vm in ('rxbvm', 'rxtvm'):
         executable = binary / (vm + extension)
         if executable.exists():
@@ -96,9 +83,18 @@ def smoke_level_l(prefix, source, work, run, extension):
                 'retries -> 3')
             if 'greeting -> "café"' not in output or 'note -> "say ""hello"""' not in output:
                 raise RuntimeError('Installed Level L consumer lost Unicode or quoted text')
-    grammar.write_text('options levell\nnamespace bad\nunknown declaration\n', encoding='utf-8')
-    run('levell-invalid-grammar', [binary / ('levell' + extension), grammar, '--rxas'],
+    # Exercise the default header and the opposite source order in the same
+    # installed workflow. A separate library-generation command is unnecessary.
+    short = work / 'settings.rxl'
+    short.write_text(grammar.read_text(encoding='utf-8').replace('options levell\n', '', 1), encoding='utf-8')
+    run('levell-short-program', [driver, '--program', linked, short, reader_source])
+    run('levell-short-consumer', [binary / ('rxbvm' + extension), linked, '-a', settings], 'retries -> 3')
+    before_failure = hashlib.sha256(linked.with_suffix('.rxbin').read_bytes()).hexdigest()
+    short.write_text('namespace bad\nunknown declaration\n', encoding='utf-8')
+    run('levell-invalid-grammar', [driver, '--program', linked, reader_source, short],
         'LL_GRAMMAR', expected_returncode=1)
+    if hashlib.sha256(linked.with_suffix('.rxbin').read_bytes()).hexdigest() != before_failure:
+        raise RuntimeError('Failed installed grammar build replaced the working program')
     script = work / 'modern.rxs'
     script.write_text("say 1+2*3; say 0.1d+0.2d; say length('café')\n", encoding='utf-8')
     output = run('rexxscript1-installed', [binary / ('rexxscript1' + extension), script])

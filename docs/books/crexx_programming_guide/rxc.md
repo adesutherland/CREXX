@@ -82,6 +82,11 @@ the initial file's extension when it is different from those standard names.
 Source files with the same module stem are de-duplicated within that source
 stage so one source module is imported for a stem.
 
+A source header selecting Level L identifies a build-time grammar. The `crexx`
+driver generates its module before invoking `rxc`. Import discovery retains the
+source-kind fingerprint but obtains that namespace from the generated binary;
+it does not parse the grammar as B/G/C source.
+
 Within a single binary root, when multiple artifacts share the same
 module stem, the compiler keeps only the freshest candidate. If
 timestamps tie, `.rxbin` wins over `.rxas`.
