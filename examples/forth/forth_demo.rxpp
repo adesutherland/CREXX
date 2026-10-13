@@ -1,0 +1,15 @@
+import forth
+##external forth
+
+##data program
+  3 SQUARE .
+  4 CUBE .
+  bye
+##end
+
+##rule definitions into forthRule
+  : SQUARE DUP * ;
+  : CUBE DUP SQUARE * ;
+##end
+
+call forth_run program

@@ -1,0 +1,10 @@
+{
+  "archive": "CREXX-v1.0.0-beta.3-windows-x64-signed.zip",
+  "bytes": 27449987,
+  "sha256": "bb83bda9545c7506592a1d1c71d1f1110b6da65b7431255afd64722aaebab539",
+  "console_entries": [
+    "CREXX-windows-x64/bin/providers/rxconsole.rxplugin",
+    "CREXX-windows-x64/bin/rxconsole.rxplugin"
+  ],
+  "buildinfo": "display=crexx-1.0.0-beta.3\r\nversion=1.0.0-beta.3\r\nbase_version=1.0.0-beta.3\r\nversion_file=1.0.0-beta.3\r\nchannel=release\r\ntimestamp=20261001T014657Z\r\ncommit=ae1607b8e145174422cee7f3e73fbcc37a65226c\r\ndirty=0\r\n"
+}

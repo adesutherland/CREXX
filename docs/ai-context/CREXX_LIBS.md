@@ -1126,7 +1126,7 @@ fixture weights outside the user payload. Rehash declared provider manifests
 only after a trusted staging/signing step has verified signatures, before
 final-payload smoke; runtime consumers must still reject changed hashes.
 
-`add_rxpa_provider_package` accepts optional `LINK_TARGETS`, `RUNTIME_TARGETS`,
+`add_rxpa_provider_package` accepts optional `LINK_TARGETS`, `LINK_FILES`, `RUNTIME_TARGETS`,
 `BACKEND_TARGETS`, `RUNTIME_FILES`, `RUNTIME_SEARCH_DIRECTORIES` and `ENGINE_ID`.
 Search directories locate redistributable SDK dependencies at build time only;
 they are not runtime search overrides or user manifest paths. Its runtime-package target
@@ -1135,6 +1135,12 @@ driver invokes `crexx-provider-package` only for selected providers carrying
 metadata; the helper validates dependencies before copying or emitting linker
 arguments. Native project caching also revalidates the selected package bytes.
 Providers without this metadata retain the established archive-only delivery.
+`LINK_FILES` supplies concrete import/archive paths, including generator
+expressions, when an INTERFACE SDK target such as PkgConfig::GTK3 has no
+`TARGET_LINKER_FILE`. Declared runtime `.rxplugin` modules are scanned like
+shared libraries for dependent DLLs/dylibs/so files. Explicit product selections
+must depend on the provider's static target and its `_runtime_package` target;
+the latter's `ALL` membership alone does not put it into `stage-product`.
 
 ### `rxsqlite` typed database provider
 

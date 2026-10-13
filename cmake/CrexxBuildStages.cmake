@@ -67,7 +67,9 @@ crexx_add_build_stage(stage-c-rexx-tools
 
 crexx_add_build_stage(stage-g-library
         DESCRIPTION "G Level G library"
-        REQUIRED_TARGETS rxfnsg ui_tui ui_contract ui_ansi
+        # The ANSI host imports the dynamic console provider; native consumers
+        # also need its static archive in a fresh core distribution.
+        REQUIRED_TARGETS rxfnsg ui_tui ui_contract ui_ansi console_static
         OPTIONAL_TARGETS ui_gtk)
 
 crexx_add_build_stage(stage-l-libraries

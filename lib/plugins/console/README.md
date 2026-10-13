@@ -72,3 +72,8 @@ restoration. Existing platform terminal-ownership safeguards remain unchanged.
 
 Build `rxconsole_test_artifacts` before `ctest -R '^rxconsole_'`. The provider
 ships as both dynamic and static RXPA artifacts through normal product packaging.
+The G product stage explicitly builds `console_static` alongside the ANSI host.
+Fresh installs retain `bin/providers/rxconsole.rxplugin`, canonical
+`rxconsole.a`/`rxconsole.lib` and the compatibility `_static` archive. Core ZIP
+smoke builds and relocates the headless console contract as a native executable;
+physical terminal/Windows UI checks remain separate platform qualification.

@@ -1,0 +1,19 @@
+WAVE: project compile/assemble jobs=1
+START: project member test_console
+BUILT: project member test_console
+BARRIER: link program
+PUBLISHED: program /Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/missing/console.rxbin
+FAILED: package native project program rc=2
+[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.gc51c65bea1c4.dirty [0m (macOS 64 20261013)
+cREXX License (MIT)
+Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+See https://github.com/adesutherland/CREXX for project details
+[32musing relpath   :[0m /Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/
+[32musing lpath     :[0m bin
+[32musing s roots   :[0m 
+[32musing i roots   :[0m 
+rxc does not compile due to --nocompile option
+[32musing existing rxbin:[0m /Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/missing/console.rxbin
+[32mrxlink command  :[0m "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/rxlink" "-s" "-p" "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/missing/console_linked.rxproviders" "-o" "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/missing/console_linked" "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/missing/console" "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/library" "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/classlib" "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/classlib_native" "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/rxfnsc" "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/rxfnsg" "/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/rexxscript"
+[ [32mOK[0m ] rxlink   - Linked          [34m/Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/native-archive-control-qualified/missing/console_linked.rxbin[0m
+missing native provider archive: /Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/providers/rxconsole.a (legacy: /Users/adrian/Documents/Franz-UI-Mac-Investigation-20261012/evidence/console-package-20261013/core-qualified/extracted/CREXX-macos-arm64/bin/providers/rxconsole_static.a)

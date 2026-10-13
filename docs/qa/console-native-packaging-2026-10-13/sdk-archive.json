@@ -1,0 +1,8 @@
+{
+  "name": "CREXX-sdk-c51c65bea1c418b71b36b0bf67014338fd1370b3-macos-arm64.zip",
+  "bytes": 44236681,
+  "sha256": "084d758d45795c2d4ee6e5756a0969aa98d6082c4f8ece6701a21ab1f79c16a2",
+  "commit": "c51c65bea1c418b71b36b0bf67014338fd1370b3",
+  "platform": "macos-arm64",
+  "toolchain": "appleclang"
+}

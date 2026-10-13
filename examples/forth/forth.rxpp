@@ -1,0 +1,613 @@
+/*
+ * MiniForth - a minimal Forth-like interpreter written in cREXX.
+ *
+ * Supported features:
+ *
+ *   - integer data stack
+ *   - whitespace-separated input
+ *   - integer literals
+ *   - arithmetic: + - * /
+ *   - stack operations: DUP DROP SWAP OVER
+ *   - comparisons: = < >
+ *   - zero test: 0=
+ *   - output: .
+ *   - user-defined Forth words
+ *   - RXPP rule for building the dictionary
+ *
+ * This is deliberately not a complete or
+ * standards-compliant Forth implementation.
+ */
+
+options levelb
+import rxfnsb
+
+namespace forth expose stack sp wordName wordBody failed forth_trace_enabled forth_trace_depth forth_run forth_set_debug forthRule
+
+##cflags nosrcmap
+
+
+/*
+ * Generate a stack-underflow check.
+ *
+ * LIMIT specifies the minimum number of values which must
+ * already be present on the data stack.
+ */
+##macro testUnderflow limit
+.gen if sp < &limit then do
+.gen    say "ERROR: stack underflow for" fword
+.gen    failed = 1
+.gen    return 1
+.gen end
+##mend
+
+
+/*
+ * Generate a stack-overflow check.
+ *
+ * LIMIT specifies the number of additional values which
+ * must be available on the data stack.
+ */
+##macro testOverflow limit
+.gen if sp + &limit > 256 then do
+.gen    say "ERROR: stack overflow for" fword
+.gen    failed = 1
+.gen    return 1
+.gen end
+##mend
+
+
+/*
+ * Generate a primitive binary arithmetic operation.
+ *
+ * Stack effect:
+ *
+ *     ( a b -- result )
+ *
+ * The right-hand operand is on top of the stack.
+ */
+##macro Primitive_2 op
+.gen when fword = "&op" then do
+.gen    ##testUnderflow 2
+.gen    b = stack[sp]
+.gen    sp = sp - 1
+.gen    a = stack[sp]
+.gen    stack[sp] = a &op b
+.gen end
+##mend
+
+
+/*
+ * Generate a primitive binary comparison.
+ *
+ * Stack effect:
+ *
+ *     ( a b -- flag )
+ *
+ * The result is represented by 1 for true and 0 for false.
+ */
+##macro PrimitiveIF op
+.gen when fword = "&op" then do
+.gen    ##testUnderflow 2
+.gen    b = stack[sp]
+.gen    sp = sp - 1
+.gen    a = stack[sp]
+.gen    if a &op b then stack[sp] = 1
+.gen    else stack[sp] = 0
+.gen end
+##mend
+
+
+/*
+ * Trace levels:
+ *
+ *   0  no execution trace
+ *   1  readable word and stack transitions
+ *   2  detailed VM-style diagnostics
+ */
+forth_trace_enabled = 0
+forth_trace_depth = 0
+
+forth_set_debug: procedure=.void expose forth_trace_enabled
+  arg enabled=.int
+  forth_trace_enabled = enabled
+  return
+
+/*
+ * Execute a Forth input program.
+ *
+ * The caller owns the input lines and dictionary definitions. This keeps the
+ * kernel reusable while allowing each RXPP example to provide its own small
+ * Forth program and user-defined words.
+ */
+forth_run: procedure=.int expose stack sp failed forth_trace_enabled forth_trace_depth
+  arg forthinput=.string[]
+
+  stack = .int[256]
+  sp = 0
+  failed = 0
+  forth_trace_depth = 0
+
+  do i = 1 to forthinput[0]
+     line = forthinput[i]
+
+     if upper(strip(line)) = "BYE" then leave
+     if strip(line) = "" then iterate
+
+     fwords = qsplit(line, " ")
+
+     do word_no = 1 to fwords[0]
+        call executeWord fwords[word_no]
+        if failed then leave
+     end
+
+     if failed then leave
+
+     if forth_trace_enabled >= 2 then do
+        say "DONE:" fword "sp=" sp
+        call showStack
+     end
+  end
+
+  if failed then do
+     say "MiniForth stopped because of an execution error."
+     return 1
+  end
+
+  return 0
+
+
+/*
+ * Execute one Forth word.
+ *
+ * ARGUMENTS:
+ *
+ *   fword
+ *       The word to execute. It may be an integer literal,
+ *       a built-in primitive, or the name of a user-defined
+ *       dictionary word.
+ *
+ * PROCESSING:
+ *
+ *   Integer literals are pushed onto the data stack.
+ *   Built-in words perform their operation directly.
+ *   User-defined words are looked up in the dictionary and
+ *   executed by calling executeBody().
+ *
+ * RETURN VALUE:
+ *
+ *   0
+ *       The word was executed successfully.
+ *
+ *   1
+ *       Execution failed because of stack underflow,
+ *       stack overflow, division by zero, or an unknown word.
+ *
+ * SIDE EFFECTS:
+ *
+ *   The data stack may be changed.
+ *   The global variable FAILED is set to 1 after an error.
+ *
+ * STACK:
+ *
+ *   SP contains the number of values currently on the data
+ *   stack. The top value is stack[sp].
+ */
+executeWord: procedure=.int expose forth_trace_enabled forth_trace_depth
+  arg fword=.string
+
+  fword = strip(fword)
+
+  if fword = "" then return 0
+
+  /*
+   * Forth words are treated case-insensitively.
+   */
+  fword = upper(fword)
+
+
+  /*
+   * Integer literal.
+   *
+   * Stack effect:
+   *
+   *     ( -- n )
+   */
+  if datatype(fword, "W") then do
+     ##testOverflow 1
+
+     sp = sp + 1
+     stack[sp] = fword
+     return 0
+  end
+
+  if forth_trace_enabled = 1 then do
+     say "TRACE: executing" fword
+     call showReadableStack "       stack before:"
+  end
+  else if forth_trace_enabled >= 2 then do
+     say "EXEC:" fword "sp=" sp
+     call showStack
+  end
+
+
+  /*
+   * Built-in primitive words.
+   */
+  select
+
+    /*
+     * Binary arithmetic primitives.
+     *
+     * Stack effect:
+     *
+     *     ( a b -- result )
+     */
+    ##Primitive_2 +
+    ##Primitive_2 -
+    ##Primitive_2 *
+
+
+    /*
+     * Division.
+     *
+     * Stack effect:
+     *
+     *     ( a b -- a/b )
+     *
+     * The divisor is the value on top of the stack.
+     */
+    when fword = "/" then do
+      ##testUnderflow 2
+
+      b = stack[sp]
+
+      if b = 0 then do
+         say "ERROR: division by zero"
+         failed = 1
+         return 1
+      end
+
+      sp = sp - 1
+      a = stack[sp]
+      stack[sp] = a / b
+    end
+
+
+    /*
+     * DUP duplicates the top stack value.
+     *
+     * Stack effect:
+     *
+     *     ( a -- a a )
+     */
+    when fword = "DUP" then do
+      ##testUnderflow 1
+      ##testOverflow 1
+
+      stack[sp + 1] = stack[sp]
+      sp = sp + 1
+    end
+
+
+    /*
+     * DROP removes the top stack value.
+     *
+     * Stack effect:
+     *
+     *     ( a -- )
+     */
+    when fword = "DROP" then do
+      ##testUnderflow 1
+
+      sp = sp - 1
+    end
+
+
+    /*
+     * SWAP exchanges the top two stack values.
+     *
+     * Stack effect:
+     *
+     *     ( a b -- b a )
+     */
+    when fword = "SWAP" then do
+      ##testUnderflow 2
+
+      a = stack[sp]
+      stack[sp] = stack[sp - 1]
+      stack[sp - 1] = a
+    end
+
+
+    /*
+     * OVER copies the second stack value to the top.
+     *
+     * Stack effect:
+     *
+     *     ( a b -- a b a )
+     */
+    when fword = "OVER" then do
+      ##testUnderflow 2
+      ##testOverflow 1
+
+      stack[sp + 1] = stack[sp - 1]
+      sp = sp + 1
+    end
+
+
+    /*
+     * The dot word prints and removes the top stack value.
+     *
+     * Stack effect:
+     *
+     *     ( a -- )
+     */
+    when fword = "." then do
+      ##testUnderflow 1
+
+      say stack[sp]
+      sp = sp - 1
+    end
+
+
+    /*
+     * Binary comparison primitives.
+     *
+     * Stack effect:
+     *
+     *     ( a b -- flag )
+     *
+     * The result is 1 for true and 0 for false.
+     */
+    ##PrimitiveIF =
+    ##PrimitiveIF >
+    ##PrimitiveIF <
+
+
+    /*
+     * 0= tests whether the top stack value is zero.
+     *
+     * Stack effect:
+     *
+     *     ( a -- flag )
+     */
+    when fword = "0=" then do
+      ##testUnderflow 1
+
+      if stack[sp] = 0 then
+        stack[sp] = 1
+      else
+        stack[sp] = 0
+    end
+
+
+    /*
+     * If the word is not a primitive, search the dictionary.
+     *
+     * A dictionary entry contains the word name and a
+     * whitespace-separated body. The body is executed by
+     * executeBody().
+     */
+    otherwise do
+
+      found = 0
+
+      do dictionaryIndex = 1 to wordName[0]
+
+        if fword = upper(wordName[dictionaryIndex]) then do
+          found = 1
+          call executeBody wordBody[dictionaryIndex]
+          leave
+        end
+
+      end
+
+      if found = 0 then do
+         say "ERROR: unknown word:" fword
+         failed = 1
+         return 1
+      end
+
+    end
+
+  end
+
+  if forth_trace_enabled = 1 & forth_trace_depth = 0 then do
+     call showReadableStack "       stack after :"
+  end
+
+return 0
+
+
+/*
+ * Execute the body of a user-defined Forth word.
+ *
+ * ARGUMENTS:
+ *
+ *   body
+ *       A whitespace-separated sequence of Forth words.
+ *
+ * EXAMPLE:
+ *
+ *   The definition:
+ *
+ *       : CUBE DUP SQUARE * ;
+ *
+ *   is stored as:
+ *
+ *       DUP SQUARE *
+ *
+ *   executeBody() splits this text and sends each word back
+ *   through executeWord(). This allows user-defined words
+ *   to call other user-defined words.
+ *
+ * RETURN VALUE:
+ *
+ *   0 after normal completion.
+ *
+ *   Execution stops as soon as FAILED is set.
+ *
+ * SIDE EFFECTS:
+ *
+ *   The data stack may be changed by the words in the body.
+ *
+ * RECURSION:
+ *
+ *   Because executeWord() may call executeBody(), and
+ *   executeBody() may call executeWord(), dictionary words
+ *   can be nested.
+ */
+executeBody: procedure=.int expose forth_trace_depth
+  arg body=.string
+
+  bodyWords = qsplit(body, " ")
+  forth_trace_depth = forth_trace_depth + 1
+
+  do bodyIndex = 1 to bodyWords[0]
+
+    bodyWord = strip(bodyWords[bodyIndex])
+
+    if bodyWord <> "" then do
+      call executeWord bodyWord
+      if failed then leave
+    end
+
+  end
+
+  forth_trace_depth = forth_trace_depth - 1
+
+return 0
+
+
+/*
+ * Display the current contents of the Forth data stack.
+ *
+ * The stack is displayed from bottom to top. The leftmost
+ * value is stack[1], and the rightmost value is the current
+ * top value.
+ *
+ * This procedure is diagnostic output used while demonstrating
+ * the interpreter. It is not itself part of the Forth language.
+ *
+ * Example:
+ *
+ *   If the stack contains 3 and 7, the output is:
+ *
+ *       Stack: [3 7]
+ */
+showStack: procedure
+
+  out = "["
+
+  do s = 1 to sp
+    if s > 1 then out = out " "
+    out = out || stack[s]
+  end
+
+  out = out "]"
+
+  say "       Stack:" out
+
+return
+
+
+/*
+ * RXPP rule handler for Forth definitions.
+ *
+ * INPUT:
+ *
+ *   forthinput
+ *       The array containing all lines between:
+ *
+ *           ##rule rules into forthRule
+ *           ...
+ *           ##end
+ *
+ * PROCESSING:
+ *
+ *   1. All input lines are joined into one string.
+ *   2. Missing outer ':' and ';' delimiters are added.
+ *   3. qextractall() extracts each colon definition.
+ *   4. The first word of each definition becomes the
+ *      dictionary name.
+ *   5. The remaining words become the executable body.
+ *
+ * EXAMPLE INPUT:
+ *
+ *       : SQUARE DUP * ;
+ *       : CUBE DUP SQUARE * ;
+ *
+ * RESULT:
+ *
+ *       wordName[1] = "SQUARE"
+ *       wordBody[1] = "DUP *"
+ *
+ *       wordName[2] = "CUBE"
+ *       wordBody[2] = "DUP SQUARE *"
+ *
+ * The generated arrays are used by executeWord() during
+ * execution.
+ */
+forthrule: procedure
+  arg forthinput=.string[]
+
+  wordName = .string[]
+  wordBody = .string[]
+
+  /*
+   * Join all rule lines so that definitions may span
+   * several source lines.
+   */
+  rline = ''
+
+  do i = 1 to forthinput[0]
+     rline = rline ' ' forthinput[i]
+  end
+
+  rline = strip(rline)
+
+  /*
+   * Be tolerant if the complete rule block does not begin
+   * with a colon.
+   */
+  if substr(word(rline, 1), 1, 1) <> ':' then
+    rline = ': ' rline
+
+  /*
+   * Be tolerant if the last definition has no semicolon.
+   */
+  if right(rline, 1) <> ';' then
+    rline = rline ';'
+
+  /*
+   * Extract all definitions between ':' and ';'.
+   */
+  defs = qextractall(':', ';', rline, 1, 'X')
+
+  /*
+   * Split every definition into its dictionary name and body.
+   */
+  do j = 1 to defs[0]
+     wordName[j] = word(defs[j], 1)
+     wordBody[j] = subword(defs[j], 2)
+  end
+
+return
+
+
+/* Display a labelled stack snapshot for the readable trace. */
+showReadableStack: procedure
+  arg label=.string
+
+  out = "["
+
+  do s = 1 to sp
+    if s > 1 then out = out " "
+    out = out || stack[s]
+  end
+
+  out = out "]"
+
+  say label out
+
+return
